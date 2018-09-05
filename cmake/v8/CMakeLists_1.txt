@@ -1,0 +1,119 @@
+# https://bitbucket.org/adrianhodos/v8/src/master/CMakeLists.txt?at=master
+# https://github.com/pmed/v8pp/blob/master/v8pp/context.hpp
+# https://www.npmjs.com/package/node-cmake-generator
+# https://github.com/LeviSchuck/v8/blob/master/CMakeLists.txt
+# https://github.com/ngot/libv8
+
+cmake_minimum_required(VERSION 2.6)
+
+project(v8)
+
+set(V8MAIN_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(V8INC_DIR ${V8MAIN_DIR}/include)
+
+set(CMAKE_DEBUG_POSTFIX "_d")
+
+set(V8_OS_UNSUPPORTED 0)
+set(V8_OS_LINUX 1)
+set(V8_OS_WINDOWS 2)
+set(V8_OS_BSD 3)
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(V8_PLATFORM ${V8_OS_LINUX})
+    set(V8_PLATFORM_LINUX 1)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    set(V8_PLATFORM ${V8_OS_WINDOWS})
+    set(V8_PLATFORM_WINDOWS 1)
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "FreeBSD")
+    set(V8_PLATFORM ${V8_OS_BSD})
+    set(V8_PLATFORM_FREEBSD 1)
+endif()
+
+if (MSVC)
+    set(MSVC_BUILD_SYSTEM   1)
+    set(RENDER_SYSTEM_D3D11 1)
+    set(cxx_disabled_warnings "/wd 4201")
+
+    if (uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+        set(cxx_aditional_flags "/Od /Zi /RTC1")
+        add_definitions(/DDEBUG /D_DEBUG)
+    endif()
+
+    foreach(flags_var
+            CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
+            CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINF)
+        string(REPLACE "/MD" "/MT" "${flags_var}" "${${flags_var}}")
+    endforeach()
+    string(REPLACE "/W3" "/W4" "${flags_var}" "${${flags_var}}")
+
+    set(V8_COMPILER_SYSTEM  ${MSVC_BUILD_SYSTEM})
+    set(V8_RENDER_SYSTEM    ${RENDER_SYSTEM_D3D11})
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${cxx_aditional_flags} ${cxx_disabled_warnings}")
+endif()
+
+if (MINGW)
+    set(MINGW_BUILD_SYSTEM  1)
+    set(RENDER_SYSTEM_OPENGL 1)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+
+    if (uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+        add_definitions(-DDEBUG -D_DEBUG)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g")
+    endif()
+
+    set(V8_COMPILER_SYSTEM  ${MINGW_BUILD_SYSTEM})
+    set(V8_RENDER_SYSTEM    ${RENDER_SYSTEM_OPENGL})
+endif()
+
+if (UNIX)
+    message("Unix build")
+    set(RENDER_SYSTEM_OPENGL 1)
+    set(GCC_BUILD_SYSTEM 1)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+endif()
+
+#configure_file(
+#    "${PROJECT_SOURCE_DIR}/include/v8/config/config.h.in"
+#    "${PROJECT_BINARY_DIR}/include/v8/config/config.h"
+#    )
+
+include_directories("${V8INC_DIR}")
+#include_directories("${PROJECT_BINARY_DIR}/include")
+
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+add_subdirectory(gtest-1.6.0)
+include_directories("${gtest_SOURCE_DIR}/include")
+include_directories("${gtest_SOURCE_DIR}")
+
+add_subdirectory(lib/base)
+add_subdirectory(lib/math)
+add_subdirectory(unit_tests)
+
+install(
+    DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inl"
+    )
+
+install(
+    DIRECTORY "${PROJECT_BINARY_DIR}/include/"
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+    PATTERN "*.inl"
+    )
+
+install(
+    DIRECTORY "${PROJECT_BINARY_DIR}/lib/"
+    DESTINATION lib
+    FILES_MATCHING
+    PATTERN "*.a"
+    PATTERN "*.lib"
+    PATTERN "*.pdb"
+    )

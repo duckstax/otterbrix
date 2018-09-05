@@ -1,0 +1,6 @@
+---
+app: hello_world.lua
+
+default:
+    ws_port: 9999
+    http_port: 9998
