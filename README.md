@@ -6,18 +6,9 @@ RocketJoe is an application server for micro-services architecture.
 
 ### Under heavy development. Come back later
 
-##RoadMap  
-1. server ws + http
-2. json rpc 2.0
-3. DataBase MongoDb
-4. client http/ws
-5. cron-like
-6. p2p
-
-
-boost > 1.67
-cmake > 2.8
-lua   > 5.3
+* boost > 1.67
+* cmake > 2.8
+* lua   > 5.3
 
 
 

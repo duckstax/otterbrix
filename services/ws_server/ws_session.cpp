@@ -28,9 +28,10 @@ namespace RocketJoe { namespace services { namespace ws_server {
                 if(ec) {
                     fail(ec, "read");
                 }
-                /// TODO: HACK blocking
-                transport::web_socket* ws_data;
-                ws_data->body = boost::beast::buffers_to_string(buffer_.data());
+
+                auto ws = std::make_shared<transport::web_socket>(id_);
+                ws->body = boost::beast::buffers_to_string(buffer_.data());
+                transport::transport ws_data(std::move(ws));
                 pipe_->send(goblin_engineer::message("router",dispatcher,{ws_data}));
                 ws_.text(ws_.got_text());
                 ws_.async_write(
