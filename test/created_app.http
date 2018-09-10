@@ -1,0 +1,11 @@
+POST http://127.0.0.1:9998/system
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"jsonrpc":"2.0","method":"create-app","params":{"name":"cube"},"id":"0"}
+
+###
+
+
+

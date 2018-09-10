@@ -14,7 +14,6 @@ namespace RocketJoe { namespace services { namespace http_server {
             namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
             namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
-
             class http_session : public std::enable_shared_from_this<http_session> {
                 // This queue_vm is used for HTTP pipelining.
                 class queue {
@@ -92,9 +91,7 @@ namespace RocketJoe { namespace services { namespace http_server {
             public:
                 http_session(tcp::socket socket,transport::transport_id , goblin_engineer::pipe* pipe_);
 
-                ~http_session(){
-                    std::cerr<<"destroy http_session" <<std::endl;
-                }
+                ~http_session();
 
                 // Start the asynchronous operation
                 void run();

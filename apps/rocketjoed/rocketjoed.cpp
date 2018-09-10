@@ -9,8 +9,11 @@
 #include <rocketjoe/services/lua_engine/lua_engine.hpp>
 #include <rocketjoe/services/ws_server/ws_server.hpp>
 #include <rocketjoe/services/http_server/http_server.hpp>
+#include <rocketjoe/services/database/database.hpp>
+#include <rocketjoe/services/router/router.hpp>
 
 #include <yaml-cpp/yaml.h>
+
 
 constexpr const char *config_name_file = "config.yaml";
 
@@ -56,9 +59,7 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
 }
 
-
 int main(int argc, char **argv) {
-
     boost::program_options::variables_map args_;
     boost::program_options::options_description app_options_;
 
@@ -140,15 +141,32 @@ int main(int argc, char **argv) {
     auto &lua = env.add_service<RocketJoe::services::lua_engine::lua_engine>();
     /// rewrite config
 
-    auto &ws = env.add_service<RocketJoe::services::ws_server::ws_server>();
+    auto& database = env.add_service<RocketJoe::services::database::database>();
+
+    auto& router = env.add_service<RocketJoe::services::router::router>();
+
     auto &http = env.add_service<RocketJoe::services::http_server::http_server>();
 
-    /// http/ws
-    ws->join(lua);
-    http->join(lua);
-    lua->join(ws);
+
+    ///http <-> router
+    http->join(router);
+    router->join(http);
+    ///http <-> router
+
+    ///lua <-> http
     lua->join(http);
-    /// http/ws
+    http->join(lua);
+    ///lua <-> http
+
+    ///router <-> database
+    router->join(database);
+    database->join(router);
+    ///router <-> database
+
+    /// lua <-> database
+    lua->join(database);
+    database->join(lua);
+    /// lua <-> database
 
     env.initialize();
 

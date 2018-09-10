@@ -10,8 +10,42 @@ RocketJoe is an application server for micro-services architecture.
 * cmake > 2.8
 * lua   > 5.3
 
+## Setup Developers Environments
 
+### for mac os x 
 
+```
+brew install mongo-cxx-driver cmake lua  boost  ccache doxygen gperftools
+
+git clone git@github.com:smart-cloud/RocketJoe.git rocketjoe
+
+cd rocketjoe
+
+sudo docker-compose up
+
+git submodule init
+
+git submodule update --recursive
+
+mkdir build
+
+cp shared/rocketjoe/config.yaml build
+
+cp lua/web.lua build
+
+cd build
+
+cmake .. 
+
+make rocketjoe
+
+./rocketjoe 
+
+```
+
+### for debian base  
+
+```
     apt-get install -y \
         autoconf \
         automake \
@@ -77,3 +111,10 @@ RocketJoe is an application server for micro-services architecture.
             cd ../.. && \
             rm -rf mongo-cxx-driver
         # end
+```
+
+### build for docker
+
+```
+
+``` 
