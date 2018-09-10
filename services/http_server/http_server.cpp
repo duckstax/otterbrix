@@ -25,12 +25,14 @@ namespace RocketJoe { namespace services { namespace http_server {
 
             };
 
-            http_server::http_server(goblin_engineer::context_t *ctx) : pimpl(new impl) {
-                auto const address = boost::asio::ip::make_address("127.0.0.1");
+            http_server::http_server(goblin_engineer::context_t *ctx) : pimpl(std::make_unique<impl>()) {
+                auto& config = ctx->config();
 
-                auto string_port = ctx->config().as_object()["default"].as_object()["http_port"].as_string();
+                boost::asio::ip::address address =  boost::asio::ip::make_address(config.as_object()["address"].as_string());
+                auto string_port = config.as_object()["http-port"].as_string();
                 auto tmp_port = std::stoul(string_port);
                 auto port = static_cast<unsigned short>(tmp_port);
+
                 pimpl->listener_ = std::make_shared<listener>(ctx->main_loop(), tcp::endpoint{address, port},to_pipe());
 
                 add(

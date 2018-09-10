@@ -16,8 +16,6 @@ namespace RocketJoe { namespace services { namespace http_server {
                     goblin_engineer::abstract_service::pipe* pipe_
             ) {
 
-
-
                 auto http_transport_ = std::make_shared<transport::http>(id);
 
                 http_transport_->method(std::string(req.method_string()));
@@ -34,6 +32,12 @@ namespace RocketJoe { namespace services { namespace http_server {
                 http_transport_->body(req.body());
 
                 transport::transport http_data(std::move(http_transport_)) ;
+
+
+                if(req.target() == "/system"){
+                    pipe_->send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
+                    return;
+                }
 
                 pipe_->send(goblin_engineer::message(router,dispatcher,{std::move(http_data)}));
 
@@ -170,6 +174,8 @@ namespace RocketJoe { namespace services { namespace http_server {
                 res.body()=http->body();
                 queue_(std::move(res));
             }
+
+            http_session::~http_session()  = default;
 
             bool http_session::queue::on_write() {
                 BOOST_ASSERT(!items_.empty());
