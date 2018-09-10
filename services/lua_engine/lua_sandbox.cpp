@@ -25,7 +25,7 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                         case transport::transport_type::http: {
                             auto *http_ = static_cast<transport::http *>(object.transport_.get());
                             table["type"] = "http";
-                            table["uri"] = http_->uri_;
+                            table["uri"] = http_->uri();
                             ///headers
                             auto range = http_->headers();
                             for(;range.first != range.second;++range.first){
@@ -33,7 +33,7 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                                 table[range.first->first]=range.first->second;
                             }
                             ///TODO Header / body not copy add method json_body_get
-                            table["body"] = http_->body_;
+                            table["body"] = http_->body();
 
                             break;
                         }

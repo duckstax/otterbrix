@@ -30,8 +30,24 @@ namespace RocketJoe {
             return std::make_pair(headers_.begin(),headers_.end());
         }
 
-        std::string http::body() const {
+        const std::string& http::body() const {
             return body_;
+        }
+
+        const std::string& http::uri() const {
+            return this->uri_;
+        }
+
+        const std::string& http::method() const {
+            return this->method_;
+        }
+
+        void http::status(unsigned code) {
+            status_code = code;
+        }
+
+        unsigned http::status() const {
+            return status_code;
         }
 
         http::~http() = default;
