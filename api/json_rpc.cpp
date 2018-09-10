@@ -1,14 +1,12 @@
 #include "json_rpc.hpp"
 
-#include <nlohmann/json.hpp>
-
 
 namespace network{ namespace protocol { namespace json_rpc {
 
 /*
             auto json_rpc::parser(const std::string&data, message&message) -> bool {
 
-                auto j = nlohmann::json::parse(data);
+                auto j = json::parse(data);
 
                 if(j.is_array()){
                     return false;
@@ -25,7 +23,7 @@ namespace network{ namespace protocol { namespace json_rpc {
 
             auto json_rpc::parser(const std::string &data, batch &b) -> bool {
 
-                auto j = nlohmann::json::parse(data);
+                auto j = json::parse(data);
 
                 if(j.is_object()){
                     return false;
