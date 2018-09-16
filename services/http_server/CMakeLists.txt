@@ -28,6 +28,7 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
+        ${CMAKE_THREAD_LIBS_INIT}
         rocketjoe::api
         goblin-engineer
 )

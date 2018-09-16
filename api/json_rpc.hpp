@@ -3,11 +3,10 @@
 #include <string>
 #include <vector>
 #include <boost/optional.hpp>
+#include <iostream>
 #include "nlohmann/json.hpp"
 
-namespace rocketjoe {
-    namespace api {
-        namespace json_rpc {
+namespace rocketjoe { namespace api { namespace json_rpc {
 
             using nlohmann::json;
 
@@ -71,7 +70,6 @@ namespace rocketjoe {
 
                 response_error(error_code code, std::string message)
                         : code(code), message(std::move(message)) {}
-
 
             };
 
@@ -180,49 +178,62 @@ namespace rocketjoe {
                 return msg.is_object() && !contains(msg, "id");
             }
 
-            ////TODO FIX
             bool is_request(const json &msg) {
-                return msg.is_object() /*&& contains(msg,"method")*/ && msg.at("method").is_string();
+                return msg.is_object() && contains(msg,"method") && msg.at("method").is_string();
             }
 
             bool is_response(const json &msg) {
                 return msg.is_object() && !contains(msg, "method") && contains(msg, "id");
             }
 
-            bool parse(const json &message, request_message &request) {
+            bool parse(const std::string &raw, request_message &request) {
+
+                auto message = json::parse(raw);
+
                 if (!is_request(message)) {
                     return false;
                 }
+
                 request.id = message.at("id");
 
                 request.method = message.at("method").get<std::string>();
+
                 if (contains(message, "param")) {
                     request.params = message["param"];
                 } else {
                     request.params = message["params"];
                 }
+
                 return true;
+
             }
 
             bool parse(const json &message, notify_message &notify) {
+
                 if (!is_notify(message)) {
                     return false;
                 }
+
                 notify.method = message.at("method").get<std::string>();
+
                 if (contains(message, "param")) {
                     notify.params = message.at("param");
                 } else {
                     notify.params = message.at("params");
                 }
+
                 return true;
             }
 
             bool parse(const json &message, response_message &response) {
+
                 if (!is_response(message)) {
                     return false;
                 }
+
                 response.id = message.at("id");
                 response.result = message.at("result");
+
                 return true;
             }
 
@@ -231,10 +242,13 @@ namespace rocketjoe {
                 obj["jsonrpc"] = json("2.0");
 
                 obj["method"] = json(msg.method);
+
                 if (!msg.params.is_null()) {
                     obj["params"] = msg.params;
                 }
+
                 obj["id"] = msg.id;
+
                 return json(obj).dump();
             }
 
@@ -254,6 +268,7 @@ namespace rocketjoe {
                 }
 
                 obj["id"] = msg.id;
+
                 return json(obj).dump();
             }
 
@@ -262,9 +277,11 @@ namespace rocketjoe {
                 obj["jsonrpc"] = json("2.0");
 
                 obj["method"] = json(msg.method);
+
                 if (!msg.params.is_null()) {
                     obj["params"] = msg.params;
                 }
+
                 return json(obj).dump();
             }
 
@@ -273,74 +290,72 @@ namespace rocketjoe {
                                       const json &param = json()) {
                     json obj;
                     obj["method"] = json(medhod);
+
                     if (!param.is_null()) {
                         obj["params"] = param;
                     }
+
                     obj["id"] = id;
+
                     return json(obj).dump();
                 }
 
-                std::string serialize(const json &id, const std::string &medhod,
-                                      const std::string &param) {
+                std::string serialize(const json &id, const std::string &medhod, const std::string &param) {
                     return serialize(id, medhod, json(param));
                 }
 
-                std::string serialize(uint64_t id, const std::string &medhod,
-                                      const std::string &param) {
+                std::string serialize(uint64_t id, const std::string &medhod, const std::string &param) {
                     return serialize(json(id), medhod, json(param));
                 }
 
-                std::string serialize(uint64_t id, const std::string &medhod,
-                                      const json &param = json()) {
+                std::string serialize(uint64_t id, const std::string &medhod, const json &param = json()) {
                     return serialize(json(id), medhod, json(param));
                 }
 
-                std::string serialize(const std::string &id, const std::string &medhod,
-                                      const std::string &param) {
+                std::string serialize(const std::string &id, const std::string &medhod, const std::string &param) {
                     return serialize(json(id), medhod, json(param));
                 }
 
-                std::string serialize(const std::string &id, const std::string &medhod,
-                                      const json &param = json()) {
+                std::string serialize(const std::string &id, const std::string &medhod, const json &param = json()) {
                     return serialize(json(id), medhod, json(param));
                 }
             }
 
             namespace notify {
 
-                std::string serialize(const std::string &medhod,
-                                      const json &param = json()) {
+                std::string serialize(const std::string &medhod, const json &param = json()) {
                     json obj;
                     obj["method"] = json(medhod);
+
                     if (!param.is_null()) {
                         obj["params"] = param;
                     }
+
                     return json(obj).dump();
                 }
 
-                std::string serialize(const std::string &medhod,
-                                      const std::string &param) {
+                std::string serialize(const std::string &medhod, const std::string &param) {
                     return serialize(medhod, json(param));
                 }
             }
 
             namespace responce {
 
-                std::string serialize(const json &id,
-                                      const json &result = json(),
-                                      bool error = false) {
+                std::string serialize(const json &id, const json &result = json(), bool error = false) {
                     json obj;
+
                     if (error) {
                         obj["error"] = result;
                     } else {
                         obj["result"] = result;
                     }
+
                     obj["id"] = id;
+
                     return json(obj).dump();
                 }
 
-                std::string serialize(const json &id, const std::string &result,
-                                      bool error = false) {
+                std::string serialize(const json &id, const std::string &result, bool error = false) {
                     return serialize(id, json(result), error);
                 }
 

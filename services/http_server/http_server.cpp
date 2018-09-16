@@ -5,7 +5,7 @@
 #include <rocketjoe/services/http_server/listener.hpp>
 
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             class http_server::impl final {
             public:
@@ -39,10 +39,10 @@ namespace RocketJoe { namespace services { namespace http_server {
                         "write",
                         [this](goblin_engineer::message&& message) -> void {
                             auto arg = message.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto t = boost::any_cast<api::transport>(arg);
                             auto*transport_tmp = t.transport_.get();
                             t.transport_.reset();
-                            std::unique_ptr<transport::http> transport(static_cast<transport::http*>(transport_tmp));
+                            std::unique_ptr<api::http> transport(static_cast<api::http*>(transport_tmp));
                             pimpl->listener_->write(std::move(transport));
                         }
                 );

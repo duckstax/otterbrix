@@ -4,7 +4,6 @@ add_executable(${CURRENT_TARGET}  rocketjoed.cpp ../../lua/web.lua)
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
-
         rocketjoe::lua_engine
         rocketjoe::ws_server
         rocketjoe::http_server

@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <string>
 
-namespace RocketJoe { namespace transport {
+namespace rocketjoe { namespace api {
         enum class http_request_command {
             unknown = 0,
             delete_,

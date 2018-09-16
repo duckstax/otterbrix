@@ -138,14 +138,14 @@ int main(int argc, char **argv) {
     goblin_engineer::dynamic_environment env(std::move(config));
 
     /// rewrite config
-    auto &lua = env.add_service<RocketJoe::services::lua_engine::lua_engine>();
+    auto &lua = env.add_service<rocketjoe::services::lua_engine::lua_engine>();
     /// rewrite config
 
-    auto& database = env.add_service<RocketJoe::services::database::database>();
+    auto& database = env.add_service<rocketjoe::services::database::database>();
 
-    auto& router = env.add_service<RocketJoe::services::router::router>();
+    auto& router = env.add_service<rocketjoe::services::router::router>();
 
-    auto &http = env.add_service<RocketJoe::services::http_server::http_server>();
+    auto &http = env.add_service<rocketjoe::services::http_server::http_server>();
 
 
     ///http <-> router

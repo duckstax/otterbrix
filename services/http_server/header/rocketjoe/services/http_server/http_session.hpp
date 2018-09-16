@@ -8,7 +8,7 @@
 #include <rocketjoe/api/http.hpp>
 
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
             namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
@@ -87,9 +87,9 @@ namespace RocketJoe { namespace services { namespace http_server {
                 http::request <http::string_body> req_;
                 queue queue_;
                 goblin_engineer::pipe* pipe_;
-                const transport::transport_id id;
+                const api::transport_id id;
             public:
-                http_session(tcp::socket socket,transport::transport_id , goblin_engineer::pipe* pipe_);
+                http_session(tcp::socket socket,api::transport_id , goblin_engineer::pipe* pipe_);
 
                 ~http_session();
 
@@ -107,7 +107,7 @@ namespace RocketJoe { namespace services { namespace http_server {
 
                 void do_close();
 
-                void write(std::unique_ptr<transport::transport_base>);
+                void write(std::unique_ptr<api::transport_base>);
 
             };
 

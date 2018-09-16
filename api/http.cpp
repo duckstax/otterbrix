@@ -2,8 +2,7 @@
 #include "http.hpp"
 
 
-namespace RocketJoe {
-    namespace transport {
+namespace rocketjoe { namespace api {
 
 
         http::http(transport_id id) : transport_base(transport_type::http, id) {

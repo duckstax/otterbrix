@@ -19,7 +19,7 @@
 #include <goblin-engineer/message.hpp>
 #include <rocketjoe/api/transport_base.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
@@ -45,13 +45,13 @@ namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.h
     public:
         explicit ws_session(
                 tcp::socket,
-                transport::transport_id ,
+                api::transport_id ,
                 goblin_engineer::pipe*
         );
 
         void run();
 
-        void write(std::unique_ptr<transport::transport_base>);
+        void write(std::unique_ptr<api::transport_base>);
 
         void on_accept(boost::system::error_code ec);
 

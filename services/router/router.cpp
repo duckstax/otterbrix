@@ -1,13 +1,33 @@
 #include <rocketjoe/services/router/router.hpp>
 
+#include <goblin-engineer/message.hpp>
 #include <goblin-engineer/context.hpp>
 #include <goblin-engineer/metadata.hpp>
+
 #include <rocketjoe/api/transport_base.hpp>
+#include <rocketjoe/api/http.hpp>
+#include <rocketjoe/api/json_rpc.hpp>
+
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/builder/stream/array.hpp>
+#include <bsoncxx/builder/stream/value_context.hpp>
+#include <bsoncxx/json.hpp>
+
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+#include <mongocxx/uri.hpp>
+#include <mongocxx/cursor.hpp>
 
 
-namespace RocketJoe {
-    namespace services {
-        namespace router {
+namespace rocketjoe { namespace services { namespace router {
+
+
+            struct task {
+                api::transport  transport_;
+                api::json_rpc::request_message request;
+
+            };
 
             class router::impl final {
             public:
@@ -22,6 +42,12 @@ namespace RocketJoe {
                 impl &operator=(const impl &) = default;
 
                 impl(const impl &) = default;
+
+                mongocxx::instance mongo_inst;
+                mongocxx::database apps;
+                mongocxx::uri uri;
+                mongocxx::client client;
+                mongocxx::options::bulk_write bulk_opts;
 
             };
 
@@ -42,18 +68,44 @@ namespace RocketJoe {
             }
 
             router::router(goblin_engineer::context_t *ctx) : pimpl(std::make_unique<impl>()) {
+                auto mongo_uri = ctx->config().as_object()["mongo-uri"].as_string();
+                pimpl->uri = mongocxx::uri{mongo_uri};
+                pimpl->client = mongocxx::client{pimpl->uri};
+                ///mongocxx::database database = pimpl->client.database("system");
+                ///mongocxx::collection collection = database["config"];
+                mongocxx::database apps = pimpl->client.database("applications");
 
                 add(
                         "dispatcher",
                         [this](goblin_engineer::message &&msg) -> void {
                             auto arg = msg.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto t = boost::any_cast<api::transport>(arg);
+                            switch (t.transport_->type()){
+                                case api::transport_type::http:{
+                                    auto* http = static_cast<api::http*>(t.transport_.get());
+                                    api::json_rpc::request_message request;
+                                    api::json_rpc::parse(http->body(),request);
+                                    std::cerr << __FILE__ << " | " << __LINE__ << " | " << "method : " << request.method << std::endl;
+                                    task task_;
+                                    task_.request= std::move(request);
+                                    task_.transport_=std::move(t);
+                                    send(goblin_engineer::message("router",request.method,{std::move(task_)}));
+                                    return;
+                                }
+
+                                case api::transport_type::ws:{
+
+                                    return;
+                                }
+
+                            }
                         }
                 );
 
                 add(
                         "create-app",
                         [this](goblin_engineer::message &&msg) -> void {
+                            ///this->pimpl->apps.collection("test").insert_one({});
 
                         }
                 );
@@ -61,6 +113,24 @@ namespace RocketJoe {
                 add(
                         "created-or-insert",
                         [this](goblin_engineer::message &&msg) -> void {
+                            auto arg = msg.args[0];
+                            auto t = boost::any_cast<task>(arg);
+                            auto table = t.request.params.at("table").get<std::string>();
+
+
+
+                            auto bulk = this->pimpl->apps.collection(table).create_bulk_write();
+                            bsoncxx::from_json()
+
+                            mongocxx::model::update_one upsert_op{doc1.view(), doc2.view()};
+
+                            // Set upsert to true: if no document matches {"a": 1}, insert {"a": 2}.
+                            upsert_op.upsert(true);
+
+                            bulk.append(upsert_op);
+
+
+                            auto result = bulk.execute();
 
                         }
                 );

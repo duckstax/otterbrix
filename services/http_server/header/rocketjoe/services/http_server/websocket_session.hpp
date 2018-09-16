@@ -6,11 +6,11 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
-            using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
-            namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
-            namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
+            using tcp = boost::asio::ip::tcp;
+            namespace http = boost::beast::http;
+            namespace websocket = boost::beast::websocket;
 
 
             void fail(boost::system::error_code ec, char const* what);

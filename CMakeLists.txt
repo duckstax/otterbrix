@@ -52,6 +52,13 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 set(yaml_path thirdparty/yaml-cpp)
 find_package(${YAML_INCLUDE_DIR} REQUIRED PATHS ${yaml_path} )
 include_directories(SYSTEM thirdparty/yaml-cpp/include)
+#YAML
+#############################################################################################
+
+#############################################################################################
+#nlohmann-json
+include_directories(SYSTEM thirdparty/json/include/)
+#nlohmann-json
 #############################################################################################
 
 #############################################################################################

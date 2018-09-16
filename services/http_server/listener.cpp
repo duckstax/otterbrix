@@ -1,6 +1,6 @@
 #include <rocketjoe/services/http_server/listener.hpp>
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, goblin_engineer::pipe *pipe_) :
                     acceptor_(ioc),
@@ -58,7 +58,7 @@ namespace RocketJoe { namespace services { namespace http_server {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    transport::transport_id id_= static_cast<transport::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
+                    api::transport_id id_= static_cast<api::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
                     auto session = std::make_shared<http_session>(std::move(socket_),id_,pipe_);
                     storage_session.emplace(id_,std::move(session));
                     storage_session.at(id_)->run();
@@ -68,7 +68,7 @@ namespace RocketJoe { namespace services { namespace http_server {
                 do_accept();
             }
 
-            void listener::write(std::unique_ptr<transport::transport_base> ptr) {
+            void listener::write(std::unique_ptr<api::transport_base> ptr) {
                 std::cerr << "id = " << ptr->id() <<std::endl;
 
                 auto& session = storage_session.at(ptr->id());
