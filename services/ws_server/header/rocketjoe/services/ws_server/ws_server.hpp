@@ -2,7 +2,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace RocketJoe {
+namespace rocketjoe {
     namespace services {
         namespace ws_server {
 

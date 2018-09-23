@@ -2,7 +2,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace RocketJoe { namespace services { namespace router {
+namespace rocketjoe { namespace services { namespace router {
 
             class router final: public goblin_engineer::abstract_service_unmanaged {
             public:

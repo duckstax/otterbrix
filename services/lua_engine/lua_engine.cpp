@@ -11,7 +11,7 @@
 #include <goblin-engineer/dynamic.hpp>
 #include <goblin-engineer/context.hpp>
 
-namespace RocketJoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
             class lua_engine::impl final {
             public:
@@ -42,8 +42,8 @@ namespace RocketJoe { namespace services { namespace lua_engine {
                 add(
                         "dispatcher",
                         [this](goblin_engineer::message && message) -> void  {
-                            auto arg = message.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto arg = std::move(message.args[0]);
+                            auto t = std::move(boost::any_cast<api::transport>(arg));
                             pimpl->push_job(std::move(t));
                         }
                 );

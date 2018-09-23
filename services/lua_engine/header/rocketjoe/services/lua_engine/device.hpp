@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <deque>
 
-namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_vm {
+namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
 
                 using id = std::size_t;
 

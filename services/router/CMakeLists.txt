@@ -1,5 +1,7 @@
 set(CURRENT_TARGET router)
 
+find_package(libbsoncxx REQUIRED)
+find_package(libmongocxx REQUIRED)
 
 
 list(APPEND CURRENT_TARGET_HEADERS
@@ -25,6 +27,11 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         rocketjoe::api
         goblin-engineer
+
+        ${LIBBSONCXX_LIBRARIES}
+        ${LIBMONGOCXX_LIBRARIES}
+        ${BSON_LIBRARIES}
+
 )
 
 target_include_directories(
@@ -32,6 +39,9 @@ target_include_directories(
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
         "${CMAKE_CURRENT_SOURCE_DIR}/../../"
+        ${LIBMONGOCXX_INCLUDE_DIRS}
+        ${LIBBSONCXX_INCLUDE_DIRS}
+        ${BSON_INCLUDE_DIRS}
 )
 
 install(TARGETS

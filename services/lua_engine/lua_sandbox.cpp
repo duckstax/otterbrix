@@ -3,7 +3,7 @@
 #include <api/websocket.hpp>
 #include <goblin-engineer/message.hpp>
 
-namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_vm {
+namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
 
                 constexpr const char * write = "write";
 
@@ -20,12 +20,12 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                 }
 
 
-                auto object_to_lua_table (transport::transport& object, sol::table& table) ->void {
+                auto object_to_lua_table (api::transport& object, sol::table& table) ->void {
                     switch (object.transport_->type()) {
-                        case transport::transport_type::http: {
-                            auto *http_ = static_cast<transport::http *>(object.transport_.get());
+                        case api::transport_type::http: {
+                            auto *http_ = static_cast<api::http *>(object.transport_.get());
                             table["type"] = "http";
-                            table["uri"] = http_->uri_;
+                            table["uri"] = http_->uri();
                             ///headers
                             auto range = http_->headers();
                             for(;range.first != range.second;++range.first){
@@ -33,11 +33,11 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                                 table[range.first->first]=range.first->second;
                             }
                             ///TODO Header / body not copy add method json_body_get
-                            table["body"] = http_->body_;
+                            table["body"] = http_->body();
 
                             break;
                         }
-                        case transport::transport_type::ws: {
+                        case api::transport_type::ws: {
                             table["type"] = "ws";
                             break;
                         }
@@ -46,10 +46,10 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                 }
 
 
-                auto lua_table_to_object (sol::table& table,transport::transport& object) ->void {
+                auto lua_table_to_object (sol::table& table,api::transport& object) ->void {
                     switch (object.transport_->type()) {
-                        case transport::transport_type::http: {
-                            auto *http_ = static_cast<transport::http *>(object.transport_.get());
+                        case api::transport_type::http: {
+                            auto *http_ = static_cast<api::http *>(object.transport_.get());
                             auto header =  table["header"].get<sol::table>();
                             for(auto&i:header){
                                 std::cerr<< "header_key" <<i.first.as<std::string>() << "header_value"<<i.second.as<std::string>()<<std::endl;
@@ -60,7 +60,7 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
 
                             break;
                         }
-                        case transport::transport_type::ws: {
+                        case api::transport_type::ws: {
                             table["type"] = "ws";
                             break;
                         }
@@ -107,12 +107,12 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                                 std::cerr<<"id = " <<id << "type = "<<type<<std::endl;
 
                                 if("http" == type){
-                                    auto http = transport::make_transport<transport::http>(in_put);
+                                    auto http = api::make_transport<api::http>(in_put);
                                     lua_table_to_object(response,http);
 
                                     pipe->send(goblin_engineer::message("http",write,{std::move(http)}));
                                 } else if ("ws" == type){
-                                    auto ws = transport::make_transport<transport::web_socket>(id);
+                                    auto ws = api::make_transport<api::web_socket>(id);
                                     lua_table_to_object(response,ws);
                                     pipe->send(goblin_engineer::message("ws",write,{std::move(ws)}));
                                 }
@@ -134,7 +134,7 @@ namespace RocketJoe { namespace services { namespace lua_engine { namespace lua_
                     );
                 }
 
-                auto lua_context::push_job(RocketJoe::transport::transport &&job) -> void {
+                auto lua_context::push_job(api::transport &&job) -> void {
                     device_.push(std::move(job));
                 }
 

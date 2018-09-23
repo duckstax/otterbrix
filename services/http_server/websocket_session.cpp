@@ -22,7 +22,7 @@
 #include <boost/config.hpp>
 
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             websocket_session::websocket_session(tcp::socket socket, goblin_engineer::pipe *pipe_) :
                     ws_(std::move(socket)),

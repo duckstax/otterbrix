@@ -4,7 +4,7 @@ find_package(libbsoncxx REQUIRED)
 find_package(libmongocxx REQUIRED)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/database/router.hpp
+        header/rocketjoe/services/database/database.hpp
 
 )
 

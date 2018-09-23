@@ -2,7 +2,7 @@
 
 #include <memory>
 
-namespace RocketJoe { namespace transport {
+namespace rocketjoe { namespace api {
 
 enum class transport_type : unsigned char {
     http = 0x00,
@@ -13,23 +13,21 @@ enum class transport_type : unsigned char {
 using transport_id = std::size_t ;
 
 struct transport_base {
+
     transport_base(transport_type type,transport_id);
     virtual ~transport_base() = default;
-    auto type() -> transport_type {
-        return type_;
-    }
-
-    auto id() -> transport_id {
-        return id_;
-    }
+    auto type() -> transport_type;
+    auto id() -> transport_id;
 
 protected:
     transport_type  type_;
     transport_id    id_;
+
 };
 
 
 struct transport final {
+    transport() = default;
     transport(std::shared_ptr<transport_base> ptr):transport_(std::move(ptr)){}
     ~transport() = default;
     std::shared_ptr<transport_base> transport_;

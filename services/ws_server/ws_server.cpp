@@ -6,7 +6,7 @@
 #include <goblin-engineer/message.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
             class ws_server::impl final {
             public:
@@ -38,10 +38,10 @@ namespace RocketJoe { namespace services { namespace ws_server {
                         "write",
                         [this](goblin_engineer::message&& message) -> void {
                             auto arg = message.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto t = std::move(boost::any_cast<api::transport>(arg));
                             auto*transport_tmp = t.transport_.get();
                             t.transport_.reset();
-                            std::unique_ptr<transport::web_socket> transport(static_cast<transport::web_socket*>(transport_tmp));
+                            std::unique_ptr<api::web_socket> transport(static_cast<api::web_socket*>(transport_tmp));
                             pimpl->listener_->write(std::move(transport));
                         }
                 );

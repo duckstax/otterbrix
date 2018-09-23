@@ -2,7 +2,8 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace RocketJoe { namespace services { namespace database {
+namespace rocketjoe { namespace services { namespace database {
+
 
             class database final: public goblin_engineer::abstract_service_unmanaged {
             public:
