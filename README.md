@@ -35,7 +35,7 @@ cp lua/web.lua build
 
 cd build
 
-cmake .. 
+cmake -DBUILD_LUA=false ..
 
 make rocketjoe
 

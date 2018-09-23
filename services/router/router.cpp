@@ -1,5 +1,7 @@
 #include <rocketjoe/services/router/router.hpp>
 
+#include <>
+
 #include <goblin-engineer/message.hpp>
 #include <goblin-engineer/context.hpp>
 #include <goblin-engineer/metadata.hpp>
@@ -33,7 +35,7 @@ namespace rocketjoe { namespace services { namespace router {
                 impl(const std::string& uri_mongo ){
                     uri = mongocxx::uri{uri_mongo};
                     client = mongocxx::client{uri};
-                    apps_ = client.database("applications");
+                    systems_ = client.database("systems");
                 }
 
                 mongocxx::database& apps() {
@@ -53,7 +55,8 @@ namespace rocketjoe { namespace services { namespace router {
 
             private:
                 mongocxx::instance mongo_inst;
-                mongocxx::database apps_;
+                std::
+                mongocxx::database systems_;
                 mongocxx::uri uri;
                 mongocxx::client client;
                 mongocxx::options::bulk_write bulk_opts;
