@@ -3,8 +3,7 @@ Accept: */*
 Cache-Control: no-cache
 Content-Type: application/json
 
-
-{"jsonrpc":"2.0","method":"update","params":{"table":"lab","find":{"name":"mordo"}},"id":"0","application-id":"1qaz","api-key": "1qaz"}
+{"jsonrpc":"2.0","method":"update","params":{"collection":"lab","document":{"name":"mordo"}},"id":"0","application-id":"1qaz","api-key": "1qaz"}
 ###
 
 

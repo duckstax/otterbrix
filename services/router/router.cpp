@@ -1,7 +1,5 @@
 #include <rocketjoe/services/router/router.hpp>
 
-#include <>
-
 #include <goblin-engineer/message.hpp>
 #include <goblin-engineer/context.hpp>
 #include <goblin-engineer/metadata.hpp>
@@ -21,10 +19,21 @@
 #include <mongocxx/uri.hpp>
 #include <mongocxx/cursor.hpp>
 
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_serialize.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 
 namespace rocketjoe { namespace services { namespace router {
 
-            struct task {
+            template<typename Data>
+            inline void log(Data& data){
+                std::cerr << __FILE__ << " | " << __LINE__ << " | " << data << std::endl;
+            }
+
+            using bsoncxx::builder::basic::kvp;
+
+            struct task final {
                 api::transport  transport_;
                 api::json_rpc::request_message request;
 
@@ -32,15 +41,26 @@ namespace rocketjoe { namespace services { namespace router {
 
             class router::impl final {
             public:
-                impl(const std::string& uri_mongo ){
+                explicit impl(const std::string& uri_mongo ){
                     uri = mongocxx::uri{uri_mongo};
                     client = mongocxx::client{uri};
-                    systems_ = client.database("systems");
                 }
 
-                mongocxx::database& apps() {
-                    return apps_;
+                mongocxx::database& find_and_create_database(const std::string&name) {
+
+                    auto db = database_storage.find(name);
+
+                    if( db == database_storage.end()){
+
+                        auto result  = database_storage.emplace(name,client.database(name));
+                        return result.first->second;
+                    } else {
+                        return db->second;
+                    }
+
                 }
+
+
 
 
                 ~impl() = default;
@@ -55,8 +75,7 @@ namespace rocketjoe { namespace services { namespace router {
 
             private:
                 mongocxx::instance mongo_inst;
-                std::
-                mongocxx::database systems_;
+                std::unordered_map<std::string,mongocxx::database> database_storage;
                 mongocxx::uri uri;
                 mongocxx::client client;
                 mongocxx::options::bulk_write bulk_opts;
@@ -94,7 +113,7 @@ namespace rocketjoe { namespace services { namespace router {
                                     auto* http = static_cast<api::http*>(t.transport_.get());
                                     api::json_rpc::request_message request;
                                     api::json_rpc::parse(http->body(),request);
-                                    std::cerr << __FILE__ << " | " << __LINE__ << " | " << "method : " << request.method << std::endl;
+                                    log(std::string("method : ").append(request.method ));
                                     task task_;
                                     task_.request = std::move(request);
                                     task_.transport_ = std::move(t);
@@ -114,24 +133,56 @@ namespace rocketjoe { namespace services { namespace router {
                 add(
                         "create-app",
                         [this](goblin_engineer::message &&msg) -> void {
+
                             auto arg = msg.args[0];
                             auto t = boost::any_cast<task>(arg);
                             auto table = t.request.params.at("name").get<std::string>();
-                            this->pimpl->apps().create_collection(table);
+                            this->pimpl->find_and_create_database(table);
+                            auto system = this->pimpl->find_and_create_database("applications");
+                            mongocxx::collection collection;
+                            if( !system.has_collection(table) ){
+                                collection = system.create_collection(table);
+                            } else {
+                                collection = system.collection(table);
+                            }
+
+                            auto app_id = boost::uuids::random_generator_mt19937()();
+                            auto app_key = boost::uuids::random_generator_mt19937()();
+
+                            auto app = bsoncxx::builder::basic::make_document(
+                                    kvp("name",table),
+                                    kvp("application-id",boost::uuids::to_string(app_id)),
+                                    kvp("api-key",boost::uuids::to_string(app_key))
+                            );
+
+                            auto  result = collection.insert_one(app.view());
+
+                            auto* http = new api::http(t.transport_.transport_->id());
+                            api::json_rpc::response_message responce;
+                            responce.id = t.request.id;
+                            responce.result["application-id"]  = boost::uuids::to_string(app_id);
+                            responce.result["api-key"]  = boost::uuids::to_string(app_key);
+
+
+                            http->body(api::json_rpc::serialize(responce));
+                            http->header("Content-Type","application/json");
+
+                            this->send(goblin_engineer::message("http","write",{std::move(api::transport(http))}));
+
                         }
                 );
 
                 add(
-                        "created-or-insert",
+                        "create",
                         [this](goblin_engineer::message &&msg) -> void {
 
-                            auto arg = msg.args[0];
-                            auto t = boost::any_cast<task>(arg);
-                            auto table = t.request.params.at("table").get<std::string>();
+                            /// auto arg = msg.args[0];
+                            /// auto t = boost::any_cast<task>(arg);
+                            /// auto table = t.request..at("table").get<std::string>();
 
 
 
-                            auto bulk = this->pimpl->apps().collection(table).create_bulk_write();
+                            ///auto bulk = this->pimpl->find_and_create_database().collection(table).create_bulk_write();
 //                            bsoncxx::from_json()
 
 ///                            mongocxx::model::update_one upsert_op{doc1.view(), doc2.view()};

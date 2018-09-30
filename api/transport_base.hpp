@@ -28,7 +28,8 @@ protected:
 
 struct transport final {
     transport() = default;
-    transport(std::shared_ptr<transport_base> ptr):transport_(std::move(ptr)){}
+    explicit transport(std::shared_ptr<transport_base> ptr):transport_(std::move(ptr)){}
+    explicit transport(transport_base* ptr):transport_(ptr){}
     ~transport() = default;
     std::shared_ptr<transport_base> transport_;
 };

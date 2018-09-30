@@ -179,6 +179,9 @@ namespace rocketjoe { namespace services { namespace http_server {
                 auto*http = static_cast<api::http*>(ptr.release());
                 http::response<http::string_body > res{http::status::ok, 11};
                 res.body()=http->body();
+                for(auto&&i:(*http)){
+                    res.set(i.first,i.second);
+                }
                 queue_(std::move(res));
             }
 

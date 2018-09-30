@@ -2,11 +2,8 @@ POST http://127.0.0.1:9998/cube
 Accept: */*
 Cache-Control: no-cache
 Content-Type: application/json
-Content-Type: application/json
-X-Application-Id: APPLICATION_ID
-X-API-Key: API_KEY
 
-{"jsonrpc":"2.0","method":"find","params":{"table":"lab","find":{"name":"mordo"}},"id":"0"}
+{"jsonrpc":"2.0","method":"find","params":{"collection":"lab","find":{"name":"mordo"}},"id":"0","application-id":"1qaz","api-key": "1qaz"}
 ###
 
 

@@ -1,4 +1,6 @@
 #include <rocketjoe/api/transport_base.hpp>
+#include "transport_base.hpp"
+
 
 namespace rocketjoe { namespace api {
 

@@ -49,6 +49,18 @@ namespace rocketjoe { namespace api {
             return status_code;
         }
 
+        void http::header(const char *key, const char *value) {
+            headers_.emplace(key, value);
+        }
+
+        auto http::begin() -> http::header_iterator {
+            return headers_.begin();
+        }
+
+        auto http::end() -> http::header_iterator {
+            return headers_.end();
+        }
+
         http::~http() = default;
 
     }

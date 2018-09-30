@@ -22,12 +22,14 @@ namespace rocketjoe { namespace api {
         public:
             using header_storage = std::unordered_map<std::string, std::string>;
             using header_const_iterator = typename  header_storage::const_iterator;
+            using header_iterator = typename  header_storage::iterator;
 
             http(transport_id);
             ~http() override;
             ///header
+            void header(const char*key,const char* value);
             void header(std::string&&,std::string&&);
-            std::pair<header_const_iterator,header_const_iterator> headers() const;
+            auto headers() const -> std::pair<header_const_iterator,header_const_iterator>;
             ///header
             ///url
             void uri(const std::string&);
@@ -45,6 +47,9 @@ namespace rocketjoe { namespace api {
             void status(unsigned code);
             unsigned status() const;
             ///status code
+
+            auto begin() -> header_iterator;
+            auto end() -> header_iterator;
 
         private:
             unsigned status_code;
