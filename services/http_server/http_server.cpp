@@ -47,6 +47,18 @@ namespace rocketjoe { namespace services { namespace http_server {
                         }
                 );
 
+
+                add(
+                        "add_trusted_url",
+                        [this](goblin_engineer::message&& message) -> void {
+
+                            auto arg = message.args[0];
+                            auto app_name = boost::any_cast<std::string>(arg);
+
+                            pimpl->listener_->add_trusted_url(app_name);
+                        }
+                );
+
             }
 
             http_server::~http_server() {

@@ -18,6 +18,7 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
 #include <mongocxx/cursor.hpp>
+#include <mongocxx/bulk_write.hpp>
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_serialize.hpp>
@@ -41,7 +42,20 @@ namespace rocketjoe { namespace services { namespace router {
 
             class router::impl final {
             public:
-                explicit impl(const std::string& uri_mongo ){
+                impl() = delete;
+
+                impl &operator=(impl &&) = default;
+
+                impl(impl &&) = default;
+
+                impl &operator=(const impl &) = default;
+
+                impl(const impl &) = default;
+
+                ~impl() = default;
+
+                impl(const std::string& uri_mongo,const std::string& mongo_root_db ){
+                    root_systems_db = mongo_root_db;
                     uri = mongocxx::uri{uri_mongo};
                     client = mongocxx::client{uri};
                 }
@@ -60,18 +74,26 @@ namespace rocketjoe { namespace services { namespace router {
 
                 }
 
+                mongocxx::collection find_and_create_collection(const std::string&db_name,const std::string&collection) {
+
+                    auto& db = find_and_create_database(db_name);
+
+                    if( !db.has_collection(collection) ){
+                        return  db.create_collection(collection);
+                    } else {
+                        return  db.collection(collection);
+                    }
+
+                }
+
+                mongocxx::database& system_database() {
+                    return find_and_create_database(root_systems_db);
+                }
 
 
-
-                ~impl() = default;
-
-                impl &operator=(impl &&) = default;
-
-                impl(impl &&) = default;
-
-                impl &operator=(const impl &) = default;
-
-                impl(const impl &) = default;
+                mongocxx::collection system_collection(const std::string&collection) {
+                    return find_and_create_collection(root_systems_db,collection);
+                }
 
             private:
                 mongocxx::instance mongo_inst;
@@ -79,6 +101,8 @@ namespace rocketjoe { namespace services { namespace router {
                 mongocxx::uri uri;
                 mongocxx::client client;
                 mongocxx::options::bulk_write bulk_opts;
+                ///std::string app_name_collections = "applications";
+                std::string root_systems_db;
 
             };
 
@@ -99,8 +123,10 @@ namespace rocketjoe { namespace services { namespace router {
             }
 
             router::router(goblin_engineer::context_t *ctx)  {
+
                 auto mongo_uri = ctx->config().as_object()["mongo-uri"].as_string();
-                pimpl = std::make_unique<impl>(mongo_uri);
+                auto mongo_root_db = ctx->config().as_object()["mongo-root-db"].as_string();
+                pimpl = std::make_unique<impl>(mongo_uri,mongo_root_db);
 
                 add(
                         "dispatcher",
@@ -136,38 +162,41 @@ namespace rocketjoe { namespace services { namespace router {
 
                             auto arg = msg.args[0];
                             auto t = boost::any_cast<task>(arg);
-                            auto table = t.request.params.at("name").get<std::string>();
-                            this->pimpl->find_and_create_database(table);
-                            auto system = this->pimpl->find_and_create_database("applications");
-                            mongocxx::collection collection;
-                            if( !system.has_collection(table) ){
-                                collection = system.create_collection(table);
-                            } else {
-                                collection = system.collection(table);
-                            }
+                            auto app_name = t.request.params.at("name").get<std::string>();
+
+                            mongocxx::collection collection = this->pimpl->system_collection("applications");
 
                             auto app_id = boost::uuids::random_generator_mt19937()();
                             auto app_key = boost::uuids::random_generator_mt19937()();
 
                             auto app = bsoncxx::builder::basic::make_document(
-                                    kvp("name",table),
+                                    kvp("name",app_name),
                                     kvp("application-id",boost::uuids::to_string(app_id)),
                                     kvp("api-key",boost::uuids::to_string(app_key))
                             );
 
-                            auto  result = collection.insert_one(app.view());
+                            auto filter = bsoncxx::builder::basic::make_document(
+                                    kvp("name",app_name)
+                            );
+
+                            mongocxx::options::update options;
+
+                            options.upsert(true);
+
+                            auto  result = collection.replace_one(filter.view(),app.view(),options);
 
                             auto* http = new api::http(t.transport_.transport_->id());
-                            api::json_rpc::response_message responce;
-                            responce.id = t.request.id;
-                            responce.result["application-id"]  = boost::uuids::to_string(app_id);
-                            responce.result["api-key"]  = boost::uuids::to_string(app_key);
 
+                            api::json_rpc::response_message response;
+                            response.id = t.request.id;
+                            response.result["application-id"]  = boost::uuids::to_string(app_id);
+                            response.result["api-key"]  = boost::uuids::to_string(app_key);
 
-                            http->body(api::json_rpc::serialize(responce));
+                            http->body(api::json_rpc::serialize(response));
                             http->header("Content-Type","application/json");
 
-                            this->send(goblin_engineer::message("http","write",{std::move(api::transport(http))}));
+                            send(goblin_engineer::message("http","add_trusted_url",{std::move(app_name)}));
+                            send(goblin_engineer::message("http","write",{api::transport(http)}));
 
                         }
                 );
@@ -175,7 +204,7 @@ namespace rocketjoe { namespace services { namespace router {
                 add(
                         "create",
                         [this](goblin_engineer::message &&msg) -> void {
-
+                            std::cerr << "create" <<std::endl;
                             /// auto arg = msg.args[0];
                             /// auto t = boost::any_cast<task>(arg);
                             /// auto table = t.request..at("table").get<std::string>();

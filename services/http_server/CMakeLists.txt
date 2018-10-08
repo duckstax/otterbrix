@@ -1,6 +1,7 @@
 set(CURRENT_TARGET http_server)
 
 list(APPEND CURRENT_TARGET_HEADERS
+        header/rocketjoe/services/http_server/http_context.hpp
         header/rocketjoe/services/http_server/http_server.hpp
         header/rocketjoe/services/http_server/http_session.hpp
         header/rocketjoe/services/http_server/websocket_session.hpp

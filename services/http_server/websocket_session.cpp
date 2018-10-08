@@ -24,11 +24,11 @@
 
 namespace rocketjoe { namespace services { namespace http_server {
 
-            websocket_session::websocket_session(tcp::socket socket, goblin_engineer::pipe *pipe_) :
+            websocket_session::websocket_session(tcp::socket socket, http_context& context) :
                     ws_(std::move(socket)),
                     strand_(ws_.get_executor()),
                     timer_(ws_.get_executor().context(), (std::chrono::steady_clock::time_point::max) ()),
-                    pipe_(pipe_){
+                    context(context){
             }
 
             void websocket_session::on_accept(boost::system::error_code ec) {

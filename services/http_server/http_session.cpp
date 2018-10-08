@@ -14,7 +14,7 @@ namespace rocketjoe { namespace services { namespace http_server {
             void handle_request(
                     http::request<Body, http::basic_fields<Allocator>>&& req,
                     api::transport_id id,
-                    goblin_engineer::abstract_service::pipe* pipe_
+                    http_context& context
             ) {
 
                 auto http_transport_ = std::make_shared<api::http>(id);
@@ -36,26 +36,27 @@ namespace rocketjoe { namespace services { namespace http_server {
 
 
                 if(req.target() == "/system"){
-                    pipe_->send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
+                    context.send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
                     return;
                 }
 
 
-                if(req.target() == "/system"){
-                    pipe_->send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
+
+                if(context.check_url(std::string(req.target()))){
+                    context.send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
                     return;
                 }
 
-                pipe_->send(goblin_engineer::message(router,dispatcher,{std::move(http_data)}));
+                context.send(goblin_engineer::message(router,dispatcher,{std::move(http_data)}));
 
             }
 
-            http_session::http_session(tcp::socket socket,api::transport_id id, goblin_engineer::pipe *pipe_) :
+            http_session::http_session(tcp::socket socket,api::transport_id id, http_context& context) :
                     socket_(std::move(socket)),
                     strand_(socket_.get_executor()),
                     timer_(socket_.get_executor().context(),(std::chrono::steady_clock::time_point::max) ()),
                     queue_(*this),
-                    pipe_(pipe_),
+                    context(context),
                     id(id){
             }
 
@@ -115,12 +116,12 @@ namespace rocketjoe { namespace services { namespace http_server {
                 // See if it is a WebSocket Upgrade
                 if (websocket::is_upgrade(req_)) {
                     // Create a WebSocket websocket_session by transferring the socket
-                    std::make_shared<websocket_session>(std::move(socket_),pipe_)->do_accept(std::move(req_));
+                    std::make_shared<websocket_session>(std::move(socket_),context)->do_accept(std::move(req_));
                     return;
                 }
 
                 // Send the response
-                handle_request(std::move(req_),id,pipe_);
+                handle_request(std::move(req_),id,context);
 
                 // If we aren't at the queue limit, try to pipeline another request
                 if (!queue_.is_full()) {

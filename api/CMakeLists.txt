@@ -28,9 +28,9 @@ add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
-target_link_libraries(
-        rocketjoe_${CURRENT_TARGET}
-)
+#target_link_libraries(
+#        rocketjoe_${CURRENT_TARGET}
+#)
 
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/header" "${CMAKE_CURRENT_SOURCE_DIR}/../../")
 

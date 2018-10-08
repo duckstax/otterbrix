@@ -1,10 +1,9 @@
 #pragma once
 
-#include <goblin-engineer/abstract_service.hpp>
-
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
+#include <rocketjoe/services/http_server/http_context.hpp>
 
 namespace rocketjoe { namespace services { namespace http_server {
 
@@ -16,16 +15,16 @@ namespace rocketjoe { namespace services { namespace http_server {
             void fail(boost::system::error_code ec, char const* what);
 
 
-            class websocket_session : public std::enable_shared_from_this<websocket_session> {
+            class websocket_session final : public std::enable_shared_from_this<websocket_session> {
                 websocket::stream<tcp::socket> ws_;
                 boost::asio::strand<boost::asio::io_context::executor_type> strand_;
                 boost::asio::steady_timer timer_;
                 boost::beast::multi_buffer buffer_;
                 char ping_state_ = 0;
-                goblin_engineer::pipe* pipe_;
+                http_context& context;
 
             public:
-                websocket_session(tcp::socket socket, goblin_engineer::pipe* pipe_);
+                websocket_session(tcp::socket, http_context&);
 
                 // Start the asynchronous operation
                 template<class Body, class Allocator>
