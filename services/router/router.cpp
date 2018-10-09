@@ -95,9 +95,14 @@ namespace rocketjoe { namespace services { namespace router {
                     return find_and_create_collection(root_systems_db,collection);
                 }
 
+
+                /// application-id -> database name;
+                std::unordered_map<std::string,std::string>resolver;
+
             private:
                 mongocxx::instance mongo_inst;
                 std::unordered_map<std::string,mongocxx::database> database_storage;
+
                 mongocxx::uri uri;
                 mongocxx::client client;
                 mongocxx::options::bulk_write bulk_opts;
@@ -164,7 +169,7 @@ namespace rocketjoe { namespace services { namespace router {
                             auto t = boost::any_cast<task>(arg);
                             auto app_name = t.request.params.at("name").get<std::string>();
 
-                            mongocxx::collection collection = this->pimpl->system_collection("applications");
+                            mongocxx::collection collection = pimpl->system_collection("applications");
 
                             auto app_id = boost::uuids::random_generator_mt19937()();
                             auto app_key = boost::uuids::random_generator_mt19937()();
@@ -195,6 +200,8 @@ namespace rocketjoe { namespace services { namespace router {
                             http->body(api::json_rpc::serialize(response));
                             http->header("Content-Type","application/json");
 
+                            pimpl->resolver.emplace(boost::uuids::to_string(app_id),app_name);
+
                             send(goblin_engineer::message("http","add_trusted_url",{std::move(app_name)}));
                             send(goblin_engineer::message("http","write",{api::transport(http)}));
 
@@ -204,36 +211,93 @@ namespace rocketjoe { namespace services { namespace router {
                 add(
                         "create",
                         [this](goblin_engineer::message &&msg) -> void {
-                            std::cerr << "create" <<std::endl;
-                            /// auto arg = msg.args[0];
-                            /// auto t = boost::any_cast<task>(arg);
-                            /// auto table = t.request..at("table").get<std::string>();
+                            log("method : create start");
+
+                            auto arg = msg.args[0];
+                            auto t = boost::any_cast<task>(arg);
+
+                            auto& db_name = pimpl->resolver.at(t.request.application_id);
+                            auto collection_name = t.request.params["collection"].get<std::string>();
+                            auto document_json = t.request.params["document"].dump();
 
 
+                            auto collection = pimpl->find_and_create_collection(db_name,collection_name);
+                            auto document = bsoncxx::from_json(document_json);
+                            collection.insert_one(document.view());
 
-                            ///auto bulk = this->pimpl->find_and_create_database().collection(table).create_bulk_write();
-//                            bsoncxx::from_json()
+                            auto* http = new api::http(t.transport_.transport_->id());
 
-///                            mongocxx::model::update_one upsert_op{doc1.view(), doc2.view()};
+                            api::json_rpc::response_message response;
+                            response.id = t.request.id;
+                            http->body(api::json_rpc::serialize(response));
+                            http->header("Content-Type","application/json");
 
-                            // Set upsert to true: if no document matches {"a": 1}, insert {"a": 2}.
-///                            upsert_op.upsert(true);
-
-///                            bulk.append(upsert_op);
-
-
-///                            auto result = bulk.execute();
-
-
+                            send(goblin_engineer::message("http","write",{api::transport(http)}));
+                            log("method : create finish");
                         }
                 );
+
+
 
                 add(
-                        "find",
+                        "delete",
                         [this](goblin_engineer::message &&msg) -> void {
+                            log("method : delete start");
 
+                            auto arg = msg.args[0];
+                            auto t = boost::any_cast<task>(arg);
+
+                            auto& db_name = pimpl->resolver.at(t.request.application_id);
+                            auto collection_name = t.request.params["collection"].get<std::string>();
+                            auto document_json = t.request.params["document"].dump();
+
+                            auto collection = pimpl->find_and_create_collection(db_name,collection_name);
+                            auto document = bsoncxx::from_json(document_json);
+                            collection.insert_one(document.view());
+
+                            auto* http = new api::http(t.transport_.transport_->id());
+
+                            api::json_rpc::response_message response;
+                            response.id = t.request.id;
+                            http->body(api::json_rpc::serialize(response));
+                            http->header("Content-Type","application/json");
+
+                            send(goblin_engineer::message("http","write",{api::transport(http)}));
+                            log("method : delete finish");
                         }
                 );
+
+
+                add(
+                        "update",
+                        [this](goblin_engineer::message &&msg) -> void {
+                            log("method : update start");
+
+                            auto arg = msg.args[0];
+                            auto t = boost::any_cast<task>(arg);
+
+                            auto& db_name = pimpl->resolver.at(t.request.application_id);
+                            auto collection_name = t.request.params["collection"].get<std::string>();
+                            auto document_json = t.request.params["document"].dump();
+
+
+                            auto collection = pimpl->find_and_create_collection(db_name,collection_name);
+                            auto document = bsoncxx::from_json(document_json);
+                            collection.insert_one(document.view());
+
+                            auto* http = new api::http(t.transport_.transport_->id());
+
+                            api::json_rpc::response_message response;
+                            response.id = t.request.id;
+                            http->body(api::json_rpc::serialize(response));
+                            http->header("Content-Type","application/json");
+
+                            send(goblin_engineer::message("http","write",{api::transport(http)}));
+                            log("method : update finish");
+                        }
+                );
+
+
 
 
             }

@@ -6,6 +6,7 @@ find_package(libmongocxx REQUIRED)
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/router/router.hpp
+        header/rocketjoe/services/router/object_storage.hpp
 
 )
 

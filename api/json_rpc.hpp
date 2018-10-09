@@ -56,6 +56,8 @@ namespace rocketjoe { namespace api { namespace json_rpc {
                 json id;
                 std::string method;
                 json params;
+                std::string application_id;
+                std::string api_key;
             };
 
 
@@ -109,7 +111,7 @@ namespace rocketjoe { namespace api { namespace json_rpc {
                         std::string id,
                         std::string method,
                         json params) {
-                    assert(type_!=type::non);
+                    assert( type_ != type::non );
                     type_ = type::request;
                     this->id = std::move(id);
                     method_ = std::move(method);
@@ -117,7 +119,7 @@ namespace rocketjoe { namespace api { namespace json_rpc {
                 }
 
                 void make_request(uint64_t id, std::string method, json params = json()) {
-                    assert(type_!=type::non);
+                    assert( type_ != type::non );
                     type_ = type::request;
                     this->id = id;
                     method_ = std::move(method);
@@ -170,121 +172,18 @@ namespace rocketjoe { namespace api { namespace json_rpc {
 
             ///Experimental }
 
-            bool contains(const json &msg, const std::string &key) {
-                return msg.find(key) != msg.end();
-            }
+            bool parse(const std::string &raw, request_message &request);
 
-            bool is_notify(const json &msg) {
-                return msg.is_object() && !contains(msg, "id");
-            }
+            bool parse(const json &message, notify_message &notify);
 
-            bool is_request(const json &msg) {
-                return msg.is_object() && contains(msg,"method") && msg.at("method").is_string();
-            }
+            bool parse(const json &message, response_message &response);
 
-            bool is_response(const json &msg) {
-                return msg.is_object() && !contains(msg, "method") && contains(msg, "id");
-            }
+            std::string serialize(const request_message &msg);
 
-            bool parse(const std::string &raw, request_message &request) {
+            std::string serialize(const response_message &msg);
 
-                auto message = json::parse(raw);
-
-                if (!is_request(message)) {
-                    return false;
-                }
-
-                request.id = message.at("id");
-
-                request.method = message.at("method").get<std::string>();
-
-                if (contains(message, "param")) {
-                    request.params = message["param"];
-                } else {
-                    request.params = message["params"];
-                }
-
-                return true;
-
-            }
-
-            bool parse(const json &message, notify_message &notify) {
-
-                if (!is_notify(message)) {
-                    return false;
-                }
-
-                notify.method = message.at("method").get<std::string>();
-
-                if (contains(message, "param")) {
-                    notify.params = message.at("param");
-                } else {
-                    notify.params = message.at("params");
-                }
-
-                return true;
-            }
-
-            bool parse(const json &message, response_message &response) {
-
-                if (!is_response(message)) {
-                    return false;
-                }
-
-                response.id = message.at("id");
-                response.result = message.at("result");
-
-                return true;
-            }
-
-            std::string serialize(const request_message &msg) {
-                json obj;
-                obj["jsonrpc"] = json("2.0");
-
-                obj["method"] = json(msg.method);
-
-                if (!msg.params.is_null()) {
-                    obj["params"] = msg.params;
-                }
-
-                obj["id"] = msg.id;
-
-                return json(obj).dump();
-            }
-
-            std::string serialize(const response_message &msg) {
-                json obj;
-                obj["jsonrpc"] = json("2.0");
-
-                obj["result"] = msg.result;
-
-                if (msg.error) {
-                    json error = {
-                            {"code", json(uint64_t(msg.error->code))},
-                            {"message", json(msg.error->message)},
-                            {"data", json(msg.error->data)}
-                    };
-                    obj["error"] = json(error);
-                }
-
-                obj["id"] = msg.id;
-
-                return json(obj).dump();
-            }
-
-            std::string serialize(const notify_message &msg) {
-                json obj;
-                obj["jsonrpc"] = json("2.0");
-
-                obj["method"] = json(msg.method);
-
-                if (!msg.params.is_null()) {
-                    obj["params"] = msg.params;
-                }
-
-                return json(obj).dump();
-            }
-
+            std::string serialize(const notify_message &msg);
+/*
             namespace request {
                 std::string serialize(const json &id, const std::string &medhod,
                                       const json &param = json()) {
@@ -360,8 +259,6 @@ namespace rocketjoe { namespace api { namespace json_rpc {
                 }
 
             }
+*/
 
-
-        }
-    }
-}
+}}}
