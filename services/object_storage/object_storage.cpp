@@ -1,4 +1,4 @@
-#include <rocketjoe/services/router/router.hpp>
+#include <rocketjoe/services/object_storage/object_storage.hpp>
 
 #include <goblin-engineer/message.hpp>
 #include <goblin-engineer/context.hpp>
@@ -25,7 +25,7 @@
 #include <boost/uuid/uuid_io.hpp>
 
 
-namespace rocketjoe { namespace services { namespace router {
+namespace rocketjoe { namespace services { namespace object_storage {
 
             template<typename Data>
             inline void log(Data& data){
@@ -40,7 +40,7 @@ namespace rocketjoe { namespace services { namespace router {
 
             };
 
-            class router::impl final {
+            class object_storage::impl final {
             public:
                 impl() = delete;
 
@@ -111,23 +111,23 @@ namespace rocketjoe { namespace services { namespace router {
 
             };
 
-            void router::shutdown() {
+            void object_storage::shutdown() {
 
             }
 
-            void router::startup(goblin_engineer::context_t *ctx) {
+            void object_storage::startup(goblin_engineer::context_t *ctx) {
 
             }
 
-            std::string router::name() const {
-                return "router";
+            std::string object_storage::name() const {
+                return "object_storage_w";
             }
 
-            void router::metadata(goblin_engineer::metadata_service *metadata) const {
-                metadata->name = "router";
+            void object_storage::metadata(goblin_engineer::metadata_service *metadata) const {
+                metadata->name = "object_storage_w";
             }
 
-            router::router(goblin_engineer::context_t *ctx)  {
+            object_storage::object_storage(goblin_engineer::context_t *ctx)  {
 
                 auto mongo_uri = ctx->config().as_object()["mongo-uri"].as_string();
                 auto mongo_root_db = ctx->config().as_object()["mongo-root-db"].as_string();
@@ -148,7 +148,7 @@ namespace rocketjoe { namespace services { namespace router {
                                     task task_;
                                     task_.request = std::move(request);
                                     task_.transport_ = std::move(t);
-                                    send(goblin_engineer::message("router",request.method,{std::move(task_)}));
+                                    send(goblin_engineer::message("object_storage_w",request.method,{std::move(task_)}));
                                     return;
                                 }
 
@@ -302,7 +302,7 @@ namespace rocketjoe { namespace services { namespace router {
 
             }
 
-            router::~router() = default;
+            object_storage::~object_storage() = default;
 
 
         }

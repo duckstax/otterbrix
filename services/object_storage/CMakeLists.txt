@@ -5,13 +5,13 @@ find_package(libmongocxx REQUIRED)
 
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-        header/rocketjoe/services/router/object_storage.hpp
+        header/rocketjoe/services/object_storage/object_storage.hpp
+        header/rocketjoe/services/object_storage/object_storage_w.hpp
 
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        router.cpp
+        object_storage.cpp
 )
 
 

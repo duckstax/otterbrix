@@ -10,7 +10,7 @@
 #include <rocketjoe/services/ws_server/ws_server.hpp>
 #include <rocketjoe/services/http_server/http_server.hpp>
 #include <rocketjoe/services/database/database.hpp>
-#include <rocketjoe/services/router/router.hpp>
+#include <rocketjoe/services/object_storage/object_storage.hpp>
 
 #include <yaml-cpp/yaml.h>
 
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 
     auto& database = env.add_service<rocketjoe::services::database::database>();
 
-    auto& router = env.add_service<rocketjoe::services::router::router>();
+    auto& router = env.add_service<rocketjoe::services::object_storage::object_storage>();
 
     auto &http = env.add_service<rocketjoe::services::http_server::http_server>();
 

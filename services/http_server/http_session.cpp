@@ -36,14 +36,14 @@ namespace rocketjoe { namespace services { namespace http_server {
 
 
                 if(req.target() == "/system"){
-                    context.send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
+                    context.send(goblin_engineer::message("object_storage",dispatcher,{std::move(http_data)}));
                     return;
                 }
 
 
 
                 if(context.check_url(std::string(req.target()))){
-                    context.send(goblin_engineer::message("router",dispatcher,{std::move(http_data)}));
+                    context.send(goblin_engineer::message("object_storage",dispatcher,{std::move(http_data)}));
                     return;
                 }
 

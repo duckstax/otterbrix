@@ -2,13 +2,13 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace rocketjoe { namespace services { namespace router {
+namespace rocketjoe { namespace services { namespace object_storage {
 
-            class router final: public goblin_engineer::abstract_service_unmanaged {
+            class object_storage final: public goblin_engineer::abstract_service_unmanaged {
             public:
-                router(goblin_engineer::context_t *ctx);
+                object_storage(goblin_engineer::context_t *ctx);
 
-                ~router();
+                ~object_storage();
 
                 auto  metadata(goblin_engineer::metadata_service*) const -> void override;
 
