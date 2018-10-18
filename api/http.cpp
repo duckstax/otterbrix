@@ -2,8 +2,7 @@
 #include "http.hpp"
 
 
-namespace RocketJoe {
-    namespace transport {
+namespace rocketjoe { namespace api {
 
 
         http::http(transport_id id) : transport_base(transport_type::http, id) {
@@ -48,6 +47,18 @@ namespace RocketJoe {
 
         unsigned http::status() const {
             return status_code;
+        }
+
+        void http::header(const char *key, const char *value) {
+            headers_.emplace(key, value);
+        }
+
+        auto http::begin() -> http::header_iterator {
+            return headers_.begin();
+        }
+
+        auto http::end() -> http::header_iterator {
+            return headers_.end();
         }
 
         http::~http() = default;

@@ -2,7 +2,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace RocketJoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
             class lua_engine final: public goblin_engineer::abstract_service_unmanaged {
             public:

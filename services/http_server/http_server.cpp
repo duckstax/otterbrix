@@ -5,7 +5,7 @@
 #include <rocketjoe/services/http_server/listener.hpp>
 
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             class http_server::impl final {
             public:
@@ -25,23 +25,37 @@ namespace RocketJoe { namespace services { namespace http_server {
 
             };
 
-            http_server::http_server(goblin_engineer::context_t *ctx) : pimpl(new impl) {
-                auto const address = boost::asio::ip::make_address("127.0.0.1");
+            http_server::http_server(goblin_engineer::context_t *ctx) : pimpl(std::make_unique<impl>()) {
+                auto& config = ctx->config();
 
-                auto string_port = ctx->config().as_object()["default"].as_object()["http_port"].as_string();
+                boost::asio::ip::address address =  boost::asio::ip::make_address(config.as_object()["address"].as_string());
+                auto string_port = config.as_object()["http-port"].as_string();
                 auto tmp_port = std::stoul(string_port);
                 auto port = static_cast<unsigned short>(tmp_port);
+
                 pimpl->listener_ = std::make_shared<listener>(ctx->main_loop(), tcp::endpoint{address, port},to_pipe());
 
                 add(
                         "write",
                         [this](goblin_engineer::message&& message) -> void {
                             auto arg = message.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto t = boost::any_cast<api::transport>(arg);
                             auto*transport_tmp = t.transport_.get();
                             t.transport_.reset();
-                            std::unique_ptr<transport::http> transport(static_cast<transport::http*>(transport_tmp));
+                            std::unique_ptr<api::http> transport(static_cast<api::http*>(transport_tmp));
                             pimpl->listener_->write(std::move(transport));
+                        }
+                );
+
+
+                add(
+                        "add_trusted_url",
+                        [this](goblin_engineer::message&& message) -> void {
+
+                            auto arg = message.args[0];
+                            auto app_name = boost::any_cast<std::string>(arg);
+
+                            pimpl->listener_->add_trusted_url(app_name);
                         }
                 );
 

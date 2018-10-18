@@ -1,0 +1,8 @@
+POST http://127.0.0.1:9998/cube
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"jsonrpc":"2.0","method":"create","params":{"collection":"lab","document":{"name":"mordo"}},"id":"0","application-id":"986f4baf-6123-478f-9a7f-a10c873ad585","api-key": "a02e714d-1d28-4c39-b4ec-bc8d1f2bcde4"}
+
+###

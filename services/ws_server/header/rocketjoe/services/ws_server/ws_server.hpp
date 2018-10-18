@@ -2,9 +2,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace RocketJoe {
-    namespace services {
-        namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
             class ws_server final: public goblin_engineer::abstract_service_unmanaged {
             public:

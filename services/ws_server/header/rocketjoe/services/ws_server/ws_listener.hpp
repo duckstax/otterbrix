@@ -19,7 +19,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
             using tcp = boost::asio::ip::tcp;
             namespace http = boost::beast::http;
@@ -35,7 +35,7 @@ namespace RocketJoe { namespace services { namespace ws_server {
                         goblin_engineer::pipe* pipe_
                 );
 
-                void write(std::unique_ptr<transport::web_socket>);
+                void write(std::unique_ptr<api::web_socket>);
 
                 void run();
 
@@ -48,7 +48,7 @@ namespace RocketJoe { namespace services { namespace ws_server {
                 tcp::acceptor acceptor_;
                 tcp::socket socket_;
                 goblin_engineer::pipe* pipe_;
-                std::unordered_map<transport::transport_id,std::shared_ptr<ws_session>> storage_sessions;
+                std::unordered_map<api::transport_id,std::shared_ptr<ws_session>> storage_sessions;
             };
 
 

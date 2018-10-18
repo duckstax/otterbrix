@@ -1,7 +1,7 @@
 #include <rocketjoe/services/ws_server/ws_session.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
     constexpr const  char* dispatcher = "dispatcher";
 
@@ -29,10 +29,10 @@ namespace RocketJoe { namespace services { namespace ws_server {
                     fail(ec, "read");
                 }
 
-                auto ws = std::make_shared<transport::web_socket>(id_);
+                auto ws = std::make_shared<api::web_socket>(id_);
                 ws->body = boost::beast::buffers_to_string(buffer_.data());
-                transport::transport ws_data(std::move(ws));
-                pipe_->send(goblin_engineer::message("router",dispatcher,{ws_data}));
+                api::transport ws_data(std::move(ws));
+                pipe_->send(goblin_engineer::message("object_storage_implement",dispatcher,{std::move(ws_data)}));
                 ws_.text(ws_.got_text());
                 ws_.async_write(
                         buffer_.data(),
@@ -95,7 +95,7 @@ namespace RocketJoe { namespace services { namespace ws_server {
                 setup_stream(ws_);
             }
 
-            void ws_session::write(std::unique_ptr<transport::transport_base>) {
+            void ws_session::write(std::unique_ptr<api::transport_base>) {
 
             }
 

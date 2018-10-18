@@ -1,19 +1,17 @@
-set(CURRENT_TARGET http_server)
+set(CURRENT_TARGET object_storage)
+
+find_package(libbsoncxx REQUIRED)
+find_package(libmongocxx REQUIRED)
+
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/http_server/http_context.hpp
-        header/rocketjoe/services/http_server/http_server.hpp
-        header/rocketjoe/services/http_server/http_session.hpp
-        header/rocketjoe/services/http_server/websocket_session.hpp
-        header/rocketjoe/services/http_server/listener.hpp
+        header/rocketjoe/services/object_storage/object_storage.hpp
+        header/rocketjoe/services/object_storage/object_storage_implement.hpp
 
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        http_session.cpp
-        listener.cpp
-        http_server.cpp
-        websocket_session.cpp
+        object_storage.cpp
 )
 
 
@@ -24,14 +22,17 @@ add_library(rocketjoe_${CURRENT_TARGET} STATIC
 
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
-
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
-        ${CMAKE_THREAD_LIBS_INIT}
         rocketjoe::api
         goblin-engineer
+
+        ${LIBBSONCXX_LIBRARIES}
+        ${LIBMONGOCXX_LIBRARIES}
+        ${BSON_LIBRARIES}
+
 )
 
 target_include_directories(
@@ -39,6 +40,9 @@ target_include_directories(
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
         "${CMAKE_CURRENT_SOURCE_DIR}/../../"
+        ${LIBMONGOCXX_INCLUDE_DIRS}
+        ${LIBBSONCXX_INCLUDE_DIRS}
+        ${BSON_INCLUDE_DIRS}
 )
 
 install(TARGETS

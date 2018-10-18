@@ -1,6 +1,10 @@
 #include <rocketjoe/services/http_server/listener.hpp>
 
-namespace RocketJoe { namespace services { namespace http_server {
+#include <chrono>
+
+namespace rocketjoe { namespace services { namespace http_server {
+
+            using clock = std::chrono::steady_clock;
 
             listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, goblin_engineer::pipe *pipe_) :
                     acceptor_(ioc),
@@ -58,9 +62,9 @@ namespace RocketJoe { namespace services { namespace http_server {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    transport::transport_id id_= static_cast<transport::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
-                    auto session = std::make_shared<http_session>(std::move(socket_),id_,pipe_);
-                    storage_session.emplace(id_,std::move(session));
+                    api::transport_id id_ = static_cast<api::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
+                    auto session = std::make_shared<http_session>(std::move(socket_), id_, *this);
+                    storage_session.emplace(id_, std::move(session));
                     storage_session.at(id_)->run();
                 }
 
@@ -68,11 +72,28 @@ namespace RocketJoe { namespace services { namespace http_server {
                 do_accept();
             }
 
-            void listener::write(std::unique_ptr<transport::transport_base> ptr) {
-                std::cerr << "id = " << ptr->id() <<std::endl;
+            void listener::write(std::unique_ptr<api::transport_base> ptr) {
+                std::cerr << "id = " << ptr->id() << std::endl;
 
-                auto& session = storage_session.at(ptr->id());
+                auto &session = storage_session.at(ptr->id());
 
                 session->write(std::move(ptr));
             }
-        }}}
+
+            void listener::add_trusted_url(std::string name) {
+                trusted_url.emplace(std::move(name));
+            }
+
+            auto listener::check_url(const std::string &url) const -> bool {
+                ///TODO: not fast
+                auto start = url.begin();
+                ++start;
+                return (trusted_url.find(std::string(start,url.end()))!=trusted_url.end());
+            }
+
+            auto listener::send(goblin_engineer::message &&msg) const -> bool {
+                return pipe_->send(std::move(msg));
+            }
+        }
+    }
+}

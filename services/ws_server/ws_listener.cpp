@@ -1,7 +1,7 @@
 #include <rocketjoe/services/ws_server/ws_listener.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
             ws_listener::ws_listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, goblin_engineer::pipe *pipe_) :
                     strand_(ioc.get_executor()),
@@ -60,7 +60,7 @@ namespace RocketJoe { namespace services { namespace ws_server {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    transport::transport_id id_= static_cast<transport::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
+                    api::transport_id id_= static_cast<api::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
                     auto session = std::make_shared<ws_session>(std::move(socket_),id_,pipe_);
                     storage_sessions.emplace(id_,std::move(session));
                     storage_sessions.at(id_)->run();
@@ -70,7 +70,7 @@ namespace RocketJoe { namespace services { namespace ws_server {
                 do_accept();
             }
 
-            void ws_listener::write(std::unique_ptr<transport::web_socket>ptr) {
+            void ws_listener::write(std::unique_ptr<api::web_socket>ptr) {
                 storage_sessions.at(ptr->id())->write(std::move(ptr));
             }
 

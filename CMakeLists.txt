@@ -18,6 +18,7 @@ project(${project} CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
@@ -47,11 +48,20 @@ ENDIF()
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
+add_compile_options(-v)
+
 #############################################################################################
 #YAML
 set(yaml_path thirdparty/yaml-cpp)
 find_package(${YAML_INCLUDE_DIR} REQUIRED PATHS ${yaml_path} )
 include_directories(SYSTEM thirdparty/yaml-cpp/include)
+#YAML
+#############################################################################################
+
+#############################################################################################
+#nlohmann-json
+include_directories(SYSTEM thirdparty/json/include/)
+#nlohmann-json
 #############################################################################################
 
 #############################################################################################
@@ -79,6 +89,37 @@ if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 #CCACHE
+#############################################################################################
+
+#############################################################################################
+#LUA
+set(LUA_PC_CFG "lua;lua5.3;lua5.2;lua5.1" CACHE STRING "pkg-config Lua configuration file (or files, separated by ;)")
+
+find_package(PkgConfig)
+if(PKG_CONFIG_EXECUTABLE)
+    pkg_search_module(LUA REQUIRED ${LUA_PC_CFG})
+else()
+    if(NOT LUA_INCLUDE_DIR)
+        message(SEND_ERROR "LUA_INCLUDE_DIR is required if no PkgConfig is available!")
+    endif()
+    if(NOT LUA_LIBRARIES)
+        message(SEND_ERROR "LUA_LIBRARIES is required if no PkgConfig is available!")
+    endif()
+endif()
+
+find_package(Lua 5.3)
+
+if(${LUA_INCLUDE_DIR})
+    if(NOT EXISTS ${LUA_INCLUDE_DIR}/lua.h)
+        message(SEND_ERROR "Can't find lua.h in ${LUA_INCLUDE_DIR}")
+    endif()
+endif()
+
+include_directories(${LUA_INCLUDE_DIRS})
+
+include_directories(SYSTEM thirdparty/sol2)
+
+#LUA
 #############################################################################################
 
 

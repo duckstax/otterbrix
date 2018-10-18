@@ -6,7 +6,7 @@
 #include <goblin-engineer/message.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace RocketJoe { namespace services { namespace ws_server {
+namespace rocketjoe { namespace services { namespace ws_server {
 
             class ws_server::impl final {
             public:
@@ -26,9 +26,10 @@ namespace RocketJoe { namespace services { namespace ws_server {
 
             };
 
-            ws_server::ws_server(goblin_engineer::context_t *ctx) : pimpl(new impl) {
-                boost::asio::ip::address address =  boost::asio::ip::make_address("127.0.0.1");
-                auto string_port = ctx->config().as_object()["default"].as_object()["ws_port"].as_string();
+            ws_server::ws_server(goblin_engineer::context_t *ctx) : pimpl(std::make_unique<impl>()) {
+                auto& config = ctx->config();
+                boost::asio::ip::address address =  boost::asio::ip::make_address(config.as_object()["address"].as_string());
+                auto string_port = config.as_object()["ws-port"].as_string();
                 auto tmp_port = std::stoul(string_port);
                 auto port = static_cast<unsigned short>(tmp_port);
                 pimpl->listener_ = std::make_shared<ws_listener>(ctx->main_loop(), tcp::endpoint{address, port},to_pipe());
@@ -37,10 +38,10 @@ namespace RocketJoe { namespace services { namespace ws_server {
                         "write",
                         [this](goblin_engineer::message&& message) -> void {
                             auto arg = message.args[0];
-                            auto t = boost::any_cast<transport::transport>(arg);
+                            auto t = std::move(boost::any_cast<api::transport>(arg));
                             auto*transport_tmp = t.transport_.get();
                             t.transport_.reset();
-                            std::unique_ptr<transport::web_socket> transport(static_cast<transport::web_socket*>(transport_tmp));
+                            std::unique_ptr<api::web_socket> transport(static_cast<api::web_socket*>(transport_tmp));
                             pimpl->listener_->write(std::move(transport));
                         }
                 );

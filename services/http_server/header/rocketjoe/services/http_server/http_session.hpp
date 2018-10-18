@@ -1,25 +1,23 @@
 #pragma once
 
-#include <goblin-engineer/abstract_service.hpp>
-
 #include <boost/beast/core/flat_buffer.hpp>
 
+#include <rocketjoe/services/http_server/http_context.hpp>
 #include <rocketjoe/services/http_server/websocket_session.hpp>
 #include <rocketjoe/api/http.hpp>
 
 
-namespace RocketJoe { namespace services { namespace http_server {
+namespace rocketjoe { namespace services { namespace http_server {
 
             using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
             namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
             namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
-
-            class http_session : public std::enable_shared_from_this<http_session> {
+            class http_session final : public std::enable_shared_from_this<http_session> {
                 // This queue_vm is used for HTTP pipelining.
-                class queue {
+                class queue final {
                     enum {
-                        // Maximum number of responses we will queue_vm
+                        // Maximum number of responses we will queue
                                 limit = 8
                     };
 
@@ -87,14 +85,12 @@ namespace RocketJoe { namespace services { namespace http_server {
                 boost::beast::flat_buffer buffer_;
                 http::request <http::string_body> req_;
                 queue queue_;
-                goblin_engineer::pipe* pipe_;
-                const transport::transport_id id;
+                http_context& context;
+                const api::transport_id id;
             public:
-                http_session(tcp::socket socket,transport::transport_id , goblin_engineer::pipe* pipe_);
+                http_session(tcp::socket,api::transport_id , http_context&);
 
-                ~http_session(){
-                    std::cerr<<"destroy http_session" <<std::endl;
-                }
+                ~http_session();
 
                 // Start the asynchronous operation
                 void run();
@@ -110,7 +106,7 @@ namespace RocketJoe { namespace services { namespace http_server {
 
                 void do_close();
 
-                void write(std::unique_ptr<transport::transport_base>);
+                void write(std::unique_ptr<api::transport_base>);
 
             };
 

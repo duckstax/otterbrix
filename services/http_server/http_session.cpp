@@ -1,6 +1,7 @@
 #include <rocketjoe/services/http_server/http_session.hpp>
 #include <boost/beast/core/string.hpp>
-namespace RocketJoe { namespace services { namespace http_server {
+
+namespace rocketjoe { namespace services { namespace http_server {
 
             constexpr const  char* dispatcher = "dispatcher";
             constexpr const  char* router = "lua_engine";
@@ -12,13 +13,11 @@ namespace RocketJoe { namespace services { namespace http_server {
             >
             void handle_request(
                     http::request<Body, http::basic_fields<Allocator>>&& req,
-                    transport::transport_id id,
-                    goblin_engineer::abstract_service::pipe* pipe_
+                    api::transport_id id,
+                    http_context& context
             ) {
 
-
-
-                auto http_transport_ = std::make_shared<transport::http>(id);
+                auto http_transport_ = std::make_shared<api::http>(id);
 
                 http_transport_->method(std::string(req.method_string()));
 
@@ -33,18 +32,31 @@ namespace RocketJoe { namespace services { namespace http_server {
 
                 http_transport_->body(req.body());
 
-                transport::transport http_data(std::move(http_transport_)) ;
+                api::transport http_data(std::move(http_transport_)) ;
 
-                pipe_->send(goblin_engineer::message(router,dispatcher,{std::move(http_data)}));
+
+                if(req.target() == "/system"){
+                    context.send(goblin_engineer::message("object_storage",dispatcher,{std::move(http_data)}));
+                    return;
+                }
+
+
+
+                if(context.check_url(std::string(req.target()))){
+                    context.send(goblin_engineer::message("object_storage",dispatcher,{std::move(http_data)}));
+                    return;
+                }
+
+                context.send(goblin_engineer::message(router,dispatcher,{std::move(http_data)}));
 
             }
 
-            http_session::http_session(tcp::socket socket,transport::transport_id id, goblin_engineer::pipe *pipe_) :
+            http_session::http_session(tcp::socket socket,api::transport_id id, http_context& context) :
                     socket_(std::move(socket)),
                     strand_(socket_.get_executor()),
                     timer_(socket_.get_executor().context(),(std::chrono::steady_clock::time_point::max) ()),
                     queue_(*this),
-                    pipe_(pipe_),
+                    context(context),
                     id(id){
             }
 
@@ -104,12 +116,12 @@ namespace RocketJoe { namespace services { namespace http_server {
                 // See if it is a WebSocket Upgrade
                 if (websocket::is_upgrade(req_)) {
                     // Create a WebSocket websocket_session by transferring the socket
-                    std::make_shared<websocket_session>(std::move(socket_),pipe_)->do_accept(std::move(req_));
+                    std::make_shared<websocket_session>(std::move(socket_),context)->do_accept(std::move(req_));
                     return;
                 }
 
                 // Send the response
-                handle_request(std::move(req_),id,pipe_);
+                handle_request(std::move(req_),id,context);
 
                 // If we aren't at the queue limit, try to pipeline another request
                 if (!queue_.is_full()) {
@@ -164,12 +176,17 @@ namespace RocketJoe { namespace services { namespace http_server {
                                                  std::placeholders::_1)));
             }
 
-            void http_session::write(std::unique_ptr<transport::transport_base> ptr) {
-                auto*http = static_cast<transport::http*>(ptr.release());
+            void http_session::write(std::unique_ptr<api::transport_base> ptr) {
+                auto*http = static_cast<api::http*>(ptr.release());
                 http::response<http::string_body > res{http::status::ok, 11};
                 res.body()=http->body();
+                for(auto&&i:(*http)){
+                    res.set(i.first,i.second);
+                }
                 queue_(std::move(res));
             }
+
+            http_session::~http_session()  = default;
 
             bool http_session::queue::on_write() {
                 BOOST_ASSERT(!items_.empty());
