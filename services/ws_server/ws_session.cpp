@@ -32,7 +32,7 @@ namespace rocketjoe { namespace services { namespace ws_server {
                 auto ws = std::make_shared<api::web_socket>(id_);
                 ws->body = boost::beast::buffers_to_string(buffer_.data());
                 api::transport ws_data(std::move(ws));
-                pipe_->send(goblin_engineer::message("object_storage_w",dispatcher,{std::move(ws_data)}));
+                pipe_->send(goblin_engineer::message("object_storage_implement",dispatcher,{std::move(ws_data)}));
                 ws_.text(ws_.got_text());
                 ws_.async_write(
                         buffer_.data(),

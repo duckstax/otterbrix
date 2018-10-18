@@ -24,6 +24,8 @@
 #include <boost/uuid/uuid_serialize.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include <rocketjoe/services/object_storage/object_storage_implement.hpp>
+
 
 namespace rocketjoe { namespace services { namespace object_storage {
 
@@ -40,7 +42,7 @@ namespace rocketjoe { namespace services { namespace object_storage {
 
             };
 
-            class object_storage::impl final {
+            class object_storage::impl final : public object_storage_implement {
             public:
                 impl() = delete;
 
@@ -54,37 +56,12 @@ namespace rocketjoe { namespace services { namespace object_storage {
 
                 ~impl() = default;
 
-                impl(const std::string& uri_mongo,const std::string& mongo_root_db ){
+                impl(const std::string& uri_mongo,const std::string& mongo_root_db ):object_storage_implement(uri_mongo){
                     root_systems_db = mongo_root_db;
-                    uri = mongocxx::uri{uri_mongo};
-                    client = mongocxx::client{uri};
-                }
-
-                mongocxx::database& find_and_create_database(const std::string&name) {
-
-                    auto db = database_storage.find(name);
-
-                    if( db == database_storage.end()){
-
-                        auto result  = database_storage.emplace(name,client.database(name));
-                        return result.first->second;
-                    } else {
-                        return db->second;
-                    }
 
                 }
 
-                mongocxx::collection find_and_create_collection(const std::string&db_name,const std::string&collection) {
 
-                    auto& db = find_and_create_database(db_name);
-
-                    if( !db.has_collection(collection) ){
-                        return  db.create_collection(collection);
-                    } else {
-                        return  db.collection(collection);
-                    }
-
-                }
 
                 mongocxx::database& system_database() {
                     return find_and_create_database(root_systems_db);
@@ -100,13 +77,6 @@ namespace rocketjoe { namespace services { namespace object_storage {
                 std::unordered_map<std::string,std::string>resolver;
 
             private:
-                mongocxx::instance mongo_inst;
-                std::unordered_map<std::string,mongocxx::database> database_storage;
-
-                mongocxx::uri uri;
-                mongocxx::client client;
-                mongocxx::options::bulk_write bulk_opts;
-                ///std::string app_name_collections = "applications";
                 std::string root_systems_db;
 
             };
@@ -120,11 +90,11 @@ namespace rocketjoe { namespace services { namespace object_storage {
             }
 
             std::string object_storage::name() const {
-                return "object_storage_w";
+                return "object_storage_implement";
             }
 
             void object_storage::metadata(goblin_engineer::metadata_service *metadata) const {
-                metadata->name = "object_storage_w";
+                metadata->name = "object_storage_implement";
             }
 
             object_storage::object_storage(goblin_engineer::context_t *ctx)  {
@@ -148,7 +118,7 @@ namespace rocketjoe { namespace services { namespace object_storage {
                                     task task_;
                                     task_.request = std::move(request);
                                     task_.transport_ = std::move(t);
-                                    send(goblin_engineer::message("object_storage_w",request.method,{std::move(task_)}));
+                                    send(goblin_engineer::message("object_storage_implement",request.method,{std::move(task_)}));
                                     return;
                                 }
 

@@ -13,22 +13,22 @@
 #include <mongocxx/uri.hpp>
 #include <mongocxx/cursor.hpp>
 #include <mongocxx/bulk_write.hpp>
-/*
-class object_storage_w final {
 
-    object_storage_w() = delete;
+class object_storage_implement  {
+public:
+    object_storage_implement() = delete;
 
-    object_storage_w &operator=(object_storage_w &&) = default;
+    object_storage_implement &operator=(object_storage_implement &&) = default;
 
-    object_storage_w(object_storage_w &&) = default;
+    object_storage_implement(object_storage_implement &&) = default;
 
-    object_storage_w &operator=(const object_storage_w &) = default;
+    object_storage_implement &operator=(const object_storage_implement &) = default;
 
-    object_storage_w(const object_storage_w &) = default;
+    object_storage_implement(const object_storage_implement &) = default;
 
-    ~object_storage_w() = default;
+    virtual ~object_storage_implement() = default;
 
-    object_storage_w(const std::string& uri_mongo){
+    object_storage_implement(const std::string& uri_mongo){
         uri = mongocxx::uri{uri_mongo};
         client = mongocxx::client{uri};
     }
@@ -67,4 +67,3 @@ private:
     mongocxx::client client;
     mongocxx::options::bulk_write bulk_opts;
 };
- */

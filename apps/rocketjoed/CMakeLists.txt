@@ -1,6 +1,6 @@
 set(CURRENT_TARGET rocketjoed)
 
-add_executable(${CURRENT_TARGET}  rocketjoed.cpp ../../lua/web.lua)
+add_executable(${CURRENT_TARGET}  rocketjoed.cpp )
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
@@ -9,7 +9,7 @@ target_link_libraries(
         rocketjoe::ws_server
         rocketjoe::http_server
         rocketjoe::database
-        rocketjoe::router
+        rocketjoe::object_storage
 
         yaml-cpp
         goblin-engineer
