@@ -1,6 +1,9 @@
 set(CURRENT_TARGET api)
 
-list(APPEND CURRENT_TARGET_HEADERS
+list(APPEND ${CURRENT_TARGET}_HEADERS
+        application.hpp
+        cache_commands.hpp
+        cache_element.hpp
         http.hpp
         json_rpc.hpp
         transport_base.hpp
@@ -8,7 +11,7 @@ list(APPEND CURRENT_TARGET_HEADERS
 
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
+list(APPEND ${CURRENT_TARGET}_SOURCES
         http.cpp
         json_rpc.cpp
         transport_base.cpp
@@ -18,8 +21,8 @@ list(APPEND CURRENT_TARGET_SOURCES
 include_directories(../thirdparty/json/include)
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_TARGET_HEADERS}
-            ${CURRENT_TARGET_SOURCES}
+            ${${CURRENT_TARGET}_HEADERS}
+            ${${CURRENT_TARGET}_SOURCES}
 )
 
 

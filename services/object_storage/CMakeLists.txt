@@ -12,6 +12,7 @@ list(APPEND CURRENT_TARGET_HEADERS
 
 list(APPEND CURRENT_TARGET_SOURCES
         object_storage.cpp
+        object_storage_implement.cpp
 )
 
 

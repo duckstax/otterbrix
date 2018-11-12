@@ -1,7 +1,6 @@
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 #include <api/http.hpp>
 #include <api/websocket.hpp>
-#include <goblin-engineer/message.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
 
@@ -21,16 +20,15 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
 
 
                 auto object_to_lua_table (api::transport& object, sol::table& table) ->void {
-                    switch (object.transport_->type()) {
+                    switch (object->type()) {
                         case api::transport_type::http: {
-                            auto *http_ = static_cast<api::http *>(object.transport_.get());
+                            auto *http_ = static_cast<api::http *>(object.get());
                             table["type"] = "http";
                             table["uri"] = http_->uri();
                             ///headers
-                            auto range = http_->headers();
-                            for(;range.first != range.second;++range.first){
-                                ///std::cerr << "heder_key = "<<range.first->first <<" header_value "<<range.first->second <<std::endl;
-                                table[range.first->first]=range.first->second;
+                            for(auto&i :*http_){
+                                ///std::cerr << "heder_key = "<< i.first <<" header_value "<< i.second <<std::endl;
+                                table[i.first]=i.second;
                             }
                             ///TODO Header / body not copy add method json_body_get
                             table["body"] = http_->body();
@@ -47,9 +45,9 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
 
 
                 auto lua_table_to_object (sol::table& table,api::transport& object) ->void {
-                    switch (object.transport_->type()) {
+                    switch (object->type()) {
                         case api::transport_type::http: {
-                            auto *http_ = static_cast<api::http *>(object.transport_.get());
+                            auto *http_ = static_cast<api::http *>(object.get());
                             auto header =  table["header"].get<sol::table>();
                             for(auto&i:header){
                                 std::cerr<< "header_key" <<i.first.as<std::string>() << "header_value"<<i.second.as<std::string>()<<std::endl;
@@ -68,11 +66,10 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
 
                 }
 
-                lua_vm::lua_context::lua_context(const std::string& name,goblin_engineer::pipe* ptr) {
-                    pipe = ptr;
-
+                lua_vm::lua_context::lua_context(const std::string& name,actor_zeta::behavior::context_t& ptr):context_(ptr) {
                     load_libraries(lua);
                     ///TODO!
+                    /*
                     lua.set_function(
                             "jobs_wait",
                             [this](sol::table jobs) {
@@ -103,25 +100,37 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                                 auto id =  response["id"].get<size_t >();
                                 auto type =  response["type"].get<std::string>();
 
-                                auto in_put = device_.get(id).transport_->id();
+                                auto in_put = device_.get(id)->id();
                                 std::cerr<<"id = " <<id << "type = "<<type<<std::endl;
 
                                 if("http" == type){
                                     auto http = api::make_transport<api::http>(in_put);
                                     lua_table_to_object(response,http);
 
-                                    pipe->send(goblin_engineer::message("http",write,{std::move(http)}));
+                                    context_.addresses("http")->send(
+                                            actor_zeta::messaging::make_message(
+                                                    context_.self(),
+                                                    write,
+                                                    std::move(http)
+                                            )
+                                    );
                                 } else if ("ws" == type){
                                     auto ws = api::make_transport<api::web_socket>(id);
                                     lua_table_to_object(response,ws);
-                                    pipe->send(goblin_engineer::message("ws",write,{std::move(ws)}));
+                                    context_.addresses("ws")->send(
+                                            actor_zeta::messaging::make_message(
+                                                    context_.self(),
+                                                    write,
+                                                    std::move(ws)
+                                            )
+                                    );
                                 }
 
 
 
                             }
                     );
-
+*/
                     r = lua.load_file(name);
 
                 }

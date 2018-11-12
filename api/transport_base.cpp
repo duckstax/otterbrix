@@ -1,7 +1,6 @@
 #include <rocketjoe/api/transport_base.hpp>
 #include "transport_base.hpp"
 
-
 namespace rocketjoe { namespace api {
 
     transport_base::transport_base(transport_type type,transport_id id ) : type_(type),id_(id) {}

@@ -4,15 +4,11 @@
 
 namespace rocketjoe { namespace services { namespace object_storage {
 
-            class object_storage final: public goblin_engineer::abstract_service_unmanaged {
+            class object_storage final: public goblin_engineer::abstract_service {
             public:
                 object_storage(goblin_engineer::context_t *ctx);
 
-                ~object_storage();
-
-                auto  metadata(goblin_engineer::metadata_service*) const -> void override;
-
-                auto name() const -> std::string override;
+                ~object_storage() = default;
 
                 auto startup(goblin_engineer::context_t *) -> void override;
 

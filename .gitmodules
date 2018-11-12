@@ -10,3 +10,6 @@
 [submodule "thirdparty/json"]
 	path = thirdparty/json
 	url = https://github.com/nlohmann/json.git
+[submodule "thirdparty/actor-zeta"]
+	path = thirdparty/actor-zeta
+	url = git@github.com:smart-cloud/actor-zeta.git
