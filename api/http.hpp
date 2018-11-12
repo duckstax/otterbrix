@@ -5,7 +5,7 @@
 #include <string>
 
 namespace rocketjoe { namespace api {
-        enum class http_request_command {
+        enum class http_method {
             unknown = 0,
             delete_,
             get,
@@ -24,12 +24,18 @@ namespace rocketjoe { namespace api {
             using header_const_iterator = typename  header_storage::const_iterator;
             using header_iterator = typename  header_storage::iterator;
 
+            http() = delete;
+            http(const http&) = default;
+            http&operator=(const http&) = default;
+            http(http&&) = default;
+            http&operator=(http&&) = default;
+
+            virtual ~http() override = default;
+
             http(transport_id);
-            ~http() override;
             ///header
             void header(const char*key,const char* value);
             void header(std::string&&,std::string&&);
-            auto headers() const -> std::pair<header_const_iterator,header_const_iterator>;
             ///header
             ///url
             void uri(const std::string&);

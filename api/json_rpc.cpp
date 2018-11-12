@@ -1,6 +1,5 @@
 #include "json_rpc.hpp"
 
-
 namespace rocketjoe { namespace api { namespace json_rpc {
 
             bool contains(const json &msg, const std::string &key) {
@@ -21,7 +20,7 @@ namespace rocketjoe { namespace api { namespace json_rpc {
 
 
 
-bool parse(const std::string &raw, rocketjoe::api::json_rpc::request_message &request) {
+bool parse(const std::string &raw, request_message &request) {
 
         auto message = json::parse(raw);
 
@@ -51,7 +50,7 @@ bool parse(const std::string &raw, rocketjoe::api::json_rpc::request_message &re
 
 }
 
-bool parse(const nlohmann::json &message, rocketjoe::api::json_rpc::notify_message &notify) {
+bool parse(const nlohmann::json &message, notify_message &notify) {
 
         if (!is_notify(message)) {
                 return false;
@@ -68,7 +67,7 @@ bool parse(const nlohmann::json &message, rocketjoe::api::json_rpc::notify_messa
         return true;
 }
 
-bool parse(const nlohmann::json &message, rocketjoe::api::json_rpc::response_message &response) {
+bool parse(const nlohmann::json &message, response_message &response) {
 
         if (!is_response(message)) {
                 return false;
@@ -80,7 +79,7 @@ bool parse(const nlohmann::json &message, rocketjoe::api::json_rpc::response_mes
         return true;
 }
 
-std::string serialize(const rocketjoe::api::json_rpc::request_message &msg) {
+std::string serialize(const request_message &msg) {
         json obj;
         obj["jsonrpc"] = json("2.0");
 
@@ -95,7 +94,7 @@ std::string serialize(const rocketjoe::api::json_rpc::request_message &msg) {
         return json(obj).dump();
 }
 
-std::string serialize(const rocketjoe::api::json_rpc::response_message &msg) {
+std::string serialize(const response_message &msg) {
         json obj;
         obj["jsonrpc"] = json("2.0");
 
@@ -115,7 +114,7 @@ std::string serialize(const rocketjoe::api::json_rpc::response_message &msg) {
         return json(obj).dump();
 }
 
-std::string serialize(const rocketjoe::api::json_rpc::notify_message &msg) {
+std::string serialize(const notify_message &msg) {
         json obj;
         obj["jsonrpc"] = json("2.0");
 

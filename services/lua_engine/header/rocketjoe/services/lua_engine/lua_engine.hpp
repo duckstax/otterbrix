@@ -4,15 +4,11 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-            class lua_engine final: public goblin_engineer::abstract_service_unmanaged {
+            class lua_engine final: public goblin_engineer::abstract_service {
             public:
                 lua_engine(goblin_engineer::context_t *);
 
                 ~lua_engine();
-
-                void metadata(goblin_engineer::metadata_service*) const override;
-
-                std::string name() const override;
 
                 void startup(goblin_engineer::context_t *) override;
 

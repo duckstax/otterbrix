@@ -6,14 +6,9 @@
 
 #include <goblin-engineer/dynamic_environment.hpp>
 
-#include <rocketjoe/services/lua_engine/lua_engine.hpp>
-#include <rocketjoe/services/ws_server/ws_server.hpp>
-#include <rocketjoe/services/http_server/http_server.hpp>
-#include <rocketjoe/services/database/database.hpp>
-#include <rocketjoe/services/object_storage/object_storage.hpp>
-
 #include <yaml-cpp/yaml.h>
 
+#include "init_service.hpp"
 
 constexpr const char *config_name_file = "config.yaml";
 
@@ -22,6 +17,33 @@ constexpr const char *data_name_file = "data";
 constexpr const char *plugins_name_file = "plugins";
 
 constexpr const char *section_default = "default";
+
+
+#ifdef __APPLE__
+
+#else
+#include <boost/stacktrace.hpp>
+
+void terminate_handler() {
+    std::cerr << "terminate called:"
+              << std::endl
+              << boost::stacktrace::stacktrace()
+              << std::endl;
+}
+
+void signal_sigsegv(int signum){
+    boost::stacktrace::stacktrace bt ;
+    if(bt){
+        std::cerr << "Signal"
+                  << signum
+                  << " , backtrace:"
+                  << std::endl
+                  << boost::stacktrace::stacktrace()
+                  << std::endl;
+    }
+    std::abort();
+}
+#endif
 
 
 void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
@@ -60,6 +82,15 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 }
 
 int main(int argc, char **argv) {
+    
+#ifdef __APPLE__
+
+#else
+    ::signal(SIGSEGV,&signal_sigsegv);
+
+    std::set_terminate(terminate_handler);
+#endif
+
     boost::program_options::variables_map args_;
     boost::program_options::options_description app_options_;
 
@@ -134,38 +165,9 @@ int main(int argc, char **argv) {
     config.dynamic_configuration = json_config;
     config.plugins_dir = plugins_dir.string();
 
-
     goblin_engineer::dynamic_environment env(std::move(config));
 
-    /// rewrite config
-    auto &lua = env.add_service<rocketjoe::services::lua_engine::lua_engine>();
-    /// rewrite config
-
-    auto& database = env.add_service<rocketjoe::services::database::database>();
-
-    auto& router = env.add_service<rocketjoe::services::object_storage::object_storage>();
-
-    auto &http = env.add_service<rocketjoe::services::http_server::http_server>();
-
-    ///http <-> router
-    http->join(router);
-    router->join(http);
-    ///http <-> router
-
-    ///lua <-> http
-    lua->join(http);
-    http->join(lua);
-    ///lua <-> http
-
-    ///router <-> database
-    router->join(database);
-    database->join(router);
-    ///router <-> database
-
-    /// lua <-> database
-    lua->join(database);
-    database->join(lua);
-    /// lua <-> database
+    init_service(env);
 
     env.initialize();
 

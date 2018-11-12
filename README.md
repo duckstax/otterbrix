@@ -2,7 +2,7 @@
 Applications server 
 
 This is an attempt to provide very easy to use Lua Application Server working over HTTP and WebSockets  protocol . 
-rocketjoe is an application server for micro-services architecture.
+RocketJoe is an application server for micro-services architecture.
 
 ### Under heavy development. Come back later
 

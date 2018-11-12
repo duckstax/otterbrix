@@ -1,9 +1,7 @@
 #include <rocketjoe/api/http.hpp>
 #include "http.hpp"
 
-
 namespace rocketjoe { namespace api {
-
 
         http::http(transport_id id) : transport_base(transport_type::http, id) {
 
@@ -23,10 +21,6 @@ namespace rocketjoe { namespace api {
 
         void http::body(const std::string & body_) {
             this->body_ = body_;
-        }
-
-        std::pair<http::header_const_iterator, http::header_const_iterator> http::headers() const {
-            return std::make_pair(headers_.begin(),headers_.end());
         }
 
         const std::string& http::body() const {
@@ -60,8 +54,6 @@ namespace rocketjoe { namespace api {
         auto http::end() -> http::header_iterator {
             return headers_.end();
         }
-
-        http::~http() = default;
 
     }
 }

@@ -13,7 +13,7 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
 
                 class lua_context final {
                 public:
-                    lua_context(const std::string&,goblin_engineer::pipe*);
+                    lua_context(const std::string&,actor_zeta::behavior::context_t&);
 
                     auto push_job(api::transport &&job) -> void;
 
@@ -24,7 +24,7 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                     sol::environment environment;
                     sol::state lua;
                     sol::load_result r;
-                    goblin_engineer::pipe* pipe;
+                    actor_zeta::behavior::context_t& context_;
                     std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
                 };
             }
