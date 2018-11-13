@@ -81,6 +81,28 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
 }
 
+auto logo() {
+
+    std::cerr << "-------------------------------------------------";
+
+    std::cerr << "\n"
+                 "\n"
+                 "______           _        _       ___            \n"
+                 "| ___ \\         | |      | |     |_  |           \n"
+                 "| |_/ /___   ___| | _____| |_      | | ___   ___ \n"
+                 "|    // _ \\ / __| |/ / _ \\ __|     | |/ _ \\ / _ \\\n"
+                 "| |\\ \\ (_) | (__|   <  __/ |_  /\\__/ / (_) |  __/\n"
+                 "\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\____/ \\___/ \\___|\n"
+                 "                                                 \n"
+                 "                                                 \n"
+                 "";
+
+
+    std::cerr << "-------------------------------------------------";
+
+    std::cerr << std::endl;
+}
+
 int main(int argc, char **argv) {
     
 #ifdef __APPLE__
@@ -170,6 +192,8 @@ int main(int argc, char **argv) {
     init_service(env);
 
     env.initialize();
+
+    logo();
 
     env.startup();
 
