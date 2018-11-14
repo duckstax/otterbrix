@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <deque>
 
-namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
                 using id = std::size_t;
 
@@ -88,4 +88,4 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                     std::deque<id> queue_;
                     std::unordered_map<std::size_t, value_type> storage;
                 };
-}}}}
+}}}

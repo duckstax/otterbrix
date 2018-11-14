@@ -32,7 +32,7 @@ using transport = actor_zeta::intrusive_ptr<transport_base>;
 
 template <typename T,typename ...Args>
 inline auto make_transport(Args... args) -> transport {
-    return actor_zeta::intrusive_ptr<T>(std::forward<Args>(args)...);
+    return actor_zeta::intrusive_ptr<T>(new T (std::forward<Args>(args)...));
 }
 
 

@@ -1,12 +1,14 @@
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
+#include <map>
 #include <api/http.hpp>
 #include <api/websocket.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
                 constexpr const char * write = "write";
 
-                auto load_libraries( sol::state&lua) -> void {
+                auto load_libraries( sol::state&lua,const std::map<std::string,std::string>&env) -> void {
+
                     lua.open_libraries(
                             sol::lib::base,
                             sol::lib::table,
@@ -16,6 +18,11 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                             sol::lib::utf8,
                             sol::lib::string
                     );
+
+                    for(const auto&i:env){
+                        lua.require_file(i.first,i.second);
+                    }
+
                 }
 
 
@@ -66,72 +73,7 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
 
                 }
 
-                lua_vm::lua_context::lua_context(const std::string& name,actor_zeta::behavior::context_t& ptr):context_(ptr) {
-                    load_libraries(lua);
-                    ///TODO!
-                    /*
-                    lua.set_function(
-                            "jobs_wait",
-                            [this](sol::table jobs) {
-                                ///std::cerr<<device_.pop()<<std::endl;
-                                auto job_id = device_.pop();
-                                if(job_id != 0){
-                                    std::cerr<<job_id<<std::endl;
-                                    jobs[1] = job_id;
-                                }
-
-                            }
-                    );
-                    /// C++ -> lua owener
-                    lua.set_function(
-                            "job_read",
-                            [this](std::size_t id,sol::table response) -> void {
-                                if (device_.in(id)) {
-                                    auto &transport = device_.get(id);
-                                    object_to_lua_table(transport,response);
-                                }
-                            }
-                    );
-
-                    ////lua -> C++ owener
-                    lua.set_function(
-                            "job_write_and_close",
-                            [this](sol::table response){
-                                auto id =  response["id"].get<size_t >();
-                                auto type =  response["type"].get<std::string>();
-
-                                auto in_put = device_.get(id)->id();
-                                std::cerr<<"id = " <<id << "type = "<<type<<std::endl;
-
-                                if("http" == type){
-                                    auto http = api::make_transport<api::http>(in_put);
-                                    lua_table_to_object(response,http);
-
-                                    context_.addresses("http")->send(
-                                            actor_zeta::messaging::make_message(
-                                                    context_.self(),
-                                                    write,
-                                                    std::move(http)
-                                            )
-                                    );
-                                } else if ("ws" == type){
-                                    auto ws = api::make_transport<api::web_socket>(id);
-                                    lua_table_to_object(response,ws);
-                                    context_.addresses("ws")->send(
-                                            actor_zeta::messaging::make_message(
-                                                    context_.self(),
-                                                    write,
-                                                    std::move(ws)
-                                            )
-                                    );
-                                }
-
-
-
-                            }
-                    );
-*/
-                    r = lua.load_file(name);
+                lua_context::lua_context(actor_zeta::behavior::context_t& ptr):context_(ptr) {
 
                 }
 
@@ -147,4 +89,72 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                     device_.push(std::move(job));
                 }
 
-}}}}
+            auto lua_context::environment_configuration(const std::string &name,const std::map<std::string,std::string> & env) -> void {
+
+                load_libraries(lua,env);
+
+                lua.set_function(
+                        "jobs_wait",
+                        [this](sol::table jobs) {
+                            ///std::cerr<<device_.pop()<<std::endl;
+                            auto job_id = device_.pop();
+                            if(job_id != 0){
+                                std::cerr<<job_id<<std::endl;
+                                jobs[1] = job_id;
+                            }
+
+                        }
+                );
+                /// C++ -> lua owener
+                lua.set_function(
+                        "job_read",
+                        [this](std::size_t id,sol::table response) -> void {
+                            if (device_.in(id)) {
+                                auto &transport = device_.get(id);
+                                object_to_lua_table(transport,response);
+                            }
+                        }
+                );
+
+                ////lua -> C++ owener
+                lua.set_function(
+                        "job_write_and_close",
+                        [this](sol::table response){
+                            auto id =  response["id"].get<size_t >();
+                            auto type =  response["type"].get<std::string>();
+
+                            auto in_put = device_.get(id)->id();
+                            std::cerr<<"id = " <<id << "type = "<<type<<std::endl;
+
+                            if("http" == type){
+                                auto http = api::make_transport<api::http>(in_put);
+                                lua_table_to_object(response,http);
+
+                                context_.addresses("http")->send(
+                                        actor_zeta::messaging::make_message(
+                                                context_.self(),
+                                                write,
+                                                std::move(http)
+                                        )
+                                );
+                            } else if ("ws" == type){
+                                auto ws = api::make_transport<api::web_socket>(id);
+                                lua_table_to_object(response,ws);
+                                context_.addresses("ws")->send(
+                                        actor_zeta::messaging::make_message(
+                                                context_.self(),
+                                                write,
+                                                std::move(ws)
+                                        )
+                                );
+                            }
+
+
+
+                        }
+                );
+
+                r = lua.load_file(name);
+            }
+
+}}}

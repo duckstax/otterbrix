@@ -12,7 +12,7 @@
 
 constexpr const char *config_name_file = "config.yaml";
 
-constexpr const char *data_name_file = "data";
+constexpr const char *data_name_file = "rocketjoe";
 
 constexpr const char *plugins_name_file = "plugins";
 
@@ -22,6 +22,7 @@ constexpr const char *section_default = "default";
 #ifdef __APPLE__
 
 #else
+
 #include <boost/stacktrace.hpp>
 
 void terminate_handler() {
@@ -43,49 +44,60 @@ void signal_sigsegv(int signum){
     }
     std::abort();
 }
+
 #endif
 
 
 void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
-    for (YAML::const_iterator it = input.begin(); it != input.end(); ++it) {
-        std::string key = it->first.as<std::string>();
-        YAML::Node value = it->second;
-        switch (value.Type()) {
+    switch (input.Type()) {
 
-            case YAML::NodeType::Scalar: {
-                output.as_object().emplace(key, value.as<std::string>());
-                break;
-            }
-            case YAML::NodeType::Sequence: {
-                break;
-            }
+        case YAML::NodeType::Map: {
 
-            case YAML::NodeType::Map: {
+            for (YAML::const_iterator it1 = input.begin(); it1 != input.end(); ++it1) {
+
+                std::string key = it1->first.as<std::string>();
+                YAML::Node value = it1->second;
                 goblin_engineer::dynamic_config tmp;
-                convector(value,tmp);
-                output.as_object().emplace(key,tmp);
-                break;
+                convector(value, tmp);
+                output.as_object().emplace(key, tmp);
+
             }
 
-            case YAML::NodeType::Undefined: {
-                break;
-            }
-
-            case YAML::NodeType::Null: {
-                break;
-            }
+            break;
         }
-    }
 
+        case YAML::NodeType::Sequence: {
+
+            for (YAML::const_iterator it1 = input.begin(); it1 != input.end(); ++it1) {
+
+                YAML::Node value = (*it1);
+                goblin_engineer::dynamic_config tmp;
+                convector(value, tmp);
+                output.as_array().emplace_back(tmp);
+
+            }
+
+            break;
+        }
+
+
+        case YAML::NodeType::Scalar: {
+            output = input.as<std::string>();
+            break;
+        }
+
+    } /// switch
 
 }
 
 auto logo() {
 
-    std::cerr << "-------------------------------------------------";
+    std::cout << std::endl;
 
-    std::cerr << "\n"
+    std::cout << "-------------------------------------------------";
+
+    std::cout << "\n"
                  "\n"
                  "______           _        _       ___            \n"
                  "| ___ \\         | |      | |     |_  |           \n"
@@ -98,9 +110,64 @@ auto logo() {
                  "";
 
 
-    std::cerr << "-------------------------------------------------";
+    std::cout << "-------------------------------------------------";
 
-    std::cerr << std::endl;
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    std::cout.flush();
+
+}
+
+auto load_config( boost::program_options::variables_map& args_, goblin_engineer::configuration & config ) {
+
+    config.data_dir = args_["data-dir"].as<std::string>();
+
+    boost::filesystem::path config_path = config.data_dir / config_name_file;
+
+    config.dynamic_configuration.as_object().emplace("config-path",(config.data_dir/data_name_file).string());
+
+    goblin_engineer::dynamic_config json_config;
+    YAML::Node config_ = YAML::LoadFile(config_path.string());
+    convector(config_,config.dynamic_configuration);
+
+    if (args_.count("plugins")) {
+        auto &plugins = args_["plugins"].as<std::vector<std::string>>();
+        for (auto &&i:plugins) {
+            config.plugins.emplace(std::move(i));
+        }
+    }
+
+}
+
+auto generate_config( goblin_engineer::configuration & config ) {
+
+    config.data_dir = boost::filesystem::current_path();
+
+    auto data_path = config.data_dir / data_name_file;
+
+    config.dynamic_configuration.as_object().emplace("config-path",data_path.string());
+
+    if (!boost::filesystem::exists(data_path)) {
+        boost::filesystem::create_directories(data_path);
+    }
+
+    if (!boost::filesystem::exists(data_path / plugins_name_file)) {
+        boost::filesystem::create_directories(data_path / plugins_name_file);
+        config.plugins_dir = data_path / plugins_name_file;
+    }
+
+    boost::filesystem::path config_path = data_path / config_name_file;
+
+    if (!boost::filesystem::exists(config_path.string())) {
+        std::ofstream outfile(config_path.string());
+        outfile.close();
+    }
+
+    goblin_engineer::dynamic_config json_config;
+    YAML::Node config_ = YAML::LoadFile(config_path.string());
+    convector(config_,config.dynamic_configuration);
+
 }
 
 int main(int argc, char **argv) {
@@ -127,73 +194,31 @@ int main(int argc, char **argv) {
     /** --help option
     */
     if (args_.count("help")) {
-        std::cout << "Basic Command Line Parameter App" << std::endl << app_options_ << std::endl;
+        std::cout << "Rocket Joe Command Line Parameter" << std::endl << app_options_ << std::endl;
         return 0;
     }
 
-
-
     //boost::program_options::notify(args_);
-
-    boost::filesystem::path data_dir;
-    boost::filesystem::path config_path;
-    boost::filesystem::path plugins_dir;
-
-
-    if (args_.count("data-dir")) {
-
-        data_dir = args_["data-dir"].as<std::string>();
-
-        config_path = data_dir / config_name_file;
-
-    } else {
-
-        data_dir = boost::filesystem::current_path();
-
-        auto data_path = data_dir / data_name_file;
-
-        if (!boost::filesystem::exists(data_path)) {
-            boost::filesystem::create_directories(data_path);
-        }
-
-        if (!boost::filesystem::exists(data_path / plugins_name_file)) {
-            boost::filesystem::create_directories(data_path / plugins_name_file);
-            plugins_dir = data_path / plugins_name_file;
-        }
-
-        config_path = data_path / config_name_file;
-
-        if (!boost::filesystem::exists(config_path.string())) {
-            std::ofstream outfile(config_path.string());
-            outfile.close();
-        }
-
-    }
 
     goblin_engineer::configuration config;
 
-    if (args_.count("plugins")) {
-        auto &plugins = args_["plugins"].as<std::vector<std::string>>();
-        for (auto &&i:plugins) {
-            config.plugins.emplace(std::move(i));
-        }
+    if (args_.count("data-dir")) {
+
+        load_config(args_,config);
+
+    } else {
+
+        generate_config(config);
+
     }
 
-    goblin_engineer::dynamic_config json_config;
-    YAML::Node config_ = YAML::LoadFile(config_path.string());
-    convector(config_,json_config);
-
-    config.data_dir = data_dir.string();
-    config.dynamic_configuration = json_config;
-    config.plugins_dir = plugins_dir.string();
+    logo();
 
     goblin_engineer::dynamic_environment env(std::move(config));
 
     init_service(env);
 
     env.initialize();
-
-    logo();
 
     env.startup();
 

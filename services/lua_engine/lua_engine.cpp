@@ -1,6 +1,9 @@
 #include <rocketjoe/services/lua_engine/lua_engine.hpp>
 
+#include <map>
+
 #include <boost/utility/string_view.hpp>
+#include <boost/filesystem.hpp>
 
 
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
@@ -14,49 +17,79 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-            class lua_engine::impl final {
+            class lua_engine::impl final : public lua_context  {
             public:
+
+                explicit impl(actor_zeta::behavior::context_t& ptr):
+                    lua_context(ptr){
+                }
+
                 impl() = default;
 
-                ~impl() = default;
+                ~impl() override = default;
 
-                auto init_vm(std::string name,actor_zeta::behavior::context_t& ptr) -> void {
-                    vm_ = std::make_unique<lua_vm::lua_context>(name,ptr);
-                }
-
-                auto load_vm() -> void {
-                    vm_->run();
-                }
-
-                template<typename Job>
-                auto push_job(Job&& job){
-                    vm_->push_job(std::forward<Job>(job));
-                }
-
-            private:
-                std::unique_ptr<lua_vm::lua_context> vm_;
             };
 
             lua_engine::lua_engine(goblin_engineer::context_t * context):
                 abstract_service(context,"lua_engine"),
-                pimpl(new impl) {
+                pimpl(new impl(*this)) {
+
                     attach(
                             actor_zeta::behavior::make_handler(
-                            "dispatcher",
-                            [this](actor_zeta::behavior::context &ctx) -> void  {
-                                std::cerr<<"9999"<<std::endl;
-                                auto t = ctx.message().body<api::transport>();
-                                pimpl->push_job(std::move(t));
-                            }
-                    ));
+                                    "dispatcher",
+                                    [this](actor_zeta::behavior::context &ctx) -> void {
+                                        std::cerr << "9999" << std::endl;
+                                        auto t = ctx.message().body<api::transport>();
+                                        pimpl->push_job(std::move(t));
+                                    }
+                            )
+                    );
 
+                /// TODO: Move to startup()
+
+                std::cerr << "processing env lua start " <<std::endl;
+
+                boost::filesystem::path config_path(context->config().as_object()["config-path"].as_string());
+
+                auto&env_lua = context->config().as_object()["env-lua"].as_object();
+
+                std::map<std::string,std::string> env ;
+
+                bool check_init = false;
+
+                std::cerr << "custom lib " <<std::endl;
+
+                for( auto &i : env_lua ){
+                    std::cerr << i.first << " : "  << (config_path/i.second.as_string()).string()<<std::endl;
+
+                    if(boost::filesystem::exists(config_path/i.second.as_string())){
+
+                        check_init = true;
+                        env.emplace(i.first,(config_path/i.second.as_string()).string());
+
+                    } else {
+
+                        check_init = false ;
+                        break;
+                    }
+
+                }
+
+                std::cerr << "custom lib " <<std::endl;
+
+                if(check_init) {
+                    pimpl->environment_configuration(context->config().as_object().at("app").as_string(),env);
+                    pimpl->run();
+                } else {
+                    std::cerr << " Error env lua " << std::endl;
+                }
+
+                std::cerr << "processing env lua finish " <<std::endl;
             }
 
-            lua_engine::~lua_engine() = default;
-
             void lua_engine::startup(goblin_engineer::context_t * context) {
-                pimpl->init_vm(context->config().as_object().at("app").as_string(), *this);
-                pimpl->load_vm();
+
+               /// TODO: FIX cycle init service
             }
 
             void lua_engine::shutdown() {

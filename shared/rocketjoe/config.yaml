@@ -4,3 +4,6 @@ address: "127.0.0.1"
 ws-port: 9999
 http-port: 9998
 mongo-uri: "mongodb://localhost:27017/rocketjoe"
+env-lua: {
+  "http": "lua/http.lua",
+}
