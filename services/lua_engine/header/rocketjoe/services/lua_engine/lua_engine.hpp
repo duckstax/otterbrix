@@ -6,9 +6,9 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
             class lua_engine final: public goblin_engineer::abstract_service {
             public:
-                lua_engine(goblin_engineer::context_t *);
+                explicit lua_engine(goblin_engineer::context_t *);
 
-                ~lua_engine();
+                ~lua_engine() override = default ;
 
                 void startup(goblin_engineer::context_t *) override;
 

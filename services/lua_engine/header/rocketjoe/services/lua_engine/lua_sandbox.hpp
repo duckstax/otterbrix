@@ -1,19 +1,24 @@
 #pragma  once
 
 #include <array>
+#include <map>
 
 #include <rocketjoe/services/lua_engine/device.hpp>
 #include <rocketjoe/api/transport_base.hpp>
 #include <sol.hpp>
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_vm {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
                 using id = std::size_t;
 
-                class lua_context final {
+                class lua_context {
                 public:
-                    lua_context(const std::string&,actor_zeta::behavior::context_t&);
+                    virtual ~lua_context() = default;
+
+                    lua_context(actor_zeta::behavior::context_t&);
+
+                    auto environment_configuration(const std::string&,const std::map<std::string,std::string>&) -> void ;
 
                     auto push_job(api::transport &&job) -> void;
 
@@ -27,9 +32,5 @@ namespace rocketjoe { namespace services { namespace lua_engine { namespace lua_
                     actor_zeta::behavior::context_t& context_;
                     std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
                 };
-            }
 
-
-        }
-    }
-}
+}}}
