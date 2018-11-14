@@ -121,6 +121,7 @@ auto logo() {
 
 auto load_config( boost::program_options::variables_map& args_, goblin_engineer::configuration & config ) {
 
+    std::cout << args_["data-dir"].as<std::string>() <<std::endl;
     config.data_dir = args_["data-dir"].as<std::string>();
 
     boost::filesystem::path config_path = config.data_dir / config_name_file;
@@ -137,6 +138,16 @@ auto load_config( boost::program_options::variables_map& args_, goblin_engineer:
             config.plugins.emplace(std::move(i));
         }
     }
+
+}
+
+auto generate_yaml_config( YAML::Node& config_ ) {
+
+    config_["address"] = "127.0.0.1";
+    config_["ws-port"] = 9999;
+    config_["http-port"] = 9998;
+    config_["mongo-uri"] = "mongodb://localhost:27017/rocketjoe";
+    config_["env-lua"]["http"] = "lua/http.lua";
 
 }
 
@@ -160,7 +171,11 @@ auto generate_config( goblin_engineer::configuration & config ) {
     boost::filesystem::path config_path = data_path / config_name_file;
 
     if (!boost::filesystem::exists(config_path.string())) {
+        YAML::Node config_;
+        generate_yaml_config(config_);
         std::ofstream outfile(config_path.string());
+        outfile << config_;
+        outfile.flush();
         outfile.close();
     }
 
@@ -180,16 +195,17 @@ int main(int argc, char **argv) {
     std::set_terminate(terminate_handler);
 #endif
 
-    boost::program_options::variables_map args_;
     boost::program_options::options_description app_options_;
 
     app_options_.add_options()
             ("help", "Print help messages")
             ("data-dir", "data-dir")
-            ("scripts", boost::program_options::value<std::vector<std::string>>()->multitoken(), "scripts")
-            ("plugins", boost::program_options::value<std::vector<std::string>>()->multitoken(), "plugins");
+            ("app", boost::program_options::value<std::string>(), "app111");
 
+
+    boost::program_options::variables_map args_;
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, app_options_), args_);
+    boost::program_options::notify(args_);
 
     /** --help option
     */
@@ -197,8 +213,6 @@ int main(int argc, char **argv) {
         std::cout << "Rocket Joe Command Line Parameter" << std::endl << app_options_ << std::endl;
         return 0;
     }
-
-    //boost::program_options::notify(args_);
 
     goblin_engineer::configuration config;
 
@@ -210,6 +224,25 @@ int main(int argc, char **argv) {
 
         generate_config(config);
 
+    }
+
+    if ( args_.count("app") ) {
+
+        std::cerr << "app :"  << args_["app"].as<std::string>() << std::endl;
+
+        if( boost::filesystem::exists(args_["app"].as<std::string>())){
+
+            config.dynamic_configuration.as_object()["app"] = args_["app"].as<std::string>();
+
+        } else {
+            std::cout << "Not App" << std::endl;
+            return 1;
+        }
+
+    } else {
+
+        std::cout << "Not App" << std::endl;
+        return 1;
     }
 
     logo();
