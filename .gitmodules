@@ -13,3 +13,6 @@
 [submodule "thirdparty/actor-zeta"]
 	path = thirdparty/actor-zeta
 	url = git@github.com:smart-cloud/actor-zeta.git
+[submodule "thirdparty/cxxopts"]
+	path = thirdparty/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git

@@ -6,7 +6,7 @@ RocketJoe is an application server for micro-services architecture.
 
 ### Under heavy development. Come back later
 
-* boost > 1.67
+* boost > 1.68
 * cmake > 2.8
 * lua   > 5.3
 
@@ -35,7 +35,7 @@ cp lua/web.lua build
 
 cd build
 
-cmake -DBUILD_LUA=false ..
+cmake ..
 
 make rocketjoe
 
@@ -130,7 +130,7 @@ make rocketjoe
     make install
     
     
-    сcmake -DBoost_NO_BOOST_CMAKE=TRUE -DBoost_NO_SYSTEM_PATHS=TRUE -DBOOST_ROOT=/home/kotbegemot/CLionProjects/boost_1_67_0/ -DBoost_LIBRARY_DIRS=/home/kotbegemot/CLionProjects/boost_1_67_0/stage/lib/ -DENABLE_PYTHON3=ON -DPYTHON_EXECUTABLE:FILEPATH=/usr/bin/python3 -DBUILD_LUA=False -Dlibmongocxx_DIR=/home/kotbegemot/CLionProjects/libmongocxx/lib/cmake/libmongocxx-3.3.1 -Dlibbsoncxx_DIR=/home/kotbegemot/CLionProjects/libmongocxx/lib/cmake/libbsoncxx-3.3.1 ..
+    сcmake -DBoost_NO_BOOST_CMAKE=TRUE -DBoost_NO_SYSTEM_PATHS=TRUE -DBOOST_ROOT=/home/kotbegemot/CLionProjects/boost_1_67_0/ -DBoost_LIBRARY_DIRS=/home/kotbegemot/CLionProjects/boost_1_67_0/stage/lib/ -Dlibmongocxx_DIR=/home/kotbegemot/CLionProjects/libmongocxx/lib/cmake/libmongocxx-3.3.1 -Dlibbsoncxx_DIR=/home/kotbegemot/CLionProjects/libmongocxx/lib/cmake/libbsoncxx-3.3.1 ..
     
     
 
