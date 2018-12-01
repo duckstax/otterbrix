@@ -6,7 +6,6 @@
 
 #include "init_service.hpp"
 
-
 #ifdef __APPLE__
 
 #else
@@ -46,14 +45,13 @@ int main(int argc, char **argv) {
     std::set_terminate(terminate_handler);
 #endif
 
-    cxxopts::Options options("defaults", "has defaults");
+    cxxopts::Options options("defaults", "");
 
     std::vector<std::string> positional;
 
     options.add_options()
             ("help", "Print help")
-            ("generate", "Input", cxxopts::value<std::string>()->default_value("."))
-            ("data-dir", "Print help",cxxopts::value<std::string>()->default_value("."))
+            ("data-dir", "data-dir",cxxopts::value<std::string>()->default_value("."))
             ("positional", "Positional parameters",cxxopts::value<std::vector<std::string>>(positional))
             ;
 
@@ -64,54 +62,48 @@ int main(int argc, char **argv) {
 
     auto result = options.parse(argc, argv);
 
-
-
+    logo();
 
     /** --help option
     */
     if (result.count("help")) {
-       ///std::cout << "Rocket Joe Command Line Parameter" << std::endl << options.show_positional_help() << std::endl;
-        return 0;
+
+        std::cout << options.help({}) << std::endl;
+
+       return 0;
     }
 
     goblin_engineer::configuration config;
 
+    load_or_generate_config(result,config);
 
-    if (result.count("generate")){
+    std::string path_app;
 
-        generate_config(config);
-        return 0;
-    }
+    if ( !positional.empty() ) {
 
-    if (result.count("data-dir")) {
+        path_app = positional[0];
 
-        load_config(result,config);
+    } else if( config.dynamic_configuration.as_object().find("app") != config.dynamic_configuration.as_object().end() ) {
 
-    } else {
-
-        generate_config(config);
-
-    }
-
-    if ( result.count("app") ) {
-
-        std::cerr << "app :"  << result["app"].as<std::string>() << std::endl;
-
-        if( boost::filesystem::exists(result["app"].as<std::string>())){
-
-            config.dynamic_configuration.as_object()["app"] = result["app"].as<std::string>();
-
-        } else {
-            std::cout << "Not App" << std::endl;
-            return 1;
-        }
+        path_app = config.dynamic_configuration.as_object()["app"].as_string();
 
     } else {
 
-        std::cout << "Not App" << std::endl;
+        std::cerr << "Not APP" << std::endl;
 
         return 1;
     }
+
+    boost::filesystem::path path_app_ = boost::filesystem::absolute(path_app);
+
+    if( !boost::filesystem::exists(path_app_) ){
+
+        std::cerr << "Not Path APP" << std::endl;
+
+        return 1;
+    }
+
+    config.dynamic_configuration.as_object()["app"] = path_app_.string();
 
     goblin_engineer::dynamic_environment env(std::move(config));
 

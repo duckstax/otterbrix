@@ -1,6 +1,10 @@
+#include <utility>
+
 #include <iostream>
 
 #include "configuration.hpp"
+
+#include <yaml-cpp/yaml.h>
 
 constexpr const char *config_name_file = "config.yaml";
 
@@ -45,7 +49,7 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
 
         case YAML::NodeType::Scalar: {
-            output = input.as<std::string>();
+            output.as_string() = input.as<std::string>();
             break;
         }
 
@@ -85,12 +89,11 @@ void logo() {
 
 void load_config(cxxopts::ParseResult &args_, goblin_engineer::configuration &config) {
 
-    std::cout << args_["data-dir"].as<std::string>() <<std::endl;
     config.data_dir = args_["data-dir"].as<std::string>();
 
     boost::filesystem::path config_path = config.data_dir / config_name_file;
 
-    config.dynamic_configuration.as_object().emplace("config-path",(config.data_dir/data_name_file).string());
+    config.dynamic_configuration.as_object().emplace("config-path",(config.data_dir).string());
 
     goblin_engineer::dynamic_config json_config;
     YAML::Node config_ = YAML::LoadFile(config_path.string());
@@ -115,11 +118,11 @@ void generate_yaml_config(YAML::Node &config_) {
 
 }
 
-void generate_config(goblin_engineer::configuration &config) {
+void generate_config(goblin_engineer::configuration &config,boost::filesystem::path data_dir_) {
 
-    config.data_dir = boost::filesystem::current_path();
+    config.data_dir = std::move(data_dir_);
 
-    auto data_path = config.data_dir / data_name_file;
+    auto data_path = config.data_dir ;
 
     config.dynamic_configuration.as_object().emplace("config-path",data_path.string());
 
@@ -145,5 +148,29 @@ void generate_config(goblin_engineer::configuration &config) {
 
     YAML::Node config_ = YAML::LoadFile(config_path.string());
     convector(config_,config.dynamic_configuration);
+
+}
+
+void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::configuration& configuration) {
+
+    if (result.count("data-dir")) {
+
+        boost::filesystem::path data_dir(result["data-dir"].as<std::string>());
+        data_dir = boost::filesystem::absolute(data_dir);
+
+        if(!boost::filesystem::exists(data_dir)){
+
+            generate_config(configuration,data_dir);
+
+        } else {
+
+            load_config(result,configuration);
+        }
+
+    } else {
+
+        generate_config(configuration,boost::filesystem::current_path());
+
+    }
 
 }
