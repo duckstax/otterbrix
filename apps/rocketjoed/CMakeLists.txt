@@ -1,6 +1,6 @@
 set(CURRENT_TARGET rocketjoed)
 
-add_executable(${CURRENT_TARGET}  rocketjoed.cpp init_service.hpp init_service.cpp)
+add_executable(${CURRENT_TARGET}  rocketjoed.cpp init_service.hpp init_service.cpp configuration.cpp configuration.hpp)
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
@@ -13,6 +13,7 @@ target_link_libraries(
         rocketjoe::flat_cache
         rocketjoe::router
 
+        cxxopts
         yaml-cpp
         goblin-engineer
         dl

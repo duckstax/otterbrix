@@ -25,23 +25,22 @@ message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 
 if (ASAN)
-    SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-
     message (STATUS "Building with AddressSanitizer")
 endif ()
 
 if (TSAN)
-    SET (CMAKE_CXX_COMPILER "/usr/bin/clang++")
     set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
-
     message (STATUS "Building with ThreadSanitizer")
 endif ()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -DBOOST_ASIO_HAS_MOVE ")#-DBOOST_ASIO_NO_EXTENSIONS")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DCXXOPTS_NO_RTTI" CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
+
+set(BUILD_LUA OFF CACHE BOOL "" FORCE)
+set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
 
 IF(NOT APPLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -pthread ")
@@ -51,72 +50,10 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 add_compile_options(
         -v
+        -Wall
+        -Wextra
         -fno-rtti
 )
-
-#############################################################################################
-#ACTOR-ZETA
-
-option(STANDALONE-ACTOR-ZETA "" ON)
-
-if(STANDALONE-ACTOR-ZETA)
-    set(actor-zeta-dir ${PROJECT_SOURCE_DIR}/thirdparty/actor-zeta)
-    include_directories( SYSTEM
-            ${actor-zeta-dir}/core
-            ${actor-zeta-dir}/io
-    )
-endif()
-
-#ACTOR-ZETA
-#############################################################################################
-
-#############################################################################################
-#JSON
-include_directories(SYSTEM thirdparty/json/include)
-#JSON
-#############################################################################################
-
-#############################################################################################
-#YAML
-set(yaml_path thirdparty/yaml-cpp)
-find_package(${YAML_INCLUDE_DIR} REQUIRED PATHS ${yaml_path} )
-include_directories(SYSTEM thirdparty/yaml-cpp/include)
-#YAML
-#############################################################################################
-
-#############################################################################################
-#nlohmann-json
-include_directories(SYSTEM thirdparty/json/include/)
-#nlohmann-json
-#############################################################################################
-
-#############################################################################################
-#BOOST
-find_package (Boost COMPONENTS REQUIRED
-        system
-        locale
-        regex
-        timer
-        program_options
-        filesystem
-        serialization
-
-)
-
-include_directories (${Boost_INCLUDE_DIRS})
-#BOOST
-#############################################################################################
-
-#############################################################################################
-#CCACHE
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-    message(STATUS "Enabling ccache")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
-#CCACHE
-#############################################################################################
 
 #############################################################################################
 #LUA
@@ -148,6 +85,69 @@ include_directories(${LUA_INCLUDE_DIRS})
 include_directories(SYSTEM thirdparty/sol2)
 
 #LUA
+#############################################################################################
+
+#############################################################################################
+#YAML
+set(yaml_path thirdparty/yaml-cpp)
+find_package(${YAML_INCLUDE_DIR} REQUIRED PATHS ${yaml_path} )
+include_directories(SYSTEM thirdparty/yaml-cpp/include)
+#YAML
+#############################################################################################
+
+#############################################################################################
+#cxxopts
+include_directories(SYSTEM thirdparty/cxxopts/include)
+#cxxopts
+#############################################################################################
+
+#############################################################################################
+#ACTOR-ZETA
+
+option(STANDALONE-ACTOR-ZETA "" ON)
+
+if(STANDALONE-ACTOR-ZETA)
+    set(actor-zeta-dir ${PROJECT_SOURCE_DIR}/thirdparty/actor-zeta)
+    include_directories( SYSTEM
+            ${actor-zeta-dir}/core
+            ${actor-zeta-dir}/io
+    )
+endif()
+
+#ACTOR-ZETA
+#############################################################################################
+
+#############################################################################################
+#nlohmann-json
+include_directories(SYSTEM thirdparty/json/include/)
+#nlohmann-json
+#############################################################################################
+
+#############################################################################################
+#boost
+find_package (Boost COMPONENTS REQUIRED
+        system
+        locale
+        regex
+        timer
+        filesystem
+        serialization
+
+)
+
+include_directories (${Boost_INCLUDE_DIRS})
+#boost
+#############################################################################################
+
+#############################################################################################
+#ccahe
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    message(STATUS "Enabling ccache")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+endif(CCACHE_FOUND)
+#ccahe
 #############################################################################################
 
 add_subdirectory(thirdparty)
