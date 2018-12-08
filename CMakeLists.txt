@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0.0)#2.8.12)
 
 set(project RocketJoe)
 
@@ -56,6 +56,25 @@ add_compile_options(
 )
 
 #############################################################################################
+
+if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.13/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
+endif()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+conan_cmake_run(
+        CONANFILE conanfile.txt
+        BASIC_SETUP
+        BUILD missing
+)
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
+#############################################################################################
+
+#############################################################################################
 #LUA
 
 set(LUA_PC_CFG "lua;lua5.3;lua5.2;lua5.1" CACHE STRING "pkg-config Lua configuration file (or files, separated by ;)")
@@ -89,15 +108,18 @@ include_directories(SYSTEM thirdparty/sol2)
 
 #############################################################################################
 #YAML
-set(yaml_path thirdparty/yaml-cpp)
+
 find_package(${YAML_INCLUDE_DIR} REQUIRED PATHS ${yaml_path} )
 include_directories(SYSTEM thirdparty/yaml-cpp/include)
+
 #YAML
 #############################################################################################
 
 #############################################################################################
 #cxxopts
+
 include_directories(SYSTEM thirdparty/cxxopts/include)
+
 #cxxopts
 #############################################################################################
 
@@ -119,12 +141,15 @@ endif()
 
 #############################################################################################
 #nlohmann-json
+
 include_directories(SYSTEM thirdparty/json/include/)
+
 #nlohmann-json
 #############################################################################################
 
 #############################################################################################
 #boost
+
 find_package (Boost COMPONENTS REQUIRED
         system
         locale
@@ -136,17 +161,20 @@ find_package (Boost COMPONENTS REQUIRED
 )
 
 include_directories (${Boost_INCLUDE_DIRS})
+
 #boost
 #############################################################################################
 
 #############################################################################################
 #ccahe
+
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
     message(STATUS "Enabling ccache")
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
+
 #ccahe
 #############################################################################################
 

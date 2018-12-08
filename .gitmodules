@@ -4,9 +4,6 @@
 [submodule "thirdparty/sol2"]
 	path = thirdparty/sol2
 	url = https://github.com/ThePhD/sol2.git
-[submodule "thirdparty/yaml-cpp"]
-	path = thirdparty/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp
 [submodule "thirdparty/json"]
 	path = thirdparty/json
 	url = https://github.com/nlohmann/json.git
