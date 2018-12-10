@@ -5,15 +5,15 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem.hpp>
 
-
-#include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
-
 #include <sol.hpp>
+
 #include <goblin-engineer/metadata.hpp>
 #include <goblin-engineer/dynamic.hpp>
 #include <goblin-engineer/context.hpp>
 
 #include <actor-zeta/actor/actor_address.hpp>
+
+#include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
@@ -30,6 +30,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
             };
 
+            /// TODO: UB
             lua_engine::lua_engine(goblin_engineer::context_t * context):
                 abstract_service(context,"lua_engine"),
                 pimpl(new impl(*this)) {
@@ -38,7 +39,6 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                             actor_zeta::behavior::make_handler(
                                     "dispatcher",
                                     [this](actor_zeta::behavior::context &ctx) -> void {
-                                        std::cerr << "9999" << std::endl;
                                         auto t = ctx.message().body<api::transport>();
                                         pimpl->push_job(std::move(t));
                                     }
@@ -57,8 +57,6 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 bool check_init = false;
 
-                std::cerr << "custom lib " <<std::endl;
-
                 for( auto &i : env_lua ){
                     std::cerr << i.first << " : "  << (config_path/i.second.as_string()).string()<<std::endl;
 
@@ -74,8 +72,6 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                     }
 
                 }
-
-                std::cerr << "custom lib " <<std::endl;
 
                 if(check_init) {
                     pimpl->environment_configuration(context->config().as_object().at("app").as_string(),env);

@@ -56,8 +56,8 @@ namespace rocketjoe { namespace api { namespace json_rpc {
                 json id;
                 std::string method;
                 json params;
-                std::string application_id;
-                std::string api_key;
+                boost::optional<std::string> application_id;
+                boost::optional<std::string> api_key;
             };
 
 

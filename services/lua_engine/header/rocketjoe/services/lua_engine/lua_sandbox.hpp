@@ -10,21 +10,21 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-                using id = std::size_t;
-
                 class lua_context {
                 public:
-                    virtual ~lua_context() = default;
 
-                    lua_context(actor_zeta::behavior::context_t&);
+                    explicit lua_context(actor_zeta::behavior::context_t&);
+
+                    virtual ~lua_context() = default;
 
                     auto environment_configuration(const std::string&,const std::map<std::string,std::string>&) -> void ;
 
-                    auto push_job(api::transport &&job) -> void;
+                    auto push_job(api::transport &&) -> void;
 
                     auto run() -> void;
 
                 private:
+                    std::vector<std::size_t> jobs_id;
                     device<api::transport> device_;
                     sol::environment environment;
                     sol::state lua;

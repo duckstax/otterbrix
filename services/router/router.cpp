@@ -60,11 +60,11 @@ namespace rocketjoe {
                                     auto *http = static_cast<api::http *>(transport.detach());
 
 
-                                    api::task task_;
-                                    task_.transport_= http;
-                                    parse(http->body(), task_.request);
-
                                     if (http->uri() == "/system") {
+                                        api::task task_;
+                                        task_.transport_= http;
+                                        parse(http->body(), task_.request);
+
                                         ctx->addresses("object_storage")->send(
                                                 actor_zeta::messaging::make_message(
                                                         ctx->self(),
@@ -76,12 +76,28 @@ namespace rocketjoe {
                                     }
 
 
-                                    if (pimpl->is_reg_app(task_.request.method)) {
+                                    if (pimpl->is_reg_app(http->method())) {
+                                        api::task task_;
+                                        task_.transport_= http;
+                                        parse(http->body(), task_.request);
+
                                         ctx->addresses("object_storage")->send(
                                                 actor_zeta::messaging::make_message(
                                                         ctx->self(),
                                                         task_.request.method,
                                                         std::move(task_)
+                                                )
+                                        );
+                                        return ;
+                                    }
+
+
+                                    {
+                                        ctx->addresses("lua_engine")->send(
+                                                actor_zeta::messaging::make_message(
+                                                        ctx->self(),
+                                                        "dispatcher",
+                                                        std::move(api::transport(http))
                                                 )
                                         );
                                         return ;
