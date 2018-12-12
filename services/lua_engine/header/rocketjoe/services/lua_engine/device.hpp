@@ -46,11 +46,14 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                     }
 
                     contaner.reserve(queue_.size());
-                    for (auto &i:queue_) {
-                        contaner.emplace_back(i);
+                    for (auto &&i:queue_) {
+                        contaner.emplace_back(std::move(i));
                     }
 
+                    queue_.clear();
+                    cv.notify_all();
                     return contaner.size();
+
                 }
 
                 auto get(id current_id) -> referen {

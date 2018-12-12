@@ -3,7 +3,7 @@ Accept: */*
 Cache-Control: no-cache
 Content-Type: application/json
 
-<> http_json.json
+{"a":1,"b":2}
 ###
 
 
