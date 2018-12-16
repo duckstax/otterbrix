@@ -5,6 +5,7 @@ OpenSSL/1.0.2p@conan/stable
 spdlog/1.2.1@bincrafters/stable
 fmt/5.2.0@bincrafters/stable
 #mongo-cxx-driver/3.3.0@bisect/stable
+jsonformoderncpp/3.4.0@vthiery/stable
 
 
 [options]
