@@ -1,6 +1,17 @@
 set(CURRENT_TARGET rocketjoed)
 
-add_executable(${CURRENT_TARGET}  rocketjoed.cpp init_service.hpp init_service.cpp configuration.cpp configuration.hpp)
+set(${CURRENT_TARGET}_headers
+        init_service.hpp
+        configuration.hpp
+)
+
+set(${CURRENT_TARGET}_sources
+        rocketjoed.cpp
+        init_service.cpp
+        configuration.cpp
+)
+
+add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers} )
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE

@@ -29,11 +29,13 @@ protected:
 
 using transport = actor_zeta::intrusive_ptr<transport_base>;
 
-
 template <typename T,typename ...Args>
 inline auto make_transport(Args... args) -> transport {
     return actor_zeta::intrusive_ptr<T>(new T (std::forward<Args>(args)...));
 }
 
+class http;
+class web_socket;
+auto create_transport(transport_type type, transport_id id) -> transport;
 
 }}

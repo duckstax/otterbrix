@@ -73,7 +73,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "job_type",
                         [this](std::size_t id) -> uint {
                             if ( device_.in(id) ) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 return uint (transport->type());
                             }
 
@@ -85,7 +85,16 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "job_close",
                         [this](std::size_t id) {
                             if ( device_.in(id) ) {
-                                device_.release(id);
+                                auto result = std::move(device_.release(id));
+
+                                context_.addresses("http")->send(
+                                        actor_zeta::messaging::make_message(
+                                                context_.self(),
+                                                "write",
+                                                std::move(result)
+                                        )
+                                );
+
                             }
                         }
                 );
@@ -95,7 +104,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_header_read",
                         [this](std::size_t id, std::string name) -> std::string {
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->header(name);
@@ -110,7 +119,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_header",
                         [this](std::size_t id, std::string name, std::string value) -> void {
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_second(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     http->header(std::move(name), std::move(value));
@@ -124,7 +133,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_uri",
                         [this](std::size_t id) -> std::string {
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->uri();
@@ -139,7 +148,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         [this](std::size_t id, std::string body_) {
 
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_second(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->body(body_);
@@ -154,7 +163,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_body_read",
                         [this](std::size_t id) -> std::string {
                             if ( device_.in(id) ) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->body();
@@ -168,7 +177,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_method",
                         [this](std::size_t id) -> std::string {
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->method();
@@ -183,7 +192,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         "http_status",
                         [this](std::size_t id) -> std::size_t {
                             if (device_.in(id)) {
-                                auto &transport = device_.get(id);
+                                auto &transport = device_.get_first(id);
                                 if ( api::transport_type::http == transport->type() ) {
                                     auto *http = static_cast<api::http *>(transport.get());
                                     return http->status();
