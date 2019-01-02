@@ -1,8 +1,13 @@
 set(CURRENT_TARGET object_storage)
 
+#include(${CMAKE_BINARY_DIR}/FindOpenSSL.cmake)
+#include(${CMAKE_BINARY_DIR}/Findzlib.cmake)
+#include(${CMAKE_BINARY_DIR}/Findmongo-c-driver.cmake)
+#include(${CMAKE_BINARY_DIR}/Findmongo-cxx-driver.cmake)
+
+#find_package(ZLIB REQUIRED)
 find_package(libbsoncxx REQUIRED)
 find_package(libmongocxx REQUIRED)
-
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/object_storage/object_storage.hpp

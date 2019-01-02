@@ -1,7 +1,4 @@
-set(CURRENT_TARGET database)
-
-find_package(libbsoncxx REQUIRED)
-find_package(libmongocxx REQUIRED)
+set(CURRENT_TARGET resource_manager)
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/resource_manager/resource_manager.hpp
