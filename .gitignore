@@ -413,3 +413,7 @@ luac.out
 .idea
 cmake-build-debug/
 venv/
+conan_paths.cmake
+conanbuildinfo.cmake
+conanbuildinfo.txt
+conaninfo.txt
