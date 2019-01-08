@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <api/json_rpc.hpp>
+#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
 
 
 namespace rocketjoe {
@@ -47,8 +48,8 @@ namespace rocketjoe {
 
             };
 
-            router::router(goblin_engineer::context_t *ctx) :
-                    abstract_service(ctx, "router"),
+            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
+                    abstract_service(env, "router"),
                     pimpl(std::make_unique<impl>()) {
 
 
@@ -113,7 +114,7 @@ namespace rocketjoe {
                         actor_zeta::behavior::make_handler(
                                 "registered_application",
                                 [this](actor_zeta::behavior::context &ctx) -> void {
-                                    auto app_info_t = std::move(ctx.message().body<api::app_info>());
+                                    auto app_info_t = ctx.message().body<api::app_info>();
                                     pimpl->add_registri_app_name(app_info_t);
                                 }
                         )

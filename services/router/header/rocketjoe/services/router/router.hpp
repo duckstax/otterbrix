@@ -6,7 +6,7 @@ namespace rocketjoe { namespace services { namespace router {
 
             class router final: public goblin_engineer::abstract_service {
             public:
-                router(goblin_engineer::context_t *ctx);
+                router(goblin_engineer::dynamic_config&, goblin_engineer::abstract_environment * );
 
                 ~router();
                 

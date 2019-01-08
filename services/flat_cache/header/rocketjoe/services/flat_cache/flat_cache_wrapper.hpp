@@ -4,9 +4,9 @@
 
 namespace rocketjoe { namespace services { namespace flat_cache {
 
-            class flat_cache_wrapper final: public goblin_engineer::abstract_service {
+            class flat_cache_wrapper final : public goblin_engineer::abstract_service {
             public:
-                flat_cache_wrapper(goblin_engineer::context_t *ctx);
+                flat_cache_wrapper(goblin_engineer::dynamic_config&, goblin_engineer::abstract_environment * );
 
                 ~flat_cache_wrapper() = default;
 

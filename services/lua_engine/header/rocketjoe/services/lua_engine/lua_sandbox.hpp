@@ -10,27 +10,25 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-                class lua_context {
-                public:
+    class lua_context final {
+    public:
 
-                    explicit lua_context(actor_zeta::behavior::context_t&);
+        lua_context(goblin_engineer::dynamic_config&,actor_zeta::actor::actor_address);
 
-                    virtual ~lua_context() = default;
+        ~lua_context() = default;
 
-                    auto environment_configuration(const std::string&,const std::map<std::string,std::string>&) -> void ;
+        auto push_job(api::transport &&) -> void;
 
-                    auto push_job(api::transport &&) -> void;
+        auto run() -> void;
 
-                    auto run() -> void;
-
-                private:
-                    std::vector<std::size_t> jobs_id;
-                    device<api::transport> device_;
-                    sol::environment environment;
-                    sol::state lua;
-                    sol::load_result r;
-                    actor_zeta::behavior::context_t& context_;
-                    std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
-                };
+    private:
+        std::vector<std::size_t> jobs_id;
+        device<api::transport> device_;
+        sol::environment environment;
+        sol::state lua;
+        std::string path_script;
+        actor_zeta::actor::actor_address address;
+        std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
+    };
 
 }}}

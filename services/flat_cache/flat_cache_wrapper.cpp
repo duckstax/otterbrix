@@ -3,6 +3,7 @@
 #include <rocketjoe/api/cache_commands.hpp>
 
 #include <goblin-engineer/metadata.hpp>
+#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
 
 namespace rocketjoe { namespace services { namespace flat_cache {
 
@@ -40,8 +41,8 @@ namespace rocketjoe { namespace services { namespace flat_cache {
 
             }
 
-            flat_cache_wrapper::flat_cache_wrapper(goblin_engineer::context_t *ctx):
-                abstract_service(ctx,"cache"),
+            flat_cache_wrapper::flat_cache_wrapper(goblin_engineer::dynamic_config& configuration,actor_zeta::environment::abstract_environment * env):
+                abstract_service(env,"cache"),
                 pimpl(std::make_unique<impl>()) {
 
                 attach(

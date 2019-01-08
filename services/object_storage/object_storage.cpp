@@ -65,10 +65,10 @@ namespace rocketjoe { namespace services { namespace object_storage {
 
             }
 
-            object_storage::object_storage(goblin_engineer::context_t *ctx) : abstract_service(ctx,"object_storage") {
+            object_storage::object_storage(goblin_engineer::dynamic_config&configuration, goblin_engineer::abstract_environment *env) : abstract_service(env,"object_storage") {
 
-                auto mongo_uri = ctx->config().as_object()["mongo-uri"].as_string();
-                auto mongo_root_db = ctx->config().as_object()["mongo-root-db"].as_string();
+                auto mongo_uri = configuration.as_object()["mongo-uri"].as_string();
+                auto mongo_root_db = configuration.as_object()["mongo-root-db"].as_string();
                 pimpl = std::make_unique<impl>(mongo_uri, mongo_root_db);
 
                 attach(
@@ -256,8 +256,5 @@ namespace rocketjoe { namespace services { namespace object_storage {
 
             }
 
-
-        }
-    }
-}
+}}}
 

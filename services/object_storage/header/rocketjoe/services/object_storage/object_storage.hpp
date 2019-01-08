@@ -6,7 +6,7 @@ namespace rocketjoe { namespace services { namespace object_storage {
 
             class object_storage final: public goblin_engineer::abstract_service {
             public:
-                object_storage(goblin_engineer::context_t *ctx);
+                object_storage(goblin_engineer::dynamic_config&, goblin_engineer::abstract_environment *);
 
                 ~object_storage() = default;
 

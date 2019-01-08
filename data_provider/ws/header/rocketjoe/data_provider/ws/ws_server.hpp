@@ -6,9 +6,9 @@ namespace rocketjoe {namespace data_provider {namespace ws_server {
 
             class ws_server final: public goblin_engineer::data_provider {
             public:
-                ws_server(goblin_engineer::context_t *,actor_zeta::actor::actor_address  );
+                ws_server(goblin_engineer::dynamic_config& ,actor_zeta::environment::abstract_environment * ,actor_zeta::actor::actor_address );
 
-                ~ws_server();
+                ~ws_server() = default;
 
                 void startup(goblin_engineer::context_t *ctx) override;
 
