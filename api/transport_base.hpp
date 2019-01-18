@@ -6,36 +6,43 @@
 
 namespace rocketjoe { namespace api {
 
-enum class transport_type : unsigned char {
-    http = 0x00,
-    ws   = 0x01,
-};
+        enum class transport_type : unsigned char {
+            http = 0x00,
+            ws = 0x01,
+        };
 
 
-using transport_id = std::size_t ;
+        using transport_id = std::size_t;
 
-struct transport_base : public actor_zeta::ref_counted  {
+        struct transport_base : public actor_zeta::ref_counted {
 
-    transport_base(transport_type type,transport_id);
-    virtual ~transport_base() = default;
-    auto type() -> transport_type;
-    auto id() -> transport_id;
+            transport_base(transport_type type, transport_id);
 
-protected:
-    transport_type  type_;
-    transport_id    id_;
+            virtual ~transport_base() = default;
 
-};
+            auto type() -> transport_type;
 
-using transport = actor_zeta::intrusive_ptr<transport_base>;
+            auto id() -> transport_id;
 
-template <typename T,typename ...Args>
-inline auto make_transport(Args... args) -> transport {
-    return actor_zeta::intrusive_ptr<T>(new T (std::forward<Args>(args)...));
-}
+        protected:
+            transport_type type_;
+            transport_id id_;
 
-class http;
-class web_socket;
-auto create_transport(transport_type type, transport_id id) -> transport;
+        };
+
+        using transport = actor_zeta::intrusive_ptr<transport_base>;
+
+        template<typename T, typename ...Args>
+        inline auto make_transport(Args... args) -> transport {
+            return actor_zeta::intrusive_ptr<T>(new T(std::forward<Args>(args)...));
+        }
+
+        template<typename T>
+        inline auto unpack_transport(transport t) -> T * {
+            auto *transport_ptr = t.detach();
+            return static_cast<T *>(transport_ptr);
+        }
+
+        auto create_transport(transport_type type, transport_id id) -> transport;
 
 }}

@@ -48,11 +48,9 @@ namespace rocketjoe { namespace data_provider { namespace ws_server {
                     attach(
                         actor_zeta::behavior::make_handler(
                                 "write",
-                                [this](actor_zeta::behavior::context& ctx,api::transport&t) -> void {
-                                    auto*transport_tmp = t.get();
-                                    t.reset();
-                                    std::unique_ptr<api::web_socket> transport(static_cast<api::web_socket*>(transport_tmp));
-                                    pimpl->listener_->write(std::move(transport));
+                                [this](actor_zeta::behavior::context&,api::transport&t) -> void {
+                                    pimpl->listener_->write(std::unique_ptr<api::web_socket>(
+                                            api::unpack_transport<api::web_socket>(t)));
                                 }
                         )
                     );

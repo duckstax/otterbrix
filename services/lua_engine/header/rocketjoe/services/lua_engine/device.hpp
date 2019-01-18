@@ -33,29 +33,35 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 auto push(value_type &&value) -> void {
                     auto current_id = value->id();
                     auto tmp = api::create_transport(value->type(),value->id());
-                    lock _(mutex_);
-                    storage.emplace(current_id,std::make_pair(std::move(value),std::move(tmp)));
-                    queue_.emplace_back(current_id);
-                    cv.notify_all();
+
+                    {
+                        lock _(mutex_);
+                        storage.emplace(current_id, std::make_pair(std::move(value), std::move(tmp)));
+                        queue_.emplace_back(current_id);
+                    }
+                        cv.notify_one();
 
                 }
 
                 auto pop_all(std::vector<std::size_t> &contaner) -> std::size_t {
+                    std::size_t  size = 0;
+                    {
+                        lock _(mutex_);
 
-                    lock _(mutex_);
+                        if (queue_.empty()) {
+                            return size ;
+                        }
 
-                    if (queue_.empty()) {
-                        return 0;
+                        contaner.reserve(queue_.size());
+                        for (auto &&i:queue_) {
+                            contaner.emplace_back(std::move(i));
+                        }
+
+                        queue_.clear();
+                        size = contaner.size();
                     }
-
-                    contaner.reserve(queue_.size());
-                    for (auto &&i:queue_) {
-                        contaner.emplace_back(std::move(i));
-                    }
-
-                    queue_.clear();
-                    cv.notify_all();
-                    return contaner.size();
+                    cv.notify_one();
+                    return size;
 
                 }
 

@@ -27,6 +27,16 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 )
         );
 
+
+        attach(
+                actor_zeta::behavior::make_handler(
+                        "write",
+                        [this](actor_zeta::behavior::context &ctx) -> void {
+                            ctx->addresses("http")->send(std::move(ctx.message()));
+                        }
+                )
+        );
+
         pimpl = std::make_unique<lua_context>(configuration, this->address());
     }
 

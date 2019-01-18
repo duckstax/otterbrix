@@ -11,6 +11,21 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
     constexpr const char *write = "write";
 
+    int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
+        std::cerr << "An exception occurred in a function, here's what it says ";
+        if (maybe_exception) {
+            std::cerr << "(straight from the exception): ";
+            const std::exception &ex = *maybe_exception;
+            std::cerr << ex.what() << std::endl;
+        } else {
+            std::cerr << "(from the description parameter): ";
+            std::cerr.write(description.data(), description.size());
+            std::cerr << std::endl;
+        }
+
+        return sol::stack::push(L, description);
+    }
+
     auto load_libraries(sol::state &lua, const std::map<std::string, std::string> &env) -> void {
 
         lua.open_libraries(
@@ -27,13 +42,16 @@ namespace rocketjoe { namespace services { namespace lua_engine {
             lua.require_file(i.first, i.second);
         }
 
+        lua.set_exception_handler(&my_exception_handler);
+
+
     }
 
 
     auto lua_context::run() -> void {
         exuctor = std::make_unique<std::thread>(
                 [this]() {
-                    sol::load_result r = lua.load_file(this->path_script);
+                    auto r = lua.load_file(this->path_script);
                     r();
                 }
         );
