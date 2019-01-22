@@ -10,7 +10,6 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-            using id = std::size_t;
 
 
             template<typename T>
@@ -21,6 +20,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 using referen = T &;
                 using pointer = value_type *;
                 using lock = std::lock_guard<std::mutex>;
+                using id_t = std::size_t;
 
                 device() = default;
 
@@ -43,13 +43,13 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 }
 
-                auto pop_all(std::vector<std::size_t> &contaner) -> std::size_t {
-                    std::size_t  size = 0;
+                auto pop_all(std::vector<id_t> &contaner) {
+                    contaner.clear();
                     {
                         lock _(mutex_);
 
                         if (queue_.empty()) {
-                            return size ;
+                            return ;
                         }
 
                         contaner.reserve(queue_.size());
@@ -58,26 +58,24 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                         }
 
                         queue_.clear();
-                        size = contaner.size();
                     }
                     cv.notify_one();
-                    return size;
 
                 }
 
-                auto get_first(id current_id) -> referen {
+                auto get_first(id_t current_id) -> referen {
                     lock _(mutex_);
                     return storage.at(current_id).first;
 
                 }
 
-                auto get_second(id current_id) -> referen {
+                auto get_second(id_t current_id) -> referen {
                     lock _(mutex_);
                     return storage.at(current_id).second;
 
                 }
 
-                auto in(id current_id) -> bool {
+                auto in(id_t current_id) -> bool {
                     lock _(mutex_);
                     auto status = false;
                     status = !(storage.find(current_id) == storage.end());
@@ -85,7 +83,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 }
 
-                auto release(std::size_t id) {
+                auto release(id_t id) {
                     lock _(mutex_);
                     auto it = storage.find(id);
                     if( it != storage.end() ){
@@ -98,7 +96,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
             private:
                 std::mutex mutex_;
                 std::condition_variable cv;
-                std::deque<id> queue_;
+                std::deque<id_t> queue_;
                 std::unordered_map<std::size_t, std::pair<value_type,value_type>> storage;
             };
 
