@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <api/json_rpc.hpp>
+#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
 
 
 namespace rocketjoe {
@@ -47,8 +48,8 @@ namespace rocketjoe {
 
             };
 
-            router::router(goblin_engineer::context_t *ctx) :
-                    abstract_service(ctx, "router"),
+            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
+                    abstract_service(env, "router"),
                     pimpl(std::make_unique<impl>()) {
 
 
@@ -60,11 +61,11 @@ namespace rocketjoe {
                                     auto *http = static_cast<api::http *>(transport.detach());
 
 
-                                    api::task task_;
-                                    task_.transport_= http;
-                                    parse(http->body(), task_.request);
-
                                     if (http->uri() == "/system") {
+                                        api::task task_;
+                                        task_.transport_= http;
+                                        parse(http->body(), task_.request);
+
                                         ctx->addresses("object_storage")->send(
                                                 actor_zeta::messaging::make_message(
                                                         ctx->self(),
@@ -76,12 +77,28 @@ namespace rocketjoe {
                                     }
 
 
-                                    if (pimpl->is_reg_app(task_.request.method)) {
+                                    if (pimpl->is_reg_app(http->method())) {
+                                        api::task task_;
+                                        task_.transport_= http;
+                                        parse(http->body(), task_.request);
+
                                         ctx->addresses("object_storage")->send(
                                                 actor_zeta::messaging::make_message(
                                                         ctx->self(),
                                                         task_.request.method,
                                                         std::move(task_)
+                                                )
+                                        );
+                                        return ;
+                                    }
+
+
+                                    {
+                                        ctx->addresses("lua_engine")->send(
+                                                actor_zeta::messaging::make_message(
+                                                        ctx->self(),
+                                                        "dispatcher",
+                                                        std::move(api::transport(http))
                                                 )
                                         );
                                         return ;
@@ -97,7 +114,7 @@ namespace rocketjoe {
                         actor_zeta::behavior::make_handler(
                                 "registered_application",
                                 [this](actor_zeta::behavior::context &ctx) -> void {
-                                    auto app_info_t = std::move(ctx.message().body<api::app_info>());
+                                    auto app_info_t = ctx.message().body<api::app_info>();
                                     pimpl->add_registri_app_name(app_info_t);
                                 }
                         )

@@ -4,21 +4,20 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-            class lua_engine final: public goblin_engineer::abstract_service {
-            public:
-                explicit lua_engine(goblin_engineer::context_t *);
+    class lua_context;
 
-                ~lua_engine() override = default ;
+    class lua_engine final : public goblin_engineer::abstract_service {
+    public:
+        lua_engine(goblin_engineer::dynamic_config &, goblin_engineer::abstract_environment *);
 
-                void startup(goblin_engineer::context_t *) override;
+        ~lua_engine() override = default;
 
-                void shutdown() override;
+        void startup(goblin_engineer::context_t *) override;
 
-            private:
-                class impl;
-                std::unique_ptr<impl> pimpl;
-            };
+        void shutdown() override;
 
-        }
-    }
-}
+    private:
+        std::unique_ptr<lua_context> pimpl;
+    };
+
+}}}

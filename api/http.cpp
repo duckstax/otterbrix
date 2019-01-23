@@ -55,5 +55,9 @@ namespace rocketjoe { namespace api {
             return headers_.end();
         }
 
+        auto http::header(std::string &name) const -> const std::string & {
+            return headers_.at(name);
+        }
+
     }
 }

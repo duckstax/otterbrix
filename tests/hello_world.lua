@@ -1,32 +1,20 @@
-local web = require('web')
+local web = require('http')
 
-
-local function gen(request)
-    local response = {
-
-    }
-
-    response["header"] = { }
-    response["body"] = ""
-    response["id"] = request["id"]
-    response["type"] = request["type"]
-    return response
+local function http_magick(self)
+    print(555555555555555)
+    return self:http("hello")(self)
 end
-
-local function http_magick(self,request)
-    print(10)
-    return self:http("hello")(self,request)
-end
-
-local function print_body(self,request)
-    print(11)
-    local response = gen(request)
-    response["body"]="{\"id\":12}"
-    self:write_and_close(response)
+print(4)
+local function print_body(self)
+    print(66666666666666)
+    print(self:body_read())
+    print("Content-Type")
+    print(self:http_header("Content-Type"))
+    print(77777777777777)
+    self:finish()
 end
 
 local app = web.application()
-
 app:handler_http("http","hello",print_body)
 app:dispatcher("http",http_magick)
 app:start()

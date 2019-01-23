@@ -1,6 +1,6 @@
 [requires]
 yaml-cpp/0.6.2@bincrafters/stable
-boost/1.68.0@conan/stable
+boost/1.69.0@conan/stable
 OpenSSL/1.0.2p@conan/stable
 spdlog/1.2.1@bincrafters/stable
 fmt/5.2.0@bincrafters/stable

@@ -36,6 +36,7 @@ namespace rocketjoe { namespace api {
             ///header
             void header(const char*key,const char* value);
             void header(std::string&&,std::string&&);
+            auto header(std::string&) const -> const std::string&;
             ///header
             ///url
             void uri(const std::string&);

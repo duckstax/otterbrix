@@ -7,8 +7,9 @@
 namespace rocketjoe { namespace api {
 
 struct web_socket final  : public  transport_base {
-    web_socket(transport_id);
-    virtual ~web_socket();
+    explicit web_socket(transport_id);
+
+    ~web_socket() override = default;
     std::string body;
 
 };
