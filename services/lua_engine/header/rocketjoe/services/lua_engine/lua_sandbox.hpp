@@ -22,7 +22,6 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         auto run() -> void;
 
     private:
-        std::vector<std::size_t> jobs_id;
         device<api::transport> device_;
         sol::environment environment;
         sol::state lua;

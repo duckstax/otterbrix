@@ -97,18 +97,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         lua.set_function(
                 "jobs_wait",
                 [this](sol::table jobs) -> std::size_t {
-
-                    device_.pop_all(jobs_id);
-
-                    if (!jobs_id.empty() ) {
-                        for (int i = 0; i <= jobs_id.size() - 1; ++i) {
-                            jobs[i] = jobs_id[i];
-                        }
-
-                    }
-
-                    return jobs_id.size();
-
+                    return device_.pop_all(jobs);
                 }
         );
 

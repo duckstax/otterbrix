@@ -7,6 +7,7 @@
 #include <deque>
 #include <vector>
 #include <rocketjoe/api/transport_base.hpp>
+#include <sol.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
@@ -43,23 +44,27 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 }
 
-                auto pop_all(std::vector<id_t> &contaner) {
-                    contaner.clear();
+                auto pop_all(sol::table jobs) {
+                    std::size_t size = 0;
+
                     {
                         lock _(mutex_);
 
                         if (queue_.empty()) {
-                            return ;
+                            return size;
                         }
 
-                        contaner.reserve(queue_.size());
-                        for (auto &&i:queue_) {
-                            contaner.emplace_back(std::move(i));
+                        for ( auto&& v : queue_ ) {
+                            jobs[size] = std::move(v);
+                            ++size;
                         }
 
                         queue_.clear();
                     }
+
                     cv.notify_one();
+
+                    return size;
 
                 }
 
