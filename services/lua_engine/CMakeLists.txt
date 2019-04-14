@@ -17,6 +17,33 @@ add_library(rocketjoe_${CURRENT_TARGET} STATIC
             ${CURRENT_TARGET_SOURCES}
 )
 
+
+set(LUA_PC_CFG "lua;lua5.3;lua5.2;lua5.1" CACHE STRING "pkg-config Lua configuration file (or files, separated by ;)")
+
+find_package(PkgConfig)
+if(PKG_CONFIG_EXECUTABLE)
+    pkg_search_module(LUA REQUIRED ${LUA_PC_CFG})
+else()
+    if(NOT LUA_INCLUDE_DIR)
+        message(SEND_ERROR "LUA_INCLUDE_DIR is required if no PkgConfig is available!")
+    endif()
+    if(NOT LUA_LIBRARIES)
+        message(SEND_ERROR "LUA_LIBRARIES is required if no PkgConfig is available!")
+    endif()
+endif()
+
+find_package(Lua 5.3)
+
+if(${LUA_INCLUDE_DIR})
+    if(NOT EXISTS ${LUA_INCLUDE_DIR}/lua.h)
+        message(SEND_ERROR "Can't find lua.h in ${LUA_INCLUDE_DIR}")
+    endif()
+endif()
+
+include_directories(${LUA_INCLUDE_DIRS})
+
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/sol2)
+
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})

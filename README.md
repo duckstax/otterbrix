@@ -43,7 +43,38 @@ make rocketjoe
 
 ```
 
-### for debian base  
+## for debian base  
+
+### use conan  
+
+```bash
+
+apt install git ccache g++ cmake python3 python3-dev python3-pip lua5.3 liblua5.3-dev 
+
+pip3 install conan --upgrade 
+
+conan remote add bisect https://api.bintray.com/conan/bisect/bisect
+
+conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+
+git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
+
+git submodule init
+
+git submodule update --recursive
+
+cd rocketjoe
+
+cmake ..
+
+make rocketjoe
+
+./rocketjoe 
+ 
+```
+
+### non use conan
+
 
 ```
     apt-get install -y \ 

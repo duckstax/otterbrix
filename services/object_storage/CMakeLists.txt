@@ -6,8 +6,8 @@ set(CURRENT_TARGET object_storage)
 #include(${CMAKE_BINARY_DIR}/Findmongo-cxx-driver.cmake)
 
 #find_package(ZLIB REQUIRED)
-find_package(libbsoncxx REQUIRED)
-find_package(libmongocxx REQUIRED)
+#find_package(libbsoncxx REQUIRED)
+#find_package(libmongocxx REQUIRED)
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/object_storage/object_storage.hpp
@@ -34,10 +34,10 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         rocketjoe::api
         goblin-engineer
-
-        ${LIBBSONCXX_LIBRARIES}
-        ${LIBMONGOCXX_LIBRARIES}
-        ${BSON_LIBRARIES}
+        ${CONAN_LIBS}
+        #${LIBBSONCXX_LIBRARIES}
+        #${LIBMONGOCXX_LIBRARIES}
+        #${BSON_LIBRARIES}
 
 )
 
