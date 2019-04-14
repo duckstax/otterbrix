@@ -1,0 +1,26 @@
+os: linux
+dist: trusty
+language: cpp
+
+cache:
+  - apt
+  - ccache
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-6
+install:
+  - "[ $CXX = g++ ] && export CXX=g++-6 || true"
+  - pip install conan
+  - conan user
+script:
+  - conan install .
+  - mkdir build && cd build
+  - cmake . -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=$COMPILER  -G "Unix makefiles"
+  - cmake --build .
