@@ -1,12 +1,12 @@
 [submodule "thirdparty/goblin-engineer"]
 	path = thirdparty/goblin-engineer
-	url = git@github.com:smart-cloud/goblin-engineer.git
+	url = https://github.com/smart-cloud/goblin-engineer.git
 [submodule "thirdparty/sol2"]
 	path = thirdparty/sol2
 	url = https://github.com/ThePhD/sol2.git
 [submodule "thirdparty/actor-zeta"]
 	path = thirdparty/actor-zeta
-	url = git@github.com:smart-cloud/actor-zeta.git
+	url = https://github.com/smart-cloud/actor-zeta.git
 [submodule "thirdparty/cxxopts"]
 	path = thirdparty/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
