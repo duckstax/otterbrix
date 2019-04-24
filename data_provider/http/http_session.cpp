@@ -1,57 +1,15 @@
 #include <rocketjoe/data_provider/http/http_session.hpp>
 #include <boost/beast/core/string.hpp>
 
-namespace rocketjoe {namespace data_provider { namespace http_server {
+namespace rocketjoe {namespace data_provider { namespace http {
             using actor_zeta::messaging::message;
             constexpr const char *router = "lua_engine";
-
 
             template<
                     class Body,
                     class Allocator
             >
             using request = http::request<Body, http::basic_fields<Allocator>>;
-
-/*
-            template<
-                    class Body,
-                    class Allocator
-            >
-            void handle_request(
-                    http::request<Body, http::basic_fields<Allocator>> &&req,
-                    api::transport_id id,
-                    actor_zeta::actor::actor_address &handle_processing
-            ) {
-
-                auto http = std::make_shared<api::http>(id);
-
-                http->method(std::string(req.method_string()));
-
-                http->uri(std::string(req.target()));
-
-                auto http_transport_ = std::make_shared<api::http>(id);
-
-                http_transport_->method(std::string(req.method_string()));
-
-                http_transport_->uri(std::string(req.target()));
-
-                for (auto const &field : req) {
-
-                    std::string header_name(field.name_string());
-                    std::string header_value(field.value());
-                    http->header(std::move(header_name), std::move(header_value));
-                }
-
-                http->body(req.body());
-
-                http_transport_->body(req.body());
-
-                api::transport http_data(std::move(http_transport_));
-
-
-
-            }
-            */
 
             http_session::http_session(tcp::socket socket, api::transport_id id, http_context& pipe_)
                     :

@@ -22,7 +22,7 @@
 #include <boost/config.hpp>
 
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
 
             websocket_session::websocket_session(tcp::socket socket, http_context& pipe_) :
              ws_(std::move(socket)),

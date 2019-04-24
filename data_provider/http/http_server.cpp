@@ -8,7 +8,7 @@
 #include <rocketjoe/data_provider/http/http_server.hpp>
 
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
 
             class http_server::impl final {
             public:

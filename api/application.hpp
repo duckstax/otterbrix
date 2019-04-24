@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <rocketjoe/api/transport_base.hpp>
+#include <api/transport_base.hpp>
 
 namespace rocketjoe { namespace api {
 

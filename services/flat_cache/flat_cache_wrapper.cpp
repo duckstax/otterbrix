@@ -1,6 +1,6 @@
 #include <rocketjoe/services/flat_cache/flat_cache_wrapper.hpp>
 #include <rocketjoe/services/flat_cache/flat_cache_impl.hpp>
-#include <rocketjoe/api/cache_commands.hpp>
+#include <rocketjoe/cache/cache_commands.hpp>
 
 #include <goblin-engineer/metadata.hpp>
 #include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>

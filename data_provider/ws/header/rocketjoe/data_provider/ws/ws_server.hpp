@@ -2,7 +2,7 @@
 
 #include <goblin-engineer/data_provider.hpp>
 
-namespace rocketjoe {namespace data_provider {namespace ws_server {
+namespace rocketjoe {namespace data_provider {namespace ws {
 
             class ws_server final: public goblin_engineer::data_provider {
             public:

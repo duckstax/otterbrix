@@ -1,7 +1,7 @@
 #include <rocketjoe/data_provider/ws/ws_listener.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace ws_server {
+namespace rocketjoe { namespace data_provider { namespace ws {
 
     using clock = std::chrono::steady_clock;
 

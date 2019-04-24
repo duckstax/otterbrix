@@ -51,8 +51,8 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 add_compile_options(
         -v
-        -Wall
-        -Wextra
+        #-Wall
+        #-Wextra
         -fno-rtti
 )
 
@@ -123,6 +123,7 @@ endif(CCACHE_FOUND)
 
 add_subdirectory(thirdparty)
 add_subdirectory(api)
+add_subdirectory(cache)
 add_subdirectory(data_provider)
 add_subdirectory(services)
 add_subdirectory(apps)

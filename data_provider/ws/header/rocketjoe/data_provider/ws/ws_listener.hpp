@@ -19,7 +19,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace ws_server {
+namespace rocketjoe { namespace data_provider { namespace ws {
 
             using tcp = boost::asio::ip::tcp;
             namespace http = boost::beast::http;

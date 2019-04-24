@@ -1,10 +1,12 @@
 set(CURRENT_TARGET http)
 
 list(APPEND CURRENT_TARGET_HEADERS
+        header/rocketjoe/data_provider/http/http_context.hpp
         header/rocketjoe/data_provider/http/http_server.hpp
         header/rocketjoe/data_provider/http/http_session.hpp
-        header/rocketjoe/data_provider/http/websocket_session.hpp
         header/rocketjoe/data_provider/http/listener.hpp
+        header/rocketjoe/data_provider/http/router.hpp
+        header/rocketjoe/data_provider/http/websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES

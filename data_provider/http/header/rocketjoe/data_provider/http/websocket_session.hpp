@@ -5,7 +5,7 @@
 #include <boost/beast/websocket.hpp>
 #include <rocketjoe/data_provider/http/http_context.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
 
 
             using tcp = boost::asio::ip::tcp;

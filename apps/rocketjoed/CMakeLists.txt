@@ -1,21 +1,21 @@
 set(CURRENT_TARGET rocketjoed)
 
 set(${CURRENT_TARGET}_headers
-        init_service.hpp
         configuration.hpp
+        init_http.hpp
+        init_service.hpp
 )
 
 set(${CURRENT_TARGET}_sources
-        rocketjoed.cpp
-        init_service.cpp
         configuration.cpp
+        init_http.cpp
+        init_service.cpp
+        rocketjoed.cpp
 )
 
 #############################################################################################
 #cxxopts
-
 include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/cxxopts/include)
-
 #cxxopts
 #############################################################################################
 

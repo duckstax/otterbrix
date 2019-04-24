@@ -18,7 +18,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 #include <rocketjoe/api/transport_base.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace ws_server {
+namespace rocketjoe { namespace data_provider { namespace ws {
 
     using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
     namespace http = boost::beast::http;            // from <boost/beast/http.hpp>

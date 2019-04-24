@@ -15,6 +15,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - g++-6
+      - lua5.3
 install:
   - "[ $CXX = g++ ] && export CXX=g++-6 || true"
   - pip install conan

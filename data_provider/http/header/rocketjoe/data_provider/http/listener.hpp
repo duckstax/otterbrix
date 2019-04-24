@@ -10,7 +10,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
 
             class listener final :
                     public std::enable_shared_from_this<listener>,

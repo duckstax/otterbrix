@@ -6,7 +6,7 @@
 #include <goblin-engineer/forward.hpp>
 #include <boost/beast/http/string_body.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
             namespace http = boost::beast::http;
 struct http_context {
 

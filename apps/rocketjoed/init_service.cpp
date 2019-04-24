@@ -11,6 +11,8 @@
 #include <actor-zeta/environment/group.hpp>
 #include <actor-zeta/environment/cooperation.hpp>
 
+#include "init_http.hpp"
+
 void init_service(goblin_engineer::dynamic_environment&env) {
 
 /// rewrite config
@@ -21,8 +23,9 @@ void init_service(goblin_engineer::dynamic_environment&env) {
         auto& cache = env.add_service<rocketjoe::services::flat_cache::flat_cache>();
         auto& router = env.add_service<rocketjoe::services::router::router>();
 
-        //auto& ws = env.add_data_provider<rocketjoe::data_provider::ws_server::ws_server>(router->entry_point());
-        auto& http = env.add_data_provider<rocketjoe::data_provider::http_server::http_server>(router->entry_point());
+        //auto& ws = env.add_data_provider<rocketjoe::data_provider::ws::ws>(router->entry_point());
+        init_http();
+        auto& http = env.add_data_provider<rocketjoe::data_provider::http::http_server>(router->entry_point());
 
         router->add_shared(http.address().operator->());
         lua->add_shared(http.address().operator->());

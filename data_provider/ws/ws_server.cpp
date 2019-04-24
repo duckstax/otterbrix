@@ -9,7 +9,7 @@
 #include <rocketjoe/data_provider/ws/ws_server.hpp>
 
 
-namespace rocketjoe { namespace data_provider { namespace ws_server {
+namespace rocketjoe { namespace data_provider { namespace ws {
 
             class ws_server::impl final {
             public:

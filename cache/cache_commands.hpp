@@ -4,7 +4,7 @@
 
 #include <utility>
 
-#include <rocketjoe/api/cache_element.hpp>
+#include <rocketjoe/cache/cache_element.hpp>
 
 
 namespace rocketjoe { namespace api { namespace cache {

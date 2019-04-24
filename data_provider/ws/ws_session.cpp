@@ -1,7 +1,7 @@
 #include <rocketjoe/data_provider/ws/ws_session.hpp>
 #include <rocketjoe/api/websocket.hpp>
 
-namespace rocketjoe { namespace data_provider { namespace ws_server {
+namespace rocketjoe { namespace data_provider { namespace ws {
 
     constexpr const  char* dispatcher = "dispatcher";
 

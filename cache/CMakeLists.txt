@@ -1,19 +1,15 @@
-set(CURRENT_TARGET api)
+set(CURRENT_TARGET cache)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
-        application.hpp
-        http.hpp
-        json_rpc.hpp
-        transport_base.hpp
-        websocket.hpp
+        ../api/application.hpp
+        cache_commands.hpp
+        cache_element.hpp
 
 )
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
-        http.cpp
-        json_rpc.cpp
-        transport_base.cpp
-        websocket.cpp
+        cache_commands.cpp
+
 )
 
 include_directories(../thirdparty/json/include)

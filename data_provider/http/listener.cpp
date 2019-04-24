@@ -1,7 +1,7 @@
 #include <rocketjoe/data_provider/http/listener.hpp>
 #include <chrono>
 
-namespace rocketjoe { namespace data_provider { namespace http_server {
+namespace rocketjoe { namespace data_provider { namespace http {
 
             using clock = std::chrono::steady_clock;
 
