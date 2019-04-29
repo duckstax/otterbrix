@@ -18,39 +18,85 @@ namespace rocketjoe { namespace data_provider { namespace http {
         ~options() = default;
     };
 
-    struct KeyHasher final {
+    struct http_method_hasher final {
         std::size_t operator()(const http_method &k) const {
             using std::size_t;
             using std::hash;
-            using std::string;
 
             return (hash<uint64_t >()(static_cast<uint64_t>(k)));
         }
+    };
 
+    struct url_hasher final {
         std::size_t operator()(const string_view &k) const {
             return boost::hash_value(k);
         }
     };
 
+    struct http__context final {
+        http__context() = delete;
+        http__context(const http__context&) = delete;
+        http__context&operator=(const http__context&) = delete;
+        http__context(http__context&&) = delete;
+        http__context&operator=(http__context&&) = delete;
+
+    };
+
+    class http_method_container final {
+    public:
+
+        http_method_container() = default;
+        http_method_container(http_method_container&&) = default;
+
+        using action = std::function<void(http__context)>;
+        using storage = std::unordered_map<std::string,action,url_hasher>;
+
+        template <class F>
+        auto registration_handler(
+                string_view route_path,
+                const options &options,
+                F&&handler
+        ){
+            storage_.emplace(route_path,[](http__context){}/*std::move(handler)*/);
+        }
+    private:
+        storage storage_;
+    };
 
     class router final {
     public:
-        using storage = std::unordered_map<http_method,std::unordered_map<string_view,std::function<void()>,KeyHasher>,KeyHasher> ;
+        router() = default;
+        router(router&&) = default;
+
+        using storage = std::unordered_map<http_method,http_method_container,http_method_hasher>;
+
         using iterator = storage::iterator;
+
         template <class F>
         auto registration_handler(
                 http_method method,
                 string_view route_path,
                 const options &options,
-                F handler
+                F&& handler
         ){
+            auto it = storage_.find(method);
+            if(it == storage_.end()){
+                storage_.emplace(method,http_method_container());
+            }
+
+            it->second.registration_handler(route_path.to_string(),options,std::forward<F>(handler));
+
 
         }
 
+        auto invoke(){
+
+        }
+/*
         auto update(router&r){
             storage_.insert(r.begin(),r.end());
         }
-
+*/
         auto begin() -> iterator {
             return storage_.begin();
         }
@@ -71,10 +117,10 @@ namespace rocketjoe { namespace data_provider { namespace http {
 
         ~wrapper_router() = default;
 
-        router get_router(){
+//        router get_router(){
 ///            assert()
-            return router_;
-        }
+//            return router_;
+//        }
 
         template<typename F>
         auto http_delete(
