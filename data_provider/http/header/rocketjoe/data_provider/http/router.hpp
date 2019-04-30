@@ -4,6 +4,7 @@
 #include <sstream>
 //#include <iostream>
 #include <unordered_map>
+#include <string>
 
 #include <boost/beast/http/verb.hpp>
 
@@ -49,15 +50,15 @@ namespace rocketjoe { namespace data_provider { namespace http {
         http_method_container(http_method_container&&) = default;
 
         using action = std::function<void(http__context)>;
-        using storage = std::unordered_map<std::string,action,url_hasher>;
+        using storage = std::unordered_map<std::string,action>;
 
         template <class F>
         auto registration_handler(
                 string_view route_path,
                 const options &options,
-                F&&handler
+                F handler
         ){
-            storage_.emplace(route_path,[](http__context){}/*std::move(handler)*/);
+            storage_.emplace(route_path.to_string(),std::forward<F>(handler));
         }
     private:
         storage storage_;
@@ -69,7 +70,6 @@ namespace rocketjoe { namespace data_provider { namespace http {
         router(router&&) = default;
 
         using storage = std::unordered_map<http_method,http_method_container,http_method_hasher>;
-
         using iterator = storage::iterator;
 
         template <class F>
@@ -77,15 +77,15 @@ namespace rocketjoe { namespace data_provider { namespace http {
                 http_method method,
                 string_view route_path,
                 const options &options,
-                F&& handler
+                F handler
         ){
+
             auto it = storage_.find(method);
             if(it == storage_.end()){
                 storage_.emplace(method,http_method_container());
             }
 
-            it->second.registration_handler(route_path.to_string(),options,std::forward<F>(handler));
-
+            it->second.registration_handler(route_path,options,std::forward<F>(handler));
 
         }
 
@@ -156,7 +156,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
             add_handler(
                     http_method::get,
                     route_path,
-                    std::move(handler)
+                    std::forward<F>(handler)
             );
         }
 
@@ -208,7 +208,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
             add_handler(
                     http_method::post,
                     route_path,
-                    std::move(handler)
+                    std::forward<F>(handler)
             );
         }
 
@@ -248,7 +248,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
                     http_method::put,
                     route_path,
                     options,
-                    std::move(handler)
+                    std::forward<F>(handler)
             );
         }
 
@@ -264,7 +264,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
                     method,
                     route_path,
                     options{},
-                    std::move(handler)
+                    std::forward<F>(handler)
             );
         }
 
@@ -275,7 +275,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
                 const options &options,
                 F handler
         ) {
-            router_.registration_handler(method, route_path, options, std::move(handler));
+            router_.registration_handler(method, route_path, options, std::forward<F>(handler));
         }
 
         router router_;
