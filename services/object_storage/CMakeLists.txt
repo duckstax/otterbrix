@@ -46,9 +46,10 @@ target_include_directories(
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
         "${CMAKE_CURRENT_SOURCE_DIR}/../../"
-        ${LIBMONGOCXX_INCLUDE_DIRS}
-        ${LIBBSONCXX_INCLUDE_DIRS}
-        ${BSON_INCLUDE_DIRS}
+        ${CONAN_LIBS}
+        #${LIBMONGOCXX_INCLUDE_DIRS}
+        #${LIBBSONCXX_INCLUDE_DIRS}
+        #${BSON_INCLUDE_DIRS}
 )
 
 install(TARGETS
