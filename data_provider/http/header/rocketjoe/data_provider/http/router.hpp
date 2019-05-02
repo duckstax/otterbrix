@@ -1,17 +1,21 @@
 #pragma once
 
-//#include <string>
 #include <sstream>
-//#include <iostream>
 #include <unordered_map>
 #include <string>
+#include <functional>
+
+#include <actor-zeta/actor/actor_address.hpp>
 
 #include <boost/beast/http/verb.hpp>
+#include <boost/beast/http.hpp>
 
 namespace rocketjoe { namespace data_provider { namespace http {
 
     using boost::string_view;
     using http_method = boost::beast::http::verb ;
+    using request_type = boost::beast::http::request<boost::beast::http::string_body>;
+    using response = boost::beast::http::response<boost::beast::http::string_body>;
 
     class options final {
     public:
@@ -34,12 +38,34 @@ namespace rocketjoe { namespace data_provider { namespace http {
         }
     };
 
-    struct http__context final {
-        http__context() = delete;
-        http__context(const http__context&) = delete;
-        http__context&operator=(const http__context&) = delete;
-        http__context(http__context&&) = delete;
-        http__context&operator=(http__context&&) = delete;
+    class request_context final {
+    public:
+        request_context() = delete;
+        request_context(const request_context&) = delete;
+        request_context&operator=(const request_context&) = delete;
+        request_context(request_context&&) = default;
+        request_context&operator=(request_context&&) = default;
+        ~request_context() = default;
+
+        request_context(
+                request_type request_,
+                size_t i,
+                actor_zeta::actor::actor_address address
+        ):
+                request_(std::move(request_)),
+                id(i),
+                address(std::move(address)){
+
+        }
+
+        auto request() ->  request_type& {
+            return request_;
+        }
+
+    private:
+        request_type request_;
+        actor_zeta::actor::actor_address address;
+        std::size_t id;
 
     };
 
@@ -49,8 +75,9 @@ namespace rocketjoe { namespace data_provider { namespace http {
         http_method_container() = default;
         http_method_container(http_method_container&&) = default;
 
-        using action = std::function<void(http__context)>;
+        using action = std::function<void(request_context&)>;
         using storage = std::unordered_map<std::string,action>;
+        using iterator = storage::iterator;
 
         template <class F>
         auto registration_handler(
@@ -60,6 +87,28 @@ namespace rocketjoe { namespace data_provider { namespace http {
         ){
             storage_.emplace(route_path.to_string(),std::forward<F>(handler));
         }
+
+        auto invoke(request_context r){
+            auto it = storage_.find(r.request().target().to_string());
+            auto request = std::move(r);
+            it->second(request);
+        }
+
+        auto update(http_method_container&r){
+            storage_.insert(
+                    std::make_move_iterator(r.begin()),
+                    std::make_move_iterator(r.end())
+            );
+        }
+
+        auto begin() -> iterator {
+            return storage_.begin();
+        }
+
+        auto end() -> iterator {
+            return storage_.end();
+        }
+
     private:
         storage storage_;
     };
@@ -68,6 +117,7 @@ namespace rocketjoe { namespace data_provider { namespace http {
     public:
         router() = default;
         router(router&&) = default;
+        router&operator =(router&&) = default;
 
         using storage = std::unordered_map<http_method,http_method_container,http_method_hasher>;
         using iterator = storage::iterator;
@@ -89,14 +139,21 @@ namespace rocketjoe { namespace data_provider { namespace http {
 
         }
 
-        auto invoke(){
+        auto invoke(request_type r, std::size_t id,actor_zeta::actor::actor_address address){
+            auto method = r.method();
 
+            auto it = storage_.find(method);
+            request_context context(std::move(r),id,std::move(address));
+            it->second.invoke(std::move(context));
         }
-/*
+
         auto update(router&r){
-            storage_.insert(r.begin(),r.end());
+            storage_.insert(
+                    std::make_move_iterator(r.begin()),
+                    std::make_move_iterator(r.end())
+            );
         }
-*/
+
         auto begin() -> iterator {
             return storage_.begin();
         }
@@ -117,10 +174,10 @@ namespace rocketjoe { namespace data_provider { namespace http {
 
         ~wrapper_router() = default;
 
-//        router get_router(){
+        router get_router(){
 ///            assert()
-//            return router_;
-//        }
+            return std::move(router_);
+        }
 
         template<typename F>
         auto http_delete(

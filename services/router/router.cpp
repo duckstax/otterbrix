@@ -13,9 +13,7 @@
 #include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
 
 
-namespace rocketjoe {
-    namespace services {
-        namespace router {
+namespace rocketjoe { namespace services { namespace router {
 
     using api::json_rpc::parse;
 

@@ -3,43 +3,43 @@
 
 namespace rocketjoe { namespace data_provider { namespace http {
 
-            using clock = std::chrono::steady_clock;
+    using clock = std::chrono::steady_clock;
 
-            constexpr const char *dispatcher = "dispatcher";
+    constexpr const char *dispatcher = "dispatcher";
 
-            listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, actor_zeta::actor::actor_address pipe_) :
-                    acceptor_(ioc),
-                    socket_(ioc),
-                    pipe_(std::move(pipe_)) {
-                boost::system::error_code ec;
+    listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, actor_zeta::actor::actor_address pipe_) :
+            acceptor_(ioc),
+            socket_(ioc),
+            pipe_(std::move(pipe_)) {
+        boost::system::error_code ec;
 
-                // Open the acceptor
-                acceptor_.open(endpoint.protocol(), ec);
-                if (ec) {
-                    fail(ec, "open");
-                    return;
-                }
+        // Open the acceptor
+        acceptor_.open(endpoint.protocol(), ec);
+        if (ec) {
+            fail(ec, "open");
+            return;
+        }
 
-                // Allow address reuse
-                acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
-                if (ec) {
-                    fail(ec, "set_option");
-                    return;
-                }
+        // Allow address reuse
+        acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+        if (ec) {
+            fail(ec, "set_option");
+            return;
+        }
 
-                // Bind to the server address
-                acceptor_.bind(endpoint, ec);
-                if (ec) {
-                    fail(ec, "bind");
-                    return;
-                }
+        // Bind to the server address
+        acceptor_.bind(endpoint, ec);
+        if (ec) {
+            fail(ec, "bind");
+            return;
+        }
 
-                // Start listening for connections
-                acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
-                if (ec) {
-                    fail(ec, "listen");
-                    return;
-                }
+        // Start listening for connections
+        acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
+        if (ec) {
+            fail(ec, "listen");
+            return;
+        }
             }
 
             void listener::run() {
