@@ -5,9 +5,8 @@ namespace rocketjoe { namespace http {
             using actor_zeta::messaging::message;
             constexpr const char *router = "lua_engine";
 
-            http_session::http_session(tcp::socket socket, std::size_t id, http_context& pipe_)
-                    :
-                    socket_(std::move(socket)),
+            http_session::http_session(boost::asio::io_context& context, std::size_t id, http_context& pipe_):
+                    socket_(context),
                     strand_(socket_.get_executor()),
                     timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max) ()),
                     queue_(*this),
@@ -135,7 +134,6 @@ namespace rocketjoe { namespace http {
                 queue_(std::move(body));
             }
 
-            http_session::~http_session() = default;
 
             bool http_session::queue::on_write() {
                 BOOST_ASSERT(!items_.empty());

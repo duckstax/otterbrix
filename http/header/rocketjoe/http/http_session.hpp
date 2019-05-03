@@ -76,6 +76,7 @@ namespace rocketjoe { namespace http {
                     }
                 };
 
+            private:
                 tcp::socket socket_;
                 boost::asio::strand<boost::asio::io_context::executor_type> strand_;
                 boost::asio::steady_timer timer_;
@@ -85,9 +86,9 @@ namespace rocketjoe { namespace http {
                 http_context& handle_processing;
                 const std::size_t  id;
             public:
-                http_session(tcp::socket socket,std::size_t, http_context& );
+                http_session(boost::asio::io_context& context,std::size_t, http_context& );
 
-                ~http_session();
+                ~http_session() = default;
 
                 // Start the asynchronous operation
                 void run();
@@ -104,6 +105,10 @@ namespace rocketjoe { namespace http {
                 void do_close();
 
                 void write(response_type &&);
+
+                auto socket() -> tcp::socket& {
+                    return socket_;
+                }
 
             };
 

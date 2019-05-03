@@ -4,14 +4,12 @@ list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/http/http_context.hpp
         header/rocketjoe/http/http_server.hpp
         header/rocketjoe/http/http_session.hpp
-        header/rocketjoe/http/listener.hpp
         header/rocketjoe/http/router.hpp
         header/rocketjoe/http/websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
         http_session.cpp
-        listener.cpp
         http_server.cpp
         websocket_session.cpp
 )
