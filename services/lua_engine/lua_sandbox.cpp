@@ -2,8 +2,8 @@
 
 #include <boost/filesystem.hpp>
 
-#include <api/http.hpp>
-#include <api/websocket.hpp>
+#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/http/websocket.hpp>
 
 #include <goblin-engineer/dynamic.hpp>
 

@@ -3,7 +3,7 @@
 #include <rocketjoe/cache/cache_commands.hpp>
 
 #include <goblin-engineer/metadata.hpp>
-#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
+#include <goblin-engineer/dynamic.hpp>
 
 namespace rocketjoe { namespace services { namespace flat_cache {
 

@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <deque>
 #include <vector>
-#include <rocketjoe/api/transport_base.hpp>
+#include <rocketjoe/http/transport_base.hpp>
 #include <sol.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {

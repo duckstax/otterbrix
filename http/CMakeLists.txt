@@ -1,18 +1,30 @@
-set(CURRENT_TARGET router)
+set(CURRENT_TARGET http)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-
+        header/rocketjoe/http/http_context.hpp
+        header/rocketjoe/http/http_server.hpp
+        header/rocketjoe/http/http_session.hpp
+        header/rocketjoe/http/listener.hpp
+        header/rocketjoe/http/router.hpp
+        header/rocketjoe/http/websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-    router.cpp
+        http_session.cpp
+        listener.cpp
+        http_server.cpp
+        websocket_session.cpp
+        http.cpp
+        transport_base.cpp
+        websocket.cpp
 )
+
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
             ${CURRENT_TARGET_HEADERS}
             ${CURRENT_TARGET_SOURCES}
 )
+
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
@@ -20,8 +32,6 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
-        rocketjoe::dto
-        rocketjoe::http
         goblin-engineer
 )
 

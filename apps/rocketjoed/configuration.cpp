@@ -111,7 +111,7 @@ void load_config(cxxopts::ParseResult &args_, goblin_engineer::configuration &co
 void generate_yaml_config(YAML::Node &config_) {
 
     config_["address"] = "127.0.0.1";
-    config_["ws-port"] = 9999;
+    config_["websocket-port"] = 9999;
     config_["http-port"] = 9998;
     config_["mongo-uri"] = "mongodb://localhost:27017/rocketjoe";
     config_["env-lua"]["http"] = "lua/http.lua";

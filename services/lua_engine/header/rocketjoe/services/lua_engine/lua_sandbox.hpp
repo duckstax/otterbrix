@@ -4,7 +4,7 @@
 #include <map>
 
 #include <rocketjoe/services/lua_engine/device.hpp>
-#include <rocketjoe/api/transport_base.hpp>
+#include <rocketjoe/http/transport_base.hpp>
 #include <sol.hpp>
 #include <goblin-engineer/abstract_service.hpp>
 

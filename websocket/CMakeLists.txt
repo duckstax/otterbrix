@@ -1,12 +1,15 @@
-set(CURRENT_TARGET router)
+set(CURRENT_TARGET ws)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-
+        header/rocketjoe/data_provider/ws/ws_server.hpp
+        header/rocketjoe/data_provider/ws/ws_session.hpp
+        header/rocketjoe/data_provider/ws/ws_listener.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-    router.cpp
+        ws_listener.cpp
+        ws_server.cpp
+        ws_session.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
@@ -20,15 +23,14 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
-        rocketjoe::dto
-        rocketjoe::http
         goblin-engineer
 )
 
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
+        "header"
+        ".."
 )
 
 install(TARGETS

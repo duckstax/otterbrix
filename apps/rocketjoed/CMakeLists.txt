@@ -25,14 +25,13 @@ add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGE
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::dto
         rocketjoe::lua_engine
-        rocketjoe::ws
+        #rocketjoe::ws
         rocketjoe::http
         rocketjoe::object_storage
         rocketjoe::flat_cache
         rocketjoe::router
-
-        cxxopts
         goblin-engineer
         dl
 )

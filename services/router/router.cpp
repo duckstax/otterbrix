@@ -1,16 +1,14 @@
 #include <rocketjoe/services/router/router.hpp>
-#include <rocketjoe/api/transport_base.hpp>
-#include <rocketjoe/api/json_rpc.hpp>
-#include <rocketjoe/api/http.hpp>
-
-#include <rocketjoe/api/application.hpp>
+#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/http/application.hpp>
 
 #include <nlohmann/json.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
-#include <api/json_rpc.hpp>
-#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
+//#include <rocketjoe/dto/json_rpc.hpp>
+#include <goblin-engineer/dynamic.hpp>
+#include "../../dto/header/rocketjoe/dto/json_rpc.hpp"
 
 
 namespace rocketjoe { namespace services { namespace router {

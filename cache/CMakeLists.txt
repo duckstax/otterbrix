@@ -1,9 +1,8 @@
 set(CURRENT_TARGET cache)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
-        ../api/application.hpp
-        cache_commands.hpp
-        cache_element.hpp
+        header/rocketjoe/cache/cache_commands.hpp
+        header/rocketjoe/cache/cache_element.hpp
 
 )
 
@@ -29,7 +28,7 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 #        rocketjoe_${CURRENT_TARGET}
 #)
 
-target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/header" "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/header/")
 
 install(TARGETS
         rocketjoe_${CURRENT_TARGET}

@@ -1,11 +1,11 @@
-#include "rocketjoe/data_provider/http/router.hpp"
+#include "rocketjoe/http/router.hpp"
 
 void init_http(){
-    rocketjoe::data_provider::http::wrapper_router router_;
+    rocketjoe::http::wrapper_router router_;
 
     router_.http_get(
             "/ping",
-            [](rocketjoe::data_provider::http::request_context request){
+            [](rocketjoe::http::request_context& request){
 
             }
     );

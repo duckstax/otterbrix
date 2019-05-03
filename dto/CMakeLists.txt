@@ -1,29 +1,27 @@
-set(CURRENT_TARGET router)
+set(CURRENT_TARGET dto)
 
-list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-
+list(APPEND ${CURRENT_TARGET}_HEADERS
+        header/rocketjoe/dto/json_rpc.hpp
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
-    router.cpp
+list(APPEND ${CURRENT_TARGET}_SOURCES
+        json_rpc.cpp
 )
+
+include_directories(../thirdparty/json/include)
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_TARGET_HEADERS}
-            ${CURRENT_TARGET_SOURCES}
+        ${${CURRENT_TARGET}_HEADERS}
+        ${${CURRENT_TARGET}_SOURCES}
 )
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
-target_link_libraries(
-        rocketjoe_${CURRENT_TARGET}
-        rocketjoe::dto
-        rocketjoe::http
-        goblin-engineer
-)
+#target_link_libraries(
+#        rocketjoe_${CURRENT_TARGET}
+#)
 
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}

@@ -122,9 +122,10 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 add_subdirectory(thirdparty)
-add_subdirectory(api)
+add_subdirectory(http)
+add_subdirectory(dto)
+#add_subdirectory(websocket)
 add_subdirectory(cache)
-add_subdirectory(data_provider)
 add_subdirectory(services)
 add_subdirectory(apps)
 add_subdirectory(tests)
