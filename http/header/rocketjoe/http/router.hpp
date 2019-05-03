@@ -6,7 +6,7 @@
 #include <functional>
 
 #include <actor-zeta/actor/actor_address.hpp>
-
+#include <actor-zeta/messaging/message.hpp>
 #include "forward.hpp"
 
 
@@ -33,22 +33,63 @@ namespace rocketjoe { namespace http {
         }
     };
 
-    class request_context final {
-    public:
-        request_context() = delete;
-        request_context(const request_context&) = delete;
-        request_context&operator=(const request_context&) = delete;
-        request_context(request_context&&) = default;
-        request_context&operator=(request_context&&) = default;
-        ~request_context() = default;
+        class response_context_type final {
+        public:
+            response_context_type() = default;
+            response_context_type(const response_context_type&) = default; // todo hack
+            response_context_type&operator=(const response_context_type&) = delete;
+            response_context_type(response_context_type&&) = default;
+            response_context_type&operator=(response_context_type&&) = default;
+            ~response_context_type() = default;
 
-        request_context(
+            response_context_type(
+                    response_type response_,
+                    std::size_t i
+            ):
+                    response_(std::move(response_)),
+                    id_(i){
+
+            }
+
+            response_context_type(
+                    std::size_t i
+            ):
+                    id_(i){
+
+            }
+
+
+            auto response() ->  response_type& {
+                return response_;
+            }
+
+            auto id() {
+                return id_;
+            }
+
+        private:
+            response_type response_;
+            std::size_t id_;
+
+        };
+
+
+    class http_query_context final {
+    public:
+        http_query_context() = default;
+        http_query_context(const http_query_context&) = default; // todo hack
+        http_query_context&operator=(const http_query_context&) = delete;
+        http_query_context(http_query_context&&) = default;
+        http_query_context&operator=(http_query_context&&) = default;
+        ~http_query_context() = default;
+
+        http_query_context(
                 request_type request_,
                 size_t i,
                 actor_zeta::actor::actor_address address
         ):
                 request_(std::move(request_)),
-                id(i),
+                id_(i),
                 address(std::move(address)){
 
         }
@@ -57,10 +98,37 @@ namespace rocketjoe { namespace http {
             return request_;
         }
 
+        auto response() ->  response_type& {
+            return response_;
+        }
+
+        auto id() {
+            return id_;
+        }
+
+        /*
+        auto response(response_type&&response_) {
+            this->response_ = std::move(response_);
+        }
+        */
+        auto write() {
+            response_.prepare_payload();
+            response_context_type context(std::move(response_),id_);
+            address->send(
+                    actor_zeta::messaging::make_message(
+                       address,
+                       "write",
+                       std::move(context)
+
+                    )
+            );
+        }
+
     private:
         request_type request_;
+        response_type response_;
         actor_zeta::actor::actor_address address;
-        std::size_t id;
+        std::size_t id_;
 
     };
 
@@ -71,7 +139,7 @@ namespace rocketjoe { namespace http {
         http_method_container(http_method_container&&) = default;
         ~http_method_container() = default;
 
-        using action = std::function<void(request_context&)>;
+        using action = std::function<void(http_query_context&)>;
         using storage = std::unordered_map<std::string,action>;
         using iterator = storage::iterator;
 
@@ -84,7 +152,7 @@ namespace rocketjoe { namespace http {
             storage_.emplace(route_path.to_string(),std::forward<F>(handler));
         }
 
-        auto invoke(request_context r){
+        auto invoke(http_query_context& r){
             auto url = r.request().target().to_string();
             auto it = storage_.find(url);
             auto request = std::move(r);
@@ -137,12 +205,11 @@ namespace rocketjoe { namespace http {
             }
         }
 
-        auto invoke(request_type r, std::size_t id,actor_zeta::actor::actor_address address){
-            auto method = r.method();
+        auto invoke(http_query_context&context){
+            auto method = context.request().method();
 
             auto it = storage_.find(method);
-            request_context context(std::move(r),id,std::move(address));
-            it->second.invoke(std::move(context));
+            it->second.invoke(context);
         }
 
         auto update(router&r){

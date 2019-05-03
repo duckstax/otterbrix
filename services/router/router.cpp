@@ -8,13 +8,14 @@
 #include <unordered_set>
 //#include <rocketjoe/dto/json_rpc.hpp>
 #include <goblin-engineer/dynamic.hpp>
-#include "../../dto/header/rocketjoe/dto/json_rpc.hpp"
+#include <rocketjoe/dto/json_rpc.hpp>
+#include <rocketjoe/http/router.hpp>
 
 
 namespace rocketjoe { namespace services { namespace router {
 
     using api::json_rpc::parse;
-
+/*
     class router::impl final {
     public:
         impl() = default;
@@ -44,15 +45,37 @@ namespace rocketjoe { namespace services { namespace router {
 
             };
 
-            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
-                    abstract_service(env, "router"),
-                    pimpl(std::make_unique<impl>()) {
+    */
 
+            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
+                    abstract_service(env, "router"){
+                    http::wrapper_router wrapper_router_;
+                    wrapper_router_.http_get(
+                        "/ping",
+                        [](http::http_query_context&request){
+                            request.response().body()="pong";
+                            request.write();
+                        }
+                    );
+
+                    router_ = std::move(wrapper_router_.get_router());
+
+                    attach(
+                        actor_zeta::behavior::make_handler(
+                                "dispatcher",
+                                [this](actor_zeta::behavior::context &ctx,http::http_query_context&context){
+                                    router_.invoke(context);
+                                }
+                        )
+                    );
+
+
+/*
 
                 attach(
                         actor_zeta::behavior::make_handler(
                                 "dispatcher",
-                                [this](actor_zeta::behavior::context &ctx) -> void {
+                                [this](actor_zeta::behavior::context &ctx,http::http_query_context) -> void {
                                     auto& transport = ctx.message().body<api::transport>();
                                     auto *http = static_cast<api::http *>(transport.detach());
 
@@ -115,10 +138,9 @@ namespace rocketjoe { namespace services { namespace router {
                                 }
                         )
                 );
+                */
 
             }
-
-            router::~router() = default;
 
             void router::startup(goblin_engineer::context_t *) {
 

@@ -9,7 +9,7 @@ namespace rocketjoe { namespace http {
         namespace http = boost::beast::http;
         using http_method = http::verb;
         using request_type = http::request<http::string_body>;
-        using response = http::response<http::string_body>;
+        using response_type = http::response<http::string_body>;
         
         using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
         namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>

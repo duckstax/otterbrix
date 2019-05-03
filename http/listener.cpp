@@ -1,5 +1,6 @@
 #include <rocketjoe/http/listener.hpp>
 #include <chrono>
+#include <rocketjoe/http/router.hpp>
 
 namespace rocketjoe { namespace http {
 
@@ -7,10 +8,11 @@ namespace rocketjoe { namespace http {
 
     constexpr const char *dispatcher = "dispatcher";
 
-    listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, actor_zeta::actor::actor_address pipe_) :
+    listener::listener(boost::asio::io_context &ioc, tcp::endpoint endpoint, actor_zeta::actor::actor_address pipe_,actor_zeta::actor::actor_address self) :
             acceptor_(ioc),
             socket_(ioc),
-            pipe_(std::move(pipe_)) {
+            pipe_(std::move(pipe_)),
+            self(self){
         boost::system::error_code ec;
 
         // Open the acceptor
@@ -63,7 +65,7 @@ namespace rocketjoe { namespace http {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    auto id_= static_cast<api::transport_id>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
+                    auto id_= static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
                     auto session = std::make_shared<http_session>(std::move(socket_),id_,*this);
                     storage_session.emplace(id_,std::move(session));
                     storage_session.at(id_)->run();
@@ -73,12 +75,12 @@ namespace rocketjoe { namespace http {
                 do_accept();
             }
 
-            void listener::write(std::unique_ptr<api::transport_base> ptr) {
-                std::cerr << "id = " << ptr->id() <<std::endl;
+            void listener::write(response_context_type&body) {
+                std::cerr << "id = " << body.id() <<std::endl;
 
-                auto &session = storage_session.at(ptr->id());
+                auto &session = storage_session.at(body.id());
 
-                session->write(std::move(ptr));
+                session->write(std::move(body.response()));
             }
 
             void listener::add_trusted_url(std::string name) {
@@ -92,29 +94,15 @@ namespace rocketjoe { namespace http {
                 return (trusted_url.find(std::string(start,url.end()))!=trusted_url.end());
             }
 
-            auto listener::operator()(http::request <http::string_body>&& req,api::transport_id id) const -> void {
+            auto listener::operator()(request_type && req,std::size_t session_id) const -> void {
 
-                auto* http = new api::http(id);
+                http_query_context  context(std::move(req),session_id,std::move(self));
 
-                http->method(std::string(req.method_string()));
-
-                http->uri(std::string(req.target()));
-
-                for (auto const &field : req) {
-
-                    std::string header_name(field.name_string());
-                    std::string header_value(field.value());
-                    http->header(std::move(header_name), std::move(header_value));
-                }
-
-                http->body(req.body());
-
-                //http::transport http_data(std::move(http_transport_));
                 pipe_->send(
                         actor_zeta::messaging::make_message(
                                 pipe_,
                                 dispatcher,
-                                api::transport(http)
+                                std::move(context)
                         )
                 );
 

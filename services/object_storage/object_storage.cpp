@@ -1,6 +1,5 @@
 #include <rocketjoe/services/object_storage/object_storage.hpp>
 
-#include <rocketjoe/http/transport_base.hpp>
 #include <rocketjoe/http/http.hpp>
 #include <rocketjoe/dto/json_rpc.hpp>
 
@@ -70,7 +69,7 @@ namespace rocketjoe { namespace services { namespace object_storage {
                 auto mongo_uri = configuration.as_object()["mongo-uri"].as_string();
                 auto mongo_root_db = configuration.as_object()["mongo-root-db"].as_string();
                 pimpl = std::make_unique<impl>(mongo_uri, mongo_root_db);
-
+/*
                 attach(
                         actor_zeta::behavior::make_handler(
                                 "create-app",
@@ -92,14 +91,14 @@ namespace rocketjoe { namespace services { namespace object_storage {
                                             kvp("name", app_name)
                                     );
 
-                                    /*
-                                    auto result = pimpl->replace(
-                                            pimpl->system_database_name(),
-                                            "applications",
-                                            filter.view(),
-                                            app.view()
-                                    );
-                                     */
+
+                                    //auto result = pimpl->replace(
+                                    //        pimpl->system_database_name(),
+                                    //        "applications",
+                                    //        filter.view(),
+                                    //        app.view()
+                                    //);
+
 
                                     auto* http = new api::http(t.transport_->id());
 
@@ -252,7 +251,7 @@ namespace rocketjoe { namespace services { namespace object_storage {
                 );
 
 
-
+*/
 
             }
 

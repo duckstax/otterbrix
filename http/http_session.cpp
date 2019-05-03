@@ -5,7 +5,7 @@ namespace rocketjoe { namespace http {
             using actor_zeta::messaging::message;
             constexpr const char *router = "lua_engine";
 
-            http_session::http_session(tcp::socket socket, api::transport_id id, http_context& pipe_)
+            http_session::http_session(tcp::socket socket, std::size_t id, http_context& pipe_)
                     :
                     socket_(std::move(socket)),
                     strand_(socket_.get_executor()),
@@ -131,14 +131,8 @@ namespace rocketjoe { namespace http {
                                                  std::placeholders::_1)));
             }
 
-            void http_session::write(std::unique_ptr<api::transport_base> ptr) {
-                auto *http = static_cast<api::http *>(ptr.release());
-                http::response<http::string_body> res{http::status::ok, 11};
-                res.body() = http->body();
-                for (auto &&i:(*http)) {
-                    res.set(i.first, i.second);
-                }
-                queue_(std::move(res));
+            void http_session::write(response_type&&body) {
+                queue_(std::move(body));
             }
 
             http_session::~http_session() = default;

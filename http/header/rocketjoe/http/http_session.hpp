@@ -6,6 +6,7 @@
 #include <rocketjoe/http/http_context.hpp>
 #include <rocketjoe/http/websocket_session.hpp>
 #include <rocketjoe/http/http.hpp>
+#include "router.hpp"
 
 namespace rocketjoe { namespace http {
 
@@ -82,9 +83,9 @@ namespace rocketjoe { namespace http {
                 http::request <http::string_body> req_;
                 queue queue_;
                 http_context& handle_processing;
-                const api::transport_id id;
+                const std::size_t  id;
             public:
-                http_session(tcp::socket socket,api::transport_id , http_context& );
+                http_session(tcp::socket socket,std::size_t, http_context& );
 
                 ~http_session();
 
@@ -102,7 +103,7 @@ namespace rocketjoe { namespace http {
 
                 void do_close();
 
-                void write(std::unique_ptr<api::transport_base>);
+                void write(response_type &&);
 
             };
 

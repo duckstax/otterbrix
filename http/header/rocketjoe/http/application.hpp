@@ -1,8 +1,7 @@
 #pragma once
 
 #include <string>
-#include <rocketjoe/http/transport_base.hpp>
-#include "../../dto/header/rocketjoe/dto/json_rpc.hpp"
+#include <rocketjoe/dto/json_rpc.hpp>
 
 namespace rocketjoe { namespace api {
 
@@ -28,7 +27,7 @@ namespace rocketjoe { namespace api {
         struct task final {
             task() = default;
             ~task() = default;
-            transport transport_;
+            http::http_query_context transport_;
             json_rpc::request_message request;
             app_info app_info_;
 

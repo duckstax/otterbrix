@@ -47,11 +47,8 @@ namespace rocketjoe { namespace http {
                 attach(
                         actor_zeta::behavior::make_handler(
                                 "write",
-                                [this](actor_zeta::behavior::context& ctx) -> void {
-                                    auto& t = ctx.message().body<api::transport>();
-                                    auto* transport_tmp = t.detach();
-                                    std::unique_ptr<api::http> transport(static_cast<api::http*>(transport_tmp));
-                                    pimpl->listener_->write(std::move(transport));
+                                [this](actor_zeta::behavior::context& ctx,response_context_type&body) -> void {
+                                    pimpl->listener_->write(body);
                                 }
                         )
                 );
@@ -69,7 +66,7 @@ namespace rocketjoe { namespace http {
             }
 
             void http_server::startup(goblin_engineer::context_t *ctx) {
-                pimpl->listener_ = std::make_shared<listener>(ctx->main_loop(), tcp::endpoint{pimpl->address_,pimpl-> port},pimpl->address__);
+                pimpl->listener_ = std::make_shared<listener>(ctx->main_loop(), tcp::endpoint{pimpl->address_,pimpl-> port},pimpl->address__,self());
                 pimpl->listener_->run();
             }
 

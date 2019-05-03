@@ -3,10 +3,11 @@
 #include <array>
 #include <map>
 
-#include <rocketjoe/services/lua_engine/device.hpp>
-#include <rocketjoe/http/transport_base.hpp>
 #include <sol.hpp>
 #include <goblin-engineer/abstract_service.hpp>
+
+#include <rocketjoe/services/lua_engine/device.hpp>
+#include <rocketjoe/http/http.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
@@ -17,12 +18,12 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
         ~lua_context() = default;
 
-        auto push_job(api::transport &&) -> void;
+        auto push_job(http::http_query_context &&) -> void;
 
         auto run() -> void;
 
     private:
-        device<api::transport> device_;
+        device<http::http_query_context,http::request_type ,http::response_type > device_;
         sol::environment environment;
         sol::state lua;
         std::string path_script;

@@ -21,7 +21,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         attach(
                 actor_zeta::behavior::make_handler(
                         "dispatcher",
-                        [this](actor_zeta::behavior::context &,api::transport&t) -> void {
+                        [this](actor_zeta::behavior::context &,http::http_query_context&t) -> void {
                             pimpl->push_job(std::move(t));
                         }
                 )

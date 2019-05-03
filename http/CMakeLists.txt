@@ -14,9 +14,6 @@ list(APPEND CURRENT_TARGET_SOURCES
         listener.cpp
         http_server.cpp
         websocket_session.cpp
-        http.cpp
-        transport_base.cpp
-        websocket.cpp
 )
 
 
