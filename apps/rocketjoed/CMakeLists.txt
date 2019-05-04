@@ -19,12 +19,11 @@ include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/vender/cxxopts/include)
 
 
 add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers} )
-
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
+        goblin-engineer
         ${Boost_LIBRARIES}
         ${CONAN_LIBS}
-        goblin-engineer
         rocketjoe::dto
         rocketjoe::lua_engine
         #rocketjoe::ws
