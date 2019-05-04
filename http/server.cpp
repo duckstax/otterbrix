@@ -99,7 +99,7 @@ namespace rocketjoe { namespace http {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    storage_session.emplace(id_, session_.release());
+                    storage_session.emplace(id_, std::shared_ptr<session>(session_.release()));
                     storage_session.at(id_)->run();
                 }
 
