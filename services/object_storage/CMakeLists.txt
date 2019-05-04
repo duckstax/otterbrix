@@ -32,9 +32,10 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
-        rocketjoe::api
         goblin-engineer
         ${CONAN_LIBS}
+        rocketjoe::dto
+        rocketjoe::http
         #${LIBBSONCXX_LIBRARIES}
         #${LIBMONGOCXX_LIBRARIES}
         #${BSON_LIBRARIES}
@@ -45,7 +46,6 @@ target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/header"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../"
         ${CONAN_LIBS}
         #${LIBMONGOCXX_INCLUDE_DIRS}
         #${LIBBSONCXX_INCLUDE_DIRS}

@@ -38,7 +38,7 @@ if (TSAN)
     message (STATUS "Building with ThreadSanitizer")
 endif ()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DCXXOPTS_NO_RTTI" CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF -DCXXOPTS_NO_RTTI" CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
 
 set(BUILD_LUA OFF CACHE BOOL "" FORCE)
 set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
@@ -51,8 +51,8 @@ set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 add_compile_options(
         -v
-        -Wall
-        -Wextra
+        #-Wall
+        #-Wextra
         -fno-rtti
 )
 
@@ -64,6 +64,8 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
+
+conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
 
 conan_cmake_run(
         CONANFILE conanfile.txt
@@ -93,17 +95,16 @@ endif()
 #############################################################################################
 #boost
 
-find_package (Boost COMPONENTS REQUIRED
-        system
-        locale
-        regex
-        timer
-        filesystem
-        serialization
+#find_package (Boost COMPONENTS REQUIRED
+#        system
+#        locale
+#        regex
+#        timer
+#        filesystem
+#        serialization
+#)
 
-)
-
-include_directories (${Boost_INCLUDE_DIRS})
+include_directories (SYSTEM ${Boost_INCLUDE_DIRS})
 
 #boost
 #############################################################################################
@@ -121,9 +122,24 @@ endif(CCACHE_FOUND)
 #ccahe
 #############################################################################################
 
+include(cmake/git_utils.cmake)
+
+git_clone(
+        PROJECT_NAME    goblin-engineer
+        GIT_URL         https://github.com/smart-cloud/goblin-engineer.git
+        GIT_BRANCH      master
+        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
+message("DOWNLOAD cxxopts")
+file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/vender/cxxopts/include/cxxopts.hpp")
+message("DOWNLOAD cxxopts")
+
 add_subdirectory(thirdparty)
-add_subdirectory(api)
-add_subdirectory(data_provider)
+add_subdirectory(http)
+add_subdirectory(dto)
+#add_subdirectory(websocket)
+add_subdirectory(cache)
 add_subdirectory(services)
 add_subdirectory(apps)
 add_subdirectory(tests)

@@ -1,0 +1,28 @@
+os: linux
+dist: xenial
+language: python
+python: "3.7"
+
+cache:
+  - pip
+  - apt
+  - ccache
+
+compiler:
+  - gcc
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - lua5.3
+      - liblua5.3-dev
+install:
+  - pip install conan
+  - conan user
+script:
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  - conan install .
+  - cmake . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCONAN=ON
+  - cmake --build .

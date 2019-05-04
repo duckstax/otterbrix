@@ -1,15 +1,14 @@
 #include "init_service.hpp"
 
+#include <actor-zeta/environment/group.hpp>
+#include <actor-zeta/environment/cooperation.hpp>
+
 #include <rocketjoe/services/lua_engine/lua_engine.hpp>
 #include <rocketjoe/services/flat_cache/flat_cache.hpp>
 #include <rocketjoe/services/router/router.hpp>
 #include <rocketjoe/services/object_storage/object_storage.hpp>
+#include <rocketjoe/http/server.hpp>
 
-#include <rocketjoe/data_provider/ws/ws_server.hpp>
-#include <rocketjoe/data_provider/http/http_server.hpp>
-
-#include <actor-zeta/environment/group.hpp>
-#include <actor-zeta/environment/cooperation.hpp>
 
 void init_service(goblin_engineer::dynamic_environment&env) {
 
@@ -21,8 +20,8 @@ void init_service(goblin_engineer::dynamic_environment&env) {
         auto& cache = env.add_service<rocketjoe::services::flat_cache::flat_cache>();
         auto& router = env.add_service<rocketjoe::services::router::router>();
 
-        //auto& ws = env.add_data_provider<rocketjoe::data_provider::ws_server::ws_server>(router->entry_point());
-        auto& http = env.add_data_provider<rocketjoe::data_provider::http_server::http_server>(router->entry_point());
+        //auto& websocket = env.add_data_provider<rocketjoe::data_provider::websocket::websocket>(router->entry_point());
+        auto& http = env.add_data_provider<rocketjoe::http::server>(router->entry_point());
 
         router->add_shared(http.address().operator->());
         lua->add_shared(http.address().operator->());

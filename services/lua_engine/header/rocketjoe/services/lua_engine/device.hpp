@@ -6,20 +6,15 @@
 #include <condition_variable>
 #include <deque>
 #include <vector>
-#include <rocketjoe/api/transport_base.hpp>
 #include <sol.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
 
 
-            template<typename T>
+            template<typename QUERY, typename REQ,typename RES>
             class device final {
             public:
-                using value_type = T;
-                using const_referens = const T &;
-                using referen = T &;
-                using pointer = value_type *;
                 using lock = std::lock_guard<std::mutex>;
                 using id_t = std::size_t;
 
@@ -31,13 +26,12 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 ~device() = default;
 
-                auto push(value_type &&value) -> void {
-                    auto current_id = value->id();
-                    auto tmp = api::create_transport(value->type(),value->id());
+                auto push(QUERY &&value) -> void {
+                    auto current_id = value.id();
 
                     {
                         lock _(mutex_);
-                        storage.emplace(current_id, std::make_pair(std::move(value), std::move(tmp)));
+                        storage.emplace(current_id, std::move(value));
                         queue_.emplace_back(current_id);
                     }
                         cv.notify_one();
@@ -68,15 +62,15 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 }
 
-                auto get_first(id_t current_id) -> referen {
+                auto get_first(id_t current_id) ->REQ& {
                     lock _(mutex_);
-                    return storage.at(current_id).first;
+                    return storage.at(current_id).request();
 
                 }
 
-                auto get_second(id_t current_id) -> referen {
+                auto get_second(id_t current_id) ->RES& {
                     lock _(mutex_);
-                    return storage.at(current_id).second;
+                    return storage.at(current_id).response();
 
                 }
 
@@ -92,9 +86,8 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                     lock _(mutex_);
                     auto it = storage.find(id);
                     if( it != storage.end() ){
-                        value_type tmp = std::move(it->second.second);
+                        it->second.write();
                         storage.erase(it);
-                        return tmp;
                     }
                 }
 
@@ -102,7 +95,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 std::mutex mutex_;
                 std::condition_variable cv;
                 std::deque<id_t> queue_;
-                std::unordered_map<std::size_t, std::pair<value_type,value_type>> storage;
+                std::unordered_map<std::size_t, QUERY> storage;
             };
 
 }}}

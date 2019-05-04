@@ -1,24 +1,21 @@
 #include <rocketjoe/services/router/router.hpp>
-#include <rocketjoe/api/transport_base.hpp>
-#include <rocketjoe/api/json_rpc.hpp>
-#include <rocketjoe/api/http.hpp>
-
-#include <rocketjoe/api/application.hpp>
+#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/http/application.hpp>
 
 #include <nlohmann/json.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
-#include <api/json_rpc.hpp>
-#include <thirdparty/goblin-engineer/header/goblin-engineer/dynamic.hpp>
+//#include <rocketjoe/dto/json_rpc.hpp>
+#include <goblin-engineer/dynamic.hpp>
+#include <rocketjoe/dto/json_rpc.hpp>
+#include <rocketjoe/http/router.hpp>
 
 
-namespace rocketjoe {
-    namespace services {
-        namespace router {
+namespace rocketjoe { namespace services { namespace router {
 
     using api::json_rpc::parse;
-
+/*
     class router::impl final {
     public:
         impl() = default;
@@ -48,15 +45,37 @@ namespace rocketjoe {
 
             };
 
-            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
-                    abstract_service(env, "router"),
-                    pimpl(std::make_unique<impl>()) {
+    */
 
+            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
+                    abstract_service(env, "router"){
+                    http::wrapper_router wrapper_router_;
+                    wrapper_router_.http_get(
+                        "/ping",
+                        [](http::query_context&request){
+                            request.response().body()="pong";
+                            request.write();
+                        }
+                    );
+
+                    router_ = std::move(wrapper_router_.get_router());
+
+                    attach(
+                        actor_zeta::behavior::make_handler(
+                                "dispatcher",
+                                [this](actor_zeta::behavior::context &ctx,http::query_context&context){
+                                    router_.invoke(context);
+                                }
+                        )
+                    );
+
+
+/*
 
                 attach(
                         actor_zeta::behavior::make_handler(
                                 "dispatcher",
-                                [this](actor_zeta::behavior::context &ctx) -> void {
+                                [this](actor_zeta::behavior::context &ctx,http::query_context) -> void {
                                     auto& transport = ctx.message().body<api::transport>();
                                     auto *http = static_cast<api::http *>(transport.detach());
 
@@ -119,10 +138,9 @@ namespace rocketjoe {
                                 }
                         )
                 );
+                */
 
             }
-
-            router::~router() = default;
 
             void router::startup(goblin_engineer::context_t *) {
 

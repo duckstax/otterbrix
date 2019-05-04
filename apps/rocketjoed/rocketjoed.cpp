@@ -36,7 +36,7 @@ void signal_sigsegv(int signum){
 
 
 int main(int argc, char **argv) {
-    
+
 #ifdef __APPLE__
 
 #else
@@ -64,8 +64,7 @@ int main(int argc, char **argv) {
 
     logo();
 
-    /** --help option
-    */
+    /// --help option
     if (result.count("help")) {
 
         std::cout << options.help({}) << std::endl;

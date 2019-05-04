@@ -1,0 +1,9 @@
+GET http://127.0.0.1:9998/ping
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{"a":1,"b":2}
+###
+
+
