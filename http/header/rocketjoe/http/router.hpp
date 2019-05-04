@@ -74,16 +74,16 @@ namespace rocketjoe { namespace http {
         };
 
 
-    class http_query_context final {
+    class query_context final {
     public:
-        http_query_context() = default;
-        http_query_context(const http_query_context&) = default; // todo hack
-        http_query_context&operator=(const http_query_context&) = delete;
-        http_query_context(http_query_context&&) = default;
-        http_query_context&operator=(http_query_context&&) = default;
-        ~http_query_context() = default;
+        query_context() = default;
+        query_context(const query_context&) = default; // todo hack
+        query_context&operator=(const query_context&) = delete;
+        query_context(query_context&&) = default;
+        query_context&operator=(query_context&&) = default;
+        ~query_context() = default;
 
-        http_query_context(
+        query_context(
                 request_type request_,
                 size_t i,
                 actor_zeta::actor::actor_address address
@@ -139,7 +139,7 @@ namespace rocketjoe { namespace http {
         http_method_container(http_method_container&&) = default;
         ~http_method_container() = default;
 
-        using action = std::function<void(http_query_context&)>;
+        using action = std::function<void(query_context&)>;
         using storage = std::unordered_map<std::string,action>;
         using iterator = storage::iterator;
 
@@ -152,7 +152,7 @@ namespace rocketjoe { namespace http {
             storage_.emplace(route_path.to_string(),std::forward<F>(handler));
         }
 
-        auto invoke(http_query_context& r){
+        auto invoke(query_context& r){
             auto url = r.request().target().to_string();
             auto it = storage_.find(url);
             auto request = std::move(r);
@@ -205,19 +205,20 @@ namespace rocketjoe { namespace http {
             }
         }
 
-        auto invoke(http_query_context&context){
+        auto invoke(query_context&context){
             auto method = context.request().method();
 
             auto it = storage_.find(method);
             it->second.invoke(context);
         }
-
+        /// TODO: not implement update
+/*
         auto update(router&r){
            for(auto&&i:r ){
 
            }
         }
-
+*/
         auto begin() -> iterator {
             return storage_.begin();
         }

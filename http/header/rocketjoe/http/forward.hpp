@@ -14,6 +14,8 @@ namespace rocketjoe { namespace http {
         using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
         namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 
+        void fail(boost::system::error_code ec, char const* what);
+
         /**
          * template<
                     class Body,

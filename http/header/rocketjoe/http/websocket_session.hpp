@@ -3,12 +3,9 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
-#include <rocketjoe/http/http_context.hpp>
+#include <rocketjoe/http/context.hpp>
 
 namespace rocketjoe { namespace http {
-
-            void fail(boost::system::error_code ec, char const* what);
-
 
             class websocket_session final : public std::enable_shared_from_this<websocket_session> {
                 websocket::stream<tcp::socket> ws_;
@@ -16,10 +13,10 @@ namespace rocketjoe { namespace http {
                 boost::asio::steady_timer timer_;
                 boost::beast::multi_buffer buffer_;
                 char ping_state_ = 0;
-                http_context& pipe_;
+                context& pipe_;
 
             public:
-                websocket_session(tcp::socket socket, http_context& pipe_);
+                websocket_session(tcp::socket socket, context& pipe_);
 
                 // Start the asynchronous operation
                 template<class Body, class Allocator>

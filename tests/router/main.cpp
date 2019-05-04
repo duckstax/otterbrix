@@ -1,13 +1,15 @@
-#include <rocketjoe/data_provider/http/router.hpp>
 #include <iostream>
+#include <memory>
+
+#include <rocketjoe/http/router.hpp>
 
 int main() {
 
-    rocketjoe::data_provider::http::wrapper_router router_;
+    rocketjoe::http::wrapper_router router_;
 
     router_.http_get(
             "/ping",
-            [](rocketjoe::data_provider::http::request_context &r) {
+            [](rocketjoe::http::query_context  &r) {
                 std::cout << " ping " << std::endl;
             }
     );
@@ -15,10 +17,11 @@ int main() {
     
     auto r = std::move(router_.get_router());
     actor_zeta::actor::actor_address address;
-    rocketjoe::data_provider::http::request_type request;
-    request.method(rocketjoe::data_provider::http::http_method::get);
+    rocketjoe::http::request_type request;
+    request.method(rocketjoe::http::http_method::get);
     request.target("/ping");
-    r.invoke(std::move(request), 1, std::move(address));
+    rocketjoe::http::query_context query(std::move(request), 1, std::move(address));
+    r.invoke(query);
     return 0;
 
 }

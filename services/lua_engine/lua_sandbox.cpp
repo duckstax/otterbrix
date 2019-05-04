@@ -61,7 +61,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
     }
 
-    auto lua_context::push_job(http::http_query_context &&job) -> void {
+    auto lua_context::push_job(http::query_context &&job) -> void {
         device_.push(std::move(job));
     }
 

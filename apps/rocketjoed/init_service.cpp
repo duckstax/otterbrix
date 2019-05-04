@@ -7,7 +7,7 @@
 #include <rocketjoe/services/flat_cache/flat_cache.hpp>
 #include <rocketjoe/services/router/router.hpp>
 #include <rocketjoe/services/object_storage/object_storage.hpp>
-#include <rocketjoe/http/http_server.hpp>
+#include <rocketjoe/http/server.hpp>
 
 
 void init_service(goblin_engineer::dynamic_environment&env) {
@@ -21,7 +21,7 @@ void init_service(goblin_engineer::dynamic_environment&env) {
         auto& router = env.add_service<rocketjoe::services::router::router>();
 
         //auto& websocket = env.add_data_provider<rocketjoe::data_provider::websocket::websocket>(router->entry_point());
-        auto& http = env.add_data_provider<rocketjoe::http::http_server>(router->entry_point());
+        auto& http = env.add_data_provider<rocketjoe::http::server>(router->entry_point());
 
         router->add_shared(http.address().operator->());
         lua->add_shared(http.address().operator->());

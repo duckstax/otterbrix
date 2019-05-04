@@ -1,30 +1,8 @@
 #include <rocketjoe/http/websocket_session.hpp>
 
-#include <algorithm>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <thread>
-#include <vector>
-
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio/bind_executor.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/signal_set.hpp>
-#include <boost/asio/strand.hpp>
-#include <boost/asio/steady_timer.hpp>
-#include <boost/make_unique.hpp>
-#include <boost/config.hpp>
-
-
 namespace rocketjoe { namespace http {
 
-            websocket_session::websocket_session(tcp::socket socket, http_context& pipe_) :
+            websocket_session::websocket_session(tcp::socket socket, context& pipe_) :
              ws_(std::move(socket)),
                     strand_(ws_.get_executor()),
                     timer_(ws_.get_executor().context(), (std::chrono::steady_clock::time_point::max) ()),
@@ -183,7 +161,4 @@ namespace rocketjoe { namespace http {
                 do_read();
             }
 
-            void fail(boost::system::error_code ec, char const *what) {
-                std::cerr << what << ": " << ec.message() << "\n";
-            }
         }}

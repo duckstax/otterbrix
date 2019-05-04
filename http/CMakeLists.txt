@@ -1,16 +1,16 @@
 set(CURRENT_TARGET http)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/http/http_context.hpp
-        header/rocketjoe/http/http_server.hpp
-        header/rocketjoe/http/http_session.hpp
+        header/rocketjoe/http/context.hpp
+        header/rocketjoe/http/server.hpp
+        header/rocketjoe/http/session.hpp
         header/rocketjoe/http/router.hpp
         header/rocketjoe/http/websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        http_session.cpp
-        http_server.cpp
+        session.cpp
+        server.cpp
         websocket_session.cpp
 )
 

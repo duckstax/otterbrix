@@ -52,7 +52,7 @@ namespace rocketjoe { namespace services { namespace router {
                     http::wrapper_router wrapper_router_;
                     wrapper_router_.http_get(
                         "/ping",
-                        [](http::http_query_context&request){
+                        [](http::query_context&request){
                             request.response().body()="pong";
                             request.write();
                         }
@@ -63,7 +63,7 @@ namespace rocketjoe { namespace services { namespace router {
                     attach(
                         actor_zeta::behavior::make_handler(
                                 "dispatcher",
-                                [this](actor_zeta::behavior::context &ctx,http::http_query_context&context){
+                                [this](actor_zeta::behavior::context &ctx,http::query_context&context){
                                     router_.invoke(context);
                                 }
                         )
@@ -75,7 +75,7 @@ namespace rocketjoe { namespace services { namespace router {
                 attach(
                         actor_zeta::behavior::make_handler(
                                 "dispatcher",
-                                [this](actor_zeta::behavior::context &ctx,http::http_query_context) -> void {
+                                [this](actor_zeta::behavior::context &ctx,http::query_context) -> void {
                                     auto& transport = ctx.message().body<api::transport>();
                                     auto *http = static_cast<api::http *>(transport.detach());
 

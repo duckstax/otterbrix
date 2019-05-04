@@ -27,7 +27,7 @@ namespace rocketjoe { namespace api {
         struct task final {
             task() = default;
             ~task() = default;
-            http::http_query_context transport_;
+            http::query_context transport_;
             json_rpc::request_message request;
             app_info app_info_;
 

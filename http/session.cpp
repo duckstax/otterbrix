@@ -1,27 +1,26 @@
-#include <rocketjoe/http/http_session.hpp>
-#include <boost/beast/core/string.hpp>
+#include <rocketjoe/http/session.hpp>
 
 namespace rocketjoe { namespace http {
             using actor_zeta::messaging::message;
             constexpr const char *router = "lua_engine";
 
-            http_session::http_session(boost::asio::io_context& context, std::size_t id, http_context& pipe_):
-                    socket_(context),
+            session::session(boost::asio::io_context& io_context, std::size_t id, context& context_):
+                    socket_(io_context),
                     strand_(socket_.get_executor()),
                     timer_(socket_.get_executor().context(), (std::chrono::steady_clock::time_point::max) ()),
                     queue_(*this),
-                    handle_processing(pipe_),
+                    handle_processing(context_),
                     id(id) {
             }
 
-            void http_session::run() {
+            void session::run() {
                 // Make sure we run on the strand
                 if (!strand_.running_in_this_thread())
                     return boost::asio::post(
                             boost::asio::bind_executor(
                                     strand_,
                                     std::bind(
-                                            &http_session::run,
+                                            &session::run,
                                             shared_from_this())));
 
                 // Run the timer. The timer is operated
@@ -31,7 +30,7 @@ namespace rocketjoe { namespace http {
                 do_read();
             }
 
-            void http_session::on_timer(boost::system::error_code ec) {
+            void session::on_timer(boost::system::error_code ec) {
                 if (ec && ec != boost::asio::error::operation_aborted) {
                     return fail(ec, "timer");
                 }
@@ -50,12 +49,12 @@ namespace rocketjoe { namespace http {
                         boost::asio::bind_executor(
                                 strand_,
                                 std::bind(
-                                        &http_session::on_timer,
+                                        &session::on_timer,
                                         shared_from_this(),
                                         std::placeholders::_1)));
             }
 
-            void http_session::on_read(boost::system::error_code ec) {
+            void session::on_read(boost::system::error_code ec) {
                 // Happens when the timer closes the socket
                 if (ec == boost::asio::error::operation_aborted)
                     return;
@@ -83,7 +82,7 @@ namespace rocketjoe { namespace http {
                 }
             }
 
-            void http_session::on_write(boost::system::error_code ec, bool close) {
+            void session::on_write(boost::system::error_code ec, bool close) {
                 // Happens when the timer closes the socket
                 if (ec == boost::asio::error::operation_aborted)
                     return;
@@ -104,7 +103,7 @@ namespace rocketjoe { namespace http {
                 }
             }
 
-            void http_session::do_close() {
+            void session::do_close() {
                 // Send a TCP shutdown
                 boost::system::error_code ec;
                 socket_.shutdown(tcp::socket::shutdown_send, ec);
@@ -112,7 +111,7 @@ namespace rocketjoe { namespace http {
                 // At this point the connection is closed gracefully
             }
 
-            void http_session::do_read() {
+            void session::do_read() {
                 // Set the timer
                 timer_.expires_after(std::chrono::seconds(15));
 
@@ -125,17 +124,21 @@ namespace rocketjoe { namespace http {
                                  boost::asio::bind_executor(
                                          strand_,
                                          std::bind(
-                                                 &http_session::on_read,
+                                                 &session::on_read,
                                                  shared_from_this(),
                                                  std::placeholders::_1)));
             }
 
-            void http_session::write(response_type&&body) {
+            void session::write(response_type&&body) {
                 queue_(std::move(body));
             }
 
+        auto session::socket() -> tcp::socket & {
+            return socket_;
+        }
 
-            bool http_session::queue::on_write() {
+
+        bool session::queue::on_write() {
                 BOOST_ASSERT(!items_.empty());
                 auto const was_full = is_full();
                 items_.erase(items_.begin());
@@ -144,11 +147,11 @@ namespace rocketjoe { namespace http {
                 return was_full;
             }
 
-            bool http_session::queue::is_full() const {
+            bool session::queue::is_full() const {
                 return items_.size() >= limit;
             }
 
-            http_session::queue::queue(http_session &self) : self_(self) {
+            session::queue::queue(session &self) : self_(self) {
                 static_assert(limit > 0, "queue_vm limit must be positive");
                 items_.reserve(limit);
             }

@@ -18,12 +18,12 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
         ~lua_context() = default;
 
-        auto push_job(http::http_query_context &&) -> void;
+        auto push_job(http::query_context &&) -> void;
 
         auto run() -> void;
 
     private:
-        device<http::http_query_context,http::request_type ,http::response_type > device_;
+        device<http::query_context,http::request_type ,http::response_type > device_;
         sol::environment environment;
         sol::state lua;
         std::string path_script;
