@@ -3,7 +3,6 @@
 #include <unordered_set>
 
 #include <goblin-engineer/context.hpp>
-#include <goblin-engineer/metadata.hpp>
 
 #include <rocketjoe/http/context.hpp>
 #include <rocketjoe/http/server.hpp>
@@ -120,14 +119,15 @@ namespace rocketjoe { namespace http {
                 trusted_url.emplace(std::move(name));
             }
 
-            auto check_url(const std::string &url) const -> bool {
+        protected:
+            auto check_url(const std::string &url) const -> bool override {
                 ///TODO: not fast
                 auto start = url.begin();
                 ++start;
                 return (trusted_url.find(std::string(start, url.end())) != trusted_url.end());
             }
 
-            auto operator()(request_type &&req, std::size_t session_id) const -> void {
+            auto operator()(request_type &&req, std::size_t session_id) const -> void override {
 
                 query_context context(std::move(req), session_id, http_address_);
 
