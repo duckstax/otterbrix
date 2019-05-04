@@ -132,6 +132,10 @@ git_clone(
         DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
+message("DOWNLOAD cxxopts")
+file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/vender/cxxopts/include/cxxopts.hpp")
+message("DOWNLOAD cxxopts")
+
 add_subdirectory(thirdparty)
 add_subdirectory(http)
 add_subdirectory(dto)

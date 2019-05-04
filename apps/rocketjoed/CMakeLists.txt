@@ -13,7 +13,7 @@ set(${CURRENT_TARGET}_sources
 
 #############################################################################################
 #cxxopts
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/cxxopts/include)
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/vender/cxxopts/include)
 #cxxopts
 #############################################################################################
 
