@@ -14,8 +14,8 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - lua
-      - liblua-dev
+      - lua5.2
+      - liblua5.2-dev
 install:
   - pip install conan
   - conan user
