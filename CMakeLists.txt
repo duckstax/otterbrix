@@ -95,17 +95,16 @@ endif()
 #############################################################################################
 #boost
 
-find_package (Boost COMPONENTS REQUIRED
-        system
-        locale
-        regex
-        timer
-        filesystem
-        serialization
+#find_package (Boost COMPONENTS REQUIRED
+#        system
+#        locale
+#        regex
+#        timer
+#        filesystem
+#        serialization
+#)
 
-)
-
-include_directories (${Boost_INCLUDE_DIRS})
+include_directories (SYSTEM ${Boost_INCLUDE_DIRS})
 
 #boost
 #############################################################################################
