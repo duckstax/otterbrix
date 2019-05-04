@@ -23,6 +23,5 @@ install:
 script:
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
   - conan install .
-  - mkdir build && cd build
-  - cmake . -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_CXX_COMPILER=$COMPILER  -G "Unix makefiles"
+  - cmake . -G "Unix Makefiles"
   - cmake --build .
