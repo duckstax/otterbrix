@@ -1,116 +1,71 @@
-#include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
+#include <rocketjoe/services/python_engine/python_sandbox.hpp>
 
 #include <boost/filesystem.hpp>
+#include <pybind11/stl.h>
 
 #include <rocketjoe/http/http.hpp>
+
 #include <goblin-engineer/dynamic.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace python_engine {
 
-    constexpr const char *write = "write";
+    using namespace pybind11::literals;
 
     enum class transport_type : unsigned char {
                 http = 0x00,
                 ws = 0x01,
     };
 
-
-            int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
-        std::cerr << "An exception occurred in a function, here's what it says ";
-        if (maybe_exception) {
-            std::cerr << "(straight from the exception): ";
-            const std::exception &ex = *maybe_exception;
-            std::cerr << ex.what() << std::endl;
-        } else {
-            std::cerr << "(from the description parameter): ";
-            std::cerr.write(description.data(), description.size());
-            std::cerr << std::endl;
-        }
-
-        return sol::stack::push(L, description);
-    }
-
-    auto load_libraries(sol::state &lua, const std::map<std::string, std::string> &env) -> void {
-
-        lua.open_libraries(
-                sol::lib::base,
-                sol::lib::table,
-                sol::lib::package,
-                sol::lib::coroutine,
-                sol::lib::math,
-                sol::lib::utf8,
-                sol::lib::string
-        );
-
-        for (const auto &i:env) {
-            lua.require_file(i.first, i.second);
-        }
-
-        lua.set_exception_handler(&my_exception_handler);
-
-
-    }
-
-
-    auto lua_context::run() -> void {
+    auto python_context::run() -> void {
         auto ext = boost::filesystem::extension(path_script);
 
-        if(ext == ".lua") {
+        if(ext == ".py") {
             exuctor = std::make_unique<std::thread>(
                     [this]() {
-                        auto r = lua.load_file(this->path_script);
-                        r();
+                      auto locals = py::dict("path"_a=path_script,
+                                             "pyrocketjoe"_a=pyrocketjoe);
+
+                        py::exec(R"(
+                           import sys, os
+                           from importlib import import_module
+
+                           sys.modules['pyrocketjoe'] = pyrocketjoe
+                           sys.path.insert(0, os.path.dirname(path))
+
+                           module_name, _ = os.path.splitext(path)
+
+                           import_module(os.path.basename(module_name))
+                        )", py::globals(), locals);
                     }
             );
         }
     }
 
-    auto lua_context::push_job(http::query_context &&job) -> void {
+    auto python_context::push_job(http::query_context &&job) -> void {
         device_.push(std::move(job));
     }
 
-    lua_context::lua_context(
+    python_context::python_context(
             goblin_engineer::dynamic_config &configuration,
             actor_zeta::actor::actor_address ptr) :
-            address(std::move(ptr)) {
+            python{}, pyrocketjoe{"pyrocketjoe"}, address(std::move(ptr)) {
 
-        std::cerr << "processing env lua start " << std::endl;
+        std::cerr << "processing env python start " << std::endl;
 
         path_script = configuration.as_object().at("app").as_string();
 
-        boost::filesystem::path config_path(configuration.as_object()["config-path"].as_string());
-
-        auto &env_lua = configuration.as_object()["env-lua"].as_object();
-
-        std::map<std::string, std::string> env;
-
-
-        for (auto &i : env_lua) {
-            std::cerr << i.first << " : " << (config_path / i.second.as_string()).string() << std::endl;
-
-            if (boost::filesystem::exists(config_path / i.second.as_string())) {
-
-                env.emplace(i.first, (config_path / i.second.as_string()).string());
-
-            }
-
-        }
-
-        std::cerr << "processing env lua finish " << std::endl;
-
-
-        load_libraries(lua, env);
+        std::cerr << "processing env python finish " << std::endl;
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "jobs_wait",
-                [this](sol::table jobs) -> std::size_t {
+                [this](std::unordered_map<std::size_t, decltype(device_)::id_t> &jobs) -> std::size_t {
                     return device_.pop_all(jobs);
                 }
         );
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "job_type",
                 [this](std::size_t id) -> uint {
                     if (device_.in(id)) {
@@ -122,19 +77,19 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// write
-        lua.set_function(
+        pyrocketjoe.def(
                 "job_close",
                 [this](std::size_t id) {
                     if (device_.in(id)) {
-                       device_.release(id);
+                        device_.release(id);
                     }
                 }
         );
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_header_read",
-                [this](std::size_t id, std::string name) -> std::string {
+                [this](std::size_t id, std::string &name) -> std::string {
                     if (device_.in(id)) {
                         auto &http = device_.get_first(id);
                         return http[name].to_string();
@@ -143,17 +98,18 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// write
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_header",
-                [this](std::size_t id, std::string name, std::string value) -> void {
+                [this](std::size_t id, std::string &name, std::string &value) -> void {
                     if (device_.in(id)) {
                         auto &http = device_.get_second(id);
                         http.set(name,value);
                     }
+
                 }
         );
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_uri",
                 [this](std::size_t id) -> std::string {
                     if (device_.in(id)) {
@@ -164,9 +120,9 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// write
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_body_write",
-                [this](std::size_t id, std::string body_) {
+                [this](std::size_t id, std::string &body_) {
 
                     if (device_.in(id)) {
                         auto &http = device_.get_second(id);
@@ -177,7 +133,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_body_read",
                 [this](std::size_t id) -> std::string {
                     if (device_.in(id)) {
@@ -188,7 +144,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_method",
                 [this](std::size_t id) -> std::string {
                     if (device_.in(id)) {
@@ -199,7 +155,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         );
 
         /// read
-        lua.set_function(
+        pyrocketjoe.def(
                 "http_status",
                 [this](std::size_t id) -> std::size_t {
                     if (device_.in(id)) {
