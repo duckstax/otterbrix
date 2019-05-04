@@ -121,6 +121,15 @@ endif(CCACHE_FOUND)
 #ccahe
 #############################################################################################
 
+include(cmake/git_utils.cmake)
+
+git_clone(
+        PROJECT_NAME    goblin-engineer
+        GIT_URL         https://github.com/smart-cloud/goblin-engineer.git
+        GIT_BRANCH      master
+        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
 add_subdirectory(thirdparty)
 add_subdirectory(http)
 add_subdirectory(dto)

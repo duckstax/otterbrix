@@ -1,6 +1,3 @@
-[submodule "thirdparty/goblin-engineer"]
-	path = thirdparty/goblin-engineer
-	url = https://github.com/smart-cloud/goblin-engineer.git
 [submodule "thirdparty/sol2"]
 	path = thirdparty/sol2
 	url = https://github.com/ThePhD/sol2.git

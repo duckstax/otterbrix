@@ -417,3 +417,4 @@ conan_paths.cmake
 conanbuildinfo.cmake
 conanbuildinfo.txt
 conaninfo.txt
+thirdparty/goblin-engineer
