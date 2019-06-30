@@ -1,11 +1,6 @@
-def main():
-    with smart_open("big_data.txt") as file:
-        for i in file:
-            print(i)
+from pyrocketjoe import file_read
 
+file = file_read('big_data.txt')
 
-if __name__ == '__main__':
-    main()
-
-
-
+for i in file.values():
+    print(i)
