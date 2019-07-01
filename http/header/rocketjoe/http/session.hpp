@@ -4,7 +4,7 @@
 
 #include <rocketjoe/http/context.hpp>
 #include <rocketjoe/http/websocket_session.hpp>
-#include <rocketjoe/http/router.hpp>
+#include <rocketjoe/http/query_context.hpp>
 
 namespace rocketjoe { namespace http {
 

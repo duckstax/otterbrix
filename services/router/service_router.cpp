@@ -1,6 +1,5 @@
-#include <rocketjoe/services/router/router.hpp>
+#include <rocketjoe/services/router/service_router.hpp>
 #include <rocketjoe/http/http.hpp>
-#include <rocketjoe/http/application.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -9,10 +8,10 @@
 //#include <rocketjoe/dto/json_rpc.hpp>
 #include <goblin-engineer/dynamic.hpp>
 #include <rocketjoe/dto/json_rpc.hpp>
-#include <rocketjoe/http/router.hpp>
+#include <rocketjoe/http/query_context.hpp>
 
 
-namespace rocketjoe { namespace services { namespace router {
+namespace rocketjoe { namespace services {
 
     using api::json_rpc::parse;
 /*
@@ -47,9 +46,9 @@ namespace rocketjoe { namespace services { namespace router {
 
     */
 
-            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
+        http_dispatcher::http_dispatcher(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
                     abstract_service(env, "router"){
-                    http::wrapper_router wrapper_router_;
+                    wrapper_router wrapper_router_;
                     wrapper_router_.http_get(
                         "/ping",
                         [](http::query_context&request){
@@ -142,12 +141,12 @@ namespace rocketjoe { namespace services { namespace router {
 
             }
 
-            void router::startup(goblin_engineer::context_t *) {
+            void http_dispatcher::startup(goblin_engineer::context_t *) {
 
             }
 
-            void router::shutdown() {
+            void http_dispatcher::shutdown() {
 
             }
 
-}}}
+}}
