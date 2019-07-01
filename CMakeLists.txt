@@ -53,8 +53,9 @@ add_compile_options(
         -v
         #-Wall
         #-Wextra
-        -fno-rtti
 )
+
+set(RTTI_DISABLE OFF)
 
 #############################################################################################
 
@@ -62,6 +63,9 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
     file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.13/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
+
+find_package(Python3 COMPONENTS Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
@@ -155,4 +159,3 @@ set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "")
 set (CPACK_DEBIAN_PACKAGE_MAINTAINER "")
 
 include (CPack)
-

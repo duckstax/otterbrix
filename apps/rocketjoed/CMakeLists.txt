@@ -26,6 +26,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::dto
         rocketjoe::lua_engine
+        rocketjoe::python_engine
         #rocketjoe::ws
         rocketjoe::http
         rocketjoe::object_storage
