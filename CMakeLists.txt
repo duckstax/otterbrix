@@ -55,7 +55,7 @@ add_compile_options(
         #-Wextra
 )
 
-set(RTTI_DISABLE OFF)
+set(RTTI_DISABLE OFF CACHE BOOL "" FORCE)
 
 #############################################################################################
 
