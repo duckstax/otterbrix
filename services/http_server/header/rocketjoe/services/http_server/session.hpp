@@ -2,8 +2,8 @@
 
 #include <boost/beast/core/flat_buffer.hpp>
 
-#include <rocketjoe/http/context.hpp>
-#include <rocketjoe/http/websocket_session.hpp>
+#include <rocketjoe/services/http_server/context.hpp>
+#include <rocketjoe/services/http_server/websocket_session.hpp>
 #include <rocketjoe/http/query_context.hpp>
 
 namespace rocketjoe { namespace http {

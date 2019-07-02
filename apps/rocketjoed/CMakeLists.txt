@@ -27,7 +27,7 @@ target_link_libraries(
         rocketjoe::dto
         rocketjoe::lua_engine
         #rocketjoe::ws
-        rocketjoe::http
+        rocketjoe::http_server
         #rocketjoe::object_storage
         rocketjoe::flat_cache
         rocketjoe::router

@@ -1,4 +1,4 @@
-#include <rocketjoe/http/session.hpp>
+#include <rocketjoe/services/http_server/session.hpp>
 
 namespace rocketjoe { namespace http {
             using actor_zeta::messaging::message;

@@ -3,7 +3,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
-#include <rocketjoe/http/context.hpp>
+#include <rocketjoe/services/http_server/context.hpp>
 
 namespace rocketjoe { namespace http {
 

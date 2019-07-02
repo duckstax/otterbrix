@@ -7,7 +7,7 @@
 #include <rocketjoe/services/flat_cache/flat_cache.hpp>
 #include <rocketjoe/services/router/service_router.hpp>
 ///#include <rocketjoe/services/object_storage/object_storage.hpp>
-#include <rocketjoe/http/server.hpp>
+#include <rocketjoe/services/http_server/server.hpp>
 
 
 void init_service(goblin_engineer::dynamic_environment&env) {

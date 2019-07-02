@@ -4,9 +4,9 @@
 
 #include <goblin-engineer/context.hpp>
 
-#include <rocketjoe/http/context.hpp>
-#include <rocketjoe/http/server.hpp>
-#include <rocketjoe/http/session.hpp>
+#include "rocketjoe/services/http_server/context.hpp"
+#include "rocketjoe/services/http_server/server.hpp"
+#include "rocketjoe/services/http_server/session.hpp"
 
 
 namespace rocketjoe { namespace http {

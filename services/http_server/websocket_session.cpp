@@ -1,4 +1,4 @@
-#include <rocketjoe/http/websocket_session.hpp>
+#include "rocketjoe/services/http_server/websocket_session.hpp"
 
 namespace rocketjoe { namespace http {
 
