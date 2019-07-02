@@ -1,11 +1,12 @@
-set(CURRENT_TARGET http)
+set(CURRENT_TARGET http_client)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/http/query_context.hpp
+header/rocketjoe/services/http_client/http_client.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        query_context.cpp
+        http_client.cpp
+        client.cpp
 )
 
 

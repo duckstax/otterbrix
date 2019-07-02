@@ -3,6 +3,7 @@
 #include <boost/beast/http/verb.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/asio.hpp>
 
 namespace rocketjoe { namespace http {
         using boost::string_view;

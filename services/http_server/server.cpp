@@ -3,6 +3,7 @@
 #include <unordered_set>
 
 #include <goblin-engineer/context.hpp>
+#include <iostream>
 
 #include "rocketjoe/services/http_server/context.hpp"
 #include "rocketjoe/services/http_server/server.hpp"
@@ -39,7 +40,38 @@ namespace rocketjoe { namespace http {
                 auto string_port = configuration.as_object()["http-port"].as_string();
                 auto tmp_port = std::stoul(string_port);
                 auto port = static_cast<unsigned short>(tmp_port);
-                endpoint_ = tcp::endpoint{address_, port};
+                beast::error_code ec;
+
+                // Open the acceptor
+                acceptor_.open(endpoint.protocol(), ec);
+
+                if(ec){
+                    fail(ec, "open");
+                    return;
+                }
+
+                // Allow address reuse
+                acceptor_.set_option(net::socket_base::reuse_address(true), ec);
+
+                if(ec){
+                    fail(ec, "set_option");
+                    return;
+                }
+
+                // Bind to the server address
+                acceptor_.bind(endpoint, ec);
+
+                if(ec){
+                    fail(ec, "bind");
+                    return;
+                }
+
+                // Start listening for connections
+                acceptor_.listen(net::socket_base::max_listen_connections, ec);
+                if(ec){
+                    fail(ec, "listen");
+                    return;
+                }
             }
 
             auto init(boost::asio::io_context &ioc) {
@@ -86,13 +118,12 @@ namespace rocketjoe { namespace http {
 
             void do_accept() {
                 id_ = static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
-                session_ = std::make_unique<session>(acceptor_->get_io_context(), id_, *this);
-                acceptor_->async_accept(
-                        session_->socket(),
-                        std::bind(
+                // The new connection gets its own strand
+                acceptor_.async_accept(
+                        net::make_strand(ioc_),
+                        beast::bind_front_handler(
                                 &impl::on_accept,
-                                shared_from_this(),
-                                std::placeholders::_1));
+                                shared_from_this()));
             }
 
             void on_accept(boost::system::error_code ec) {
@@ -142,9 +173,8 @@ namespace rocketjoe { namespace http {
             }
 
         private:
-            tcp::endpoint endpoint_;
-            std::unique_ptr<tcp::acceptor> acceptor_;
-            std::unique_ptr<session> session_;
+            net::io_context& ioc_;
+            tcp::acceptor acceptor_;
             std::size_t id_;
             actor_zeta::actor::actor_address pipe_;
             actor_zeta::actor::actor_address http_address_;
@@ -193,6 +223,9 @@ namespace rocketjoe { namespace http {
         }
 
         void fail(boost::system::error_code ec, char const *what) {
+            if(ec == net::ssl::error::stream_truncated)
+                return;
+
             std::cerr << what << ": " << ec.message() << "\n";
         }
 }}

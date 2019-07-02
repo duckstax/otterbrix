@@ -6,8 +6,9 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/asio/strand.hpp>
+#include <iostream>
 
-#include "forward.hpp"
+#include "rocketjoe/http/http.hpp"
 
 namespace rocketjoe { namespace http {
         namespace beast = boost::beast;         // from <boost/beast.hpp>
@@ -38,7 +39,7 @@ namespace rocketjoe { namespace http {
                     char const *host,
                     char const *port,
                     char const *target) {
-                // Set up an HTTP GET request message
+
                 req_.version(11);
                 req_.method(http::verb::get);
                 req_.target(target);
