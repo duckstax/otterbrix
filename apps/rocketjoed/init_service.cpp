@@ -21,8 +21,8 @@ void init_service(goblin_engineer::dynamic_environment&env) {
 
 //        auto& object_storage = env.add_service<rocketjoe::services::object_storage::object_storage>();
         auto& cache = env.add_service<rocketjoe::services::flat_cache::flat_cache>();
-        auto& router = env.add_service<rocketjoe::services::router::router>();
-        auto& control_block =env.add_service<rocketjoe::services::router::router>();
+        auto& router = env.add_service<rocketjoe::services::router>();
+        auto& control_block =env.add_service<rocketjoe::services::control_block>();
 //      auto& websocket = env.add_data_provider<rocketjoe::data_provider::websocket::websocket>(router->entry_point());
         auto& http = env.add_data_provider<rocketjoe::http::server>(router->entry_point());
 

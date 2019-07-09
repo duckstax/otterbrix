@@ -21,11 +21,22 @@ namespace rocketjoe { namespace services {
                     http::wrapper_router wrapper_router_;
                     wrapper_router_.http_get(
                         "/ping",
-                        [](http::query_context&request){
+                        [&](http::query_context&ctx){
+                            ctx.response().body()="pong";
+                            ctx.write();
+                        }
+                    );
+
+                wrapper_router_.http_get(
+                        "/system",
+                        [&](http::query_context&request){
+                            addresses("control_block")->send(
+                                    actor_zeta::messaging::make_message()
+                            );
                             request.response().body()="pong";
                             request.write();
                         }
-                    );
+                );
 
                     router_ = std::move(wrapper_router_.get_router());
 
@@ -47,4 +58,4 @@ namespace rocketjoe { namespace services {
 
             }
 
-}}}
+}}
