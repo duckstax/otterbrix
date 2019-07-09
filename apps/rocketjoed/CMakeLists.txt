@@ -32,6 +32,7 @@ target_link_libraries(
         #rocketjoe::object_storage
         rocketjoe::flat_cache
         rocketjoe::router
+        rocketjoe::control_block
         dl
 )
 

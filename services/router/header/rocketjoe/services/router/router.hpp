@@ -3,8 +3,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 #include <rocketjoe/http/router.hpp>
 
-namespace rocketjoe { namespace services { namespace router {
-
+namespace rocketjoe { namespace services {
             class router final: public goblin_engineer::abstract_service {
             public:
                 router(goblin_engineer::dynamic_config&, goblin_engineer::abstract_environment * );
@@ -20,4 +19,4 @@ namespace rocketjoe { namespace services { namespace router {
                 //std::unique_ptr<impl> pimpl;
             };
 
-}}}
+}}

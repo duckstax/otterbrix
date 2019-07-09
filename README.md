@@ -17,13 +17,11 @@ RocketJoe is an application server for micro-services architecture.
 ### for mac os x 
 
 ```
-brew install mongo-cxx-driver cmake lua  boost  ccache doxygen gperftools
+brew install mongo-cxx-driver cmake lua  boost  ccache doxygen gperftools conan
 
 git clone git@github.com:smart-cloud/rocketjoe.git rocketjoe
 
 cd rocketjoe
-
-sudo docker-compose up # monodb up
 
 git submodule init
 
@@ -55,11 +53,9 @@ apt install git ccache g++ cmake python3 python3-dev python3-pip lua5.3 liblua5.
 
 pip3 install conan --upgrade 
 
-conan remote add bisect https://api.bintray.com/conan/bisect/bisect
-
-conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-
 git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
+
+cd rocketjoe
 
 git submodule init
 
