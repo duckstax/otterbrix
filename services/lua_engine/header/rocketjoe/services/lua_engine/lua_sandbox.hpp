@@ -9,7 +9,7 @@
 #include <rocketjoe/services/lua_engine/device.hpp>
 #include <rocketjoe/http/http.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace detail {
 
     class lua_context final {
     public:

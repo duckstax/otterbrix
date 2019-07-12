@@ -13,39 +13,36 @@
 
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services {
 
-    lua_engine::lua_engine(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
-            abstract_service(env, "lua_engine") {
+            lua_engine::lua_engine(goblin_engineer::dynamic_config &configuration,
+                                   goblin_engineer::abstract_environment *env) :
+                    abstract_service(env, "lua_engine") {
 
-        attach(
-                actor_zeta::behavior::make_handler(
+                add_handler(
                         "dispatcher",
-                        [this](actor_zeta::behavior::context &,http::query_context&t) -> void {
+                        [this](actor_zeta::actor::context &, http::query_context &t) -> void {
                             pimpl->push_job(std::move(t));
                         }
-                )
-        );
+                );
 
 
-        attach(
-                actor_zeta::behavior::make_handler(
+                add_handler(
                         "write",
-                        [this](actor_zeta::behavior::context &ctx) -> void {
+                        [this](actor_zeta::actor::context &ctx) -> void {
                             ctx->addresses("http")->send(std::move(ctx.message()));
                         }
-                )
-        );
+                );
 
-        pimpl = std::make_unique<lua_context>(configuration, this->address());
-    }
+                pimpl = std::make_unique<detail::lua_context>(configuration, this->address());
+            }
 
-    void lua_engine::startup(goblin_engineer::context_t *) {
-        pimpl->run();
-    }
+            void lua_engine::startup(goblin_engineer::context_t *) {
+                pimpl->run();
+            }
 
-    void lua_engine::shutdown() {
+            void lua_engine::shutdown() {
 
-    }
+            }
 
-}}}
+}}

@@ -8,9 +8,7 @@
 #include <vector>
 #include <sol.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
-
-
+namespace rocketjoe { namespace services { namespace detail {
 
             template<typename QUERY, typename REQ,typename RES>
             class device final {

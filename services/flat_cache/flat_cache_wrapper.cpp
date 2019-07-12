@@ -45,25 +45,23 @@ namespace rocketjoe { namespace services { namespace flat_cache {
                 abstract_service(env,"cache"),
                 pimpl(std::make_unique<impl>()) {
 
-                attach(
-                        actor_zeta::behavior::make_handler(
-                            "cache",
-                            [this](actor_zeta::behavior::context& ctx) -> void {
-                                auto& command = ctx.message().body<api::cache::cache_command>();
-                                api::cache_element output ;
-                                dispatcher(pimpl->cache(),command,output);
-                                if( output.get() != nullptr ) {
-                                    ctx.message().sender()->send(
-                                            actor_zeta::messaging::make_message(
-                                                    ctx->self(),
-                                                    "cache",
-                                                    std::move(output)
+                add_handler(
+                        "cache",
+                        [this](actor_zeta::actor::context &ctx) -> void {
+                            auto &command = ctx.message().body<api::cache::cache_command>();
+                            api::cache_element output;
+                            dispatcher(pimpl->cache(), command, output);
+                            if (output.get() != nullptr) {
+                                ctx.message().sender()->send(
+                                        actor_zeta::messaging::make_message(
+                                                ctx->self(),
+                                                "cache",
+                                                std::move(output)
 
-                                            )
-                                    );
-                                }
+                                        )
+                                );
                             }
-                        )
+                        }
                 );
 
             }

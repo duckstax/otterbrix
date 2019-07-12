@@ -1,10 +1,9 @@
 #pragma once
 
+#include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 #include <goblin-engineer/abstract_service.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
-
-    class lua_context;
+namespace rocketjoe { namespace services {
 
     class lua_engine final : public goblin_engineer::abstract_service {
     public:
@@ -17,7 +16,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         void shutdown() override;
 
     private:
-        std::unique_ptr<lua_context> pimpl;
+        std::unique_ptr<detail::lua_context> pimpl;
     };
 
-}}}
+}}

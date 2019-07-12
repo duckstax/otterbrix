@@ -16,46 +16,41 @@ namespace rocketjoe { namespace services {
 
     using api::json_rpc::parse;
 
-            router::router(goblin_engineer::dynamic_config& ,goblin_engineer::abstract_environment * env) :
-                    abstract_service(env, "router"){
-                    http::wrapper_router wrapper_router_;
-                    wrapper_router_.http_get(
-                        "/ping",
-                        [&](http::query_context&ctx){
-                            ctx.response().body()="pong";
-                            ctx.write();
-                        }
-                    );
+        router::router(goblin_engineer::dynamic_config &, goblin_engineer::abstract_environment *env) :
+                abstract_service(env, "router") {
+            http::wrapper_router wrapper_router_;
+            wrapper_router_.http_get(
+                    "/ping",
+                    [&](http::query_context &ctx) {
+                        ctx.response().body() = "pong";
+                        ctx.write();
+                    }
+            );
 
-                wrapper_router_.http_get(
-                        "/system",
-                        [&](http::query_context&request){
-                            addresses("control_block")->send(
-                                    actor_zeta::messaging::make_message()
-                            );
-                            request.response().body()="pong";
-                            request.write();
-                        }
-                );
+            wrapper_router_.http_get(
+                    "/system",
+                    [&](http::query_context &request) {
+                        request.response().body() = "pong";
+                        request.write();
+                    }
+            );
 
-                    router_ = std::move(wrapper_router_.get_router());
+            router_ = std::move(wrapper_router_.get_router());
 
-                    attach(
-                        actor_zeta::behavior::make_handler(
-                                "dispatcher",
-                                [this](actor_zeta::behavior::context &ctx,http::query_context&context){
-                                    router_.invoke(context);
-                                }
-                        )
-                    );
-            }
+            add_handler(
+                    "dispatcher",
+                    [this](actor_zeta::actor::context &ctx, http::query_context &context) {
+                        router_.invoke(context);
+                    }
+            );
+        }
 
-            void router::startup(goblin_engineer::context_t *) {
+        void router::startup(goblin_engineer::context_t *) {
 
-            }
+        }
 
-            void router::shutdown() {
+        void router::shutdown() {
 
-            }
+        }
 
 }}

@@ -5,7 +5,7 @@
 #include <rocketjoe/http/http.hpp>
 #include <goblin-engineer/dynamic.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace detail {
 
     constexpr const char *write = "write";
 
@@ -14,8 +14,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 ws = 0x01,
     };
 
-
-            int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
+    int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
         std::cerr << "An exception occurred in a function, here's what it says ";
         if (maybe_exception) {
             std::cerr << "(straight from the exception): ";
