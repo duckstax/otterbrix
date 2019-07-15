@@ -16,7 +16,7 @@ void init_service(goblin_engineer::dynamic_environment&env) {
 
 /// rewrite config
         auto& lua = env.add_service<rocketjoe::services::lua_engine::lua_engine>();
-        auto& python = env.add_service<rocketjoe::services::python_engine::python_engine>();
+        auto& python = env.add_service<rocketjoe::services::python_engine>();
 /// rewrite config
 
 //        auto& object_storage = env.add_service<rocketjoe::services::object_storage::object_storage>();

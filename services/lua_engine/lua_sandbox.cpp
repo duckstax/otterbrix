@@ -5,7 +5,7 @@
 #include <rocketjoe/http/http.hpp>
 #include <goblin-engineer/dynamic.hpp>
 
-namespace rocketjoe { namespace services { namespace detail {
+namespace rocketjoe { namespace services { namespace lua_engine {
 
     constexpr const char *write = "write";
 

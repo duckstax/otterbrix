@@ -13,9 +13,9 @@
 
 #include <rocketjoe/services/python_engine/python_sandbox.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services {
 
-    python_engine::python_engine(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
+            python_vm::python_vm(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
             abstract_service(env, "python_engine") {
 
         add_handler(
@@ -33,15 +33,15 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
         );
 
-        pimpl = std::make_unique<python_context>(configuration, this->address());
+        pimpl = std::make_unique<python_engine::python_context>(configuration, this->address());
     }
 
-    void python_engine::startup(goblin_engineer::context_t *) {
+    void python_vm::startup(goblin_engineer::context_t *) {
         pimpl->run();
     }
 
-    void python_engine::shutdown() {
+    void python_vm::shutdown() {
 
     }
 
-}}}
+}}
