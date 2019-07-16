@@ -10,8 +10,6 @@
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
-
-
             template<typename QUERY, typename REQ,typename RES>
             class device final {
             public:

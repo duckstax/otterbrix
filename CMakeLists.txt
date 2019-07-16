@@ -130,7 +130,14 @@ include(cmake/git_utils.cmake)
 
 git_clone(
         PROJECT_NAME    goblin-engineer
-        GIT_URL         https://github.com/smart-cloud/goblin-engineer.git
+        GIT_URL         https://github.com/jinntechio/goblin-engineer.git
+        GIT_BRANCH      master
+        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
+git_clone(
+        PROJECT_NAME    actor-zeta
+        GIT_URL         https://github.com/jinntechio/actor-zeta.git
         GIT_BRANCH      master
         DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
 )
