@@ -25,7 +25,7 @@ target_link_libraries(
         ${Boost_LIBRARIES}
         ${CONAN_LIBS}
         rocketjoe::dto
-        rocketjoe::lua_engine
+        #rocketjoe::lua_engine
         rocketjoe::python_engine
         #rocketjoe::ws
         rocketjoe::http

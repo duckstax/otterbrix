@@ -4,6 +4,6 @@
 
 namespace rocketjoe { namespace services {
 
-    using flat_cache = flat_cache_wrapper;
+    using cache = flat_cache::flat_cache_wrapper;
 
 }}
