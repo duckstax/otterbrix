@@ -1,4 +1,4 @@
-set(CURRENT_TARGET http)
+set(CURRENT_TARGET network)
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/http/context.hpp

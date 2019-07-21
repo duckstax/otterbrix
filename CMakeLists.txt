@@ -147,9 +147,8 @@ file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/includ
 message("DOWNLOAD cxxopts")
 
 add_subdirectory(thirdparty)
-add_subdirectory(http)
+add_subdirectory(network)
 add_subdirectory(dto)
-#add_subdirectory(websocket)
 add_subdirectory(cache)
 add_subdirectory(services)
 add_subdirectory(apps)

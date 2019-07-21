@@ -23,7 +23,6 @@ void init_service(goblin_engineer::dynamic_environment&env) {
         auto& cache = env.add_service<rocketjoe::services::cache>();
         auto& router = env.add_service<rocketjoe::services::router>();
         auto& control_block =env.add_service<rocketjoe::services::control_block>();
-//      auto& websocket = env.add_data_provider<rocketjoe::data_provider::websocket::websocket>(router->entry_point());
         auto& http = env.add_data_provider<rocketjoe::http::server>(router->entry_point());
 
         router->add_shared(http.address().operator->());
