@@ -25,12 +25,13 @@ target_link_libraries(
         ${Boost_LIBRARIES}
         ${CONAN_LIBS}
         rocketjoe::dto
-        rocketjoe::lua_engine
-        #rocketjoe::ws
+        #rocketjoe::lua_engine
+        rocketjoe::python_engine
         rocketjoe::http_server
         #rocketjoe::object_storage
         rocketjoe::flat_cache
         rocketjoe::router
+        rocketjoe::control_block
         dl
 )
 

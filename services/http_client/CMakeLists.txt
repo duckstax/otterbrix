@@ -23,7 +23,7 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         goblin-engineer
-        rocketjoe::http
+        rocketjoe::network
 )
 
 target_include_directories(

@@ -53,8 +53,9 @@ add_compile_options(
         -v
         #-Wall
         #-Wextra
-        -fno-rtti
 )
+
+set(RTTI_DISABLE OFF CACHE BOOL "" FORCE)
 
 #############################################################################################
 
@@ -62,6 +63,9 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
     file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.13/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
+
+find_package(Python3 COMPONENTS Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
@@ -126,7 +130,14 @@ include(cmake/git_utils.cmake)
 
 git_clone(
         PROJECT_NAME    goblin-engineer
-        GIT_URL         https://github.com/smart-cloud/goblin-engineer.git
+        GIT_URL         https://github.com/jinntechio/goblin-engineer.git
+        GIT_BRANCH      master
+        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
+git_clone(
+        PROJECT_NAME    actor-zeta
+        GIT_URL         https://github.com/jinntechio/actor-zeta.git
         GIT_BRANCH      master
         DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
 )
@@ -136,9 +147,8 @@ file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/includ
 message("DOWNLOAD cxxopts")
 
 add_subdirectory(thirdparty)
-add_subdirectory(http)
+add_subdirectory(network)
 add_subdirectory(dto)
-#add_subdirectory(websocket)
 add_subdirectory(cache)
 add_subdirectory(services)
 add_subdirectory(apps)
@@ -155,4 +165,3 @@ set (CPACK_DEBIAN_PACKAGE_DESCRIPTION "")
 set (CPACK_DEBIAN_PACKAGE_MAINTAINER "")
 
 include (CPack)
-

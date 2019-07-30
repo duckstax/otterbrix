@@ -2,7 +2,7 @@
 
 #include <string>
 #include <goblin-engineer/forward.hpp>
-#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/network/http.hpp>
 
 
 namespace rocketjoe { namespace http {

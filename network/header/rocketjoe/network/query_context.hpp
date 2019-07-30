@@ -9,7 +9,6 @@
 #include <actor-zeta/messaging/message.hpp>
 #include "forward.hpp"
 
-
 namespace rocketjoe { namespace http {
 
         class options final {

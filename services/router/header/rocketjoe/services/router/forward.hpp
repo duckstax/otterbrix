@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/network/http.hpp>
 
 namespace rocketjoe { namespace services {
 

@@ -6,9 +6,10 @@
 #include <condition_variable>
 #include <deque>
 #include <vector>
-#include <sol.hpp>
 
-namespace rocketjoe { namespace services { namespace lua_engine {
+namespace rocketjoe { namespace services { namespace python_engine {
+
+
 
             template<typename QUERY, typename REQ,typename RES>
             class device final {
@@ -36,7 +37,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
                 }
 
-                auto pop_all(sol::table jobs) {
+                auto pop_all(std::unordered_map<std::size_t, id_t> &jobs) {
                     std::size_t size = 0;
 
                     {

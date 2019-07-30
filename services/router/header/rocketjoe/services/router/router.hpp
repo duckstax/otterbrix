@@ -7,25 +7,28 @@
 
 #include <actor-zeta/actor/actor_address.hpp>
 #include <actor-zeta/messaging/message.hpp>
-#include <rocketjoe/http/query_context.hpp>
+#include <rocketjoe/network/query_context.hpp>
 #include "forward.hpp"
 
-namespace rocketjoe { namespace services {
+namespace rocketjoe { namespace services { namespace detail {
 
-            struct http_method_hasher final {
-                std::size_t operator()(const http_method &k) const {
-                    using std::size_t;
-                    using std::hash;
 
-                    return (hash<uint64_t>()(static_cast<uint64_t>(k)));
-                }
-            };
 
-            struct url_hasher final {
-                std::size_t operator()(const string_view &k) const {
-                    return boost::hash_value(k);
-                }
-            };
+                struct http_method_hasher final {
+                    std::size_t operator()(const http_method &k) const {
+                        using std::size_t;
+                        using std::hash;
+
+                        return (hash<uint64_t>()(static_cast<uint64_t>(k)));
+                    }
+                };
+
+                struct url_hasher final {
+                    std::size_t operator()(const string_view &k) const {
+                        return boost::hash_value(k);
+                    }
+                };
+
 
 class http_method_container final {
 public:
@@ -297,4 +300,4 @@ private:
     router router_;
 };
 
-}}
+}}}

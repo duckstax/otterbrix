@@ -15,8 +15,6 @@ namespace rocketjoe { namespace http {
                 do_read();
             }
 
-
-
             void session::on_read(boost::system::error_code ec){
                 boost::ignore_unused(bytes_transferred);
 
@@ -28,17 +26,15 @@ namespace rocketjoe { namespace http {
                     return fail(ec, "read");
 
                 // See if it is a WebSocket Upgrade
-                if(websocket::is_upgrade(parser_->get()))
-                {
+                if(websocket::is_upgrade(parser_->get())){
                     // Create a websocket session, transferring ownership
                     // of both the socket and the HTTP request.
-                    std::make_shared<websocket_session>(
-                            stream_.release_socket())->do_accept(parser_->release());
+                    std::make_shared<websocket_session>(stream_.release_socket())->do_accept(parser_->release());
                     return;
                 }
 
                 // Send the response
-                handle_request(*doc_root_, std::move(parser_->release()), queue_);
+                handle_processing(std::move(parser_->release()), queue_);
 
                 // If we aren't at the queue limit, try to pipeline another request
                 if(! queue_.is_full())

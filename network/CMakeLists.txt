@@ -1,21 +1,19 @@
-set(CURRENT_TARGET ws)
+set(CURRENT_TARGET network)
 
-list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/data_provider/ws/ws_server.hpp
-        header/rocketjoe/data_provider/ws/ws_session.hpp
-        header/rocketjoe/data_provider/ws/ws_listener.hpp
+list(APPEND CURRENT_${TARGET_HEADERS}
+        header/rocketjoe/network/query_context.hpp
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
-        ws_listener.cpp
-        ws_server.cpp
-        ws_session.cpp
+list(APPEND CURRENT_${TARGET_HEADERS}
+        query_context.cpp
 )
+
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_TARGET_HEADERS}
-            ${CURRENT_TARGET_SOURCES}
+            ${CURRENT_${TARGET_HEADERS}}
+            ${CURRENT_${TARGET_HEADERS}}
 )
+
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
@@ -29,8 +27,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "header"
-        ".."
+        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
 )
 
 install(TARGETS

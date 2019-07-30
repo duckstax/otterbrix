@@ -4,7 +4,7 @@
 
 #include <rocketjoe/services/http_server/context.hpp>
 #include <rocketjoe/services/http_server/websocket_session.hpp>
-#include <rocketjoe/http/query_context.hpp>
+#include <rocketjoe/network/query_context.hpp>
 
 namespace rocketjoe { namespace http {
 
@@ -27,8 +27,7 @@ namespace rocketjoe { namespace http {
                 std::vector<std::unique_ptr<work>> items_;
 
             public:
-                explicit
-                queue(session &self): self_(self) {
+                explicit queue(session &self): self_(self) {
                     static_assert(limit > 0, "queue limit must be positive");
                     items_.reserve(limit);
                 }
@@ -51,8 +50,7 @@ namespace rocketjoe { namespace http {
 
                 // Called by the HTTP handler to send a response.
                 template<bool isRequest, class Body, class Fields>
-                void
-                operator()(http::message<isRequest, Body, Fields> &&msg) {
+                void operator()(http::message<isRequest, Body, Fields> &&msg) {
                     // This holds a work item
                     struct work_impl final : work {
                         session &self_;
@@ -64,8 +62,7 @@ namespace rocketjoe { namespace http {
                                 : self_(self), msg_(std::move(msg)) {
                         }
 
-                        void
-                        operator()() {
+                        void operator()() {
                             http::async_write(
                                     self_.stream_,
                                     msg_,
@@ -77,8 +74,7 @@ namespace rocketjoe { namespace http {
                     };
 
                     // Allocate and store the work
-                    items_.push_back(
-                            boost::make_unique<work_impl>(self_, std::move(msg)));
+                    items_.push_back(std::make_unique<work_impl>(self_, std::move(msg)));
 
                     // If there was no previous work, start this one
                     if (items_.size() == 1)

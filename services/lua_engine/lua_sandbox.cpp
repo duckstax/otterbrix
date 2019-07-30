@@ -14,8 +14,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 ws = 0x01,
     };
 
-
-            int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
+    int my_exception_handler(lua_State *L, sol::optional<const std::exception &> maybe_exception,sol::string_view description) {
         std::cerr << "An exception occurred in a function, here's what it says ";
         if (maybe_exception) {
             std::cerr << "(straight from the exception): ";
@@ -53,12 +52,16 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
 
     auto lua_context::run() -> void {
-        exuctor = std::make_unique<std::thread>(
-                [this]() {
-                    auto r = lua.load_file(this->path_script);
-                    r();
-                }
-        );
+        auto ext = boost::filesystem::extension(path_script);
+
+        if(ext == ".lua") {
+            exuctor = std::make_unique<std::thread>(
+                    [this]() {
+                        auto r = lua.load_file(this->path_script);
+                        r();
+                    }
+            );
+        }
     }
 
     auto lua_context::push_job(http::query_context &&job) -> void {

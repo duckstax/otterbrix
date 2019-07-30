@@ -6,6 +6,7 @@ spdlog/1.3.1@bincrafters/stable
 fmt/5.2.0@bincrafters/stable
 #mongo-cxx-driver/3.3.0@bincrafters/stable
 jsonformoderncpp/3.4.0@vthiery/stable
+pybind11/2.2.4@conan/stable
 
 
 [options]

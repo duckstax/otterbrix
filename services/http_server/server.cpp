@@ -36,7 +36,7 @@ namespace rocketjoe { namespace http {
                  actor_zeta::actor::actor_address http_address) :
                     pipe_(std::move(address)),
                     http_address_(std::move(http_address)) {
-                boost::asio::ip::address address_ = boost::asio::ip::make_address("127.0.0.1");
+                auto address_ = boost::asio::ip::make_address("127.0.0.1");
                 auto string_port = configuration.as_object()["http-port"].as_string();
                 auto tmp_port = std::stoul(string_port);
                 auto port = static_cast<unsigned short>(tmp_port);
@@ -192,23 +192,19 @@ namespace rocketjoe { namespace http {
                 pimpl(std::make_shared<impl>(configuration, std::move(address), std::move(self()))) {
 
 
-            attach(
-                    actor_zeta::behavior::make_handler(
-                            "write",
-                            [this](actor_zeta::behavior::context &ctx, response_context_type &body) -> void {
+            add_handler(
+                    "write",
+                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
                                 pimpl->write(body);
-                            }
-                    )
+                    }
             );
 
-            attach(
-                    actor_zeta::behavior::make_handler(
-                            "add_trusted_url",
-                            [this](actor_zeta::behavior::context &ctx) -> void {
-                                auto app_name = ctx.message().body<std::string>();
-                                pimpl->add_trusted_url(app_name);
-                            }
-                    )
+            add_handler(
+                    "add_trusted_url",
+                    [this](actor_zeta::actor::context &ctx) -> void {
+                        auto app_name = ctx.message().body<std::string>();
+                        pimpl->add_trusted_url(app_name);
+                    }
             );
 
         }

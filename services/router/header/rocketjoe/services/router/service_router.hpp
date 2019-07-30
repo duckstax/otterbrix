@@ -16,7 +16,7 @@ namespace rocketjoe { namespace services {
                 void shutdown() override;
             private:
 
-                router router_;
+                detail::router router_;
                 ///class impl;
                 //std::unique_ptr<impl> pimpl;
             };

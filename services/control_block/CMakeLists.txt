@@ -1,19 +1,20 @@
-set(CURRENT_TARGET router)
+set(CURRENT_TARGET control_block)
 
-list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-        header/rocketjoe/services/router/service_router.hpp
+list(APPEND ${CURRENT_TARGET}_HEADERS
+        header/rocketjoe/services/control_block/control_block.hpp
 
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
-    service_router.cpp
+list(APPEND ${CURRENT_TARGET}_SOURCES
+        control_block.cpp
 )
+
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_TARGET_HEADERS}
-            ${CURRENT_TARGET_SOURCES}
+            ${${CURRENT_TARGET}_HEADERS}
+            ${${CURRENT_TARGET}_SOURCES}
 )
+
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
@@ -21,15 +22,14 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
-        rocketjoe::dto
-        rocketjoe::network
+        rocketjoe::cache
         goblin-engineer
 )
 
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
+        "${CMAKE_CURRENT_SOURCE_DIR}/header"
 )
 
 install(TARGETS
