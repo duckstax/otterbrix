@@ -23,7 +23,8 @@ WORKDIR /app
 
 RUN conan install .
 
-RUN cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+WORKDIR /app/build
+RUN cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
 RUN cmake --build .
 
 #ENTRYPOINT ["./entrypoint.sh"]
