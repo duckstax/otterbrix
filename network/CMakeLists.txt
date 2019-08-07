@@ -1,11 +1,11 @@
 set(CURRENT_TARGET network)
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        header/rocketjoe/network/query_context.hpp
+        header/rocketjoe/network/network.hpp
 )
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        query_context.cpp
+        network.cpp
 )
 
 
@@ -22,6 +22,8 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         goblin-engineer
+        ${Boost_LIBRARIES}
+        ${CONAN_LIBS}
 )
 
 target_include_directories(

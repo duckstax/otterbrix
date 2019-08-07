@@ -13,7 +13,7 @@ set(${CURRENT_TARGET}_sources
 
 #############################################################################################
 #cxxopts
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/vender/cxxopts/include)
+include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/cxxopts/include)
 #cxxopts
 #############################################################################################
 
@@ -22,13 +22,9 @@ add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGE
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         goblin-engineer
-        ${Boost_LIBRARIES}
-        ${CONAN_LIBS}
-        rocketjoe::dto
-        #rocketjoe::lua_engine
-        rocketjoe::python_engine
         rocketjoe::http_server
-        #rocketjoe::object_storage
+        rocketjoe::dto
+        rocketjoe::python_engine
         rocketjoe::flat_cache
         rocketjoe::router
         rocketjoe::control_block

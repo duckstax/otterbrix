@@ -1,14 +1,13 @@
 set(CURRENT_TARGET http_server)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/http_server/context.hpp
         header/rocketjoe/services/http_server/server.hpp
-        header/rocketjoe/services/http_server/session.hpp
+        header/rocketjoe/services/http_server/http_session.hpp
         header/rocketjoe/services/http_server/websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        session.cpp
+        http_session.cpp
         server.cpp
         websocket_session.cpp
 )
@@ -28,6 +27,8 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         goblin-engineer
         rocketjoe::network
+        ${Boost_LIBRARIES}
+        ${CONAN_LIBS}
 )
 
 target_include_directories(

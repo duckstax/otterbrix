@@ -7,15 +7,17 @@
 
 #include <actor-zeta/actor/actor_address.hpp>
 #include <actor-zeta/messaging/message.hpp>
-#include <rocketjoe/network/query_context.hpp>
-#include "forward.hpp"
+#include <rocketjoe/network/network.hpp>
 
 namespace rocketjoe { namespace services { namespace detail {
-
+    using network::string_view;
+    using network::http_method ;
+    using network::options;
+    using network::query_context;
 
 
                 struct http_method_hasher final {
-                    std::size_t operator()(const http_method &k) const {
+                    std::size_t operator()(const network::http_method &k) const {
                         using std::size_t;
                         using std::hash;
 
@@ -24,7 +26,7 @@ namespace rocketjoe { namespace services { namespace detail {
                 };
 
                 struct url_hasher final {
-                    std::size_t operator()(const string_view &k) const {
+                    std::size_t operator()(const network::string_view &k) const {
                         return boost::hash_value(k);
                     }
                 };
@@ -37,20 +39,20 @@ public:
     http_method_container(http_method_container&&) = default;
     ~http_method_container() = default;
 
-    using action = std::function<void(query_context&)>;
+    using action = std::function<void(network::query_context&)>;
     using storage = std::unordered_map<std::string,action>;
     using iterator = storage::iterator;
 
     template <class F>
     auto registration_handler(
-            string_view route_path,
-            const options &options,
+            network::string_view route_path,
+            const network::options &options,
             F handler
     ){
         storage_.emplace(route_path.to_string(),std::forward<F>(handler));
     }
 
-    auto invoke(query_context& r){
+    auto invoke(network::query_context& r){
         auto url = r.request().target().to_string();
         auto it = storage_.find(url);
         auto request = std::move(r);
@@ -83,7 +85,7 @@ public:
     router&operator =(router&&) = default;
     ~router() = default;
 
-    using storage = std::unordered_map<http_method,http_method_container,http_method_hasher>;
+    using storage = std::unordered_map<network::http_method,http_method_container,http_method_hasher>;
     using iterator = storage::iterator;
 
     template<class F>

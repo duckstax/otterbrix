@@ -19,7 +19,7 @@ namespace rocketjoe { namespace services {
                     detail::wrapper_router wrapper_router_;
                     wrapper_router_.http_get(
                         "/ping",
-                        [](http::query_context&request){
+                        [](network::query_context&request){
                             request.response().body()="pong";
                             request.write();
                         }
@@ -29,7 +29,7 @@ namespace rocketjoe { namespace services {
 
                     add_handler(
                             "dispatcher",
-                            [this](actor_zeta::actor::context &ctx,http::query_context&context){
+                            [this](actor_zeta::actor::context &ctx,network::query_context&context){
                                 router_.invoke(context);
                             }
                     );

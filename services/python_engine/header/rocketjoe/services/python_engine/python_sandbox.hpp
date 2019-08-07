@@ -7,7 +7,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 
 #include <rocketjoe/services/python_engine/device.hpp>
-#include <rocketjoe/network/http.hpp>
+#include <rocketjoe/network/network.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
@@ -20,12 +20,12 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         ~python_context() = default;
 
-        auto push_job(http::query_context &&) -> void;
+        auto push_job(network::query_context &&) -> void;
 
         auto run() -> void;
 
     private:
-        device<http::query_context,http::request_type ,http::response_type > device_;
+        device<network::query_context,network::request_type ,network::response_type > device_;
         py::scoped_interpreter python;
         py::module pyrocketjoe;
         std::string path_script;

@@ -2,7 +2,7 @@
 
 #include <goblin-engineer/data_provider.hpp>
 
-namespace rocketjoe { namespace http {
+namespace rocketjoe { namespace network {
 
     class server final: public goblin_engineer::data_provider {
     public:

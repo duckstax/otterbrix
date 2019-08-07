@@ -5,11 +5,44 @@
 #include <string>
 #include <functional>
 
+#include <boost/asio.hpp>
+#include <boost/asio/strand.hpp>
+#include <boost/asio/ip/tcp.hpp>
+
+#include <boost/beast/core.hpp>
+
+#include <boost/beast/http.hpp>
+#include <boost/beast/http/verb.hpp>
+
+#include <boost/beast/websocket.hpp>
+#include <boost/beast/core/tcp_stream.hpp>
+
 #include <actor-zeta/actor/actor_address.hpp>
 #include <actor-zeta/messaging/message.hpp>
-#include "forward.hpp"
 
-namespace rocketjoe { namespace http {
+namespace rocketjoe { namespace network {
+        using boost::string_view;
+
+        namespace net = boost::asio;
+        using net::ip::tcp;
+        
+        namespace beast = boost::beast;
+        namespace http = beast::http;
+        using http_method = http::verb;
+        using request_type = http::request<http::string_body>;
+        using response_type = http::response<http::string_body>;
+
+        namespace websocket = boost::beast::websocket;
+
+        void fail(boost::system::error_code ec, char const* what);
+
+        /**
+         * template<
+                    class Body,
+                    class Allocator
+            >
+            using request = http::request<Body, http::basic_fields<Allocator>>;
+         * */
 
         class options final {
         public:
@@ -126,4 +159,4 @@ namespace rocketjoe { namespace http {
 
         };
 
-}}
+    }}

@@ -1,28 +1,45 @@
 #include <utility>
 #include <unordered_map>
-#include <unordered_set>
+#include <memory>
+#include <chrono>
 
 #include <goblin-engineer/context.hpp>
 #include <iostream>
 
-#include "rocketjoe/services/http_server/context.hpp"
+#include <rocketjoe/network/network.hpp>
 #include "rocketjoe/services/http_server/server.hpp"
-#include "rocketjoe/services/http_server/session.hpp"
+#include "rocketjoe/services/http_server/http_session.hpp"
 
 
-namespace rocketjoe { namespace http {
+namespace rocketjoe { namespace network {
 
         using clock = std::chrono::steady_clock;
 
-        constexpr const char *dispatcher = "dispatcher";
+        class server::impl final : public std::enable_shared_from_this<impl>{
+        private:
+            struct tcp_listener final  {
+                template <typename F>
+                tcp_listener(
+                        network::net::io_context& ioc,
+                        unsigned short port,
+                        F&&f
+                )
+                    : acceptor_(ioc,boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port),net::socket_base::reuse_address(true))
+                    , helper_write(std::forward<F>(f))
+                {
+                    acceptor_.listen(net::socket_base::max_listen_connections);
+                }
+                tcp::acceptor acceptor_;
+                network::helper_write_f_t helper_write;
+                std::unordered_map<std::size_t, std::shared_ptr<session::http_session>> storage_session;
+            };
 
-        class server::impl final :
-                public std::enable_shared_from_this<impl>,
-                public context {
+            using listener_ptr = std::unique_ptr<tcp_listener>;
+
         public:
             impl() = default;
 
-            ~impl() override = default;
+            ~impl() = default;
 
             impl &operator=(impl &&) = default;
 
@@ -32,84 +49,13 @@ namespace rocketjoe { namespace http {
 
             impl(const impl &) = default;
 
-            impl(goblin_engineer::dynamic_config &configuration, actor_zeta::actor::actor_address address,
-                 actor_zeta::actor::actor_address http_address) :
-                    pipe_(std::move(address)),
-                    http_address_(std::move(http_address)) {
-                auto address_ = boost::asio::ip::make_address("127.0.0.1");
-                auto string_port = configuration.as_object()["http-port"].as_string();
-                auto tmp_port = std::stoul(string_port);
-                auto port = static_cast<unsigned short>(tmp_port);
-                beast::error_code ec;
-
-                // Open the acceptor
-                acceptor_.open(endpoint.protocol(), ec);
-
-                if(ec){
-                    fail(ec, "open");
-                    return;
-                }
-
-                // Allow address reuse
-                acceptor_.set_option(net::socket_base::reuse_address(true), ec);
-
-                if(ec){
-                    fail(ec, "set_option");
-                    return;
-                }
-
-                // Bind to the server address
-                acceptor_.bind(endpoint, ec);
-
-                if(ec){
-                    fail(ec, "bind");
-                    return;
-                }
-
-                // Start listening for connections
-                acceptor_.listen(net::socket_base::max_listen_connections, ec);
-                if(ec){
-                    fail(ec, "listen");
-                    return;
-                }
-            }
-
-            auto init(boost::asio::io_context &ioc) {
-                acceptor_ = std::make_unique<tcp::acceptor>(ioc);
-
-                boost::system::error_code ec;
-
-                // Open the acceptor
-                acceptor_->open(endpoint_.protocol(), ec);
-                if (ec) {
-                    fail(ec, "open");
-                    return;
-                }
-
-                // Allow address reuse
-                acceptor_->set_option(boost::asio::socket_base::reuse_address(true), ec);
-                if (ec) {
-                    fail(ec, "set_option");
-                    return;
-                }
-
-                // Bind to the server address
-                acceptor_->bind(endpoint_, ec);
-                if (ec) {
-                    fail(ec, "bind");
-                    return;
-                }
-
-                // Start listening for connections
-                acceptor_->listen(boost::asio::socket_base::max_listen_connections, ec);
-                if (ec) {
-                    fail(ec, "listen");
-                    return;
-                }
+            impl(
+                    goblin_engineer::dynamic_config &configuration
+            ) {
             }
 
             void run() {
-                if (!acceptor_->is_open()) {
+                if (!listener->acceptor_.is_open()) {
                     return;
                 }
 
@@ -117,21 +63,23 @@ namespace rocketjoe { namespace http {
             }
 
             void do_accept() {
-                id_ = static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
                 // The new connection gets its own strand
-                acceptor_.async_accept(
-                        net::make_strand(ioc_),
+                listener->acceptor_.async_accept(
+                        net::make_strand(listener->acceptor_.get_executor()),
                         beast::bind_front_handler(
                                 &impl::on_accept,
-                                shared_from_this()));
+                                shared_from_this()
+                        )
+                );
             }
 
-            void on_accept(boost::system::error_code ec) {
+            void on_accept(boost::system::error_code ec,tcp::socket socket) {
                 if (ec) {
                     fail(ec, "accept");
                 } else {
-                    storage_session.emplace(id_, std::shared_ptr<session>(session_.release()));
-                    storage_session.at(id_)->run();
+                    auto id_ = static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
+                    listener->storage_session.emplace(id_, std::make_shared<session::http_session>(std::move(socket),id_,listener->helper_write));
+                    listener->storage_session.at(id_)->run();
                 }
 
                 // Accept another connection
@@ -140,88 +88,80 @@ namespace rocketjoe { namespace http {
 
             void write(response_context_type &body) {
                 std::cerr << "id = " << body.id() << std::endl;
-
-                auto &session = storage_session.at(body.id());
-
-                session->write(std::move(body.response()));
+                auto it = listener->storage_session.find(body.id());
+                if (it != listener->storage_session.end()) {
+                    it->second->write(std::move(body.response()));
+                }
             }
 
-            void add_trusted_url(std::string name) {
-                trusted_url.emplace(std::move(name));
+        public:
+            template<typename Fun>
+            auto add_listener(
+                    network::net::io_context& ioc,
+                    unsigned short port,
+                    Fun&&f
+                    ){
+                listener = std::make_unique<tcp_listener>(ioc,port,std::forward<Fun>(f));
             }
-
-        protected:
-            auto check_url(const std::string &url) const -> bool override {
-                ///TODO: not fast
-                auto start = url.begin();
-                ++start;
-                return (trusted_url.find(std::string(start, url.end())) != trusted_url.end());
+            auto shutdown() {
+                //if (!listener->acceptor_.is_open()) {
+                //    return;
+                //} else {
+                 ///listener->acceptor_.
+                //}
             }
-
-            auto operator()(request_type &&req, std::size_t session_id) const -> void override {
-
-                query_context context(std::move(req), session_id, http_address_);
-
-                pipe_->send(
-                        actor_zeta::messaging::make_message(
-                                http_address_,
-                                dispatcher,
-                                std::move(context)
-                        )
-                );
-
-            }
-
+            std::function<void(request_type &&, std::size_t)> helper_write;
         private:
-            net::io_context& ioc_;
-            tcp::acceptor acceptor_;
-            std::size_t id_;
-            actor_zeta::actor::actor_address pipe_;
-            actor_zeta::actor::actor_address http_address_;
-            std::unordered_set<std::string> trusted_url;
-            std::unordered_map<std::size_t, std::shared_ptr<session>> storage_session;
-
+            listener_ptr listener;
         };
 
         server::server(
                 goblin_engineer::dynamic_config &configuration,
                 actor_zeta::environment::abstract_environment *env,
                 actor_zeta::actor::actor_address address
-        ) :
-                data_provider(env, "http"),
-                pimpl(std::make_shared<impl>(configuration, std::move(address), std::move(self()))) {
+        )
+            : data_provider(env, "http")
+            , pimpl(std::make_shared<impl>(configuration ))
+        {
 
+            auto http_address = self();
+
+            pimpl->helper_write = [=](request_type &&req, std::size_t session_id) {
+
+                query_context context(std::move(req), session_id, http_address);
+
+                address->send(
+                        actor_zeta::messaging::make_message(
+                                http_address,
+                                "dispatcher",
+                                std::move(context)
+                        )
+                );
+
+            };
+
+            add_handler(
+                    "close",
+                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+
+                    }
+            );
 
             add_handler(
                     "write",
                     [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
-                                pimpl->write(body);
+                        pimpl->write(body);
                     }
             );
-
-            add_handler(
-                    "add_trusted_url",
-                    [this](actor_zeta::actor::context &ctx) -> void {
-                        auto app_name = ctx.message().body<std::string>();
-                        pimpl->add_trusted_url(app_name);
-                    }
-            );
-
         }
 
         void server::startup(goblin_engineer::context_t *ctx) {
-            pimpl->init(ctx->main_loop());
+            pimpl->add_listener(ctx->main_loop(),7878,pimpl->helper_write);
             pimpl->run();
         }
 
         void server::shutdown() {
-
+            pimpl->shutdown();
         }
 
-        void fail(boost::system::error_code ec, char const *what) {
-            if(ec == net::ssl::error::stream_truncated)
-                return;
-
-            std::cerr << what << ": " << ec.message() << "\n";
-        }
 }}
