@@ -1,5 +1,4 @@
 #include <rocketjoe/services/http_client/client.hpp>
-#include <rocketjoe/http/http.hpp>
 
 #include <nlohmann/json.hpp>
 
