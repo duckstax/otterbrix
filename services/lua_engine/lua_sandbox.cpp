@@ -2,7 +2,7 @@
 
 #include <boost/filesystem.hpp>
 
-#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/network/network.hpp>
 #include <goblin-engineer/dynamic.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
@@ -64,7 +64,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         }
     }
 
-    auto lua_context::push_job(http::query_context &&job) -> void {
+    auto lua_context::push_job(network::query_context &&job) -> void {
         device_.push(std::move(job));
     }
 
@@ -203,7 +203,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
                 [this](std::size_t id) -> std::size_t {
                     if (device_.in(id)) {
                         auto &http = device_.get_second(id);
-                        http.result(http::http::status::ok);
+                        http.result(network::http::status::ok);
                     }
                 }
         );
