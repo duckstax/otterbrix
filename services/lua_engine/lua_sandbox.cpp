@@ -1,5 +1,7 @@
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 
+#include <iostream>
+
 #include <boost/filesystem.hpp>
 
 #include <rocketjoe/network/network.hpp>
