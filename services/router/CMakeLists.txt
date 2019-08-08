@@ -2,11 +2,12 @@ set(CURRENT_TARGET router)
 
 list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/router/router.hpp
+        header/rocketjoe/services/router/service_router.hpp
 
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-    router.cpp
+    service_router.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC

@@ -7,7 +7,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 
 #include <rocketjoe/services/lua_engine/device.hpp>
-#include <rocketjoe/http/http.hpp>
+#include <rocketjoe/network/network.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 
@@ -18,12 +18,12 @@ namespace rocketjoe { namespace services { namespace lua_engine {
 
         ~lua_context() = default;
 
-        auto push_job(http::query_context &&) -> void;
+        auto push_job(network::query_context &&) -> void;
 
         auto run() -> void;
 
     private:
-        device<http::query_context,http::request_type ,http::response_type > device_;
+        device<network::query_context,network::request_type ,network::response_type > device_;
         sol::environment environment;
         sol::state lua;
         std::string path_script;

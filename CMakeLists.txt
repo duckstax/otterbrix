@@ -77,10 +77,8 @@ conan_cmake_run(
         BUILD missing
         NO_OUTPUT_DIRS
 )
-
 #############################################################################################
 
-#############################################################################################
 #ACTOR-ZETA
 
 option(STANDALONE-ACTOR-ZETA "" ON)
@@ -94,26 +92,15 @@ if(STANDALONE-ACTOR-ZETA)
 endif()
 
 #ACTOR-ZETA
-#############################################################################################
 
 #############################################################################################
+
 #boost
-
-#find_package (Boost COMPONENTS REQUIRED
-#        system
-#        locale
-#        regex
-#        timer
-#        filesystem
-#        serialization
-#)
-
 include_directories (SYSTEM ${Boost_INCLUDE_DIRS})
-
 #boost
-#############################################################################################
 
 #############################################################################################
+
 #ccahe
 
 find_program(CCACHE_FOUND ccache)
@@ -124,6 +111,7 @@ if(CCACHE_FOUND)
 endif(CCACHE_FOUND)
 
 #ccahe
+
 #############################################################################################
 
 include(cmake/git_utils.cmake)
@@ -142,9 +130,9 @@ git_clone(
         DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
 )
 
-message("DOWNLOAD cxxopts")
-file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/vender/cxxopts/include/cxxopts.hpp")
-message("DOWNLOAD cxxopts")
+message("DOWNLOAD cxxopts start")
+file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include/cxxopts.hpp")
+message("DOWNLOAD cxxopts finish")
 
 add_subdirectory(thirdparty)
 add_subdirectory(network)

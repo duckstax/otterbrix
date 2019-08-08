@@ -3,8 +3,6 @@
 #include <boost/filesystem.hpp>
 #include <pybind11/stl.h>
 
-#include <rocketjoe/http/http.hpp>
-
 #include <goblin-engineer/dynamic.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
@@ -41,7 +39,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
         }
     }
 
-    auto python_context::push_job(http::query_context &&job) -> void {
+    auto python_context::push_job(network::query_context &&job) -> void {
         device_.push(std::move(job));
     }
 
@@ -55,7 +53,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
         path_script = configuration.as_object().at("app").as_string();
 
         std::cerr << "processing env python finish " << std::endl;
-
+/*
         /// read
         pyrocketjoe.def(
                 "jobs_wait",
@@ -185,6 +183,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     return file_content;
                 }
         );
+        */
     }
 
 }}}

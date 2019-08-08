@@ -21,7 +21,7 @@ namespace rocketjoe { namespace services {
 
                 add_handler(
                         "dispatcher",
-                        [this](actor_zeta::actor::context &, http::query_context &t) -> void {
+                        [this](actor_zeta::actor::context &, network::query_context &t) -> void {
                             pimpl->push_job(std::move(t));
                         }
                 );

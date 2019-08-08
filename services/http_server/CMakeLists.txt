@@ -1,17 +1,21 @@
-set(CURRENT_TARGET network)
+set(CURRENT_TARGET http_server)
 
-list(APPEND CURRENT_${TARGET_HEADERS}
-        header/rocketjoe/network/network.hpp
+list(APPEND CURRENT_TARGET_HEADERS
+        header/rocketjoe/services/http_server/server.hpp
+        header/rocketjoe/services/http_server/http_session.hpp
+        header/rocketjoe/services/http_server/websocket_session.hpp
 )
 
-list(APPEND CURRENT_${TARGET_HEADERS}
-        network.cpp
+list(APPEND CURRENT_TARGET_SOURCES
+        http_session.cpp
+        server.cpp
+        websocket_session.cpp
 )
 
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_${TARGET_HEADERS}}
-            ${CURRENT_${TARGET_HEADERS}}
+            ${CURRENT_TARGET_HEADERS}
+            ${CURRENT_TARGET_SOURCES}
 )
 
 
@@ -22,6 +26,7 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         goblin-engineer
+        rocketjoe::network
         ${Boost_LIBRARIES}
         ${CONAN_LIBS}
 )
