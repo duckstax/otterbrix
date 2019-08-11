@@ -418,4 +418,5 @@ conanbuildinfo.cmake
 conanbuildinfo.txt
 conaninfo.txt
 thirdparty/goblin-engineer
-vender/cxxopts/include
+thirdparty/actor-zeta
+thirdparty/cxxopts/include

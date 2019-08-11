@@ -4,6 +4,8 @@ list(APPEND CURRENT_TARGET_HEADERS
         header/rocketjoe/services/python_engine/python_engine.hpp
         header/rocketjoe/services/python_engine/device.hpp
         header/rocketjoe/services/python_engine/python_sandbox.hpp
+        header/rocketjoe/services/python_engine/mapreduce.hpp
+        header/rocketjoe/services/python_engine/utils.hpp
 
 )
 
