@@ -36,28 +36,40 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
             };
 
-            class map_reduce final {
+
+            class data_set final /* : public py::object */ {
             public:
-                auto create_task() -> std::function<task(py_task)> const {
-                    return [](auto task_handler) {
-                        auto module_name = py::cast<std::string>(*task_handler.attr("__module__"));
-                        auto qualified_name = py::cast<std::string>(*task_handler.attr("__qualname__"));
-                        auto name = module_name + "." + qualified_name;
-
-                        return task{task_handler, std::move(name)};
-                    };
+                auto map(py::function f) -> data_set* {
+                    return this;
                 }
 
-                auto map() -> void {
-
+                auto reduce_by_key(py::function f) -> data_set* {
+                    return this;
                 }
 
-                auto reduce() -> void {
+                auto flat_map(py::function f) -> data_set* {
+                    return this;
+                }
+
+                auto collect() -> py::list {
+                    return py::list{};
+                }
+
+            private:
+                bool is_cached = false;
+                bool is_checkpointed = false;
+            };
+
+
+            class context final {
+            public:
+                auto text_file(const std::string& name ) -> data_set* {
 
                 }
             };
 
             void add_mapreduce(py::module &pyrocketjoe) {
+
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("mapreduce");
                 auto celery_result_mod = mapreduce_submodule.def_submodule("result");
                 auto celery_app_mod = mapreduce_submodule.def_submodule("app");
@@ -73,11 +85,17 @@ namespace rocketjoe { namespace services { namespace python_engine {
                         .def(py::init<py_task, std::string &&>())
                         .def("__call__", &task::operator());
 
-                py::class_<map_reduce>(mapreduce_submodule, "MapReduce")
+                py::class_<context>(mapreduce_submodule, "RocketJoeContext")
                         .def(py::init<>())
-                        .def("task", &map_reduce::create_task)
-                        .def("map",&map_reduce::map)
-                        .def("reduce",&map_reduce::map);
+                        .def("textFile",&context::text_file);
+
+                py::class_<data_set>(mapreduce_submodule, "DataSet")
+                        .def(py::init<>())
+                        .def("map",&data_set::map)
+                        .def("reduceByKey",&data_set::reduce_by_key)
+                        .def("flatMap",&data_set::flat_map)
+                        .def("collect",&data_set::collect);
+
             }
 
 
