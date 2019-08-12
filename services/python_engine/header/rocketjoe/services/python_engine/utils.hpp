@@ -1,26 +1,16 @@
 #pragma once
 
+#include "file_manager.hpp"
+
 namespace rocketjoe { namespace services { namespace python_engine {
 
-inline auto add_file_read(py::module &pyrocketjoe){
+inline auto add_file_read(py::module &pyrocketjoe, file_manager* fm ){
 
     pyrocketjoe.def(
             "file_read",
-            [](const std::string &path) -> std::map<std::size_t, std::string> {
-                std::ifstream file(path);
-                std::map<std::size_t, std::string> file_content;
-
-                if (!file)
-                    return file_content;
-
-                for (std::size_t line_number = 0; !file.eof(); line_number++) {
-                    std::string line;
-
-                    std::getline(file, line);
-                    file_content[line_number] = line;
-                }
-
-                return file_content;
+            [fm](const std::string &path) -> std::map<std::size_t, std::string> {
+                auto& file =  fm->open(path);
+                return file.read();
             }
     );
 }

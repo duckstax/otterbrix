@@ -44,8 +44,11 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
     python_context::python_context(
             goblin_engineer::dynamic_config &configuration,
-            actor_zeta::actor::actor_address ptr) :
-            python{}, pyrocketjoe{"pyrocketjoe"}, address(std::move(ptr)) {
+            actor_zeta::actor::actor_address ptr)
+            : python{}
+            , pyrocketjoe{"pyrocketjoe"}
+            , address(std::move(ptr))
+            , file_manager_(std::make_unique<file_manager>()) {
 
         std::cerr << "processing env python start " << std::endl;
 
@@ -53,9 +56,9 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         std::cerr << "processing env python finish " << std::endl;
 
-        add_file_read(pyrocketjoe);
+        add_file_read(pyrocketjoe,file_manager_.get());
 
-        add_mapreduce(pyrocketjoe);
+        //add_mapreduce(pyrocketjoe);
 
     }
 

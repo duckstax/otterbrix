@@ -9,6 +9,8 @@
 #include <rocketjoe/services/python_engine/device.hpp>
 #include <rocketjoe/network/network.hpp>
 
+#include "file_manager.hpp"
+
 namespace rocketjoe { namespace services { namespace python_engine {
 
     namespace py = pybind11;
@@ -29,6 +31,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
         py::scoped_interpreter python;
         py::module pyrocketjoe;
         std::string path_script;
+        std::unique_ptr<file_manager> file_manager_;
         actor_zeta::actor::actor_address address;
         std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
     };
