@@ -23,3 +23,7 @@ def pipeline():
     counts = file.to_stream(helper_to_stream).map(helper_map).reduce(helper_reduce)
 
     counts.save_text_file("result.txt")
+
+
+if __name__ == "__main__":
+    pass
