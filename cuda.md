@@ -32,6 +32,7 @@ exit
     sudo apt install nvidia-driver-430
     sudo reboot
     prime-select intel
+    sudo reboot
     
 add sudo vim /lib/modprobe.d/blacklist-nvidia.conf 
     
