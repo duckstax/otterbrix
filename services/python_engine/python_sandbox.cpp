@@ -48,7 +48,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
             : python{}
             , pyrocketjoe{"pyrocketjoe"}
             , address(std::move(ptr))
-            , file_manager_(std::make_unique<file_manager>()) {
+            , file_manager_(std::make_unique<file_manager>())
+            {
 
         std::cerr << "processing env python start " << std::endl;
 
