@@ -30,7 +30,8 @@ class file_manager final  {
 public:
     auto open(const std::string& path) -> file_view& {
         file_view tmp(path);
-        files.emplace(path,std::move(tmp));
+        auto result = files.emplace(path,std::move(tmp));
+        return result.first->second;
     }
 private:
     std::unordered_map<std::string,file_view> files;
