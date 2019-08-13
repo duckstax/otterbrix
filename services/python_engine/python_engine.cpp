@@ -1,8 +1,5 @@
 #include <rocketjoe/services/python_engine/python_engine.hpp>
-
-#include <map>
-
-#include <boost/utility/string_view.hpp>
+#include <iostream>
 #include <boost/filesystem.hpp>
 
 #include <goblin-engineer/metadata.hpp>
@@ -21,7 +18,7 @@ namespace rocketjoe { namespace services {
         add_handler(
                 "dispatcher",
                 [this](actor_zeta::actor::context &,network::query_context&t) -> void {
-                    pimpl->push_job(std::move(t));
+                   std::cerr << "Warning" << std::endl;
                 }
         );
 

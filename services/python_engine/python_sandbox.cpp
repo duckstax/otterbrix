@@ -7,6 +7,8 @@
 #include <rocketjoe/services/python_engine/utils.hpp>
 #include <rocketjoe/services/python_engine/mapreduce.hpp>
 #include "rocketjoe/services/python_engine/data_set_manager.hpp"
+#include "rocketjoe/services/python_engine/celery.hpp"
+
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
@@ -39,9 +41,6 @@ namespace rocketjoe { namespace services { namespace python_engine {
         }
     }
 
-    auto python_context::push_job(network::query_context &&job) -> void {
-        device_.push(std::move(job));
-    }
 
     python_context::python_context(
             goblin_engineer::dynamic_config &configuration,
@@ -61,7 +60,9 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         add_file_read(pyrocketjoe,file_manager_.get());
 
-        add_mapreduce(pyrocketjoe);
+        add_mapreduce(pyrocketjoe,data_set_manager_.get());
+
+        add_celery(pyrocketjoe);
 
     }
 

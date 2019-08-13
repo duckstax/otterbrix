@@ -1,22 +1,25 @@
 set(CURRENT_TARGET python_engine)
 
-list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/python_engine/python_engine.hpp
-        header/rocketjoe/services/python_engine/device.hpp
-        header/rocketjoe/services/python_engine/python_sandbox.hpp
+list(APPEND ${CURRENT_TARGET}_HEADERS
+        header/rocketjoe/services/python_engine/celery.hpp
+        header/rocketjoe/services/python_engine/data_set_manager.hpp
+        header/rocketjoe/services/python_engine/file_manager.hpp
         header/rocketjoe/services/python_engine/mapreduce.hpp
+        header/rocketjoe/services/python_engine/python_engine.hpp
+        header/rocketjoe/services/python_engine/python_sandbox.hpp
         header/rocketjoe/services/python_engine/utils.hpp
-
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
+list(APPEND ${CURRENT_TARGET}_SOURCES
+        celery.cpp
+        mapreduce.cpp
         python_engine.cpp
         python_sandbox.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
-            ${CURRENT_TARGET_HEADERS}
-            ${CURRENT_TARGET_SOURCES}
+            ${${CURRENT_TARGET}_HEADERS}
+            ${${CURRENT_TARGET}_SOURCES}
 )
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
