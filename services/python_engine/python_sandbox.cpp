@@ -6,6 +6,7 @@
 #include <goblin-engineer/dynamic.hpp>
 #include <rocketjoe/services/python_engine/utils.hpp>
 #include <rocketjoe/services/python_engine/mapreduce.hpp>
+#include "rocketjoe/services/python_engine/data_set_manager.hpp"
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
@@ -49,6 +50,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
             , pyrocketjoe{"pyrocketjoe"}
             , address(std::move(ptr))
             , file_manager_(std::make_unique<file_manager>())
+            , data_set_manager_(std::make_unique<data_set_manager>(file_manager_.get()))
             {
 
         std::cerr << "processing env python start " << std::endl;
@@ -59,7 +61,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         add_file_read(pyrocketjoe,file_manager_.get());
 
-        //add_mapreduce(pyrocketjoe);
+        add_mapreduce(pyrocketjoe);
 
     }
 
