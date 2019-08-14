@@ -54,14 +54,14 @@ namespace rocketjoe { namespace services { namespace python_engine {
             }
 
             auto context_wrapper::text_file(const std::string &path) -> data_set_wrapper & {
-                auto* ds = context_->create_data_set(name_);
+                auto* ds = context_->create_data_set(path);
                 ds_ = new data_set_wrapper(ds);
                 return *ds_;
             }
 
             void add_mapreduce(py::module &pyrocketjoe, data_set_manager *dsm) {
 
-                auto mapreduce_submodule = pyrocketjoe.def_submodule("mapreduce");
+                auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 
                 py::class_<context_wrapper>(mapreduce_submodule, "RocketJoeContext")
                         .def(
