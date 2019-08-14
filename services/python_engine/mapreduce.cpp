@@ -40,8 +40,10 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             auto data_set_wrapper::collect() -> py::list {
                 py::list tmp{};
-                ///auto range = ds_->range();
-                ///std::copy(range.first,range.second,std::back_inserter(tmp));
+                auto range = ds_->range();
+                for(;range.first!=range.second;++range.first  ){
+                    tmp.append(range.first->first);
+                }
                 return  tmp;
 
             }
