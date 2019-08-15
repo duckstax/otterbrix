@@ -4,7 +4,7 @@
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
-inline auto add_file_read(py::module &pyrocketjoe, file_manager* fm ){
+inline auto add_file_system(py::module &pyrocketjoe, file_manager* fm ){
 
     pyrocketjoe.def(
             "file_read",

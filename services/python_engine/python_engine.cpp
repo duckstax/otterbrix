@@ -12,8 +12,8 @@
 
 namespace rocketjoe { namespace services {
 
-            python_vm::python_vm(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
-            abstract_service(env, "python_engine") {
+    python_vm::python_vm(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
+    abstract_service(env, "python_engine") {
 
         add_handler(
                 "dispatcher",
@@ -21,7 +21,6 @@ namespace rocketjoe { namespace services {
                    std::cerr << "Warning" << std::endl;
                 }
         );
-
 
         add_handler(
                 "write",
