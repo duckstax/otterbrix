@@ -25,7 +25,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
         auto run() -> void;
 
     private:
-        py::scoped_interpreter python;
+        py::scoped_interpreter python_;
         py::module pyrocketjoe;
         std::string path_script;
         std::unique_ptr<file_manager> file_manager_;

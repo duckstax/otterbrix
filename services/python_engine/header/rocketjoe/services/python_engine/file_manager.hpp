@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <fstream>
 #include <iostream>
+#include <map>
 
 class file_view final {
 private:
