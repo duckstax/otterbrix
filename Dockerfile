@@ -27,7 +27,7 @@ WORKDIR /app/build
 RUN cmake .. -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
 RUN cmake --build .
 
-ENTRYPOINT["bash"]
-CMD ["./script/entrypoint.sh"]
+#ENTRYPOINT["bash"]
+#CMD ["./script/entrypoint.sh"]
 #ENTRYPOINT ["./entrypoint.sh"]
 #CMD ["run"]

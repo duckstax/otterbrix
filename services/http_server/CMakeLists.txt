@@ -24,7 +24,7 @@ add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
 target_link_libraries(
-        rocketjoe_${CURRENT_TARGET}
+        rocketjoe_${CURRENT_TARGET} PRIVATE
         goblin-engineer
         rocketjoe::network
         ${Boost_LIBRARIES}

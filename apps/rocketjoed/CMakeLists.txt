@@ -25,9 +25,7 @@ target_link_libraries(
         rocketjoe::http_server
         rocketjoe::dto
         rocketjoe::python_engine
-        rocketjoe::flat_cache
         rocketjoe::router
-        rocketjoe::control_block
         dl
 )
 

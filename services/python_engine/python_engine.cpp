@@ -1,8 +1,5 @@
 #include <rocketjoe/services/python_engine/python_engine.hpp>
-
-#include <map>
-
-#include <boost/utility/string_view.hpp>
+#include <iostream>
 #include <boost/filesystem.hpp>
 
 #include <goblin-engineer/metadata.hpp>
@@ -15,16 +12,15 @@
 
 namespace rocketjoe { namespace services {
 
-            python_vm::python_vm(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
-            abstract_service(env, "python_engine") {
+    python_vm::python_vm(goblin_engineer::dynamic_config& configuration,goblin_engineer::abstract_environment * env):
+    abstract_service(env, "python_engine") {
 
         add_handler(
                 "dispatcher",
                 [this](actor_zeta::actor::context &,network::query_context&t) -> void {
-                    pimpl->push_job(std::move(t));
+                   std::cerr << "Warning" << std::endl;
                 }
         );
-
 
         add_handler(
                 "write",

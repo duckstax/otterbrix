@@ -1,9 +1,0 @@
-DELETE http://127.0.0.1:9998/cube
-Accept: */*
-Cache-Control: no-cache
-Content-Type: application/json
-
-{"jsonrpc":"2.0","method":"delete","params":{"collection":"lab","document":{"name":"mordo"}},"id":"0","application-id":"1qaz","api-key": "1qaz"}
-###
-
-
