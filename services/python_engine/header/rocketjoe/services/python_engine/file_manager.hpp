@@ -5,36 +5,38 @@
 #include <iostream>
 #include <map>
 
-class file_view final {
-private:
-    using storage_t = std::map<std::size_t, std::string>;
-public:
-    file_view(const std::string& path):file_(path){}
+#include <boost/interprocess/file_mapping.hpp>
+#include <boost/interprocess/mapped_region.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/utility/string_view.hpp>
 
-    auto read()-> storage_t {
-        if (file_) {
-            for (std::size_t line_number = 0; !file_.eof(); line_number++) {
-                std::string line;
+namespace rocketjoe { namespace services { namespace python_engine {
 
-                std::getline(file_, line);
-                file_content[line_number] = line;
-            }
-        }
-        return file_content;
-    }
+            class file_view final {
+            private:
+                using storage_t = std::map<std::size_t, std::string>;
+            public:
+                explicit file_view(const boost::filesystem::path &path);
 
-private:
-    std::ifstream file_;
-    storage_t file_content;
-};
+                auto read() -> storage_t;
 
-class file_manager final  {
-public:
-    auto open(const std::string& path) -> file_view& {
-        file_view tmp(path);
-        auto result = files.emplace(path,std::move(tmp));
-        return result.first->second;
-    }
-private:
-    std::unordered_map<std::string,file_view> files;
-};
+            private:
+                boost::interprocess::file_mapping file__;
+                boost::interprocess::mapped_region region;
+                boost::string_view raw_;
+                storage_t file_content;
+            };
+
+            class file_manager final {
+            public:
+                auto open(const std::string &path) -> file_view & {
+                    file_view tmp(path);
+                    auto result = files.emplace(path, std::move(tmp));
+                    return result.first->second;
+                }
+
+            private:
+                std::unordered_map<std::string, file_view> files;
+            };
+
+}}}

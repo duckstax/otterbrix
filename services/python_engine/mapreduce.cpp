@@ -76,11 +76,13 @@ namespace rocketjoe { namespace services { namespace python_engine {
             }
 
             auto data_set_wrapper::collect() -> py::list {
+
                 py::list tmp{};
-                auto range = ds_->range();
-                for(;range.first!=range.second;++range.first  ){
-                    tmp.append(range.first->first);
+
+                for(const auto&i :*ds_){
+                    tmp.append(i.second);
                 }
+
                 return  tmp;
 
             }

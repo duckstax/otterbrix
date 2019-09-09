@@ -3,6 +3,7 @@
 #include <goblin-engineer/abstract_service.hpp>
 
 namespace rocketjoe { namespace services {
+
         namespace python_engine {
             class python_context;
         }

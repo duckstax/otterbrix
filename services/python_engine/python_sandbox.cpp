@@ -35,6 +35,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                            module_name, _ = os.path.splitext(path)
 
                            import_module(os.path.basename(module_name))
+
                         )", py::globals(), locals);
                     }
             );
