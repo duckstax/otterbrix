@@ -1,5 +1,6 @@
 #include <rocketjoe/services/python_engine/mapreduce.hpp>
 
+#include <rocketjoe/services/python_engine/context_manager.h>
 #include <pybind11/functional.h>
 
 namespace rocketjoe { namespace services { namespace python_engine {
@@ -10,116 +11,97 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             class data_set_wrapper final {
             public:
-                data_set_wrapper(data_set *ds);
+                explicit data_set_wrapper(context *ctx) : ctx_(ctx) {}
 
-                auto map(py::function f) -> data_set_wrapper&;
+                auto map(py::function f) -> data_set_wrapper & {
+                    auto &current = *ctx_->top();
+                    auto &new_set = *(ctx_->next());
+                    for (auto &i:current) {
+                        auto result = f(i);
+                        new_set.append(result.cast<std::string>());
+                    }
+                    return *this;
+                }
 
-                auto reduce_by_key(py::function f) -> data_set_wrapper&;
+                auto reduce_by_key(py::function f) -> data_set_wrapper & {
+                    auto &current = *ctx_->top();
+                    auto &new_set = *(ctx_->next());
+                    for (auto &i:current) {
+                        auto result = f(i);
+                        new_set.append(result.cast<std::string>());
+                    }
 
-                auto flat_map(py::function f) -> data_set_wrapper&;
+                    return *this;
+                }
 
-                auto collect() -> py::list;
+                auto flat_map(py::function f) -> data_set_wrapper & {
+
+                    py::list result = f(ctx_->top()->file()->raw_file());
+
+                    for (auto &i:result) {
+                        ctx_->top()->append(i.cast<std::string>());
+                    }
+
+                    ctx_->next();
+
+                    return *this;
+                }
+
+                auto collect() -> py::list {
+
+                    py::list tmp{};
+
+                    auto &current = *ctx_->top();
+                    for (const auto &i :current) {
+                        tmp.append(i.second);
+                    }
+
+                    return tmp;
+                }
 
             private:
-                context*ctx_;
-                data_set* ds_;
+                context *ctx_;
             };
 
 
             class context_wrapper final {
             public:
-                context_wrapper(const std::string& name,context* ctx);
+                context_wrapper(const std::string &name, context *ctx)
+                        : name_(name), ctx_(ctx)
+                        {
+                }
 
-                auto text_file(const std::string& path ) -> data_set_wrapper&;
+                auto text_file(const std::string &path) -> data_set_wrapper {
+                    ctx_->read_file(path);
+                    return {ctx_};
+                }
 
             private:
                 std::string name_;
-                context* context_;
-                data_set_wrapper* ds_;
-
+                context *ctx_;
             };
 
-            data_set_wrapper::data_set_wrapper(data_set *ds) :ds_(ds) {}
 
-            auto data_set_wrapper::map(py::function f) -> data_set_wrapper & {
-                ds_->transform(
-                        [=](const std::string& data)-> std::string{
-                            auto result =  f(data);
-                            auto unpack = result.cast<std::string>();
-                            return unpack;
-                        }
-                );
-                return *this;
-            }
-
-            auto data_set_wrapper::reduce_by_key(py::function f) -> data_set_wrapper & {
-                ds_->transform(
-                        [=](const std::string& data)-> std::string{
-                            auto result =  f(data);
-                            auto unpack = result.cast<std::string>();
-                            return unpack;
-                        }
-                );
-
-                return *this;
-            }
-
-            auto data_set_wrapper::flat_map(py::function f) -> data_set_wrapper & {
-                ds_->transform(
-                        [=](const std::string& data)-> std::string{
-                            auto result =  f(data);
-                            auto unpack = result.cast<std::string>();
-                            return unpack;
-                        }
-                );
-                return *this;
-            }
-
-            auto data_set_wrapper::collect() -> py::list {
-
-                py::list tmp{};
-
-                for(const auto&i :*ds_){
-                    tmp.append(i.second);
-                }
-
-                return  tmp;
-
-            }
-
-            context_wrapper::context_wrapper(const std::string &name, context *ctx)
-                    : name_(name)
-                    , context_(ctx)
-            {
-
-            }
-
-            auto context_wrapper::text_file(const std::string &path) -> data_set_wrapper & {
-                auto* ds = context_->create_data_set(path);
-                ds_ = new data_set_wrapper(ds);
-                return *ds_;
-            }
-
-            void add_mapreduce(py::module &pyrocketjoe, data_set_manager *dsm) {
+            void add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) {
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 
                 py::class_<context_wrapper>(mapreduce_submodule, "RocketJoeContext")
                         .def(
                                 py::init(
-                                        [dsm](const std::string& name) {
-                                            auto* ctx = dsm->create_context(name);
+                                        [cm_](const std::string &name) {
+                                            auto *ctx = cm_->create_context(name);
                                             return new context_wrapper(name, ctx);
                                         }
                                 )
                         )
-                        .def("textFile",&context_wrapper::text_file);
+                        .def("textFile", &context_wrapper::text_file);
 
                 py::class_<data_set_wrapper>(mapreduce_submodule, "DataSet")
-                        .def("map",&data_set_wrapper::map)
-                        .def("reduceByKey",&data_set_wrapper::reduce_by_key)
-                        .def("flatMap",&data_set_wrapper::flat_map)
-                        .def("collect",&data_set_wrapper::collect);
+                        .def("map", &data_set_wrapper::map)
+                        .def("reduceByKey", &data_set_wrapper::reduce_by_key)
+                        .def("flatMap", &data_set_wrapper::flat_map)
+                        .def("collect", &data_set_wrapper::collect);
             }
 
 }}}

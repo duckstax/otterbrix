@@ -20,6 +20,10 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
                 auto read() -> storage_t;
 
+                auto raw_file() -> boost::string_view& {
+                    return  raw_;
+                }
+
             private:
                 boost::interprocess::file_mapping file__;
                 boost::interprocess::mapped_region region;
@@ -29,14 +33,23 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             class file_manager final {
             public:
-                auto open(const std::string &path) -> file_view & {
-                    file_view tmp(path);
-                    auto result = files.emplace(path, std::move(tmp));
-                    return result.first->second;
+                auto open(const boost::filesystem::path &path) -> file_view * {
+                    auto result = files_.emplace(path.string(), std::make_unique<file_view>(path));
+                    return result.first->second.get();
+                }
+
+                auto get(const std::string &path) -> file_view* {
+                    auto it = files_.find(path);
+                    if ( it == files_.end() ) {
+                        auto result = files_.emplace(path, std::make_unique<file_view>(path));
+                        return result.first->second.get();
+                    } else {
+                        return it->second.get();
+                    }
                 }
 
             private:
-                std::unordered_map<std::string, file_view> files;
+                std::unordered_map<std::string, std::unique_ptr<file_view>> files_;
             };
 
 }}}

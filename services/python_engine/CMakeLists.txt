@@ -2,6 +2,7 @@ set(CURRENT_TARGET python_engine)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
         header/rocketjoe/services/python_engine/celery.hpp
+        header/rocketjoe/services/python_engine/context_manager.h
         header/rocketjoe/services/python_engine/data_set_manager.hpp
         header/rocketjoe/services/python_engine/file_manager.hpp
         header/rocketjoe/services/python_engine/mapreduce.hpp

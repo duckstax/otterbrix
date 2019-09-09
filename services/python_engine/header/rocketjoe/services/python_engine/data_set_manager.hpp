@@ -15,12 +15,22 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 using storage_t = std::map<std::size_t, std::string>;
                 using const_iterator = storage_t::const_iterator;
             public:
-                data_set(std::map<std::size_t, std::string> d) : data_(std::move(d)) {}
+                data_set(file_view*file):file_(file){}
+
+                data_set():file_(nullptr){}
 
                 auto transform(operand &&f) {
                     for (auto &i:data_) {
                         i.second = f(i.second);
                     }
+                }
+
+                auto file() -> file_view* {
+                    return file_;
+                }
+
+                auto append(const std::string&value ){
+                    data_.emplace(data_.size(),std::move(value));
                 }
 
                 auto begin() const -> const_iterator {
@@ -32,36 +42,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
             private:
+                file_view*file_;
                 std::map<std::size_t, std::string> data_;
-            };
-
-            class context final {
-            public:
-                context(file_manager *fileManager) : file_manager_(fileManager) {}
-
-                auto create_data_set(const std::string &path) -> data_set * {
-                    auto &file = file_manager_->open(path);
-                    ds_ = std::make_unique<data_set>(file.read());
-                    return ds_.get();
-                }
-
-            private:
-                file_manager *file_manager_;
-                std::unique_ptr<data_set> ds_;
-            };
-
-
-            class data_set_manager final {
-            public:
-                data_set_manager(file_manager *fm_ptr) : file_manager_(fm_ptr) {}
-
-                auto create_context(const std::string &name) -> context * {
-                    auto result = storage_t.emplace(name, std::make_unique<context>(file_manager_));
-                    return result.first->second.get();
-                }
-
-            private:
-                file_manager *file_manager_;
-                std::unordered_map<std::string, std::unique_ptr<context>> storage_t;
             };
 }}}
