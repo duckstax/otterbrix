@@ -8,6 +8,6 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
     class context_manager;
 
-    void add_mapreduce(py::module &pyrocketjoe, context_manager * dsm);
+    auto add_mapreduce(py::module &, context_manager * ) -> void ;
 
 }}}

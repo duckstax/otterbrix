@@ -1,6 +1,6 @@
 #include <rocketjoe/services/python_engine/mapreduce.hpp>
-
 #include <rocketjoe/services/python_engine/context_manager.h>
+#include <rocketjoe/services/python_engine/data_set_manager.hpp>
 #include <pybind11/functional.h>
 
 namespace rocketjoe { namespace services { namespace python_engine {
@@ -73,7 +73,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
                 auto text_file(const std::string &path) -> data_set_wrapper {
                     ctx_->read_file(path);
-                    return {ctx_};
+                    return data_set_wrapper{ctx_};
                 }
 
             private:
@@ -82,7 +82,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
             };
 
 
-            void add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) {
+            auto add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) -> void {
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 

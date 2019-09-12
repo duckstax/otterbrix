@@ -9,6 +9,7 @@
 #include <actor-zeta/actor/actor_address.hpp>
 
 #include <rocketjoe/services/python_engine/python_sandbox.hpp>
+#include <rocketjoe/network/network.hpp>
 
 namespace rocketjoe { namespace services {
 

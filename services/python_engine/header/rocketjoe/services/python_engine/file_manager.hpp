@@ -34,17 +34,16 @@ namespace rocketjoe { namespace services { namespace python_engine {
             class file_manager final {
             public:
                 auto open(const boost::filesystem::path &path) -> file_view * {
-                    auto result = files_.emplace(path.string(), std::make_unique<file_view>(path));
-                    return result.first->second.get();
-                }
-
-                auto get(const std::string &path) -> file_view* {
-                    auto it = files_.find(path);
-                    if ( it == files_.end() ) {
-                        auto result = files_.emplace(path, std::make_unique<file_view>(path));
-                        return result.first->second.get();
+                    if (boost::filesystem::exists(path)) {
+                        auto it = files_.find(path.string());
+                        if (it == files_.end()) {
+                            auto result = files_.emplace(path.string(), std::move(std::make_unique<file_view>(path)));
+                            return result.first->second.get();
+                        } else {
+                            return it->second.get();
+                        }
                     } else {
-                        return it->second.get();
+                        return nullptr;
                     }
                 }
 

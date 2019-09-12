@@ -1,18 +1,13 @@
 #pragma once
 
-#include "file_manager.hpp"
+#include <pybind11/pybind11.h>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
-inline auto add_file_system(py::module &pyrocketjoe, file_manager* fm ){
+            namespace py = pybind11;
 
-    pyrocketjoe.def(
-            "file_read",
-            [fm](const std::string &path) -> std::map<std::size_t, std::string> {
-                auto& file =  fm->open(path);
-                return file.read();
-            }
-    );
-}
+            class file_manager;
+
+            auto add_file_system(py::module &, file_manager *) -> void;
 
 }}}
