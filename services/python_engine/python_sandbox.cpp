@@ -56,7 +56,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         path_script = configuration.as_object().at("app").as_string();
 
-        add_file_system(pyrocketjoe,file_manager_.get(););
+        add_file_system(pyrocketjoe,file_manager_.get());
 
         add_mapreduce(pyrocketjoe,context_manager_.get());
 
