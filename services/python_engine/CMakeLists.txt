@@ -23,7 +23,7 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
             ${${CURRENT_TARGET}_HEADERS}
             ${${CURRENT_TARGET}_SOURCES}
-        file_manager.cpp)
+)
 
 find_package(pybind11 REQUIRED)
 

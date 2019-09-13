@@ -14,9 +14,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
     using namespace pybind11::literals;
 
     auto python_context::run() -> void {
-        auto ext = boost::filesystem::extension(path_script);
-
-        if(ext == ".py") {
+        if(path_script.extension() == ".py") {
             exuctor = std::make_unique<std::thread>(
                     [this]() {
                         auto locals = py::dict(

@@ -77,6 +77,8 @@ conan_cmake_run(
         BUILD missing
         NO_OUTPUT_DIRS
 )
+
+set(CONAN ON CACHE BOOL "" FORCE)
 #############################################################################################
 
 #ACTOR-ZETA
@@ -127,6 +129,13 @@ git_clone(
         PROJECT_NAME    actor-zeta
         GIT_URL         https://github.com/jinntechio/actor-zeta.git
         GIT_BRANCH      master
+        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
+)
+
+git_clone(
+        PROJECT_NAME    sol2
+        GIT_URL         https://github.com/ThePhD/sol2.git
+        GIT_COMMIT      902ceaf
         DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
 )
 

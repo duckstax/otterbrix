@@ -1,5 +1,7 @@
 #include <rocketjoe/services/python_engine/file_system.hpp>
 
+#include <pybind11/stl.h>
+
 #include <rocketjoe/services/python_engine/file_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {

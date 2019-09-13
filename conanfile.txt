@@ -1,7 +1,6 @@
 [requires]
 yaml-cpp/0.6.2@bincrafters/stable
-boost/1.70.0@conan/stable
-OpenSSL/1.0.2p@conan/stable
+boost/1.71.0@conan/stable
 spdlog/1.3.1@bincrafters/stable
 fmt/5.2.0@bincrafters/stable
 #mongo-cxx-driver/3.3.0@bincrafters/stable
@@ -11,7 +10,10 @@ pybind11/2.3.0@conan/stable
 
 [options]
 yaml-cpp:shared = False
-OpenSSL:shared = True
+boost:error_code_header_only=True
+boost:system_no_deprecated=True
+boost:asio_no_deprecated=True
+boost:filesystem_no_deprecated=True
 #mongo-cxx-driver:shared = True
 
 [generators]

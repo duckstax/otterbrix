@@ -5,7 +5,7 @@
 
 #include <sol.hpp>
 #include <goblin-engineer/abstract_service.hpp>
-
+#include <boost/filesystem.hpp>
 #include <rocketjoe/services/lua_engine/device.hpp>
 #include <rocketjoe/network/network.hpp>
 
@@ -26,7 +26,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         device<network::query_context,network::request_type ,network::response_type > device_;
         sol::environment environment;
         sol::state lua;
-        std::string path_script;
+        boost::filesystem::path path_script;
         actor_zeta::actor::actor_address address;
         std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
     };

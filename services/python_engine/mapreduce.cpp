@@ -1,7 +1,9 @@
 #include <rocketjoe/services/python_engine/mapreduce.hpp>
-#include <rocketjoe/services/python_engine/context_manager.h>
-#include <rocketjoe/services/python_engine/data_set_manager.hpp>
+
 #include <pybind11/functional.h>
+#include <pybind11/stl.h>
+
+#include <rocketjoe/services/python_engine/context_manager.h>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 

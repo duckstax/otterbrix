@@ -28,7 +28,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
     private:
         py::scoped_interpreter python_;
         py::module pyrocketjoe;
-        std::string path_script;
+        boost::filesystem::path path_script;
         std::unique_ptr<file_manager> file_manager_;
         std::unique_ptr<context_manager> context_manager_;
         actor_zeta::actor::actor_address address;
