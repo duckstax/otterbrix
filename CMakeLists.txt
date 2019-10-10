@@ -1,19 +1,13 @@
-cmake_minimum_required(VERSION 3.0.0)#2.8.12)
+cmake_minimum_required(VERSION 3.0.0)
 
 set(project RocketJoe)
 
-if (CMAKE_VERSION VERSION_LESS 3.0)
-   PROJECT(${project} CXX)
-else()
-
-    cmake_policy(SET CMP0048 NEW)
-
-    set (CMAKE_PROJECT_VERSION_MAJOR 0)
-    set (CMAKE_PROJECT_VERSION_MINOR 0)
-    set (CMAKE_PROJECT_VERSION_PATCH 0)
-    set (CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-    PROJECT(${project} VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
-endif()
+cmake_policy(SET CMP0048 NEW)
+set (CMAKE_PROJECT_VERSION_MAJOR 0)
+set (CMAKE_PROJECT_VERSION_MINOR 0)
+set (CMAKE_PROJECT_VERSION_PATCH 0)
+set (CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
+PROJECT(${project} VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -43,21 +37,18 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISA
 set(BUILD_LUA OFF CACHE BOOL "" FORCE)
 set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
 
-IF(NOT APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -pthread ")
-ENDIF()
-
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
 add_compile_options(
         -v
-        #-Wall
-        #-Wextra
+        -Wall
+        -Wextra
 )
 
 set(RTTI_DISABLE OFF CACHE BOOL "" FORCE)
 
 #############################################################################################
+#conan
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
@@ -77,30 +68,9 @@ conan_cmake_run(
         BUILD missing
         NO_OUTPUT_DIRS
 )
+
+#conan
 #############################################################################################
-
-#ACTOR-ZETA
-
-option(STANDALONE-ACTOR-ZETA "" ON)
-
-if(STANDALONE-ACTOR-ZETA)
-    set(actor-zeta-dir ${PROJECT_SOURCE_DIR}/thirdparty/actor-zeta)
-    include_directories( SYSTEM
-            ${actor-zeta-dir}/core
-            ${actor-zeta-dir}/io
-    )
-endif()
-
-#ACTOR-ZETA
-
-#############################################################################################
-
-#boost
-include_directories (SYSTEM ${Boost_INCLUDE_DIRS})
-#boost
-
-#############################################################################################
-
 #ccahe
 
 find_program(CCACHE_FOUND ccache)
@@ -111,24 +81,7 @@ if(CCACHE_FOUND)
 endif(CCACHE_FOUND)
 
 #ccahe
-
 #############################################################################################
-
-include(cmake/git_utils.cmake)
-
-git_clone(
-        PROJECT_NAME    goblin-engineer
-        GIT_URL         https://github.com/jinntechio/goblin-engineer.git
-        GIT_BRANCH      master
-        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
-)
-
-git_clone(
-        PROJECT_NAME    actor-zeta
-        GIT_URL         https://github.com/jinntechio/actor-zeta.git
-        GIT_BRANCH      master
-        DIRECTORY       ${CMAKE_SOURCE_DIR}/thirdparty
-)
 
 message("DOWNLOAD cxxopts start")
 file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include/cxxopts.hpp")

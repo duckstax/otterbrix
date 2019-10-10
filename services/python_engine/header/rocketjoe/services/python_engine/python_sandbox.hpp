@@ -3,6 +3,8 @@
 #include <array>
 #include <map>
 
+#include <boost/filesystem.hpp>
+
 #include <pybind11/embed.h>
 #include <goblin-engineer/abstract_service.hpp>
 
@@ -27,7 +29,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
     private:
         py::scoped_interpreter python_;
         py::module pyrocketjoe;
-        std::string path_script;
+        boost::filesystem::path path_script;
         std::unique_ptr<file_manager> file_manager_;
         std::unique_ptr<data_set_manager> data_set_manager_;
         actor_zeta::actor::actor_address address;

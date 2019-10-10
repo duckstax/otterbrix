@@ -5,6 +5,7 @@
 #include "configuration.hpp"
 
 #include <yaml-cpp/yaml.h>
+#include <boost/filesystem.hpp>
 
 constexpr const char *config_name_file = "config.yaml";
 
@@ -87,22 +88,22 @@ void logo() {
 
 }
 
-void load_config(cxxopts::ParseResult &args_, goblin_engineer::configuration &config) {
+void load_config(cxxopts::ParseResult &args_, goblin_engineer::dynamic_config &config) {
 
-    config.data_dir = args_["data-dir"].as<std::string>();
+     auto data_dir = boost::filesystem::path(args_["data-dir"].as<std::string>());
 
-    boost::filesystem::path config_path = config.data_dir / config_name_file;
+     boost::filesystem::path config_path = data_dir / config_name_file;
 
-    config.dynamic_configuration.as_object().emplace("config-path",(config.data_dir).string());
+    /// config.as_object().emplace("config-path",(config.data_dir).string());
 
     goblin_engineer::dynamic_config json_config;
     YAML::Node config_ = YAML::LoadFile(config_path.string());
-    convector(config_,config.dynamic_configuration);
+    convector(config_,config);
 
     if (args_.count("plugins")) {
         auto &plugins = args_["plugins"].as<std::vector<std::string>>();
         for (auto &&i:plugins) {
-            config.plugins.emplace(std::move(i));
+///            config.plugins.emplace(std::move(i));
         }
     }
 
@@ -118,22 +119,22 @@ void generate_yaml_config(YAML::Node &config_) {
 
 }
 
-void generate_config(goblin_engineer::configuration &config,boost::filesystem::path data_dir_) {
+void generate_config(goblin_engineer::dynamic_config &config,boost::filesystem::path data_dir_) {
 
-    config.data_dir = std::move(data_dir_);
+    ///config.data_dir = std::move(data_dir_);
 
-    auto data_path = config.data_dir ;
+    auto data_path = data_dir_ ;
 
-    config.dynamic_configuration.as_object().emplace("config-path",data_path.string());
+    ///config.as_object().emplace("config-path",data_path.string());
 
-    if (!boost::filesystem::exists(data_path)) {
-        boost::filesystem::create_directories(data_path);
-    }
+    ///if (!boost::filesystem::exists(data_path)) {
+    ///    boost::filesystem::create_directories(data_path);
+    //}
 
-    if (!boost::filesystem::exists(data_path / plugins_name_file)) {
-        boost::filesystem::create_directories(data_path / plugins_name_file);
-        config.plugins_dir = data_path / plugins_name_file;
-    }
+    ///if (!boost::filesystem::exists(data_path / plugins_name_file)) {
+    ///    boost::filesystem::create_directories(data_path / plugins_name_file);
+    ///    config.plugins_dir = data_path / plugins_name_file;
+    //}
 
     boost::filesystem::path config_path = data_path / config_name_file;
 
@@ -147,11 +148,11 @@ void generate_config(goblin_engineer::configuration &config,boost::filesystem::p
     }
 
     YAML::Node config_ = YAML::LoadFile(config_path.string());
-    convector(config_,config.dynamic_configuration);
+    convector(config_,config);
 
 }
 
-void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::configuration& configuration) {
+void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::dynamic_config& configuration) {
 
     if (result.count("data-dir")) {
 

@@ -23,6 +23,7 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET}
         rocketjoe::dto
         rocketjoe::network
+        rocketjoe::http_server
         goblin-engineer
 )
 
