@@ -11,10 +11,6 @@ namespace rocketjoe { namespace services {
 
         ~lua_vm() override = default;
 
-        void startup(goblin_engineer::context_t *) override;
-
-        void shutdown() override;
-
     private:
         std::unique_ptr<lua_engine::lua_context> pimpl;
     };

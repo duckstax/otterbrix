@@ -13,9 +13,9 @@
 
 namespace rocketjoe { namespace services {
 
-            lua_vm::lua_vm(goblin_engineer::dynamic_config &configuration,
-                                   goblin_engineer::abstract_environment *env) :
-                    abstract_service(env, "lua_engine") {
+            lua_vm::lua_vm(goblin_engineer::dynamic_config &configuration,goblin_engineer::abstract_environment *env)
+                : abstract_service(env, "lua_engine")
+                , pimpl(std::make_unique<lua_engine::lua_context>(configuration, this->address())) {
 
                 add_handler(
                         "dispatcher",
@@ -24,23 +24,14 @@ namespace rocketjoe { namespace services {
                         }
                 );
 
-
                 add_handler(
                         "write",
                         [this](actor_zeta::actor::context &ctx) -> void {
-                            ctx->addresses("http")->send(std::move(ctx.message()));
+                            actor_zeta::send(ctx->addresses("http"),std::move(ctx.message()));
                         }
                 );
 
-                pimpl = std::make_unique<lua_engine::lua_context>(configuration, this->address());
-            }
-
-            void lua_vm::startup(goblin_engineer::context_t *) {
                 pimpl->run();
-            }
-
-            void lua_vm::shutdown() {
-
             }
 
 }}
