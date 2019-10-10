@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
-#include <goblin-engineer/abstract_service.hpp>
+#include <goblin-engineer.hpp>
 
 namespace rocketjoe { namespace services {
 

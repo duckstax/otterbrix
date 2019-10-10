@@ -5,11 +5,9 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem.hpp>
 
-#include <goblin-engineer/metadata.hpp>
-#include <goblin-engineer/dynamic.hpp>
-#include <goblin-engineer/context.hpp>
+#include <goblin-engineer.hpp>
 
-#include <actor-zeta/actor/actor_address.hpp>
+#include <actor-zeta/core.hpp>
 
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 
