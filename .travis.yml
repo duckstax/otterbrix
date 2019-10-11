@@ -16,6 +16,7 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
+      - ninja-build
       - lua5.3
       - liblua5.3-dev
 install:
