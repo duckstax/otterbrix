@@ -15,40 +15,24 @@ RocketJoe is an application server for micro-services architecture.
 
 ### for mac os x 
 
-```
-brew install mongo-cxx-driver cmake lua  boost  ccache doxygen gperftools conan
+```bash
 
-git clone git@github.com:smart-cloud/rocketjoe.git rocketjoe
-
-cd rocketjoe
-
-git submodule init
-
-git submodule update --recursive
-
-mkdir build
-
-cp shared/rocketjoe/config.yaml build
-
-cp lua/web.lua build
-
-cd build
-
-cmake ..
-
-make rocketjoe
-
-./rocketjoe 
+brew install cmake lua ccache conan python3
 
 ```
-
-## for debian base
+### for debian base
 
 ```bash
 
 apt install git ccache g++ cmake python3 python3-dev python3-pip lua5.3 liblua5.3-dev 
 
-pip3 install conan --upgrade 
+pip3 install conan --upgrade
+ 
+```
+
+### Build 
+
+```bash
 
 git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
 
@@ -58,11 +42,13 @@ git submodule init
 
 git submodule update --recursive
 
-cd rocketjoe
+mkdir build
 
-cmake ..
+cd build
 
-make rocketjoe
+cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release
+
+cmake --build .
 
 ./rocketjoe 
  
