@@ -13,7 +13,7 @@
 
 namespace rocketjoe { namespace services {
 
-            lua_vm::lua_vm(network::server* ptr,goblin_engineer::dynamic_config&)
+            lua_vm::lua_vm(network::server* ptr,goblin_engineer::dynamic_config&configuration)
                 : abstract_service(ptr, "lua_engine")
                 , pimpl(std::make_unique<lua_engine::lua_context>(configuration, this->address())) {
 
