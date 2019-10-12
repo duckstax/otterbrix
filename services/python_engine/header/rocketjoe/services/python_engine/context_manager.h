@@ -17,10 +17,14 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
                 auto top() -> data_set* {
-                    return archive_data_set_.at(end).get();
+                    if(end == 0 ) {
+                        return nullptr;
+                    } else{
+                        return archive_data_set_.at(end - 1).get();
+                    }
                 }
 
-                auto read_file(boost::filesystem::path path) {
+                auto read_file(const boost::filesystem::path& path) {
                     auto* file = file_manager_.open(path);
                     archive_data_set_.emplace(end,std::make_unique<data_set>(file));
                     ++end;

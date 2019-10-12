@@ -18,7 +18,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
             exuctor = std::make_unique<std::thread>(
                     [this]() {
                         auto locals = py::dict(
-                              "path"_a=path_script,
+                              "path"_a=path_script.string(),
                               "pyrocketjoe"_a=pyrocketjoe
                         );
 

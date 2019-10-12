@@ -20,7 +20,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     auto &new_set = *(ctx_->next());
                     for (auto &i:current) {
                         auto result = f(i);
-                        new_set.append(result.cast<std::string>());
+                        auto tmp = result.cast<std::string>();
+                        new_set.append(tmp);
                     }
                     return *this;
                 }
@@ -30,15 +31,16 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     auto &new_set = *(ctx_->next());
                     for (auto &i:current) {
                         auto result = f(i);
-                        new_set.append(result.cast<std::string>());
+                        auto tmp = result.cast<std::string>();
+                        new_set.append(tmp);
                     }
 
                     return *this;
                 }
 
                 auto flat_map(py::function f) -> data_set_wrapper & {
-
-                    py::list result = f(ctx_->top()->file()->raw_file());
+                    auto tmp = ctx_->top()->file()->raw_file();
+                    py::list result = f(tmp.to_string());
 
                     for (auto &i:result) {
                         ctx_->top()->append(i.cast<std::string>());
