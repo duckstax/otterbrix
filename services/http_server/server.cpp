@@ -155,6 +155,13 @@ namespace rocketjoe { namespace network {
                     }
             );
 
+            add_handler(
+                    "dispatcher",
+                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                        actor_zeta::send(addresses("router"),std::move(ctx.message()));
+                    }
+            );
+
             pimpl->add_listener(loop(),7878,pimpl->helper_write);
             pimpl->run();
         }

@@ -11,14 +11,13 @@ namespace rocketjoe { namespace services {
     http_dispatcher::http_dispatcher(network::server* ptr,goblin_engineer::dynamic_config&) :
                     abstract_service(ptr, "router"){
                     detail::wrapper_router wrapper_router_;
-                    /*wrapper_router_.http_get(
+                    wrapper_router_.http_get(
                         "/ping",
                         [](network::query_context&request){
                             request.response().body()="pong";
                             request.write();
                         }
                     );
-                     */
 
                     router_ = wrapper_router_.get_router();
 
