@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.14)
 
 set(project RocketJoe)
 
@@ -39,13 +39,15 @@ set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
 
-add_compile_options(
-        -v
-        -Wall
-        -Wextra
-)
+option(DEV_MODE "developer mode" OFF)
 
-set(RTTI_DISABLE OFF CACHE BOOL "" FORCE)
+if (DEV_MODE)
+    add_compile_options(
+            -v
+            -Wall
+            -Wextra
+    )
+endif ()
 
 #############################################################################################
 #conan
