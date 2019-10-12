@@ -7,9 +7,10 @@ RocketJoe is an application server for micro-services architecture.
 
 ### Under heavy development. Come back later
 
-* boost >=  1.70
-* cmake >=  3.14
-* lua   == 5.3
+* boost  >=  1.70
+* cmake  >=  3.14
+* lua    ==  5.3
+* python >=  3.5
 
 ## Setup Developers Environments 
 
