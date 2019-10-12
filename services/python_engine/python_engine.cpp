@@ -17,14 +17,14 @@ namespace rocketjoe { namespace services {
 
         add_handler(
                 "dispatcher",
-                [this](actor_zeta::actor::context &,::rocketjoe::network::query_context&t) -> void {
+                [](actor_zeta::actor::context &,::rocketjoe::network::query_context&) -> void {
                    std::cerr << "Warning" << std::endl;
                 }
         );
 
         add_handler(
                 "write",
-                [this](actor_zeta::actor::context &ctx) -> void {
+                [](actor_zeta::actor::context &ctx) -> void {
                     actor_zeta::send(ctx->addresses("http"),std::move(ctx.message()));
                 }
         );

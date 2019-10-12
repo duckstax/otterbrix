@@ -51,7 +51,7 @@ namespace rocketjoe { namespace network {
             impl(const impl &) = default;
 
             impl(
-                    goblin_engineer::dynamic_config &configuration
+                    goblin_engineer::dynamic_config &/*configuration*/
             ) {
             }
 
@@ -143,14 +143,14 @@ namespace rocketjoe { namespace network {
 
             add_handler(
                     "close",
-                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                    [](actor_zeta::actor::context &/*ctx*/, response_context_type &/*body*/) -> void {
 
                     }
             );
 
             add_handler(
                     "write",
-                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                    [this](actor_zeta::actor::context &/*ctx*/, response_context_type &body) -> void {
                         pimpl->write(body);
                     }
             );

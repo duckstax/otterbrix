@@ -9,11 +9,11 @@
 
 constexpr const char *config_name_file = "config.yaml";
 
-constexpr const char *data_name_file = "rocketjoe";
+/// constexpr const char *data_name_file = "rocketjoe";
 
-constexpr const char *plugins_name_file = "plugins";
+/// constexpr const char *plugins_name_file = "plugins";
 
-constexpr const char *section_default = "default";
+/// constexpr const char *section_default = "default";
 
 void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
@@ -101,10 +101,10 @@ void load_config(cxxopts::ParseResult &args_, goblin_engineer::dynamic_config &c
     convector(config_,config);
 
     if (args_.count("plugins")) {
-        auto &plugins = args_["plugins"].as<std::vector<std::string>>();
-        for (auto &&i:plugins) {
+///        auto &plugins = args_["plugins"].as<std::vector<std::string>>();
+///        for (auto &&i:plugins) {
 ///            config.plugins.emplace(std::move(i));
-        }
+///        }
     }
 
 }

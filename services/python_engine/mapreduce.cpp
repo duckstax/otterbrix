@@ -21,7 +21,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 auto collect() -> py::list;
 
             private:
-                context*ctx_;
+                /*context*ctx_;*/
                 data_set* ds_;
             };
 

@@ -44,9 +44,9 @@ namespace rocketjoe { namespace services { namespace python_engine {
     python_context::python_context(
             goblin_engineer::dynamic_config &configuration,
             actor_zeta::actor::actor_address ptr)
-            : python_{}
+            : address(std::move(ptr))
+            , python_{}
             , pyrocketjoe{"pyrocketjoe"}
-            , address(std::move(ptr))
             , file_manager_(std::make_unique<file_manager>())
             , data_set_manager_(std::make_unique<data_set_manager>(file_manager_.get()))
             {

@@ -20,7 +20,7 @@ namespace rocketjoe { namespace services {
                     );
                      */
 
-                    router_ = std::move(wrapper_router_.get_router());
+                    router_ = wrapper_router_.get_router();
 
                     add_handler(
                             "dispatcher",
