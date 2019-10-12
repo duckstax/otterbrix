@@ -1,1 +1,3 @@
+add_subdirectory(actor-zeta)
+add_subdirectory(goblin-engineer)
 #add_subdirectory(sol2)

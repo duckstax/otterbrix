@@ -46,7 +46,7 @@ public:
     template <class F>
     auto registration_handler(
             network::string_view route_path,
-            const network::options &/*options*/,
+            const network::options &options,
             F handler
     ){
         storage_.emplace(route_path.to_string(),std::forward<F>(handler));

@@ -16,7 +16,6 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - ninja-build
       - lua5.3
       - liblua5.3-dev
 install:
@@ -24,7 +23,6 @@ install:
   - conan user
 script:
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-  - conan remote add jinntechio https://api.bintray.com/conan/jinntechio/public-conan
-  - conan install . --build missing
-  - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release
+  - conan install .
+  - cmake . -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCONAN=ON
   - cmake --build .

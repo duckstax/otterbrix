@@ -1,18 +1,24 @@
 #pragma once
 
-#include <goblin-engineer.hpp>
+#include <goblin-engineer/abstract_service.hpp>
 #include <rocketjoe/services/router/router.hpp>
-#include <rocketjoe/services/http_server/server.hpp>
 
 namespace rocketjoe { namespace services {
 
-        class http_dispatcher final : public goblin_engineer::abstract_service {
-        public:
-            http_dispatcher(network::server *,goblin_engineer::dynamic_config&);
+            class http_dispatcher final: public goblin_engineer::abstract_service {
+            public:
+                http_dispatcher(goblin_engineer::dynamic_config&, goblin_engineer::abstract_environment * );
 
-            ~http_dispatcher() override = default;
+                ~http_dispatcher() override = default;
+                
+                void startup(goblin_engineer::context_t *) override;
 
-        private:
-            detail::router router_;
-        };
+                void shutdown() override;
+            private:
+
+                detail::router router_;
+                ///class impl;
+                //std::unique_ptr<impl> pimpl;
+            };
+
 }}

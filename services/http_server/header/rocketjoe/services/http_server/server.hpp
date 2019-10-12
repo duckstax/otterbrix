@@ -1,18 +1,22 @@
 #pragma once
 
-#include <goblin-engineer.hpp>
-#include <goblin-engineer/components/network.hpp>
+#include <goblin-engineer/data_provider.hpp>
 
 namespace rocketjoe { namespace network {
 
-class server final: public goblin_engineer::components::network_manager_service {
+    class server final: public goblin_engineer::data_provider {
     public:
         server(
                 goblin_engineer::dynamic_config &,
-                goblin_engineer::dynamic_environment *
+                actor_zeta::environment::abstract_environment *,
+                actor_zeta::actor::actor_address
         );
 
         ~server() override = default;
+
+        void startup(goblin_engineer::context_t *) override;
+
+        void shutdown() override;
 
     private:
         class impl;

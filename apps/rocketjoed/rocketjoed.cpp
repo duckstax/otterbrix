@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
        return 0;
     }
 
-    goblin_engineer::dynamic_config config;
+    goblin_engineer::configuration config;
 
     load_or_generate_config(result,config);
 
@@ -82,9 +82,9 @@ int main(int argc, char **argv) {
 
         path_app = positional[0];
 
-    } else if( config.as_object().find("app") != config.as_object().end() ) {
+    } else if( config.dynamic_configuration.as_object().find("app") != config.dynamic_configuration.as_object().end() ) {
 
-        path_app = config.as_object()["app"].as_string();
+        path_app = config.dynamic_configuration.as_object()["app"].as_string();
 
     } else {
 
@@ -102,13 +102,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    config.as_object()["app"] = path_app_.string();
-
-    goblin_engineer::dynamic_config config_tmp = config;
+    config.dynamic_configuration.as_object()["app"] = path_app_.string();
 
     goblin_engineer::dynamic_environment env(std::move(config));
 
-    init_service(env,config_tmp);
+    init_service(env);
 
     env.initialize();
 

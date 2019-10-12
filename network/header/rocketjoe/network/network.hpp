@@ -17,7 +17,8 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/core/tcp_stream.hpp>
 
-#include <actor-zeta/core.hpp>
+#include <actor-zeta/actor/actor_address.hpp>
+#include <actor-zeta/messaging/message.hpp>
 
 namespace rocketjoe { namespace network {
         using boost::string_view;
@@ -140,8 +141,7 @@ namespace rocketjoe { namespace network {
             auto write() {
                 response_.prepare_payload();
                 response_context_type context(std::move(response_), id_);
-                actor_zeta::send(
-                        address,
+                address->send(
                         actor_zeta::messaging::make_message(
                                 address,
                                 "write",
@@ -153,9 +153,10 @@ namespace rocketjoe { namespace network {
 
         private:
             request_type request_;
-            std::size_t id_;
-            actor_zeta::actor::actor_address address;
             response_type response_;
+            actor_zeta::actor::actor_address address;
+            std::size_t id_;
+
         };
 
     }}
