@@ -4,7 +4,7 @@
 #include <map>
 
 #include <sol.hpp>
-#include <goblin-engineer/abstract_service.hpp>
+#include <goblin-engineer.hpp>
 
 #include <rocketjoe/services/lua_engine/device.hpp>
 #include <rocketjoe/network/network.hpp>

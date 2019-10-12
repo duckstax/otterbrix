@@ -5,7 +5,7 @@
 #include <boost/filesystem.hpp>
 
 #include <rocketjoe/network/network.hpp>
-#include <goblin-engineer/dynamic.hpp>
+#include <goblin-engineer.hpp>
 
 namespace rocketjoe { namespace services { namespace lua_engine {
 

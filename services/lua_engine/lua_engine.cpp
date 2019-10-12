@@ -5,19 +5,17 @@
 #include <boost/utility/string_view.hpp>
 #include <boost/filesystem.hpp>
 
-#include <goblin-engineer/metadata.hpp>
-#include <goblin-engineer/dynamic.hpp>
-#include <goblin-engineer/context.hpp>
+#include <goblin-engineer.hpp>
 
-#include <actor-zeta/actor/actor_address.hpp>
+#include <actor-zeta/core.hpp>
 
 #include <rocketjoe/services/lua_engine/lua_sandbox.hpp>
 
 namespace rocketjoe { namespace services {
 
-            lua_vm::lua_vm(goblin_engineer::dynamic_config &configuration,
-                                   goblin_engineer::abstract_environment *env) :
-                    abstract_service(env, "lua_engine") {
+            lua_vm::lua_vm(network::server* ptr,goblin_engineer::dynamic_config&configuration)
+                : abstract_service(ptr, "lua_engine")
+                , pimpl(std::make_unique<lua_engine::lua_context>(configuration, this->address())) {
 
                 add_handler(
                         "dispatcher",
@@ -26,23 +24,14 @@ namespace rocketjoe { namespace services {
                         }
                 );
 
-
                 add_handler(
                         "write",
                         [this](actor_zeta::actor::context &ctx) -> void {
-                            ctx->addresses("http")->send(std::move(ctx.message()));
+                            actor_zeta::send(ctx->addresses("http"),std::move(ctx.message()));
                         }
                 );
 
-                pimpl = std::make_unique<lua_engine::lua_context>(configuration, this->address());
-            }
-
-            void lua_vm::startup(goblin_engineer::context_t *) {
                 pimpl->run();
-            }
-
-            void lua_vm::shutdown() {
-
             }
 
 }}
