@@ -2,7 +2,7 @@
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
-            task::task(py::function task_handler, std::string &&name) : task_handler{task_handler} {}
+            task::task(py::function task_handler, std::string &&/*name*/) : task_handler{task_handler} {}
 
             auto task::operator()(py::args args, py::kwargs kwargs) -> eager_result const {
                 return eager_result{task_handler(*args, **kwargs)};

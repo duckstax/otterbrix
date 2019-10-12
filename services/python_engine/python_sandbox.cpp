@@ -15,9 +15,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
     using namespace pybind11::literals;
 
     auto python_context::run() -> void {
-        auto ext = boost::filesystem::extension(path_script);
 
-        if(ext == ".py") {
+        if(path_script.extension() == ".py") {
             exuctor = std::make_unique<std::thread>(
                     [this]() {
                         auto locals = py::dict(
@@ -45,9 +44,9 @@ namespace rocketjoe { namespace services { namespace python_engine {
     python_context::python_context(
             goblin_engineer::dynamic_config &configuration,
             actor_zeta::actor::actor_address ptr)
-            : python_{}
+            : address(std::move(ptr))
+            , python_{}
             , pyrocketjoe{"pyrocketjoe"}
-            , address(std::move(ptr))
             , file_manager_(std::make_unique<file_manager>())
             , data_set_manager_(std::make_unique<data_set_manager>(file_manager_.get()))
             {

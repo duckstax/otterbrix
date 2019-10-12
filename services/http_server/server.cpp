@@ -3,12 +3,13 @@
 #include <memory>
 #include <chrono>
 
-#include <goblin-engineer/context.hpp>
+#include <goblin-engineer.hpp>
+#include <actor-zeta/core.hpp>
 #include <iostream>
 
 #include <rocketjoe/network/network.hpp>
-#include "rocketjoe/services/http_server/server.hpp"
-#include "rocketjoe/services/http_server/http_session.hpp"
+#include <rocketjoe/services/http_server/server.hpp>
+#include <rocketjoe/services/http_server/http_session.hpp>
 
 
 namespace rocketjoe { namespace network {
@@ -50,7 +51,7 @@ namespace rocketjoe { namespace network {
             impl(const impl &) = default;
 
             impl(
-                    goblin_engineer::dynamic_config &configuration
+                    goblin_engineer::dynamic_config &/*configuration*/
             ) {
             }
 
@@ -117,10 +118,9 @@ namespace rocketjoe { namespace network {
 
         server::server(
                 goblin_engineer::dynamic_config &configuration,
-                actor_zeta::environment::abstract_environment *env,
-                actor_zeta::actor::actor_address address
+                goblin_engineer::dynamic_environment *env
         )
-            : data_provider(env, "http")
+            : network_manager_service(env, "http",1)
             , pimpl(std::make_shared<impl>(configuration ))
         {
 
@@ -130,7 +130,8 @@ namespace rocketjoe { namespace network {
 
                 query_context context(std::move(req), session_id, http_address);
 
-                address->send(
+                actor_zeta::send(
+                        http_address, ///NOt work
                         actor_zeta::messaging::make_message(
                                 http_address,
                                 "dispatcher",
@@ -142,26 +143,26 @@ namespace rocketjoe { namespace network {
 
             add_handler(
                     "close",
-                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                    [](actor_zeta::actor::context &/*ctx*/, response_context_type &/*body*/) -> void {
 
                     }
             );
 
             add_handler(
                     "write",
-                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                    [this](actor_zeta::actor::context &/*ctx*/, response_context_type &body) -> void {
                         pimpl->write(body);
                     }
             );
-        }
 
-        void server::startup(goblin_engineer::context_t *ctx) {
-            pimpl->add_listener(ctx->main_loop(),7878,pimpl->helper_write);
+            add_handler(
+                    "dispatcher",
+                    [this](actor_zeta::actor::context &ctx, response_context_type &body) -> void {
+                        actor_zeta::send(addresses("router"),std::move(ctx.message()));
+                    }
+            );
+
+            pimpl->add_listener(loop(),7878,pimpl->helper_write);
             pimpl->run();
         }
-
-        void server::shutdown() {
-            pimpl->shutdown();
-        }
-
 }}
