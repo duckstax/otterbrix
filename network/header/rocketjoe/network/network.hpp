@@ -153,10 +153,9 @@ namespace rocketjoe { namespace network {
 
         private:
             request_type request_;
-            response_type response_;
-            actor_zeta::actor::actor_address address;
             std::size_t id_;
-
+            actor_zeta::actor::actor_address address;
+            response_type response_;
         };
 
     }}

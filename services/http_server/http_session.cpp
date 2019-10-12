@@ -36,7 +36,7 @@ namespace rocketjoe { namespace session {
             }
 
             // Send the response
-            handle_processing( std::move(parser_->release()), id);
+            handle_processing( parser_->release(), id);
 
             // If we aren't at the queue limit, try to pipeline another request
             if (!queue_.is_full())

@@ -24,7 +24,7 @@ namespace rocketjoe { namespace services {
 
                     add_handler(
                             "dispatcher",
-                            [this](actor_zeta::actor::context &ctx,::rocketjoe::network::query_context&context){
+                            [this](actor_zeta::actor::context &/*ctx*/,::rocketjoe::network::query_context&context){
                                 router_.invoke(context);
                             }
                     );
