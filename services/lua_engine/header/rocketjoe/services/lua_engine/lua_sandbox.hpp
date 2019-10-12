@@ -3,9 +3,12 @@
 #include <array>
 #include <map>
 
-#include <sol.hpp>
-#include <goblin-engineer/abstract_service.hpp>
 #include <boost/filesystem.hpp>
+
+#include <sol.hpp>
+
+#include <goblin-engineer.hpp>
+
 #include <rocketjoe/services/lua_engine/device.hpp>
 #include <rocketjoe/network/network.hpp>
 

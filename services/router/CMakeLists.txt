@@ -23,6 +23,7 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET} #PRIVATE # not work
         rocketjoe::dto
         rocketjoe::network
+        rocketjoe::http_server
         goblin-engineer
 )
 

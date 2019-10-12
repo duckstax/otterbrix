@@ -38,7 +38,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
                 auto end() const -> const_iterator {
-                    data_.cend();
+                    return data_.cend();
                 }
 
             private:

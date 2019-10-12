@@ -37,7 +37,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     if (boost::filesystem::exists(path)) {
                         auto it = files_.find(path.string());
                         if (it == files_.end()) {
-                            auto result = files_.emplace(path.string(), std::move(std::make_unique<file_view>(path)));
+                            auto result = files_.emplace(path.string(), std::make_unique<file_view>(path));
                             return result.first->second.get();
                         } else {
                             return it->second.get();

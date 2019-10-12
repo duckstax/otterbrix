@@ -4,6 +4,8 @@
 #include <map>
 #include <thread>
 
+#include <boost/filesystem.hpp>
+
 #include <pybind11/embed.h>
 #include <goblin-engineer/abstract_service.hpp>
 
@@ -26,12 +28,12 @@ namespace rocketjoe { namespace services { namespace python_engine {
         auto run() -> void;
 
     private:
+        actor_zeta::actor::actor_address address;
         py::scoped_interpreter python_;
         py::module pyrocketjoe;
         boost::filesystem::path path_script;
         std::unique_ptr<file_manager> file_manager_;
         std::unique_ptr<context_manager> context_manager_;
-        actor_zeta::actor::actor_address address;
         std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
     };
 
