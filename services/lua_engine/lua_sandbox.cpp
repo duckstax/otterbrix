@@ -57,7 +57,7 @@ namespace rocketjoe { namespace services { namespace lua_engine {
         if(path_script.extension() == ".lua") {
             exuctor = std::make_unique<std::thread>(
                     [this]() {
-                        auto r = lua.load_file(this->path_script);
+                        auto r = lua.load_file(this->path_script.string());
                         r();
                     }
             );

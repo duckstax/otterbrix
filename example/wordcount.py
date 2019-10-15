@@ -20,7 +20,7 @@ counts = context \
     .flatMap(split_string) \
     .map(map) \
     .reduceByKey(reduce_by_key) \
- \
+
 output = counts.collect()
 
 print(output)
