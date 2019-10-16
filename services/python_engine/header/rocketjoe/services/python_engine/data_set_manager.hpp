@@ -30,7 +30,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
                 auto append(const std::string&value ){
-                    data_.emplace(data_.size(),std::move(value));
+                    data_.emplace(data_.size(),value);
                 }
 
                 auto begin() const -> const_iterator {

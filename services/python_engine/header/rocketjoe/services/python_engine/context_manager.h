@@ -12,34 +12,23 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     return end;
                 }
 
-                auto get(std::size_t index)-> data_set* {
-                    return archive_data_set_.at(index).get();
-                }
-
-                auto top() -> data_set* {
-                    if(end == 0 ) {
-                        return nullptr;
-                    } else{
-                        return archive_data_set_.at(end - 1).get();
-                    }
+                auto top() -> data_set * {
+                    return archive_data_set_.top().get();
                 }
 
                 auto read_file(const boost::filesystem::path& path) {
-                    auto* file = file_manager_.open(path);
-                    archive_data_set_.emplace(end,std::make_unique<data_set>(file));
-                    ++end;
+                    archive_data_set_.push(std::make_unique<data_set>(file_manager_.open(path)));
                 }
 
                 auto next() -> data_set* {
-                    auto result = archive_data_set_.emplace(archive_data_set_.size(),std::make_unique<data_set>());
-                    ++end;
-                    return result.first->second.get();
+                    archive_data_set_.emplace(std::make_unique<data_set>());
+                    return archive_data_set_.top().get();
                 }
 
             private:
                 std::size_t end;
                 file_manager &file_manager_;
-                std::unordered_map <std::size_t , std::unique_ptr<data_set>> archive_data_set_;
+                std::stack <std::unique_ptr<data_set>> archive_data_set_;
             };
 
 

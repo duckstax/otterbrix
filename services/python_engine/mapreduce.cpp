@@ -18,11 +18,13 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 auto map(py::function f) -> data_set_wrapper & {
                     auto &current = *ctx_->top();
                     auto &new_set = *(ctx_->next());
+
                     for (auto &i:current) {
-                        auto result = f(i);
-                        auto tmp = result.cast<std::string>();
-                        new_set.append(tmp);
+                        auto result = f(i.second);
+                        std::cerr << result.begin().cast<std::string>() << std::endl;
+                        new_set.append(result[0].cast<std::string>());
                     }
+
                     return *this;
                 }
 
@@ -39,14 +41,16 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
                 auto flat_map(py::function f) -> data_set_wrapper & {
-                    auto tmp = ctx_->top()->file()->raw_file();
+                    auto &current = *ctx_->top();
+                    auto &new_set = *(ctx_->next());
+
+                    auto tmp = current.file()->raw_file();
+
                     py::list result = f(tmp.to_string());
-
                     for (auto &i:result) {
-                        ctx_->top()->append(i.cast<std::string>());
+                        auto tmp_ = i.cast<std::string>();
+                        new_set.append(tmp_);
                     }
-
-                    ctx_->next();
 
                     return *this;
                 }
