@@ -46,14 +46,7 @@ namespace rocketjoe { namespace network {
 
             impl(impl &&) = default;
 
-            impl &operator=(const impl &) = default;
-
-            impl(const impl &) = default;
-
-            impl(
-                    goblin_engineer::dynamic_config &/*configuration*/
-            ) {
-            }
+            explicit impl(goblin_engineer::dynamic_config &/*configuration*/) {}
 
             void run() {
                 if (!listener->acceptor_.is_open()) {
@@ -101,7 +94,8 @@ namespace rocketjoe { namespace network {
                     network::net::io_context& ioc,
                     unsigned short port,
                     Fun&&f
-                    ){
+            ){
+                std::cerr << "Port = " << port << std::endl;
                 listener = std::make_unique<tcp_listener>(ioc,port,std::forward<Fun>(f));
             }
             auto shutdown() {
@@ -131,7 +125,7 @@ namespace rocketjoe { namespace network {
                 query_context context(std::move(req), session_id, http_address);
 
                 actor_zeta::send(
-                        http_address, ///NOt work
+                        http_address,
                         actor_zeta::messaging::make_message(
                                 http_address,
                                 "dispatcher",
@@ -162,7 +156,11 @@ namespace rocketjoe { namespace network {
                     }
             );
 
-            pimpl->add_listener(loop(),7878,pimpl->helper_write);
+            auto string_port = configuration.as_object()["http-port"].as_string();
+            auto tmp_port = std::stoul(string_port);
+            auto port = static_cast<unsigned short>(tmp_port);
+
+            pimpl->add_listener(loop(),port,pimpl->helper_write);
             pimpl->run();
         }
 }}

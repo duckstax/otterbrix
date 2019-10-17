@@ -19,25 +19,25 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 
-if (ASAN)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-    message (STATUS "Building with AddressSanitizer")
-endif ()
+#if (ASAN)
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+#    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+#    message (STATUS "Building with AddressSanitizer")
+#endif ()
 
-if (TSAN)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
-    message (STATUS "Building with ThreadSanitizer")
-endif ()
+#if (TSAN)
+#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+#    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
+#    message (STATUS "Building with ThreadSanitizer")
+#endif ()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF -DCXXOPTS_NO_RTTI" CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF -DCXXOPTS_NO_RTTI -DBOOST_ASIO_NO_EXTENSIONS" CACHE STRING "compile flags" FORCE)
 
 set(BUILD_LUA OFF CACHE BOOL "" FORCE)
 set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
 
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMakeModules")
+#set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(DEV_MODE "developer mode" OFF)
 
@@ -63,6 +63,7 @@ include_directories(${Python3_INCLUDE_DIRS})
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
+conan_add_remote(NAME jinntechio INDEX 1 URL https://api.bintray.com/conan/jinntechio/public-conan )
 
 conan_cmake_run(
         CONANFILE conanfile.txt

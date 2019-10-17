@@ -21,8 +21,10 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
                     for (auto &i:current) {
                         auto result = f(i.second);
-                        std::cerr << result.begin().cast<std::string>() << std::endl;
-                        new_set.append(result[0].cast<std::string>());
+                        for(auto&i:result){
+
+                        }
+                        ///new_set.append();
                     }
 
                     return *this;
