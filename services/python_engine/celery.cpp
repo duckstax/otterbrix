@@ -2,6 +2,34 @@
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
+            class result_base {};
+
+            class eager_result : public result_base {
+            public:
+                eager_result(py::object result);
+
+                auto get() -> py::object const;
+
+            private:
+                py::object result;
+            };
+
+            class task {
+            public:
+
+                task(py_task task_handler, std::string &&name);
+
+                auto operator()(py::args args, py::kwargs kwargs) -> eager_result const;
+
+            private:
+                py_task task_handler;
+            };
+
+            class celery {
+            public:
+                auto create_task() -> std::function<task(py_task)> const;
+            };
+
             task::task(py::function task_handler, std::string &&/*name*/) : task_handler{task_handler} {}
 
             auto task::operator()(py::args args, py::kwargs kwargs) -> eager_result const {
