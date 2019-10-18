@@ -18,7 +18,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
     namespace py = pybind11;
 
-    class python_context final {
+    class BOOST_SYMBOL_VISIBLE python_context final {
     public:
 
         python_context(goblin_engineer::dynamic_config&,actor_zeta::actor::actor_address);
