@@ -20,7 +20,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     second = std::find_first_of(first, last, std::cbegin(delims), std::cend(delims));
 
                     if (first != second) {
-                        file_content.emplace(key, boost::string_view(first, second - first));
+                        file_content.emplace(key, boost::string_view(first, second - first).to_string());
                         ++key;
                     }
                 }
