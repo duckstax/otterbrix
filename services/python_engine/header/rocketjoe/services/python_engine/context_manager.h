@@ -6,7 +6,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             class context final {
             public:
-                context(file_manager &file_manager) : end(0),file_manager_(file_manager) {}
+                explicit context(file_manager &file_manager) : end(0),file_manager_(file_manager) {}
 
                 auto id() -> std::size_t {
                     return end;
