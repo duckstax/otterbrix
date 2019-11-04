@@ -9,10 +9,9 @@
 #include <pybind11/embed.h>
 #include <goblin-engineer/abstract_service.hpp>
 
-
-#include "file_manager.hpp"
-#include "data_set_manager.hpp"
-#include "context_manager.h"
+#include <rocketjoe/services/python_engine/file_manager.hpp>
+#include <rocketjoe/services/python_engine/data_set_manager.hpp>
+#include <rocketjoe/services/python_engine/context_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 

@@ -5,13 +5,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include <rocketjoe/services/python_engine/context_manager.h>
+#include <rocketjoe/services/python_engine/context_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
             using namespace pybind11::literals;
             namespace py = pybind11;
-            using py_task = py::function;
             using namespace nlohmann;
 
             json to_json_impl(const py::handle &obj) {
@@ -72,9 +71,16 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             class python_wrapper_data_set final {
             public:
-                explicit data_set_wrapper(py::object collections,context *ctx) : ctx_(ctx) {}
+                python_wrapper_data_set(const py::object& collections,context *ctx)
+                    : collection_(collections)
+                    , ctx_(ctx) {}
 
-                auto map(py::function f) -> python_wrapper_data_set & {
+                python_wrapper_data_set() {
+                    std::cerr << "constructor python_wrapper_data_set()" << std::endl;
+                }
+
+
+                auto map(py::function f) -> python_wrapper_data_set {
                     auto &current = *ctx_->top();
                     auto &new_set = *(ctx_->next());
 
@@ -89,7 +95,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     return *this;
                 }
 
-                auto reduce_by_key(py::function f) -> python_wrapper_data_set & {
+                auto reduce_by_key(py::function f) -> python_wrapper_data_set {
                     auto &current = *ctx_->top();
                     auto &new_set = *(ctx_->next());
 
@@ -97,7 +103,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     return *this;
                 }
 
-                auto flat_map(py::function f,bool preservesPartitioning=false) -> python_wrapper_data_set & {
+                auto flat_map(py::function f,bool preservesPartitioning=false) -> python_wrapper_data_set {
                     auto &current = *ctx_->top();
                     auto &new_set = *(ctx_->next());
 
@@ -120,7 +126,6 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             private:
                 py::object collection_;
-                json data_set_;
                 context *ctx_;
             };
 
@@ -136,7 +141,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 auto text_file(const std::string &path) -> python_wrapper_data_set {
                     ctx_->read_file(path);
                     auto all_file = ctx_->top()->file()->raw_file();
-                    return python_wrapper_data_set{py::str(all_file.to_string()),ctx_};
+                    return python_wrapper_data_set(py::str(all_file.to_string()),ctx_);
                 }
 
             private:
