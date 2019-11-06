@@ -16,7 +16,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 auto next() -> data_set*;
 
 
-                auto make_new_version_data_set
+                ///auto make_new_version_data_set
 
             private:
                 file_manager &file_manager_;

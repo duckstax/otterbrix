@@ -171,7 +171,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                                                 , int profiler_cls
                                         ) {
                                             auto *ctx = cm_->create_context(appName);
-                                            return new context_wrapper(name, ctx);
+                                            return new context_wrapper(appName, ctx);
                                         }
                                 )
                         )
