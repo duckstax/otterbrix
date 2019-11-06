@@ -46,4 +46,5 @@ namespace rocketjoe { namespace services { namespace python_engine {
             }
 
             eager_result::eager_result(py::object result) : result{result} {}
-        }}}
+
+}}}

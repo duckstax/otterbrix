@@ -16,7 +16,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
             private:
                 using storage_t = std::map<std::size_t, std::string>;
             public:
-                explicit file_view(const boost::filesystem::path &path);
+                file_view(const boost::filesystem::path &path);
 
                 auto read() -> storage_t;
 
@@ -28,7 +28,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 boost::interprocess::file_mapping file__;
                 boost::interprocess::mapped_region region;
                 boost::string_view raw_;
-                storage_t file_content;
+                storage_t file_content; ///TODO: OLD
             };
 
             class file_manager final {

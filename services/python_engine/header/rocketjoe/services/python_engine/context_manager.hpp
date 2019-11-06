@@ -1,32 +1,24 @@
 #pragma once
 
-#include <rocketjoe/services/python_engine/data_set_manager.hpp>
+#include <rocketjoe/services/python_engine/forward.hpp>
+#include <rocketjoe/services/python_engine/file_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
             class context final {
             public:
-                explicit context(file_manager &file_manager) : end(0),file_manager_(file_manager) {}
+                context(file_manager &file_manager) : file_manager_(file_manager) {}
 
-                auto id() -> std::size_t {
-                    return end;
-                }
+                auto top() -> data_set *;
 
-                auto top() -> data_set * {
-                    return archive_data_set_.top().get();
-                }
+                auto open_file(const boost::filesystem::path& path);
 
-                auto read_file(const boost::filesystem::path& path) {
-                    archive_data_set_.push(std::make_unique<data_set>(file_manager_.open(path)));
-                }
+                auto next() -> data_set*;
 
-                auto next() -> data_set* {
-                    archive_data_set_.emplace(std::make_unique<data_set>());
-                    return archive_data_set_.top().get();
-                }
+
+                auto make_new_version_data_set
 
             private:
-                std::size_t end;
                 file_manager &file_manager_;
                 std::stack <std::unique_ptr<data_set>> archive_data_set_;
             };

@@ -139,8 +139,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 }
 
                 auto text_file(const std::string &path) -> python_wrapper_data_set {
-                    ctx_->read_file(path);
-                    auto all_file = ctx_->top()->file()->raw_file();
+                    auto * file = ctx_->open_file(path);
+                    auto all_file = file->raw_file();
                     return python_wrapper_data_set(py::str(all_file.to_string()),ctx_);
                 }
 
@@ -157,8 +157,20 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 py::class_<context_wrapper>(mapreduce_submodule, "RocketJoeContext")
                         .def(
                                 py::init(
-                                        [cm_](const std::string &name) {
-                                            auto *ctx = cm_->create_context(name);
+                                        [cm_](
+                                                  std::string master
+                                                , std::string appName
+                                                , std::string sparkHome
+                                                , std::string pyFiles
+                                                , std::string environment
+                                                , int batchSize
+                                                , int serializer
+                                                , int conf
+                                                , int gateway
+                                                , int jsc
+                                                , int profiler_cls
+                                        ) {
+                                            auto *ctx = cm_->create_context(appName);
                                             return new context_wrapper(name, ctx);
                                         }
                                 )

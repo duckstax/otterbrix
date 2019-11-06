@@ -13,6 +13,8 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
         celery.cpp
+        context_manager.cpp
+        data_set_manager.cpp
         file_manager.cpp
         file_system.cpp
         mapreduce.cpp
