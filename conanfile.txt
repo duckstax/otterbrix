@@ -9,6 +9,7 @@ fmt/5.3.0@bincrafters/stable
 jsonformoderncpp/3.7.0@vthiery/stable
 
 goblin-engineer/1.0.0a2@jinncrafters/stable
+sol2/2.20.6@jinncrafters/stable
 
 [options]
 yaml-cpp:shared = False
