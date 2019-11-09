@@ -26,5 +26,5 @@ script:
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
   - conan remote add jinntechio https://api.bintray.com/conan/jinntechio/public-conan
   - conan install . --build missing
-  - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release
+  - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
   - cmake --build .
