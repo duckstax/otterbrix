@@ -1,13 +1,13 @@
 set(CURRENT_TARGET router)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/router/router.hpp
-        header/rocketjoe/services/router/service_router.hpp
+        router.hpp
+        service_router.hpp
 
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-    service_router.cpp
+        service_router.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
@@ -30,7 +30,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
+        "../../../../router/header"
 )
 
 install(TARGETS

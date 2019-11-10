@@ -1,9 +1,9 @@
 set(CURRENT_TARGET lua_engine)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/lua_engine/lua_engine.hpp
-        header/rocketjoe/services/lua_engine/device.hpp
-        header/rocketjoe/services/lua_engine/lua_sandbox.hpp
+        lua_engine.hpp
+        device.hpp
+        lua_sandbox.hpp
 
 )
 
@@ -56,7 +56,7 @@ target_link_libraries(
         ${LUA_LIBRARIES}
 )
 
-target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/header" "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "../../../../lua_engine/header" "../../../../..")
 
 install(TARGETS
         rocketjoe_${CURRENT_TARGET}

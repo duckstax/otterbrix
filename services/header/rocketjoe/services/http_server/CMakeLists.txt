@@ -1,9 +1,9 @@
 set(CURRENT_TARGET http_server)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        header/rocketjoe/services/http_server/server.hpp
-        header/rocketjoe/services/http_server/http_session.hpp
-        header/rocketjoe/services/http_server/websocket_session.hpp
+        server.hpp
+        http_session.hpp
+        websocket_session.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
@@ -34,7 +34,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
+        "../../.."
 )
 
 install(TARGETS

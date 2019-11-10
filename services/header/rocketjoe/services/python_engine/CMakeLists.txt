@@ -1,14 +1,14 @@
 set(CURRENT_TARGET python_engine)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
-        header/rocketjoe/services/python_engine/detail/celery.hpp
-        header/rocketjoe/services/python_engine/detail/context_manager.hpp
-        header/rocketjoe/services/python_engine/detail/data_set_manager.hpp
-        header/rocketjoe/services/python_engine/detail/file_manager.hpp
-        header/rocketjoe/services/python_engine/detail/mapreduce.hpp
-        header/rocketjoe/services/python_engine/python_engine.hpp
-        header/rocketjoe/services/python_engine/python_sandbox.hpp
-        header/rocketjoe/services/python_engine/detail/file_system.hpp
+        detail/celery.hpp
+        detail/context_manager.hpp
+        detail/data_set_manager.hpp
+        detail/file_manager.hpp
+        detail/mapreduce.hpp
+        python_engine.hpp
+        python_sandbox.hpp
+        detail/file_system.hpp
 )
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
@@ -41,7 +41,7 @@ target_link_libraries(
         PRIVATE pybind11::embed
 )
 
-target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/header" "${CMAKE_CURRENT_SOURCE_DIR}/../../")
+target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "../../../../python_engine/header" "../../../../..")
 
 install(TARGETS
         rocketjoe_${CURRENT_TARGET}
