@@ -1,13 +1,16 @@
-#include <rocketjoe/services/python_engine/mapreduce.hpp>
+#include <rocketjoe/services/python_engine/detail/mapreduce.hpp>
+
+#include <deque>
 
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
 #include <nlohmann/json.hpp>
 
-#include <rocketjoe/services/python_engine/context_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/context_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
             using namespace pybind11::literals;
             namespace py = pybind11;
@@ -84,13 +87,13 @@ namespace rocketjoe { namespace services { namespace python_engine {
                     auto &current = *ctx_->top();
                     auto &new_set = *(ctx_->next());
 
-                    for (auto &i:current) {
-                        auto result = f(i.second);
-                        for(auto&i:result){
+                    ///for (auto &i:current) {
+                    ///    auto result = f(i.second);
+                        ///for(auto&i:result){
 
-                        }
+                        //}
                         ///new_set.append();
-                    }
+                    ///}
 
                     return *this;
                 }
@@ -116,10 +119,10 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
                     py::list tmp{};
 
-                    auto &current = *ctx_->top();
-                    for (const auto &i :current) {
-                        tmp.append(i.second);
-                    }
+                    ////auto &current = *ctx_->top();
+                    ///for (const auto &i :current) {
+                    ///    tmp.append(i.second);
+                    ///}
 
                     return tmp;
                 }
@@ -150,7 +153,7 @@ namespace rocketjoe { namespace services { namespace python_engine {
             };
 
 
-            auto add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) -> void {
+            auto add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) -> void  {
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 
@@ -184,4 +187,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
                         .def("collect", &python_wrapper_data_set::collect);
             }
 
-}}}
+}}}}

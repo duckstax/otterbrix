@@ -10,7 +10,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/utility/string_view.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
             class file_view final {
             private:
@@ -51,4 +51,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
                 std::unordered_map<std::string, std::unique_ptr<file_view>> files_;
             };
 
-}}}
+}}}}

@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
     namespace py = pybind11;
 
@@ -10,4 +10,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
     auto add_mapreduce(py::module &, context_manager * ) -> void ;
 
-}}}
+}}}}

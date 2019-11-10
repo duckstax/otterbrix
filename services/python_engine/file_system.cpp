@@ -1,10 +1,10 @@
-#include <rocketjoe/services/python_engine/file_system.hpp>
+#include <rocketjoe/services/python_engine/detail/file_system.hpp>
 
 #include <pybind11/stl.h>
 
-#include <rocketjoe/services/python_engine/file_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
 auto add_file_system(py::module &pyrocketjoe, file_manager* fm ) -> void{
 
@@ -23,4 +23,4 @@ auto add_file_system(py::module &pyrocketjoe, file_manager* fm ) -> void{
     );
 }
 
-}}}
+}}}}

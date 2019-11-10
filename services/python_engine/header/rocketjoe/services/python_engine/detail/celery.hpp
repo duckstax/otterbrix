@@ -6,7 +6,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
             using namespace pybind11::literals;
             namespace py = pybind11;
@@ -42,4 +42,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             void add_celery(py::module &pyrocketjoe);
 
-}}}
+}}}}

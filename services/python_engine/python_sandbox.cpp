@@ -4,9 +4,9 @@
 #include <pybind11/stl.h>
 
 #include <goblin-engineer/dynamic.hpp>
-#include <rocketjoe/services/python_engine/file_system.hpp>
-#include <rocketjoe/services/python_engine/mapreduce.hpp>
-#include "rocketjoe/services/python_engine/celery.hpp"
+#include <rocketjoe/services/python_engine/detail/file_system.hpp>
+#include <rocketjoe/services/python_engine/detail/mapreduce.hpp>
+#include <rocketjoe/services/python_engine/detail/celery.hpp>
 
 
 namespace rocketjoe { namespace services { namespace python_engine {
@@ -46,8 +46,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
             : address(std::move(ptr))
             , python_{}
             , pyrocketjoe{"pyrocketjoe"}
-            , file_manager_(std::make_unique<file_manager>())
-            , context_manager_(std::make_unique<context_manager>(*file_manager_))
+            , file_manager_(std::make_unique<detail::file_manager>())
+            , context_manager_(std::make_unique<detail::context_manager>(*file_manager_))
             {
 
         std::cerr << "processing env python start " << std::endl;
@@ -56,9 +56,9 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
         add_file_system(pyrocketjoe,file_manager_.get());
 
-        add_mapreduce(pyrocketjoe,context_manager_.get());
+        detail::add_mapreduce(pyrocketjoe,context_manager_.get());
 
-        add_celery(pyrocketjoe);
+        detail::add_celery(pyrocketjoe);
 
         std::cerr << "processing env python finish " << std::endl;
 

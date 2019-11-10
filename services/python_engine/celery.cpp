@@ -1,6 +1,6 @@
-#include <rocketjoe/services/python_engine/celery.hpp>
+#include <rocketjoe/services/python_engine/detail/celery.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
             task::task(py::function task_handler, std::string &&/*name*/) : task_handler{task_handler} {}
 
@@ -47,4 +47,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
             eager_result::eager_result(py::object result) : result{result} {}
 
-}}}
+}}}}

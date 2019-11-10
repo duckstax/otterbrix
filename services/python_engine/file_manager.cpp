@@ -1,6 +1,6 @@
-#include <rocketjoe/services/python_engine/file_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine {
+namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
 
             file_view::file_view(const boost::filesystem::path &path)
@@ -27,4 +27,4 @@ namespace rocketjoe { namespace services { namespace python_engine {
 
                 return file_content;
             }
-}}}
+}}}}

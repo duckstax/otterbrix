@@ -9,9 +9,9 @@
 #include <pybind11/embed.h>
 #include <goblin-engineer/abstract_service.hpp>
 
-#include <rocketjoe/services/python_engine/file_manager.hpp>
-#include <rocketjoe/services/python_engine/data_set_manager.hpp>
-#include <rocketjoe/services/python_engine/context_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/data_set_manager.hpp>
+#include <rocketjoe/services/python_engine/detail/context_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine {
 
@@ -31,8 +31,8 @@ namespace rocketjoe { namespace services { namespace python_engine {
         py::scoped_interpreter python_;
         py::module pyrocketjoe;
         boost::filesystem::path path_script;
-        std::unique_ptr<file_manager> file_manager_;
-        std::unique_ptr<context_manager> context_manager_;
+        std::unique_ptr<detail::file_manager> file_manager_;
+        std::unique_ptr<detail::context_manager> context_manager_;
         std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
     };
 
