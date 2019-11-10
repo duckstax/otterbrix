@@ -57,9 +57,6 @@ if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.14/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
-find_package(Python3 COMPONENTS Development)
-include_directories(${Python3_INCLUDE_DIRS})
-
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
@@ -90,13 +87,14 @@ message("DOWNLOAD cxxopts start")
 file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include/cxxopts.hpp")
 message("DOWNLOAD cxxopts finish")
 
-add_subdirectory(thirdparty)
+#add_subdirectory(thirdparty)
 add_subdirectory(network)
 add_subdirectory(dto)
 add_subdirectory(services)
 add_subdirectory(apps)
-add_subdirectory(tests)
-
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif()
 
 set (CPACK_GENERATOR "DEB")
 set (CPACK_SET_DESTDIR true)

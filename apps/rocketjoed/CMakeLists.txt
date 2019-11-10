@@ -29,6 +29,7 @@ target_link_libraries(
         dl
 )
 
+file(COPY ${CMAKE_SOURCE_DIR}/libraries/lua DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS
         ${CURRENT_TARGET}
