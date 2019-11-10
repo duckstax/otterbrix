@@ -40,3 +40,8 @@ install(TARGETS
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
 )
+
+
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif()
