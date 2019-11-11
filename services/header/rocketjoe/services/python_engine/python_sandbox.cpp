@@ -7,6 +7,7 @@
 #include <rocketjoe/services/python_engine/detail/file_system.hpp>
 #include <rocketjoe/services/python_engine/detail/mapreduce.hpp>
 #include <rocketjoe/services/python_engine/detail/celery.hpp>
+#include <rocketjoe/services/python_engine/detail/context.hpp>
 
 
 namespace rocketjoe { namespace services { namespace python_engine {
