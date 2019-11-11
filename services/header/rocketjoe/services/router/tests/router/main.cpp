@@ -9,13 +9,13 @@ int main() {
 
     router_.http_get(
             "/ping",
-            [](rocketjoe::network::query_context  &r) {
+            [](rocketjoe::network::query_context  &/*r*/) {
                 std::cout << " ping " << std::endl;
             }
     );
 
     
-    auto r = std::move(router_.get_router());
+    auto r = router_.get_router();
     actor_zeta::actor::actor_address address;
     rocketjoe::network::request_type request;
     request.method(rocketjoe::network::http_method::get);
