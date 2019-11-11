@@ -12,22 +12,27 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                 using namespace pybind11::literals;
                 namespace py = pybind11;
 
+                class python_wrapper_pipelien_data_set;
+
                 class python_wrapper_data_set {
                 public:
-                    python_wrapper_data_set(const py::object& collections,context *ctx);
+                    python_wrapper_data_set(const py::object &, context *);
 
                     python_wrapper_data_set();
 
                     virtual ~python_wrapper_data_set() = default;
 
-                    auto map(py::function f) -> python_wrapper_data_set;
+                    auto map(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
 
-                    auto reduce_by_key(py::function f, bool preservesPartitioning=false) -> python_wrapper_data_set;
+                    auto reduce_by_key(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
 
-                    auto flat_map(py::function f, bool preservesPartitioning=false) -> python_wrapper_data_set;
+                    auto flat_map(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
 
                     auto collect() -> py::list;
 
+                    auto map_partitions_with_index(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
+
+                    auto map_partitions(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
                 protected:
                     py::object collection_;
                     context *ctx_;
@@ -36,7 +41,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
 
                 class python_wrapper_pipelien_data_set final : public python_wrapper_data_set {
                 public:
-                        python_wrapper_pipelien_data_set(python_wrapper_data_set* data_set, py::function f  ){}
+                        python_wrapper_pipelien_data_set(python_wrapper_data_set* , py::function);
 
                 private:
                     py::function f_;

@@ -84,49 +84,39 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                     std::cerr << "constructor python_wrapper_data_set()" << std::endl;
                 }
 
-                auto python_wrapper_data_set::map(py::function f) -> python_wrapper_data_set {
-                    auto &current = *ctx_->top();
-                    auto &new_set = *(ctx_->next());
+                auto python_wrapper_data_set::map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
 
-                    ///for (auto &i:current) {
-                    ///    auto result = f(i.second);
-                    ///for(auto&i:result){
 
-                    //}
-                    ///new_set.append();
-                    ///}
+                    return map_partitions_with_index(f,preservesPartitioning);
+                }
 
+                auto python_wrapper_data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
 
                 }
 
-                auto python_wrapper_data_set::reduce_by_key(py::function f,
-                                                            bool preservesPartitioning) -> python_wrapper_data_set {
-                    auto &current = *ctx_->top();
-                    auto &new_set = *(ctx_->next());
-
-
-                }
-
-                auto
-                python_wrapper_data_set::flat_map(py::function f, bool preservesPartitioning) -> python_wrapper_data_set {
-                    auto &current = *ctx_->top();
-                    auto &new_set = *(ctx_->next());
-
+                auto python_wrapper_data_set::flat_map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
                     collection_ = f(collection_);
-
-
+                    return map_partitions_with_index(f,preservesPartitioning);
                 }
 
                 auto python_wrapper_data_set::collect() -> py::list {
 
                     py::list tmp{};
 
-                    ////auto &current = *ctx_->top();
-                    ///for (const auto &i :current) {
-                    ///    tmp.append(i.second);
-                    ///}
-
                     return tmp;
                 }
 
-}}}}
+                auto python_wrapper_data_set::map_partitions_with_index(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                    return python_wrapper_pipelien_data_set(ptr , f, preservesPartitioning);
+                }
+
+                auto python_wrapper_data_set::map_partitions(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+
+                    return map_partitions_with_index(f, preservesPartitioning);
+                }
+
+                python_wrapper_pipelien_data_set::python_wrapper_pipelien_data_set(python_wrapper_data_set *,py::function) {}
+
+
+
+            }}}}

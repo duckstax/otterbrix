@@ -2,11 +2,6 @@
 
 #include <deque>
 
-#include <pybind11/functional.h>
-#include <pybind11/stl.h>
-
-#include <nlohmann/json.hpp>
-
 #include <rocketjoe/services/python_engine/detail/context_manager.hpp>
 #include <rocketjoe/services/python_engine/detail/file_manager.hpp>
 #include <rocketjoe/services/python_engine/detail/python_wrapper_context.hpp>
