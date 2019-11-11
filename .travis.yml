@@ -10,6 +10,7 @@ cache:
 
 compiler:
   - gcc
+  - clang
 
 addons:
   apt:
