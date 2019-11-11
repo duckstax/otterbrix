@@ -13,6 +13,7 @@ sol2/2.20.6@jinncrafters/stable
 
 [options]
 yaml-cpp:shared = False
+OpenSSL:shared = True
 
 [generators]
 cmake
