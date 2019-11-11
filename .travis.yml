@@ -23,7 +23,7 @@ install:
   - pip install conan
   - conan user
 script:
-  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-  - conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+  #- conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  #- conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
   - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
   - cmake --build .
