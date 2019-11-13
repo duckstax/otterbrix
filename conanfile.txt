@@ -10,6 +10,7 @@ jsonformoderncpp/3.7.0@vthiery/stable
 
 goblin-engineer/1.0.0a2@jinncrafters/stable
 sol2/2.20.6@jinncrafters/stable
+cxxopts/2.2.0@jinncrafters/stable
 
 [options]
 yaml-cpp:shared = False

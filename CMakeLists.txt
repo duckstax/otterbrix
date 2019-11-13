@@ -32,7 +32,7 @@ message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 #    message (STATUS "Building with ThreadSanitizer")
 #endif ()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF -DCXXOPTS_NO_RTTI -DBOOST_ASIO_NO_EXTENSIONS" CACHE STRING "compile flags" FORCE)
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
 
 set(BUILD_LUA OFF CACHE BOOL "" FORCE)
 set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
@@ -82,10 +82,6 @@ endif(CCACHE_FOUND)
 
 #ccahe
 #############################################################################################
-
-message("DOWNLOAD cxxopts start")
-file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include/cxxopts.hpp")
-message("DOWNLOAD cxxopts finish")
 
 #add_subdirectory(thirdparty)
 add_subdirectory(network)

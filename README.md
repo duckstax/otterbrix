@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/blizgard/RocketJoe.svg?branch=master)](https://travis-ci.org/blizgard/RocketJoe)
+[![Build Status](https://travis-ci.org/jinncrafters/RocketJoe.svg?branch=master)](https://travis-ci.org/jinncrafters/RocketJoe)
 
 Applications server 
 
