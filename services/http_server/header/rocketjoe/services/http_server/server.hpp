@@ -8,8 +8,9 @@ namespace rocketjoe { namespace network {
 class server final: public goblin_engineer::components::network_manager_service {
     public:
         server(
-                goblin_engineer::dynamic_config &,
-                goblin_engineer::dynamic_environment *
+                goblin_engineer::root_manager *,
+                goblin_engineer::dynamic_config &
+
         );
 
         ~server() override = default;

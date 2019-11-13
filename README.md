@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/blizgard/RocketJoe.svg?branch=master)](https://travis-ci.org/blizgard/RocketJoe)
+[![Build Status](https://travis-ci.org/jinncrafters/RocketJoe.svg?branch=master)](https://travis-ci.org/jinncrafters/RocketJoe)
 
 Applications server 
 
@@ -20,6 +20,9 @@ RocketJoe is an application server for micro-services architecture.
 
 brew install cmake lua ccache conan python3
 
+
+conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+
 ```
 ### for debian base
 
@@ -28,6 +31,8 @@ brew install cmake lua ccache conan python3
 apt install git ccache g++ cmake python3 python3-dev python3-pip lua5.3 liblua5.3-dev 
 
 pip3 install conan --upgrade
+
+conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
  
 ```
 

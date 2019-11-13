@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 
     goblin_engineer::dynamic_config config_tmp = config;
 
-    goblin_engineer::dynamic_environment env(std::move(config));
+    goblin_engineer::root_manager env(std::move(config));
 
     init_service(env,config_tmp);
 
