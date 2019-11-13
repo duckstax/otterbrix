@@ -9,6 +9,7 @@
 
 #include <rocketjoe/services/python_engine/python_sandbox.hpp>
 #include <rocketjoe/network/network.hpp>
+#include <rocketjoe/services/python_engine/detail/context.hpp>
 
 namespace rocketjoe { namespace services {
 

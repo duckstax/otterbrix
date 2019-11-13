@@ -2,10 +2,14 @@ set(CURRENT_TARGET python_engine)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/celery.hpp
+        detail/context.hpp
         detail/context_manager.hpp
         detail/data_set_manager.hpp
         detail/file_manager.hpp
         detail/mapreduce.hpp
+        detail/python_wrapper_context.hpp
+        detail/python_wrapper_data_set.hpp
+
         python_engine.hpp
         python_sandbox.hpp
         detail/file_system.hpp
@@ -20,6 +24,8 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
         mapreduce.cpp
         python_engine.cpp
         python_sandbox.cpp
+        python_wrapper_context.cpp
+        python_wrapper_data_set.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
