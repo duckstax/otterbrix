@@ -117,8 +117,8 @@ namespace rocketjoe { namespace network {
         };
 
         server::server(
-                goblin_engineer::dynamic_config &configuration,
-                goblin_engineer::dynamic_environment *env
+                goblin_engineer::root_manager *env,
+                goblin_engineer::dynamic_config &configuration
         )
             : network_manager_service(env, "http",1)
             , pimpl(std::make_shared<impl>(configuration ))

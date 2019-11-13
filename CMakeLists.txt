@@ -32,7 +32,7 @@ if (TSAN)
     message (STATUS "Building with ThreadSanitizer")
 endif ()
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF -DCXXOPTS_NO_RTTI" CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
 
 set(BUILD_LUA OFF CACHE BOOL "" FORCE)
 set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
@@ -62,7 +62,7 @@ include_directories(${Python3_INCLUDE_DIRS})
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
+#conan_add_remote(NAME bincrafters INDEX 1 URL https://api.bintray.com/conan/bincrafters/public-conan)
 
 conan_cmake_run(
         CONANFILE conanfile.txt
@@ -84,10 +84,6 @@ endif(CCACHE_FOUND)
 
 #ccahe
 #############################################################################################
-
-message("DOWNLOAD cxxopts start")
-file(DOWNLOAD "https://raw.githubusercontent.com/jarro2783/cxxopts/master/include/cxxopts.hpp" "${CMAKE_SOURCE_DIR}/thirdparty/cxxopts/include/cxxopts.hpp")
-message("DOWNLOAD cxxopts finish")
 
 #add_subdirectory(thirdparty)
 add_subdirectory(network)
