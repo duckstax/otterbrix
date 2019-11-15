@@ -2,7 +2,7 @@ set(CURRENT_TARGET python_engine)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/celery.hpp
-        detail/context.hpp
+        detail/mapreduce_context.hpp
         detail/context_manager.hpp
         detail/data_set_manager.hpp
         detail/file_manager.hpp

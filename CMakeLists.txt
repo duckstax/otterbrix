@@ -14,30 +14,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 #set(CMAKE_VERBOSE_MAKEFILE ON)
-#set(TSAN true)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-
-#if (ASAN)
-#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
-#    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-#    message (STATUS "Building with AddressSanitizer")
-#endif ()
-
-#if (TSAN)
-#    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
-#    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
-#    message (STATUS "Building with ThreadSanitizer")
-#endif ()
-
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
-
-set(BUILD_LUA OFF CACHE BOOL "" FORCE)
-set(ENABLE_PYTHON3 ON CACHE BOOL "" FORCE)
-
-#set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(DEV_MODE "developer mode" OFF)
 
@@ -83,7 +63,6 @@ endif(CCACHE_FOUND)
 #ccahe
 #############################################################################################
 
-#add_subdirectory(thirdparty)
 add_subdirectory(network)
 add_subdirectory(dto)
 add_subdirectory(services)

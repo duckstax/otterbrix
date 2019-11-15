@@ -9,7 +9,7 @@
 
 #include <rocketjoe/services/python_engine/python_sandbox.hpp>
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/services/python_engine/detail/context.hpp>
+#include <rocketjoe/services/python_engine/detail/mapreduce_context.hpp>
 
 namespace rocketjoe { namespace services {
 

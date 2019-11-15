@@ -15,7 +15,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 
-                py::class_<context_wrapper>(mapreduce_submodule, "RocketJoeContext")
+                py::class_<python_wrapper_context>(mapreduce_submodule, "RocketJoeContext")
                         .def(
                                 py::init(
                                         [cm_](
@@ -32,11 +32,11 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                                                 , int profiler_cls
                                         ) {
                                             auto *ctx = cm_->create_context(appName);
-                                            return new context_wrapper(appName, ctx);
+                                            return new python_wrapper_context(appName, ctx);
                                         }
                                 )
                         )
-                        .def("textFile", &context_wrapper::text_file);
+                        .def("textFile", &python_wrapper_context::text_file);
 
                 py::class_<python_wrapper_data_set>(mapreduce_submodule, "DataSet")
                         .def("map", &python_wrapper_data_set::map)

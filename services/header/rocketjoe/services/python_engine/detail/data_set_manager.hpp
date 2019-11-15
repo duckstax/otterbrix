@@ -14,9 +14,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
             class data_set final {
             public:
                 data_set() = default;
-
             private:
                 nlohmann::json data_set_;
-                ///std::unique_ptr<python_wrapper_data_set> wrapper_data_set_;
             };
 }}}}

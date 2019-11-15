@@ -6,6 +6,7 @@
 #include <pybind11/stl.h>
 
 #include <rocketjoe/services/python_engine/detail/forward.hpp>
+#include <rocketjoe/services/python_engine/detail/data_set_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
@@ -14,9 +15,9 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
 
                 class python_wrapper_pipelien_data_set;
 
-                class python_wrapper_data_set {
+                class python_wrapper_data_set  : public data_set {
                 public:
-                    python_wrapper_data_set(const py::object &, context *);
+                    python_wrapper_data_set(const py::object &, mapreduce_context *);
 
                     python_wrapper_data_set();
 
@@ -35,7 +36,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                     auto map_partitions(py::function, bool preservesPartitioning = false) -> python_wrapper_pipelien_data_set;
                 protected:
                     py::object collection_;
-                    context *ctx_;
+                    mapreduce_context *ctx_;
                 };
 
 

@@ -10,15 +10,14 @@
 
 namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
 
-                class context final {
+                class mapreduce_context final {
                 public:
-                    context(file_manager &file_manager);
-
-                    auto top() -> data_set *;
+                    mapreduce_context(file_manager &file_manager);
 
                     auto open_file(const boost::filesystem::path &) -> file_view *;
 
                     auto next() -> data_set *;
+
 
 
                 private:

@@ -1,5 +1,5 @@
 #include <rocketjoe/services/python_engine/detail/python_wrapper_data_set.hpp>
-#include <rocketjoe/services/python_engine/detail/context.hpp>
+#include <rocketjoe/services/python_engine/detail/mapreduce_context.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -73,7 +73,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                 }
 
 
-                python_wrapper_data_set::python_wrapper_data_set(const py::object &collections, context *ctx)
+                python_wrapper_data_set::python_wrapper_data_set(const py::object &collections, mapreduce_context *ctx)
                         : collection_(collections)
                         , ctx_(ctx)
                         {
