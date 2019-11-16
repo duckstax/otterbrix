@@ -1,6 +1,6 @@
-#include <rocketjoe/services/python_engine/detail/celery.hpp>
+#include <rocketjoe/services/python_sandbox/detail/celery.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
             task::task(py::function task_handler, std::string &&/*name*/) : task_handler{task_handler} {}
 

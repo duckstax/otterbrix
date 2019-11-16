@@ -1,6 +1,6 @@
-#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
+#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
 
             file_view::file_view(const boost::filesystem::path &path)
@@ -27,4 +27,18 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
 
                 return file_content;
             }
-}}}}
+
+                auto file_manager::open(const boost::filesystem::path &path) -> file_view * {
+                    if (boost::filesystem::exists(path)) {
+                        auto it = files_.find(path.string());
+                        if (it == files_.end()) {
+                            auto result = files_.emplace(path.string(), std::make_unique<file_view>(path));
+                            return result.first->second.get();
+                        } else {
+                            return it->second.get();
+                        }
+                    } else {
+                        return nullptr;
+                    }
+                }
+            }}}}

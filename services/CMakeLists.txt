@@ -12,5 +12,5 @@
 
 add_subdirectory(header/rocketjoe/services/http_server)
 add_subdirectory(header/rocketjoe/services/lua_engine)
-add_subdirectory(header/rocketjoe/services/python_engine)
+add_subdirectory(header/rocketjoe/services/python_sandbox)
 add_subdirectory(header/rocketjoe/services/router)

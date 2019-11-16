@@ -6,18 +6,19 @@
 
 #include <boost/filesystem.hpp>
 
-#include <rocketjoe/services/python_engine/detail/forward.hpp>
+#include <rocketjoe/services/python_sandbox/detail/forward.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
-                class mapreduce_context final {
+                class context final {
                 public:
-                    mapreduce_context(file_manager &file_manager);
+                    context(file_manager &file_manager);
 
                     auto open_file(const boost::filesystem::path &) -> file_view *;
 
                     auto next() -> data_set *;
 
+                    auto text_file(const std::string &path) -> data_set;
 
 
                 private:

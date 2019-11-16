@@ -17,7 +17,7 @@ target_link_libraries(
         goblin-engineer
         rocketjoe::http_server
         rocketjoe::dto
-        rocketjoe::python_engine
+        rocketjoe::python_sandbox
         rocketjoe::router
         dl
 )

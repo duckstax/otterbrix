@@ -1,13 +1,13 @@
-#include <rocketjoe/services/python_engine/detail/mapreduce.hpp>
+#include <rocketjoe/services/python_sandbox/detail/mapreduce.hpp>
 
 #include <deque>
 
-#include <rocketjoe/services/python_engine/detail/context_manager.hpp>
-#include <rocketjoe/services/python_engine/detail/file_manager.hpp>
-#include <rocketjoe/services/python_engine/detail/python_wrapper_context.hpp>
-#include <rocketjoe/services/python_engine/detail/python_wrapper_data_set.hpp>
+#include <rocketjoe/services/python_sandbox/detail/context_manager.hpp>
+#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
+#include <rocketjoe/services/python_sandbox/detail/context.hpp>
+#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
 
 
@@ -15,7 +15,7 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
 
-                py::class_<python_wrapper_context>(mapreduce_submodule, "RocketJoeContext")
+                py::class_<context>(mapreduce_submodule, "RocketJoeContext")
                         .def(
                                 py::init(
                                         [cm_](
@@ -31,18 +31,17 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                                                 , int jsc
                                                 , int profiler_cls
                                         ) {
-                                            auto *ctx = cm_->create_context(appName);
-                                            return new python_wrapper_context(appName, ctx);
+                                            return cm_->create_context(appName);
                                         }
                                 )
                         )
-                        .def("textFile", &python_wrapper_context::text_file);
+                        .def("textFile", &context::text_file);
 
-                py::class_<python_wrapper_data_set>(mapreduce_submodule, "DataSet")
-                        .def("map", &python_wrapper_data_set::map)
-                        .def("reduceByKey", &python_wrapper_data_set::reduce_by_key)
-                        .def("flatMap", &python_wrapper_data_set::flat_map)
-                        .def("collect", &python_wrapper_data_set::collect);
+                py::class_<data_set>(mapreduce_submodule, "DataSet")
+                        .def("map", &data_set::map)
+                        .def("reduceByKey", &data_set::reduce_by_key)
+                        .def("flatMap", &data_set::flat_map)
+                        .def("collect", &data_set::collect);
             }
 
 }}}}

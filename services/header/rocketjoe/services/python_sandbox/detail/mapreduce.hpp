@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
     namespace py = pybind11;
 

@@ -1,9 +1,9 @@
-#include <rocketjoe/services/python_engine/detail/python_wrapper_data_set.hpp>
-#include <rocketjoe/services/python_engine/detail/mapreduce_context.hpp>
+#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/services/python_sandbox/detail/context.hpp>
 
 #include <nlohmann/json.hpp>
 
-namespace rocketjoe { namespace services { namespace python_engine { namespace detail {
+namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
                 using namespace pybind11::literals;
                 namespace py = pybind11;
@@ -73,49 +73,49 @@ namespace rocketjoe { namespace services { namespace python_engine { namespace d
                 }
 
 
-                python_wrapper_data_set::python_wrapper_data_set(const py::object &collections, mapreduce_context *ctx)
+                data_set::data_set(const py::object &collections, context *ctx)
                         : collection_(collections)
                         , ctx_(ctx)
                         {
 
                 }
 
-                python_wrapper_data_set::python_wrapper_data_set() {
+                data_set::data_set() {
                     std::cerr << "constructor python_wrapper_data_set()" << std::endl;
                 }
 
-                auto python_wrapper_data_set::map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
 
 
                     return map_partitions_with_index(f,preservesPartitioning);
                 }
 
-                auto python_wrapper_data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
 
                 }
 
-                auto python_wrapper_data_set::flat_map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::flat_map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
                     collection_ = f(collection_);
                     return map_partitions_with_index(f,preservesPartitioning);
                 }
 
-                auto python_wrapper_data_set::collect() -> py::list {
+                auto data_set::collect() -> py::list {
 
                     py::list tmp{};
 
                     return tmp;
                 }
 
-                auto python_wrapper_data_set::map_partitions_with_index(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::map_partitions_with_index(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
                     return python_wrapper_pipelien_data_set(ptr , f, preservesPartitioning);
                 }
 
-                auto python_wrapper_data_set::map_partitions(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::map_partitions(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
 
                     return map_partitions_with_index(f, preservesPartitioning);
                 }
 
-                python_wrapper_pipelien_data_set::python_wrapper_pipelien_data_set(python_wrapper_data_set *,py::function) {}
+                python_wrapper_pipelien_data_set::python_wrapper_pipelien_data_set(data_set *, py::function) {}
 
 
 
