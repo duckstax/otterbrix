@@ -82,19 +82,20 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
                 data_set::data_set() {
                     std::cerr << "constructor python_wrapper_data_set()" << std::endl;
+                    assert(false);
                 }
 
-                auto data_set::map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::map(py::function f, bool preservesPartitioning) -> pipelien_data_set {
 
 
                     return map_partitions_with_index(f,preservesPartitioning);
                 }
 
-                auto data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> pipelien_data_set {
 
                 }
 
-                auto data_set::flat_map(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::flat_map(py::function f, bool preservesPartitioning) -> pipelien_data_set {
                     collection_ = f(collection_);
                     return map_partitions_with_index(f,preservesPartitioning);
                 }
@@ -106,16 +107,16 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                     return tmp;
                 }
 
-                auto data_set::map_partitions_with_index(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
-                    return python_wrapper_pipelien_data_set(ptr , f, preservesPartitioning);
+                auto data_set::map_partitions_with_index(py::function f, bool preservesPartitioning) -> pipelien_data_set {
+                    return pipelien_data_set(ptr , f, preservesPartitioning);
                 }
 
-                auto data_set::map_partitions(py::function f, bool preservesPartitioning) -> python_wrapper_pipelien_data_set {
+                auto data_set::map_partitions(py::function f, bool preservesPartitioning) -> pipelien_data_set {
 
                     return map_partitions_with_index(f, preservesPartitioning);
                 }
 
-                python_wrapper_pipelien_data_set::python_wrapper_pipelien_data_set(data_set *, py::function) {}
+                pipelien_data_set::pipelien_data_set(data_set *, py::function) {}
 
 
 

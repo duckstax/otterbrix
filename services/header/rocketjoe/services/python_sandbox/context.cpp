@@ -19,15 +19,6 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                     return data_set(py::str(all_file.to_string()), *this);
                 }
 
-                auto context::next() -> data_set * {
-                    pipeline_.emplace_back(std::make_unique<data_set>());
-                    return pipeline_.front().get();
-                }
-
-                auto context::open_file(const boost::filesystem::path &path) -> file_view* {
-                    return file_manager_.open(path);
-                }
-
                 context::context(file_manager &file_manager) : file_manager_(file_manager) {}
 
 

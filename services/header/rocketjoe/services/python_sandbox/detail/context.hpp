@@ -14,10 +14,6 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                 public:
                     context(file_manager &file_manager);
 
-                    auto open_file(const boost::filesystem::path &) -> file_view *;
-
-                    auto next() -> data_set *;
-
                     auto text_file(const std::string &path) -> data_set;
 
 

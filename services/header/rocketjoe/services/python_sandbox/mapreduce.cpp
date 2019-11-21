@@ -9,8 +9,6 @@
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
-
-
             auto add_mapreduce(py::module &pyrocketjoe, context_manager *cm_) -> void  {
 
                 auto mapreduce_submodule = pyrocketjoe.def_submodule("MapReduce");
@@ -42,6 +40,15 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                         .def("reduceByKey", &data_set::reduce_by_key)
                         .def("flatMap", &data_set::flat_map)
                         .def("collect", &data_set::collect);
+
+                py::class_<pipelien_data_set,data_set>(mapreduce_submodule, "PipeLineDataSet")
+                        .def("map", &data_set::map)
+                        .def("reduceByKey", &data_set::reduce_by_key)
+                        .def("flatMap", &data_set::flat_map)
+                        .def("collect", &data_set::collect);
+
+
+
             }
 
 }}}}
