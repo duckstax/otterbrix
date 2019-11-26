@@ -29,8 +29,8 @@ add_library(rocketjoe_${CURRENT_TARGET} STATIC
             ${${CURRENT_TARGET}_SOURCES}
 )
 
-find_package(Python3 COMPONENTS Development)
-include_directories(${Python3_INCLUDE_DIRS})
+#find_package(Python3 COMPONENTS Development)
+#include_directories(${Python3_INCLUDE_DIRS})
 find_package(pybind11 REQUIRED)
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})

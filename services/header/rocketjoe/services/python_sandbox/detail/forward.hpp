@@ -10,3 +10,8 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
     class file_manager;
 
 }}}}
+
+namespace  boost {
+    template<class T>
+    class intrusive_ptr;
+}

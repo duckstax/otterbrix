@@ -11,7 +11,11 @@ set(${CURRENT_TARGET}_sources
         rocketjoed.cpp
 )
 
+find_package(Python3 COMPONENTS Development)
+include_directories(${Python3_INCLUDE_DIRS})
+
 add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers} )
+
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         goblin-engineer
