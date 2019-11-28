@@ -17,17 +17,17 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                         .def(
                                 py::init(
                                         [cm_](
-                                                  std::string master
-                                                , std::string appName
-                                                , std::string sparkHome
-                                                , std::string pyFiles
-                                                , std::string environment
-                                                , int batchSize
-                                                , int serializer
-                                                , int conf
-                                                , int gateway
-                                                , int jsc
-                                                , int profiler_cls
+                                              ////    std::string master
+                                               /* ,*/ std::string appName
+                                              ////  , std::string sparkHome
+                                              ///  , std::string pyFiles
+                                             ////   , std::string environment
+                                              ///  , int batchSize
+                                              ///  , int serializer
+                                              ///  , int conf
+                                             ///   , int gateway
+                                             ///   , int jsc
+                                            ///    , int profiler_cls
                                         ) {
                                             return cm_->create_context(appName);
                                         }

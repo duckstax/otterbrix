@@ -43,8 +43,7 @@ namespace rocketjoe { namespace services {
 ///            );
 
 
-            std::cerr << "processing env python start " <<
-                      std::endl;
+            std::cerr << "processing env python start " << std::endl;
 
             path_script = configuration.as_object().at("app").as_string();
 
@@ -60,6 +59,34 @@ namespace rocketjoe { namespace services {
 
         }
 
+        constexpr char init_script[] = R"__(
+            import sys, os
+            from importlib import import_module
+
+            sys.modules['pyrocketjoe'] = pyrocketjoe
+            sys.path.insert(0, os.path.dirname(path))
+
+            module_name, _ = os.path.splitext(path)
+            import_module(os.path.basename(module_name))
+
+            def fail_on_stopiteration(f):
+                """
+                Wraps the input function to fail on 'StopIteration' by raising a 'RuntimeError'
+                prevents silent loss of data when 'f' is used in a for loop in Spark code
+                """
+                def wrapper(*args, **kwargs):
+                    try:
+                        return f(*args, **kwargs)
+                    except StopIteration as exc:
+                        raise RuntimeError(
+                            "Caught StopIteration thrown from user's code; failing the task",
+                            exc
+                        )
+
+                return wrapper
+
+        )__";
+
         auto python_sandbox_t::start() -> void {
             if (path_script.extension() == ".py") {
                 exuctor = std::make_unique<std::thread>(
@@ -69,18 +96,7 @@ namespace rocketjoe { namespace services {
                                     "pyrocketjoe"_a = pyrocketjoe
                             );
 
-                            py::exec(R"(
-                               import sys, os
-                               from importlib import import_module
-
-                               sys.modules['pyrocketjoe'] = pyrocketjoe
-                               sys.path.insert(0, os.path.dirname(path))
-
-                               module_name, _ = os.path.splitext(path)
-
-                               import_module(os.path.basename(module_name))
-
-                            )", py::globals(), locals);
+                            py::exec(init_script, py::globals(), locals);
                         }
                 );
             }
