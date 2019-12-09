@@ -39,8 +39,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                         }
                         return out;
                     }
-                    throw std::runtime_error(
-                            "to_json not implemented for this type of object: " + obj.cast<std::string>());
+                    throw std::runtime_error("to_json not implemented for this type of object: " + obj.cast<std::string>());
                 }
 
                 py::object from_json_impl(const json &j) {

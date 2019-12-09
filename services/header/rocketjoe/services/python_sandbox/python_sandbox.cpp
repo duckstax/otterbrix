@@ -69,31 +69,22 @@ namespace rocketjoe { namespace services {
             module_name, _ = os.path.splitext(path)
             import_module(os.path.basename(module_name))
 
-            def fail_on_stopiteration(f):
-                """
-                Wraps the input function to fail on 'StopIteration' by raising a 'RuntimeError'
-                prevents silent loss of data when 'f' is used in a for loop in Spark code
-                """
-                def wrapper(*args, **kwargs):
-                    try:
-                        return f(*args, **kwargs)
-                    except StopIteration as exc:
-                        raise RuntimeError(
-                            "Caught StopIteration thrown from user's code; failing the task",
-                            exc
-                        )
-
-                return wrapper
-
         )__";
 
         auto python_sandbox_t::start() -> void {
             if (path_script.extension() == ".py") {
                 exuctor = std::make_unique<std::thread>(
                         [this]() {
+
+                            auto lib = boost::filesystem::absolute(boost::filesystem::path("lib.py"));
+                            if (!boost::filesystem::exists(lib)) {
+                                std::cerr <<  "not load lib " << std::endl;
+                            }
+
                             auto locals = py::dict(
                                     "path"_a = path_script.string(),
-                                    "pyrocketjoe"_a = pyrocketjoe
+                                    "pyrocketjoe"_a = pyrocketjoe,
+                                     "lib"_a = lib.string()
                             );
 
                             py::exec(init_script, py::globals(), locals);
