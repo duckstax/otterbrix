@@ -26,7 +26,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
                 using  boost::intrusive_ptr;
 
-                class data_set :  public ref_counter<data_set> {
+                class BOOST_SYMBOL_VISIBLE data_set :  public ref_counter<data_set> {
                 public:
                     data_set(const data_set&) = delete;
 
@@ -61,7 +61,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                 };
 
 
-                class pipelien_data_set final : public data_set {
+                class BOOST_SYMBOL_VISIBLE pipelien_data_set final : public data_set {
                 public:
                         pipelien_data_set(data_set*, py::function, bool);
 

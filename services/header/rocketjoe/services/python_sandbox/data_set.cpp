@@ -91,7 +91,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                     return map_partitions_with_index(f,preservesPartitioning);
                 }
 
-                auto data_set::reduce_by_key(py::function f, bool preservesPartitioning) -> intrusive_ptr<pipelien_data_set> {
+                auto data_set::reduce_by_key(py::function f, bool /*preservesPartitioning*/ ) -> intrusive_ptr<pipelien_data_set> {
 
                 }
 
@@ -120,7 +120,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                     return ctx_;
                 }
 
-                pipelien_data_set::pipelien_data_set(data_set* ds , py::function f, bool preservesPartitioning)
+                pipelien_data_set::pipelien_data_set(data_set* ds , py::function f, bool /*preservesPartitioning*/)
                     :data_set(py::object(),ds->ctx()),f_(f) {}
 
 

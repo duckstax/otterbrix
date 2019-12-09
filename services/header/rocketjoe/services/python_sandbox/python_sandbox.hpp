@@ -16,7 +16,7 @@ namespace rocketjoe { namespace services {
 
     namespace py = pybind11;
 
-    class python_sandbox_t final : public goblin_engineer::abstract_service {
+    class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_service {
     public:
         python_sandbox_t(network::server*, goblin_engineer::dynamic_config &);
 
