@@ -33,6 +33,8 @@ add_library(rocketjoe_${CURRENT_TARGET} STATIC
 #include_directories(${Python3_INCLUDE_DIRS})
 find_package(pybind11 REQUIRED)
 
+file(COPY ${CMAKE_SOURCE_DIR}/libraries/python DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})

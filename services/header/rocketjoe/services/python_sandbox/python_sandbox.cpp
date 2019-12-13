@@ -66,6 +66,10 @@ namespace rocketjoe { namespace services {
             sys.modules['pyrocketjoe'] = pyrocketjoe
             sys.path.insert(0, os.path.dirname(path))
 
+            lib_name, _ = os.path.splitext(lib_path)
+            print(lib_name)
+            import_module(os.path.basename(lib_name))
+
             module_name, _ = os.path.splitext(path)
             import_module(os.path.basename(module_name))
 
@@ -76,7 +80,7 @@ namespace rocketjoe { namespace services {
                 exuctor = std::make_unique<std::thread>(
                         [this]() {
 
-                            auto lib = boost::filesystem::absolute(boost::filesystem::path("lib.py"));
+                            auto lib = boost::filesystem::absolute(boost::filesystem::path("python/lib.py"));
                             if (!boost::filesystem::exists(lib)) {
                                 std::cerr <<  "not load lib " << std::endl;
                             }
@@ -84,7 +88,7 @@ namespace rocketjoe { namespace services {
                             auto locals = py::dict(
                                     "path"_a = path_script.string(),
                                     "pyrocketjoe"_a = pyrocketjoe,
-                                     "lib"_a = lib.string()
+                                     "lib_path"_a = lib.string()
                             );
 
                             py::exec(init_script, py::globals(), locals);
