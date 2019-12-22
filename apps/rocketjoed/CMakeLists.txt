@@ -11,24 +11,22 @@ set(${CURRENT_TARGET}_sources
         rocketjoed.cpp
 )
 
-#############################################################################################
-#cxxopts
-include_directories(SYSTEM ${PROJECT_SOURCE_DIR}/thirdparty/cxxopts/include)
-#cxxopts
-#############################################################################################
-
+find_package(Python3 COMPONENTS Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers} )
+
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         goblin-engineer
         rocketjoe::http_server
         rocketjoe::dto
-        rocketjoe::python_engine
+        rocketjoe::python_sandbox
         rocketjoe::router
         dl
 )
 
+file(COPY ${CMAKE_SOURCE_DIR}/libraries/lua DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS
         ${CURRENT_TARGET}

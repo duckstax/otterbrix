@@ -1,6 +1,7 @@
 #include <utility>
 
 #include <iostream>
+#include <string>
 
 #include "configuration.hpp"
 

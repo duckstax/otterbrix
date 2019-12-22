@@ -20,7 +20,6 @@ RocketJoe is an application server for micro-services architecture.
 
 brew install cmake lua ccache conan python3
 
-
 conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
 
 ```
