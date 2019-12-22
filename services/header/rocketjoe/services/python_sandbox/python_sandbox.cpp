@@ -15,7 +15,6 @@
 #include <rocketjoe/services/python_sandbox/detail/context.hpp>
 #include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
 #include <rocketjoe/services/python_sandbox/detail/celery.hpp>
-#include <rocketjoe/services/python_sandbox/detail/mapreduce.hpp>
 #include <rocketjoe/services/python_sandbox/detail/file_system.hpp>
 #include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
 
@@ -49,7 +48,7 @@ namespace rocketjoe { namespace services {
 
             python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
-            python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
+            ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
             python_sandbox::detail::add_celery(pyrocketjoe);
 
@@ -66,10 +65,6 @@ namespace rocketjoe { namespace services {
             sys.modules['pyrocketjoe'] = pyrocketjoe
             sys.path.insert(0, os.path.dirname(path))
 
-            lib_name, _ = os.path.splitext(lib_path)
-            print(lib_name)
-            import_module(os.path.basename(lib_name))
-
             module_name, _ = os.path.splitext(path)
             import_module(os.path.basename(module_name))
 
@@ -79,16 +74,9 @@ namespace rocketjoe { namespace services {
             if (path_script.extension() == ".py") {
                 exuctor = std::make_unique<std::thread>(
                         [this]() {
-
-                            auto lib = boost::filesystem::absolute(boost::filesystem::path("python/lib.py"));
-                            if (!boost::filesystem::exists(lib)) {
-                                std::cerr <<  "not load lib " << std::endl;
-                            }
-
                             auto locals = py::dict(
                                     "path"_a = path_script.string(),
-                                    "pyrocketjoe"_a = pyrocketjoe,
-                                     "lib_path"_a = lib.string()
+                                    "pyrocketjoe"_a = pyrocketjoe
                             );
 
                             py::exec(init_script, py::globals(), locals);
