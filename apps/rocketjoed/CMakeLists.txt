@@ -20,13 +20,10 @@ target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         goblin-engineer
         rocketjoe::http_server
-        rocketjoe::dto
         rocketjoe::python_sandbox
         rocketjoe::router
         dl
 )
-
-file(COPY ${CMAKE_SOURCE_DIR}/libraries/lua DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 install(TARGETS
         ${CURRENT_TARGET}
