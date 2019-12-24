@@ -2,17 +2,15 @@
 
 #include <deque>
 
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
 #include <rocketjoe/services/python_sandbox/detail/forward.hpp>
 #include <nlohmann/json.hpp>
-
-#include <boost/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
-
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
@@ -21,12 +19,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
                 class pipelien_data_set;
 
-                template <typename T>
-                using ref_counter = boost::intrusive_ref_counter<T, boost::thread_safe_counter>;
-
-                using  boost::intrusive_ptr;
-
-                class BOOST_SYMBOL_VISIBLE data_set :  public ref_counter<data_set> {
+                class BOOST_SYMBOL_VISIBLE data_set : public boost::intrusive_ref_counter<data_set> {
                 public:
                     data_set(const data_set&) = delete;
 
@@ -38,17 +31,17 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
                     virtual ~data_set() = default;
 
-                    auto map(py::function, bool preservesPartitioning = false) -> intrusive_ptr<pipelien_data_set>;
+                    auto map(py::function, bool preservesPartitioning = false) -> boost::intrusive_ptr<pipelien_data_set>;
 
-                    auto reduce_by_key(py::function, bool preservesPartitioning = false) -> intrusive_ptr<pipelien_data_set>;
+                    auto reduce_by_key(py::function, bool preservesPartitioning = false) -> boost::intrusive_ptr<pipelien_data_set>;
 
-                    auto flat_map(py::function, bool preservesPartitioning = false) -> intrusive_ptr<pipelien_data_set>;
+                    auto flat_map(py::function, bool preservesPartitioning = false) -> boost::intrusive_ptr<pipelien_data_set>;
 
                     auto collect() -> py::list;
 
-                    auto map_partitions_with_index(py::function, bool preservesPartitioning = false) -> intrusive_ptr<pipelien_data_set>;
+                    auto map_partitions_with_index(py::function, bool preservesPartitioning = false) -> boost::intrusive_ptr<pipelien_data_set>;
 
-                    auto map_partitions(py::function, bool preservesPartitioning = false) -> intrusive_ptr<pipelien_data_set>;
+                    auto map_partitions(py::function, bool preservesPartitioning = false) -> boost::intrusive_ptr<pipelien_data_set>;
 
                     auto ctx() -> context*;
 
