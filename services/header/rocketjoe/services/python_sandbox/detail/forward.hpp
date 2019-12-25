@@ -8,6 +8,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
     class context;
     class context_manager;
     class file_manager;
+    class pipelien_data_set;
 
 }}}}
 
