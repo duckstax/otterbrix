@@ -58,7 +58,7 @@ namespace rocketjoe { namespace services {
 
         }
 
-        constexpr char init_script[] = R"__(
+        constexpr static char init_script[] = R"__(
             import sys, os
             from importlib import import_module
 

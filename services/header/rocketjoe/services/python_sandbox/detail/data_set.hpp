@@ -17,8 +17,6 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                 using namespace pybind11::literals;
                 namespace py = pybind11;
 
-                class pipelien_data_set;
-
                 class BOOST_SYMBOL_VISIBLE data_set : public boost::intrusive_ref_counter<data_set> {
                 public:
                     data_set(const data_set&) = delete;

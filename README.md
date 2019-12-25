@@ -9,7 +9,6 @@ RocketJoe is an application server for micro-services architecture.
 
 * boost  >=  1.70
 * cmake  >=  3.14
-* lua    ==  5.3
 * python >=  3.5
 
 ## Setup Developers Environments 
@@ -27,7 +26,7 @@ conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
 
 ```bash
 
-apt install git ccache g++ cmake python3 python3-dev python3-pip lua5.3 liblua5.3-dev 
+apt install git ccache g++ cmake python3 python3-dev python3-pip
 
 pip3 install conan --upgrade
 

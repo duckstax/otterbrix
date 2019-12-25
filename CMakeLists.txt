@@ -64,7 +64,6 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 add_subdirectory(network)
-add_subdirectory(dto)
 add_subdirectory(services)
 add_subdirectory(apps)
 
