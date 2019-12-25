@@ -62,6 +62,12 @@ namespace rocketjoe { namespace services {
             import sys, os
             from importlib import import_module
 
+            class Worker(pyrocketjoe.celery.apps.Worker):
+                def __init__(self, app) -> None:
+                    super().__init__(app)
+
+            pyrocketjoe.celery.apps.Worker = Worker
+
             sys.modules['pyrocketjoe'] = pyrocketjoe
             sys.path.insert(0, os.path.dirname(path))
 

@@ -5,9 +5,10 @@
 #include <unordered_map>
 
 #include <boost/filesystem.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
 #include <rocketjoe/services/python_sandbox/detail/forward.hpp>
-#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 
@@ -15,7 +16,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                 public:
                     context(file_manager &file_manager);
 
-                    auto text_file(const std::string &path) -> intrusive_ptr<data_set>;
+                    auto text_file(const std::string &path) -> boost::intrusive_ptr<data_set>;
 
                     template <class DTYPE,class ...Args>
                     auto make_new_step(Args... args) {
