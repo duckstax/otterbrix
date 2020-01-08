@@ -20,12 +20,14 @@
 
 namespace rocketjoe { namespace services {
 
-        using namespace py::literals;
+    using namespace py::literals;
 
-        python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
-                : abstract_service(ptr, "python_sandbox"), python_{}, pyrocketjoe{"pyrocketjoe"},
-                  file_manager_(std::make_unique<python_sandbox::detail::file_manager>()),
-                  context_manager_(std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)) {
+    constexpr static char extension_python_file[] = ".py";
+
+    python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
+            : abstract_service(ptr, "python_sandbox"), python_{}, pyrocketjoe{"pyrocketjoe"},
+              file_manager_(std::make_unique<python_sandbox::detail::file_manager>()),
+              context_manager_(std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)) {
 
 ///            add_handler(
 ///                    "dispatcher",
@@ -42,23 +44,31 @@ namespace rocketjoe { namespace services {
 ///            );
 
 
-            std::cerr << "processing env python start " << std::endl;
+        std::cerr << "processing env python start " << std::endl;
 
-            path_script = configuration.as_object().at("app").as_string();
+        auto &cfg = configuration.as_object().at("args").as_array();
 
-            python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
-
-            ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
-
-            python_sandbox::detail::add_celery(pyrocketjoe);
-
-            std::cerr << "processing env python finish " << std::endl;
-
-            start();
-
+        for (auto &i:cfg) {
+            auto &path_tmp = i.as_string();
+            if (path_tmp.find(extension_python_file) != std::string::npos) {
+                path_script = path_tmp;
+            }
         }
 
-        constexpr static char init_script[] = R"__(
+
+        python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
+
+        ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
+
+        python_sandbox::detail::add_celery(pyrocketjoe);
+
+        std::cerr << "processing env python finish " << std::endl;
+
+        start();
+
+    }
+
+    constexpr static char init_script[] = R"__(
             import sys, os
             from importlib import import_module
 
@@ -76,7 +86,8 @@ namespace rocketjoe { namespace services {
 
         )__";
 
-        auto python_sandbox_t::start() -> void {
+    auto python_sandbox_t::start() -> void {
+        if (!path_script.empty()) {
             if (path_script.extension() == ".py") {
                 exuctor = std::make_unique<std::thread>(
                         [this]() {
@@ -90,5 +101,7 @@ namespace rocketjoe { namespace services {
                 );
             }
         }
+
+    }
 
 }}
