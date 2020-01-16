@@ -1,12 +1,16 @@
-set(CURRENT_TARGET control_center)
+set(CURRENT_TARGET  ipc_message_queue)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        control_center.hpp
+        detail/basic_message_queue.hpp
+        detail/basic_message_queue_service.hpp
+        detail/message_queue.hpp
+        detail/posix_message_queue_impl.hpp
+        ipc_message_queue.hpp
 
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        control_center.cpp
+        ipc_message_queue.cpp
 )
 
 
@@ -31,7 +35,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${PROJECT_SOURCE_DIR}/services/header/rocketjoe/services/timer_manager"
+        "${PROJECT_SOURCE_DIR}/services/header/rocketjoe/services/ipc_message_queue"
 )
 
 install(TARGETS
@@ -41,3 +45,7 @@ install(TARGETS
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
 )
+
+if (DEV_MODE)
+    add_subdirectory(test)
+endif()

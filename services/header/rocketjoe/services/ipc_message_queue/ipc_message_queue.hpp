@@ -5,12 +5,13 @@
 #include <goblin-engineer.hpp>
 #include <goblin-engineer/components/network.hpp>
 
+#include "detail/message_queue.hpp"
+
 namespace rocketjoe { namespace network {
 
-    boost::asio::local:
-    class control_center final : public goblin_engineer::components::network_manager_service {
+    class ipc_message_queue final : public goblin_engineer::components::network_manager_service {
     public:
-        control_center(
+        ipc_message_queue(
                 goblin_engineer::root_manager *,
                 goblin_engineer::dynamic_config &
         );
@@ -20,11 +21,10 @@ namespace rocketjoe { namespace network {
 
         };
 
-        ~control_center() override = default;
+        ~ipc_message_queue() override = default;
 
     private:
-        std::unordered_map<pid_t,int> d_;
-
+        ipc::message_queue  ipc_mq_;
     };
 
 }}

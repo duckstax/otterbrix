@@ -31,7 +31,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${PROJECT_SOURCE_DIR}/services/header/rocketjoe/services/control_center"
+        "${PROJECT_SOURCE_DIR}/services/header/rocketjoe/services/timer_manager"
 )
 
 install(TARGETS

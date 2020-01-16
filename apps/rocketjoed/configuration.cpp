@@ -7,6 +7,9 @@
 
 #include <yaml-cpp/yaml.h>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>            // uuid class
+#include <boost/uuid/uuid_generators.hpp> // generators
+#include <boost/uuid/uuid_io.hpp>
 
 constexpr const char *config_name_file = "config.yaml";
 
@@ -115,8 +118,7 @@ void generate_yaml_config(YAML::Node &config_) {
     config_["address"] = "127.0.0.1";
     config_["websocket-port"] = 9999;
     config_["http-port"] = 9998;
-    config_["mongo-uri"] = "mongodb://localhost:27017/rocketjoe";
-    config_["env-lua"]["http"] = "lua/http.lua";
+    config_["ipc_message_queue_id"] =  boost::uuids::to_string( boost::uuids::random_generator()());
 
 }
 
