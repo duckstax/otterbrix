@@ -5,7 +5,7 @@
 #include <goblin-engineer.hpp>
 #include <goblin-engineer/components/network.hpp>
 
-#include "detail/message_queue.hpp"
+#include "detail/old/message_queue.hpp"
 
 namespace rocketjoe { namespace network {
 
