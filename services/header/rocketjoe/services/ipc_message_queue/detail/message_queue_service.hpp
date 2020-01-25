@@ -13,19 +13,12 @@
 namespace services {
 
     template <class Implementation>
-    class message_queue_service : public boost::asio::execution_context::service {
+    class message_queue_service final : public boost::asio::execution_context::service {
     public:
 
         using key_type = message_queue_service<Implementation>;
 
-        struct logger_impl {
-            explicit logger_impl(const std::string &ident) : identifier(ident) {}
-
-            std::string identifier;
-        };
-
-
-        typedef logger_impl *impl_type;
+        using  impl_type = Implementation*;
 
         message_queue_service(boost::asio::execution_context &context)
                 : boost::asio::execution_context::service(context),
@@ -50,50 +43,56 @@ namespace services {
 
 
         void create(impl_type &impl, const std::string &identifier) {
-            impl = new logger_impl(identifier);
+            impl = new impl_type();
+            impl->open(identifier, O_CREAT | O_RDWR);
         }
 
 
         void destroy(impl_type &impl) {
+            impl->close();
             delete impl;
             impl = null();
         }
 
 
-        void use_file(impl_type & /*impl*/, const std::string &file) {
-            // Pass the work of opening the file to the background thread.
-            boost::asio::post(work_io_context_, boost::bind(&message_queue_service::use_file_impl, this, file));
+        template<typename Handler>
+        void async_send(impl_type &impl, const void *buffer, int buffer_size, unsigned int priority, Handler handler) {
+            auto opaque = [=] {
+                if (impl) {
+                    boost::system::error_code ec;
+                    impl->send(buffer, buffer_size, priority, ec);
+                    handler(ec);
+                } else {
+                    handler(boost::asio::error::operation_aborted);
+                }
+            };
+
+            boost::asio::post(work_io_context_,opaque);
         }
 
-        void log(impl_type &impl, const std::string &message) {
-            // Format the text to be logged.
-            std::ostringstream os;
-            os << impl->identifier << ": " << message;
+        template<typename Handler>
+        void async_receive(impl_type &impl, void *buffer, int buffer_size, Handler handler) {
+            auto opaque = [=]() mutable {
+                if (impl) {
+                    boost::system::error_code ec;
+                    size_t bytes = impl->receive(buffer, buffer_size, ec);
+                    boost::asio::post(work_.get_executor(),boost::asio::detail::bind_handler(handler, ec, bytes));
+                } else {
+                    boost::asio::post(work_.get_executor(),boost::asio::detail::bind_handler(handler, boost::asio::error::operation_aborted, -1));
+                }
+            };
 
-            // Pass the work of writing to the file to the background thread.
-            boost::asio::post(work_io_context_, boost::bind(&message_queue_service::log_impl, this, os.str()));
+            boost::asio::post(work_io_context_,opaque);
         }
 
     private:
-
-        void use_file_impl(const std::string &file) {
-            ofstream_.close();
-            ofstream_.clear();
-            ofstream_.open(file.c_str());
-        }
-
-        void log_impl(const std::string &text) {
-            ofstream_ << text << std::endl;
-        }
 
         boost::asio::io_context work_io_context_;
 
         boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_;
 
-
         boost::scoped_ptr<boost::thread> work_thread_;
 
-        Implementation mq_;
     };
 
 } // namespace services

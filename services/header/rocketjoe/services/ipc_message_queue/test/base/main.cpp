@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../../detail/old/message_queue.hpp"
+#include "../../detail/message_queue.hpp"
 
 std::string in_data;
 
@@ -17,13 +17,13 @@ void test1() {
 
     std::string out_data("hello I ma mq2");
 
-    ipc::message_queue mq(io, "/server");
+    services::message_queue mq(io, "/server");
 
     in_data.resize(mq.max_msg_size());
 
     mq.async_receive((void *) in_data.data(), in_data.capacity(), received_handler);
 
-    ipc::message_queue mq2(io, "/server");
+    services::message_queue mq2(io, "/server");
     mq2.async_send(out_data.data(), out_data.size(), 0, sent_handler);
 
     io.run();
@@ -38,7 +38,7 @@ void test2() {
 
     std::string out_data("hello I myself");
 
-    ipc::message_queue mq(io, "/server");
+    services::message_queue mq(io, "/server");
 
     in_data.resize(mq.max_msg_size());
     mq.async_receive((void *) in_data.data(), in_data.capacity(), received_handler);;

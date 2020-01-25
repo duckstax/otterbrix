@@ -18,13 +18,13 @@ namespace ipc {
             }
         }
 
-        void open(const char *name, int flags, boost::system::error_code &ec) {
+        void open(const std::string& name, int flags, boost::system::error_code &ec) {
             name_ = name;
             if (flags & O_CREAT) {
-                d_ = mq_open(name, O_CREAT | O_RDWR,S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
+                d_ = mq_open(name.c_str(), O_CREAT | O_RDWR,S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
                 created_ = true;
             } else {
-                d_ = mq_open(name, flags);
+                d_ = mq_open(name.c_str(), flags);
             }
             ec = check_error(d_);
         }

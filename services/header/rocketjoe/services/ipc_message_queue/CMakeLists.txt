@@ -1,10 +1,10 @@
 set(CURRENT_TARGET  ipc_message_queue)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        detail/old/basic_message_queue.hpp
-        detail/old/basic_message_queue_service.hpp
-        detail/old/message_queue.hpp
-        detail/old/posix_message_queue_impl.hpp
+        #detail/old/basic_message_queue.hpp
+        #detail/old/basic_message_queue_service.hpp
+        #detail/old/message_queue.hpp
+        #detail/old/posix_message_queue_impl.hpp
 
         detail/basic_message_queue.hpp
         detail/message_queue_service.hpp
@@ -31,7 +31,6 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
         goblin-engineer
-        rocketjoe::network
         ${Boost_LIBRARIES}
         ${CONAN_LIBS}
 )

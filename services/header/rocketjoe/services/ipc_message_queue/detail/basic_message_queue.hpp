@@ -32,13 +32,31 @@ namespace services {
         }
 
 
-        void use_file(const std::string &file) {
-            service_.use_file(impl_, file);
+        void send(const void *buffer, int buffer_size, unsigned int priority) {
+            boost::system::error_code ec;
+            service_.send(buffer, buffer_size, priority, ec);
+            boost::asio::detail::throw_error(ec, "send");
         }
 
+        size_t receive(void *buffer, int buffer_size) {
+            boost::system::error_code ec;
+            size_t bytes = service_.receive(buffer, buffer_size, ec);
+            boost::asio::detail::throw_error(ec, "receive");
+            return bytes;
+        }
 
-        void log(const std::string &message) {
-            service_.log(impl_, message);
+        template<typename Handler>
+        void async_send(const void *buffer, int buffer_size, unsigned int priority, Handler handler) {
+            service_.async_send(impl_, buffer, buffer_size, priority, handler);
+        }
+
+        template<typename Handler>
+        void async_receive(void *buffer, int buffer_size, Handler handler) {
+            service_.async_receive(impl_, buffer, buffer_size, handler);
+        }
+
+        size_t max_msg_size() {
+            return service_.max_msg_size();
         }
 
     private:
