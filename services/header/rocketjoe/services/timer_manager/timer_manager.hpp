@@ -1,9 +1,12 @@
 #pragma once
 
+#include <atomic>
 #include <unordered_map>
 #include <functional>
 #include <chrono>
+
 #include <boost/chrono/chrono_io.hpp>
+
 #include <goblin-engineer.hpp>
 #include <goblin-engineer/components/network.hpp>
 
