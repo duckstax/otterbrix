@@ -5,7 +5,7 @@
 #include <goblin-engineer.hpp>
 #include <goblin-engineer/components/network.hpp>
 
-#include "detail/old/message_queue.hpp"
+#include "detail/message_queue.hpp"
 
 namespace rocketjoe { namespace network {
 
@@ -24,7 +24,7 @@ namespace rocketjoe { namespace network {
         ~ipc_message_queue() override = default;
 
     private:
-        ipc::message_queue  ipc_mq_;
+        services::message_queue  ipc_mq_;
     };
 
 }}

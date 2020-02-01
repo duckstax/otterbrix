@@ -31,7 +31,6 @@ namespace services {
             return service_.get_io_context();
         }
 
-
         void send(const void *buffer, int buffer_size, unsigned int priority) {
             boost::system::error_code ec;
             service_.send(buffer, buffer_size, priority, ec);
@@ -56,7 +55,9 @@ namespace services {
         }
 
         size_t max_msg_size() {
-            return service_.max_msg_size();
+            std::size_t size;
+            service_.max_msg_size(impl_, size);
+            return size;
         }
 
     private:

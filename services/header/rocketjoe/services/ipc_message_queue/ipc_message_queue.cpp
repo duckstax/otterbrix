@@ -10,7 +10,7 @@ namespace rocketjoe { namespace network {
                 goblin_engineer::dynamic_config & cfg
         )
         : network_manager_service(env, "timer_manager",1)
-        , ipc_mq_(loop(),__ipc_message_queue_name__) {
+        , ipc_mq_(loop(),cfg.as_object()["ipc_message_queue_id"].as_string()) {
 
 
 

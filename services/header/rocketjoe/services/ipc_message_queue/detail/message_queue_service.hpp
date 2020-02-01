@@ -18,7 +18,7 @@ namespace services {
 
         using key_type = message_queue_service<Implementation>;
 
-        using  impl_type = Implementation*;
+        using  impl_type = std::shared_ptr<Implementation>;
 
         message_queue_service(boost::asio::execution_context &context)
                 : boost::asio::execution_context::service(context),
@@ -38,20 +38,27 @@ namespace services {
 
 
         impl_type null() const {
-            return 0;
+            return nullptr;
         }
 
 
         void create(impl_type &impl, const std::string &identifier) {
-            impl = new impl_type();
-            impl->open(identifier, O_CREAT | O_RDWR);
+            impl.reset(new Implementation());
+            boost::system::error_code ec;
+            impl->open(identifier, O_CREAT | O_RDWR,ec);
         }
 
 
         void destroy(impl_type &impl) {
-            impl->close();
-            delete impl;
-            impl = null();
+            impl->destroy();
+            impl.reset();
+            //delete impl;
+            ///impl = null();
+        }
+
+
+        void max_msg_size(impl_type &impl,std::size_t& size ){
+            size = impl->max_msg_size();
         }
 
 
