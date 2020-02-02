@@ -121,7 +121,7 @@ namespace rocketjoe { namespace network {
             return counter_timer_++;
         }
 
-        std::atomic_uint64_t counter_timer_;
+        std::atomic<std::uint64_t> counter_timer_;
         timer_manager_storage timer_manager_storage_;
 
     };
