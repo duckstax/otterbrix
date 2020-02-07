@@ -1,10 +1,10 @@
 set(CURRENT_TARGET  ipc_message_queue)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        detail/basic_message_queue.hpp
-        detail/message_queue_service.hpp
-        detail/message_queue.hpp
-        ipc_message_queue.hpp
+        detail/service/basic_message_queue.hpp
+        detail/service/message_queue_service.hpp
+        detail/service/message_queue.hpp
+        detail/posix_message_queue_impl.hpp
 
 )
 
