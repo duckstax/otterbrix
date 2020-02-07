@@ -83,9 +83,9 @@ namespace services {
                 if (impl) {
                     boost::system::error_code ec;
                     size_t bytes = impl->receive(buffer, buffer_size, ec);
-                    boost::asio::post(work_.get_executor(),boost::asio::detail::bind_handler(handler, ec, bytes));
+                    handler(ec,bytes);
                 } else {
-                    boost::asio::post(work_.get_executor(),boost::asio::detail::bind_handler(handler, boost::asio::error::operation_aborted, -1));
+                    handler(boost::asio::error::operation_aborted,0);
                 }
             };
 
