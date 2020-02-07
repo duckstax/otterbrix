@@ -10,7 +10,8 @@
 #    endif()
 #endforeach()
 
+#add_subdirectory(header/rocketjoe/services/ipc_message_queue)
+#add_subdirectory(header/rocketjoe/services/timer_manager)
 add_subdirectory(header/rocketjoe/services/http_server)
-#add_subdirectory(header/rocketjoe/services/lua_engine)
 add_subdirectory(header/rocketjoe/services/python_sandbox)
 add_subdirectory(header/rocketjoe/services/router)

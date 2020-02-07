@@ -10,7 +10,19 @@
 
 #else
 
+#include <signal.h>
 #include <boost/stacktrace.hpp>
+
+void my_signal_handler(int signum) {
+    ::signal(signum, SIG_DFL);
+    boost::stacktrace::safe_dump_to("./backtrace.dump");
+    ::raise(SIGABRT);
+}
+
+void setup_handlers() {
+    ::signal(SIGSEGV, &my_signal_handler);
+    ::signal(SIGABRT, &my_signal_handler);
+}
 
 void terminate_handler() {
     std::cerr << "terminate called:"
@@ -19,28 +31,15 @@ void terminate_handler() {
               << std::endl;
 }
 
-void signal_sigsegv(int signum){
-    boost::stacktrace::stacktrace bt ;
-    if(bt){
-        std::cerr << "Signal"
-                  << signum
-                  << " , backtrace:"
-                  << std::endl
-                  << boost::stacktrace::stacktrace()
-                  << std::endl;
-    }
-    std::abort();
-}
-
 #endif
 
 
-int main(int argc, char **argv) {
+int main(int argc, char *argv[]) {
 
 #ifdef __APPLE__
 
 #else
-    ::signal(SIGSEGV,&signal_sigsegv);
+    setup_handlers();
 
     std::set_terminate(terminate_handler);
 #endif
@@ -51,14 +50,18 @@ int main(int argc, char **argv) {
 
     options.add_options()
             ("help", "Print help")
-            ("data-dir", "data-dir",cxxopts::value<std::string>()->default_value("."))
-            ("positional", "Positional parameters",cxxopts::value<std::vector<std::string>>(positional))
-            ;
-
+            ("worker_mode", "Worker Process Mode")
+            ("jupyter_mode", "Jupyter kernel mode")
+            ("data-dir", "data-dir", cxxopts::value<std::string>()->default_value("."))
+            ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional));
 
     std::vector<std::string> pos_names = {"positional"};
 
     options.parse_positional(pos_names.begin(), pos_names.end());
+
+    options.allow_unrecognised_options();
+
+    std::vector<std::string> all_args(argv, argv + argc);
 
     auto result = options.parse(argc, argv);
 
@@ -69,46 +72,34 @@ int main(int argc, char **argv) {
 
         std::cout << options.help({}) << std::endl;
 
-       return 0;
+        return 0;
     }
 
     goblin_engineer::dynamic_config config;
 
-    load_or_generate_config(result,config);
+    load_or_generate_config(result, config);
 
-    std::string path_app;
+    config.as_object()["master"] = true;
 
-    if ( !positional.empty() ) {
+    if (result.count("worker_mode")) {
 
-        path_app = positional[0];
+        std::cerr << "Worker Mode" << std::endl;
 
-    } else if( config.as_object().find("app") != config.as_object().end() ) {
-
-        path_app = config.as_object()["app"].as_string();
-
-    } else {
-
-        std::cerr << "Not APP" << std::endl;
-
-        return 1;
+        config.as_object()["master"] = false;
     }
 
-    boost::filesystem::path path_app_ = boost::filesystem::absolute(path_app);
+    if (result.count("jupyter_mode")) {
 
-    if( !boost::filesystem::exists(path_app_) ){
-
-        std::cerr << "Not Path APP" << std::endl;
-
-        return 1;
+        std::cerr << "Jupyter Mode" << std::endl;
     }
 
-    config.as_object()["app"] = path_app_.string();
+    config.as_object()["args"] = all_args;
 
     goblin_engineer::dynamic_config config_tmp = config;
 
     goblin_engineer::root_manager env(std::move(config));
 
-    init_service(env,config_tmp);
+    init_service(env, config_tmp);
 
     env.initialize();
 
