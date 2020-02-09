@@ -1,4 +1,4 @@
-#include "rocketjoe/services/jupyter/interpreter.hpp"
+#include <rocketjoe/services/jupyter/interpreter.hpp>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -1001,8 +1001,6 @@ namespace rocketjoe {
           }}
         , identifier{boost::uuids::random_generator()()}
         , parent_header(nl::json::object()) {
-        py::gil_scoped_acquire acquire{};
-
         shell = py::module::import("rocketjoe.pykernel").attr("RocketJoeShell")(
             "_init_location_id"_a = "shell.py:1"
         );
@@ -1049,8 +1047,6 @@ namespace rocketjoe {
     }
 
     interpreter_impl::~interpreter_impl() {
-        py::gil_scoped_acquire acquire{};
-
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout") = pystdout;
@@ -1161,6 +1157,7 @@ namespace rocketjoe {
 
         if(result.attr("success").cast<bool>()) {
             execute_reply["status"] = "ok";
+            execute_reply["user_expressions"] = nl::json::object();
             //execute_reply["user_expressions"] = shell
             //    .attr("user_expressions")(user_expressions);
         } else {
@@ -1389,6 +1386,7 @@ namespace rocketjoe {
         auto sys{py::module::import("sys")};
 
         return {{"protocol_version", "5.3"},
+                {"implementation", "ipython"},
                 {"implementation_version", "ipython"},
                 {"language_info", {
                     {"name", "python"},
@@ -1447,9 +1445,6 @@ namespace rocketjoe {
     auto interpreter_impl::dispatch_shell(
         std::vector<std::string> msgs
     ) -> void {
-        py::gil_scoped_acquire acquire{};
-        publish_status("busy", {});
-
         std::vector<std::string> identifiers{};
         nl::json header{};
         nl::json parent_header{};
@@ -1468,6 +1463,7 @@ namespace rocketjoe {
                         {"content", std::move(content)}};
 
         set_parent(identifiers, parent);
+        publish_status("busy", {});
 
         if(msg_type == "execute_request") {
             execute_request(shell_socket, std::move(identifiers),
@@ -1496,9 +1492,6 @@ namespace rocketjoe {
     auto interpreter_impl::dispatch_control(
         std::vector<std::string> msgs
     ) -> bool {
-        py::gil_scoped_acquire acquire{};
-        publish_status("busy", {});
-
         std::vector<std::string> identifiers{};
         nl::json header{};
         nl::json parent_header{};
@@ -1517,6 +1510,7 @@ namespace rocketjoe {
                         {"content", std::move(content)}};
 
         set_parent(identifiers, parent);
+        publish_status("busy", {});
 
         auto resume{true};
 

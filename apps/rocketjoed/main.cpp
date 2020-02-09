@@ -1,6 +1,11 @@
 #include <cxxopts.hpp>
 
+#include <cstdlib>
+#include <exception>
+#include <locale>
+
 #include <boost/filesystem.hpp>
+#include <boost/locale/generator.hpp>
 
 #include "configuration.hpp"
 
@@ -15,7 +20,10 @@
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
-    boost::stacktrace::safe_dump_to("./backtrace.dump");
+    std::cerr << "signal called:"
+              << std::endl
+              << boost::stacktrace::stacktrace()
+              << std::endl;
     ::raise(SIGABRT);
 }
 
@@ -24,11 +32,15 @@ void setup_handlers() {
     ::signal(SIGABRT, &my_signal_handler);
 }
 
+static auto original_terminate_handler{std::get_terminate()};
+
 void terminate_handler() {
     std::cerr << "terminate called:"
               << std::endl
               << boost::stacktrace::stacktrace()
               << std::endl;
+    original_terminate_handler();
+    std::abort();
 }
 
 #endif
@@ -43,6 +55,8 @@ int main(int argc, char *argv[]) {
 
     std::set_terminate(terminate_handler);
 #endif
+
+    std::locale::global(boost::locale::generator{}(""));
 
     cxxopts::Options options("defaults", "");
 

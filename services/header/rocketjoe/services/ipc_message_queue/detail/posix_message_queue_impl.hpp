@@ -18,7 +18,7 @@ namespace ipc {
             }
         }
 
-        void open(const std::string& name, int flags, boost::system::error_code &ec) {
+        mqd_t open(const std::string& name, int flags, boost::system::error_code &ec) {
             name_ = name;
             if (flags & O_CREAT) {
                 d_ = mq_open(name.c_str(), O_CREAT | O_RDWR,S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, 0);
@@ -27,6 +27,7 @@ namespace ipc {
                 d_ = mq_open(name.c_str(), flags);
             }
             ec = check_error(d_);
+            return d_;
         }
 
         void send(const void *buffer, size_type buffer_size, unsigned int priority, boost::system::error_code &ec) {
