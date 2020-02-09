@@ -1,13 +1,10 @@
-set(CURRENT_TARGET rocketjoed)
+set(CURRENT_TARGET debug_worker)
 
 set(${CURRENT_TARGET}_headers
-        configuration.hpp
-        init_service.hpp
+
 )
 
 set(${CURRENT_TARGET}_sources
-        configuration.cpp
-        init_service.cpp
         main.cpp
 )
 
