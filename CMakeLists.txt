@@ -62,6 +62,8 @@ endif(CCACHE_FOUND)
 #ccahe
 #############################################################################################
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+
 add_subdirectory(network)
 add_subdirectory(services)
 add_subdirectory(apps)
