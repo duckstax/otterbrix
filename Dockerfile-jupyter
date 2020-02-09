@@ -27,7 +27,10 @@ WORKDIR ./build
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
     cmake --build . && \
-    jupyter kernelspec install --user kernels/ipython
+    jupyter kernelspec install --user kernels/ipython && \
+    mkdir -p ~/rocketjoe
+
+WORKDIR ~/rocketjoe
 
 CMD jupyter notebook --no-browser --allow-root \
         --NotebookApp.allow_remote_access=True --NotebookApp.ip=0.0.0.0

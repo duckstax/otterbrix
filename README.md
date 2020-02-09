@@ -57,3 +57,25 @@ cmake --build .
 ./rocketjoe 
  
 ```
+
+## Setup RocketJoe Kernel for Jupyter Notebook in Docker
+
+### Requirements
+* Docker (18.09.5 tested)
+* Docker Compose (1.24.1 tested)
+
+### Build and start
+1. Clone repository:
+```bash
+git clone https://github.com/jinncrafters/RocketJoe.git
+cd RocketJoe
+```
+
+2. Run RocketJoe Kernel and Jupyter Notebook
+```bash
+docker-compose -f docker-compose-jupyter.yaml up
+```
+
+3. Open the browser at http://localhost:8888/?token=your_token, where your_token
+is the access token for the Jupyter Notebook, which will be displayed in the
+logs when the container starts.
