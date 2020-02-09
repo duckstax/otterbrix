@@ -24,7 +24,8 @@ namespace services {
                 : boost::asio::execution_context::service(context),
                   work_io_context_(),
                   work_(boost::asio::make_work_guard(work_io_context_)),
-                  work_thread_(new boost::thread(boost::bind(&boost::asio::io_context::run, &work_io_context_))) {
+                  work_thread_(new boost::thread(boost::bind(&boost::asio::io_context::run, &work_io_context_))),
+                  stream_descriptor_(work_io_context_){
         }
 
 
@@ -45,7 +46,10 @@ namespace services {
         void create(impl_type &impl, const std::string &identifier) {
             impl.reset(new Implementation());
             boost::system::error_code ec;
-            impl->open(identifier, O_CREAT | O_RDWR,ec);
+            auto id = impl->open(identifier, O_CREAT | O_RDWR,ec);
+            if(!ec) {
+                stream_descriptor_.assign(id);
+            }
         }
 
 
@@ -79,7 +83,7 @@ namespace services {
 
         template<typename Handler>
         void async_receive(impl_type &impl, void *buffer, int buffer_size, Handler handler) {
-            auto opaque = [=]() mutable {
+            auto opaque = [=](boost::system::error_code,std::size_t) {
                 if (impl) {
                     boost::system::error_code ec;
                     size_t bytes = impl->receive(buffer, buffer_size, ec);
@@ -89,16 +93,35 @@ namespace services {
                 }
             };
 
-            boost::asio::post(work_io_context_,opaque);
+            stream_descriptor_.async_read_some(
+                    boost::asio::null_buffers(),
+                    opaque
+            );
+
         }
 
     private:
+/*
+        void handleRead(boost::system::error_code ec){
+            u_int pri;
+            message msg;
+            ssize_t receiveRet = mq_receive(mqid, (char *) &msg, sizeof(msg), &pri);
+            cout << "receiveRet = " << receiveRet << endl;
 
+            stream_descriptor_.async_read_some(
+                    boost::asio::null_buffers(),
+                    boost::bind(&message_queue_service::handleRead,
+                                this,
+                                boost::asio::placeholders::error));
+        }
+*/
         boost::asio::io_context work_io_context_;
 
         boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work_;
 
         boost::scoped_ptr<boost::thread> work_thread_;
+
+        boost::asio::posix::stream_descriptor stream_descriptor_;
 
     };
 

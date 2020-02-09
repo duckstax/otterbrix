@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../../detail/message_queue.hpp"
+#include "../../detail/service/message_queue.hpp"
 
 static std::string in_data;
 
