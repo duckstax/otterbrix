@@ -62,6 +62,7 @@ endif(CCACHE_FOUND)
 #ccahe
 #############################################################################################
 
+# stack track
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 
 add_subdirectory(network)
