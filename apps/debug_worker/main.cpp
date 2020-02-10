@@ -1,5 +1,9 @@
 #include <string>
 #include <iostream>
+#include <fstream>
+#include <chrono>
+#include <ctime>
+#include <vector>
 
 void logo() {
 
@@ -29,7 +33,30 @@ void logo() {
 
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     logo();
+
+    std::ofstream myfile;
+
+    myfile.open ("example.txt");
+
+    auto start = std::chrono::system_clock::now();
+    auto end = std::chrono::system_clock::now();
+
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+    myfile  << "finished computation at " << std::ctime(&end_time)
+            << "elapsed time: " << elapsed_seconds.count() << "s\n";
+
+    std::vector<std::string> all_args(argv, argv + argc);
+
+    for(const auto&i:all_args ){
+        myfile  << i << std::endl;
+    }
+
+    myfile.close();
+
+    return 0;
 
 }
