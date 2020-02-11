@@ -5,13 +5,14 @@
 #include <ctime>
 #include <vector>
 
-void logo() {
+template <class T>
+void logo(T&stream) {
 
-    std::cout << std::endl;
+    stream << std::endl;
 
-    std::cout << "-------------------------------------------------";
+    stream << "-------------------------------------------------";
 
-    std::cout << "\n"
+    stream << "\n"
                  "\n"
                  "       __     __                                       __   \n"
                  "  ____/ /__  / /_  __  ______ _   ____ ___  ____  ____/ /__ \n"
@@ -24,18 +25,16 @@ void logo() {
                  "";
 
 
-    std::cout << "-------------------------------------------------";
+    stream << "-------------------------------------------------";
 
-    std::cout << std::endl;
-    std::cout << std::endl;
+    stream << std::endl;
+    stream << std::endl;
 
-    std::cout.flush();
+    ////std::cout.flush();
 
 }
 
 int main(int argc, char *argv[]) {
-    logo();
-
     std::ofstream myfile;
 
     myfile.open ("example.txt");
@@ -45,7 +44,7 @@ int main(int argc, char *argv[]) {
 
     std::chrono::duration<double> elapsed_seconds = end-start;
     std::time_t end_time = std::chrono::system_clock::to_time_t(end);
-
+    logo(myfile);
     myfile  << "finished computation at " << std::ctime(&end_time)
             << "elapsed time: " << elapsed_seconds.count() << "s\n";
 

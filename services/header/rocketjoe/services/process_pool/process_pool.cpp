@@ -8,8 +8,7 @@ namespace rocketjoe { namespace services {
         }
 
         void process_pool_t::add_worker_process() {
-            auto path = boost::filesystem::path("/home/kotbegemot/CLionProjects/RocketJoe/cmake-build-debug/apps/debug_worker");
-            boost::process::spawn(path, g_);
+            boost::process::spawn("debug_worker","-f", g_);
         }
 
         process_pool_t::~process_pool_t() {
