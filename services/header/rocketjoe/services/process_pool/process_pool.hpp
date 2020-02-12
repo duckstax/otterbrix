@@ -11,6 +11,8 @@ namespace rocketjoe { namespace services {
 
             ~process_pool_t() override;
 
+            void created_workers(std::size_t);
+
             void add_worker_process();
 
         private:

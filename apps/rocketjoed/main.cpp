@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     options.add_options()
             ("help", "Print help")
             ("worker_mode", "Worker Process Mode")
-            ("workers", "Count Worker")
+            ("workers", "Count Worker")///,cxxopts::value<int>()->default_value(0))
             ("jupyter_mode", "Jupyter kernel mode")
             ("data-dir", "data-dir", cxxopts::value<std::string>()->default_value("."))
             ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional));
