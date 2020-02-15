@@ -42,8 +42,9 @@ target_link_libraries(
         rocketjoe::network
         rocketjoe::http_server
         rocketjoe::jupyter
+        rocketjoe::log
         goblin-engineer
-        PRIVATE pybind11::embed
+        pybind11::embed
 )
 
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")

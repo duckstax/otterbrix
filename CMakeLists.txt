@@ -1,9 +1,9 @@
+#############################################################################################
+# configuration
+
 cmake_minimum_required(VERSION 3.12)
 
 set(project RocketJoe)
-
-#############################################################################################
-# configuration
 
 cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 0)
