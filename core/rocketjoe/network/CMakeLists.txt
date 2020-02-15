@@ -1,7 +1,7 @@
 set(CURRENT_TARGET network)
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        header/rocketjoe/network/network.hpp
+        network.hpp
 )
 
 list(APPEND CURRENT_${TARGET_HEADERS}
@@ -28,7 +28,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
-        "${CMAKE_CURRENT_SOURCE_DIR}/header/"
+        "../../../"
 )
 
 install(TARGETS

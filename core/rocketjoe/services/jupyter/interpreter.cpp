@@ -406,8 +406,8 @@ namespace rocketjoe {
     ) -> std::vector<std::string> {
         nl::json parent_header = nl::json::object();
 
-        if(parent.contains("header")) {
-            parent_header = std::move(parent["header"]);
+        if(parent.contains("core")) {
+            parent_header = std::move(parent["core"]);
         }
 
         if(!header.contains("version")) {
@@ -1457,7 +1457,7 @@ namespace rocketjoe {
         }
 
         std::string msg_type{header["msg_type"]};
-        nl::json parent{{"header", std::move(header)},
+        nl::json parent{{"core", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
                         {"content", std::move(content)}};
@@ -1504,7 +1504,7 @@ namespace rocketjoe {
         }
 
         std::string msg_type{header["msg_type"]};
-        nl::json parent{{"header", std::move(header)},
+        nl::json parent{{"core", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
                         {"content", std::move(content)}};
