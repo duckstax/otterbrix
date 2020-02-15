@@ -22,13 +22,36 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISA
 option(DEV_MODE "developer mode" OFF)
 
 if (DEV_MODE)
-    add_compile_options(
-            -v
-            -Wall
-            -Wextra
-    )
+    if(NOT WIN32)
+        add_compile_options(
+                -v
+
+                -Wall
+                -Wextra
+                -Wpedantic
+
+                -Wcast-align
+                #-Wcast-qual
+                #-Wconversion
+                -Wctor-dtor-privacy
+                -Wenum-compare
+                #-Wfloat-equal
+                -Wnon-virtual-dtor
+                #-Wold-style-cast
+                -Woverloaded-virtual
+                -Wredundant-decls
+                #-Wsign-conversion
+                -Wsign-promo
+        )
+    endif()
 endif ()
 
+#############################################################################################
+#clang tool
+
+include(cmake/clang_tools.cmake)
+
+#clang tool
 #############################################################################################
 #conan
 
