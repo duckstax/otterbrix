@@ -8,7 +8,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-#include <rocketjoe/services/python_sandbox/detail/forward.hpp>
+#include <rocketjoe/python_sandbox/detail/forward.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 

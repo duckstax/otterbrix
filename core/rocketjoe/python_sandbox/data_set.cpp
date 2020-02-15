@@ -1,5 +1,5 @@
-#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
-#include <rocketjoe/services/python_sandbox/detail/context.hpp>
+#include <rocketjoe/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/context.hpp>
 
 #include <nlohmann/json.hpp>
 

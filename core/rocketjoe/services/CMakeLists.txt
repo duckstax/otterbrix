@@ -1,6 +1,0 @@
-add_subdirectory(ipc_message_queue)
-#add_subdirectory(core/rocketjoe/services/timer_manager)
-add_subdirectory(http_server)
-add_subdirectory(jupyter)
-add_subdirectory(python_sandbox)
-add_subdirectory(router)

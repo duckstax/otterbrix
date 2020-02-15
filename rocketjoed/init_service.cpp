@@ -1,8 +1,8 @@
 #include "init_service.hpp"
 
-#include <rocketjoe/services/python_sandbox/python_sandbox.hpp>
-#include <rocketjoe/services/router/service_router.hpp>
-#include <rocketjoe/services/http_server/server.hpp>
+#include <rocketjoe/python_sandbox/python_sandbox.hpp>
+#include <rocketjoe/router/service_router.hpp>
+#include <rocketjoe/http_server/server.hpp>
 
 void init_service(goblin_engineer::root_manager& env,goblin_engineer::dynamic_config&cfg) {
 

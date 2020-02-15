@@ -9,9 +9,9 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-#include <rocketjoe/services/http_server/server.hpp>
-#include <rocketjoe/services/jupyter/interpreter.hpp>
-#include <rocketjoe/services/python_sandbox/detail/forward.hpp>
+#include <rocketjoe/http_server/server.hpp>
+#include <rocketjoe/jupyter/interpreter.hpp>
+#include <rocketjoe/python_sandbox/detail/forward.hpp>
 
 namespace rocketjoe { namespace services {
     namespace py = pybind11;

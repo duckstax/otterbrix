@@ -9,7 +9,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
-#include <rocketjoe/services/python_sandbox/detail/forward.hpp>
+#include <rocketjoe/python_sandbox/detail/forward.hpp>
 #include <nlohmann/json.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {

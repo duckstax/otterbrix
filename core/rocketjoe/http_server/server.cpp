@@ -8,8 +8,8 @@
 #include <iostream>
 
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/services/http_server/server.hpp>
-#include <rocketjoe/services/http_server/http_session.hpp>
+#include <rocketjoe/http_server/server.hpp>
+#include <rocketjoe/http_server/http_session.hpp>
 
 
 namespace rocketjoe { namespace network {

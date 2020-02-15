@@ -1,4 +1,4 @@
-#include <rocketjoe/services/python_sandbox/detail/celery.hpp>
+#include <rocketjoe/python_sandbox/detail/celery.hpp>
 
 #include <utility>
 

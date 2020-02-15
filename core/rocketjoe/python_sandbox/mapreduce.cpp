@@ -1,11 +1,11 @@
-#include <rocketjoe/services/python_sandbox/detail/mapreduce.hpp>
+#include <rocketjoe/python_sandbox/detail/mapreduce.hpp>
 
 #include <deque>
 
-#include <rocketjoe/services/python_sandbox/detail/context_manager.hpp>
-#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
-#include <rocketjoe/services/python_sandbox/detail/context.hpp>
-#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/context_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/file_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/context.hpp>
+#include <rocketjoe/python_sandbox/detail/data_set.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 

@@ -1,12 +1,12 @@
-#include <rocketjoe/services/python_sandbox/detail/context.hpp>
+#include <rocketjoe/python_sandbox/detail/context.hpp>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
-#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
-#include <rocketjoe/services/python_sandbox/detail/context.hpp>
-#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/context.hpp>
+#include <rocketjoe/python_sandbox/detail/file_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 

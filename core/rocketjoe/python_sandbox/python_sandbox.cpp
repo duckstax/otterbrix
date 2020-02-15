@@ -1,4 +1,4 @@
-#include <rocketjoe/services/python_sandbox/python_sandbox.hpp>
+#include <rocketjoe/python_sandbox/python_sandbox.hpp>
 
 #include <exception>
 #include <fstream>
@@ -15,12 +15,12 @@
 #include <goblin-engineer.hpp>
 
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/services/python_sandbox/detail/context_manager.hpp>
-#include <rocketjoe/services/python_sandbox/detail/context.hpp>
-#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
-#include <rocketjoe/services/python_sandbox/detail/celery.hpp>
-#include <rocketjoe/services/python_sandbox/detail/file_system.hpp>
-#include <rocketjoe/services/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/context_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/context.hpp>
+#include <rocketjoe/python_sandbox/detail/file_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/celery.hpp>
+#include <rocketjoe/python_sandbox/detail/file_system.hpp>
+#include <rocketjoe/python_sandbox/detail/data_set.hpp>
 
 namespace rocketjoe { namespace services {
     namespace po = boost::program_options;

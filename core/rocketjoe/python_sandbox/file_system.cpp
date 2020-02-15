@@ -1,8 +1,8 @@
-#include <rocketjoe/services/python_sandbox/detail/file_system.hpp>
+#include <rocketjoe/python_sandbox/detail/file_system.hpp>
 
 #include <pybind11/stl.h>
 
-#include <rocketjoe/services/python_sandbox/detail/file_manager.hpp>
+#include <rocketjoe/python_sandbox/detail/file_manager.hpp>
 
 namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
 

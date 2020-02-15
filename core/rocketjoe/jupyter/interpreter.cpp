@@ -1,4 +1,4 @@
-#include <rocketjoe/services/jupyter/interpreter.hpp>
+#include <rocketjoe/jupyter/interpreter.hpp>
 
 #include <unistd.h>
 #include <pwd.h>
