@@ -8,16 +8,16 @@
 
 namespace rocketjoe {
 
-    class log final {
+    class log_t final {
     public:
 
-        log() = default;
+        log_t() = default;
 
-        log(std::shared_ptr<spdlog::async_logger> logger);
+        log_t(std::shared_ptr<spdlog::async_logger> logger);
 
-        ~log() = default;
+        ~log_t() = default;
 
-        auto clone() noexcept -> log;
+        auto clone() noexcept -> log_t;
 
         auto context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> void;
 
