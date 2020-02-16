@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#include <rocketjoe/services/router/router.hpp>
+#include <rocketjoe/router/router.hpp>
 
 int main() {
 
