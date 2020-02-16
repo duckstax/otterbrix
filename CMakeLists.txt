@@ -27,7 +27,7 @@ option(DEV_MODE "developer mode" OFF)
 
 if (DEV_MODE)
     add_compile_options(
-            -v
+           # -v
             -Wall
             -Wextra
     )
