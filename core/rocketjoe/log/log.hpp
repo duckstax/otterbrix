@@ -13,7 +13,9 @@ namespace rocketjoe {
 
         log_t() = default;
 
-        log_t(std::shared_ptr<spdlog::async_logger> logger);
+        log_t(std::shared_ptr<spdlog::async_logger>);
+
+        log_t(std::shared_ptr<spdlog::logger>);
 
         ~log_t() = default;
 
@@ -52,6 +54,13 @@ namespace rocketjoe {
         }
 
     private:
-        std::shared_ptr<spdlog::async_logger> logger_;
+        std::shared_ptr<spdlog::logger> logger_;
     };
+
+
+    auto get_logger(const std::string&) -> log_t;
+    auto get_logger() -> log_t;
+    auto initialization_logger(std::shared_ptr<spdlog::logger>) -> void;
+    auto initialization_logger() -> void;
+
 }

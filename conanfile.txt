@@ -16,7 +16,6 @@ goblin-engineer/1.0.0a2@jinncrafters/stable
 cxxopts/2.2.0@jinncrafters/stable
 
 [options]
-#openssl:shared = True
 OpenSSL:shared = True
 
 [generators]
