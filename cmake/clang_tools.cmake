@@ -7,7 +7,7 @@ if (CLANG_TIDY)
             COMMAND ${CLANG_TIDY}
             ${ALL_SOURCE_FILES}
             --
-            -std=c++11
+            -std=c++14
             ${INCLUDE_DIRECTORIES}
     )
 endif ()

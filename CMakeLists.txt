@@ -24,8 +24,6 @@ option(DEV_MODE "developer mode" OFF)
 if (DEV_MODE)
     if(NOT WIN32)
         add_compile_options(
-                -v
-
                 -Wall
                 -Wextra
                 -Wpedantic
