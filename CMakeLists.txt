@@ -61,7 +61,7 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 #conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
-
+set(CONAN_SYSTEM_INCLUDES "On")
 conan_cmake_run(
         CONANFILE conanfile.txt
         BASIC_SETUP
