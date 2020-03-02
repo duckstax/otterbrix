@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+
 #include <zmq.hpp>
 
 namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
@@ -65,7 +67,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
     class interpreter_impl;
 
-    class interpreter final {
+    class interpreter final : public boost::intrusive_ref_counter<interpreter> {
     public:
         interpreter(std::string session_key, std::string signature_scheme,
                     zmq::socket_t shell_socket, zmq::socket_t control_socket,

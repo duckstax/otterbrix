@@ -4,6 +4,7 @@
 #include <thread>
 
 #include <boost/filesystem.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <pybind11/embed.h>
 
@@ -42,9 +43,11 @@ namespace rocketjoe { namespace services {
         std::unique_ptr<python_sandbox::detail::file_manager> file_manager_;
         std::unique_ptr<python_sandbox::detail::context_manager> context_manager_;
         std::unique_ptr<zmq::context_t> zmq_context;
-        std::vector<zmq::pollitem_t> jupyter_kernel_polls;
-        std::unique_ptr<interpreter> jupyter_kernel;
-        std::unique_ptr<std::thread> exuctor;  ///TODO: HACK
+        std::vector<zmq::pollitem_t> jupyter_kernel_commands_polls;
+        std::vector<zmq::pollitem_t> jupyter_kernel_infos_polls;
+        boost::intrusive_ptr<interpreter> jupyter_kernel;
+        std::unique_ptr<std::thread> commands_exuctor;  ///TODO: HACK
+        std::unique_ptr<std::thread> infos_exuctor;  ///TODO: HACK
     };
 
 }}

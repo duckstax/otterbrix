@@ -21,7 +21,6 @@
 #include <boost/locale/format.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -335,7 +334,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
                                std::vector<std::string> identifiers,
                                nl::json parent) -> void;
 
-        auto dispatch_shell(std::vector<std::string> msgs) -> void;
+        auto dispatch_shell(std::vector<std::string> msgs) -> bool;
 
         auto dispatch_control(std::vector<std::string> msgs) -> bool;
 
@@ -1053,50 +1052,13 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
     }
 
     auto interpreter_impl::poll(poll_flags polls) -> bool {
-        auto resume{true};
-
-        if((polls & poll_flags::shell_socket) == poll_flags::shell_socket) {
-            std::vector<zmq::message_t> msgs{};
-
-            if(zmq::recv_multipart(shell_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
-                std::vector<std::string> msgs_for_parse{};
-
-                msgs_for_parse.reserve(msgs.size());
-
-                for(const auto &msg : msgs) {
-                    std::cerr << "Shell: " << msg << std::endl;
-                    msgs_for_parse.push_back(std::move(msg.to_string()));
-                }
-
-                dispatch_shell(std::move(msgs_for_parse));
-            }
-        }
-
-        if((polls & poll_flags::control_socket) == poll_flags::control_socket) {
-            std::vector<zmq::message_t> msgs{};
-
-            if(zmq::recv_multipart(control_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
-                std::vector<std::string> msgs_for_parse{};
-
-                msgs_for_parse.reserve(msgs.size());
-
-                for(const auto &msg : msgs) {
-                    std::cerr << "Control: " << msg << std::endl;
-                    msgs_for_parse.push_back(std::move(msg.to_string()));
-                }
-
-                resume = dispatch_control(std::move(msgs_for_parse));
-            }
-        }
-
         if((polls & poll_flags::heartbeat_socket) ==
             poll_flags::heartbeat_socket) {
             std::vector<zmq::message_t> msgs{};
 
-            if(zmq::recv_multipart(heartbeat_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
+            while(zmq::recv_multipart(heartbeat_socket,
+                                      std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
                 for(const auto &msg : msgs) {
                     std::cerr << "Heartbeat: " << msg << std::endl;
                 }
@@ -1106,7 +1068,47 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
             }
         }
 
-        return resume;
+        if((polls & poll_flags::control_socket) == poll_flags::control_socket) {
+            std::vector<zmq::message_t> msgs{};
+
+            while(zmq::recv_multipart(control_socket, std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
+                std::vector<std::string> msgs_for_parse{};
+
+                msgs_for_parse.reserve(msgs.size());
+
+                for(const auto &msg : msgs) {
+                    std::cerr << "Control: " << msg << std::endl;
+                    msgs_for_parse.push_back(std::move(msg.to_string()));
+                }
+
+                if(!dispatch_control(std::move(msgs_for_parse))) {
+                    return false;
+                }
+            }
+        }
+
+        if((polls & poll_flags::shell_socket) == poll_flags::shell_socket) {
+            std::vector<zmq::message_t> msgs{};
+
+            while(zmq::recv_multipart(shell_socket, std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
+                std::vector<std::string> msgs_for_parse{};
+
+                msgs_for_parse.reserve(msgs.size());
+
+                for(const auto &msg : msgs) {
+                    std::cerr << "Shell: " << msg << std::endl;
+                    msgs_for_parse.push_back(std::move(msg.to_string()));
+                }
+
+                if(!dispatch_shell(std::move(msgs_for_parse))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     auto interpreter_impl::topic(std::string topic) const -> std::string {
@@ -1443,7 +1445,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
     auto interpreter_impl::dispatch_shell(
         std::vector<std::string> msgs
-    ) -> void {
+    ) -> bool {
         std::vector<std::string> identifiers{};
         nl::json header{};
         nl::json parent_header{};
@@ -1452,7 +1454,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         if(!current_session->parse_message(std::move(msgs), identifiers, header,
                                            parent_header, metadata, content)) {
-            return;
+            return true;
         }
 
         std::string msg_type{header["msg_type"]};
@@ -1463,6 +1465,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         set_parent(identifiers, parent);
         publish_status("busy", {});
+
+        auto resume{true};
 
         if(msg_type == "execute_request") {
             execute_request(shell_socket, std::move(identifiers),
@@ -1479,6 +1483,14 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         } else if(msg_type == "kernel_info_request") {
             kernel_info_request(shell_socket, std::move(identifiers),
                                 std::move(parent));
+        } if(msg_type == "shutdown_request") {
+            shutdown_request(control_socket, std::move(identifiers),
+                             std::move(parent));
+            resume = false;
+        } else if(msg_type == "interrupt_request") {
+            interrupt_request(control_socket, std::move(identifiers),
+                              std::move(parent));
+            resume = false;
         }
 
         auto sys{py::module::import("sys")};
@@ -1486,6 +1498,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
         publish_status("idle", {});
+
+        return resume;
     }
 
     auto interpreter_impl::dispatch_control(
