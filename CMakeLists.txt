@@ -25,26 +25,52 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 
 option(DEV_MODE "developer mode" OFF)
 
+option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
+
 if (DEV_MODE)
-    add_compile_options(
-           # -v
-            -Wall
-            -Wextra
-    )
+    if(NOT WIN32)
+        add_compile_options(
+                -Wall
+                -Wextra
+                -Wpedantic
+
+                -Wcast-align
+                #-Wcast-qual
+                #-Wconversion
+                -Wctor-dtor-privacy
+                -Wenum-compare
+                #-Wfloat-equal
+                -Wnon-virtual-dtor
+                #-Wold-style-cast
+                -Woverloaded-virtual
+                -Wredundant-decls
+                #-Wsign-conversion
+                -Wsign-promo
+        )
+    endif()
 endif ()
 
 # configuration
 #############################################################################################
-# conan
+#clang tool
+
+include(cmake/clang_tools.cmake)
+
+#clang tool
+#############################################################################################
+#conan
 
 if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.14/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.15/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-#conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
+if (CONAN_EXPERIMENTAL_INCLUDE)
+    conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
+    set(CONAN_SYSTEM_INCLUDES "On")
+endif ()
 
 conan_cmake_run(
         CONANFILE conanfile.txt
