@@ -7,6 +7,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/locale/generator.hpp>
 
+#include <core/rocketjoe/log/log.hpp>
+
 #include "configuration.hpp"
 
 #include "init_service.hpp"
@@ -55,6 +57,8 @@ int main(int argc, char *argv[]) {
 
     std::set_terminate(terminate_handler);
 #endif
+
+    rocketjoe::initialization_logger();
 
     std::locale::global(boost::locale::generator{}(""));
 

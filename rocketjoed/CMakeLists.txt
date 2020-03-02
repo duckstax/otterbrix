@@ -22,6 +22,7 @@ target_link_libraries(
         rocketjoe::http_server
         rocketjoe::python_sandbox
         rocketjoe::router
+        rocketjoe::log
         dl
 )
 

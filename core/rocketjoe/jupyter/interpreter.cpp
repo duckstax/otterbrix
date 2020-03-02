@@ -124,7 +124,7 @@ namespace nlohmann {
     }
 }
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace rocketjoe {
     namespace nl = nlohmann;
