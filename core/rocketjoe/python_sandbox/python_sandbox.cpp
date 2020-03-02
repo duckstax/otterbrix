@@ -26,6 +26,7 @@ namespace rocketjoe { namespace services {
     namespace po = boost::program_options;
     namespace nl = nlohmann;
     using namespace py::literals;
+    using jupyter::detail::poll_flags;
 
     python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
         : abstract_service(ptr, "python_sandbox")
@@ -208,18 +209,18 @@ namespace rocketjoe { namespace services {
                         continue;
                     }
 
-                    rocketjoe::poll_flags polls{rocketjoe::poll_flags::none};
+                    poll_flags polls{poll_flags::none};
 
                     if(jupyter_kernel_polls[0].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::shell_socket;
+                        polls |= poll_flags::shell_socket;
                     }
 
                     if(jupyter_kernel_polls[1].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::control_socket;
+                        polls |= poll_flags::control_socket;
                     }
 
                     if(jupyter_kernel_polls[2].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::heartbeat_socket;
+                        polls |= poll_flags::heartbeat_socket;
                     }
 
                     if(!jupyter_kernel->poll(polls)) {

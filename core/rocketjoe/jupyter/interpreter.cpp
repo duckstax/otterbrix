@@ -126,7 +126,7 @@ namespace nlohmann {
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace rocketjoe {
+namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
     namespace nl = nlohmann;
     namespace py = pybind11;
 
@@ -181,7 +181,7 @@ namespace rocketjoe {
     public:
         input_redirection(
             boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-            boost::intrusive_ptr<rocketjoe::session> current_session,
+            boost::intrusive_ptr<session> current_session,
             std::vector<std::string> parent_identifiers, nl::json parent_header,
             bool allow_stdin
         );
@@ -344,7 +344,7 @@ namespace rocketjoe {
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
         boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
         zmq::socket_t heartbeat_socket;
-        boost::intrusive_ptr<rocketjoe::session> current_session;
+        boost::intrusive_ptr<session> current_session;
         py::object shell;
         py::object pystdout;
         py::object pystderr;
@@ -510,7 +510,7 @@ namespace rocketjoe {
 
     static auto input_request(
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-        boost::intrusive_ptr<rocketjoe::session> current_session,
+        boost::intrusive_ptr<session> current_session,
         std::vector<std::string> parent_identifiers, nl::json parent_header,
         const std::string &prompt, bool password
     ) -> std::string {
@@ -578,7 +578,7 @@ namespace rocketjoe {
 
     input_redirection::input_redirection(
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-        boost::intrusive_ptr<rocketjoe::session> current_session,
+        boost::intrusive_ptr<session> current_session,
         std::vector<std::string> parent_identifiers, nl::json parent_header,
         bool allow_stdin
     ) {
@@ -995,10 +995,9 @@ namespace rocketjoe {
               new zmq_socket_shared{std::move(iopub_socket)}
           }}
         , heartbeat_socket{std::move(heartbeat_socket)}
-        , current_session{boost::intrusive_ptr<rocketjoe::session>{
-              new rocketjoe::session{std::move(signature_key),
-                                     std::move(signature_scheme)}
-          }}
+        , current_session{boost::intrusive_ptr<session>{new session{
+              std::move(signature_key), std::move(signature_scheme)
+          }}}
         , identifier{boost::uuids::random_generator()()}
         , parent_header(nl::json::object()) {
         shell = py::module::import("rocketjoe.pykernel").attr("RocketJoeShell")(
@@ -1552,4 +1551,4 @@ namespace rocketjoe {
     auto interpreter::poll(poll_flags polls) -> bool {
         return pimpl->poll(polls);
     }
-}
+}}}}
