@@ -31,6 +31,10 @@ target_include_directories(
         "../../../"
 )
 
+if(DEV_MODE)
+    add_subdirectory(test)
+endif()
+
 install(TARGETS
         rocketjoe_${CURRENT_TARGET}
 

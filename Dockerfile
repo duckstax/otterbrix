@@ -16,7 +16,6 @@ COPY . /app
 WORKDIR /app
 
 RUN conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
-#RUN conan remote add jinntechio https://api.bintray.com/conan/jinntechio/public-conan
 #RUN conan install . --build missing -s build_type=Release
 
 WORKDIR /app/build

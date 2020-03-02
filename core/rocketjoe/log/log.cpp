@@ -42,15 +42,15 @@ namespace rocketjoe {
         spdlog::register_logger(logger);
     }
 
-    auto rocketjoe::get_logger(const std::string &name) -> log_t {
+    auto get_logger(const std::string &name) -> log_t {
         return spdlog::get(name);
     }
 
-    auto rocketjoe::get_logger() -> log_t {
+    auto get_logger() -> log_t {
         return spdlog::get(__default__);
     }
 
-    auto rocketjoe::initialization_logger(std::shared_ptr<spdlog::logger> logger) -> void {
+    auto initialization_logger(std::shared_ptr<spdlog::logger> logger) -> void {
         spdlog::register_logger(std::move(logger));
     }
 
