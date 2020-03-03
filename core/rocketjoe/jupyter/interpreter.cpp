@@ -14,6 +14,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -334,6 +335,24 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
                                std::vector<std::string> identifiers,
                                nl::json parent) -> void;
 
+        auto do_clear() -> nl::json;
+
+        auto clear_request(zmq::socket_t &socket,
+                           std::vector<std::string> identifiers,
+                           nl::json parent) -> void;
+
+        auto do_abort(
+            boost::optional<std::vector<std::string>> identifiers
+        ) -> nl::json;
+
+        auto abort_request(zmq::socket_t &socket,
+                           std::vector<std::string> identifiers,
+                           nl::json parent) -> void;
+
+        auto abort_reply(zmq::socket_t &socket,
+                         std::vector<std::string> identifiers,
+                         nl::json parent) -> void;
+
         auto dispatch_shell(std::vector<std::string> msgs) -> bool;
 
         auto dispatch_control(std::vector<std::string> msgs) -> bool;
@@ -350,6 +369,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         boost::uuids::uuid identifier;
         std::vector<std::string> parent_identifiers;
         nl::json parent_header;
+        bool abort_all;
+        std::unordered_set<std::string> aborted;
     };
 
     zmq_socket_shared::zmq_socket_shared(zmq::socket_t socket)
@@ -665,8 +686,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
     auto display_hook::write_format_data(py::object self, py::dict data,
                                          py::dict metadata) -> void {
-        self.attr("msg")["content"]["data"] = data;
-        self.attr("msg")["content"]["metadata"] = metadata;
+        self.attr("msg")["content"]["data"] = std::move(data);
+        self.attr("msg")["content"]["metadata"] = std::move(metadata);
     }
 
     auto display_hook::finish_displayhook(py::object self) -> void {
@@ -998,7 +1019,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
               std::move(signature_key), std::move(signature_scheme)
           }}}
         , identifier{boost::uuids::random_generator()()}
-        , parent_header(nl::json::object()) {
+        , parent_header(nl::json::object())
+        , abort_all{false} {
         shell = py::module::import("rocketjoe.pykernel").attr("RocketJoeShell")(
             "_init_location_id"_a = "shell.py:1"
         );
@@ -1108,6 +1130,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
             }
         }
 
+        abort_all = false;
+
         return true;
     }
 
@@ -1131,7 +1155,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
     auto interpreter_impl::set_parent(std::vector<std::string> identifiers,
                                       nl::json parent) -> void {
-        parent_identifiers = identifiers;
+        parent_identifiers = std::move(identifiers);
         parent_header = parent;
 
         shell::set_parent(shell, py::module::import("json")
@@ -1183,10 +1207,11 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
                                            std::vector<std::string> identifiers,
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
-        std::string code{std::move(content["code"])};
-        bool silent{content["silent"]};
+        auto code{content["code"].get<std::string>()};
+        auto silent{content["silent"].get<bool>()};
         auto execution_count = shell.attr("execution_count")
             .cast<std::size_t>();
+        auto stop_on_error{content["stop_on_error"].get<bool>()};
 
         if(!silent) {
             current_session->send(**iopub_socket,
@@ -1207,6 +1232,12 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
+
+        if(!silent && reply_content["status"].get<std::string>() == "error" &&
+           stop_on_error) {
+           abort_all = true;
+        }
+
         current_session->send(socket, current_session->construct_message(
             std::move(identifiers), {{"msg_type", "execute_reply"}},
             std::move(parent), {}, std::move(reply_content)
@@ -1443,6 +1474,65 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         ));
     }
 
+    auto interpreter_impl::do_clear() -> nl::json {
+        shell.attr("reset")(false);
+
+        return {{"status", "ok"}};
+    }
+
+    auto interpreter_impl::clear_request(
+        zmq::socket_t &socket, std::vector<std::string> identifiers,
+        nl::json parent
+    ) -> void {
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", "clear_reply"}},
+            std::move(parent), {}, do_clear()
+        ));
+    }
+
+    auto interpreter_impl::do_abort(
+        boost::optional<std::vector<std::string>> identifiers
+    ) -> nl::json {
+        if(identifiers) {
+            aborted.insert(std::make_move_iterator(identifiers->cbegin()),
+                           std::make_move_iterator(identifiers->cend()));
+        } else {
+            abort_all = true;
+        }
+
+        return {{"status", "ok"}};
+    }
+
+    auto interpreter_impl::abort_request(
+        zmq::socket_t &socket, std::vector<std::string> identifiers,
+        nl::json parent
+    ) -> void {
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", "abort_reply"}},
+            std::move(parent), {}, do_abort(parent["content"]["msg_ids"])
+        ));
+    }
+
+    auto interpreter_impl::abort_reply(zmq::socket_t &socket,
+                                       std::vector<std::string> identifiers,
+                                       nl::json parent) -> void {
+        auto msg_type{parent["header"]["msg_type"].get<std::string>()};
+
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", std::string{
+                std::make_move_iterator(std::make_reverse_iterator(
+                    msg_type.crend()
+                )),
+                std::make_move_iterator(std::make_reverse_iterator(
+                    std::find(msg_type.crbegin(), msg_type.crend(), '_')
+                ))
+            }}}, std::move(parent), {
+                {"status", "aborted"},
+                {"engine", boost::uuids::to_string(identifier)}
+            }, {{"status", "aborted"}}
+        ));
+    }
+
     auto interpreter_impl::dispatch_shell(
         std::vector<std::string> msgs
     ) -> bool {
@@ -1457,7 +1547,8 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
             return true;
         }
 
-        std::string msg_type{header["msg_type"]};
+        auto msg_type{header["msg_type"].get<std::string>()};
+        auto msg_id{header["msg_id"].get<std::string>()};
         nl::json parent{{"header", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
@@ -1465,6 +1556,26 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         set_parent(identifiers, parent);
         publish_status("busy", {});
+
+        if(abort_all) {
+            abort_reply(shell_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
+
+        auto abort{std::find(aborted.cbegin(), aborted.cend(),
+                   std::move(msg_id))};
+
+        if(abort != aborted.cend()) {
+            aborted.erase(abort);
+            abort_reply(shell_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
 
         auto resume{true};
 
@@ -1483,12 +1594,12 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         } else if(msg_type == "kernel_info_request") {
             kernel_info_request(shell_socket, std::move(identifiers),
                                 std::move(parent));
-        } if(msg_type == "shutdown_request") {
-            shutdown_request(control_socket, std::move(identifiers),
+        } else if(msg_type == "shutdown_request") {
+            shutdown_request(shell_socket, std::move(identifiers),
                              std::move(parent));
             resume = false;
         } else if(msg_type == "interrupt_request") {
-            interrupt_request(control_socket, std::move(identifiers),
+            interrupt_request(shell_socket, std::move(identifiers),
                               std::move(parent));
             resume = false;
         }
@@ -1516,7 +1627,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
             return true;
         }
 
-        std::string msg_type{header["msg_type"]};
+        auto msg_type{header["msg_type"].get<std::string>()};
         nl::json parent{{"header", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
@@ -1525,9 +1636,32 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         set_parent(identifiers, parent);
         publish_status("busy", {});
 
+        if(abort_all) {
+            abort_reply(control_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
+
         auto resume{true};
 
-        if(msg_type == "shutdown_request") {
+        if(msg_type == "execute_request") {
+            execute_request(control_socket, std::move(identifiers),
+                            std::move(parent));
+        } else if(msg_type == "inspect_request") {
+            inspect_request(control_socket, std::move(identifiers),
+                            std::move(parent));
+        } else if(msg_type == "complete_request") {
+            complete_request(control_socket, std::move(identifiers),
+                             std::move(parent));
+        } else if(msg_type == "is_complete_request") {
+            is_complete_request(control_socket, std::move(identifiers),
+                                std::move(parent));
+        } else if(msg_type == "kernel_info_request") {
+            kernel_info_request(control_socket, std::move(identifiers),
+                                std::move(parent));
+        } else if(msg_type == "shutdown_request") {
             shutdown_request(control_socket, std::move(identifiers),
                              std::move(parent));
             resume = false;
@@ -1535,6 +1669,12 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
             interrupt_request(control_socket, std::move(identifiers),
                               std::move(parent));
             resume = false;
+        } else if(msg_type == "clear_request") {
+            clear_request(control_socket, std::move(identifiers),
+                          std::move(parent));
+        } else if(msg_type == "abort_request") {
+            abort_request(control_socket, std::move(identifiers),
+                          std::move(parent));
         }
 
         auto sys{py::module::import("sys")};
