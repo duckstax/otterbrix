@@ -1454,10 +1454,18 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         zmq::socket_t &socket, std::vector<std::string> identifiers,
         nl::json parent
     ) -> void {
+        auto content = do_shutdown(parent["content"]["restart"]);
+
         current_session->send(socket, current_session->construct_message(
-            std::move(identifiers), {{"msg_type", "shutdown_reply"}},
-            std::move(parent), {}, do_shutdown(parent["content"]["restart"])
+            std::move(identifiers), {{"msg_type", "shutdown_reply"}}, parent,
+            {}, content
         ));
+        current_session->send(**iopub_socket,
+            current_session->construct_message(
+                {topic("shutdown")}, {{"msg_type", "shutdown_reply"}},
+                std::move(parent), {}, std::move(content)
+            )
+        );
     }
 
     auto interpreter_impl::do_interrupt() -> nl::json {
@@ -1608,7 +1616,10 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
-        publish_status("idle", {});
+
+        if(resume) {
+            publish_status("idle", {});
+        }
 
         return resume;
     }
@@ -1681,7 +1692,10 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
-        publish_status("idle", {});
+
+        if(resume) {
+            publish_status("idle", {});
+        }
 
         return resume;
     }
