@@ -1,0 +1,8 @@
+add_subdirectory(rocketjoe/log)
+add_subdirectory(rocketjoe/network)
+add_subdirectory(rocketjoe/ipc_message_queue)
+#add_subdirectory(core/rocketjoe/services/timer_manager)
+add_subdirectory(rocketjoe/http_server)
+add_subdirectory(rocketjoe/jupyter)
+add_subdirectory(rocketjoe/python_sandbox)
+add_subdirectory(rocketjoe/router)
