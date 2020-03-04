@@ -14,6 +14,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -21,7 +22,6 @@
 #include <boost/locale/format.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
-#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -126,7 +126,7 @@ namespace nlohmann {
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace rocketjoe {
+namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
     namespace nl = nlohmann;
     namespace py = pybind11;
 
@@ -181,7 +181,7 @@ namespace rocketjoe {
     public:
         input_redirection(
             boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-            boost::intrusive_ptr<rocketjoe::session> current_session,
+            boost::intrusive_ptr<session> current_session,
             std::vector<std::string> parent_identifiers, nl::json parent_header,
             bool allow_stdin
         );
@@ -335,7 +335,25 @@ namespace rocketjoe {
                                std::vector<std::string> identifiers,
                                nl::json parent) -> void;
 
-        auto dispatch_shell(std::vector<std::string> msgs) -> void;
+        auto do_clear() -> nl::json;
+
+        auto clear_request(zmq::socket_t &socket,
+                           std::vector<std::string> identifiers,
+                           nl::json parent) -> void;
+
+        auto do_abort(
+            boost::optional<std::vector<std::string>> identifiers
+        ) -> nl::json;
+
+        auto abort_request(zmq::socket_t &socket,
+                           std::vector<std::string> identifiers,
+                           nl::json parent) -> void;
+
+        auto abort_reply(zmq::socket_t &socket,
+                         std::vector<std::string> identifiers,
+                         nl::json parent) -> void;
+
+        auto dispatch_shell(std::vector<std::string> msgs) -> bool;
 
         auto dispatch_control(std::vector<std::string> msgs) -> bool;
 
@@ -344,13 +362,15 @@ namespace rocketjoe {
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
         boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
         zmq::socket_t heartbeat_socket;
-        boost::intrusive_ptr<rocketjoe::session> current_session;
+        boost::intrusive_ptr<session> current_session;
         py::object shell;
         py::object pystdout;
         py::object pystderr;
         boost::uuids::uuid identifier;
         std::vector<std::string> parent_identifiers;
         nl::json parent_header;
+        bool abort_all;
+        std::unordered_set<std::string> aborted;
     };
 
     zmq_socket_shared::zmq_socket_shared(zmq::socket_t socket)
@@ -510,7 +530,7 @@ namespace rocketjoe {
 
     static auto input_request(
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-        boost::intrusive_ptr<rocketjoe::session> current_session,
+        boost::intrusive_ptr<session> current_session,
         std::vector<std::string> parent_identifiers, nl::json parent_header,
         const std::string &prompt, bool password
     ) -> std::string {
@@ -578,7 +598,7 @@ namespace rocketjoe {
 
     input_redirection::input_redirection(
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
-        boost::intrusive_ptr<rocketjoe::session> current_session,
+        boost::intrusive_ptr<session> current_session,
         std::vector<std::string> parent_identifiers, nl::json parent_header,
         bool allow_stdin
     ) {
@@ -666,8 +686,8 @@ namespace rocketjoe {
 
     auto display_hook::write_format_data(py::object self, py::dict data,
                                          py::dict metadata) -> void {
-        self.attr("msg")["content"]["data"] = data;
-        self.attr("msg")["content"]["metadata"] = metadata;
+        self.attr("msg")["content"]["data"] = std::move(data);
+        self.attr("msg")["content"]["metadata"] = std::move(metadata);
     }
 
     auto display_hook::finish_displayhook(py::object self) -> void {
@@ -995,12 +1015,12 @@ namespace rocketjoe {
               new zmq_socket_shared{std::move(iopub_socket)}
           }}
         , heartbeat_socket{std::move(heartbeat_socket)}
-        , current_session{boost::intrusive_ptr<rocketjoe::session>{
-              new rocketjoe::session{std::move(signature_key),
-                                     std::move(signature_scheme)}
-          }}
+        , current_session{boost::intrusive_ptr<session>{new session{
+              std::move(signature_key), std::move(signature_scheme)
+          }}}
         , identifier{boost::uuids::random_generator()()}
-        , parent_header(nl::json::object()) {
+        , parent_header(nl::json::object())
+        , abort_all{false} {
         shell = py::module::import("rocketjoe.pykernel").attr("RocketJoeShell")(
             "_init_location_id"_a = "shell.py:1"
         );
@@ -1054,50 +1074,13 @@ namespace rocketjoe {
     }
 
     auto interpreter_impl::poll(poll_flags polls) -> bool {
-        auto resume{true};
-
-        if((polls & poll_flags::shell_socket) == poll_flags::shell_socket) {
-            std::vector<zmq::message_t> msgs{};
-
-            if(zmq::recv_multipart(shell_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
-                std::vector<std::string> msgs_for_parse{};
-
-                msgs_for_parse.reserve(msgs.size());
-
-                for(const auto &msg : msgs) {
-                    std::cerr << "Shell: " << msg << std::endl;
-                    msgs_for_parse.push_back(std::move(msg.to_string()));
-                }
-
-                dispatch_shell(std::move(msgs_for_parse));
-            }
-        }
-
-        if((polls & poll_flags::control_socket) == poll_flags::control_socket) {
-            std::vector<zmq::message_t> msgs{};
-
-            if(zmq::recv_multipart(control_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
-                std::vector<std::string> msgs_for_parse{};
-
-                msgs_for_parse.reserve(msgs.size());
-
-                for(const auto &msg : msgs) {
-                    std::cerr << "Control: " << msg << std::endl;
-                    msgs_for_parse.push_back(std::move(msg.to_string()));
-                }
-
-                resume = dispatch_control(std::move(msgs_for_parse));
-            }
-        }
-
         if((polls & poll_flags::heartbeat_socket) ==
             poll_flags::heartbeat_socket) {
             std::vector<zmq::message_t> msgs{};
 
-            if(zmq::recv_multipart(heartbeat_socket, std::back_inserter(msgs),
-                                   zmq::recv_flags::dontwait)) {
+            while(zmq::recv_multipart(heartbeat_socket,
+                                      std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
                 for(const auto &msg : msgs) {
                     std::cerr << "Heartbeat: " << msg << std::endl;
                 }
@@ -1107,7 +1090,49 @@ namespace rocketjoe {
             }
         }
 
-        return resume;
+        if((polls & poll_flags::control_socket) == poll_flags::control_socket) {
+            std::vector<zmq::message_t> msgs{};
+
+            while(zmq::recv_multipart(control_socket, std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
+                std::vector<std::string> msgs_for_parse{};
+
+                msgs_for_parse.reserve(msgs.size());
+
+                for(const auto &msg : msgs) {
+                    std::cerr << "Control: " << msg << std::endl;
+                    msgs_for_parse.push_back(std::move(msg.to_string()));
+                }
+
+                if(!dispatch_control(std::move(msgs_for_parse))) {
+                    return false;
+                }
+            }
+        }
+
+        if((polls & poll_flags::shell_socket) == poll_flags::shell_socket) {
+            std::vector<zmq::message_t> msgs{};
+
+            while(zmq::recv_multipart(shell_socket, std::back_inserter(msgs),
+                                      zmq::recv_flags::dontwait)) {
+                std::vector<std::string> msgs_for_parse{};
+
+                msgs_for_parse.reserve(msgs.size());
+
+                for(const auto &msg : msgs) {
+                    std::cerr << "Shell: " << msg << std::endl;
+                    msgs_for_parse.push_back(std::move(msg.to_string()));
+                }
+
+                if(!dispatch_shell(std::move(msgs_for_parse))) {
+                    return false;
+                }
+            }
+        }
+
+        abort_all = false;
+
+        return true;
     }
 
     auto interpreter_impl::topic(std::string topic) const -> std::string {
@@ -1130,7 +1155,7 @@ namespace rocketjoe {
 
     auto interpreter_impl::set_parent(std::vector<std::string> identifiers,
                                       nl::json parent) -> void {
-        parent_identifiers = identifiers;
+        parent_identifiers = std::move(identifiers);
         parent_header = parent;
 
         shell::set_parent(shell, py::module::import("json")
@@ -1182,10 +1207,11 @@ namespace rocketjoe {
                                            std::vector<std::string> identifiers,
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
-        std::string code{std::move(content["code"])};
-        bool silent{content["silent"]};
+        auto code{content["code"].get<std::string>()};
+        auto silent{content["silent"].get<bool>()};
         auto execution_count = shell.attr("execution_count")
             .cast<std::size_t>();
+        auto stop_on_error{content["stop_on_error"].get<bool>()};
 
         if(!silent) {
             current_session->send(**iopub_socket,
@@ -1206,6 +1232,12 @@ namespace rocketjoe {
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
+
+        if(!silent && reply_content["status"].get<std::string>() == "error" &&
+           stop_on_error) {
+           abort_all = true;
+        }
+
         current_session->send(socket, current_session->construct_message(
             std::move(identifiers), {{"msg_type", "execute_reply"}},
             std::move(parent), {}, std::move(reply_content)
@@ -1422,10 +1454,18 @@ namespace rocketjoe {
         zmq::socket_t &socket, std::vector<std::string> identifiers,
         nl::json parent
     ) -> void {
+        auto content = do_shutdown(parent["content"]["restart"]);
+
         current_session->send(socket, current_session->construct_message(
-            std::move(identifiers), {{"msg_type", "shutdown_reply"}},
-            std::move(parent), {}, do_shutdown(parent["content"]["restart"])
+            std::move(identifiers), {{"msg_type", "shutdown_reply"}}, parent,
+            {}, content
         ));
+        current_session->send(**iopub_socket,
+            current_session->construct_message(
+                {topic("shutdown")}, {{"msg_type", "shutdown_reply"}},
+                std::move(parent), {}, std::move(content)
+            )
+        );
     }
 
     auto interpreter_impl::do_interrupt() -> nl::json {
@@ -1442,9 +1482,68 @@ namespace rocketjoe {
         ));
     }
 
+    auto interpreter_impl::do_clear() -> nl::json {
+        shell.attr("reset")(false);
+
+        return {{"status", "ok"}};
+    }
+
+    auto interpreter_impl::clear_request(
+        zmq::socket_t &socket, std::vector<std::string> identifiers,
+        nl::json parent
+    ) -> void {
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", "clear_reply"}},
+            std::move(parent), {}, do_clear()
+        ));
+    }
+
+    auto interpreter_impl::do_abort(
+        boost::optional<std::vector<std::string>> identifiers
+    ) -> nl::json {
+        if(identifiers) {
+            aborted.insert(std::make_move_iterator(identifiers->cbegin()),
+                           std::make_move_iterator(identifiers->cend()));
+        } else {
+            abort_all = true;
+        }
+
+        return {{"status", "ok"}};
+    }
+
+    auto interpreter_impl::abort_request(
+        zmq::socket_t &socket, std::vector<std::string> identifiers,
+        nl::json parent
+    ) -> void {
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", "abort_reply"}},
+            std::move(parent), {}, do_abort(parent["content"]["msg_ids"])
+        ));
+    }
+
+    auto interpreter_impl::abort_reply(zmq::socket_t &socket,
+                                       std::vector<std::string> identifiers,
+                                       nl::json parent) -> void {
+        auto msg_type{parent["header"]["msg_type"].get<std::string>()};
+
+        current_session->send(socket, current_session->construct_message(
+            std::move(identifiers), {{"msg_type", std::string{
+                std::make_move_iterator(std::make_reverse_iterator(
+                    msg_type.crend()
+                )),
+                std::make_move_iterator(std::make_reverse_iterator(
+                    std::find(msg_type.crbegin(), msg_type.crend(), '_')
+                ))
+            }}}, std::move(parent), {
+                {"status", "aborted"},
+                {"engine", boost::uuids::to_string(identifier)}
+            }, {{"status", "aborted"}}
+        ));
+    }
+
     auto interpreter_impl::dispatch_shell(
         std::vector<std::string> msgs
-    ) -> void {
+    ) -> bool {
         std::vector<std::string> identifiers{};
         nl::json header{};
         nl::json parent_header{};
@@ -1453,10 +1552,11 @@ namespace rocketjoe {
 
         if(!current_session->parse_message(std::move(msgs), identifiers, header,
                                            parent_header, metadata, content)) {
-            return;
+            return true;
         }
 
-        std::string msg_type{header["msg_type"]};
+        auto msg_type{header["msg_type"].get<std::string>()};
+        auto msg_id{header["msg_id"].get<std::string>()};
         nl::json parent{{"header", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
@@ -1464,6 +1564,28 @@ namespace rocketjoe {
 
         set_parent(identifiers, parent);
         publish_status("busy", {});
+
+        if(abort_all) {
+            abort_reply(shell_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
+
+        auto abort{std::find(aborted.cbegin(), aborted.cend(),
+                   std::move(msg_id))};
+
+        if(abort != aborted.cend()) {
+            aborted.erase(abort);
+            abort_reply(shell_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
+
+        auto resume{true};
 
         if(msg_type == "execute_request") {
             execute_request(shell_socket, std::move(identifiers),
@@ -1480,13 +1602,26 @@ namespace rocketjoe {
         } else if(msg_type == "kernel_info_request") {
             kernel_info_request(shell_socket, std::move(identifiers),
                                 std::move(parent));
+        } else if(msg_type == "shutdown_request") {
+            shutdown_request(shell_socket, std::move(identifiers),
+                             std::move(parent));
+            resume = false;
+        } else if(msg_type == "interrupt_request") {
+            interrupt_request(shell_socket, std::move(identifiers),
+                              std::move(parent));
+            resume = false;
         }
 
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
-        publish_status("idle", {});
+
+        if(resume) {
+            publish_status("idle", {});
+        }
+
+        return resume;
     }
 
     auto interpreter_impl::dispatch_control(
@@ -1503,7 +1638,7 @@ namespace rocketjoe {
             return true;
         }
 
-        std::string msg_type{header["msg_type"]};
+        auto msg_type{header["msg_type"].get<std::string>()};
         nl::json parent{{"header", std::move(header)},
                         {"parent_header", std::move(parent_header)},
                         {"metadata", std::move(metadata)},
@@ -1512,9 +1647,32 @@ namespace rocketjoe {
         set_parent(identifiers, parent);
         publish_status("busy", {});
 
+        if(abort_all) {
+            abort_reply(control_socket, std::move(identifiers),
+                        std::move(parent));
+            publish_status("idle", {});
+
+            return true;
+        }
+
         auto resume{true};
 
-        if(msg_type == "shutdown_request") {
+        if(msg_type == "execute_request") {
+            execute_request(control_socket, std::move(identifiers),
+                            std::move(parent));
+        } else if(msg_type == "inspect_request") {
+            inspect_request(control_socket, std::move(identifiers),
+                            std::move(parent));
+        } else if(msg_type == "complete_request") {
+            complete_request(control_socket, std::move(identifiers),
+                             std::move(parent));
+        } else if(msg_type == "is_complete_request") {
+            is_complete_request(control_socket, std::move(identifiers),
+                                std::move(parent));
+        } else if(msg_type == "kernel_info_request") {
+            kernel_info_request(control_socket, std::move(identifiers),
+                                std::move(parent));
+        } else if(msg_type == "shutdown_request") {
             shutdown_request(control_socket, std::move(identifiers),
                              std::move(parent));
             resume = false;
@@ -1522,13 +1680,22 @@ namespace rocketjoe {
             interrupt_request(control_socket, std::move(identifiers),
                               std::move(parent));
             resume = false;
+        } else if(msg_type == "clear_request") {
+            clear_request(control_socket, std::move(identifiers),
+                          std::move(parent));
+        } else if(msg_type == "abort_request") {
+            abort_request(control_socket, std::move(identifiers),
+                          std::move(parent));
         }
 
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
-        publish_status("idle", {});
+
+        if(resume) {
+            publish_status("idle", {});
+        }
 
         return resume;
     }
@@ -1552,4 +1719,4 @@ namespace rocketjoe {
     auto interpreter::poll(poll_flags polls) -> bool {
         return pimpl->poll(polls);
     }
-}
+}}}}

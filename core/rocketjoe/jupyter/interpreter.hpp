@@ -3,9 +3,11 @@
 #include <functional>
 #include <memory>
 
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
+
 #include <zmq.hpp>
 
-namespace rocketjoe {
+namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
     enum class poll_flags : std::uint8_t
     {
         none             = 0,
@@ -65,7 +67,7 @@ namespace rocketjoe {
 
     class interpreter_impl;
 
-    class interpreter final {
+    class interpreter final : public boost::intrusive_ref_counter<interpreter> {
     public:
         interpreter(std::string session_key, std::string signature_scheme,
                     zmq::socket_t shell_socket, zmq::socket_t control_socket,
@@ -83,4 +85,4 @@ namespace rocketjoe {
     private:
         std::unique_ptr<interpreter_impl> pimpl;
     };
-}
+}}}}

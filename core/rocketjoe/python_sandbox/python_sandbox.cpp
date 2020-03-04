@@ -1,5 +1,6 @@
 #include <rocketjoe/python_sandbox/python_sandbox.hpp>
 
+#include <cstdlib>
 #include <exception>
 #include <fstream>
 #include <iostream>
@@ -26,6 +27,7 @@ namespace rocketjoe { namespace services {
     namespace po = boost::program_options;
     namespace nl = nlohmann;
     using namespace py::literals;
+    using jupyter::detail::poll_flags;
 
     python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
         : abstract_service(ptr, "python_sandbox")
@@ -35,9 +37,11 @@ namespace rocketjoe { namespace services {
         , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
         , context_manager_{std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)}
         , zmq_context{nullptr}
-        , jupyter_kernel_polls{}
+        , jupyter_kernel_commands_polls{}
+        , jupyter_kernel_infos_polls{}
         , jupyter_kernel{nullptr}
-        , exuctor{nullptr}  {
+        , commands_exuctor{nullptr}
+        , infos_exuctor{nullptr}   {
 
 ///            add_handler(
 ///                    "dispatcher",
@@ -179,47 +183,58 @@ namespace rocketjoe { namespace services {
         iopub_socket.bind(iopub_address);
         heartbeat_socket.bind(heartbeat_address);
 
-        jupyter_kernel_polls = {
-            {shell_socket,     0, ZMQ_POLLIN, 0},
-            {control_socket,   0, ZMQ_POLLIN, 0},
-            {heartbeat_socket, 0, ZMQ_POLLIN, 0}
-        };
-        jupyter_kernel = std::make_unique<interpreter>(
+        jupyter_kernel_commands_polls = {{shell_socket,   0, ZMQ_POLLIN, 0},
+                                         {control_socket, 0, ZMQ_POLLIN, 0}};
+        jupyter_kernel_infos_polls = {{heartbeat_socket, 0, ZMQ_POLLIN, 0}};
+        jupyter_kernel = boost::intrusive_ptr<interpreter>{new interpreter{
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
             std::move(stdin_socket), std::move(iopub_socket),
             std::move(heartbeat_socket)
-        );
+        }};
     }
 
     auto python_sandbox_t::start() -> void {
         if(mode == sandbox_mode::script) {
-            exuctor = std::make_unique<std::thread>([this]() {
+            commands_exuctor = std::make_unique<std::thread>([this]() {
                 py::exec(init_script, py::globals(), py::dict(
                     "path"_a = script_path.string(),
                     "pyrocketjoe"_a = pyrocketjoe
                 ));
             });
         } else if(mode == sandbox_mode::jupyter) {
-            exuctor = std::make_unique<std::thread>([this]() {
+            commands_exuctor = std::make_unique<std::thread>([this]() {
                 while(true) {
-                    if(zmq::poll(jupyter_kernel_polls) == -1) {
+                    if(zmq::poll(jupyter_kernel_commands_polls) == -1) {
                         continue;
                     }
 
-                    rocketjoe::poll_flags polls{rocketjoe::poll_flags::none};
+                    poll_flags polls{poll_flags::none};
 
-                    if(jupyter_kernel_polls[0].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::shell_socket;
+                    if(jupyter_kernel_commands_polls[0].revents & ZMQ_POLLIN) {
+                        polls |= poll_flags::shell_socket;
                     }
 
-                    if(jupyter_kernel_polls[1].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::control_socket;
+                    if(jupyter_kernel_commands_polls[1].revents & ZMQ_POLLIN) {
+                        polls |= poll_flags::control_socket;
                     }
 
-                    if(jupyter_kernel_polls[2].revents & ZMQ_POLLIN) {
-                        polls |= rocketjoe::poll_flags::heartbeat_socket;
+                    if(!jupyter_kernel->poll(polls)) {
+                        std::exit(EXIT_SUCCESS);
+                    }
+                }
+            });
+            infos_exuctor = std::make_unique<std::thread>([this]() {
+                while(true) {
+                    if(zmq::poll(jupyter_kernel_infos_polls) == -1) {
+                        continue;
+                    }
+
+                    poll_flags polls{poll_flags::none};
+
+                    if(jupyter_kernel_infos_polls[0].revents & ZMQ_POLLIN) {
+                        polls |= poll_flags::heartbeat_socket;
                     }
 
                     if(!jupyter_kernel->poll(polls)) {
