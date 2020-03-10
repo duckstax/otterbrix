@@ -95,9 +95,7 @@ int main(int argc, char *argv[]) {
 
     goblin_engineer::dynamic_config config;
 
-    load_or_generate_config(result, config);
-
-    config.as_object()["master"] = true;
+    config.as_object()["master"] = true; /// default
 
     if (result.count("worker_mode")) {
 
@@ -112,6 +110,8 @@ int main(int argc, char *argv[]) {
     }
 
     config.as_object()["args"] = all_args;
+
+    load_or_generate_config(result, config);
 
     goblin_engineer::dynamic_config config_tmp = config;
 
