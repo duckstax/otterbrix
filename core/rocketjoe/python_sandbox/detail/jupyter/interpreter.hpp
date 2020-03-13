@@ -7,7 +7,8 @@
 
 #include <zmq.hpp>
 
-namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
+namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+
     enum class poll_flags : std::uint8_t
     {
         none             = 0,

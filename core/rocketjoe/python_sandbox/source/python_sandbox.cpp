@@ -22,12 +22,13 @@
 #include <rocketjoe/python_sandbox/detail/celery.hpp>
 #include <rocketjoe/python_sandbox/detail/file_system.hpp>
 #include <rocketjoe/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter.hpp>
 
 namespace rocketjoe { namespace services {
     namespace po = boost::program_options;
     namespace nl = nlohmann;
     using namespace py::literals;
-    using jupyter::detail::poll_flags;
+    using detail::jupyter::poll_flags;
 
     python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
         : abstract_service(ptr, "python_sandbox")
@@ -111,6 +112,7 @@ namespace rocketjoe { namespace services {
 
         if(mode == sandbox_mode::jupyter) {
             jupyter_kernel_init();
+            python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
         }
 
         start();

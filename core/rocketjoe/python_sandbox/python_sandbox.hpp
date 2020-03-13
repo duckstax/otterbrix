@@ -16,7 +16,7 @@
 
 namespace rocketjoe { namespace services {
     namespace py = pybind11;
-    using jupyter::detail::interpreter;
+    using detail::jupyter::interpreter;
 
     enum class sandbox_mode : std::uint8_t {
         none = 0,

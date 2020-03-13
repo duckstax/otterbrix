@@ -1,29 +1,48 @@
 set(CURRENT_TARGET python_sandbox)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
+        detail/jupyter/display_hook.hpp
+        detail/jupyter/display_publisher.hpp
         detail/jupyter/interpreter.hpp
+        detail/jupyter/session.hpp
+        detail/jupyter/shell.hpp
+        detail/jupyter/zmq_ostream.hpp
+        detail/jupyter/zmq_socket_shared.hpp
+
         detail/celery.hpp
         detail/context.hpp
         detail/context_manager.hpp
-        detail/file_manager.hpp
-        detail/mapreduce.hpp
-        detail/context.hpp
         detail/data_set.hpp
+        detail/file_manager.hpp
+        detail/file_system.hpp
+        detail/forward.hpp
+        detail/jupyter.hpp
+        detail/mapreduce.hpp
 
         python_sandbox.hpp
-        detail/file_system.hpp
 )
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
-        detail/jupyter/interpreter.cpp
-        celery.cpp
-        context_manager.cpp
-        file_manager.cpp
-        file_system.cpp
-        mapreduce.cpp
-        python_sandbox.cpp
-        context.cpp
-        data_set.cpp
+
+        source/detail/jupyter/display_hook.cpp
+        source/detail/jupyter/display_publisher.cpp
+        source/detail/jupyter/interpreter.cpp
+        source/detail/jupyter/session.cpp
+        source/detail/jupyter/shell.cpp
+        source/detail/jupyter/zmq_ostream.cpp
+        source/detail/jupyter/zmq_socket_shared.cpp
+
+        source/detail/celery.cpp
+        source/detail/context.cpp
+        source/detail/context_manager.cpp
+        source/detail/data_set.cpp
+        source/detail/file_manager.cpp
+        source/detail/file_system.cpp
+        source/detail/jupyter.cpp
+
+        kernel.json.in
+        source/detail/mapreduce.cpp
+        source/python_sandbox.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC

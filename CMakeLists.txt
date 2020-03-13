@@ -32,7 +32,7 @@ if (DEV_MODE)
                 -Wextra
                 -Wpedantic
 
-                -Wredundant-move
+                #-Wredundant-move # not work gcc
                 -Wcast-align
                 #-Wcast-qual
                 #-Wconversion
