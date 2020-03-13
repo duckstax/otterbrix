@@ -83,6 +83,18 @@ int main(int argc, char *argv[]) {
 
     auto result = options.parse(argc, argv);
 
+    if (positional.empty()) {
+        std::cerr << "not file" << std::endl;
+        return EAI_FAIL;
+    } else {
+        bool found = (positional[0].find(".py") != std::string::npos);
+        bool exists = boost::filesystem::exists(positional[0]);
+        if (found && exists) {
+            std::cerr << "not file" << std::endl;
+            return EAI_FAIL;
+        }
+    }
+
     logo();
 
     /// --help option
