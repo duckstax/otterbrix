@@ -1,6 +1,5 @@
 #include <rocketjoe/python_sandbox/detail/jupyter/display_hook.hpp>
 
-
 #include <unistd.h>
 #include <pwd.h>
 

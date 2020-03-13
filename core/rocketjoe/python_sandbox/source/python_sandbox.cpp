@@ -111,8 +111,8 @@ namespace rocketjoe { namespace services {
         std::cerr << "processing env python finish " << std::endl;
 
         if(mode == sandbox_mode::jupyter) {
-            jupyter_kernel_init();
-            python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+          python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+          jupyter_kernel_init();
         }
 
         start();
