@@ -7,10 +7,9 @@
 #include <actor-zeta/core.hpp>
 #include <iostream>
 
+#include <rocketjoe/network/http_session.hpp>
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/http_server/server.hpp>
-#include <rocketjoe/http_server/http_session.hpp>
-
+#include <rocketjoe/network/server.hpp>
 
 namespace rocketjoe { namespace network {
 

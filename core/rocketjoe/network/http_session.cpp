@@ -1,8 +1,7 @@
-#include <rocketjoe/http_server/http_session.hpp>
+#include <rocketjoe/network/http_session.hpp>
 
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/http_server/websocket_session.hpp>
-
+#include <rocketjoe/network/websocket_session.hpp>
 
 namespace rocketjoe { namespace session {
 

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <goblin-engineer.hpp>
-#include <rocketjoe/router/router.hpp>
-#include <rocketjoe/http_server/server.hpp>
+#include <rocketjoe/network/router.hpp>
+#include <rocketjoe/network/server.hpp>
 
 namespace rocketjoe { namespace services {
 
