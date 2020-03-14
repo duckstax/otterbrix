@@ -4,7 +4,7 @@
 #include <rocketjoe/network/router.hpp>
 #include <rocketjoe/network/server.hpp>
 
-namespace rocketjoe { namespace services {
+namespace rocketjoe { namespace network {
 
         class http_dispatcher final : public goblin_engineer::abstract_service {
         public:

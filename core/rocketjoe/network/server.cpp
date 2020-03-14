@@ -31,7 +31,7 @@ namespace rocketjoe { namespace network {
                 }
                 tcp::acceptor acceptor_;
                 network::helper_write_f_t helper_write;
-                std::unordered_map<std::size_t, std::shared_ptr<session::http_session>> storage_session;
+                std::unordered_map<std::size_t, std::shared_ptr<http_session>> storage_session;
             };
 
             using listener_ptr = std::unique_ptr<tcp_listener>;
@@ -71,7 +71,7 @@ namespace rocketjoe { namespace network {
                     fail(ec, "accept");
                 } else {
                     auto id_ = static_cast<std::size_t>(std::chrono::duration_cast<std::chrono::microseconds>(clock::now().time_since_epoch()).count());
-                    listener->storage_session.emplace(id_, std::make_shared<session::http_session>(std::move(socket),id_,listener->helper_write));
+                    listener->storage_session.emplace(id_, std::make_shared<http_session>(std::move(socket),id_,listener->helper_write));
                     listener->storage_session.at(id_)->run();
                 }
 

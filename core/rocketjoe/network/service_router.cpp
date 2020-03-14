@@ -7,7 +7,7 @@
 #include <rocketjoe/network/router.hpp>
 #include <rocketjoe/network/server.hpp>
 
-namespace rocketjoe { namespace services {
+namespace rocketjoe { namespace network {
     http_dispatcher::http_dispatcher(network::server* ptr,goblin_engineer::dynamic_config&) :
                     abstract_service(ptr, "router"){
                     detail::wrapper_router wrapper_router_;
