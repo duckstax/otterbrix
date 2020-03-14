@@ -3,7 +3,7 @@ set(CURRENT_TARGET python_sandbox)
 list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/jupyter/display_hook.hpp
         detail/jupyter/display_publisher.hpp
-        detail/jupyter/interpreter.hpp
+        detail/jupyter/pykernel.hpp
         detail/jupyter/session.hpp
         detail/jupyter/shell.hpp
         detail/jupyter/zmq_ostream.hpp
@@ -26,7 +26,7 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
 
         source/detail/jupyter/display_hook.cpp
         source/detail/jupyter/display_publisher.cpp
-        source/detail/jupyter/interpreter.cpp
+        source/detail/jupyter/pykernel.cpp
         source/detail/jupyter/session.cpp
         source/detail/jupyter/shell.cpp
         source/detail/jupyter/zmq_ostream.cpp

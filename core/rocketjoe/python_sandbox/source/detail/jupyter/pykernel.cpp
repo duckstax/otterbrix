@@ -1,4 +1,4 @@
-#include <rocketjoe/python_sandbox/detail/jupyter/interpreter.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/pykernel.hpp>
 
 #include <iostream>
 #include <algorithm>
@@ -1071,7 +1071,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         return resume;
     }
 
-    interpreter::interpreter(std::string signature_key,
+    pykernel::pykernel(std::string signature_key,
                              std::string signature_scheme,
                              zmq::socket_t shell_socket,
                              zmq::socket_t control_socket,
@@ -1085,9 +1085,9 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
               std::move(heartbeat_socket)
           )} {}
 
-    interpreter::~interpreter() = default;
+    pykernel::~pykernel() = default;
 
-    auto interpreter::poll(poll_flags polls) -> bool {
+    auto pykernel::poll(poll_flags polls) -> bool {
         return pimpl->poll(polls);
     }
 

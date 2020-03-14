@@ -188,7 +188,7 @@ namespace rocketjoe { namespace services {
         jupyter_kernel_commands_polls = {{shell_socket,   0, ZMQ_POLLIN, 0},
                                          {control_socket, 0, ZMQ_POLLIN, 0}};
         jupyter_kernel_infos_polls = {{heartbeat_socket, 0, ZMQ_POLLIN, 0}};
-        jupyter_kernel = boost::intrusive_ptr<interpreter>{new interpreter{
+        jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
