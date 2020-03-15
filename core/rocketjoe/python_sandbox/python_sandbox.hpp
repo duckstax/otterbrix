@@ -10,7 +10,7 @@
 
 #include <goblin-engineer/abstract_service.hpp>
 
-#include <rocketjoe/http_server/server.hpp>
+#include <rocketjoe/network/server.hpp>
 #include <rocketjoe/python_sandbox/detail/forward.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/pykernel.hpp>
 

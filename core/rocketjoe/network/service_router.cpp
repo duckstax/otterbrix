@@ -1,13 +1,13 @@
-#include <rocketjoe/router/service_router.hpp>
+#include <rocketjoe/network/service_router.hpp>
 
 #include <unordered_map>
 
 #include <goblin-engineer.hpp>
 
-#include <rocketjoe/router/router.hpp>
-#include <rocketjoe/http_server/server.hpp>
+#include <rocketjoe/network/router.hpp>
+#include <rocketjoe/network/server.hpp>
 
-namespace rocketjoe { namespace services {
+namespace rocketjoe { namespace network {
     http_dispatcher::http_dispatcher(network::server* ptr,goblin_engineer::dynamic_config&) :
                     abstract_service(ptr, "router"){
                     detail::wrapper_router wrapper_router_;

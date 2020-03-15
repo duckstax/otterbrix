@@ -1,10 +1,9 @@
-#include <rocketjoe/http_server/http_session.hpp>
+#include <rocketjoe/network/http_session.hpp>
 
 #include <rocketjoe/network/network.hpp>
-#include <rocketjoe/http_server/websocket_session.hpp>
+#include <rocketjoe/network/websocket_session.hpp>
 
-
-namespace rocketjoe { namespace session {
+namespace rocketjoe { namespace network {
 
         http_session::http_session(network::tcp::socket &&socket, std::size_t id, network::helper_write_f_t  context_) :
                 stream_(std::move(socket)),
@@ -31,7 +30,7 @@ namespace rocketjoe { namespace session {
             if (network::websocket::is_upgrade(parser_->get())) {
                 // Create a websocket session, transferring ownership
                 // of both the socket and the HTTP request.
-                std::make_shared<session::websocket_session>(stream_.release_socket(),handle_processing)->do_accept(parser_->release());
+                std::make_shared<websocket_session>(stream_.release_socket(),handle_processing)->do_accept(parser_->release());
                 return;
             }
 

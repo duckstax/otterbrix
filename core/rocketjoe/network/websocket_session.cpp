@@ -1,7 +1,6 @@
-#include "rocketjoe/http_server/websocket_session.hpp"
+#include "websocket_session.hpp"
 
-
-namespace rocketjoe { namespace session {
+namespace rocketjoe { namespace network {
 
         websocket_session::websocket_session(network::tcp::socket &&socket, network::helper_write_f_t pipe_) :
                 ws_(std::move(socket)),

@@ -1,11 +1,20 @@
 set(CURRENT_TARGET network)
 
 list(APPEND CURRENT_${TARGET_HEADERS}
+        http_session.hpp
         network.hpp
+        router.hpp
+        server.hpp
+        service_router.hpp
+        websocket_session.hpp
 )
 
 list(APPEND CURRENT_${TARGET_HEADERS}
+        http_session.cpp
         network.cpp
+        server.cpp
+        service_router.cpp
+        websocket_session.cpp
 )
 
 

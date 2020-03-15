@@ -5,7 +5,7 @@
 #include <rocketjoe/network/network.hpp>
 #include "forward.hpp"
 
-namespace rocketjoe { namespace session {
+namespace rocketjoe { namespace network {
 
         class http_session final : public std::enable_shared_from_this<http_session> {
             // This queue is used for HTTP pipelining.

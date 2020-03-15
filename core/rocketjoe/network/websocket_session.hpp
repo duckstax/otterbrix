@@ -5,7 +5,7 @@
 #include <rocketjoe/network/network.hpp>
 #include "forward.hpp"
 
-namespace rocketjoe { namespace session {
+namespace rocketjoe { namespace network {
 
         class websocket_session final : public std::enable_shared_from_this<websocket_session> {
                 network::websocket::stream<network::beast::tcp_stream> ws_;

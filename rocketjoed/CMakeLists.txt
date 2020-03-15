@@ -18,9 +18,8 @@ add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGE
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
-        rocketjoe::http_server
+        goblin-engineer
         rocketjoe::python_sandbox
-        rocketjoe::router
         rocketjoe::log
         dl
 )

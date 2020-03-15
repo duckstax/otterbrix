@@ -9,7 +9,7 @@
 #include <actor-zeta/messaging/message.hpp>
 #include <rocketjoe/network/network.hpp>
 
-namespace rocketjoe { namespace services { namespace detail {
+namespace rocketjoe { namespace network { namespace detail {
     using network::string_view;
     using network::http_method ;
     using network::options;
