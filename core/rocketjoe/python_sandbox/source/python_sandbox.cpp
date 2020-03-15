@@ -22,12 +22,13 @@
 #include <rocketjoe/python_sandbox/detail/celery.hpp>
 #include <rocketjoe/python_sandbox/detail/file_system.hpp>
 #include <rocketjoe/python_sandbox/detail/data_set.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter.hpp>
 
 namespace rocketjoe { namespace services {
     namespace po = boost::program_options;
     namespace nl = nlohmann;
     using namespace py::literals;
-    using jupyter::detail::poll_flags;
+    using detail::jupyter::poll_flags;
 
     python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
         : abstract_service(ptr, "python_sandbox")
@@ -110,7 +111,8 @@ namespace rocketjoe { namespace services {
         std::cerr << "processing env python finish " << std::endl;
 
         if(mode == sandbox_mode::jupyter) {
-            jupyter_kernel_init();
+          python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+          jupyter_kernel_init();
         }
 
         start();
@@ -186,7 +188,7 @@ namespace rocketjoe { namespace services {
         jupyter_kernel_commands_polls = {{shell_socket,   0, ZMQ_POLLIN, 0},
                                          {control_socket, 0, ZMQ_POLLIN, 0}};
         jupyter_kernel_infos_polls = {{heartbeat_socket, 0, ZMQ_POLLIN, 0}};
-        jupyter_kernel = boost::intrusive_ptr<interpreter>{new interpreter{
+        jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),

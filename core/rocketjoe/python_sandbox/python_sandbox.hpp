@@ -11,12 +11,12 @@
 #include <goblin-engineer/abstract_service.hpp>
 
 #include <rocketjoe/http_server/server.hpp>
-#include <rocketjoe/jupyter/interpreter.hpp>
 #include <rocketjoe/python_sandbox/detail/forward.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/pykernel.hpp>
 
 namespace rocketjoe { namespace services {
     namespace py = pybind11;
-    using jupyter::detail::interpreter;
+    using detail::jupyter::pykernel;
 
     enum class sandbox_mode : std::uint8_t {
         none = 0,
@@ -45,7 +45,7 @@ namespace rocketjoe { namespace services {
         std::unique_ptr<zmq::context_t> zmq_context;
         std::vector<zmq::pollitem_t> jupyter_kernel_commands_polls;
         std::vector<zmq::pollitem_t> jupyter_kernel_infos_polls;
-        boost::intrusive_ptr<interpreter> jupyter_kernel;
+        boost::intrusive_ptr<pykernel> jupyter_kernel;
         std::unique_ptr<std::thread> commands_exuctor;  ///TODO: HACK
         std::unique_ptr<std::thread> infos_exuctor;  ///TODO: HACK
     };

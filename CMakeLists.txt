@@ -16,8 +16,6 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-#set(CMAKE_VERBOSE_MAKEFILE ON)
-
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
@@ -34,6 +32,7 @@ if (DEV_MODE)
                 -Wextra
                 -Wpedantic
 
+                #-Wredundant-move # not work gcc
                 -Wcast-align
                 #-Wcast-qual
                 #-Wconversion
