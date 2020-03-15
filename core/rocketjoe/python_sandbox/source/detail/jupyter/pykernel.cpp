@@ -1,14 +1,8 @@
-#include <rocketjoe/jupyter/interpreter.hpp>
-
-#include <unistd.h>
-#include <pwd.h>
+#include <rocketjoe/python_sandbox/detail/jupyter/pykernel.hpp>
 
 #include <iostream>
-
 #include <algorithm>
 #include <cassert>
-#include <iterator>
-#include <locale>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -18,8 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/locale/date_time.hpp>
-#include <boost/locale/format.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -29,15 +21,15 @@
 
 #include <nlohmann/json.hpp>
 
-#include <botan/hex.h>
-#include <botan/mac.h>
-
 #include <pybind11/embed.h>
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
 #include <zmq_addon.hpp>
+
+#include "rocketjoe/python_sandbox/detail/jupyter/session.hpp"
+#include "rocketjoe/python_sandbox/detail/jupyter/shell.hpp"
+#include "rocketjoe/python_sandbox/detail/jupyter/zmq_socket_shared.hpp"
 
 namespace pybind11 { namespace detail {
     template<typename T>
@@ -124,58 +116,12 @@ namespace nlohmann {
     }
 }
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
-namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
     namespace nl = nlohmann;
     namespace py = pybind11;
 
     using namespace pybind11::literals;
-
-    class zmq_socket_shared final
-        : public boost::intrusive_ref_counter<zmq_socket_shared> {
-    public:
-        zmq_socket_shared(zmq::socket_t socket);
-
-        zmq::socket_t &operator*();
-
-    private:
-        zmq::socket_t socket;
-    };
-
-    class session final : public boost::intrusive_ref_counter<session> {
-    public:
-        session(std::string signature_key, std::string signature_scheme);
-
-        session(const session &) = delete;
-
-        session &operator=(const session &) = delete;
-
-        auto parse_message(std::vector<std::string> msgs,
-                           std::vector<std::string> &identifiers,
-                           nl::json &header, nl::json &parent_header,
-                           nl::json &metadata, nl::json &content) const -> bool;
-
-        auto construct_message(std::vector<std::string> identifiers,
-                               nl::json header, nl::json parent,
-                               nl::json metadata,
-                               nl::json content) -> std::vector<std::string>;
-
-        auto send(zmq::socket_t &socket,
-                  std::vector<std::string> msgs) const -> void;
-
-    private:
-        auto compute_signature(std::string header, std::string parent_header,
-                               std::string metadata,
-                               std::string content) const -> std::string;
-
-        constexpr static auto version{"5.3"};
-        constexpr static auto delimiter{"<IDS|MSG>"};
-        boost::uuids::uuid session_id;
-        std::size_t message_count;
-        std::string signature_key;
-        std::string signature_scheme;
-    };
 
     class BOOST_SYMBOL_VISIBLE input_redirection final {
     public:
@@ -191,69 +137,6 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
     private:
         py::object m_input;
         py::object m_getpass;
-    };
-
-    class zmq_ostream final {
-    public:
-        static auto set_parent(py::object self, py::dict parent) -> void;
-
-        static auto writable(py::object self) -> bool;
-
-        static auto write(py::object self, py::str string) -> void;
-
-        static auto flush(py::object self) -> void;
-    };
-
-    class display_hook final {
-    public:
-        static auto set_parent(py::object self, py::dict parent) -> void;
-
-        static auto start_displayhook(py::object self) -> void;
-
-        static auto write_output_prompt(py::object self) -> void;
-
-        static auto write_format_data(py::object self, py::dict data,
-                                      py::dict metadata) -> void;
-
-        static auto finish_displayhook(py::object self) -> void;
-    };
-
-    class display_publisher final {
-    public:
-        static auto set_parent(py::object self, py::dict parent) -> void;
-
-        static auto publish(py::object self, py::dict data, py::dict metadata,
-                            py::str source, py::dict trasistent,
-                            py::bool_ update) -> void;
-
-        static auto clear_output(py::object self,
-                                 py::bool_ wait = false) -> void;
-    };
-
-    class shell final {
-    public:
-        static auto _default_banner1(py::object self) -> py::object;
-
-        static auto _default_exiter(py::object self) -> py::object;
-
-        static auto init_hooks(py::object self) -> void;
-
-        static auto ask_exit(py::object self) -> void;
-
-        static auto run_cell(py::object self, py::args args,
-                             py::kwargs kwargs) -> py::object;
-
-        static auto _showtraceback(py::object self, py::object etype,
-                                   py::object evalue, py::object stb) -> void;
-
-        static auto set_next_input(py::object self, py::object text,
-                                   py::bool_ replace = true) -> void;
-
-        static auto set_parent(py::object self, py::dict parent) -> void;
-
-        static auto init_environment(py::object self) -> void;
-
-        static auto init_virtualenv(py::object self) -> void;
     };
 
     class BOOST_SYMBOL_VISIBLE interpreter_impl final {
@@ -373,161 +256,6 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         std::unordered_set<std::string> aborted;
     };
 
-    zmq_socket_shared::zmq_socket_shared(zmq::socket_t socket)
-        : socket{std::move(socket)} {}
-
-    zmq::socket_t &zmq_socket_shared::operator*() { return socket; }
-
-    session::session(std::string signature_key, std::string signature_scheme)
-        : session_id{boost::uuids::random_generator()()}
-        , message_count{0}
-        , signature_key{std::move(signature_key)}
-        , signature_scheme{std::move(signature_scheme)} {}
-
-    auto session::parse_message(std::vector<std::string> msgs,
-                                std::vector<std::string> &identifiers,
-                                nl::json &header, nl::json &parent_header,
-                                nl::json &metadata,
-                                nl::json &content) const -> bool {
-        auto split_position{std::find(msgs.cbegin(), msgs.cend(),
-                                      std::string{delimiter})};
-
-        identifiers = std::vector<std::string>{
-            std::make_move_iterator(msgs.cbegin()),
-            std::make_move_iterator(split_position)
-        };
-
-        std::vector<std::string> msgs_tail{
-            std::make_move_iterator(split_position + 1),
-            std::make_move_iterator(msgs.cend())
-        };
-        auto header_raw{std::move(msgs_tail[1])};
-        auto parent_header_raw{std::move(msgs_tail[2])};
-        auto metadata_raw{std::move(msgs_tail[3])};
-        auto content_raw{std::move(msgs_tail[4])};
-        auto signature{compute_signature(header_raw, parent_header_raw,
-                                         metadata_raw, content_raw)};
-
-        if(signature != msgs_tail[0]) {
-            return false;
-        }
-
-        header = nl::json::parse(std::move(header_raw));
-        parent_header = nl::json::parse(std::move(parent_header_raw));
-        metadata = nl::json::parse(std::move(metadata_raw));
-        content = nl::json::parse(std::move(content_raw));
-
-        return true;
-    }
-
-    auto session::construct_message(
-        std::vector<std::string> identifiers, nl::json header, nl::json parent,
-        nl::json metadata, nl::json content
-    ) -> std::vector<std::string> {
-        nl::json parent_header = nl::json::object();
-
-        if(parent.contains("header")) {
-            parent_header = std::move(parent["header"]);
-        }
-
-        if(!header.contains("version")) {
-            header["version"] = std::string{version};
-        }
-
-        if(!header.contains("username")) {
-            std::string username{"root"};
-            auto user_info{getpwuid(geteuid())};
-
-            if(user_info) {
-                username = user_info->pw_name;
-            }
-
-            header["username"] = std::move(username);
-        }
-
-        if(!header.contains("session")) {
-            header["session"] = boost::uuids::to_string(session_id);
-        }
-
-        if(!header.contains("msg_id")) {
-            header["msg_id"] = boost::uuids::to_string(session_id) + "_"
-                             + std::to_string(message_count++);
-        }
-
-        if(!header.contains("date")) {
-            header["date"] = (boost::locale::format("{1,ftime='%FT%T%Ez'}") %
-                              boost::locale::date_time{}).str(std::locale());
-        }
-
-        if(metadata.is_null()) {
-            metadata = nl::json::object();
-        }
-
-        if(content.is_null()) {
-            content = nl::json::object();
-        }
-
-        auto header_raw{header.dump()};
-        auto parent_header_raw{parent_header.dump()};
-        auto metadata_raw{metadata.dump()};
-        auto content_raw{content.dump()};
-        auto signature{compute_signature(header_raw, parent_header_raw,
-                                         metadata_raw, content_raw)};
-
-        std::vector<std::string> msgs{};
-
-        msgs.reserve(identifiers.size() + 6);
-        msgs.insert(msgs.end(), std::make_move_iterator(identifiers.begin()),
-                    std::make_move_iterator(identifiers.end()));
-        msgs.push_back(delimiter);
-        msgs.push_back(std::move(signature));
-        msgs.push_back(std::move(header_raw));
-        msgs.push_back(std::move(parent_header_raw));
-        msgs.push_back(std::move(metadata_raw));
-        msgs.push_back(std::move(content_raw));
-
-        return std::move(msgs);
-    }
-
-    auto session::send(zmq::socket_t &socket,
-                       std::vector<std::string> msgs) const -> void {
-        std::vector<zmq::const_buffer> msgs_for_send{};
-
-        msgs_for_send.reserve(msgs.size());
-
-        for(const auto &msg : msgs) {
-            std::cerr << msg << std::endl;
-            msgs_for_send.push_back(zmq::buffer(std::move(msg)));
-        }
-
-        assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
-    }
-
-    auto session::compute_signature(std::string header,
-                                    std::string parent_header,
-                                    std::string metadata,
-                                    std::string content) const -> std::string {
-        std::unique_ptr<Botan::MessageAuthenticationCode> mac{};
-
-        if(signature_scheme == "hmac-sha256") {
-            mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
-        }
-
-        if(!mac) {
-            return {};
-        }
-
-        mac->set_key(std::vector<std::uint8_t>{signature_key.begin(),
-                                               signature_key.end()});
-        mac->start();
-        mac->update(std::move(header));
-        mac->update(std::move(parent_header));
-        mac->update(std::move(metadata));
-        mac->update(std::move(content));
-
-        return Botan::hex_encode(mac->final(), false);
-    }
-
     static auto input_request(
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
         boost::intrusive_ptr<session> current_session,
@@ -640,363 +368,6 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
     input_redirection::~input_redirection() {
         py::module::import("builtins").attr("input") = m_input;
         py::module::import("getpass").attr("getpass") = m_getpass;
-    }
-
-    auto zmq_ostream::set_parent(py::object self, py::dict parent) -> void {
-        self.attr("parent") = std::move(parent);
-    }
-
-    auto zmq_ostream::writable(py::object self) -> bool { return true; }
-
-    auto zmq_ostream::write(py::object self, py::str string) -> void {
-        auto current_session{self.attr("current_session")
-            .cast<boost::intrusive_ptr<session>>()};
-
-        current_session->send(**self.attr("iopub_socket")
-            .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-            current_session->construct_message(
-                {self.attr("topic").cast<std::string>()},
-                {{"msg_type", "stream"}},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    self.attr("parent")
-                ).cast<std::string>()), {},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    py::dict("name"_a = self.attr("name").cast<std::string>(),
-                             "text"_a = std::move(string))
-                ).cast<std::string>())
-            )
-        );
-    }
-
-    auto zmq_ostream::flush(py::object self) -> void {}
-
-    auto display_hook::set_parent(py::object self, py::dict parent) -> void {
-        self.attr("parent") = std::move(parent);
-    }
-
-    auto display_hook::start_displayhook(py::object self) -> void {
-        self.attr("msg") = py::dict("parent"_a = self.attr("parent"),
-                                    "content"_a = py::dict());
-    }
-
-    auto display_hook::write_output_prompt(py::object self) -> void {
-        self.attr("msg")["content"]["execution_count"] =
-            self.attr("prompt_count");
-    }
-
-    auto display_hook::write_format_data(py::object self, py::dict data,
-                                         py::dict metadata) -> void {
-        self.attr("msg")["content"]["data"] = std::move(data);
-        self.attr("msg")["content"]["metadata"] = std::move(metadata);
-    }
-
-    auto display_hook::finish_displayhook(py::object self) -> void {
-        auto sys{py::module::import("sys")};
-
-        sys.attr("stdout").attr("flush")();
-        sys.attr("stderr").attr("flush")();
-
-        auto msg = nl::json::parse(py::module::import("json").attr("dumps")(
-            self.attr("msg")
-        ).cast<std::string>());
-
-        if(!msg["content"]["data"].is_null()) {
-            auto current_session{self.attr("current_session")
-                .cast<boost::intrusive_ptr<session>>()};
-
-            current_session->send(**self.attr("iopub_socket")
-                .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-                current_session->construct_message(
-                    {self.attr("topic").cast<std::string>()},
-                    {{"msg_type", "execute_result"}}, std::move(msg["parent"]),
-                    {}, std::move(msg["content"])
-                )
-            );
-        }
-
-        self.attr("msg") = py::none();
-    }
-
-    auto display_publisher::set_parent(py::object self,
-                                       py::dict parent) -> void {
-        self.attr("parent") = std::move(parent);
-    }
-
-    auto display_publisher::publish(py::object self, py::dict data,
-                                    py::dict metadata, py::str source,
-                                    py::dict trasistent,
-                                    py::bool_ update) -> void {
-        auto sys{py::module::import("sys")};
-
-        sys.attr("stdout").attr("flush")();
-        sys.attr("stderr").attr("flush")();
-
-        if(!metadata) {
-            metadata = py::dict();
-        }
-
-        self.attr("_validate_data")(data, metadata);
-
-        if(!trasistent) {
-            trasistent = py::dict();
-        }
-
-        auto current_session{self.attr("current_session")
-            .cast<boost::intrusive_ptr<session>>()};
-
-        current_session->send(**self.attr("iopub_socket")
-            .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-            current_session->construct_message(
-                {self.attr("topic").cast<std::string>()},
-                {{"msg_type", update ? "update_display_data" : "display_data"}},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    self.attr("parent")
-                ).cast<std::string>()), {},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    py::dict("data"_a = std::move(data),
-                             "metadata"_a = std::move(metadata),
-                             "transistent"_a = std::move(trasistent))
-                ).cast<std::string>())
-            )
-        );
-    }
-
-    auto display_publisher::clear_output(py::object self,
-                                         py::bool_ wait) -> void {
-        auto sys{py::module::import("sys")};
-
-        sys.attr("stdout").attr("flush")();
-        sys.attr("stderr").attr("flush")();
-
-        auto current_session{self.attr("current_session")
-            .cast<boost::intrusive_ptr<session>>()};
-
-        current_session->send(**self.attr("iopub_socket")
-            .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-            current_session->construct_message(
-                {self.attr("topic").cast<std::string>()},
-                {{"msg_type", "clear_output"}},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    self.attr("parent")
-                ).cast<std::string>()), {},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    py::dict("wait"_a = wait)
-                ).cast<std::string>())
-            )
-        );
-    }
-
-    auto shell::_default_banner1(py::object self) -> py::object {
-        return py::module::import("IPython.core.usage").attr("default_banner");
-    }
-
-    auto shell::_default_exiter(py::object self) -> py::object {
-        return py::module::import("IPython.core.autocall")
-            .attr("ZMQExitAutocall")(std::move(self));
-    }
-
-    auto shell::init_hooks(py::object self) -> void {
-        py::module::import("IPython.core.interactiveshell")
-            .attr("InteractiveShell").attr("init_hooks")(self);
-        self.attr("set_hook")(
-            "show_in_pager", py::module::import("IPython.core").attr("page")
-                .attr("as_hook")(py::module::import("IPython.core.payloadpage")
-                                    .attr("page")), 99
-        );
-    }
-
-    auto shell::ask_exit(py::object self) -> void {
-        auto keepkernel_on_exit{self.attr("keepkernel_on_exit")};
-
-        self.attr("exit_now") = !keepkernel_on_exit.cast<py::bool_>();
-        self.attr("payload_manager").attr("write_payload")(
-            py::dict("source"_a = "ask_exit",
-                     "keepkernel"_a = keepkernel_on_exit)
-        );
-    }
-
-    auto shell::run_cell(py::object self, py::args args,
-                         py::kwargs kwargs) -> py::object {
-        self.attr("_last_traceback") = py::none();
-
-        return py::module::import("IPython.core.interactiveshell")
-            .attr("InteractiveShell").attr("run_cell")(self, *args, **kwargs);
-    }
-
-    auto shell::_showtraceback(py::object self, py::object etype,
-                               py::object evalue, py::object stb) -> void {
-        auto sys{py::module::import("sys")};
-
-        sys.attr("stdout").attr("flush")();
-        sys.attr("stderr").attr("flush")();
-
-        auto displayhook{self.attr("displayhook")};
-        auto topic{py::none()};
-
-        if(!displayhook.attr("topic").is_none()) {
-            topic = displayhook.attr("topic").attr("replace")("execute_result",
-                                                              "error");
-        }
-
-        auto current_session{displayhook.attr("current_session")
-            .cast<boost::intrusive_ptr<session>>()};
-
-        current_session->send(**displayhook.attr("iopub_socket")
-            .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-            current_session->construct_message(
-                {topic.cast<std::string>()}, {{"msg_type", "error"}},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    displayhook.attr("parent")
-                ).cast<std::string>()), {},
-                nl::json::parse(py::module::import("json").attr("dumps")(
-                    py::dict("traceback"_a = stb,
-                             "ename"_a = etype.attr("__name__"),
-                             "evalue"_a = py::str(std::move(evalue)))
-                ).cast<std::string>())
-            )
-        );
-
-        self.attr("_last_traceback") = std::move(stb);
-    }
-
-    auto shell::set_next_input(py::object self, py::object text,
-                               py::bool_ replace) -> void {
-        self.attr("payload_manager").attr("write_payload")(
-            py::dict("source"_a = "set_next_input", "text"_a = std::move(text),
-                     "replace"_a = replace)
-        );
-    }
-
-    auto shell::set_parent(py::object self, py::dict parent) -> void {
-        display_hook::set_parent(self.attr("displayhook"), parent);
-        display_publisher::set_parent(self.attr("display_pub"), parent);
-
-        auto sys{py::module::import("sys")};
-
-        zmq_ostream::set_parent(sys.attr("stdout"), parent);
-        zmq_ostream::set_parent(sys.attr("stderr"), parent);
-    }
-
-    auto shell::init_environment(py::object self) -> void {
-        auto environ{py::module::import("os").attr("environ")};
-
-        environ["TERM"] = "xterm-color";
-        environ["CLICOLOR"] = "1";
-        environ["PAGER"] = "cat";
-        environ["GIT_PAGER"] = "cat";
-    }
-
-    auto shell::init_virtualenv(py::object self) -> void {}
-
-    PYBIND11_EMBEDDED_MODULE(rocketjoe, rocketjoe) {
-        auto pykernel{rocketjoe.def_submodule("pykernel")};
-        auto type{py::reinterpret_borrow<py::object>((PyObject *)&PyType_Type)};
-        auto traitlets{py::module::import("traitlets")};
-        auto tl_type{traitlets.attr("Type")};
-        auto tl_any{traitlets.attr("Any")};
-        auto tl_cbool{traitlets.attr("CBool")};
-        auto tl_instance{traitlets.attr("Instance")};
-        auto tl_default{traitlets.attr("default")};
-        auto text_io_base{py::module::import("io").attr("TextIOBase")};
-        auto display_hook{py::module::import("IPython.core.displayhook")
-            .attr("DisplayHook")};
-        auto display_publisher{py::module::import("IPython.core.displaypub")
-            .attr("DisplayPublisher")};
-        auto shell_module{py::module::import("IPython.core.interactiveshell")};
-        auto shell_abc{shell_module.attr("InteractiveShellABC")};
-        auto shell{shell_module.attr("InteractiveShell")};
-        auto zmq_exit_autocall{py::module::import("IPython.core.autocall")
-            .attr("ZMQExitAutocall")};
-        auto zmq_ostream_props{py::dict(
-            "encoding"_a = "UTF-8",
-            "writable"_a = py::cpp_function(&zmq_ostream::writable,
-                                            py::is_method(py::none())),
-            "write"_a = py::cpp_function(&zmq_ostream::write,
-                                         py::is_method(py::none())),
-            "flush"_a = py::cpp_function(&zmq_ostream::flush,
-                                         py::is_method(py::none()))
-        )};
-        auto zmq_ostream{type("ZMQOstream",
-                              py::make_tuple(std::move(text_io_base)),
-                              std::move(zmq_ostream_props))};
-        auto display_hook_props{py::dict(
-            "parent"_a = tl_any("allow_none"_a = true),
-            "start_displayhook"_a = py::cpp_function(
-                &display_hook::start_displayhook, py::is_method(py::none())
-            ),
-            "write_output_prompt"_a = py::cpp_function(
-                &display_hook::write_output_prompt, py::is_method(py::none())
-            ),
-            "write_format_data"_a = py::cpp_function(
-                &display_hook::write_format_data, py::is_method(py::none())
-            ),
-            "finish_displayhook"_a = py::cpp_function(
-                &display_hook::finish_displayhook, py::is_method(py::none())
-            )
-        )};
-        auto rocketjoe_display_hook{type(
-            "RocketJoeDisplayHook", py::make_tuple(std::move(display_hook)),
-            std::move(display_hook_props)
-        )};
-        auto display_publisher_props{py::dict(
-            "parent"_a = tl_any("allow_none"_a = true),
-            "publish"_a = py::cpp_function(&display_publisher::publish,
-                                           py::is_method(py::none())),
-            "clear_output"_a = py::cpp_function(
-                &display_publisher::clear_output, py::is_method(py::none())
-            )
-        )};
-        auto rocketjoe_display_publisher{type(
-            "RocketJoeDisplayPublisher",
-            py::make_tuple(std::move(display_publisher)),
-            std::move(display_publisher_props)
-        )};
-        auto shell_props{py::dict(
-            "displayhook_class"_a = tl_type(rocketjoe_display_hook),
-            "display_pub_class"_a = tl_type(rocketjoe_display_publisher),
-            "readline_use"_a = tl_cbool(false),
-            "autoindent"_a = tl_cbool(false),
-            "exiter"_a = tl_instance(std::move(zmq_exit_autocall)),
-            "keepkernel_on_exit"_a = py::none(),
-            "_default_banner1"_a = tl_default("banner1")(
-                py::cpp_function(&shell::_default_banner1,
-                                 py::is_method(py::none()))
-            ),
-            "_default_exiter"_a = tl_default("exiter")(
-                py::cpp_function(&shell::_default_exiter,
-                                 py::is_method(py::none()))
-            ),
-            "init_hooks"_a = py::cpp_function(&shell::init_hooks,
-                                              py::is_method(py::none())),
-            "ask_exit"_a = py::cpp_function(&shell::ask_exit,
-                                            py::is_method(py::none())),
-            "run_cell"_a = py::cpp_function(&shell::run_cell,
-                                            py::is_method(py::none())),
-            "_showtraceback"_a = py::cpp_function(&shell::_showtraceback,
-                                                  py::is_method(py::none())),
-            "set_next_input"_a = py::cpp_function(&shell::set_next_input,
-                                                  py::is_method(py::none())),
-            "init_environment"_a = py::cpp_function(&shell::init_environment,
-                                                    py::is_method(py::none())),
-            "init_virtualenv"_a = py::cpp_function(&shell::init_virtualenv,
-                                                   py::is_method(py::none()))
-        )};
-        auto rocketjoe_shell{type("RocketJoeShell",
-                                  py::make_tuple(std::move(shell)),
-                                  std::move(shell_props))};
-
-        py::class_<zmq_socket_shared, boost::intrusive_ptr<zmq_socket_shared>>(
-            pykernel, "ZMQSocket"
-        );
-        py::class_<session, boost::intrusive_ptr<session>>(pykernel,
-                                                           "RocketJoeSession");
-        pykernel.attr("ZMQOstream") = std::move(zmq_ostream);
-        pykernel.attr("RocketJoeDisplayHook") =
-            std::move(rocketjoe_display_hook);
-        pykernel.attr("RocketJoeDisplayPublisher") =
-            std::move(rocketjoe_display_publisher);
-        pykernel.attr("RocketJoeShell") = rocketjoe_shell;
-        shell_abc.attr("register")(std::move(rocketjoe_shell));
     }
 
     interpreter_impl::interpreter_impl(std::string signature_key,
@@ -1700,7 +1071,7 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
         return resume;
     }
 
-    interpreter::interpreter(std::string signature_key,
+    pykernel::pykernel(std::string signature_key,
                              std::string signature_scheme,
                              zmq::socket_t shell_socket,
                              zmq::socket_t control_socket,
@@ -1714,9 +1085,10 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
               std::move(heartbeat_socket)
           )} {}
 
-    interpreter::~interpreter() = default;
+    pykernel::~pykernel() = default;
 
-    auto interpreter::poll(poll_flags polls) -> bool {
+    auto pykernel::poll(poll_flags polls) -> bool {
         return pimpl->poll(polls);
     }
+
 }}}}

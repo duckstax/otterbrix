@@ -7,7 +7,8 @@
 
 #include <zmq.hpp>
 
-namespace rocketjoe { namespace services { namespace jupyter { namespace detail {
+namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+
     enum class poll_flags : std::uint8_t
     {
         none             = 0,
@@ -67,20 +68,20 @@ namespace rocketjoe { namespace services { namespace jupyter { namespace detail 
 
     class interpreter_impl;
 
-    class interpreter final : public boost::intrusive_ref_counter<interpreter> {
+    class pykernel final : public boost::intrusive_ref_counter<pykernel> {
     public:
-        interpreter(std::string session_key, std::string signature_scheme,
+      pykernel(std::string session_key, std::string signature_scheme,
                     zmq::socket_t shell_socket, zmq::socket_t control_socket,
                     zmq::socket_t stdin_socket, zmq::socket_t iopub_socket,
                     zmq::socket_t heartbeat_socket);
 
-        interpreter(const interpreter &) = delete;
+      pykernel(const pykernel &) = delete;
 
-        interpreter &operator=(const interpreter &) = delete;
+      pykernel &operator=(const pykernel &) = delete;
 
-        ~interpreter();
+      ~pykernel();
 
-        auto poll(poll_flags polls) -> bool;
+      auto poll(poll_flags polls) -> bool;
 
     private:
         std::unique_ptr<interpreter_impl> pimpl;
