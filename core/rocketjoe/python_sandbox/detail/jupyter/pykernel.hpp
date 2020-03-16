@@ -70,18 +70,18 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
     class pykernel final : public boost::intrusive_ref_counter<pykernel> {
     public:
-      pykernel(std::string session_key, std::string signature_scheme,
+        pykernel(std::string session_key, std::string signature_scheme,
                     zmq::socket_t shell_socket, zmq::socket_t control_socket,
                     zmq::socket_t stdin_socket, zmq::socket_t iopub_socket,
                     zmq::socket_t heartbeat_socket);
 
-      pykernel(const pykernel &) = delete;
+        pykernel(const pykernel &) = delete;
 
-      pykernel &operator=(const pykernel &) = delete;
+        pykernel &operator=(const pykernel &) = delete;
 
-      ~pykernel();
+        ~pykernel();
 
-      auto poll(poll_flags polls) -> bool;
+        auto poll(poll_flags polls) -> bool;
 
     private:
         std::unique_ptr<interpreter_impl> pimpl;
