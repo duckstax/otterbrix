@@ -31,6 +31,10 @@
 #include "rocketjoe/python_sandbox/detail/jupyter/shell.hpp"
 #include "rocketjoe/python_sandbox/detail/jupyter/zmq_socket_shared.hpp"
 
+//The bug related to the use of RTTI by the pybind11 library has been fixed: a
+//declaration should be in each translation unit.
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+
 namespace pybind11 { namespace detail {
     template<typename T>
     struct type_caster<boost::optional<T>>
@@ -392,7 +396,9 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         , identifier{boost::uuids::random_generator()()}
         , parent_header(nl::json::object())
         , abort_all{false} {
-        shell = py::module::import("rocketjoe.pykernel").attr("RocketJoeShell")(
+        auto pykernel{py::module::import("pyrocketjoe.pykernel")};
+
+        shell = pykernel.attr("RocketJoeShell")(
             "_init_location_id"_a = "shell.py:1"
         );
         shell.attr("displayhook").attr("current_session") = current_session;
@@ -401,8 +407,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         shell.attr("display_pub").attr("current_session") = current_session;
         shell.attr("display_pub").attr("iopub_socket") = this->iopub_socket;
 
-        auto zmq_ostream{py::module::import("rocketjoe.pykernel")
-            .attr("ZMQOstream")};
+        auto zmq_ostream{pykernel.attr("ZMQOstream")};
         auto new_stdout{zmq_ostream()};
 
         new_stdout.attr("current_session") = current_session;

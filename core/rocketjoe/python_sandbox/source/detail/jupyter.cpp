@@ -21,7 +21,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
     using namespace ::rocketjoe::services::detail::jupyter;
 
     auto add_jupyter(py::module &pyrocketjoe, context_manager *) -> void  {
-        auto pykernel  = pyrocketjoe.def_submodule("pykernel");
+        auto pykernel = pyrocketjoe.def_submodule("pykernel");
         auto type{py::reinterpret_borrow<py::object>((PyObject *)&PyType_Type)};
         auto traitlets{py::module::import("traitlets")};
         auto tl_type{traitlets.attr("Type")};

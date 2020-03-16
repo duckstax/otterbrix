@@ -8,6 +8,10 @@
 #include <rocketjoe/python_sandbox/detail/jupyter/zmq_ostream.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/zmq_socket_shared.hpp>
 
+//The bug related to the use of RTTI by the pybind11 library has been fixed: a
+//declaration should be in each translation unit.
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
     using namespace pybind11::literals;
