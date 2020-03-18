@@ -52,7 +52,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                     py::dict("data"_a = std::move(data),
                                              "metadata"_a = std::move(metadata),
                                              "transistent"_a = std::move(trasistent))
-                                ).cast<std::string>())
+                                ).cast<std::string>()), {}
                             )
         );
     }
@@ -77,7 +77,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                 ).cast<std::string>()), {},
                                 nl::json::parse(py::module::import("json").attr("dumps")(
                                     py::dict("wait"_a = wait)
-                                ).cast<std::string>())
+                                ).cast<std::string>()), {}
                             )
         );
     }

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <pybind11/embed.h>
-#include <pybind11/functional.h>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+
+#include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/zmq_socket_shared.hpp>
 
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
@@ -11,16 +13,17 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
     class display_hook final {
     public:
-        static auto set_parent(py::object self, py::dict parent) -> void;
+        display_hook(boost::intrusive_ptr<session> current_session,
+                     boost::intrusive_ptr<zmq_socket_shared> iopub_socket);
 
-        static auto start_displayhook(py::object self) -> void;
+        auto set_execution_count(size_t execution_count) -> void;
 
-        static auto write_output_prompt(py::object self) -> void;
+        auto operator()(py::object value) -> void;
 
-        static auto write_format_data(py::object self, py::dict data,
-                                    py::dict metadata) -> void;
-
-        static auto finish_displayhook(py::object self) -> void;
+    private:
+        boost::intrusive_ptr<session> current_session;
+        boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
+        size_t execution_count;
     };
 
 }}}}

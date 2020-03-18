@@ -1,4 +1,10 @@
-#include <rocketjoe/python_sandbox/detail/jupyter/display_hook.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
+
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <utility>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -11,8 +17,6 @@
 
 #include <botan/hex.h>
 #include <botan/mac.h>
-
-#include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
 
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
@@ -29,7 +33,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                 std::vector<std::string> &identifiers,
                                 nl::json &header, nl::json &parent_header,
                                 nl::json &metadata,
-                                nl::json &content) const -> bool {
+                                nl::json &content,
+                                std::vector<std::string>& buffers) const -> bool {
         auto split_position{std::find(msgs.cbegin(), msgs.cend(),
                                     std::string{delimiter})};
 
@@ -46,8 +51,13 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto parent_header_raw{std::move(msgs_tail[2])};
         auto metadata_raw{std::move(msgs_tail[3])};
         auto content_raw{std::move(msgs_tail[4])};
+
+        std::move(std::make_move_iterator(msgs_tail.cbegin() + 4),
+                  std::make_move_iterator(msgs.cend()),
+                  std::back_inserter(buffers));
+
         auto signature{compute_signature(header_raw, parent_header_raw,
-                                       metadata_raw, content_raw)};
+                                         metadata_raw, content_raw, buffers)};
 
         if(signature != msgs_tail[0]) {
             return false;
@@ -63,7 +73,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
     auto session::construct_message(
         std::vector<std::string> identifiers, nl::json header, nl::json parent,
-        nl::json metadata, nl::json content
+        nl::json metadata, nl::json content, std::vector<std::string> buffers
     ) -> std::vector<std::string> {
         nl::json parent_header = nl::json::object();
 
@@ -113,19 +123,22 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto metadata_raw{metadata.dump()};
         auto content_raw{content.dump()};
         auto signature{compute_signature(header_raw, parent_header_raw,
-                                       metadata_raw, content_raw)};
+                                         metadata_raw, content_raw, buffers)};
 
         std::vector<std::string> msgs{};
 
         msgs.reserve(identifiers.size() + 6);
         msgs.insert(msgs.end(), std::make_move_iterator(identifiers.begin()),
-                  std::make_move_iterator(identifiers.end()));
+                    std::make_move_iterator(identifiers.end()));
         msgs.push_back(delimiter);
         msgs.push_back(std::move(signature));
         msgs.push_back(std::move(header_raw));
         msgs.push_back(std::move(parent_header_raw));
         msgs.push_back(std::move(metadata_raw));
         msgs.push_back(std::move(content_raw));
+        std::move(std::make_move_iterator(buffers.cbegin()),
+                  std::make_move_iterator(buffers.cend()),
+                  std::back_inserter(msgs));
 
         return std::move(msgs);
     }
@@ -137,8 +150,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         msgs_for_send.reserve(msgs.size());
 
         for(const auto &msg : msgs) {
-        std::cerr << msg << std::endl;
-        msgs_for_send.push_back(zmq::buffer(std::move(msg)));
+            std::cerr << msg << std::endl;
+            msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
 
         assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
@@ -147,7 +160,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     auto session::compute_signature(std::string header,
                                     std::string parent_header,
                                     std::string metadata,
-                                    std::string content) const -> std::string {
+                                    std::string content,
+                                    std::vector<std::string>& buffers) const -> std::string {
         std::unique_ptr<Botan::MessageAuthenticationCode> mac{};
 
         if(signature_scheme == "hmac-sha256") {
@@ -159,12 +173,16 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         }
 
         mac->set_key(std::vector<std::uint8_t>{signature_key.begin(),
-                                             signature_key.end()});
+                                               signature_key.end()});
         mac->start();
         mac->update(std::move(header));
         mac->update(std::move(parent_header));
         mac->update(std::move(metadata));
         mac->update(std::move(content));
+
+        for(const auto& buffer : buffers) {
+            mac->update(buffer);
+        }
 
         return Botan::hex_encode(mac->final(), false);
     }

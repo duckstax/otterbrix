@@ -37,7 +37,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                       .attr("dumps")(
                           py::dict("name"_a = self.attr("name").cast<std::string>(),
                                    "text"_a = std::move(string)))
-                      .cast<std::string>())));
+                      .cast<std::string>()), {}));
     }
 
     auto zmq_ostream::flush(py::object self) -> void {}

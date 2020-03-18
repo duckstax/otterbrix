@@ -2,7 +2,7 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
-#include <rocketjoe/python_sandbox/detail/jupyter/display_hook.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/shell_display_hook.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/display_publisher.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/zmq_ostream.hpp>
@@ -82,7 +82,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                     py::dict("traceback"_a = stb,
                                              "ename"_a = etype.attr("__name__"),
                                              "evalue"_a = py::str(std::move(evalue)))
-                                ).cast<std::string>())
+                                ).cast<std::string>()), {}
                             )
         );
 
@@ -98,7 +98,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     }
 
     auto shell::set_parent(py::object self, py::dict parent) -> void {
-        display_hook::set_parent(self.attr("displayhook"), parent);
+        shell_display_hook::set_parent(self.attr("displayhook"), parent);
         display_publisher::set_parent(self.attr("display_pub"), parent);
 
         auto sys{py::module::import("sys")};

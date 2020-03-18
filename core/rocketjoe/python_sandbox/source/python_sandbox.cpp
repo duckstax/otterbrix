@@ -200,7 +200,7 @@ namespace rocketjoe { namespace services {
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
             std::move(stdin_socket), std::move(iopub_socket),
-            std::move(heartbeat_socket)
+            std::move(heartbeat_socket), false
         }};
     }
 

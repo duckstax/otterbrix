@@ -6,6 +6,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <rocketjoe/python_sandbox/detail/jupyter/display_hook.hpp>
+#include <rocketjoe/python_sandbox/detail/jupyter/shell_display_hook.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/display_publisher.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/shell.hpp>
@@ -30,8 +31,8 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
         auto tl_instance{traitlets.attr("Instance")};
         auto tl_default{traitlets.attr("default")};
         auto text_io_base{py::module::import("io").attr("TextIOBase")};
-        auto display_hook{py::module::import("IPython.core.displayhook")
-                              .attr("DisplayHook")};
+        auto shell_display_hook{py::module::import("IPython.core.displayhook")
+                                .attr("DisplayHook")};
         auto display_publisher{py::module::import("IPython.core.displaypub")
                                    .attr("DisplayPublisher")};
         auto shell_module{py::module::import("IPython.core.interactiveshell")};
@@ -51,24 +52,29 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
         auto zmq_ostream{type("ZMQOstream",
                               py::make_tuple(std::move(text_io_base)),
                               std::move(zmq_ostream_props))};
-        auto display_hook_props{py::dict(
+        auto shell_display_hook_props{py::dict(
             "parent"_a = tl_any("allow_none"_a = true),
             "start_displayhook"_a = py::cpp_function(
-                &display_hook::start_displayhook, py::is_method(py::none())
+                &shell_display_hook::start_displayhook,
+                py::is_method(py::none())
             ),
             "write_output_prompt"_a = py::cpp_function(
-                &display_hook::write_output_prompt, py::is_method(py::none())
+                &shell_display_hook::write_output_prompt,
+                py::is_method(py::none())
             ),
             "write_format_data"_a = py::cpp_function(
-                &display_hook::write_format_data, py::is_method(py::none())
+                &shell_display_hook::write_format_data,
+                py::is_method(py::none())
             ),
             "finish_displayhook"_a = py::cpp_function(
-                &display_hook::finish_displayhook, py::is_method(py::none())
+                &shell_display_hook::finish_displayhook,
+                py::is_method(py::none())
             )
         )};
-        auto rocketjoe_display_hook{type(
-            "RocketJoeDisplayHook", py::make_tuple(std::move(display_hook)),
-            std::move(display_hook_props)
+        auto rocketjoe_shell_display_hook{type(
+            "RocketJoeShellDisplayHook", py::make_tuple(std::move(
+                shell_display_hook
+            )), std::move(shell_display_hook_props)
         )};
         auto display_publisher_props{py::dict(
             "parent"_a = tl_any("allow_none"_a = true),
@@ -84,7 +90,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
             std::move(display_publisher_props)
         )};
         auto shell_props{py::dict(
-            "displayhook_class"_a = tl_type(rocketjoe_display_hook),
+            "displayhook_class"_a = tl_type(rocketjoe_shell_display_hook),
             "display_pub_class"_a = tl_type(rocketjoe_display_publisher),
             "readline_use"_a = tl_cbool(false),
             "autoindent"_a = tl_cbool(false),
@@ -120,11 +126,14 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
         py::class_<zmq_socket_shared, boost::intrusive_ptr<zmq_socket_shared>>(
             pykernel, "ZMQSocket"
         );
+        py::class_<display_hook>(pykernel, "RocketJoeDisplayHook")
+            .def("set_execution_count", &display_hook::set_execution_count)
+            .def("__call__", &display_hook::operator());
         py::class_<session, boost::intrusive_ptr<session>>(pykernel,
             "RocketJoeSession");
         pykernel.attr("ZMQOstream") = std::move(zmq_ostream);
-        pykernel.attr("RocketJoeDisplayHook") =
-            std::move(rocketjoe_display_hook);
+        pykernel.attr("RocketJoeShellDisplayHook") =
+            std::move(rocketjoe_shell_display_hook);
         pykernel.attr("RocketJoeDisplayPublisher") =
             std::move(rocketjoe_display_publisher);
         pykernel.attr("RocketJoeShell") = rocketjoe_shell;

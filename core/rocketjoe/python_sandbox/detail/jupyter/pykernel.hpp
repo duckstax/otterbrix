@@ -73,7 +73,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         pykernel(std::string session_key, std::string signature_scheme,
                     zmq::socket_t shell_socket, zmq::socket_t control_socket,
                     zmq::socket_t stdin_socket, zmq::socket_t iopub_socket,
-                    zmq::socket_t heartbeat_socket);
+                    zmq::socket_t heartbeat_socket, bool engine_mode);
 
         pykernel(const pykernel &) = delete;
 
