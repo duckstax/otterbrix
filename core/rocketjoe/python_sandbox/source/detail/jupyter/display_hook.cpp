@@ -5,55 +5,47 @@
 #include <rocketjoe/python_sandbox/detail/jupyter/session.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/zmq_socket_shared.hpp>
 
+//The bug related to the use of RTTI by the pybind11 library has been fixed: a
+//declaration should be in each translation unit.
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
-using namespace pybind11::literals;
+    using namespace pybind11::literals;
 
-auto display_hook::set_parent(py::object self, py::dict parent) -> void {
-  self.attr("parent") = std::move(parent);
-}
+    display_hook::display_hook(
+        boost::intrusive_ptr<session> current_session,
+        boost::intrusive_ptr<zmq_socket_shared> iopub_socket
+    ) : current_session{current_session}, iopub_socket{iopub_socket},
+        execution_count{0} {}
 
-auto display_hook::start_displayhook(py::object self) -> void {
-  self.attr("msg") = py::dict("parent"_a = self.attr("parent"),
-                              "content"_a = py::dict());
-}
+    auto display_hook::set_execution_count(size_t execution_count) -> void {
+        this->execution_count = execution_count;
+    }
 
-auto display_hook::write_output_prompt(py::object self) -> void {
-  self.attr("msg")["content"]["execution_count"] =
-      self.attr("prompt_count");
-}
+    auto display_hook::operator()(py::object value) -> void {
+        if(!value) {
+            return;
+        }
 
-auto display_hook::write_format_data(py::object self, py::dict data,
-                                     py::dict metadata) -> void {
-  self.attr("msg")["content"]["data"] = std::move(data);
-  self.attr("msg")["content"]["metadata"] = std::move(metadata);
-}
+        auto builtins = py::module::import("builtins");
 
-auto display_hook::finish_displayhook(py::object self) -> void {
-  auto sys{py::module::import("sys")};
+        builtins.attr("_") = value;
 
-  sys.attr("stdout").attr("flush")();
-  sys.attr("stderr").attr("flush")();
+        auto sys{py::module::import("sys")};
 
-  auto msg = nl::json::parse(py::module::import("json").attr("dumps")(
-      self.attr("msg")
-  ).cast<std::string>());
+        sys.attr("stdout").attr("flush")();
+        sys.attr("stderr").attr("flush")();
 
-  if(!msg["content"]["data"].is_null()) {
-    auto current_session{self.attr("current_session")
-                             .cast<boost::intrusive_ptr<session>>()};
-
-    current_session->send(**self.attr("iopub_socket")
-                              .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-                          current_session->construct_message(
-                              {self.attr("topic").cast<std::string>()},
-                              {{"msg_type", "execute_result"}}, std::move(msg["parent"]),
-                              {}, std::move(msg["content"])
-                          )
-    );
-  }
-
-  self.attr("msg") = py::none();
-}
+        current_session->send(
+            **iopub_socket, current_session->construct_message(
+                {"execute_result"}, {{"msg_type", "execute_result"}},
+                {}, {},
+                {{"execution_count", execution_count},
+                 {"data", {{"text/plain", py::repr(value)}}},
+                 {"metadata", nl::json::object()}}, {}
+            )
+        );
+    }
 
 }}}}

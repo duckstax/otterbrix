@@ -111,8 +111,15 @@ namespace rocketjoe { namespace services {
         std::cerr << "processing env python finish " << std::endl;
 
         if(mode == sandbox_mode::jupyter) {
-          python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
-          jupyter_kernel_init();
+            python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+            py::exec(R"__(
+                import sys
+
+                sys.modules['pyrocketjoe'] = pyrocketjoe
+            )__", py::globals(), py::dict(
+                "pyrocketjoe"_a = pyrocketjoe
+            ));
+            jupyter_kernel_init();
         }
 
         start();
@@ -193,7 +200,7 @@ namespace rocketjoe { namespace services {
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
             std::move(stdin_socket), std::move(iopub_socket),
-            std::move(heartbeat_socket)
+            std::move(heartbeat_socket), false
         }};
     }
 

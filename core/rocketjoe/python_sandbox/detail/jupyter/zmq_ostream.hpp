@@ -7,17 +7,17 @@
 
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
-namespace py = pybind11;
+    namespace py = pybind11;
 
-class zmq_ostream final {
-public:
-  static auto set_parent(py::object self, py::dict parent) -> void;
+    class zmq_ostream final {
+    public:
+        static auto set_parent(py::object self, py::dict parent) -> void;
 
-  static auto writable(py::object self) -> bool;
+        static auto writable(py::object self) -> bool;
 
-  static auto write(py::object self, py::str string) -> void;
+        static auto write(py::object self, py::str string) -> void;
 
-  static auto flush(py::object self) -> void;
-};
+        static auto flush(py::object self) -> void;
+    };
 
 }}}}

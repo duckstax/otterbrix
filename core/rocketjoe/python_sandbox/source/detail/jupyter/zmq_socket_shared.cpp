@@ -4,9 +4,9 @@
 
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
-zmq_socket_shared::zmq_socket_shared(zmq::socket_t socket)
-    : socket{std::move(socket)} {}
+    zmq_socket_shared::zmq_socket_shared(zmq::socket_t socket)
+        : socket{std::move(socket)} {}
 
-zmq::socket_t &zmq_socket_shared::operator*() { return socket; }
+    zmq::socket_t &zmq_socket_shared::operator*() { return socket; }
 
 }}}}
