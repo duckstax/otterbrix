@@ -18,7 +18,7 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 - [ ] ndarray.
    - [ ] Implementation of ndarray.
    - [ ] CUDA integration to speed up the processing of ndarray operations.
-   - [ ] OpenCL integration to speed up the processing of ndarray operations (optionally).
+   - [ ] OpenCL integration to speed up the processing of ndarray operations (optional).
 - [ ] Monitoring: implementation of monitoring capabilities for the state of the worker pool and processes, visualization of statistics and load.
 
 ### Under heavy development. Come back later
