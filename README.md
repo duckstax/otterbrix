@@ -6,9 +6,7 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 - [ ] Integration of the Jupyter Kernel Protocol to simplify data scientists' processing and visualization of data, modeling of any species possible in the Jupyter ecosystem.
    - [x] Implementation of the protocol for the execution, completion and introspection of the code.
    - [ ] Integration of ipyparallel for parallel execution in a cluster.
-   - [ ] cPickle integration for backward compatibility with the Jupyter ecosystem.
-   - [ ] Integration of dataframe for use in the Jupyter ecosystem.
-   - [ ] Integration of tensor calculus.
+   - [ ] Storage of cPickle in shared memory to minimize copying in the the process pool.
 - [ ] Integration of two-dimensional dataframe to provide data scientists with the usual ways of presenting and processing data.
    - [ ] The basic dataframe implementation for loading, unloading and various data processing methods.
    - [ ] Storage of the dataframe in shared memory to minimize copying in the process pool.
@@ -17,10 +15,10 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 - [ ] Computing on the GPU.
    - [ ] Basic implementation of CUDA.
    - [ ] Similarly, but OpenCL (optional).
-- [ ] Tensor calculus.
-   - [ ] Implementation of tensor calculus.
-   - [ ] CUDA integration to speed up the processing of tensor operations.
-   - [ ] OpenCL integration to speed up the processing of tensor operations. (optionally).
+- [ ] ndarray.
+   - [ ] Implementation of ndarray.
+   - [ ] CUDA integration to speed up the processing of ndarray operations.
+   - [ ] OpenCL integration to speed up the processing of ndarray operations (optionally).
 - [ ] Monitoring: implementation of monitoring capabilities for the state of the worker pool and processes, visualization of statistics and load.
 
 ### Under heavy development. Come back later
