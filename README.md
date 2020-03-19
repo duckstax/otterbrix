@@ -21,11 +21,28 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
    - [ ] OpenCL integration to speed up the processing of ndarray operations (optional).
 - [ ] Monitoring: implementation of monitoring capabilities for the state of the worker pool and processes, visualization of statistics and load.
 
-### Under heavy development. Come back later
+## Environment Settings Data Engineer or Data Scientist for Jupyter Notebook 
 
-* boost  >=  1.70
-* cmake  >=  3.14
-* python >=  3.5
+### Requirements
+* Docker (18.09.5 tested)
+* Docker Compose (1.24.1 tested)
+
+### Build and start
+1. Clone repository:
+```bash
+git clone https://github.com/jinncrafters/RocketJoe.git
+cd RocketJoe
+```
+
+2. Run RocketJoe Kernel and Jupyter Notebook
+```bash
+docker-compose -f docker-compose-jupyter.yaml up
+```
+
+3. Open the browser at http://localhost:8888/?token=your_token, where your_token
+is the access token for the Jupyter Notebook, which will be displayed in the
+logs when the container starts.
+
 
 ## Setup Developers Environments 
 
@@ -73,25 +90,3 @@ cmake --build .
 ./rocketjoe 
  
 ```
-
-## Setup RocketJoe Kernel for Jupyter Notebook in Docker
-
-### Requirements
-* Docker (18.09.5 tested)
-* Docker Compose (1.24.1 tested)
-
-### Build and start
-1. Clone repository:
-```bash
-git clone https://github.com/jinncrafters/RocketJoe.git
-cd RocketJoe
-```
-
-2. Run RocketJoe Kernel and Jupyter Notebook
-```bash
-docker-compose -f docker-compose-jupyter.yaml up
-```
-
-3. Open the browser at http://localhost:8888/?token=your_token, where your_token
-is the access token for the Jupyter Notebook, which will be displayed in the
-logs when the container starts.
