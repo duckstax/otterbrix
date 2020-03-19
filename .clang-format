@@ -57,4 +57,4 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 Standard: Cpp11
 UseTab: Never
-ColumnLimit: 0
+ColumnLimit: 80
