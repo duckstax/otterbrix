@@ -4,7 +4,7 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 
 # Roadmap
 - [ ] Integration of the Jupyter Kernel Protocol to simplify data scientists' processing and visualization of data, modeling of any species possible in the Jupyter ecosystem.
-   - [x] Implementation of the protocol for the execution, addition and introspection of the code.
+   - [x] Implementation of the protocol for the execution, completion and introspection of the code.
    - [ ] Integration of ipyparallel for parallel execution in a cluster.
    - [ ] cPickle integration for backward compatibility with the Jupyter ecosystem.
    - [ ] Integration of dataframe for use in the Jupyter ecosystem.
