@@ -1,9 +1,25 @@
 [![Build Status](https://travis-ci.org/jinncrafters/RocketJoe.svg?branch=master)](https://travis-ci.org/jinncrafters/RocketJoe)
 
-Applications server 
+RoсketJoe is a Python worker pool for distributed execution of computational tasks on a CPU or GPU. RocketJoe is intended for splitting two-dimensional dataframe into chunks for processing large volumes of data on a cluster of machines or accelerators, such as GPUs. It is also integrated with Jupyter Notebook for the possibility of interactive work with data and algorithms, as well as their visualization.
 
-This is an attempt to provide very easy to use Lua Application Server working over HTTP and WebSockets  protocol . 
-RocketJoe is an application server for micro-services architecture.
+# Roadmap
+- [ ] Integration of the Jupyter Kernel Protocol to simplify data scientists' processing and visualization of data, modeling of any species possible in the Jupyter ecosystem.
+   - [x] Implementation of the protocol for the execution, completion and introspection of the code.
+   - [ ] Integration of ipyparallel for parallel execution in a cluster.
+   - [ ] Storage of cPickle in shared memory to minimize copying in the the process pool.
+- [ ] Integration of two-dimensional dataframe to provide data scientists with the usual ways of presenting and processing data.
+   - [ ] The basic dataframe implementation for loading, unloading and various data processing methods.
+   - [ ] Storage of the dataframe in shared memory to minimize copying in the process pool.
+   - [ ] CUDA integration to speed up dataframe processing.
+   - [ ] OpenCL integration to speed up dataframe processing (optional).
+- [ ] Computing on the GPU.
+   - [ ] Basic implementation of CUDA.
+   - [ ] Similarly, but OpenCL (optional).
+- [ ] ndarray.
+   - [ ] Implementation of ndarray.
+   - [ ] CUDA integration to speed up the processing of ndarray operations.
+   - [ ] OpenCL integration to speed up the processing of ndarray operations (optional).
+- [ ] Monitoring: implementation of monitoring capabilities for the state of the worker pool and processes, visualization of statistics and load.
 
 ### Under heavy development. Come back later
 
