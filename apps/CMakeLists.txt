@@ -1,2 +1,0 @@
-add_subdirectory(debug_worker)
-add_subdirectory(rocketjoed)
