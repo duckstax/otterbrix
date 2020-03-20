@@ -69,7 +69,8 @@ int main(int argc, char *argv[]) {
     options.add_options()
             ("help", "Print help")
             ("worker_mode", "Worker Process Mode")
-            ("jupyter_mode", "Jupyter kernel mode")
+            ("max_worker","Max worker")
+            ("jupyter_mode", "Jupyter kernel mode",cxxopts::value<std::size_t >()->default_value(0))
             ("data-dir", "data-dir", cxxopts::value<std::string>()->default_value("."))
             ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional));
 
