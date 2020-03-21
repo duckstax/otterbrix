@@ -94,6 +94,11 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 include_directories(core)
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    add_subdirectory(debug_worker)
+endif()
+
 add_subdirectory(core)
 add_subdirectory(rocketjoed)
 

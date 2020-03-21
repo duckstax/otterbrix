@@ -1,22 +1,26 @@
 #pragma once
 
 #include <boost/process.hpp>
-#include <goblin-engineer.hpp>
+#include <rocketjoe/log/log.hpp>
 
-namespace rocketjoe { namespace services {
+namespace rocketjoe {
 
-        class process_pool_t final : goblin_engineer::abstract_service {
-        public:
-            process_pool_t(goblin_engineer::root_manager *, goblin_engineer::dynamic_config &);
+class process_pool_t final {
+public:
+  process_pool_t(const process_pool_t &) = delete;
+  process_pool_t &operator=(const process_pool_t &) = delete;
+  process_pool_t(log_t log);
 
-            ~process_pool_t() override;
+  ~process_pool_t();
 
-            void created_workers(std::size_t);
+  void add_worker_process(std::size_t);
 
-            void add_worker_process();
+  void add_worker_process();
 
-        private:
-            std::uint64_t worker_counter_;
-            boost::process::group g_;
-        };
-}}
+private:
+  std::uint64_t worker_counter_;
+  boost::process::group g_;
+  log_t log_t_;
+};
+
+} // namespace rocketjoe

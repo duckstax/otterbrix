@@ -1,10 +1,8 @@
-#include "../../process_pool.hpp"
+#include <rocketjoe/process_pool/process_pool.hpp>
 
 int main(){
-    goblin_engineer::dynamic_config cfg;
-    goblin_engineer::root_manager app(cfg);
-    rocketjoe::services::process_pool_t base(&app,cfg);
-
+    auto log = rocketjoe::initialization_logger();
+    rocketjoe::process_pool_t base(log);
     base.add_worker_process();
     return 0;
 

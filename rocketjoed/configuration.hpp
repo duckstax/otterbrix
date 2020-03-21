@@ -4,6 +4,6 @@
 
 #include <goblin-engineer.hpp>
 
-void logo();
+auto logo() -> const char * ;
 
 void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::dynamic_config& configuration);

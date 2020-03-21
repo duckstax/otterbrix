@@ -21,6 +21,7 @@ target_link_libraries(
         goblin-engineer
         rocketjoe::python_sandbox
         rocketjoe::log
+        rocketjoe::process_pool
         dl
 )
 
