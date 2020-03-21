@@ -4,7 +4,7 @@
 namespace rocketjoe {
 
         void process_pool_t::add_worker_process() {
-            boost::process::spawn("debug_worker","-f", g_);
+            boost::process::spawn(exe_,boost::process::args(args_), g_);
             log_t_.info("created worker process");
         }
 
@@ -19,8 +19,10 @@ namespace rocketjoe {
             }
         }
 
-        process_pool_t::process_pool_t(log_t log)
-            : worker_counter_(0)
+        process_pool_t::process_pool_t(const std::string& exe, const std::vector<std::string>& args,log_t log)
+            : exe_(exe)
+            , args_(args)
+            , worker_counter_(0)
             , log_t_(std::move(log)) {
 
             log_t_.info("construct process pool");

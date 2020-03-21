@@ -9,7 +9,7 @@ class process_pool_t final {
 public:
   process_pool_t(const process_pool_t &) = delete;
   process_pool_t &operator=(const process_pool_t &) = delete;
-  process_pool_t(log_t log);
+  process_pool_t( const std::string& exe, const std::vector<std::string>& args, log_t log);
 
   ~process_pool_t();
 
@@ -18,6 +18,8 @@ public:
   void add_worker_process();
 
 private:
+  std::string exe_;
+  std::vector<std::string> args_;
   std::uint64_t worker_counter_;
   boost::process::group g_;
   log_t log_t_;

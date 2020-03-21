@@ -112,9 +112,7 @@ int main(int argc, char *argv[]) {
         log.info("Jupyter Mode");
     }
 
-    rocketjoe::process_pool_t process_pool(log);
-
-
+    rocketjoe::process_pool_t process_pool(all_args[0],{"-f"},log);
 
     config.as_object()["args"] = all_args;
 
