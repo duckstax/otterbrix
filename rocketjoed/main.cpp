@@ -125,7 +125,6 @@ int main(int argc, char *argv[]) {
     env.initialize();
 
     if(result.count("max_worker")) {
-      std::cerr << result["max_worker"].as<std::size_t>() << std::endl;
       process_pool.add_worker_process(result["max_worker"].as<std::size_t>()); /// todo hack
     }
     env.startup();
