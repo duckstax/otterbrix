@@ -6,10 +6,6 @@
 
 void init_service(goblin_engineer::root_manager& env,goblin_engineer::dynamic_config&cfg) {
 
-    cfg.as_object()["worker"].is_uint();
-
-
-
         auto* http = env.add_manager_service<rocketjoe::network::server>();
 
         auto python = goblin_engineer::make_service<rocketjoe::services::python_sandbox_t>(http, cfg);

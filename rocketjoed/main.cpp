@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
         log.info("Jupyter Mode");
     }
 
-    rocketjoe::process_pool_t process_pool(all_args[0],{"-f"},log);
+    rocketjoe::process_pool_t process_pool(all_args[0],{"--worker_mode=true"},log);
 
     config.as_object()["args"] = all_args;
 
@@ -124,6 +124,10 @@ int main(int argc, char *argv[]) {
 
     env.initialize();
 
+    if(result.count("max_worker")) {
+      std::cerr << result["max_worker"].as<std::size_t>() << std::endl;
+      process_pool.add_worker_process(result["max_worker"].as<std::size_t>()); /// todo hack
+    }
     env.startup();
 
     return 0;

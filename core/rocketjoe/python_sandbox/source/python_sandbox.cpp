@@ -44,20 +44,6 @@ namespace rocketjoe { namespace services {
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr}   {
 
-///            add_handler(
-///                    "dispatcher",
-///                    [](actor_zeta::actor::context &, ::rocketjoe::network::query_context &) -> void {
-///                        std::cerr << "Warning" << std::endl;
-///                    }
-///            );
-
-///            add_handler(
-///                    "write",
-///                    [](actor_zeta::actor::context &ctx) -> void {
-///                        actor_zeta::send(ctx->addresses("http"), std::move(ctx.message()));
-///                    }
-///            );
-
 
         std::cerr << "processing env python start " << std::endl;
 
@@ -74,8 +60,13 @@ namespace rocketjoe { namespace services {
 
         po::variables_map command_line;
 
-        po::store(po::command_line_parser(cfg).options(command_line_description)
-            .run(), command_line);
+        po::store(
+            po::command_line_parser(cfg)
+                .options(command_line_description)
+                .allow_unregistered() /// todo hack
+                .run(),
+            command_line
+        );
 
         if(command_line.count("script")) {
             script_path = command_line["script"].as<boost::filesystem::path>();
