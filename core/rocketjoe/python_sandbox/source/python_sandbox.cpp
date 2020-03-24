@@ -9,6 +9,8 @@
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <pybind11/pybind11.h>
 
@@ -68,6 +70,7 @@ namespace rocketjoe { namespace services {
         command_line_description.add_options()
             ("script", po::value<boost::filesystem::path>(),
              "path to script file")
+            ("worker_mode", "Worker Process Mode")
             ("jupyter_mode", "Jupyter kernel mode")
             ("jupyter_connection", po::value<boost::filesystem::path>(),
              "path to jupyter connection file");
@@ -97,7 +100,11 @@ namespace rocketjoe { namespace services {
                                        "parameter is undefined");
             }
 
-            mode = sandbox_mode::jupyter;
+            if(command_line.count("worker_mode")) {
+                mode = sandbox_mode::jupyter_engine;
+            } else {
+                mode = sandbox_mode::jupyter_kernel;
+            }
         }
 
 
@@ -110,7 +117,8 @@ namespace rocketjoe { namespace services {
 
         std::cerr << "processing env python finish " << std::endl;
 
-        if(mode == sandbox_mode::jupyter) {
+        if(mode == sandbox_mode::jupyter_kernel ||
+           mode == sandbox_mode::jupyter_engine) {
             python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
             py::exec(R"__(
                 import sys
@@ -119,7 +127,12 @@ namespace rocketjoe { namespace services {
             )__", py::globals(), py::dict(
                 "pyrocketjoe"_a = pyrocketjoe
             ));
-            jupyter_kernel_init();
+
+            if(mode == sandbox_mode::jupyter_kernel) {
+                jupyter_kernel_init();
+            } else {
+                jupyter_engine_init();
+            }
         }
 
         start();
@@ -146,7 +159,7 @@ namespace rocketjoe { namespace services {
         std::ifstream connection_file{jupyter_connection_path.string()};
 
         if(!connection_file) {
-            throw std::logic_error("FIle jupyter_connection not found");
+            throw std::logic_error("File jupyter_connection not found");
         }
 
         nl::json configuration;
@@ -200,7 +213,86 @@ namespace rocketjoe { namespace services {
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
             std::move(stdin_socket), std::move(iopub_socket),
-            std::move(heartbeat_socket), false
+            std::move(heartbeat_socket), {}, false,
+            boost::uuids::random_generator()()
+        }};
+    }
+
+    auto python_sandbox_t::jupyter_engine_init() -> void {
+        std::ifstream connection_file{jupyter_connection_path.string()};
+
+        if(!connection_file) {
+            throw std::logic_error("File jupyter_connection not found");
+        }
+
+        nl::json configuration;
+
+        connection_file >> configuration;
+
+        std::cerr << configuration.dump(4) << std::endl;
+
+        std::string interface{configuration["interface"]};
+        auto mux_port{std::to_string(configuration["mux"]
+            .get<std::uint16_t>())};
+        auto task_port{std::to_string(configuration["task"]
+            .get<std::uint16_t>())};
+        auto control_port{std::to_string(configuration["control"]
+            .get<std::uint16_t>())};
+        auto iopub_port{std::to_string(configuration["iopub"]
+            .get<std::uint16_t>())};
+        auto heartbeat_ping_port{std::to_string(configuration["hb_ping"]
+            .get<std::uint16_t>())};
+        auto heartbeat_pong_port{std::to_string(configuration["hb_pong"]
+            .get<std::uint16_t>())};
+        auto registration_port{std::to_string(configuration["registration"]
+            .get<std::uint16_t>())};
+        auto mux_address{interface + ":" + mux_port};
+        auto task_address{interface + ":" + task_port};
+        auto control_address{interface + ":" + control_port};
+        auto iopub_address{interface + ":" + iopub_port};
+        auto heartbeat_ping_address{interface + ":" + heartbeat_ping_port};
+        auto heartbeat_pong_address{interface + ":" + heartbeat_pong_port};
+        auto registration_address{interface + ":" + registration_port};
+
+        zmq_context = std::make_unique<zmq::context_t>();
+        zmq::socket_t shell_socket{*zmq_context, zmq::socket_type::router};
+        zmq::socket_t control_socket{*zmq_context, zmq::socket_type::router};
+        zmq::socket_t iopub_socket{*zmq_context, zmq::socket_type::pub};
+
+        heartbeat_ping_socket = zmq::socket_t{*zmq_context,
+                                              zmq::socket_type::sub};
+        heartbeat_pong_socket = zmq::socket_t{*zmq_context,
+                                              zmq::socket_type::dealer};
+
+        zmq::socket_t registration_socket{*zmq_context,
+                                          zmq::socket_type::dealer};
+
+        auto identifier{boost::uuids::random_generator()()};
+        auto identifier_raw{boost::uuids::to_string(identifier)};
+
+        shell_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
+        control_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
+        iopub_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
+        heartbeat_ping_socket.setsockopt(ZMQ_SUBSCRIBE, "");
+        heartbeat_pong_socket.setsockopt(ZMQ_ROUTING_ID,
+                                         std::move(identifier_raw));
+
+        shell_socket.connect(mux_address);
+        shell_socket.connect(task_address);
+        control_socket.connect(control_address);
+        iopub_socket.connect(iopub_address);
+        heartbeat_ping_socket.connect(heartbeat_ping_address);
+        heartbeat_pong_socket.connect(heartbeat_pong_address);
+        registration_socket.connect(registration_address);
+
+        jupyter_kernel_commands_polls = {{shell_socket,   0, ZMQ_POLLIN, 0},
+                                         {control_socket, 0, ZMQ_POLLIN, 0}};
+        jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
+            std::move(configuration["key"]),
+            std::move(configuration["signature_scheme"]),
+            std::move(shell_socket), std::move(control_socket), {},
+            std::move(iopub_socket), {}, std::move(registration_socket), true,
+            std::move(identifier)
         }};
     }
 
@@ -212,8 +304,13 @@ namespace rocketjoe { namespace services {
                     "pyrocketjoe"_a = pyrocketjoe
                 ));
             });
-        } else if(mode == sandbox_mode::jupyter) {
+        } else if(mode == sandbox_mode::jupyter_kernel ||
+                  mode == sandbox_mode::jupyter_engine) {
             commands_exuctor = std::make_unique<std::thread>([this]() {
+                if(mode == sandbox_mode::jupyter_engine) {
+                    while(!jupyter_kernel->registration()) {}
+                 }
+
                 while(true) {
                     if(zmq::poll(jupyter_kernel_commands_polls) == -1) {
                         continue;
@@ -235,20 +332,24 @@ namespace rocketjoe { namespace services {
                 }
             });
             infos_exuctor = std::make_unique<std::thread>([this]() {
-                while(true) {
-                    if(zmq::poll(jupyter_kernel_infos_polls) == -1) {
-                        continue;
-                    }
+                if(mode == sandbox_mode::jupyter_kernel) {
+                    while(true) {
+                        if(zmq::poll(jupyter_kernel_infos_polls) == -1) {
+                            continue;
+                        }
 
-                    poll_flags polls{poll_flags::none};
+                        poll_flags polls{poll_flags::none};
 
-                    if(jupyter_kernel_infos_polls[0].revents & ZMQ_POLLIN) {
-                        polls |= poll_flags::heartbeat_socket;
-                    }
+                        if(jupyter_kernel_infos_polls[0].revents & ZMQ_POLLIN) {
+                            polls |= poll_flags::heartbeat_socket;
+                        }
 
-                    if(!jupyter_kernel->poll(polls)) {
-                        break;
+                        if(!jupyter_kernel->poll(polls)) {
+                            break;
+                        }
                     }
+                } else {
+                    zmq::proxy(heartbeat_ping_socket, heartbeat_pong_socket);
                 }
             });
         }

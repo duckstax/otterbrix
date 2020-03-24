@@ -29,6 +29,13 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         , signature_key{std::move(signature_key)}
         , signature_scheme{std::move(signature_scheme)} {}
 
+    session::session(std::string signature_key, std::string signature_scheme,
+                     boost::uuids::uuid session)
+        : session_id{std::move(session_id)}
+        , message_count{0}
+        , signature_key{std::move(signature_key)}
+        , signature_scheme{std::move(signature_scheme)} {}
+
     auto session::parse_message(std::vector<std::string> msgs,
                                 std::vector<std::string> &identifiers,
                                 nl::json &header, nl::json &parent_header,
