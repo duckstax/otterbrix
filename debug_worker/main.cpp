@@ -1,7 +1,5 @@
 #include <chrono>
 #include <ctime>
-#include <fstream>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -25,8 +23,6 @@ auto logo() -> const char * {
 }
 
 int main(int argc, char *argv[]) {
-  std::ofstream myfile;
-
   auto id = boost::this_process::get_id();
   std::string filename;
   ////example: "logs/basic.txt"
