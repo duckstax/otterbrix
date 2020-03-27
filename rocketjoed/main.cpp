@@ -48,6 +48,10 @@ void terminate_handler() {
 
 #endif
 
+constexpr const static bool worker = false;
+
+constexpr const static bool master = true;
+
 
 int main(int argc, char *argv[]) {
 
@@ -99,13 +103,13 @@ int main(int argc, char *argv[]) {
 
     load_or_generate_config(result, config);
 
-    config.as_object()["master"] = true;
+    config.as_object()["master"] = master;
 
     if (result.count("worker_mode")) {
 
         log.info("Worker Mode");
 
-        config.as_object()["master"] = false;
+        config.as_object()["master"] = worker;
     }
 
     if (result.count("jupyter_mode")) {

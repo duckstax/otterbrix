@@ -24,9 +24,14 @@ namespace rocketjoe { namespace services {
         jupyter = 2,
     };
 
-    class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_service {
+    class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_manager_service {
     public:
-        python_sandbox_t(network::server*, goblin_engineer::dynamic_config &);
+        python_sandbox_t(
+          goblin_engineer::root_manager *,
+          goblin_engineer::dynamic_config &
+        );
+
+      void enqueue(goblin_engineer::message , actor_zeta::executor::execution_device *) override;
 
         ~python_sandbox_t() override = default;
 
