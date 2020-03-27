@@ -10,12 +10,12 @@ using goblin_engineer::root_manager;
 
 using actor_zeta::link;
 
-constexpr const static bool worker = false;
+constexpr const static bool master = true;
 
 void init_service(root_manager &env, dynamic_config &cfg) {
   env.add_manager_service<rocketjoe::services::python_sandbox_t>();
 
-  if (cfg.as_object()["master"].as_bool() == worker) {
+  if (cfg.as_object()["master"].as_bool() == master) {
       auto *http = env.add_manager_service<rocketjoe::network::server>();
       auto router = make_service<rocketjoe::network::http_dispatcher>(http, cfg);
       link(http, router);

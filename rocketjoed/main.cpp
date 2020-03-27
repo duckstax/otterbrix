@@ -101,8 +101,6 @@ int main(int argc, char *argv[]) {
 
     goblin_engineer::dynamic_config config;
 
-    load_or_generate_config(result, config);
-
     config.as_object()["master"] = master;
 
     if (result.count("worker_mode")) {
@@ -116,13 +114,15 @@ int main(int argc, char *argv[]) {
         log.info("Jupyter Mode");
     }
 
-    rocketjoe::process_pool_t process_pool(all_args[0],{"--worker_mode=true"},log);
-
     config.as_object()["args"] = all_args;
+
+    load_or_generate_config(result, config);
 
     goblin_engineer::dynamic_config config_tmp = config;
 
     goblin_engineer::root_manager env(std::move(config));
+
+    rocketjoe::process_pool_t process_pool(all_args[0],{"--worker_mode=true"},log);
 
     init_service(env, config_tmp);
 
