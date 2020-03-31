@@ -2,6 +2,7 @@ set(CURRENT_TARGET python_sandbox)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/jupyter/display_hook.hpp
+        detail/jupyter/shell_display_hook.hpp
         detail/jupyter/display_publisher.hpp
         detail/jupyter/pykernel.hpp
         detail/jupyter/session.hpp
@@ -23,8 +24,8 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
 )
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
-
         source/detail/jupyter/display_hook.cpp
+        source/detail/jupyter/shell_display_hook.cpp
         source/detail/jupyter/display_publisher.cpp
         source/detail/jupyter/pykernel.cpp
         source/detail/jupyter/session.cpp

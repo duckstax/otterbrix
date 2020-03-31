@@ -11,7 +11,7 @@
 
 namespace rocketjoe {
 
-    constexpr  static char*  __default__ = "__default__";
+    constexpr static const char*  __default__ = "__default__";
 
     log_t::log_t(std::shared_ptr<spdlog::async_logger> logger) : logger_(std::move(logger)) {}
 
@@ -25,7 +25,7 @@ namespace rocketjoe {
         logger_= std::move(logger);
     }
 
-    auto initialization_logger() -> void{
+    auto initialization_logger() -> log_t{
         spdlog::set_pattern("[%H:%M:%S %z] [%^%L%$] [thread %t] %v");
 
         spdlog::init_thread_pool(8192, 1);
@@ -40,6 +40,7 @@ namespace rocketjoe {
         );
 
         spdlog::register_logger(logger);
+        return logger;
     }
 
     auto get_logger(const std::string &name) -> log_t {

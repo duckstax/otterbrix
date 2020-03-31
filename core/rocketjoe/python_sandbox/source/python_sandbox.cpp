@@ -44,20 +44,6 @@ namespace rocketjoe { namespace services {
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr}   {
 
-///            add_handler(
-///                    "dispatcher",
-///                    [](actor_zeta::actor::context &, ::rocketjoe::network::query_context &) -> void {
-///                        std::cerr << "Warning" << std::endl;
-///                    }
-///            );
-
-///            add_handler(
-///                    "write",
-///                    [](actor_zeta::actor::context &ctx) -> void {
-///                        actor_zeta::send(ctx->addresses("http"), std::move(ctx.message()));
-///                    }
-///            );
-
 
         std::cerr << "processing env python start " << std::endl;
 
@@ -74,8 +60,13 @@ namespace rocketjoe { namespace services {
 
         po::variables_map command_line;
 
-        po::store(po::command_line_parser(cfg).options(command_line_description)
-            .run(), command_line);
+        po::store(
+            po::command_line_parser(cfg)
+                .options(command_line_description)
+                .allow_unregistered() /// todo hack
+                .run(),
+            command_line
+        );
 
         if(command_line.count("script")) {
             script_path = command_line["script"].as<boost::filesystem::path>();
@@ -111,8 +102,15 @@ namespace rocketjoe { namespace services {
         std::cerr << "processing env python finish " << std::endl;
 
         if(mode == sandbox_mode::jupyter) {
-          python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
-          jupyter_kernel_init();
+            python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+            py::exec(R"__(
+                import sys
+
+                sys.modules['pyrocketjoe'] = pyrocketjoe
+            )__", py::globals(), py::dict(
+                "pyrocketjoe"_a = pyrocketjoe
+            ));
+            jupyter_kernel_init();
         }
 
         start();
@@ -193,7 +191,7 @@ namespace rocketjoe { namespace services {
             std::move(configuration["signature_scheme"]),
             std::move(shell_socket), std::move(control_socket),
             std::move(stdin_socket), std::move(iopub_socket),
-            std::move(heartbeat_socket)
+            std::move(heartbeat_socket), false
         }};
     }
 

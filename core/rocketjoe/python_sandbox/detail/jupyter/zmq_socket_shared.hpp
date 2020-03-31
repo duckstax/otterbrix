@@ -11,16 +11,16 @@
 
 namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
 
-namespace py = pybind11;
+    namespace py = pybind11;
 
-class zmq_socket_shared final: public boost::intrusive_ref_counter<zmq_socket_shared> {
-public:
-  zmq_socket_shared(zmq::socket_t socket);
+    class zmq_socket_shared final: public boost::intrusive_ref_counter<zmq_socket_shared> {
+    public:
+        zmq_socket_shared(zmq::socket_t socket);
 
-  zmq::socket_t &operator*();
+        zmq::socket_t &operator*();
 
-private:
-  zmq::socket_t socket;
-};
+    private:
+        zmq::socket_t socket;
+    };
 
 }}}}

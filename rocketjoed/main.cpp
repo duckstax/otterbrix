@@ -7,7 +7,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/locale/generator.hpp>
 
-#include <core/rocketjoe/log/log.hpp>
+#include <rocketjoe/log/log.hpp>
+#include <rocketjoe/process_pool/process_pool.hpp>
 
 #include "configuration.hpp"
 
@@ -17,7 +18,7 @@
 
 #else
 
-#include <signal.h>
+#include <csignal>
 #include <boost/stacktrace.hpp>
 
 void my_signal_handler(int signum) {
@@ -58,7 +59,7 @@ int main(int argc, char *argv[]) {
     std::set_terminate(terminate_handler);
 #endif
 
-    rocketjoe::initialization_logger();
+    auto log = rocketjoe::initialization_logger();
 
     std::locale::global(boost::locale::generator{}(""));
 
@@ -68,8 +69,9 @@ int main(int argc, char *argv[]) {
 
     options.add_options()
             ("help", "Print help")
-            ("worker_mode", "Worker Process Mode")
-            ("jupyter_mode", "Jupyter kernel mode")
+            ("worker_mode", "Worker Process Mode",cxxopts::value<bool>())
+            ("max_worker","Max worker",cxxopts::value<std::size_t >())
+            ("jupyter_mode", "Jupyter kernel mode",cxxopts::value<bool>())
             ("data-dir", "data-dir", cxxopts::value<std::string>()->default_value("."))
             ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional));
 
@@ -83,7 +85,7 @@ int main(int argc, char *argv[]) {
 
     auto result = options.parse(argc, argv);
 
-    logo();
+    log.info(logo());
 
     /// --help option
     if (result.count("help")) {
@@ -101,15 +103,16 @@ int main(int argc, char *argv[]) {
 
     if (result.count("worker_mode")) {
 
-        std::cerr << "Worker Mode" << std::endl;
+        log.info("Worker Mode");
 
         config.as_object()["master"] = false;
     }
 
     if (result.count("jupyter_mode")) {
-
-        std::cerr << "Jupyter Mode" << std::endl;
+        log.info("Jupyter Mode");
     }
+
+    rocketjoe::process_pool_t process_pool(all_args[0],{"--worker_mode=true"},log);
 
     config.as_object()["args"] = all_args;
 
@@ -121,6 +124,9 @@ int main(int argc, char *argv[]) {
 
     env.initialize();
 
+    if(result.count("max_worker")) {
+      process_pool.add_worker_process(result["max_worker"].as<std::size_t>()); /// todo hack
+    }
     env.startup();
 
     return 0;
