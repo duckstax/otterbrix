@@ -30,8 +30,11 @@ namespace rocketjoe { namespace services {
     using namespace py::literals;
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
-        : abstract_service(ptr, "python_sandbox")
+    python_sandbox_t::python_sandbox_t(
+        goblin_engineer::root_manager *env,
+        goblin_engineer::dynamic_config &configuration
+    )
+        : abstract_manager_service(env, "python_sandbox")
         , mode{sandbox_mode::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
@@ -244,4 +247,10 @@ namespace rocketjoe { namespace services {
             });
         }
     }
+
+    void python_sandbox_t::enqueue(goblin_engineer::message,
+                                   actor_zeta::executor::execution_device *) {
+
+    }
+
 }}
