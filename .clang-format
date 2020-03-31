@@ -32,7 +32,7 @@ BraceWrapping:
 BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
-BreakInheritanceList: BeforeColon
+BreakInheritanceList: BeforeComma
 ColumnLimit: 0
 CompactNamespaces: true
 ContinuationIndentWidth: 4 #8
