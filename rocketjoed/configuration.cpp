@@ -1,11 +1,10 @@
 #include <utility>
-
-#include <iostream>
 #include <string>
 
 #include "configuration.hpp"
 
 #include <yaml-cpp/yaml.h>
+
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -64,32 +63,20 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
 }
 
-void logo() {
-
-    std::cout << std::endl;
-
-    std::cout << "-------------------------------------------------";
-
-    std::cout << "\n"
-                 "\n"
-                 "______           _        _       ___            \n"
-                 "| ___ \\         | |      | |     |_  |           \n"
-                 "| |_/ /___   ___| | _____| |_      | | ___   ___ \n"
-                 "|    // _ \\ / __| |/ / _ \\ __|     | |/ _ \\ / _ \\\n"
-                 "| |\\ \\ (_) | (__|   <  __/ |_  /\\__/ / (_) |  __/\n"
-                 "\\_| \\_\\___/ \\___|_|\\_\\___|\\__| \\____/ \\___/ \\___|\n"
-                 "                                                 \n"
-                 "                                                 \n"
-                 "";
-
-
-    std::cout << "-------------------------------------------------";
-
-    std::cout << std::endl;
-    std::cout << std::endl;
-
-    std::cout.flush();
-
+auto logo() -> const char * {
+/// clang-format off
+    constexpr const char* logo_ = R"__(
+-------------------------------------------------
+______           _        _     ___
+| ___ \         | |      | |   |_  |
+| |_/ /___   ___| | _____| |_    | | ___   ___
+|    // _ \ / __| |/ / _ \ __|   | |/ _ \ / _ \
+| |\ \ (_) | (__|   <  __/ |_/\__/ / (_) |  __/
+\_| \_\___/ \___|_|\_\___|\__\____/ \___/ \___|
+-------------------------------------------------
+    )__";
+/// clang-format on
+    return logo_;
 }
 
 void load_config(cxxopts::ParseResult &args_, goblin_engineer::dynamic_config &config) {
@@ -155,26 +142,32 @@ void generate_config(goblin_engineer::dynamic_config &config,boost::filesystem::
 
 }
 
-void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::dynamic_config& configuration) {
+constexpr const static bool master = true;
+
+void load_or_generate_config(
+    cxxopts::ParseResult &result,
+    goblin_engineer::dynamic_config &cfg) {
+
+  if (cfg.as_object()["master"].as_bool() == master) {
 
     if (result.count("data-dir")) {
 
-        boost::filesystem::path data_dir(result["data-dir"].as<std::string>());
-        data_dir = boost::filesystem::absolute(data_dir);
+      boost::filesystem::path data_dir(result["data-dir"].as<std::string>());
+      data_dir = boost::filesystem::absolute(data_dir);
 
-        if(!boost::filesystem::exists(data_dir)){
+      if (!boost::filesystem::exists(data_dir)) {
 
-            generate_config(configuration,data_dir);
+        generate_config(cfg, data_dir);
 
-        } else {
+      } else {
 
-            load_config(result,configuration);
-        }
+        load_config(result, cfg);
+      }
 
     } else {
 
-        generate_config(configuration,boost::filesystem::current_path());
-
+      generate_config(cfg, boost::filesystem::current_path());
     }
+  }
 
 }

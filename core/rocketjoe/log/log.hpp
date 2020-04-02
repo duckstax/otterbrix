@@ -61,6 +61,6 @@ namespace rocketjoe {
     auto get_logger(const std::string&) -> log_t;
     auto get_logger() -> log_t;
     auto initialization_logger(std::shared_ptr<spdlog::logger>) -> void;
-    auto initialization_logger() -> void;
+    auto initialization_logger() -> log_t;
 
 }

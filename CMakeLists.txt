@@ -19,6 +19,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
+# stack track
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 
 option(DEV_MODE "developer mode" OFF)
@@ -93,16 +94,22 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 include_directories(core)
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+    add_subdirectory(debug_worker)
+endif()
+
 add_subdirectory(core)
 add_subdirectory(rocketjoed)
 
-set(CPACK_GENERATOR "DEB")
-set(CPACK_SET_DESTDIR true)
-set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_MODULE_PATH}/CPackOptions.cmake" )
-set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
-set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
-set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "")
+#set(CPACK_GENERATOR "DEB")
+#set(CPACK_SET_DESTDIR true)
+#set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_MODULE_PATH}/CPackOptions.cmake" )
+#set(CPACK_DEB_COMPONENT_INSTALL ON)
+#set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)#
+#set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+#set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "")
+#set(CPACK_DEBIAN_PACKAGE_MAINTAINER "")
 
-include (CPack)
+
+#include (CPack)

@@ -32,8 +32,11 @@ namespace rocketjoe { namespace services {
     using namespace py::literals;
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(network::server *ptr, goblin_engineer::dynamic_config &configuration)
-        : abstract_service(ptr, "python_sandbox")
+    python_sandbox_t::python_sandbox_t(
+        goblin_engineer::root_manager *env,
+        goblin_engineer::dynamic_config &configuration
+    )
+        : abstract_manager_service(env, "python_sandbox")
         , mode{sandbox_mode::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
@@ -45,20 +48,6 @@ namespace rocketjoe { namespace services {
         , jupyter_kernel{nullptr}
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr}   {
-
-///            add_handler(
-///                    "dispatcher",
-///                    [](actor_zeta::actor::context &, ::rocketjoe::network::query_context &) -> void {
-///                        std::cerr << "Warning" << std::endl;
-///                    }
-///            );
-
-///            add_handler(
-///                    "write",
-///                    [](actor_zeta::actor::context &ctx) -> void {
-///                        actor_zeta::send(ctx->addresses("http"), std::move(ctx.message()));
-///                    }
-///            );
 
 
         std::cerr << "processing env python start " << std::endl;
@@ -77,8 +66,13 @@ namespace rocketjoe { namespace services {
 
         po::variables_map command_line;
 
-        po::store(po::command_line_parser(cfg).options(command_line_description)
-            .run(), command_line);
+        po::store(
+            po::command_line_parser(cfg)
+                .options(command_line_description)
+                .allow_unregistered() /// todo hack
+                .run(),
+            command_line
+        );
 
         if(command_line.count("script")) {
             script_path = command_line["script"].as<boost::filesystem::path>();
@@ -354,4 +348,10 @@ namespace rocketjoe { namespace services {
             });
         }
     }
+
+    void python_sandbox_t::enqueue(goblin_engineer::message,
+                                   actor_zeta::executor::execution_device *) {
+
+    }
+
 }}

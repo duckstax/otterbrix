@@ -4,14 +4,21 @@
 #include <rocketjoe/network/service_router.hpp>
 #include <rocketjoe/python_sandbox/python_sandbox.hpp>
 
-void init_service(goblin_engineer::root_manager& env,goblin_engineer::dynamic_config&cfg) {
+using goblin_engineer::dynamic_config;
+using goblin_engineer::make_service;
+using goblin_engineer::root_manager;
 
-        auto* http = env.add_manager_service<rocketjoe::network::server>();
+using actor_zeta::link;
 
-        auto python = goblin_engineer::make_service<rocketjoe::services::python_sandbox_t>(http, cfg);
-        auto router = goblin_engineer::make_service<rocketjoe::network::http_dispatcher>(http,cfg);
+constexpr const static bool master = true;
 
-        actor_zeta::link(http,router);
-        actor_zeta::link(http,python);
+void init_service(root_manager &env, dynamic_config &cfg) {
+  env.add_manager_service<rocketjoe::services::python_sandbox_t>();
+
+  if (cfg.as_object()["master"].as_bool() == master) {
+      auto *http = env.add_manager_service<rocketjoe::network::server>();
+      auto router = make_service<rocketjoe::network::http_dispatcher>(http, cfg);
+      link(http, router);
+  }
 
 }
