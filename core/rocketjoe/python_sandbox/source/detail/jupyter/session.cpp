@@ -30,7 +30,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         , signature_scheme{std::move(signature_scheme)} {}
 
     session::session(std::string signature_key, std::string signature_scheme,
-                     boost::uuids::uuid session)
+                     boost::uuids::uuid session_id)
         : session_id{std::move(session_id)}
         , message_count{0}
         , signature_key{std::move(signature_key)}

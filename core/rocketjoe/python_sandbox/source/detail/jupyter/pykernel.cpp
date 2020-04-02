@@ -719,12 +719,36 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
         auto code{content["code"].get<std::string>()};
-        auto silent{content["silent"].get<bool>()};
-        auto execution_count = shell.attr("execution_count")
-            .cast<std::size_t>();
-        auto stop_on_error{content["stop_on_error"].get<bool>()};
+        auto silent{content["silent"].get<boost::optional<bool>>()};
 
         if(!silent) {
+            silent = false;
+        }
+
+        auto store_history{content["store_history"]
+            .get<boost::optional<bool>>()};
+
+        if(!store_history) {
+            store_history = !*silent;
+        }
+
+        auto execution_count = shell.attr("execution_count")
+            .cast<std::size_t>();
+
+        auto allow_stdin{content["allow_stdin"].get<boost::optional<bool>>()};
+
+        if(!allow_stdin) {
+            allow_stdin = true;
+        }
+
+        auto stop_on_error{content["stop_on_error"]
+            .get<boost::optional<bool>>()};
+
+        if(!stop_on_error) {
+            stop_on_error = true;
+        }
+
+        if(!*silent) {
             current_session->send(**iopub_socket,
                 current_session->construct_message(
                     {topic("execute_input")}, {{"msg_type", "execute_input"}},
@@ -736,10 +760,10 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         }
 
         auto metadata = init_metadata();
-        auto reply_content = do_execute(std::move(code), silent,
-                                        content["store_history"],
+        auto reply_content = do_execute(std::move(code), *silent,
+                                        *store_history,
                                         std::move(content["user_expressions"]),
-                                        content["allow_stdin"]);
+                                        *allow_stdin);
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout").attr("flush")();
@@ -747,8 +771,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         finish_metadata(metadata, reply_content);
 
-        if(!silent && reply_content["status"].get<std::string>() == "error" &&
-           stop_on_error) {
+        if(!*silent && reply_content["status"].get<std::string>() == "error" &&
+           *stop_on_error) {
            abort_all = true;
         }
 

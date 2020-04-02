@@ -264,12 +264,16 @@ namespace rocketjoe { namespace services {
         auto identifier{boost::uuids::random_generator()()};
         auto identifier_raw{boost::uuids::to_string(identifier)};
 
-        shell_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
-        control_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
-        iopub_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw);
-        heartbeat_ping_socket.setsockopt(ZMQ_SUBSCRIBE, "");
+        shell_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),
+                                identifier_raw.size());
+        control_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),
+                                  identifier_raw.size());
+        iopub_socket.setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),
+                                identifier_raw.size());
+        heartbeat_ping_socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
         heartbeat_pong_socket.setsockopt(ZMQ_ROUTING_ID,
-                                         std::move(identifier_raw));
+                                         identifier_raw.c_str(),
+                                         identifier_raw.size());
 
         shell_socket.connect(mux_address);
         shell_socket.connect(task_address);
