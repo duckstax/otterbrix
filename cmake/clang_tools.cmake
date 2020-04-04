@@ -1,6 +1,6 @@
 file(GLOB_RECURSE ALL_SOURCE_FILES *.cpp *.hpp)
 
-find_program(CLANG_TIDY NAMES clang-tidy )
+find_program(CLANG_TIDY NAMES clang-tidy clang-tidy-9 clang-tidy-10 )
 if (CLANG_TIDY)
     add_custom_target(
             clang-tidy
@@ -12,7 +12,7 @@ if (CLANG_TIDY)
     )
 endif ()
 
-find_program(CLANG_FORMAT NAMES clang-format )
+find_program(CLANG_FORMAT NAMES clang-format clang-format-9 clang-format-10 )
 if (CLANG_FORMAT)
     add_custom_target(
             clang-format
