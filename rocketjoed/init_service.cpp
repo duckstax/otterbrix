@@ -12,13 +12,14 @@ using actor_zeta::link;
 
 constexpr const static bool master = true;
 
-void init_service(root_manager &env, dynamic_config &cfg) {
-  env.add_manager_service<rocketjoe::services::python_sandbox_t>();
+void init_service(root_manager& env, dynamic_config& cfg) {
+    auto* python_env = env.add_manager_service<rocketjoe::services::python_sandbox_t>();
+    python_env->init();
+    python_env->start();
 
-  if (cfg.as_object()["master"].as_bool() == master) {
-      auto *http = env.add_manager_service<rocketjoe::network::server>();
-      auto router = make_service<rocketjoe::network::http_dispatcher>(http, cfg);
-      link(http, router);
-  }
-
+    if (cfg.as_object()["master"].as_bool() == master) {
+        auto* http = env.add_manager_service<rocketjoe::network::server>();
+        auto router = make_service<rocketjoe::network::http_dispatcher>(http, cfg);
+        link(http, router);
+    }
 }
