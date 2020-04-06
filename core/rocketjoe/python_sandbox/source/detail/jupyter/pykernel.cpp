@@ -679,7 +679,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto result = shell.attr("run_cell")(std::move(code), store_history,
                                              silent);
 
-        if(!result.attr("execution_count")) {
+        if(py::hasattr(result, "execution_count")) {
             execution_count = result.attr("execution_count")
                 .cast<std::size_t>() - 1;
         }
