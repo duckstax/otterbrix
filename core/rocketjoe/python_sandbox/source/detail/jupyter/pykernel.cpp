@@ -270,6 +270,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         nl::json parent_header;
         bool abort_all;
         std::unordered_set<std::string> aborted;
+        std::size_t execution_count;
     };
 
     static auto input_request(
@@ -406,7 +407,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         , identifier{std::move(identifier)}
         , engine_identifier{0}
         , parent_header(nl::json::object())
-        , abort_all{false} {
+        , abort_all{false}
+        , execution_count{1} {
         if(engine_mode) {
             current_session = boost::intrusive_ptr<session>{new session{
                 std::move(signature_key), std::move(signature_scheme),
@@ -676,8 +678,11 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         auto result = shell.attr("run_cell")(std::move(code), store_history,
                                              silent);
-        auto execution_count{result.attr("execution_count")
-            .cast<std::size_t>() - 1};
+
+        if(!result.attr("execution_count")) {
+            execution_count = result.attr("execution_count")
+                .cast<std::size_t>() - 1;
+        }
 
         execute_reply["execution_count"] = execution_count;
         py::module::import("sys").attr("displayhook")

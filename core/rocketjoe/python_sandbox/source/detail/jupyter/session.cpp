@@ -59,8 +59,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto metadata_raw{std::move(msgs_tail[3])};
         auto content_raw{std::move(msgs_tail[4])};
 
-        std::move(std::make_move_iterator(msgs_tail.cbegin() + 4),
-                  std::make_move_iterator(msgs.cend()),
+        std::move(std::make_move_iterator(msgs_tail.cbegin() + 5),
+                  std::make_move_iterator(msgs_tail.cend()),
                   std::back_inserter(buffers));
 
         auto signature{compute_signature(header_raw, parent_header_raw,
