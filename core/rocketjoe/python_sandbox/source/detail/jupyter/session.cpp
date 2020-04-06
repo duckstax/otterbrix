@@ -42,6 +42,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                 nl::json &metadata,
                                 nl::json &content,
                                 std::vector<std::string>& buffers) const -> bool {
+        //See for a description of the protocol:
+        //https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
         auto split_position{std::find(msgs.cbegin(), msgs.cend(),
                                     std::string{delimiter})};
 
