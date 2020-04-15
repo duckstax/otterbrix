@@ -6,14 +6,14 @@
 #include <memory>
 #include <utility>
 
-#include <unistd.h>
 #include <pwd.h>
+#include <unistd.h>
 
+#include <boost/locale/date_time.hpp>
+#include <boost/locale/format.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/locale/date_time.hpp>
-#include <boost/locale/format.hpp>
 
 #include <botan/hex.h>
 #include <botan/mac.h>
@@ -21,41 +21,185 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace rocketjoe {
+namespace services {
+namespace detail {
+namespace jupyter {
+
+    auto execute_ok_reply::identifiers() const -> const std::vector<std::string>& {
+        return identifiers_;
+    }
+
+    auto execute_ok_reply::identifiers(std::vector<std::string> identifiers)
+        -> execute_ok_reply& {
+        identifiers_ = identifiers;
+
+        return *this;
+    }
+
+    auto execute_ok_reply::parent() const -> const nl::json& { return parent_; }
+
+    auto execute_ok_reply::parent(nl::json parent) -> execute_ok_reply& {
+        parent_ = parent;
+
+        return *this;
+    }
+
+    auto execute_ok_reply::metadata() const -> const nl::json& {
+        return metadata_;
+    }
+
+    auto execute_ok_reply::metadata(nl::json metadata) -> execute_ok_reply& {
+        metadata_ = metadata;
+
+        return *this;
+    }
+
+    auto execute_ok_reply::execution_count() const -> std::size_t {
+        return execution_count_;
+    }
+
+    auto execute_ok_reply::execution_count(std::size_t execution_count)
+        -> execute_ok_reply& {
+        execution_count_ = execution_count;
+
+        return *this;
+    }
+
+    auto execute_ok_reply::payload() const -> const nl::json& { return payload_; }
+
+    auto execute_ok_reply::payload(nl::json payload) -> execute_ok_reply& {
+        payload_ = payload;
+
+        return *this;
+    }
+
+    auto execute_ok_reply::user_expressions() const -> const nl::json& {
+        return user_expressions_;
+    }
+
+    auto execute_ok_reply::user_expressions(nl::json user_expressions)
+        -> execute_ok_reply& {
+        user_expressions_ = user_expressions;
+
+        return *this;
+    }
+
+    auto execute_error_reply::identifiers() const
+        -> const std::vector<std::string>& {
+        return identifiers_;
+    }
+
+    auto execute_error_reply::identifiers(std::vector<std::string> identifiers)
+        -> execute_error_reply& {
+        identifiers_ = identifiers;
+
+        return *this;
+    }
+
+    auto execute_error_reply::parent() const -> const nl::json& { return parent_; }
+
+    auto execute_error_reply::parent(nl::json parent) -> execute_error_reply& {
+        parent_ = parent;
+
+        return *this;
+    }
+
+    auto execute_error_reply::metadata() const -> const nl::json& {
+        return metadata_;
+    }
+
+    auto execute_error_reply::metadata(nl::json metadata) -> execute_error_reply& {
+        metadata_ = metadata;
+
+        return *this;
+    }
+
+    auto execute_error_reply::execution_count() const -> std::size_t {
+        return execution_count_;
+    }
+
+    auto execute_error_reply::execution_count(std::size_t execution_count)
+        -> execute_error_reply& {
+        execution_count_ = execution_count;
+
+        return *this;
+    }
+
+    auto execute_error_reply::payload() const -> const nl::json& {
+        return payload_;
+    }
+
+    auto execute_error_reply::payload(nl::json payload) -> execute_error_reply& {
+        payload_ = payload;
+
+        return *this;
+    }
+
+    auto execute_error_reply::ename() const -> const std::string& {
+        return ename_;
+    }
+
+    auto execute_error_reply::ename(std::string ename) -> execute_error_reply& {
+        ename_ = ename;
+
+        return *this;
+    }
+
+    auto execute_error_reply::evalue() const -> const std::string& {
+        return evalue_;
+    }
+
+    auto execute_error_reply::evalue(std::string evalue) -> execute_error_reply& {
+        evalue_ = evalue;
+
+        return *this;
+    }
+
+    auto execute_error_reply::traceback() const
+        -> const std::vector<std::string>& {
+        return traceback_;
+    }
+
+    auto execute_error_reply::traceback(std::vector<std::string> traceback)
+        -> execute_error_reply& {
+        traceback_ = traceback;
+
+        return *this;
+    }
 
     session::session(std::string signature_key, std::string signature_scheme)
         : session_id{boost::uuids::random_generator()()}
         , message_count{0}
         , signature_key{std::move(signature_key)}
-        , signature_scheme{std::move(signature_scheme)} {}
+        , signature_scheme{std::move(
+              signature_scheme)} {}
 
     session::session(std::string signature_key, std::string signature_scheme,
                      boost::uuids::uuid session_id)
         : session_id{std::move(session_id)}
         , message_count{0}
         , signature_key{std::move(signature_key)}
-        , signature_scheme{std::move(signature_scheme)} {}
+        , signature_scheme{std::move(
+              signature_scheme)} {}
 
     auto session::parse_message(std::vector<std::string> msgs,
-                                std::vector<std::string> &identifiers,
-                                nl::json &header, nl::json &parent_header,
-                                nl::json &metadata,
-                                nl::json &content,
+                                std::vector<std::string>& identifiers,
+                                nl::json& header, nl::json& parent_header,
+                                nl::json& metadata, nl::json& content,
                                 std::vector<std::string>& buffers) const -> bool {
-        //See for a description of the protocol:
-        //https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
-        auto split_position{std::find(msgs.cbegin(), msgs.cend(),
-                                    std::string{delimiter})};
+        // See for a description of the protocol:
+        // https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
+        auto split_position{
+            std::find(msgs.cbegin(), msgs.cend(), std::string{delimiter})};
 
-        identifiers = std::vector<std::string>{
-          std::make_move_iterator(msgs.cbegin()),
-          std::make_move_iterator(split_position)
-        };
+        identifiers =
+            std::vector<std::string>{std::make_move_iterator(msgs.cbegin()),
+                                     std::make_move_iterator(split_position)};
 
         std::vector<std::string> msgs_tail{
-          std::make_move_iterator(split_position + 1),
-          std::make_move_iterator(msgs.cend())
-        };
+            std::make_move_iterator(split_position + 1),
+            std::make_move_iterator(msgs.cend())};
         auto header_raw{std::move(msgs_tail[1])};
         auto parent_header_raw{std::move(msgs_tail[2])};
         auto metadata_raw{std::move(msgs_tail[3])};
@@ -65,10 +209,10 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                   std::make_move_iterator(msgs_tail.cend()),
                   std::back_inserter(buffers));
 
-        auto signature{compute_signature(header_raw, parent_header_raw,
-                                         metadata_raw, content_raw, buffers)};
+        auto signature{compute_signature(header_raw, parent_header_raw, metadata_raw,
+                                         content_raw, buffers)};
 
-        if(signature != msgs_tail[0]) {
+        if (signature != msgs_tail[0]) {
             return false;
         }
 
@@ -80,50 +224,52 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         return true;
     }
 
-    auto session::construct_message(
-        std::vector<std::string> identifiers, nl::json header, nl::json parent,
-        nl::json metadata, nl::json content, std::vector<std::string> buffers
-    ) -> std::vector<std::string> {
+    auto session::construct_message(std::vector<std::string> identifiers,
+                                    nl::json header, nl::json parent,
+                                    nl::json metadata, nl::json content,
+                                    std::vector<std::string> buffers)
+        -> std::vector<std::string> {
         nl::json parent_header = nl::json::object();
 
-        if(parent.contains("header")) {
+        if (parent.contains("header")) {
             parent_header = std::move(parent["header"]);
         }
 
-        if(!header.contains("version")) {
+        if (!header.contains("version")) {
             header["version"] = std::string{version};
         }
 
-        if(!header.contains("username")) {
+        if (!header.contains("username")) {
             std::string username{"root"};
             auto user_info{getpwuid(geteuid())};
 
-            if(user_info) {
-              username = user_info->pw_name;
+            if (user_info) {
+                username = user_info->pw_name;
             }
 
             header["username"] = std::move(username);
         }
 
-        if(!header.contains("session")) {
+        if (!header.contains("session")) {
             header["session"] = boost::uuids::to_string(session_id);
         }
 
-        if(!header.contains("msg_id")) {
-            header["msg_id"] = boost::uuids::to_string(session_id) + "_"
-                               + std::to_string(message_count++);
+        if (!header.contains("msg_id")) {
+            header["msg_id"] = boost::uuids::to_string(session_id) + "_" +
+                               std::to_string(message_count++);
         }
 
-        if(!header.contains("date")) {
+        if (!header.contains("date")) {
             header["date"] = (boost::locale::format("{1,ftime='%FT%T%Ez'}") %
-                              boost::locale::date_time{}).str(std::locale());
+                              boost::locale::date_time{})
+                                 .str(std::locale());
         }
 
-        if(metadata.is_null()) {
+        if (metadata.is_null()) {
             metadata = nl::json::object();
         }
 
-        if(content.is_null()) {
+        if (content.is_null()) {
             content = nl::json::object();
         }
 
@@ -131,8 +277,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto parent_header_raw{parent_header.dump()};
         auto metadata_raw{metadata.dump()};
         auto content_raw{content.dump()};
-        auto signature{compute_signature(header_raw, parent_header_raw,
-                                         metadata_raw, content_raw, buffers)};
+        auto signature{compute_signature(header_raw, parent_header_raw, metadata_raw,
+                                         content_raw, buffers)};
 
         std::vector<std::string> msgs{};
 
@@ -146,19 +292,42 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         msgs.push_back(std::move(metadata_raw));
         msgs.push_back(std::move(content_raw));
         std::move(std::make_move_iterator(buffers.cbegin()),
-                  std::make_move_iterator(buffers.cend()),
-                  std::back_inserter(msgs));
+                  std::make_move_iterator(buffers.cend()), std::back_inserter(msgs));
 
         return std::move(msgs);
     }
 
-    auto session::send(zmq::socket_t &socket,
-                       std::vector<std::string> msgs) const -> void {
+    auto session::construct_execute_ok_reply(execute_ok_reply reply)
+        -> std::vector<std::string> {
+        return construct_message(reply.identifiers(), {{"msg_type", "execute_reply"}},
+                                 reply.parent(), reply.metadata(),
+                                 {{"execution_count", reply.execution_count()},
+                                  {"payload", reply.payload()},
+                                  {"status", "ok"},
+                                  {"user_expressions", reply.user_expressions()}},
+                                 {});
+    }
+
+    auto session::construct_execute_error_reply(execute_error_reply reply)
+        -> std::vector<std::string> {
+        return construct_message(reply.identifiers(), {{"msg_type", "execute_reply"}},
+                                 reply.parent(), reply.metadata(),
+                                 {{"execution_count", reply.execution_count()},
+                                  {"payload", reply.payload()},
+                                  {"status", "error"},
+                                  {"ename", reply.ename()},
+                                  {"evalue", reply.evalue()},
+                                  {"traceback", reply.traceback()}},
+                                 {});
+    }
+
+    auto session::send(zmq::socket_t& socket, std::vector<std::string> msgs) const
+        -> void {
         std::vector<zmq::const_buffer> msgs_for_send{};
 
         msgs_for_send.reserve(msgs.size());
 
-        for(const auto &msg : msgs) {
+        for (const auto& msg : msgs) {
             std::cerr << msg << std::endl;
             msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
@@ -166,34 +335,36 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
     }
 
-    auto session::compute_signature(std::string header,
-                                    std::string parent_header,
-                                    std::string metadata,
-                                    std::string content,
-                                    std::vector<std::string>& buffers) const -> std::string {
+    auto session::compute_signature(std::string header, std::string parent_header,
+                                    std::string metadata, std::string content,
+                                    std::vector<std::string>& buffers) const
+        -> std::string {
         std::unique_ptr<Botan::MessageAuthenticationCode> mac{};
 
-        if(signature_scheme == "hmac-sha256") {
+        if (signature_scheme == "hmac-sha256") {
             mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
         }
 
-        if(!mac) {
+        if (!mac) {
             return {};
         }
 
-        mac->set_key(std::vector<std::uint8_t>{signature_key.begin(),
-                                               signature_key.end()});
+        mac->set_key(
+            std::vector<std::uint8_t>{signature_key.begin(), signature_key.end()});
         mac->start();
         mac->update(std::move(header));
         mac->update(std::move(parent_header));
         mac->update(std::move(metadata));
         mac->update(std::move(content));
 
-        for(const auto& buffer : buffers) {
+        for (const auto& buffer : buffers) {
             mac->update(buffer);
         }
 
         return Botan::hex_encode(mac->final(), false);
     }
 
-}}}}
+}
+}
+}
+} // namespace rocketjoe::services::detail::jupyter
