@@ -24,7 +24,7 @@
 
 namespace rocketjoe { namespace services {
 
-        constexpr static char init_script[] = R"__(
+    constexpr static char init_script[] = R"__(
         import sys, os
         from importlib import import_module
 
@@ -38,20 +38,20 @@ namespace rocketjoe { namespace services {
         sys.path.insert(0, os.path.dirname(path))
     )__";
 
-        constexpr static char load_script[] = R"__(
+    constexpr static char load_script[] = R"__(
         import sys, os
         from importlib import import_module
 
         module_name, _ = os.path.splitext(path)
         import_module(os.path.basename(module_name))
     )__";
-        namespace po = boost::program_options;
-        namespace nl = nlohmann;
-        using namespace py::literals;
+    namespace po = boost::program_options;
+    namespace nl = nlohmann;
+    using namespace py::literals;
 
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env,nlohmann::json&configuration)
+    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, nlohmann::json& configuration)
         : goblin_engineer::abstract_manager_service(env, "python_sandbox")
         , mode_{sandbox_mode_t::none}
         , python_{}

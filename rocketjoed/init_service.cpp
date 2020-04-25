@@ -12,11 +12,10 @@ using actor_zeta::link;
 
 constexpr const static bool master = true;
 
-void init_service(goblin_engineer::components::root_manager& env, nlohmann::json &cfg) {
-    auto python= make_manager_service<rocketjoe::services::python_sandbox_t>(env,cfg);
+void init_service(goblin_engineer::components::root_manager& env, nlohmann::json& cfg) {
+    auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg);
     python->init();
     python->start();
-
 
     // TODO: fix
     /*

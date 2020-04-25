@@ -28,7 +28,7 @@ namespace rocketjoe { namespace services {
 
     class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_manager_service {
     public:
-        python_sandbox_t(goblin_engineer::components::root_manager*,nlohmann::json&);
+        python_sandbox_t(goblin_engineer::components::root_manager*, nlohmann::json&);
 
         ~python_sandbox_t() override = default;
 
