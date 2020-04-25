@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
     config["args"] = all_args;
 
-    load_or_generate_config(result, config);
+    ///load_or_generate_config(result, config);
 
     goblin_engineer::components::root_manager env(1, 1000);
 

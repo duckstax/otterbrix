@@ -17,6 +17,7 @@ cxxopts/2.2.0@jinncrafters/stable
 
 [options]
 OpenSSL:shared = True
+goblin-engineer:http_component = True
 
 [generators]
 cmake
