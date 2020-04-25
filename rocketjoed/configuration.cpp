@@ -10,6 +10,8 @@
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>
 
+#include <nlohmann/json.hpp>
+
 constexpr const char *config_name_file = "config.yaml";
 
 /// constexpr const char *data_name_file = "rocketjoe";
@@ -18,7 +20,7 @@ constexpr const char *config_name_file = "config.yaml";
 
 /// constexpr const char *section_default = "default";
 
-void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
+void convector(YAML::Node &input, nlohmann::json &output) {
 
     switch (input.Type()) {
 
@@ -28,9 +30,10 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
                 std::string key = it1->first.as<std::string>();
                 YAML::Node value = it1->second;
-                goblin_engineer::dynamic_config tmp;
+                nlohmann::json tmp;
                 convector(value, tmp);
-                output.as_object().emplace(key, tmp);
+                output = nlohmann::json::object();
+                output.emplace(key, tmp);
 
             }
 
@@ -42,9 +45,10 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
             for (YAML::const_iterator it1 = input.begin(); it1 != input.end(); ++it1) {
 
                 YAML::Node value = (*it1);
-                goblin_engineer::dynamic_config tmp;
+                nlohmann::json tmp;
                 convector(value, tmp);
-                output.as_array().emplace_back(tmp);
+                output = nlohmann::json::array();
+                output.emplace_back(tmp);
 
             }
 
@@ -53,7 +57,8 @@ void convector(YAML::Node &input, goblin_engineer::dynamic_config &output) {
 
 
         case YAML::NodeType::Scalar: {
-            output.as_string() = input.as<std::string>();
+            output = nlohmann::json::string_t();
+            output = input.as<std::string>();
             break;
         }
 
@@ -79,7 +84,7 @@ ______           _        _     ___
     return logo_;
 }
 
-void load_config(cxxopts::ParseResult &args_, goblin_engineer::dynamic_config &config) {
+void load_config(cxxopts::ParseResult &args_, nlohmann::json &config) {
 
      auto data_dir = boost::filesystem::path(args_["data-dir"].as<std::string>());
 
@@ -87,7 +92,7 @@ void load_config(cxxopts::ParseResult &args_, goblin_engineer::dynamic_config &c
 
     /// config.as_object().emplace("config-path",(config.data_dir).string());
 
-    goblin_engineer::dynamic_config json_config;
+    nlohmann::json json_config = nlohmann::json::object();
     YAML::Node config_ = YAML::LoadFile(config_path.string());
     convector(config_,config);
 
@@ -109,7 +114,7 @@ void generate_yaml_config(YAML::Node &config_) {
 
 }
 
-void generate_config(goblin_engineer::dynamic_config &config,boost::filesystem::path data_dir_) {
+void generate_config(nlohmann::json &config,boost::filesystem::path data_dir_) {
 
     ///config.data_dir = std::move(data_dir_);
 
@@ -146,9 +151,9 @@ constexpr const static bool master = true;
 
 void load_or_generate_config(
     cxxopts::ParseResult &result,
-    goblin_engineer::dynamic_config &cfg) {
+    nlohmann::json &cfg) {
 
-  if (cfg.as_object()["master"].as_bool() == master) {
+  if (cfg["master"].get<bool>() == master) {
 
     if (result.count("data-dir")) {
 

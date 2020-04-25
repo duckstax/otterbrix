@@ -12,7 +12,7 @@ nlohmann_json/3.7.3@_/_
 cppzmq/4.6.0@bincrafters/stable
 pybind11/2.3.0@conan/stable
 
-goblin-engineer/1.0.0a2@jinncrafters/stable
+goblin-engineer/1.0.0a3@jinncrafters/stable
 cxxopts/2.2.0@jinncrafters/stable
 
 [options]

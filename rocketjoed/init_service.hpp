@@ -1,5 +1,6 @@
 #pragma once
 
-#include <goblin-engineer.hpp>
+#include <goblin-engineer/components/root_manager.hpp>
+#include <nlohmann/json.hpp>
 
-void init_service(goblin_engineer::root_manager&, goblin_engineer::dynamic_config&);
+void init_service(goblin_engineer::components::root_manager&, nlohmann::json &);

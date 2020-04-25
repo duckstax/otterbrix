@@ -8,11 +8,13 @@
 
 #include <pybind11/embed.h>
 
-#include <goblin-engineer/abstract_service.hpp>
+#include <goblin-engineer/abstract_manager_service.hpp>
+#include <goblin-engineer/components/root_manager.hpp>
 
-#include <rocketjoe/network/server.hpp>
 #include <rocketjoe/python_sandbox/detail/forward.hpp>
 #include <rocketjoe/python_sandbox/detail/jupyter/pykernel.hpp>
+
+#include <nlohmann/json.hpp>
 
 namespace rocketjoe { namespace services {
     namespace py = pybind11;
@@ -26,13 +28,11 @@ namespace rocketjoe { namespace services {
 
     class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_manager_service {
     public:
-        python_sandbox_t(
-            goblin_engineer::root_manager*,
-            goblin_engineer::dynamic_config&);
+        python_sandbox_t(goblin_engineer::components::root_manager*,nlohmann::json&);
 
         ~python_sandbox_t() override = default;
 
-        void enqueue(goblin_engineer::message, actor_zeta::executor::execution_device*) override;
+        void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
         auto start() -> void;
 

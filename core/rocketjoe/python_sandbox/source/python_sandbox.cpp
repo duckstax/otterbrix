@@ -12,10 +12,8 @@
 
 #include <pybind11/pybind11.h>
 
-#include <actor-zeta/core.hpp>
-#include <goblin-engineer.hpp>
+#include <goblin-engineer/abstract_service.hpp>
 
-#include <rocketjoe/network/network.hpp>
 #include <rocketjoe/python_sandbox/detail/celery.hpp>
 #include <rocketjoe/python_sandbox/detail/context.hpp>
 #include <rocketjoe/python_sandbox/detail/context_manager.hpp>
@@ -25,15 +23,36 @@
 #include <rocketjoe/python_sandbox/detail/jupyter.hpp>
 
 namespace rocketjoe { namespace services {
-    namespace po = boost::program_options;
-    namespace nl = nlohmann;
-    using namespace py::literals;
+
+        constexpr static char init_script[] = R"__(
+        import sys, os
+        from importlib import import_module
+
+        class Worker(pyrocketjoe.celery.apps.Worker):
+            def __init__(self, app) -> None:
+                super().__init__(app)
+
+        pyrocketjoe.celery.apps.Worker = Worker
+
+        sys.modules['pyrocketjoe'] = pyrocketjoe
+        sys.path.insert(0, os.path.dirname(path))
+    )__";
+
+        constexpr static char load_script[] = R"__(
+        import sys, os
+        from importlib import import_module
+
+        module_name, _ = os.path.splitext(path)
+        import_module(os.path.basename(module_name))
+    )__";
+        namespace po = boost::program_options;
+        namespace nl = nlohmann;
+        using namespace py::literals;
+
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(
-        goblin_engineer::root_manager* env,
-        goblin_engineer::dynamic_config& configuration)
-        : abstract_manager_service(env, "python_sandbox")
+    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env,nlohmann::json&configuration)
+        : goblin_engineer::abstract_manager_service(env, "python_sandbox")
         , mode_{sandbox_mode_t::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
@@ -47,7 +66,7 @@ namespace rocketjoe { namespace services {
         , infos_exuctor{nullptr} {
         std::cerr << "processing env python start " << std::endl;
 
-        auto cfg = configuration.as_object().at("args").to<std::vector<std::string>>();
+        auto cfg = configuration.at("args").get<std::vector<std::string>>();
 
         po::options_description command_line_description("Allowed options");
         // clang-format off
@@ -92,28 +111,6 @@ namespace rocketjoe { namespace services {
 
         std::cerr << "processing env python finish " << std::endl;
     }
-
-    constexpr static char init_script[] = R"__(
-        import sys, os
-        from importlib import import_module
-
-        class Worker(pyrocketjoe.celery.apps.Worker):
-            def __init__(self, app) -> None:
-                super().__init__(app)
-
-        pyrocketjoe.celery.apps.Worker = Worker
-
-        sys.modules['pyrocketjoe'] = pyrocketjoe
-        sys.path.insert(0, os.path.dirname(path))
-    )__";
-
-    constexpr static char load_script[] = R"__(
-        import sys, os
-        from importlib import import_module
-
-        module_name, _ = os.path.splitext(path)
-        import_module(os.path.basename(module_name))
-    )__";
 
     auto python_sandbox_t::jupyter_kernel_init() -> void {
         std::ifstream connection_file{jupyter_connection_path.string()};

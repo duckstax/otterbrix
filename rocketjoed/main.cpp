@@ -10,6 +10,8 @@
 #include <rocketjoe/log/log.hpp>
 #include <rocketjoe/process_pool/process_pool.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include "configuration.hpp"
 
 #include "init_service.hpp"
@@ -99,38 +101,43 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    goblin_engineer::dynamic_config config;
+    ///goblin_engineer::dynamic_config config;
 
-    config.as_object()["master"] = master;
+    nlohmann::json config= nlohmann::json::object();
+    config["master"] = master;
 
     if (result.count("worker_mode")) {
 
         log.info("Worker Mode");
 
-        config.as_object()["master"] = worker;
+        config["master"] = worker;
     }
 
     if (result.count("jupyter_mode")) {
         log.info("Jupyter Mode");
     }
 
-    config.as_object()["args"] = all_args;
+    config["args"] = all_args;
 
     load_or_generate_config(result, config);
 
-    goblin_engineer::dynamic_config config_tmp = config;
-
-    goblin_engineer::root_manager env(std::move(config));
+    goblin_engineer::components::root_manager env(1,1000);
 
     rocketjoe::process_pool_t process_pool(all_args[0],{"--worker_mode=true"},log);
 
-    init_service(env, config_tmp);
-
-    env.initialize();
+    init_service(env, config);
 
     if(result.count("max_worker")) {
       process_pool.add_worker_process(result["max_worker"].as<std::size_t>()); /// todo hack
     }
+
+    auto sigint_set = std::make_shared<boost::asio::signal_set>(env.loop(), SIGINT, SIGTERM);
+    sigint_set->async_wait(
+        [sigint_set](const boost::system::error_code & /*err*/,int /*num*/) {
+          sigint_set->cancel();
+        }
+    );
+
     env.startup();
 
     return 0;
