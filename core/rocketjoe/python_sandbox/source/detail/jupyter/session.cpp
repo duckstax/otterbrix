@@ -29,12 +29,21 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         , signature_key{std::move(signature_key)}
         , signature_scheme{std::move(signature_scheme)} {}
 
+    session::session(std::string signature_key, std::string signature_scheme,
+                     boost::uuids::uuid session_id)
+        : session_id{std::move(session_id)}
+        , message_count{0}
+        , signature_key{std::move(signature_key)}
+        , signature_scheme{std::move(signature_scheme)} {}
+
     auto session::parse_message(std::vector<std::string> msgs,
                                 std::vector<std::string> &identifiers,
                                 nl::json &header, nl::json &parent_header,
                                 nl::json &metadata,
                                 nl::json &content,
                                 std::vector<std::string>& buffers) const -> bool {
+        //See for a description of the protocol:
+        //https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
         auto split_position{std::find(msgs.cbegin(), msgs.cend(),
                                     std::string{delimiter})};
 
@@ -52,8 +61,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         auto metadata_raw{std::move(msgs_tail[3])};
         auto content_raw{std::move(msgs_tail[4])};
 
-        std::move(std::make_move_iterator(msgs_tail.cbegin() + 4),
-                  std::make_move_iterator(msgs.cend()),
+        std::move(std::make_move_iterator(msgs_tail.cbegin() + 5),
+                  std::make_move_iterator(msgs_tail.cend()),
                   std::back_inserter(buffers));
 
         auto signature{compute_signature(header_raw, parent_header_raw,

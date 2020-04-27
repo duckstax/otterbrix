@@ -78,10 +78,10 @@ if (DEV_MODE)
     configure_file("test_python_kernel.py"
             "${CMAKE_CURRENT_BINARY_DIR}/test_python_kernel.py")
 
-    add_test(NAME "../../test_python_kernel.py" COMMAND "${PYTEST}"
+    add_test(NAME "test_python_kernel.py" COMMAND "${PYTEST}"
             "${CMAKE_CURRENT_BINARY_DIR}/test_python_kernel.py")
 
-    set_tests_properties("../../test_python_kernel.py" PROPERTIES ENVIRONMENT
+    set_tests_properties("test_python_kernel.py" PROPERTIES ENVIRONMENT
             "JUPYTER_PATH=${CMAKE_BINARY_DIR}")
 
 endif()

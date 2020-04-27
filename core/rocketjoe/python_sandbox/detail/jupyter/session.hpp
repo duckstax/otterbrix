@@ -18,6 +18,9 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     public:
         session(std::string signature_key, std::string signature_scheme);
 
+        session(std::string signature_key, std::string signature_scheme,
+                boost::uuids::uuid session_id);
+
         session(const session &) = delete;
 
         session &operator=(const session &) = delete;

@@ -14,10 +14,7 @@
 
 #include <boost/locale/date_time.hpp>
 #include <boost/locale/format.hpp>
-#include <boost/optional/optional.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/variant/variant.hpp>
 
@@ -153,16 +150,19 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                          std::string signature_scheme,
                          zmq::socket_t shell_socket,
                          zmq::socket_t control_socket,
-                         zmq::socket_t stdin_socket,
+                         boost::optional<zmq::socket_t> stdin_socket,
                          zmq::socket_t iopub_socket,
-                         zmq::socket_t heartbeat_socket,
-                         bool engine_mode);
+                         boost::optional<zmq::socket_t> heartbeat_socket,
+                         boost::optional<zmq::socket_t> registration_socket,
+                         bool engine_mode, boost::uuids::uuid identifier);
 
         ~interpreter_impl();
 
         interpreter_impl(const interpreter_impl &) = delete;
 
         interpreter_impl &operator=(const interpreter_impl &) = delete;
+
+        auto registration() -> bool;
 
         auto poll(poll_flags polls) -> bool;
 
@@ -257,7 +257,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         zmq::socket_t control_socket;
         boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
         boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
-        zmq::socket_t heartbeat_socket;
+        boost::optional<zmq::socket_t> heartbeat_socket;
+        boost::optional<zmq::socket_t> registration_socket;
         bool engine_mode;
         boost::intrusive_ptr<session> current_session;
         py::object shell;
@@ -269,6 +270,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         nl::json parent_header;
         bool abort_all;
         std::unordered_set<std::string> aborted;
+        std::size_t execution_count;
     };
 
     static auto input_request(
@@ -386,31 +388,42 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         py::module::import("getpass").attr("getpass") = m_getpass;
     }
 
-    interpreter_impl::interpreter_impl(std::string signature_key,
-                                       std::string signature_scheme,
-                                       zmq::socket_t shell_socket,
-                                       zmq::socket_t control_socket,
-                                       zmq::socket_t stdin_socket,
-                                       zmq::socket_t iopub_socket,
-                                       zmq::socket_t heartbeat_socket,
-                                       bool engine_mode)
+    interpreter_impl::interpreter_impl(
+        std::string signature_key, std::string signature_scheme,
+        zmq::socket_t shell_socket, zmq::socket_t control_socket,
+        boost::optional<zmq::socket_t> stdin_socket, zmq::socket_t iopub_socket,
+        boost::optional<zmq::socket_t> heartbeat_socket,
+        boost::optional<zmq::socket_t> registration_socket,
+        bool engine_mode, boost::uuids::uuid identifier
+    )
         : shell_socket{std::move(shell_socket)}
         , control_socket{std::move(control_socket)}
-        , stdin_socket{boost::intrusive_ptr<zmq_socket_shared>{
-              new zmq_socket_shared{std::move(stdin_socket)}
-          }}
         , iopub_socket{boost::intrusive_ptr<zmq_socket_shared>{
               new zmq_socket_shared{std::move(iopub_socket)}
           }}
         , heartbeat_socket{std::move(heartbeat_socket)}
+        , registration_socket{std::move(registration_socket)}
         , engine_mode{engine_mode}
-        , current_session{boost::intrusive_ptr<session>{new session{
-              std::move(signature_key), std::move(signature_scheme)
-          }}}
-        , identifier{boost::uuids::random_generator()()}
+        , identifier{std::move(identifier)}
         , engine_identifier{0}
         , parent_header(nl::json::object())
-        , abort_all{false} {
+        , abort_all{false}
+        , execution_count{1} {
+        if(engine_mode) {
+            current_session = boost::intrusive_ptr<session>{new session{
+                std::move(signature_key), std::move(signature_scheme),
+                this->identifier
+            }};
+            this->stdin_socket = this->iopub_socket;
+        } else {
+            current_session = boost::intrusive_ptr<session>{new session{
+                std::move(signature_key), std::move(signature_scheme)
+            }};
+            this->stdin_socket = boost::intrusive_ptr<zmq_socket_shared>{
+                new zmq_socket_shared{std::move(*stdin_socket)}
+            };
+        }
+
         auto pykernel{py::module::import("pyrocketjoe.pykernel")};
 
         shell = pykernel.attr("RocketJoeShell")(
@@ -418,7 +431,6 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         );
         shell.attr("displayhook").attr("current_session") = current_session;
         shell.attr("displayhook").attr("iopub_socket") = this->iopub_socket;
-        shell.attr("displayhook").attr("topic") = topic("execute_result");
         shell.attr("display_pub").attr("current_session") = current_session;
         shell.attr("display_pub").attr("iopub_socket") = this->iopub_socket;
 
@@ -430,8 +442,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         std::string out_name{"stdout"};
 
-        new_stdout.attr("topic") = "stream." + out_name;
-        new_stdout.attr("name") = std::move(out_name);
+        new_stdout.attr("name") = out_name;
 
         auto new_stderr{zmq_ostream()};
 
@@ -440,8 +451,23 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         std::string err_name{"stderr"};
 
-        new_stderr.attr("topic") = "stream." + err_name;
-        new_stderr.attr("name") = std::move(err_name);
+        new_stderr.attr("name") = err_name;
+
+        if(engine_mode) {
+            shell.attr("displayhook").attr("topic") = "engine." +
+                std::to_string(engine_identifier) + topic(".execute_result");
+            shell.attr("display_pub").attr("topic") = "engine." +
+                std::to_string(engine_identifier) + topic(".displaypub");
+            new_stdout.attr("topic") = "engine." +
+                std::to_string(engine_identifier) + std::move(out_name);
+            new_stderr.attr("topic") = "engine." +
+                std::to_string(engine_identifier) + std::move(err_name);
+        } else {
+            shell.attr("displayhook").attr("topic") = topic("execute_result");
+            shell.attr("display_pub").attr("topic") = topic("display_data");
+            new_stdout.attr("topic") = "stream." + std::move(out_name);
+            new_stderr.attr("topic") = "stream." + std::move(err_name);
+        }
 
         display_hook displayhook{current_session, this->iopub_socket};
 
@@ -457,7 +483,9 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         sys.attr("stderr") = std::move(new_stderr);
         sys.attr("displayhook") = std::move(displayhook);
 
-        publish_status("starting", {});
+        if(!engine_mode) {
+            publish_status("starting", {});
+        }
     }
 
     interpreter_impl::~interpreter_impl() {
@@ -467,20 +495,73 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         sys.attr("stderr") = pystderr;
     }
 
+    auto interpreter_impl::registration() -> bool {
+        current_session->send(*registration_socket,
+            current_session->construct_message(
+                {}, {{"msg_type", "registration_request"}}, {}, {},
+                {{"uuid", boost::uuids::to_string(identifier)},
+                 {"id", engine_identifier}}, {}
+            )
+        );
+
+        std::vector<zmq::message_t> msgs{};
+
+        if(!zmq::recv_multipart(*registration_socket,
+                                std::back_inserter(msgs))) {
+            return false;
+        }
+
+        std::vector<std::string> msgs_for_parse{};
+
+        msgs_for_parse.reserve(msgs.size());
+
+        for(const auto &msg : msgs) {
+            std::cerr << "Registration: " << msg << std::endl;
+            msgs_for_parse.push_back(std::move(msg.to_string()));
+        }
+
+        std::vector<std::string> identifiers{};
+        nl::json header{};
+        nl::json parent_header{};
+        nl::json metadata{};
+        nl::json content{};
+        std::vector<std::string> buffers{};
+
+        if(!current_session->parse_message(std::move(msgs_for_parse),
+                                           identifiers, header, parent_header,
+                                           metadata, content, buffers)) {
+            return true;
+        }
+
+        if(header["msg_type"].get<std::string>() != "registration_reply") {
+            return false;
+        } else if(content["status"].get<std::string>() != "ok") {
+            return false;
+        } else {
+            engine_identifier = content["id"].get<std::uint64_t>();
+        }
+
+        publish_status("starting", {});
+
+        return true;
+    }
+
     auto interpreter_impl::poll(poll_flags polls) -> bool {
-        if((polls & poll_flags::heartbeat_socket) ==
-            poll_flags::heartbeat_socket) {
-            std::vector<zmq::message_t> msgs{};
+        if(!engine_mode) {
+            if((polls & poll_flags::heartbeat_socket) ==
+                poll_flags::heartbeat_socket) {
+                std::vector<zmq::message_t> msgs{};
 
-            while(zmq::recv_multipart(heartbeat_socket,
-                                      std::back_inserter(msgs),
-                                      zmq::recv_flags::dontwait)) {
-                for(const auto &msg : msgs) {
-                    std::cerr << "Heartbeat: " << msg << std::endl;
+                while(zmq::recv_multipart(*heartbeat_socket,
+                                          std::back_inserter(msgs),
+                                          zmq::recv_flags::dontwait)) {
+                    for(const auto &msg : msgs) {
+                        std::cerr << "Heartbeat: " << msg << std::endl;
+                    }
+
+                    zmq::send_multipart(*heartbeat_socket, std::move(msgs),
+                                        zmq::send_flags::dontwait);
                 }
-
-                zmq::send_multipart(heartbeat_socket, std::move(msgs),
-                                    zmq::send_flags::dontwait);
             }
         }
 
@@ -579,7 +660,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
             metadata["engine_info"] = {{"engine_uuid",
                                         boost::uuids::to_string(identifier)},
-                                       {"engine_id", 0}};
+                                       {"engine_id", engine_identifier}};
         }
     }
 
@@ -597,8 +678,11 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         auto result = shell.attr("run_cell")(std::move(code), store_history,
                                              silent);
-        auto execution_count{result.attr("execution_count")
-            .cast<std::size_t>() - 1};
+
+        if(py::hasattr(result, "execution_count")) {
+            execution_count = result.attr("execution_count")
+                .cast<std::size_t>() - 1;
+        }
 
         execute_reply["execution_count"] = execution_count;
         py::module::import("sys").attr("displayhook")
@@ -640,12 +724,36 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
         auto code{content["code"].get<std::string>()};
-        auto silent{content["silent"].get<bool>()};
-        auto execution_count = shell.attr("execution_count")
-            .cast<std::size_t>();
-        auto stop_on_error{content["stop_on_error"].get<bool>()};
+        auto silent{content["silent"].get<boost::optional<bool>>()};
 
         if(!silent) {
+            silent = false;
+        }
+
+        auto store_history{content["store_history"]
+            .get<boost::optional<bool>>()};
+
+        if(!store_history) {
+            store_history = !*silent;
+        }
+
+        auto execution_count = shell.attr("execution_count")
+            .cast<std::size_t>();
+
+        auto allow_stdin{content["allow_stdin"].get<boost::optional<bool>>()};
+
+        if(!allow_stdin) {
+            allow_stdin = true;
+        }
+
+        auto stop_on_error{content["stop_on_error"]
+            .get<boost::optional<bool>>()};
+
+        if(!stop_on_error) {
+            stop_on_error = true;
+        }
+
+        if(!*silent) {
             current_session->send(**iopub_socket,
                 current_session->construct_message(
                     {topic("execute_input")}, {{"msg_type", "execute_input"}},
@@ -657,10 +765,10 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         }
 
         auto metadata = init_metadata();
-        auto reply_content = do_execute(std::move(code), silent,
-                                        content["store_history"],
+        auto reply_content = do_execute(std::move(code), *silent,
+                                        *store_history,
                                         std::move(content["user_expressions"]),
-                                        content["allow_stdin"]);
+                                        *allow_stdin);
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout").attr("flush")();
@@ -668,8 +776,8 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
         finish_metadata(metadata, reply_content);
 
-        if(!silent && reply_content["status"].get<std::string>() == "error" &&
-           stop_on_error) {
+        if(!*silent && reply_content["status"].get<std::string>() == "error" &&
+           *stop_on_error) {
            abort_all = true;
         }
 
@@ -1143,18 +1251,24 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                        std::string signature_scheme,
                        zmq::socket_t shell_socket,
                        zmq::socket_t control_socket,
-                       zmq::socket_t stdin_socket,
+                       boost::optional<zmq::socket_t> stdin_socket,
                        zmq::socket_t iopub_socket,
-                       zmq::socket_t heartbeat_socket,
-                       bool engine_mode)
+                       boost::optional<zmq::socket_t> heartbeat_socket,
+                       boost::optional<zmq::socket_t> registration_socket,
+                       bool engine_mode, boost::uuids::uuid identifier)
         : pimpl{std::make_unique<interpreter_impl>(
                 std::move(signature_key), std::move(signature_scheme),
                 std::move(shell_socket), std::move(control_socket),
                 std::move(stdin_socket), std::move(iopub_socket),
-                std::move(heartbeat_socket), engine_mode
+                std::move(heartbeat_socket), std::move(registration_socket),
+                engine_mode, std::move(identifier)
           )} {}
 
     pykernel::~pykernel() = default;
+
+    auto pykernel::registration() -> bool {
+        return pimpl->registration();
+    }
 
     auto pykernel::poll(poll_flags polls) -> bool {
         return pimpl->poll(polls);

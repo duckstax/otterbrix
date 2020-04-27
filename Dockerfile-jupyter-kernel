@@ -1,0 +1,38 @@
+FROM debian:buster-backports
+
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
+        build-essential \
+        cmake \
+        ninja-build \
+        python3-pip \
+        ipython3 \
+        jupyter && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip3 install --no-cache-dir conan
+
+WORKDIR /app
+
+COPY conanfile.txt ./
+
+RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
+    conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
+    conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
+
+COPY . ./
+
+WORKDIR ./build
+
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
+    cmake --build . && \
+    jupyter kernelspec install --user kernels/ipython && \
+    mkdir -p rocketjoe
+
+WORKDIR rocketjoe
+
+CMD jupyter notebook --no-browser --allow-root \
+        --NotebookApp.allow_remote_access=True --NotebookApp.ip=0.0.0.0
+
+EXPOSE 8888

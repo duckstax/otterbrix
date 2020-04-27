@@ -35,16 +35,16 @@ if (DEV_MODE)
 
                 #-Wredundant-move # not work gcc
                 -Wcast-align
-                #-Wcast-qual
-                #-Wconversion
+                -Wcast-qual
+                -Wconversion
                 -Wctor-dtor-privacy
                 -Wenum-compare
-                #-Wfloat-equal
+                -Wfloat-equal
                 -Wnon-virtual-dtor
-                #-Wold-style-cast
+                -Wold-style-cast
                 -Woverloaded-virtual
                 -Wredundant-decls
-                #-Wsign-conversion
+                -Wsign-conversion
                 -Wsign-promo
         )
     endif()
