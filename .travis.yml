@@ -1,12 +1,12 @@
 linux: &linux
   os: linux
-  dist: xenial
+  dist: bionic
   sudo: required
   language: python
   python: "3.6"
   services:
     - docker
-    -
+
 matrix:
   include:
     - <<: *linux
