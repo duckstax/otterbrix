@@ -2,6 +2,8 @@ os: linux
 dist: bionic
 language: python
 python: "3.7"
+services:
+  - docker
 
 cache:
   - pip
