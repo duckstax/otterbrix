@@ -31,5 +31,6 @@ script:
   - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
   - cmake --build . --parallel 2
   - sudo pip3 install -r requirements.txt
+  - ls rocketjoed
   - jupyter kernelspec install --user rocketjoed/kernels/ipython
   - pytest core/python_sandbox/test_python_kernel.py
