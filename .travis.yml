@@ -21,6 +21,7 @@ addons:
       - clang-format-9
       - python3-dev
       - python3-pip
+      - python3-setuptools
 install:
   - pip install conan
   - conan user
