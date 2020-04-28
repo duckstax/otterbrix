@@ -19,7 +19,6 @@ if [[ "$(uname -s)" == 'Darwin' ]]; then
     pyenv activate conan
 fi
 
-sudo apt install ninja-build
 pip install conan conan_package_tools bincrafters_package_tools  --upgrade
 pip3 install -r requirements.txt
 
