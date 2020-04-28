@@ -1,0 +1,4 @@
+jupyter_kernel_test
+pytest
+ipython
+jupyter

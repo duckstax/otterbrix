@@ -37,13 +37,13 @@ namespace rocketjoe { namespace services {
         pyrocketjoe.celery.apps.Worker = Worker
 
         sys.modules['pyrocketjoe'] = pyrocketjoe
-        sys.path.insert(0, os.path.dirname(path))
     )__";
 
     constexpr static char load_script[] = R"__(
         import sys, os
         from importlib import import_module
 
+        sys.path.insert(0, os.path.dirname(path))
         module_name, _ = os.path.splitext(path)
         import_module(os.path.basename(module_name))
     )__";
@@ -267,7 +267,6 @@ namespace rocketjoe { namespace services {
             std::move(registration_socket),
             true,
             std::move(identifier)}};
-
     }
 
     auto python_sandbox_t::start() -> void {
@@ -343,13 +342,12 @@ namespace rocketjoe { namespace services {
 
         py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe));
 
-        if (mode_ == sandbox_mode_t::jupyter_kernel ||
-            mode_ == sandbox_mode_t::jupyter_engine) {
-            if (mode_ == sandbox_mode_t::jupyter_kernel) {
-                jupyter_kernel_init();
-            } else {
-                jupyter_engine_init();
-            }
+        if (sandbox_mode_t::jupyter_kernel == mode_) {
+            jupyter_kernel_init();
+        } else if (sandbox_mode_t::jupyter_engine == mode_) {
+            jupyter_engine_init();
+        } else {
+            std::cerr << "not init " << std::endl;
         }
     }
 
