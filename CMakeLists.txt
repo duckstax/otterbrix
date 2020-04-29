@@ -68,7 +68,7 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 if (CONAN_EXPERIMENTAL_INCLUDE)
-    conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
+    #conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
     set(CONAN_SYSTEM_INCLUDES "On")
 endif ()
 
