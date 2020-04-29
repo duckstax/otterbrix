@@ -4,16 +4,16 @@ on: [push, pull_request]
 
 runs-on: ubuntu-18.04
   steps:
-      - uses: actions/checkout@v1
+  - uses: actions/checkout@v1
     #- name: Install ninja-build tool
     #  uses: seanmiddleditch/gha-setup-ninja@v1
-        - name: install conan
-          run:  pip3 install conan
+  - name: install conan
+    run:  pip3 install conan
     #- name: Download dependens
     #- run:
-        - name: Run CMake
-          env:
-            CC: gcc
-          run: |
-            cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
-            cmake --build . --parallel 2
+  - name: Run CMake
+    env:
+      CC: gcc
+    run: |
+      cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+      cmake --build . --parallel 2
