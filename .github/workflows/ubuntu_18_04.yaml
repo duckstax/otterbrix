@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-18.04]
-          python-version: [ 3.7]
+        python-version: [ 3.7]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
