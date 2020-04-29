@@ -3,6 +3,7 @@ name: ubuntu 18.04
 on: [push, pull_request]
 
 strategy:
+  fail-fast: false
   matrix:
     os: [ubuntu-18.04]
     compiler: [gcc]
