@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: install conan
-        run:  pip3 install conan
+        run:  pip install conan
 
       - name: Run CMake
         env:
