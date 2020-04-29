@@ -1,37 +1,38 @@
-linux: &linux
-  os: linux
-  dist: bionic
-  sudo: required
-  language: python
-  python: "3.6"
-  services:
-    - docker
+os: linux
+dist: bionic
+language: python
+python: "3.7"
+services:
+  - docker
 
-matrix:
-  include:
-    - <<: *linux
-      env: CONAN_GCC_VERSIONS=4.9 CONAN_DOCKER_IMAGE=conanio/gcc49
-    - <<: *linux
-      env: CONAN_GCC_VERSIONS=5 CONAN_DOCKER_IMAGE=conanio/gcc5
-    - <<: *linux
-      env: CONAN_GCC_VERSIONS=6 CONAN_DOCKER_IMAGE=conanio/gcc6
-    - <<: *linux
-      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7
-    - <<: *linux
-      env: CONAN_GCC_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/gcc8
-    - <<: *linux
-      env: CONAN_CLANG_VERSIONS=3.9 CONAN_DOCKER_IMAGE=conanio/clang39
-    - <<: *linux
-      env: CONAN_CLANG_VERSIONS=4.0 CONAN_DOCKER_IMAGE=conanio/clang40
-    - <<: *linux
-      env: CONAN_CLANG_VERSIONS=5.0 CONAN_DOCKER_IMAGE=conanio/clang50
-    - <<: *linux
-      env: CONAN_CLANG_VERSIONS=6.0 CONAN_DOCKER_IMAGE=conanio/clang60
+cache:
+  - pip
+  - apt
+  - ccache
 
+compiler:
+  - gcc
+  - clang
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - ninja-build
+      - clang-format-9
+      - python3-dev
+      - python3-pip
+      - python3-setuptools
 install:
-  - chmod +x .ci/install.sh
-  - ./.ci/install.sh
-
+  - pip install conan
+  - conan user
+  - pip3 install -r requirements.txt
 script:
-  - chmod +x .ci/run.sh
-  - ./.ci/run.sh
+  - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+  - conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+  - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+  - cmake --build . --parallel 2
+  #- sudo pip3 install -r requirements.txt
+  - jupyter kernelspec install --user kernels/ipython
+  - pytest core/rocketjoe/python_sandbox/test_python_kernel.py
