@@ -16,11 +16,12 @@ jobs:
       #- name: Install ninja-build tool
       #  uses: seanmiddleditch/gha-setup-ninja@v1
       - name: install conan
-      - run:  pip3 install conan
+        run:  pip3 install conan
       #- name: Download dependens
       #- run:
       - name: Run CMake
         env:
           CC: ${{ matrix.compiler }}
-      - run: cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
-      - run: cmake --build . --parallel 2
+        run: |
+            cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+            cmake --build . --parallel 2
