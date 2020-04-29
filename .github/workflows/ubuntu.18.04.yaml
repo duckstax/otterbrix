@@ -1,0 +1,26 @@
+name: ubuntu 18.04
+
+on: [push, pull_request]
+
+strategy:
+  matrix:
+    os: [ubuntu-18.04]
+    compiler: [gcc]
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install ninja-build tool
+        uses: seanmiddleditch/gha-setup-ninja@v1
+      - name: install conan
+      - run:  pip3 install conan
+      #- name: Download dependens
+      #- run:
+      - name: Run CMake
+        env:
+          CC: ${{ matrix.compiler }}
+      - run: cmake . -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+      - run: cmake --build . --parallel 2
