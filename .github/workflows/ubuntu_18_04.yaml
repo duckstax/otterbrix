@@ -46,5 +46,6 @@ jobs:
       #  run: jupyter kernelspec install --user kernels/ipython
 
       - name: run test
-        env: export JUPYTER_PATH=pwd
-        run: pytest core/rocketjoe/python_sandbox/test_python_kernel.py
+        run: |
+          export JUPYTER_PATH=pwd
+          pytest core/rocketjoe/python_sandbox/test_python_kernel.py
