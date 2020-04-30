@@ -42,8 +42,9 @@ jobs:
       - name: install dependons test
         run: pip install -r requirements.txt
 
-      - name: install kernel
-        run: jupyter kernelspec install --user kernels/ipython
+      #- name: install kernel
+      #  run: jupyter kernelspec install --user kernels/ipython
 
       - name: run test
+        env: export JUPYTER_PATH=pwd
         run: pytest core/rocketjoe/python_sandbox/test_python_kernel.py
