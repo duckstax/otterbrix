@@ -46,4 +46,4 @@ jobs:
         run: jupyter kernelspec install --user kernels/ipython
 
       - name: run test
-        run: pytest core/rocketjoe/python_sandbox/test_python_kernel.py
+        run: ctest #pytest core/rocketjoe/python_sandbox/test_python_kernel.py
