@@ -27,6 +27,7 @@ option(DEV_MODE "developer mode" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
 if (DEV_MODE)
+    enable_testing()
     if(NOT WIN32)
         add_compile_options(
                 -Wall
