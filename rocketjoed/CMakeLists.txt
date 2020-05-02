@@ -25,10 +25,10 @@ target_link_libraries(
         dl
 )
 
-install(TARGETS
-        ${CURRENT_TARGET}
+#install(TARGETS
+#        ${CURRENT_TARGET}
 
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-)
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib
+#        ARCHIVE DESTINATION lib
+#)
