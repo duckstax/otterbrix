@@ -33,7 +33,7 @@ script:
   - conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
   - cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
   - cmake --build . --parallel 2
-  - ctest
+  - ctest --verbose
   #- sudo pip3 install -r requirements.txt
   #- jupyter kernelspec install --user kernels/ipython
   #- pytest core/rocketjoe/python_sandbox/test_python_kernel.py
