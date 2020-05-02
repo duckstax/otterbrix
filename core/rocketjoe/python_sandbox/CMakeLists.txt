@@ -73,7 +73,7 @@ configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json
 if (DEV_MODE)
     add_subdirectory(tests)
 
-    find_program(PYTEST NAMES pytest-3 pytest py.test-3 py.test)
+    find_program(PYTEST NAMES pytest )
 
     configure_file("test_python_kernel.py"
             "${CMAKE_CURRENT_BINARY_DIR}/test_python_kernel.py")
