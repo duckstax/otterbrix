@@ -8,28 +8,42 @@ set(${CURRENT_TARGET}_headers
 set(${CURRENT_TARGET}_sources
         configuration.cpp
         init_service.cpp
-        rocketjoed.cpp
+        main.cpp
+        kernel.json.in
 )
 
 find_package(Python3 COMPONENTS Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
-add_executable(${CURRENT_TARGET}  ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers} )
+add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers})
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         goblin-engineer
-        rocketjoe::http_server
         rocketjoe::python_sandbox
-        rocketjoe::router
         rocketjoe::log
+        rocketjoe::process_pool
         dl
 )
 
-install(TARGETS
-        ${CURRENT_TARGET}
+configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
 
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-)
+if (DEV_MODE)
+
+    find_program(PYTEST NAMES pytest )
+
+    configure_file("test/test_python_kernel.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_python_kernel.py")
+
+    add_test(NAME "test_python_kernel.py" COMMAND "${PYTEST}" "${CMAKE_CURRENT_BINARY_DIR}/test/test_python_kernel.py")
+
+    set_tests_properties("test_python_kernel.py" PROPERTIES ENVIRONMENT "JUPYTER_PATH=${CMAKE_BINARY_DIR}")
+
+endif()
+
+#install(TARGETS
+#        ${CURRENT_TARGET}
+
+#        RUNTIME DESTINATION bin
+#        LIBRARY DESTINATION lib
+#        ARCHIVE DESTINATION lib
+#)

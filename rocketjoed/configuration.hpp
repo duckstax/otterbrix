@@ -4,6 +4,8 @@
 
 #include <goblin-engineer.hpp>
 
-void logo();
+#include <nlohmann/json.hpp>
 
-void load_or_generate_config(cxxopts::ParseResult& result, goblin_engineer::dynamic_config& configuration);
+auto logo() -> const char*;
+
+void load_or_generate_config(cxxopts::ParseResult& /*result*/, nlohmann::json& /*configuration*/);

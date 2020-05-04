@@ -1,17 +1,36 @@
 #include "init_service.hpp"
 
 #include <rocketjoe/python_sandbox/python_sandbox.hpp>
-#include <rocketjoe/router/service_router.hpp>
-#include <rocketjoe/http_server/server.hpp>
 
-void init_service(goblin_engineer::root_manager& env,goblin_engineer::dynamic_config&cfg) {
+#include <goblin-engineer/components/http.hpp>
+#include <goblin-engineer/components/root_manager.hpp>
+#include <iostream>
 
-        auto* http = env.add_manager_service<rocketjoe::network::server>();
+using goblin_engineer::components::make_manager_service;
+using goblin_engineer::components::make_service;
+using goblin_engineer::components::root_manager;
+using namespace goblin_engineer::components;
 
-        auto python = goblin_engineer::make_service<rocketjoe::services::python_sandbox_t>(http, cfg);
-        auto router = goblin_engineer::make_service<rocketjoe::services::http_dispatcher>(http,cfg);
+using actor_zeta::link;
 
-        actor_zeta::link(http,router);
-        actor_zeta::link(http,python);
+constexpr const static bool master = true;
 
+void init_service(goblin_engineer::components::root_manager& env, nlohmann::json& cfg) {
+    auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg);
+    python->init();
+    python->start();
+
+    if (cfg["master"].get<bool>() == master) {
+        http::router router_;
+
+        router_.http_get(
+            R"(/my/super/url)", [](http::query_context& ctx) {
+                std::cerr << ctx.response().body().c_str() << std::endl;
+                ctx.response().body() = ctx.request().body();
+                ctx.write();
+            });
+
+        auto http = make_manager_service<http::server>(env, 9999);
+        make_service<http::http_dispatcher>(http, router_);
+    }
 }
