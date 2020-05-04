@@ -3,8 +3,6 @@
 import unittest
 import jupyter_kernel_test
 
-jupyter_kernel_test.TIMEOUT = 120
-
 class RocketJoePythonTests(jupyter_kernel_test.KernelTests):
     kernel_name = "ipython"
     language_name = "python"
