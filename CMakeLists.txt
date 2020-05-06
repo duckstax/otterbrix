@@ -27,6 +27,7 @@ option(DEV_MODE "developer mode" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
 if (DEV_MODE)
+    enable_testing()
     if(NOT WIN32)
         add_compile_options(
                 -Wall
@@ -35,16 +36,16 @@ if (DEV_MODE)
 
                 #-Wredundant-move # not work gcc
                 -Wcast-align
-                #-Wcast-qual
-                #-Wconversion
+                -Wcast-qual
+                -Wconversion
                 -Wctor-dtor-privacy
                 -Wenum-compare
-                #-Wfloat-equal
+                -Wfloat-equal
                 -Wnon-virtual-dtor
-                #-Wold-style-cast
+                -Wold-style-cast
                 -Woverloaded-virtual
                 -Wredundant-decls
-                #-Wsign-conversion
+                -Wsign-conversion
                 -Wsign-promo
         )
     endif()
@@ -68,7 +69,7 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 if (CONAN_EXPERIMENTAL_INCLUDE)
-    conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
+    #conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
     set(CONAN_SYSTEM_INCLUDES "On")
 endif ()
 

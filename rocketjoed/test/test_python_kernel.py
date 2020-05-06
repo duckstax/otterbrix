@@ -3,7 +3,6 @@
 import unittest
 import jupyter_kernel_test
 
-
 class RocketJoePythonTests(jupyter_kernel_test.KernelTests):
     kernel_name = "ipython"
     language_name = "python"

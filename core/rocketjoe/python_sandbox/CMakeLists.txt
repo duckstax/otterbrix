@@ -40,8 +40,6 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
         source/detail/file_manager.cpp
         source/detail/file_system.cpp
         source/detail/jupyter.cpp
-
-        kernel.json.in
         source/detail/mapreduce.cpp
         source/python_sandbox.cpp
 )
@@ -61,7 +59,6 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
-        rocketjoe::network
         rocketjoe::log
         goblin-engineer
         pybind11::embed
@@ -69,20 +66,6 @@ target_link_libraries(
 
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
-configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
-
 if (DEV_MODE)
     add_subdirectory(tests)
-
-    find_program(PYTEST NAMES pytest-3 pytest py.test-3 py.test)
-
-    configure_file("test_python_kernel.py"
-            "${CMAKE_CURRENT_BINARY_DIR}/test_python_kernel.py")
-
-    add_test(NAME "../../test_python_kernel.py" COMMAND "${PYTEST}"
-            "${CMAKE_CURRENT_BINARY_DIR}/test_python_kernel.py")
-
-    set_tests_properties("../../test_python_kernel.py" PROPERTIES ENVIRONMENT
-            "JUPYTER_PATH=${CMAKE_BINARY_DIR}")
-
 endif()

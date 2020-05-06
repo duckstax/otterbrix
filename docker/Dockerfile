@@ -12,7 +12,7 @@ RUN apk update \
  && rm -rf /var/cache/* \
  && rm -rf /root/.cache/*
 
-COPY . /app
+COPY .. /app
 WORKDIR /app
 
 RUN conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan

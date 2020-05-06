@@ -36,7 +36,7 @@ cd RocketJoe
 
 2. Run RocketJoe Kernel and Jupyter Notebook
 ```bash
-docker-compose -f docker-compose-jupyter.yaml up
+docker-compose -f docker/docker-compose-jupyter.yaml up
 ```
 
 3. Open the browser at http://localhost:8888/?token=your_token, where your_token
@@ -74,10 +74,6 @@ conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
 git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
 
 cd rocketjoe
-
-git submodule init
-
-git submodule update --recursive
 
 mkdir build
 
