@@ -1,16 +1,16 @@
-#include <cxxopts.hpp>
-
 #include <cstdlib>
 #include <exception>
 #include <locale>
 
 #include <boost/filesystem.hpp>
 #include <boost/locale/generator.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
 
+#include <rocketjoe/configuration/configuration.hpp>
 #include <rocketjoe/log/log.hpp>
 #include <rocketjoe/process_pool/process_pool.hpp>
-
-#include <nlohmann/json.hpp>
 
 #include "configuration.hpp"
 
@@ -50,9 +50,7 @@ void terminate_handler() {
 
 #endif
 
-constexpr const static bool worker = false;
-
-constexpr const static bool master = true;
+namespace po = boost::program_options;
 
 int main(int argc, char* argv[]) {
 #ifdef __APPLE__
@@ -67,73 +65,109 @@ int main(int argc, char* argv[]) {
 
     std::locale::global(boost::locale::generator{}(""));
 
-    cxxopts::Options options("defaults", "");
-
-    std::vector<std::string> positional;
-    // clang-format off
-    options.add_options()
-        ("help", "Print help")
-        ("worker_mode", "Worker Process Mode", cxxopts::value<bool>())
-        ("max_worker", "Max worker", cxxopts::value<std::size_t>())
-        ("jupyter_mode", "Jupyter kernel mode", cxxopts::value<bool>())
-        ("data-dir", "data-dir", cxxopts::value<std::string>()->default_value("."))
-        ("positional", "Positional parameters", cxxopts::value<std::vector<std::string>>(positional));
-    // clang-format on
-    std::vector<std::string> pos_names = {"positional"};
-
-    options.parse_positional(pos_names.begin(), pos_names.end());
-
-    options.allow_unrecognised_options();
-
     std::vector<std::string> all_args(argv, argv + argc);
 
-    auto result = options.parse(argc, argv);
+    po::options_description command_line_description("Allowed options");
+    // clang-format off
+    command_line_description.add_options()
+        ("help", "Print help")
+        ("worker_mode",po::value<unsigned short int>()->default_value(1), "Worker Process Mode")
+        ("jupyter_mode", "Jupyter kernel mode")
+        ("port_http",po::value<unsigned short int>()->default_value(9999), "Port Http")
+        ("jupyter_connection", po::value<boost::filesystem::path>(),"path to jupyter connection file")
+        ;
+    // clang-format on
+    po::variables_map command_line;
+
+    po::store(
+        po::command_line_parser(all_args)
+            .options(command_line_description)
+            .allow_unregistered() /// todo hack
+            .run(),
+        command_line);
 
     log.info(logo());
 
     /// --help option
-    if (result.count("help")) {
-        std::cout << options.help({}) << std::endl;
-
+    if (command_line.count("help")) {
+        std::cerr << command_line_description << std::endl;
         return 0;
     }
 
-    ///goblin_engineer::dynamic_config config;
+    rocketjoe::configuration cfg_;
 
-    nlohmann::json config = nlohmann::json::object();
-    config["master"] = master;
+    cfg_.port_http_ = command_line["port_http"].as<unsigned short int>();
 
-    if (result.count("worker_mode")) {
-        log.info("Worker Mode");
+    int count_python_file = 0;
 
-        config["master"] = worker;
+    auto it = std::find_if(
+        all_args.begin(),
+        all_args.end(),
+        [&count_python_file](const std::string& value) {
+            boost::filesystem::path p(value);
+            if (!p.empty() && p.extension() == ".py") {
+                count_python_file++;
+                return true;
+            }
+            return false;
+        });
+
+    if (count_python_file == 1) {
+        if (command_line.count("jupyter_mode")) {
+            log.error("mutually exclusive command line options: script and jupyter_mode");
+            return 1;
+        }
+
+        cfg_.python_configuration_.script_path_ = *it;
+        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
+
+    } else if (command_line.count("jupyter_mode")) {
+        if (command_line.count("jupyter_connection")) {
+            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
+        } else {
+            log.error("the jupyter_connection command line parameter is undefined");
+            return 1;
+        }
+
+        if (command_line.count("worker_mode")) {
+            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
+        } else {
+            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_kernel;
+        }
+    } else {
+        log.error("non correct run ");
+        return 1;
     }
 
-    if (result.count("jupyter_mode")) {
+    cfg_.operating_mode_ = rocketjoe::operating_mode::master;
+
+    if (command_line.count("worker_mode")) {
+        log.info("Worker Mode");
+
+        cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
+    }
+
+    if (command_line.count("jupyter_mode")) {
         log.info("Jupyter Mode");
     }
 
-    config["args"] = all_args;
-
-    ///load_or_generate_config(result, config);
-
     goblin_engineer::components::root_manager env(1, 1000);
 
-    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_mode=true"}, log);
+    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
 
-    init_service(env, config);
+    init_service(env, cfg_);
 
-    if (result.count("max_worker")) {
-        process_pool.add_worker_process(result["max_worker"].as<std::size_t>()); /// todo hack
+    if (command_line.count("worker_mode")) {
+        process_pool.add_worker_process(command_line["worker_mode"].as<std::size_t>()); /// todo hack
     }
 
-    auto sigint_set = std::make_shared<boost::asio::signal_set>(env.loop(), SIGINT, SIGTERM);
-    sigint_set->async_wait(
-        [sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
-          sigint_set->cancel();
+    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
+    sigint_set.async_wait(
+        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
+            sigint_set.cancel();
         });
 
     env.startup();
-
+    log.info("Shutdown RocketJoe");
     return 0;
 }

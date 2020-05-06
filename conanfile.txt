@@ -1,8 +1,4 @@
 [requires]
-#boost/1.72.0@_/_
-#openssl/1.0.2u@_/_
-#cppzmq/4.6.0@_/_
-
 boost/1.71.0@conan/stable
 OpenSSL/1.1.1c@conan/stable
 botan/2.13.0@_/_
@@ -13,7 +9,6 @@ cppzmq/4.6.0@bincrafters/stable
 pybind11/2.3.0@conan/stable
 
 goblin-engineer/1.0.0a3@jinncrafters/stable
-cxxopts/2.2.0@jinncrafters/stable
 
 [options]
 OpenSSL:shared = True

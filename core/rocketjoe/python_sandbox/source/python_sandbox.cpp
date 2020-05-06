@@ -2,13 +2,8 @@
 
 #include <cstdlib>
 #include <exception>
-#include <fstream>
 #include <iostream>
-#include <vector>
 
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/parsers.hpp>
-#include <boost/program_options/variables_map.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -47,13 +42,12 @@ namespace rocketjoe { namespace services {
         module_name, _ = os.path.splitext(path)
         import_module(os.path.basename(module_name))
     )__";
-    namespace po = boost::program_options;
     namespace nl = nlohmann;
     using namespace py::literals;
 
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, nlohmann::json& configuration)
+    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const rocketjoe::python_sandbox_configuration& configuration)
         : goblin_engineer::abstract_manager_service(env, "python_sandbox")
         , mode_{sandbox_mode_t::none}
         , python_{}
@@ -67,58 +61,14 @@ namespace rocketjoe { namespace services {
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr} {
         std::cerr << "processing env python start " << std::endl;
-
-        auto cfg = configuration.at("args").get<std::vector<std::string>>();
-
-        po::options_description command_line_description("Allowed options");
-        // clang-format off
-        command_line_description.add_options()
-            ("script", po::value<boost::filesystem::path>(),"path to script file")
-            ("worker_mode", "Worker Process Mode")
-            ("jupyter_mode", "Jupyter kernel mode")
-            ("jupyter_connection", po::value<boost::filesystem::path>(),"path to jupyter connection file");
-        // clang-format on
-        po::variables_map command_line;
-
-        po::store(
-            po::command_line_parser(cfg)
-                .options(command_line_description)
-                .allow_unregistered() /// todo hack
-                .run(),
-            command_line);
-
-        if (command_line.count("script")) {
-            script_path = command_line["script"].as<boost::filesystem::path>();
-
-            if (command_line.count("jupyter_mode")) {
-                throw std::logic_error("mutually exclusive command line "
-                                       "options: script and jupyter_mode");
-            }
-
-            if (!script_path.empty() && script_path.extension() == ".py") {
-                mode_ = sandbox_mode_t::script;
-            }
-        } else if (command_line.count("jupyter_mode")) {
-            if (command_line.count("jupyter_connection")) {
-                jupyter_connection_path = command_line["jupyter_connection"]
-                                              .as<boost::filesystem::path>();
-            } else {
-                throw std::logic_error("the jupyter_connection command line "
-                                       "parameter is undefined");
-            }
-
-            if (command_line.count("worker_mode")) {
-                mode_ = sandbox_mode_t::jupyter_engine;
-            } else {
-                mode_ = sandbox_mode_t::jupyter_kernel;
-            }
-        }
-
+        mode_ = configuration.mode_;
+        script_path_ = configuration.script_path_;
+        jupyter_connection_path_ = configuration.jupyter_connection_path_;
         std::cerr << "processing env python finish " << std::endl;
     }
 
     auto python_sandbox_t::jupyter_kernel_init() -> void {
-        std::ifstream connection_file{jupyter_connection_path.string()};
+        std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
             throw std::logic_error("File jupyter_connection not found");
@@ -184,7 +134,7 @@ namespace rocketjoe { namespace services {
     }
 
     auto python_sandbox_t::jupyter_engine_init() -> void {
-        std::ifstream connection_file{jupyter_connection_path.string()};
+        std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
             throw std::logic_error("File jupyter_connection not found");
@@ -272,7 +222,7 @@ namespace rocketjoe { namespace services {
     auto python_sandbox_t::start() -> void {
         if (mode_ == sandbox_mode_t::script) {
             commands_exuctor = std::make_unique<std::thread>([this]() {
-                py::exec(load_script, py::globals(), py::dict("path"_a = script_path.string()));
+                py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
             });
         } else if (mode_ == sandbox_mode_t::jupyter_kernel ||
                    mode_ == sandbox_mode_t::jupyter_engine) {

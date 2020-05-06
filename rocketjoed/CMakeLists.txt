@@ -19,7 +19,8 @@ add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
-        goblin-engineer
+        ${CONAN_LIBS}
+        rocketjoe::configuration
         rocketjoe::python_sandbox
         rocketjoe::log
         rocketjoe::process_pool
