@@ -1,0 +1,4 @@
+include_directories(${CMAKE_SOURCE_DIR})
+add_subdirectory(log)
+add_subdirectory(process_pool)
+add_subdirectory(python_sandbox)

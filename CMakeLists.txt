@@ -94,14 +94,8 @@ endif(CCACHE_FOUND)
 # ccahe
 #############################################################################################
 
-include_directories(core)
-
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    add_subdirectory(debug_worker)
-endif()
-
-add_subdirectory(core)
-add_subdirectory(rocketjoed)
+add_subdirectory(components)
+add_subdirectory(apps)
 
 #set(CPACK_GENERATOR "DEB")
 #set(CPACK_SET_DESTDIR true)
