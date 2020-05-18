@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.12)
 set(project RocketJoe)
 
 cmake_policy(SET CMP0048 NEW)
-set(CMAKE_PROJECT_VERSION_MAJOR 0)
+set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
@@ -69,7 +69,6 @@ endif()
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
 if (CONAN_EXPERIMENTAL_INCLUDE)
-    #conan_add_remote(NAME jinncrafters INDEX 2 URL https://api.bintray.com/conan/jinncrafters/conan )
     set(CONAN_SYSTEM_INCLUDES "On")
 endif ()
 
@@ -95,6 +94,7 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 add_subdirectory(components)
+add_subdirectory(services)
 add_subdirectory(apps)
 
 #set(CPACK_GENERATOR "DEB")
