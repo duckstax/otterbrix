@@ -296,3 +296,6 @@ gen
 *.py
 *.yml
 **/*.sh
+
+/.dockerignore
+/docker
