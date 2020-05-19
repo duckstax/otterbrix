@@ -134,9 +134,13 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     class BOOST_SYMBOL_VISIBLE apply_locals_guard final {
     public:
         apply_locals_guard(py::dict locals,
+                           std::string shell_name,
                            std::string function_name,
                            std::string arg_name,
                            std::string kwarg_name,
+                           std::string success_name,
+                           std::string result_name,
+                           py::object shell,
                            py::object function,
                            py::args args,
                            py::kwargs kwargs);
@@ -145,9 +149,12 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
     private:
         py::dict locals_;
+        std::string shell_name_;
         std::string function_name_;
         std::string arg_name_;
         std::string kwarg_name_;
+        std::string success_name_;
+        std::string result_name_;
     };
 
     class BOOST_SYMBOL_VISIBLE interpreter_impl final {
@@ -430,26 +437,44 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     }
 
     apply_locals_guard::apply_locals_guard(py::dict locals,
+                                           std::string shell_name,
                                            std::string function_name,
                                            std::string arg_name,
                                            std::string kwarg_name,
+                                           std::string success_name,
+                                           std::string result_name,
+                                           py::object shell,
                                            py::object function,
                                            py::args args,
                                            py::kwargs kwargs)
         : locals_(std::move(locals))
+        , shell_name_(std::move(shell_name))
         , function_name_(std::move(function_name))
         , arg_name_(std::move(arg_name))
-        , kwarg_name_(std::move(kwarg_name)) {
+        , kwarg_name_(std::move(kwarg_name))
+        , success_name_(std::move(success_name))
+        , result_name_(std::move(result_name)) {
+        locals_[shell_name_.c_str()] = shell;
         locals_[function_name_.c_str()] = function;
         locals_[arg_name_.c_str()] = args;
         locals_[kwarg_name_.c_str()] = kwargs;
+        locals_[success_name_.c_str()] = true;
     }
 
     apply_locals_guard::~apply_locals_guard() {
-        //FIX: fix cleaning error locals
-        //py::delattr(locals_, function_name_.c_str());
-        //py::delattr(locals_, arg_name_.c_str());
-        //py::delattr(std::move(locals_), kwarg_name_.c_str());
+        py::exec(R"(
+             for key in keys:
+                old_locals.pop(key)
+        )",
+                 py::globals(),
+                 py::dict(
+                     "old_locals"_a = std::move(locals_),
+                     "keys"_a = std::vector<std::string>{std::move(shell_name_),
+                                                         std::move(function_name_),
+                                                         std::move(arg_name_),
+                                                         std::move(kwarg_name_),
+                                                         std::move(success_name_),
+                                                         std::move(result_name_)}));
     }
 
     interpreter_impl::interpreter_impl(
@@ -1210,51 +1235,58 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         std::replace(msg_id.begin(), msg_id.end(), '-', '_');
 
         auto prefix = "_" + std::move(msg_id) + "_";
+        auto shell_name = prefix + "shell";
         auto function_name = prefix + "f";
         auto arg_name = prefix + "args";
-        auto kwarg_name = std::move(prefix) + "kwargs";
-        auto code = function_name + "(*" + arg_name + ", **" + kwarg_name + ")";
+        auto kwarg_name = prefix + "kwargs";
+        auto success_name = prefix + "success";
+        auto result_name = std::move(prefix) + "result";
+        auto code = "try:\n    " + result_name + " = " + function_name + "(*" + arg_name + ", **" + kwarg_name + ")\nexcept BaseException as exception:\n    " + result_name + " = " + shell_name + "._user_obj_error()\n    " + success_name + " = False";
         auto globals = shell.attr("user_global_ns");
         auto failed = false;
 
-        py::object result;
         apply_locals_guard guard(locals,
+                                 std::move(shell_name),
                                  std::move(function_name),
                                  std::move(arg_name),
                                  std::move(kwarg_name),
+                                 success_name,
+                                 result_name,
+                                 shell,
                                  std::move(std::get<0>(execute)),
                                  std::move(std::get<1>(execute)),
                                  std::move(std::get<1>(execute)));
 
-        //FIX: fix error catching
-        try {
-            result = py::eval(std::move(code),
-                              std::move(globals),
-                              std::move(locals));
-        } catch (const py::error_already_set& _error) {
-            auto error = shell.attr("_user_obj_error")().cast<py::dict>();
-            auto ename = error["ename"].cast<std::string>();
-            auto evalue = error["evalue"].cast<std::string>();
-            auto traceback = error["traceback"].cast<std::vector<std::string>>();
-            engine_info_t engine_info;
+        py::exec(std::move(code),
+                 std::move(globals),
+                 locals);
 
-            engine_info.kernel_identifier(identifier)
-                .engine_identifier(engine_identifier);
+        auto result = locals[result_name.c_str()];
 
-            apply_error_reply reply;
+        if (locals[success_name.c_str()].cast<bool>()) {
+            apply_ok_reply reply;
 
-            reply.ename(std::move(ename))
-                .evalue(std::move(evalue))
-                .traceback(std::move(traceback))
-                .engine_info(std::move(engine_info));
+            reply.buffers(serialize.attr("serialize_object")(result)
+                              .cast<std::vector<std::string>>());
 
             return reply;
         }
 
-        apply_ok_reply reply;
+        auto error = result.cast<py::dict>();
+        auto ename = error["ename"].cast<std::string>();
+        auto evalue = error["evalue"].cast<std::string>();
+        auto traceback = error["traceback"].cast<std::vector<std::string>>();
+        engine_info_t engine_info;
 
-        reply.buffers(serialize.attr("serialize_object")(result)
-                          .cast<std::vector<std::string>>());
+        engine_info.kernel_identifier(identifier)
+            .engine_identifier(engine_identifier);
+
+        apply_error_reply reply;
+
+        reply.ename(std::move(ename))
+            .evalue(std::move(evalue))
+            .traceback(std::move(traceback))
+            .engine_info(std::move(engine_info));
 
         return reply;
     }

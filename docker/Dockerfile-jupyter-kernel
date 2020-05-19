@@ -27,7 +27,7 @@ WORKDIR ./build
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
     cmake --build . && \
-    jupyter kernelspec install --user kernels/ipython && \
+    jupyter kernelspec install --user kernels/jupyter && \
     mkdir -p rocketjoe
 
 WORKDIR rocketjoe

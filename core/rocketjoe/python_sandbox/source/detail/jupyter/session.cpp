@@ -535,7 +535,11 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                   {"ename", reply.ename()},
                                   {"evalue", reply.evalue()},
                                   {"traceback", reply.traceback()},
-                                  {"engine_info", {{"engine_uuid", reply.engine_info().kernel_identifier()}, {"engine_id", reply.engine_info().engine_identifier()}, {"method", "apply"}}}},
+                                  // clang-format off
+                                  {"engine_info", {{"engine_uuid", boost::uuids::to_string(reply.engine_info().kernel_identifier())},
+                                                   {"engine_id", reply.engine_info().engine_identifier()},
+                                                   {"method", "apply"}}}},
+                                  // clang-format on
                                  {});
     }
 
@@ -548,7 +552,11 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                   {"ename", broadcast.ename()},
                                   {"evalue", broadcast.evalue()},
                                   {"traceback", broadcast.traceback()},
-                                  {"engine_info", {{"engine_uuid", broadcast.engine_info().kernel_identifier()}, {"engine_id", broadcast.engine_info().engine_identifier()}, {"method", "apply"}}}},
+                                  // clang-format off
+                                  {"engine_info", {{"engine_uuid", boost::uuids::to_string(broadcast.engine_info().kernel_identifier())},
+                                                   {"engine_id", broadcast.engine_info().engine_identifier()},
+                                                   {"method", "apply"}}}},
+                                  // clang-format on
                                  {});
     }
 
