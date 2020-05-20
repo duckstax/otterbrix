@@ -421,3 +421,5 @@ conaninfo.txt
 thirdparty/goblin-engineer
 thirdparty/actor-zeta
 thirdparty/cxxopts/include
+
+**/.#session.*
