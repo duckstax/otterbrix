@@ -298,3 +298,5 @@ gen
 **/*.sh
 
 **/.#session.*
+/.dockerignore
+/docker
