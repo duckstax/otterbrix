@@ -11,6 +11,10 @@ spdlog/1.5.0@_/_
 nlohmann_json/3.7.3@_/_
 cppzmq/4.6.0@bincrafters/stable
 pybind11/2.3.0@conan/stable
+flatbuffers/1.12.0
+flatbuffers/1.12.0
+flatc/1.12.0
+protobuf/3.9.1@bincrafters/stable
 
 goblin-engineer/1.0.0a3@jinncrafters/stable
 cxxopts/2.2.0@jinncrafters/stable
@@ -21,3 +25,4 @@ goblin-engineer:http_component = True
 
 [generators]
 cmake
+/home/kotbegemot/.conan/data/flatc/1.12.0/_/_/package/44fcf6b9a7fb86b2586303e3db40189d3b511830/bin/flatc
