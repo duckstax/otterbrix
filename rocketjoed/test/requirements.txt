@@ -2,3 +2,4 @@ jupyter_kernel_test == 0.3
 pytest == 5.4.1
 ipython == 7.13.0
 jupyter == 1.0.0
+pytest-xprocess == 0.13.1

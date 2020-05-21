@@ -47,7 +47,7 @@ namespace rocketjoe { namespace services {
 
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const rocketjoe::python_sandbox_configuration& configuration)
+    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const python_sandbox_configuration& configuration,log_t&log)
         : goblin_engineer::abstract_manager_service(env, "python_sandbox")
         , mode_{sandbox_mode_t::none}
         , python_{}
@@ -60,11 +60,14 @@ namespace rocketjoe { namespace services {
         , jupyter_kernel{nullptr}
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr} {
-        std::cerr << "processing env python start " << std::endl;
+        log_ = log.clone();
+        log_.info("processing env python start ");
+        log_.info(fmt::format("Mode : {0}", configuration.mode_));
         mode_ = configuration.mode_;
         script_path_ = configuration.script_path_;
+        log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
-        std::cerr << "processing env python finish " << std::endl;
+        log_.info("processing env python finish ");
     }
 
     auto python_sandbox_t::jupyter_kernel_init() -> void {
@@ -293,11 +296,13 @@ namespace rocketjoe { namespace services {
         py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe));
 
         if (sandbox_mode_t::jupyter_kernel == mode_) {
+            log_.info( "jupyter kernel mode");
             jupyter_kernel_init();
         } else if (sandbox_mode_t::jupyter_engine == mode_) {
+            log_.info( "jupyter engine mode");
             jupyter_engine_init();
         } else {
-            std::cerr << "not init " << std::endl;
+            log_.info( "not init ");
         }
     }
 

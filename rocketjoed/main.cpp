@@ -71,8 +71,9 @@ int main(int argc, char* argv[]) {
     // clang-format off
     command_line_description.add_options()
         ("help", "Print help")
-        ("worker_mode",po::value<unsigned short int>()->default_value(1), "Worker Process Mode")
-        ("jupyter_mode", "Jupyter kernel mode")
+        ("worker_number",po::value<unsigned short int>(), "Worker Process Mode and run  ")
+        ("jupyter_kernel", "Jupyter kernel mode")
+        ("jupyter_engine", "Ipyparalle mode")
         ("port_http",po::value<unsigned short int>()->default_value(9999), "Port Http")
         ("jupyter_connection", po::value<boost::filesystem::path>(),"path to jupyter connection file")
         ;
@@ -87,6 +88,7 @@ int main(int argc, char* argv[]) {
         command_line);
 
     log.info(logo());
+    log.info(fmt::format("Command  Args : {0}", fmt::join(all_args, " , ")));
 
     /// --help option
     if (command_line.count("help")) {
@@ -95,9 +97,7 @@ int main(int argc, char* argv[]) {
     }
 
     rocketjoe::configuration cfg_;
-
     cfg_.port_http_ = command_line["port_http"].as<unsigned short int>();
-
     int count_python_file = 0;
 
     auto it = std::find_if(
@@ -113,15 +113,22 @@ int main(int argc, char* argv[]) {
         });
 
     if (count_python_file == 1) {
-        if (command_line.count("jupyter_mode")) {
-            log.error("mutually exclusive command line options: script and jupyter_mode");
-            return 1;
-        }
-
+        log.info("script mode");
         cfg_.python_configuration_.script_path_ = *it;
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
 
-    } else if (command_line.count("jupyter_mode")) {
+        if (command_line.count("jupyter_engine") && command_line.count("jupyter_connection")) {
+            log.info("script mode + ipyparalle");
+            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
+            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
+        } else {
+            log.error("the jupyter_connection command line parameter is undefined");
+            return 1;
+        }
+    }
+
+    if (command_line.count("jupyter_kernel")) {
+        log.info("jupyter kernel mode");
         if (command_line.count("jupyter_connection")) {
             cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
         } else {
@@ -129,36 +136,33 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        if (command_line.count("worker_mode")) {
-            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
+        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_kernel;
+    }
+
+    if (command_line.count("jupyter_engine") && command_line.count("worker_number")) {
+        log.info("jupyter engine mode");
+        if (command_line.count("jupyter_connection")) {
+            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
         } else {
-            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_kernel;
+            log.error("the jupyter_connection command line parameter is undefined");
+            return 1;
         }
-    } else {
-        log.error("non correct run ");
-        return 1;
+        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
     }
 
     cfg_.operating_mode_ = rocketjoe::operating_mode::master;
 
-    if (command_line.count("worker_mode")) {
+    if (command_line.count("worker_number")) {
         log.info("Worker Mode");
-
         cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
     }
 
-    if (command_line.count("jupyter_mode")) {
-        log.info("Jupyter Mode");
-    }
-
     goblin_engineer::components::root_manager env(1, 1000);
+    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_number 0"}, log);
+    init_service(env, cfg_, log);
 
-    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
-
-    init_service(env, cfg_);
-
-    if (command_line.count("worker_mode")) {
-        process_pool.add_worker_process(command_line["worker_mode"].as<std::size_t>()); /// todo hack
+    if (command_line.count("worker_number")) {
+        process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
     }
 
     boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
@@ -168,6 +172,7 @@ int main(int argc, char* argv[]) {
         });
 
     env.startup();
+
     log.info("Shutdown RocketJoe");
     return 0;
 }
