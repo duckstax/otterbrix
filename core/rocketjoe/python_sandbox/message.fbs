@@ -120,10 +120,15 @@ union content {
 
 }
 
+table key_value {
+    key:string;
+    value:string;
+}
+
 table message {
-  header:bool;//{};
-  parent_header:bool;//{};
-  metadata:bool;//{};
+  header:[key_value];
+  parent_header:[key_value];
+  metadata:[key_value];
   content:content;
   buffers: [byte];
 }
