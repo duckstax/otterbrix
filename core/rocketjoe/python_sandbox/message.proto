@@ -1,9 +1,131 @@
 syntax = "proto3";
 
+message user_expressions_t {
+  string status = 1;
+  string ename = 2;
+  string evalue = 3;
+  string traceback = 4;
+}
+
+message execute_request {
+  string code  =1 ;
+  bool silent = 2;
+  bool store_history=3;
+  user_expressions_t  user_expressions  = 4;
+  bool allow_stdin  = 5;
+  bool stop_on_error= 6;
+}
+
+
+message execute_reply {
+  string status = 1;
+  uint32 execution_count = 2;
+}
+
+message inspect_request {
+  string code = 1;
+  uint32 cursor_pos = 2;
+  uint32 detail_level = 3; // 0 or 1,
+}
+
+message inspect_reply {
+  string status  = 1;
+  bool found = 2;
+  map<string,string> data = 3;
+  map<string,string> metadata = 4;
+}
+
+message complete_request {
+  string code = 1;
+  uint32 cursor_pos = 2;
+}
+
+message complete_reply {
+  string status = 1;
+  repeated string matches  = 2;
+  int32 cursor_start = 3;
+  int32 cursor_end = 4;
+  map<string,string> metadata = 5;
+}
+
+message history_request {
+  bool   output  = 1;
+  bool   raw = 2;
+  string hist_access_type =3;
+  int32  session =4;
+  int32  start =5;
+  int32  stop =6 ;
+  int32  n = 7;
+  string pattern =8;
+  bool   unique =9;
+}
+
+message history_item {
+    repeated string  e = 1;
+}
+
+message history_reply {
+    repeated history_item history =1;
+}
+
+message is_complete_request {
+  string code  = 1;
+}
+
+message is_complete_reply {
+    string status = 1;
+    string indent = 2;
+}
+
+
+message connect_request {
+  string eqqq = 1;
+}
+
+message connect_reply {
+  uint32 shell_port = 1;  //# The port the shell ROUTER socket is listening on.
+  uint32 iopub_port = 2;  //  # The port the PUB socket is listening on.
+  uint32 stdin_port = 3;  //  # The port the stdin ROUTER socket is listening on.
+  uint32 hb_port = 4;     //  # The port the heartbeat socket is listening on.
+  uint32 control_port = 5;
+}
+
+message comm_info_request {
+  string target_name = 1;
+}
+
+message comm_id {
+  string target_name = 1;
+}
+
+message comm_info_reply {
+  comm_id comms = 1;
+}
+
+message kernel_info_request {
+  string eqqqqqqq = 1;
+}
+
+
 message message {
   map<string,string> header = 1;
   map<string,string> parent_header = 2;
   map<string,string> metadata=3;
-  map<string,string> content=4;
-  bytes buffers =5;
+  oneof content {
+    execute_request execute_request =4;
+    execute_reply execute_reply = 5;
+    inspect_request inspect_request = 6;
+    inspect_reply inspect_reply =7;
+    complete_request complete_request =8;
+    history_request history_request =9 ;
+    history_reply history_reply =10;
+    is_complete_request is_complete_request =11;
+    connect_request connect_request =12;
+    connect_reply connect_reply =13;
+    comm_info_request comm_info_request =14;
+    comm_info_reply comm_info_reply= 15;
+    kernel_info_request kernel_info_request =16;
+  }
+
+  bytes buffers = 17;
 }
