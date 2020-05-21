@@ -3,6 +3,6 @@ services:
   rocketjoe_jupyter:
     build:
       context: ..
-      dockerfile: Dockerfile-jupyter-kernel
+      dockerfile: docker/Dockerfile-jupyter-kernel
     ports:
       - 8888:8888

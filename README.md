@@ -6,7 +6,7 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 - [ ] Integration of the Jupyter Kernel Protocol to simplify data scientists' processing and visualization of data, modeling of any species possible in the Jupyter ecosystem.
    - [x] Implementation of the protocol for the execution, completion and introspection of the code.
    - [ ] Integration of ipyparallel for parallel execution in a cluster.
-   - [ ] Storage of cPickle in shared memory to minimize copying in the the process pool.
+   - [x] Storage of cPickle in shared memory to minimize copying in the the process pool.
 - [ ] Integration of two-dimensional dataframe to provide data scientists with the usual ways of presenting and processing data.
    - [ ] The basic dataframe implementation for loading, unloading and various data processing methods.
    - [ ] Storage of the dataframe in shared memory to minimize copying in the process pool.
