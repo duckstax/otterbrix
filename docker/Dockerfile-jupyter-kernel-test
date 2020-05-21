@@ -1,0 +1,35 @@
+FROM debian:buster-backports
+
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
+        build-essential \
+        cmake \
+        ninja-build \
+        python3-pip && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip3 install --no-cache-dir conan
+
+WORKDIR /app
+
+COPY conanfile.txt ./
+
+RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
+    conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
+    conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
+
+COPY rocketjoed/test/requirements.txt ./rocketjoed/test/
+
+RUN pip3 install --no-cache-dir -r rocketjoed/test/requirements.txt
+
+COPY . ./
+
+WORKDIR ./build
+
+ENV JUPYTER_PATH=/usr/local/share/jupyter
+
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DDEV_MODE=ON && \
+    cmake --build .
+
+CMD ctest -V

@@ -9,7 +9,6 @@ set(${CURRENT_TARGET}_sources
         configuration.cpp
         init_service.cpp
         main.cpp
-        kernel.json.in
 )
 
 find_package(Python3 COMPONENTS Development)
@@ -27,17 +26,17 @@ target_link_libraries(
         dl
 )
 
-configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
+configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/jupyter/kernel.json")
 
 if (DEV_MODE)
 
-    find_program(PYTEST NAMES pytest )
+    find_program(PYTEST NAMES pytest)
 
-    configure_file("test/test_python_kernel.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_python_kernel.py")
+    configure_file("test/test_jupyter_kernel.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
 
-    add_test(NAME "test_python_kernel.py" COMMAND "${PYTEST}" "${CMAKE_CURRENT_BINARY_DIR}/test/test_python_kernel.py")
+    add_test(NAME "test_jupyter_kernel.py" COMMAND "${PYTEST}" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
 
-    set_tests_properties("test_python_kernel.py" PROPERTIES ENVIRONMENT "JUPYTER_PATH=${CMAKE_BINARY_DIR}")
+    set_tests_properties("test_jupyter_kernel.py" PROPERTIES ENVIRONMENT "JUPYTER_PATH=$JUPYTER_PATH:${CMAKE_BINARY_DIR}")
 
 endif()
 
