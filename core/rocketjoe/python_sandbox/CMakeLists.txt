@@ -63,7 +63,7 @@ target_link_libraries(
         goblin-engineer
         pybind11::embed
 )
-
+# /home/kotbegemot/.conan/data/flatc/1.12.0/_/_/package/44fcf6b9a7fb86b2586303e3db40189d3b511830/bin/flatc message.fbs --cpp --json --cpp-std c++11 --scoped-enums
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
 if (DEV_MODE)
