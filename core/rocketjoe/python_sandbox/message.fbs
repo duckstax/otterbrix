@@ -1,0 +1,147 @@
+table user_expressions  {
+          status :string;
+          ename : string;
+          evalue : string;
+          traceback : string;
+      }
+
+table execute_request {
+
+code : string;
+
+silent: bool;
+
+store_history : bool;
+user_expressions : user_expressions;
+
+allow_stdin : bool = True;
+
+stop_on_error : bool = True;
+
+}
+
+
+table execute_reply {
+status : string;
+  execution_count : int;
+}
+
+table inspect_request {
+    code : string;
+    cursor_pos : int;
+    detail_level : int; // 0 or 1,
+}
+
+table inspect_reply {
+  status : string;
+
+    found : bool;
+   ///'data' : dict,
+    ///'metadata' : dict,
+}
+table complete_request {
+code : string;
+
+    cursor_pos : int;
+}
+
+table complete_reply {
+status: string;
+
+matches : [string];
+
+cursor_start : int;
+cursor_end : int;
+
+//metadata : dict;
+}
+
+table history_request {
+ output : bool;
+
+  raw : bool;
+
+  hist_access_type : string;
+session : int;
+  start : int;
+  stop: int;
+
+  n : int;
+
+ pattern :string;
+
+  unique : bool;
+}
+
+table history_item {
+e:[string];
+}
+
+table history_reply {
+history:[e];
+}
+
+table is_complete_request {
+code : string;
+}
+
+table is_complete_reply {
+ status : string;
+indent: string;
+}
+
+
+table connect_request {
+e:string;
+}
+
+table connect_reply {
+  shell_port : int;   //# The port the shell ROUTER socket is listening on.
+    iopub_port : int; //  # The port the PUB socket is listening on.
+    stdin_port : int; //  # The port the stdin ROUTER socket is listening on.
+    hb_port : int;    //  # The port the heartbeat socket is listening on.
+    control_port : int;
+}
+
+table comm_info_request {
+target_name: string;
+}
+
+struct comm_id {
+    target_name:string;
+}
+
+struct comm_info_reply {
+    comms: comm_id;
+}
+
+struct kernel_info_request {
+e:string;
+}
+
+union content {
+      execute_request
+    , execute_reply
+    , inspect_request
+    , inspect_reply
+    , complete_request
+    , history_request
+    , history_reply
+    , is_complete_request
+    , connect_request
+    , connect_reply
+    , comm_info_request
+    , comm_info_reply
+    , kernel_info_request
+
+}
+
+struct message {
+  header:bool;//{};
+  parent_header:bool;//{};
+  metadata:bool;//{};
+  content:content;
+  buffers: [byte];
+}
+
+root_type message;
