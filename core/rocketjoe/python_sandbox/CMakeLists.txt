@@ -64,6 +64,7 @@ target_link_libraries(
         pybind11::embed
 )
 # /home/kotbegemot/.conan/data/flatc/1.12.0/_/_/package/44fcf6b9a7fb86b2586303e3db40189d3b511830/bin/flatc message.fbs --cpp --json --cpp-std c++11 --scoped-enums
+#  /home/kotbegemot/.conan/data/protoc_installer/3.9.1/bincrafters/stable/package/c0c1ef10e3d0ded44179e28b669d6aed0277ca6a/bin/protoc --cpp_out=. message.proto
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
 if (DEV_MODE)
