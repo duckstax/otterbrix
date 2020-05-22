@@ -21,6 +21,9 @@ protoc_installer/3.9.1@bincrafters/stable
 goblin-engineer/1.0.0a3@jinncrafters/stable
 cxxopts/2.2.0@jinncrafters/stable
 
+
+gtest/1.8.1@bincrafters/stable
+
 [options]
 OpenSSL:shared = True
 goblin-engineer:http_component = True
