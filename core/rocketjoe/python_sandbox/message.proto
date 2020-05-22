@@ -108,24 +108,24 @@ message kernel_info_request {
 
 
 message message {
-  map<string,string> header = 1;
-  map<string,string> parent_header = 2;
-  map<string,string> metadata=3;
+  map<string,string> header                 = 1;
+  map<string,string> parent_header          = 2;
+  map<string,string> metadata               = 3;
   oneof content {
-    execute_request execute_request =4;
-    execute_reply execute_reply = 5;
-    inspect_request inspect_request = 6;
-    inspect_reply inspect_reply =7;
-    complete_request complete_request =8;
-    history_request history_request =9 ;
-    history_reply history_reply =10;
-    is_complete_request is_complete_request =11;
-    connect_request connect_request =12;
-    connect_reply connect_reply =13;
-    comm_info_request comm_info_request =14;
-    comm_info_reply comm_info_reply= 15;
-    kernel_info_request kernel_info_request =16;
+    execute_request execute_request         = 4;
+    execute_reply execute_reply             = 5;
+    inspect_request inspect_request         = 6;
+    inspect_reply inspect_reply             = 7;
+    complete_request complete_request       = 8;
+    history_request history_request         = 9;
+    history_reply history_reply             = 10;
+    is_complete_request is_complete_request = 11;
+    connect_request connect_request         = 12;
+    connect_reply connect_reply             = 13;
+    comm_info_request comm_info_request     = 14;
+    comm_info_reply comm_info_reply         = 15;
+    kernel_info_request kernel_info_request = 16;
   }
 
-  bytes buffers = 17;
+  bytes buffers                             = 17;
 }
