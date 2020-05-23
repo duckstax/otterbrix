@@ -97,7 +97,23 @@ int main(int argc, char* argv[]) {
     }
 
     rocketjoe::configuration cfg_;
-    cfg_.port_http_ = command_line["port_http"].as<unsigned short int>();
+
+    if (command_line.count("port_http")) {
+        cfg_.port_http_ = command_line["port_http"].as<unsigned short int>();
+    } else {
+        log.info("default port : 9999");
+    }
+
+    if (command_line.count("jupyter_kernel") && command_line.count("jupyter_engine")) {
+        log.error("configuration conflict jupyter_kernel and jupyter_engine");
+        return 1;
+    }
+
+    if (command_line.count("jupyter_kernel") && command_line.count("worker_number")) {
+        log.error("configuration conflict jupyter_kernel and worker_number");
+        return 1;
+    }
+
     int count_python_file = 0;
 
     auto it = std::find_if(
@@ -116,11 +132,10 @@ int main(int argc, char* argv[]) {
         log.info("script mode");
         cfg_.python_configuration_.script_path_ = *it;
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
-    } else if(count_python_file >1) {
+    } else if (count_python_file > 1) {
         log.error("More file python");
         return 1;
     }
-
 
     if (command_line.count("jupyter_kernel")) {
         log.info("jupyter kernel mode");
