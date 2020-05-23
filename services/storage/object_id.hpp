@@ -13,10 +13,10 @@ namespace services {
 
     constexpr int64_t kUniqueIDSize = 16;
 
-    class UniqueID final {
+    class unique_id final {
     public:
 
-        bool operator==(const UniqueID &rhs) const;
+        bool operator==(const unique_id&rhs) const;
 
         const uint8_t *data() const;
 
@@ -34,17 +34,17 @@ namespace services {
         std::array<uint8_t,kUniqueIDSize> id_;
     };
 
-    UniqueID from_binary(const std::string &binary);
+    unique_id from_binary(const std::string &binary);
 
-    static_assert(std::is_pod<UniqueID>::value, "UniqueID must be plain old data");
+    static_assert(std::is_pod<unique_id>::value, "UniqueID must be plain old data");
 
-    typedef UniqueID ObjectID;
+    typedef unique_id ObjectID;
 }
 
 namespace std {
     template<>
-    struct hash<::services::UniqueID> {
-        size_t operator()(const ::services::UniqueID &id) const { return id.hash(); }
+    struct hash<::services::unique_id> {
+        size_t operator()(const ::services::unique_id&id) const { return id.hash(); }
     };
 }
 

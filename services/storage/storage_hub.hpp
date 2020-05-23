@@ -10,6 +10,8 @@
 
 
 namespace services {
+    using buffer_tt = std::string;
+    using temporary_buffer_storage = std::vector<std::pair<ObjectID,std::unique_ptr<buffer_tt>>>;
 
     class storage {
     public:
@@ -19,7 +21,7 @@ namespace services {
 
         virtual bool connect(const std::string &endpoint) = 0;
 
-        virtual bool put(const std::vector<ObjectID> &ids, const std::vector<std::shared_ptr<components::buffer_t>> &data) = 0;
+        virtual bool put(temporary_buffer_storage&data) = 0;
 
         virtual bool get(const std::vector<ObjectID> &ids, std::vector<std::shared_ptr<components::buffer_t>> buffers) = 0;
     };
@@ -29,7 +31,7 @@ namespace services {
 
         storage_hub() = default;
 
-        using StoreMap = std::unordered_map<std::string, std::unique_ptr<storage>> ;
+        using storage_types = std::unordered_map<std::string, std::unique_ptr<storage>> ;
 
         bool extract_storage_name(const std::string &endpoint, std::string *store_name);
         
@@ -37,11 +39,10 @@ namespace services {
 
         void deregister_storage(const std::string &store_name);
 
-        storage& GetStore(const std::string &store_name);
+        storage& get_store(const std::string &store_name);
 
     private:
-
-        StoreMap store_map_;
+        storage_types store_map_;
     };
 
 }

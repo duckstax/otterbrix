@@ -1,7 +1,8 @@
 #pragma once
 
+#include <goblin-engineer.hpp>
 
-class storage final {
+class storage final  {
 
 };
 

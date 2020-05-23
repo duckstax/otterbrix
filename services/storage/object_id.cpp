@@ -8,21 +8,21 @@
 
 namespace services {
 
-UniqueID from_binary(const std::string& binary) {
-  UniqueID id;
+    unique_id from_binary(const std::string& binary) {
+        unique_id id;
   std::memcpy(&id, binary.data(), sizeof(id));
   return id;
 }
 
-const uint8_t* UniqueID::data() const { return id_.data(); }
+const uint8_t* unique_id::data() const { return id_.data(); }
 
-uint8_t* UniqueID::mutable_data() { return id_.data(); }
+uint8_t* unique_id::mutable_data() { return id_.data(); }
 
-std::string UniqueID::binary() const {
+std::string unique_id::binary() const {
   return std::string(id_.begin(), id_.end());
 }
 
-std::string UniqueID::hex() const {
+std::string unique_id::hex() const {
   constexpr char hex[] = "0123456789abcdef";
   std::string result;
   for (int i = 0; i < kUniqueIDSize; i++) {
@@ -34,13 +34,13 @@ std::string UniqueID::hex() const {
 }
 
 
-size_t UniqueID::hash() const { return boost::hash_value(id_); }
+size_t unique_id::hash() const { return boost::hash_value(id_); }
 
-bool UniqueID::operator==(const UniqueID& rhs) const {
+bool unique_id::operator==(const unique_id& rhs) const {
   return std::memcmp(data(), rhs.data(), kUniqueIDSize) == 0;
 }
 
-    int64_t UniqueID::size() { return kUniqueIDSize; }
+    int64_t unique_id::size() { return kUniqueIDSize; }
 
 
 }

@@ -1,10 +1,11 @@
 set(CURRENT_TARGET resource-hub)
 
 set(${CURRENT_TARGET}_headers
-
+    init_service.hpp
 )
 
 set(${CURRENT_TARGET}_sources
+        init_service.cpp
         main.cpp
 )
 

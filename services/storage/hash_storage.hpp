@@ -19,7 +19,7 @@ namespace services {
 
         bool get(const std::vector<ObjectID> &ids, std::vector<std::shared_ptr<components::buffer_t>> buffers) override;
 
-        bool put(const std::vector<ObjectID> &ids, const std::vector<std::shared_ptr<components::buffer_t>> &data) override;
+        bool put(temporary_buffer_storage &data) override;
 
     private:
         using hash_table_t = std::unordered_map<ObjectID, std::string>;

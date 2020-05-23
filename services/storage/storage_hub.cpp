@@ -29,7 +29,7 @@ void storage_hub::deregister_storage(const std::string& store_name) {
     store_map_.erase(it);
 }
 
-storage& storage_hub::GetStore(const std::string& store_name) {
+storage& storage_hub::get_store(const std::string& store_name) {
   auto it = store_map_.find(store_name);
   if (it == store_map_.end()) {
     ///return nullptr;
