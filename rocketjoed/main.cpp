@@ -116,38 +116,24 @@ int main(int argc, char* argv[]) {
         log.info("script mode");
         cfg_.python_configuration_.script_path_ = *it;
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
-
-        if (command_line.count("jupyter_engine") && command_line.count("jupyter_connection")) {
-            log.info("script mode + ipyparalle");
-            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
-            cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
-        } else {
-            log.error("the jupyter_connection command line parameter is undefined");
-            return 1;
-        }
+    } else if(count_python_file >1) {
+        log.error("More file python");
+        return 1;
     }
+
 
     if (command_line.count("jupyter_kernel")) {
         log.info("jupyter kernel mode");
-        if (command_line.count("jupyter_connection")) {
-            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
-        } else {
-            log.error("the jupyter_connection command line parameter is undefined");
-            return 1;
-        }
-
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_kernel;
     }
 
-    if (command_line.count("jupyter_engine") && command_line.count("worker_number")) {
+    if (command_line.count("jupyter_engine")) {
         log.info("jupyter engine mode");
-        if (command_line.count("jupyter_connection")) {
-            cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
-        } else {
-            log.error("the jupyter_connection command line parameter is undefined");
-            return 1;
-        }
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
+    }
+
+    if (command_line.count("jupyter_connection")) {
+        cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
     }
 
     cfg_.operating_mode_ = rocketjoe::operating_mode::master;
