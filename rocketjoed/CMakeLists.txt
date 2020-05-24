@@ -26,7 +26,7 @@ target_link_libraries(
         dl
 )
 
-configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/jupyter/kernel.json")
+configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
 
 if (DEV_MODE)
 

@@ -114,27 +114,37 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    int count_python_file = 0;
+    int number_of_python_files = 0;
 
-    auto it = std::find_if(
-        all_args.begin(),
-        all_args.end(),
-        [&count_python_file](const std::string& value) {
-            boost::filesystem::path p(value);
-            if (!p.empty() && p.extension() == ".py") {
-                count_python_file++;
-                return true;
+    /// TODO: print non-existing files
+    for (const auto& i : all_args) {
+        boost::filesystem::path p(i);
+        auto non_empty = boost::filesystem::exists(p);
+        auto extension = p.extension();
+        if ((non_empty && extension == ".py")) {
+            if (number_of_python_files == 1) {
+                cfg_.python_configuration_.script_path_ = i;
             }
-            return false;
-        });
+            number_of_python_files++;
+        }
+    }
 
-    if (count_python_file == 1) {
-        log.info("script mode");
-        cfg_.python_configuration_.script_path_ = *it;
-        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
-    } else if (count_python_file > 1) {
-        log.error("More file python");
+    if (number_of_python_files > 1) {
+        log.error("More than one file to run!");
+        log.error(fmt::format("Number of files: {0}", number_of_python_files));
+        log.error("More than one file to run!");
         return 1;
+    }
+
+    if (number_of_python_files == 1 && command_line.count("jupyter_kernel")) {
+        log.error("configuration conflict jupyter_kernel andscript mode");
+        return 1;
+    }
+
+    if (number_of_python_files == 1) {
+        log.info("script mode");
+        log.info(fmt::format("run: {0}", (cfg_.python_configuration_.script_path_.string())));
+        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
     }
 
     if (command_line.count("jupyter_kernel")) {
