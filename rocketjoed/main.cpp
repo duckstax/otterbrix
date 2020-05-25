@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
     // clang-format off
     command_line_description.add_options()
         ("help", "Print help")
+        ("worker_mode", "Worker Mode")
         ("worker_number",po::value<unsigned short int>(), "Worker Process Mode and run  ")
         ("jupyter_kernel", "Jupyter kernel mode")
         ("jupyter_engine", "Ipyparalle mode")
@@ -163,13 +164,13 @@ int main(int argc, char* argv[]) {
 
     cfg_.operating_mode_ = rocketjoe::operating_mode::master;
 
-    if (command_line.count("worker_number")) {
+    if (command_line.count("worker_mode")) {
         log.info("Worker Mode");
         cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
     }
 
     goblin_engineer::components::root_manager env(1, 1000);
-    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_number 0"}, log);
+    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
     init_service(env, cfg_, log);
 
     if (command_line.count("worker_number")) {
