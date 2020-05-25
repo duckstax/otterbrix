@@ -37,5 +37,5 @@ CMD (nohup ipcontroller --debug &) && \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
-    && rocketjoe ../rocketjoed/test/test_script_mode.py --jupyter_engine \
-        --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &
+    && ../rocketjoed/rocketjoe ../rocketjoed/test/test_script_mode.py --jupyter_engine \
+        --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json
