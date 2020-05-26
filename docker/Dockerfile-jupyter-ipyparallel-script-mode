@@ -31,11 +31,11 @@ RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release && \
 
 WORKDIR rocketjoe
 
-CMD (nohup ipcontroller --debug &) && \
+CMD (nohup ipcontroller &) && \
     while [ ! -f /root/.ipython/profile_default/security/ipcontroller-engine.json ]; do sleep 1; done \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
-    && ../rocketjoed/rocketjoed ../rocketjoed/test/test_script_mode.py --jupyter_engine \
+    && ../rocketjoed/rocketjoed ../rocketjoed/test/script_mode.py --jupyter_engine \
         --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json
