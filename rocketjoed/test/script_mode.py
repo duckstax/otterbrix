@@ -1,4 +1,4 @@
-import ipyparallel as ipp
+#import ipyparallel as ipp
 
 c = ipp.Client()
 assert (len(c.ids) == 2)

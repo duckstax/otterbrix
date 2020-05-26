@@ -6,9 +6,7 @@ RUN apt update && \
         build-essential \
         cmake \
         ninja-build \
-        python3-pip \
-        ipython3 \
-        jupyter && \
+        python3-pip &&\
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install --no-cache-dir conan ipyparallel
@@ -37,5 +35,4 @@ CMD (nohup ipcontroller &) && \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
-    && ../rocketjoed/rocketjoed ../rocketjoed/test/script_mode.py --jupyter_engine \
-        --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json
+    && ../rocketjoed/rocketjoed ../rocketjoed/test/script_mode.py

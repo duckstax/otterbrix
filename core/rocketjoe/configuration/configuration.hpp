@@ -17,12 +17,16 @@ namespace rocketjoe {
     };
 
     struct python_sandbox_configuration final {
+        python_sandbox_configuration() {
+            mode_ = sandbox_mode_t::none;
+        }
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
         sandbox_mode_t mode_;
     };
 
     struct configuration final {
+        configuration() = default;
         python_sandbox_configuration python_configuration_;
         operating_mode operating_mode_;
         unsigned short int port_http_;

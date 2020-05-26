@@ -123,12 +123,14 @@ int main(int argc, char* argv[]) {
         auto non_empty = boost::filesystem::exists(p);
         auto extension = p.extension();
         if ((non_empty && extension == ".py")) {
-            if (number_of_python_files == 1) {
+            if (number_of_python_files == 0) {
                 cfg_.python_configuration_.script_path_ = i;
             }
             number_of_python_files++;
         }
     }
+
+    bool exist_path_script_python_file = !cfg_.python_configuration_.script_path_.empty();
 
     if (number_of_python_files > 1) {
         log.error("More than one file to run!");
@@ -137,12 +139,22 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (number_of_python_files == 1 && command_line.count("jupyter_kernel")) {
-        log.error("configuration conflict jupyter_kernel andscript mode");
+    if (exist_path_script_python_file && command_line.count("jupyter_kernel")) {
+        log.error("configuration conflict jupyter_kernel and script mode");
         return 1;
     }
 
-    if (number_of_python_files == 1) {
+    if (exist_path_script_python_file && command_line.count("jupyter_engine")) {
+        log.error("configuration conflict jupyter_engine and script mode");
+        return 1;
+    }
+
+    if (exist_path_script_python_file && command_line.count("jupyter_connection")) {
+        log.error("configuration conflict jupyter_* and script mode");
+        return 1;
+    }
+
+    if (exist_path_script_python_file) {
         log.info("script mode");
         log.info(fmt::format("run: {0}", (cfg_.python_configuration_.script_path_.string())));
         cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
@@ -167,6 +179,11 @@ int main(int argc, char* argv[]) {
     if (command_line.count("worker_mode")) {
         log.info("Worker Mode");
         cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
+    }
+
+    if(cfg_.python_configuration_.mode_ == rocketjoe::sandbox_mode_t::none) {
+        log.error("initialization error");
+        return 1;
     }
 
     goblin_engineer::components::root_manager env(1, 1000);
