@@ -182,7 +182,7 @@ int main(int argc, char* argv[]) {
     }
 
     if(cfg_.python_configuration_.mode_ == rocketjoe::sandbox_mode_t::none) {
-        log.error("initialization error");
+        log.error("initialization error: mode is none");
         return 1;
     }
 

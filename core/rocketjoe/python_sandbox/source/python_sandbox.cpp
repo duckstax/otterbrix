@@ -302,7 +302,7 @@ namespace rocketjoe { namespace services {
             log_.info( "jupyter engine mode");
             jupyter_engine_init();
         } else {
-            log_.info( "not init ");
+            log_.info( "init script mode ");
         }
     }
 

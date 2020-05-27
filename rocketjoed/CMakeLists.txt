@@ -34,6 +34,8 @@ if (DEV_MODE)
 
     configure_file("test/test_jupyter_kernel.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
 
+    configure_file("test/script_mode.py" "${CMAKE_CURRENT_BINARY_DIR}/test/script_mode.py")
+
     add_test(NAME "test_jupyter_kernel.py" COMMAND "${PYTEST}" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
 
     set_tests_properties("test_jupyter_kernel.py" PROPERTIES ENVIRONMENT "JUPYTER_PATH=$JUPYTER_PATH:${CMAKE_BINARY_DIR}")
