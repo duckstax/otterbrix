@@ -17,19 +17,19 @@ COPY ./conanfile.txt ./
 
 RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
     conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
-    conan install . --build missing -s compiler.libcxx=libstdc++11
+    conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
 COPY . ./
 
 WORKDIR ./build
 
-RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release && \
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug     && \
     cmake --build . && \
     jupyter kernelspec install --user kernels/ipython && \
     mkdir -p rocketjoe
 
 WORKDIR rocketjoe
 
-CMD (nohup ipcontroller &) && \
+CMD (nohup ipcontroller --debug &) && \
     while [ ! -f /root/.ipython/profile_default/security/ipcontroller-engine.json ]; do sleep 1; done \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
