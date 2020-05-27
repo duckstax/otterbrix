@@ -5,13 +5,12 @@
 #include <unordered_map>
 #include <vector>
 
-#include <components/buffer/buffer.hpp>
 #include "object_id.hpp"
 
 
 namespace services {
     using buffer_tt = std::string;
-    using temporary_buffer_storage = std::vector<std::pair<ObjectID,std::unique_ptr<buffer_tt>>>;
+    using temporary_buffer_storage = std::vector<std::pair<object_id,std::unique_ptr<buffer_tt>>>;
 
     class storage {
     public:
@@ -19,22 +18,21 @@ namespace services {
 
         virtual ~storage() = default;
 
-        virtual bool connect(const std::string &endpoint) = 0;
+        virtual void connect(const std::string &endpoint) = 0;
 
-        virtual bool put(temporary_buffer_storage&data) = 0;
+        virtual void put(temporary_buffer_storage&data) = 0;
 
-        virtual bool get(const std::vector<ObjectID> &ids, std::vector<std::shared_ptr<components::buffer_t>> buffers) = 0;
+        virtual void get(const std::vector<object_id> &ids, std::vector<std::unique_ptr<buffer_tt>>& buffers) = 0;
     };
 
-    class storage_hub final {
-    public:
+    std::string extract_storage_name(const std::string &endpoint);
 
-        storage_hub() = default;
+    class storage_engine final {
+    public:
+        storage_engine() = default;
 
         using storage_types = std::unordered_map<std::string, std::unique_ptr<storage>> ;
 
-        bool extract_storage_name(const std::string &endpoint, std::string *store_name);
-        
         void register_storage(const std::string &store_name, std::unique_ptr<storage> store);
 
         void deregister_storage(const std::string &store_name);

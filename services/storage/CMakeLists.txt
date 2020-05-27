@@ -2,14 +2,14 @@ set(CURRENT_TARGET storage)
 
 set(${CURRENT_TARGET}_HEADERS
         object_id.hpp
-        storage_hub.hpp
+        storage_engine.hpp
         hash_storage.hpp
         storage.hpp
 )
 
 set(${CURRENT_TARGET}_SOURCES
         object_id.cpp
-        storage_hub.cpp
+        storage_engine.cpp
         hash_storage.cpp
         storage.cpp
 )

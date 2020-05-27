@@ -5,9 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include <components/buffer/buffer.hpp>
-
-#include "storage_hub.hpp"
+#include "storage_engine.hpp"
 
 namespace services {
 
@@ -15,14 +13,14 @@ namespace services {
     public:
         memory_hash_storage() = default;
 
-        bool connect(const std::string &endpoint) override;
+        void connect(const std::string &endpoint) override;
 
-        bool get(const std::vector<ObjectID> &ids, std::vector<std::shared_ptr<components::buffer_t>> buffers) override;
+        void get(const std::vector<object_id> &ids, std::vector<std::unique_ptr<buffer_tt>>& buffers) override;
 
-        bool put(temporary_buffer_storage &data) override;
+        void put(temporary_buffer_storage &data) override;
 
     private:
-        using hash_table_t = std::unordered_map<ObjectID, std::string>;
+        using hash_table_t = std::unordered_map<object_id, std::string>;
 
         hash_table_t table_;
     };
