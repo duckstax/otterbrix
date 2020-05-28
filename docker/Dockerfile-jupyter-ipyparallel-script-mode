@@ -35,4 +35,5 @@ CMD (nohup ipcontroller --debug &) && \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
          --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
+    && sleep 10 \
     && ../rocketjoed/rocketjoed ../rocketjoed/test/script_mode.py
