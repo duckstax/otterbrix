@@ -6,26 +6,23 @@ RUN apt update && \
         build-essential \
         cmake \
         ninja-build \
-        python3-pip \
-        ipython3 \
-        jupyter && \
+        python3-pip &&\
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install --no-cache-dir conan ipyparallel
 
 WORKDIR /app
 
-COPY conanfile.txt ./
+COPY ./conanfile.txt ./
 
 RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
     conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
     conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
-
 COPY . ./
 
 WORKDIR ./build
 
-RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug  -DDEV_MODE=ON  && \
     cmake --build . && \
     jupyter kernelspec install --user kernels/ipython && \
     mkdir -p rocketjoe
@@ -35,10 +32,8 @@ WORKDIR rocketjoe
 CMD (nohup ipcontroller --debug &) && \
     while [ ! -f /root/.ipython/profile_default/security/ipcontroller-engine.json ]; do sleep 1; done \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
-           --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
+         --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
-           --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
-    && jupyter notebook --no-browser --allow-root \
-           --NotebookApp.allow_remote_access=True --NotebookApp.ip=0.0.0.0
-
-EXPOSE 8888
+         --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
+    && sleep 10 \
+    && ../rocketjoed/rocketjoed ../rocketjoed/test/script_mode.py

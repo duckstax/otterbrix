@@ -11,16 +11,12 @@ using goblin_engineer::components::make_service;
 using goblin_engineer::components::root_manager;
 using namespace goblin_engineer::components;
 
-using actor_zeta::link;
-
-constexpr const static bool master = true;
-
-void init_service(goblin_engineer::components::root_manager& env, nlohmann::json& cfg) {
-    auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg);
+void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg,rocketjoe::log_t& log) {
+    auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg.python_configuration_,log);
     python->init();
     python->start();
 
-    if (cfg["master"].get<bool>() == master) {
+    if (cfg.operating_mode_ == rocketjoe::operating_mode::master) {
         http::router router_;
 
         router_.http_get(
@@ -30,7 +26,7 @@ void init_service(goblin_engineer::components::root_manager& env, nlohmann::json
                 ctx.write();
             });
 
-        auto http = make_manager_service<http::server>(env, 9999);
+        auto http = make_manager_service<http::server>(env, cfg.port_http_);
         make_service<http::http_dispatcher>(http, router_);
     }
 }
