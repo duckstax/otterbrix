@@ -22,7 +22,7 @@ COPY . ./
 
 WORKDIR ./build
 
-RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug     && \
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug  -DDEV_MODE=ON  && \
     cmake --build . && \
     jupyter kernelspec install --user kernels/ipython && \
     mkdir -p rocketjoe

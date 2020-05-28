@@ -26,7 +26,6 @@ namespace rocketjoe {
     }
 
     auto initialization_logger() -> log_t{
-        spdlog::set_pattern("[%H:%M:%S %z] [%^%L%$] [thread %t] %v");
 
         spdlog::init_thread_pool(8192, 1);
         auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -39,6 +38,7 @@ namespace rocketjoe {
                 spdlog::async_overflow_policy::block
         );
 
+        logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [pid %P tid %t] %v");
         spdlog::register_logger(logger);
         return logger;
     }
