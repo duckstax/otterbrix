@@ -10,7 +10,6 @@ pybind11/2.3.0@conan/stable
 gtest/1.10.0
 
 goblin-engineer/1.0.0a3@jinncrafters/stable
-cxxopts/2.2.0@jinncrafters/stable
 
 [options]
 OpenSSL:shared = True

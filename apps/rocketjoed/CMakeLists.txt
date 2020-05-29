@@ -18,20 +18,23 @@ add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
-        goblin-engineer
+        ${CONAN_LIBS}
+        rocketjoe::configuration
         rocketjoe::python_sandbox
         rocketjoe::log
         rocketjoe::process_pool
         dl
 )
 
-configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/jupyter/kernel.json")
+configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
 
 if (DEV_MODE)
 
     find_program(PYTEST NAMES pytest)
 
     configure_file("test/test_jupyter_kernel.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
+
+    configure_file("test/script_mode.py" "${CMAKE_CURRENT_BINARY_DIR}/test/script_mode.py")
 
     add_test(NAME "test_jupyter_kernel.py" COMMAND "${PYTEST}" "${CMAKE_CURRENT_BINARY_DIR}/test/test_jupyter_kernel.py")
 

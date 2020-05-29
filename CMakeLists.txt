@@ -85,9 +85,10 @@ conan_cmake_run(
 
 find_program(CCACHE_FOUND ccache)
 if(CCACHE_FOUND)
-    message(STATUS "Enabling ccache")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    message(STATUS "Using ccache: ${CCACHE_FOUND}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_FOUND})
+    set(ENV{CCACHE_COMMENTS} "1")
 endif(CCACHE_FOUND)
 
 # ccahe
