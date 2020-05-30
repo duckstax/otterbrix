@@ -1,9 +1,6 @@
 #include "gtest/gtest.h"
-#include <services/storage/storage_engine.hpp>
 #include <services/storage/hash_storage.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
+#include <services/storage/storage_engine.hpp>
 
 constexpr static  char* name = "test_name";
 
@@ -16,7 +13,7 @@ TEST(register_storage_storage,storage_engine) {
 TEST(init,memory_hash_storage) {
     auto storage = std::make_unique<services::memory_hash_storage>();
     services::temporary_buffer_storage tbs;
-    tbs.emplace_back(services::from_binary("1111111111"),std::make_unique<services::buffer_tt>("111111111"));
+    tbs.emplace_back("1111111111",std::make_unique<services::buffer_tt>("111111111"));
     storage->put(tbs);
 }
 

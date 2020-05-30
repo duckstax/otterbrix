@@ -32,8 +32,9 @@ namespace services {
         auto it = store_map_.find(store_name);
         if (it == store_map_.end()) {
             ///return nullptr;
+        } else {
+            return *(it->second);
         }
-        return *(it->second);
     }
 
 } // namespace services

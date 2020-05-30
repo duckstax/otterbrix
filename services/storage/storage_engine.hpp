@@ -5,12 +5,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "object_id.hpp"
-
-
 namespace services {
     using buffer_tt = std::string;
-    using temporary_buffer_storage = std::vector<std::pair<object_id,std::unique_ptr<buffer_tt>>>;
+    using object_id = std::string;
+    using temporary_buffer_storage = std::vector<std::pair<const object_id,std::unique_ptr<buffer_tt>>>;
 
     class storage {
     public:
@@ -22,7 +20,7 @@ namespace services {
 
         virtual void put(temporary_buffer_storage&data) = 0;
 
-        virtual void get(const std::vector<object_id> &ids, std::vector<std::unique_ptr<buffer_tt>>& buffers) = 0;
+        virtual void get(temporary_buffer_storage& buffers) = 0;
     };
 
     std::string extract_storage_name(const std::string &endpoint);
