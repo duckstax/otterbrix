@@ -11,7 +11,7 @@ using goblin_engineer::components::make_service;
 using goblin_engineer::components::root_manager;
 using namespace goblin_engineer::components;
 
-void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg,rocketjoe::log_t& log) {
+void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg,components::log_t& log) {
     auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg.python_configuration_,log);
     python->init();
     python->start();

@@ -6,7 +6,7 @@
 #include <spdlog/async_logger.h>
 #include <string>
 
-namespace rocketjoe {
+namespace components {
 
     class log_t final {
     public:

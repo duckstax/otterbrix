@@ -1,7 +1,11 @@
 #include "init_service.hpp"
 
+#include <goblin-engineer/components/http.hpp>
 #include <goblin-engineer/components/root_manager.hpp>
-#include <nlohmann/json.hpp>
+#include <iostream>
+
+#include <services/storage/storage.hpp>
+#include <services/zmq-hub/zmq_hub.hpp>
 
 using goblin_engineer::components::make_manager_service;
 using goblin_engineer::components::make_service;
@@ -10,5 +14,37 @@ using namespace goblin_engineer::components;
 
 using actor_zeta::link;
 
-void init_service(goblin_engineer::components::root_manager& env, nlohmann::json& cfg) {
+class controller_t final : public goblin_engineer::abstract_service {
+public:
+    template<class Manager>
+    controller_t(actor_zeta::intrusive_ptr<Manager> ptr):abstract_service(ptr,"controller") {
+        add_handler("controller",&controller_t::dispatcher);
+    }
+
+    void dispatcher() {
+
+    }
+};
+
+void init_service(goblin_engineer::components::root_manager&  env, rocketjoe::configuration&cfg, components::log_t&log){
+
+    std::vector<zmq::pollitem_t> f;
+    auto zmq_hub = make_manager_service<services::zmq_hub_t>(env,log, std::move(f));
+    auto storage = make_service<services::storage_hub>(zmq_hub);
+    auto controller = make_service<controller_t>(zmq_hub);
+    link(controller,storage);
+
+
+    http::router router_;
+
+    router_.http_get(
+        R"(/my/super/url)", [](http::query_context& ctx) {
+            std::cerr << ctx.response().body().c_str() << std::endl;
+            ctx.response().body() = ctx.request().body();
+            ctx.write();
+        });
+
+    auto http = make_manager_service<http::server>(env, cfg.port_http_);
+    make_service<http::http_dispatcher>(http, router_);
+
 }

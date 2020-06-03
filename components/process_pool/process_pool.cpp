@@ -1,7 +1,7 @@
 #include <components/process_pool/process_pool.hpp>
 #include <iostream>
 
-namespace rocketjoe {
+namespace components {
 
         void process_pool_t::add_worker_process() {
             boost::process::spawn(executable_file_,boost::process::args(args_), g_);

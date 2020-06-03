@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     std::set_terminate(terminate_handler);
 #endif
 
-    auto log = rocketjoe::initialization_logger();
+    auto log = components::initialization_logger();
 
     std::locale::global(boost::locale::generator{}(""));
 
@@ -186,7 +186,7 @@ int main(int argc, char* argv[]) {
     }
 
     goblin_engineer::components::root_manager env(1, 1000);
-    rocketjoe::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
+    components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
     init_service(env, cfg_, log);
 
     if (command_line.count("worker_number")) {

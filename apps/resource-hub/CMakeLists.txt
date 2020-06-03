@@ -14,6 +14,10 @@ add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         rocketjoe::log
+        rocketjoe::zmq-hub
+        rocketjoe::storage
+        rocketjoe::configuration
+        rocketjoe::process_pool
         ${CONAN_LIBS}
         dl
 )

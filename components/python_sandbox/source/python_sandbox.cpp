@@ -47,7 +47,7 @@ namespace rocketjoe { namespace services {
 
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const python_sandbox_configuration& configuration,log_t&log)
+    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const python_sandbox_configuration& configuration,components::log_t&log)
         : goblin_engineer::abstract_manager_service(env, "python_sandbox")
         , mode_{sandbox_mode_t::none}
         , python_{}

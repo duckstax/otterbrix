@@ -25,7 +25,7 @@ namespace rocketjoe { namespace services {
 
     class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_manager_service {
     public:
-        python_sandbox_t(goblin_engineer::components::root_manager*, const python_sandbox_configuration&, log_t&);
+        python_sandbox_t(goblin_engineer::components::root_manager*, const python_sandbox_configuration&, components::log_t&);
 
         ~python_sandbox_t() override = default;
 
@@ -55,7 +55,7 @@ namespace rocketjoe { namespace services {
         boost::intrusive_ptr<pykernel> jupyter_kernel;
         std::unique_ptr<std::thread> commands_exuctor; ///TODO: HACK
         std::unique_ptr<std::thread> infos_exuctor;    ///TODO: HACK
-        log_t log_;
+        components::log_t log_;
     };
 
 }} // namespace rocketjoe::services

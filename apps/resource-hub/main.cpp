@@ -1,4 +1,18 @@
+#include <cstdlib>
+#include <exception>
+#include <locale>
+
+#include <boost/filesystem.hpp>
+#include <boost/locale/generator.hpp>
+#include <boost/program_options/options_description.hpp>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/variables_map.hpp>
+
 #include <components/log/log.hpp>
+#include <components/process_pool/process_pool.hpp>
+#include <components/configuration/configuration.hpp>
+
+#include "init_service.hpp"
 
 #ifdef __APPLE__
 
@@ -45,8 +59,24 @@ int main(int argc, char* argv[]) {
     std::set_terminate(terminate_handler);
 #endif
 
-    auto log = rocketjoe::initialization_logger();
+    auto log = components::initialization_logger();
 
+    rocketjoe::configuration cfg_;
 
+    std::vector<std::string> all_args(argv, argv + argc);
+
+    goblin_engineer::components::root_manager env(1, 1000);
+    components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
+    init_service(env, cfg_, log);
+
+    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
+    sigint_set.async_wait(
+        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
+            sigint_set.cancel();
+        });
+
+    env.startup();
+
+    log.info("Shutdown RocketJoe");
     return 0;
 }

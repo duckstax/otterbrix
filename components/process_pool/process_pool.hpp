@@ -3,7 +3,7 @@
 #include <boost/process.hpp>
 #include <components/log/log.hpp>
 
-namespace rocketjoe {
+namespace components {
 
 class process_pool_t final {
 public:

@@ -1,22 +1,16 @@
-set(CURRENT_TARGET storage)
+set(CURRENT_TARGET zmq-hub)
 
 set(${CURRENT_TARGET}_HEADERS
-        storage_engine.hpp
-        hash_storage.hpp
-        storage.hpp
+        zmq_hub.hpp
 )
 
 set(${CURRENT_TARGET}_SOURCES
-        storage_engine.cpp
-        hash_storage.cpp
-        storage.cpp
+        zmq_hub.cpp
 )
 
-add_library(
-    rocketjoe_${CURRENT_TARGET}
-    STATIC
-    ${${CURRENT_TARGET}_HEADERS}
-    ${${CURRENT_TARGET}_SOURCES}
+add_library(rocketjoe_${CURRENT_TARGET} STATIC
+            ${${CURRENT_TARGET}_HEADERS}
+            ${${CURRENT_TARGET}_SOURCES}
 )
 
 
@@ -34,5 +28,5 @@ target_link_libraries(
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
 if (DEV_MODE)
-    add_subdirectory(tests)
+#    add_subdirectory(tests)
 endif()

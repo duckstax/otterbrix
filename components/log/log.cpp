@@ -9,7 +9,7 @@
 #include <spdlog/async.h>
 #include <utility>
 
-namespace rocketjoe {
+namespace components {
 
     constexpr static const char* __default__ = "__default__";
 
