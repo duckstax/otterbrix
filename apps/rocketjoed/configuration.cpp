@@ -14,4 +14,3 @@ ______           _        _     ___
     /// clang-format on
     return logo_;
 }
-

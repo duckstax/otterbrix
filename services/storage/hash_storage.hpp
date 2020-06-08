@@ -13,11 +13,11 @@ namespace services {
     public:
         memory_hash_storage() = default;
 
-        void connect(const std::string &endpoint) override;
+        void connect(const std::string& endpoint) override;
 
         void get(temporary_buffer_storage& buffers) override;
 
-        void put(temporary_buffer_storage &data) override;
+        void put(temporary_buffer_storage& data) override;
 
     private:
         using hash_table_t = std::unordered_map<object_id, std::unique_ptr<buffer_tt>>;
@@ -25,4 +25,4 @@ namespace services {
         hash_table_t table_;
     };
 
-}
+} // namespace services

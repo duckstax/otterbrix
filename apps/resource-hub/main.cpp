@@ -8,9 +8,9 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
-#include <components/configuration/configuration.hpp>
 
 #include <zmq.hpp>
 
@@ -50,9 +50,7 @@ void terminate_handler() {
 
 #endif
 
-
 int main(int argc, char* argv[]) {
-
 #ifdef __APPLE__
 
 #else
@@ -68,7 +66,6 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> all_args(argv, argv + argc);
 
     goblin_engineer::components::root_manager env(1, 1000);
-    components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
     init_service(env, cfg_, log);
 
     boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);

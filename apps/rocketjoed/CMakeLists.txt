@@ -40,7 +40,7 @@ if (DEV_MODE)
 
     set_tests_properties("test_jupyter_kernel.py" PROPERTIES ENVIRONMENT "JUPYTER_PATH=$JUPYTER_PATH:${CMAKE_BINARY_DIR}")
 
-endif()
+endif ()
 
 #install(TARGETS
 #        ${CURRENT_TARGET}

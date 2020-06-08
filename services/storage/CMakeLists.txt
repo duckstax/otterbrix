@@ -13,12 +13,11 @@ set(${CURRENT_TARGET}_SOURCES
 )
 
 add_library(
-    rocketjoe_${CURRENT_TARGET}
-    STATIC
-    ${${CURRENT_TARGET}_HEADERS}
-    ${${CURRENT_TARGET}_SOURCES}
+        rocketjoe_${CURRENT_TARGET}
+        STATIC
+        ${${CURRENT_TARGET}_HEADERS}
+        ${${CURRENT_TARGET}_SOURCES}
 )
-
 
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
@@ -35,4 +34,4 @@ target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
 if (DEV_MODE)
     add_subdirectory(tests)
-endif()
+endif ()

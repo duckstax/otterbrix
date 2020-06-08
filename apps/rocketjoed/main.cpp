@@ -8,10 +8,10 @@
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
 
+#include "configuration.hpp"
+#include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
-#include <components/configuration/configuration.hpp>
-#include "configuration.hpp"
 
 #include "init_service.hpp"
 
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
         cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
     }
 
-    if(cfg_.python_configuration_.mode_ == rocketjoe::sandbox_mode_t::none) {
+    if (cfg_.python_configuration_.mode_ == rocketjoe::sandbox_mode_t::none) {
         log.error("initialization error: mode is none");
         return 1;
     }

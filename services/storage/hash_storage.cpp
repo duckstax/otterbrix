@@ -15,10 +15,10 @@ namespace services {
     }
 
     void memory_hash_storage::get(temporary_buffer_storage& buffers) {
-        for (auto &i:buffers) {
+        for (auto& i : buffers) {
             auto result = table_.find(i.first);
             if (result != table_.end()) {
-                i.second  = std::make_unique<buffer_tt>(*result->second);
+                i.second = std::make_unique<buffer_tt>(*result->second);
             }
         }
     }

@@ -1,7 +1,7 @@
 set(CURRENT_TARGET resource-hub)
 
 set(${CURRENT_TARGET}_headers
-    init_service.hpp
+        init_service.hpp
 )
 
 set(${CURRENT_TARGET}_sources
@@ -24,7 +24,7 @@ target_link_libraries(
 
 if (DEV_MODE)
 
-endif()
+endif ()
 
 #install(TARGETS
 #        ${CURRENT_TARGET}
