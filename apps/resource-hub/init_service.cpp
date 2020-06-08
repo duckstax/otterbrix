@@ -28,8 +28,10 @@ public:
 
 void init_service(goblin_engineer::components::root_manager&  env, rocketjoe::configuration&cfg, components::log_t&log){
 
-    std::vector<zmq::pollitem_t> f;
-    auto zmq_hub = make_manager_service<services::zmq_hub_t>(env,log, std::move(f));
+    auto zmq_context = std::make_unique<zmq::context_t>();
+
+    auto zmq_hub = make_manager_service<services::zmq_hub_t>(env,log,std::move(zmq_context));
+   ///services::make_lisaner_zmq_socket(*zmq_context,zmq_hub,services::make_url("","",9999), zmq::socket_type::router);
     auto storage = make_service<services::storage_hub>(zmq_hub);
     auto controller = make_service<controller_t>(zmq_hub);
     link(controller,storage);

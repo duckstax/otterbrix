@@ -412,7 +412,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         return true;
     }
 
-    auto session::construct_message(std::vector<std::string> identifiers,
+    auto session::construct_message(std::vector<std::string>  identifiers,
                                     nl::json header,
                                     nl::json parent,
                                     nl::json metadata,

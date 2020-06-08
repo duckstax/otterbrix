@@ -12,6 +12,8 @@
 #include <components/process_pool/process_pool.hpp>
 #include <components/configuration/configuration.hpp>
 
+#include <zmq.hpp>
+
 #include "init_service.hpp"
 
 #ifdef __APPLE__
@@ -76,7 +78,6 @@ int main(int argc, char* argv[]) {
         });
 
     env.startup();
-
     log.info("Shutdown RocketJoe");
     return 0;
 }
