@@ -1,4 +1,4 @@
-set(CURRENT_TARGET log_test)
+set(CURRENT_TARGET test_log)
 
 add_executable(${CURRENT_TARGET} main.cpp)
 

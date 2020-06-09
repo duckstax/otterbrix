@@ -1,4 +1,4 @@
-set(CURRENT_TARGET storage_test)
+set(CURRENT_TARGET test_storage)
 
 add_executable(${CURRENT_TARGET} main.cpp)
 

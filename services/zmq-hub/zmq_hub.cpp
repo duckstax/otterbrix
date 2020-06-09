@@ -5,23 +5,37 @@ namespace services {
     zmq_server_t::zmq_server_t()
         : enabled_(true) {}
 
-    zmq_server_t::~zmq_server_t() { stop(); }
+    zmq_server_t::~zmq_server_t() {
+        stop();
+        thread_.join();
+        std::cerr << "~zmq_server_t" << std::endl;
+    }
 
     void zmq_server_t::run_() {
+        std::cerr << " run_ " << std::endl;
         while (enabled_) {
+            std::cerr << " while " << std::endl;
             std::unique_lock<std::mutex>_(mtx_);
             {
+                std::cerr << " mtx " << std::endl;
                 std::swap(task_,inner_task_);
             }
+            std::cerr << "  while(!inner_task_.empty()){ " << std::endl;
             while(!inner_task_.empty()){
                 auto tmp = std::move(inner_task_.back());
                 inner_task_.pop();
                 inner_write(std::move(tmp));
             }
-            if (zmq::poll(polls_table_) == -1) {
+
+            std::cerr << " if (zmq::poll(polls_table_) == -1) { " << std::endl;
+            auto d = zmq::poll(polls_table_);
+            std::cerr << "status :" << d << std::endl;
+            if (d == -1) {
+                std::cerr << "  continue " << std::endl;
                 continue;
             }
 
+            std::cerr << "   for (auto& i : polls_table_) { " << std::endl;
             for (auto& i : polls_table_) {
                 if (i.revents & ZMQ_POLLIN) {
                     std::vector<zmq::message_t> msgs;
@@ -29,6 +43,7 @@ namespace services {
                         zmq::socket_ref(zmq::from_handle, i.socket),
                         std::back_inserter(msgs),
                         zmq::recv_flags::dontwait);
+                    std::cerr << "result : " << *result << std::endl;
                     while (result) {
                         std::vector<std::string> msgs_for_parse;
 
@@ -69,7 +84,12 @@ namespace services {
     }
     void zmq_server_t::run() {
         thread_ = std::thread([this](){
-            run_();
+            try {
+                run_();
+            } catch (std::exception const & e){
+                std::cerr << "Run exception" <<e.what() << std::endl;
+            }
+
         });
     }
     void zmq_server_t::inner_write(zmq_buffer_t buffer) {
@@ -91,9 +111,10 @@ namespace services {
 
     zmq_hub_t::zmq_hub_t(goblin_engineer::components::root_manager* ptr, components::log_t&, std::unique_ptr<zmq::context_t> ctx)
         : goblin_engineer::abstract_manager_service(ptr, "zmq_hub")
+        , init_(true)
         , ctx_(std::move(ctx)) {
         add_handler("write", &zmq_hub_t::write);
-        zmq_server_.run();
+        std::cerr << "constructor" << std::endl;
     }
 
     void zmq_hub_t::enqueue(goblin_engineer::message msg, actor_zeta::executor::execution_device*) {
@@ -116,22 +137,41 @@ namespace services {
     }
 
     auto zmq_hub_t::add_client(zmq::pollitem_t client) {
-        auto fd = zmq_client_.add_client(std::move(client));
-        clients_.emplace(fd);
+        if(init_) {
+            auto fd = zmq_client_.add_client(std::move(client));
+            clients_.emplace(fd);
+        } else {
+            throw std::runtime_error("non corector add lisaner");
+        }
     }
 
     auto zmq_hub_t::add_listener(zmq::pollitem_t client,actor_zeta::detail::string_view name ) -> void {
-
-        auto fd = zmq_server_.add_listener(
-            std::move(client),
-            [this,name](zmq_buffer_t buffer){
-                actor_zeta::send(addresses(name),actor_zeta::actor_address(this),"dispatcher",std::move(buffer));
-            });
-        listener_.emplace(fd);
+        if(init_) {
+            auto fd = zmq_server_.add_listener(
+                std::move(client),
+                [this, name](zmq_buffer_t buffer) {
+                    actor_zeta::send(addresses(name), actor_zeta::actor_address(this), "dispatcher", std::move(buffer));
+                });
+            listener_.emplace(fd);
+        } else {
+            throw std::runtime_error("non corector add lisaner");
+        }
     }
 
     zmq::context_t& zmq_hub_t::ctx() {
-        return *ctx_;
+        if(init_) {
+            return *ctx_;
+        } else {
+            throw std::runtime_error("non corector add lisaner");
+        }
+    }
+    void zmq_hub_t::run() {
+        if(init_) {
+            init_= false;
+            zmq_server_.run();
+        } else {
+            throw std::runtime_error("non corector add lisaner");
+        }
     }
 
     auto zmq_client_t::add_client(zmq::pollitem_t client) -> int {

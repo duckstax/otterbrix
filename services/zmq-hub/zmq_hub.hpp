@@ -88,8 +88,10 @@ namespace services {
         Adrress& adrress) {
         zmq::socket_t socket{storage->ctx(), socket_type};
         socket.setsockopt(ZMQ_LINGER, 1000);
+        std::cerr << "Url :" << url << std::endl;
         socket.bind(url);
-        storage->add_listener({socket, 0, ZMQ_POLLIN, 0}, adrress->name());
+        zmq::pollitem_t tmp = {static_cast<void*>(socket), 0, ZMQ_POLLIN, 0};
+        storage->add_listener(tmp, adrress->name());
     }
 
     template<class Url, class Clients>
@@ -124,6 +126,8 @@ namespace services {
 
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
+        void run();
+
         zmq::context_t& ctx();
 
         auto write(zmq_buffer_t& buffer) -> void;
@@ -133,6 +137,7 @@ namespace services {
         auto add_listener(zmq::pollitem_t, actor_zeta::detail::string_view) -> void;
 
     private:
+        std::atomic_bool init_;
         std::unique_ptr<zmq::context_t> ctx_;
         std::unordered_set<int> clients_;
         std::unordered_set<int> listener_;

@@ -22,8 +22,11 @@ public:
         add_handler("dispatcher", &controller_t::dispatcher);
     }
 
-    void dispatcher(services::zmq_buffer_t&buffer) {
-        auto msg = std::move( static_cast<actor_zeta::context&>(*this).current_message());
+    void dispatcher(services::zmq_buffer_t& buffer) {
+        //auto msg = std::move( static_cast<actor_zeta::context&>(*this).current_message());
+        for (auto& i : buffer.msg()) {
+            std::cerr << i << std::endl;
+        }
     }
 };
 
