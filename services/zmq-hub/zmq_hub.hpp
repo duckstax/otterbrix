@@ -13,18 +13,19 @@
 #include <goblin-engineer/abstract_manager_service.hpp>
 #include <goblin-engineer/components/root_manager.hpp>
 
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <components/log/log.hpp>
 
 namespace services {
 
-    class zmq_buffer_t final {
+    class zmq_buffer_tt final : public boost::intrusive_ref_counter<zmq_buffer_tt> {
     public:
-        zmq_buffer_t()
+        zmq_buffer_tt()
             : id_(-1) {}
-        zmq_buffer_t(const zmq_buffer_t&) = default;
-        zmq_buffer_t& operator=(const zmq_buffer_t&) = delete;
+        zmq_buffer_tt(const zmq_buffer_tt&) = delete;
+        zmq_buffer_tt& operator=(const zmq_buffer_tt&) = delete;
 
-        zmq_buffer_t(int fd, std::vector<std::string> msgs)
+        zmq_buffer_tt(int fd, std::vector<std::string> msgs)
             : id_(fd)
             , msg_(std::move(msgs)) {}
 
@@ -41,6 +42,13 @@ namespace services {
         int id_;
     };
 
+    using zmq_buffer_t = boost::intrusive_ptr<zmq_buffer_tt>;
+
+    template<class... Args>
+    auto buffer(Args&&... args) -> zmq_buffer_t {
+        return boost::intrusive_ptr<zmq_buffer_tt>(new zmq_buffer_tt(std::forward<Args>(args)...));
+    }
+
     using sender_t = std::function<void(zmq_buffer_t)>;
 
     class zmq_server_t final {
@@ -51,13 +59,13 @@ namespace services {
 
         void run();
 
+        void stop();
+
         auto write(zmq_buffer_t& buffer) -> void;
 
         auto add_listener(std::unique_ptr<zmq::socket_t>, sender_t) -> int;
-
     private:
         void run_();
-        void stop();
         void inner_write(zmq_buffer_t);
         std::mutex mtx_;
         std::thread thread_;
@@ -131,13 +139,15 @@ namespace services {
 
         void run();
 
+        void stop();
+
         auto write(zmq_buffer_t& buffer) -> void;
 
         auto add_client(zmq::pollitem_t client);
 
         auto add_listener(std::unique_ptr<zmq::socket_t>, actor_zeta::detail::string_view) -> void;
 
-        auto executor() noexcept -> actor_zeta::abstract_executor & override;
+        auto executor() noexcept -> actor_zeta::abstract_executor& override;
 
     private:
         std::atomic_bool init_;
