@@ -80,13 +80,15 @@ namespace services {
         std::vector<sender_t> senders_;
     };
 
+
     template<class Url, class Listener, class Adrress>
     void make_listener_zmq_socket(
+        zmq::context_t&ctx,
         Listener& storage,
         const Url& url,
         zmq::socket_type socket_type,
         Adrress& adrress) {
-        zmq::socket_t socket{storage->ctx(), socket_type};
+        zmq::socket_t socket{ctx, socket_type};
         socket.setsockopt(ZMQ_LINGER, 1000);
         std::cerr << "Url :" << url << std::endl;
         socket.bind(url);
@@ -119,16 +121,13 @@ namespace services {
     public:
         zmq_hub_t(
             goblin_engineer::components::root_manager*,
-            components::log_t&,
-            std::unique_ptr<zmq::context_t>);
+            components::log_t&);
 
         ~zmq_hub_t() override = default;
 
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
         void run();
-
-        zmq::context_t& ctx();
 
         auto write(zmq_buffer_t& buffer) -> void;
 
@@ -138,7 +137,6 @@ namespace services {
 
     private:
         std::atomic_bool init_;
-        std::unique_ptr<zmq::context_t> ctx_;
         std::unordered_set<int> clients_;
         std::unordered_set<int> listener_;
         zmq_client_t zmq_client_;

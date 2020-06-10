@@ -87,7 +87,7 @@ namespace services {
             try {
                 run_();
             } catch (std::exception const & e){
-                std::cerr << "Run exception" <<e.what() << std::endl;
+                std::cerr << "Run exception : " <<e.what() << std::endl;
             }
 
         });
@@ -109,10 +109,9 @@ namespace services {
         assert(zmq::send_multipart(zmq::socket_ref(zmq::from_handle, socket), std::move(msgs_for_send)));
     }
 
-    zmq_hub_t::zmq_hub_t(goblin_engineer::components::root_manager* ptr, components::log_t&, std::unique_ptr<zmq::context_t> ctx)
+    zmq_hub_t::zmq_hub_t(goblin_engineer::components::root_manager* ptr, components::log_t&)
         : goblin_engineer::abstract_manager_service(ptr, "zmq_hub")
-        , init_(true)
-        , ctx_(std::move(ctx)) {
+        , init_(true) {
         add_handler("write", &zmq_hub_t::write);
         std::cerr << "constructor" << std::endl;
     }
@@ -158,13 +157,6 @@ namespace services {
         }
     }
 
-    zmq::context_t& zmq_hub_t::ctx() {
-        if(init_) {
-            return *ctx_;
-        } else {
-            throw std::runtime_error("non corector add lisaner");
-        }
-    }
     void zmq_hub_t::run() {
         if(init_) {
             init_= false;

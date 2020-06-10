@@ -24,10 +24,10 @@ public:
     }
 };
 
-void work() {
+void work(zmq::context_t&ctx) {
     std::cerr << "start" <<std::endl;
-    zmq::context_t context ;
-    zmq::socket_t socket (context, ZMQ_REQ);
+
+    zmq::socket_t socket (ctx, ZMQ_REQ);
     socket.connect ("tcp://localhost:9999");
     std::cerr << "connect" <<std::endl;
     zmq::message_t request (5);
@@ -41,7 +41,7 @@ void work() {
 }
 
 using namespace std::chrono_literals;
-
+/*
 TEST(zmq_hub_server, ping_pong) {
 
     auto log = ::components::initialization_logger();
@@ -60,6 +60,7 @@ TEST(zmq_hub_server, ping_pong) {
 
     t1.join();
 }
+ */
 /*
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
@@ -68,16 +69,17 @@ int main(int argc, char** argv) {
  */
 
 int main() {
+    auto ctx = std::make_unique<zmq::context_t>();
     auto log = ::components::initialization_logger();
     goblin_engineer::components::root_manager env(1, 1000);
-    auto zmq_hub = goblin_engineer::components::make_manager_service<services::zmq_hub_t>(env, log, std::move(std::make_unique<zmq::context_t>()));
+    auto zmq_hub = goblin_engineer::components::make_manager_service<services::zmq_hub_t>(env, log);
     auto controller = goblin_engineer::components::make_service<controller_t>(zmq_hub);
-    services::make_listener_zmq_socket(zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);
+    services::make_listener_zmq_socket(*ctx,zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);
     zmq_hub->run();
-    std::this_thread::sleep_for(10s);
-
-    std::thread t1([](){
-      work();
+    std::this_thread::sleep_for(5s);
+    auto& ctx_ref = *ctx;
+    std::thread t1([&ctx_ref](){
+      work(ctx_ref);
     });
 
     std::this_thread::sleep_for(30s);
