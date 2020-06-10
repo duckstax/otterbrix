@@ -53,7 +53,7 @@ namespace services {
 
         auto write(zmq_buffer_t& buffer) -> void;
 
-        auto add_listener(zmq::socket_ref, sender_t) -> int ;
+        auto add_listener(std::unique_ptr<zmq::socket_t>, sender_t) -> int;
 
     private:
         void run_();
@@ -67,6 +67,7 @@ namespace services {
         std::atomic_bool enabled_;
         std::vector<zmq::pollitem_t> polls_table_;
         std::vector<sender_t> senders_;
+        std::vector<std::unique_ptr<zmq::socket_t>> original_socket_;
     };
 
     class zmq_client_t final {
@@ -80,18 +81,21 @@ namespace services {
         std::vector<sender_t> senders_;
     };
 
-
     template<class Url, class Listener, class Adrress>
-    inline void make_listener_zmq_socket(
-        zmq::context_t&ctx,
+    void make_listener_zmq_socket(
+        zmq::context_t& ctx,
         Listener& storage,
         const Url& url,
         zmq::socket_type socket_type,
         Adrress& adrress) {
-        auto* socket_ = new zmq::socket_t (ctx, socket_type);
-        socket_->setsockopt(ZMQ_LINGER, 1000);
-        socket_->bind(url);
-        storage->add_listener(static_cast<zmq::socket_ref>(*socket_), adrress->name());
+        try {
+            auto socket_ = std::make_unique<zmq::socket_t>(ctx, socket_type);
+            socket_->setsockopt(ZMQ_LINGER, 1000);
+            socket_->bind(url);
+            storage->add_listener(std::move(socket_), adrress->name());
+        } catch (std::exception const& e) {
+            std::cerr << "Run exception : " << e.what() << std::endl;
+        }
     }
 
     template<class Url, class Clients>
@@ -131,7 +135,9 @@ namespace services {
 
         auto add_client(zmq::pollitem_t client);
 
-        auto add_listener(zmq::socket_ref, actor_zeta::detail::string_view) -> void;
+        auto add_listener(std::unique_ptr<zmq::socket_t>, actor_zeta::detail::string_view) -> void;
+
+        auto executor() noexcept -> actor_zeta::abstract_executor & override;
 
     private:
         std::atomic_bool init_;
@@ -139,5 +145,6 @@ namespace services {
         std::unordered_set<int> listener_;
         zmq_client_t zmq_client_;
         zmq_server_t zmq_server_;
+        std::unique_ptr<actor_zeta::executor::abstract_executor> coordinator_;
     };
 } // namespace services

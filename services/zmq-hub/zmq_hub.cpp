@@ -70,12 +70,14 @@ namespace services {
         }
     }
 
-    auto zmq_server_t::add_listener(zmq::socket_ref client, sender_t current_sender) -> int {
-        polls_table_.emplace_back(zmq::pollitem_t{client.handle(), 0, ZMQ_POLLIN, 0});
+    auto zmq_server_t::add_listener(std::unique_ptr<zmq::socket_t> client, sender_t current_sender) -> int {
+        original_socket_.emplace_back(std::move(client));
+        auto index = original_socket_.size();
+        polls_table_.emplace_back(zmq::pollitem_t{*original_socket_[index-1], 0, ZMQ_POLLIN, 0});
         senders_.emplace_back(std::move(current_sender));
-        auto index = polls_table_.size();
-        auto fd = polls_table_[index].fd;
-        fd_index_.emplace(fd, index);
+        auto index_ = polls_table_.size();
+        auto fd = polls_table_[index_].fd;
+        fd_index_.emplace(fd, index_);
         return fd;
     }
 
@@ -111,7 +113,8 @@ namespace services {
 
     zmq_hub_t::zmq_hub_t(goblin_engineer::components::root_manager* ptr, components::log_t&)
         : goblin_engineer::abstract_manager_service(ptr, "zmq_hub")
-        , init_(true) {
+        , init_(true)
+        , coordinator_(std::make_unique<actor_zeta::executor_t<actor_zeta::work_sharing>>(1,1000)) {
         add_handler("write", &zmq_hub_t::write);
         std::cerr << "constructor" << std::endl;
     }
@@ -144,10 +147,10 @@ namespace services {
         }
     }
 
-    auto zmq_hub_t::add_listener(zmq::socket_ref client,actor_zeta::detail::string_view name ) -> void {
+    auto zmq_hub_t::add_listener(std::unique_ptr<zmq::socket_t> client,actor_zeta::detail::string_view name ) -> void {
         if(init_) {
             auto fd = zmq_server_.add_listener(
-                client,
+                std::move(client),
                 [this, name](zmq_buffer_t buffer) {
                     actor_zeta::send(addresses(name), actor_zeta::actor_address(this), "dispatcher", std::move(buffer));
                 });
@@ -160,10 +163,14 @@ namespace services {
     void zmq_hub_t::run() {
         if(init_) {
             init_= false;
+            coordinator_->start();
             zmq_server_.run();
         } else {
             throw std::runtime_error("non corector add lisaner");
         }
+    }
+    auto zmq_hub_t::executor() noexcept -> actor_zeta::abstract_executor& {
+        return *coordinator_;
     }
 
     auto zmq_client_t::add_client(zmq::pollitem_t client) -> int {
