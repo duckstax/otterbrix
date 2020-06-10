@@ -70,8 +70,8 @@ namespace services {
         }
     }
 
-    auto zmq_server_t::add_listener(zmq::pollitem_t client, sender_t current_sender) {
-        polls_table_.emplace_back(std::move(client));
+    auto zmq_server_t::add_listener(zmq::socket_ref client, sender_t current_sender) -> int {
+        polls_table_.emplace_back(zmq::pollitem_t{client.handle(), 0, ZMQ_POLLIN, 0});
         senders_.emplace_back(std::move(current_sender));
         auto index = polls_table_.size();
         auto fd = polls_table_[index].fd;
@@ -144,10 +144,10 @@ namespace services {
         }
     }
 
-    auto zmq_hub_t::add_listener(zmq::pollitem_t client,actor_zeta::detail::string_view name ) -> void {
+    auto zmq_hub_t::add_listener(zmq::socket_ref client,actor_zeta::detail::string_view name ) -> void {
         if(init_) {
             auto fd = zmq_server_.add_listener(
-                std::move(client),
+                client,
                 [this, name](zmq_buffer_t buffer) {
                     actor_zeta::send(addresses(name), actor_zeta::actor_address(this), "dispatcher", std::move(buffer));
                 });

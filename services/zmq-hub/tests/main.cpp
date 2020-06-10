@@ -5,6 +5,7 @@
 #include <components/log/log.hpp>
 
 using namespace goblin_engineer;
+using namespace std::chrono_literals;
 
 
 class controller_t final : public abstract_service {
@@ -40,7 +41,6 @@ void work(zmq::context_t&ctx) {
 
 }
 
-using namespace std::chrono_literals;
 /*
 TEST(zmq_hub_server, ping_pong) {
 
@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
  */
 
 int main() {
+
     auto ctx = std::make_unique<zmq::context_t>();
     auto log = ::components::initialization_logger();
     goblin_engineer::components::root_manager env(1, 1000);
@@ -76,8 +77,11 @@ int main() {
     auto controller = goblin_engineer::components::make_service<controller_t>(zmq_hub);
     services::make_listener_zmq_socket(*ctx,zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);
     zmq_hub->run();
+
     std::this_thread::sleep_for(5s);
+
     auto& ctx_ref = *ctx;
+
     std::thread t1([&ctx_ref](){
       work(ctx_ref);
     });
@@ -85,5 +89,6 @@ int main() {
     std::this_thread::sleep_for(30s);
 
     t1.join();
+
     return 0;
 }

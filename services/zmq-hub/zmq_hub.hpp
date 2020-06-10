@@ -53,7 +53,7 @@ namespace services {
 
         auto write(zmq_buffer_t& buffer) -> void;
 
-        auto add_listener(zmq::pollitem_t client, sender_t);
+        auto add_listener(zmq::socket_ref, sender_t) -> int ;
 
     private:
         void run_();
@@ -82,18 +82,16 @@ namespace services {
 
 
     template<class Url, class Listener, class Adrress>
-    void make_listener_zmq_socket(
+    inline void make_listener_zmq_socket(
         zmq::context_t&ctx,
         Listener& storage,
         const Url& url,
         zmq::socket_type socket_type,
         Adrress& adrress) {
-        zmq::socket_t socket{ctx, socket_type};
-        socket.setsockopt(ZMQ_LINGER, 1000);
-        std::cerr << "Url :" << url << std::endl;
-        socket.bind(url);
-        zmq::pollitem_t tmp = {static_cast<void*>(socket), 0, ZMQ_POLLIN, 0};
-        storage->add_listener(tmp, adrress->name());
+        auto* socket_ = new zmq::socket_t (ctx, socket_type);
+        socket_->setsockopt(ZMQ_LINGER, 1000);
+        socket_->bind(url);
+        storage->add_listener(static_cast<zmq::socket_ref>(*socket_), adrress->name());
     }
 
     template<class Url, class Clients>
@@ -133,7 +131,7 @@ namespace services {
 
         auto add_client(zmq::pollitem_t client);
 
-        auto add_listener(zmq::pollitem_t, actor_zeta::detail::string_view) -> void;
+        auto add_listener(zmq::socket_ref, actor_zeta::detail::string_view) -> void;
 
     private:
         std::atomic_bool init_;
