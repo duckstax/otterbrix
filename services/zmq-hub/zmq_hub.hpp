@@ -5,6 +5,7 @@
 #include <queue>
 #include <unordered_set>
 
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
 #include <zmq.hpp>
@@ -12,8 +13,6 @@
 
 #include <goblin-engineer/abstract_manager_service.hpp>
 #include <goblin-engineer/components/root_manager.hpp>
-
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <components/log/log.hpp>
 
@@ -28,11 +27,11 @@ namespace services {
         zmq_buffer_tt(const zmq_buffer_tt&) = delete;
         zmq_buffer_tt& operator=(const zmq_buffer_tt&) = delete;
 
-        zmq_buffer_tt(int fd, std::vector<std::string> msgs)
+        zmq_buffer_tt(std::ptrdiff_t fd, std::vector<std::string> msgs)
             : id_(fd)
             , msg_(std::move(msgs)) {}
 
-        int id() const {
+        std::ptrdiff_t id() const {
             return id_;
         }
 
@@ -41,8 +40,8 @@ namespace services {
         }
 
     private:
+        std::ptrdiff_t id_;
         std::vector<std::string> msg_;
-        int id_;
     };
 
     using zmq_buffer_t = boost::intrusive_ptr<zmq_buffer_tt>;
@@ -66,16 +65,13 @@ namespace services {
 
         auto write(zmq_buffer_t& buffer) -> void;
 
-        auto add_listener(std::unique_ptr<zmq::socket_t>, sender_t) -> int;
+        auto add_listener(std::unique_ptr<zmq::socket_t>, sender_t) -> std::ptrdiff_t;
 
     private:
         void run_();
         void inner_write(zmq_buffer_t);
-        std::mutex mtx_;
         std::thread thread_;
-        std::queue<zmq_buffer_t> task_;
-        std::queue<zmq_buffer_t> inner_task_;
-        std::unordered_map<int, int> fd_index_;
+        std::unordered_map<std::ptrdiff_t, int> fd_index_;
         std::atomic_bool enabled_;
         std::vector<zmq::pollitem_t> polls_table_;
         std::vector<sender_t> senders_;
@@ -155,8 +151,8 @@ namespace services {
 
     private:
         std::atomic_bool init_;
-        std::unordered_set<int> clients_;
-        std::unordered_set<int> listener_;
+        std::unordered_set<std::ptrdiff_t> clients_;
+        std::unordered_set<std::ptrdiff_t> listener_;
         zmq_client_t zmq_client_;
         zmq_server_t zmq_server_;
         std::unique_ptr<actor_zeta::executor::abstract_executor> coordinator_;
