@@ -24,16 +24,16 @@ public:
 
     void dispatcher(services::zmq_buffer_t& buffer) {
         //auto msg = std::move( static_cast<actor_zeta::context&>(*this).current_message());
-        for (auto& i : buffer.msg()) {
+        for (auto& i : buffer->msg()) {
             std::cerr << i << std::endl;
         }
     }
 };
 
-void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg, components::log_t& log) {
-    auto zmq_hub = make_manager_service<services::zmq_hub_t>(env, log, std::move(std::make_unique<zmq::context_t>()));
+void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg, components::log_t& log,zmq::context_t&ctx) {
+    auto zmq_hub = make_manager_service<services::zmq_hub_t>(env, log);
     auto controller = make_service<controller_t>(zmq_hub);
-    services::make_listener_zmq_socket(zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);
+    services::make_listener_zmq_socket(ctx,zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);
     auto storage = make_service<services::storage_hub>(zmq_hub);
     link(controller, storage);
 /*

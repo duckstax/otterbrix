@@ -66,7 +66,10 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> all_args(argv, argv + argc);
 
     goblin_engineer::components::root_manager env(1, 1000);
-    init_service(env, cfg_, log);
+
+    auto ctx = std::make_unique<zmq::context_t>();
+
+    init_service(env, cfg_, log,*ctx);
 
     boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
     sigint_set.async_wait(
@@ -75,6 +78,7 @@ int main(int argc, char* argv[]) {
         });
 
     env.startup();
+    ctx->close();
     log.info("Shutdown RocketJoe");
     return 0;
 }
