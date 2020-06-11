@@ -28,7 +28,7 @@ namespace services {
             }
 
             std::cerr << " if (zmq::poll(polls_table_) == -1) { " << std::endl;
-            auto d = zmq::poll(polls_table_,10);
+            auto d = zmq::poll(polls_table_);
             std::cerr << "status :" << d << std::endl;
             if (d == -1) {
                 std::cerr << "  continue " << std::endl;
@@ -83,10 +83,10 @@ namespace services {
 
     void zmq_server_t::stop() {
         enabled_ = false;
-        thread_.join();
         for(auto&i:original_socket_){
             i->close();
         }
+        thread_.join();
     }
     void zmq_server_t::run() {
         thread_ = std::thread([this]() {

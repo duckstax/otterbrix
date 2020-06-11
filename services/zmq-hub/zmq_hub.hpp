@@ -14,7 +14,10 @@
 #include <goblin-engineer/components/root_manager.hpp>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
+
 #include <components/log/log.hpp>
+
+#include <actor-zeta/core.hpp>
 
 namespace services {
 
@@ -64,6 +67,7 @@ namespace services {
         auto write(zmq_buffer_t& buffer) -> void;
 
         auto add_listener(std::unique_ptr<zmq::socket_t>, sender_t) -> int;
+
     private:
         void run_();
         void inner_write(zmq_buffer_t);
