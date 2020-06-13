@@ -2,11 +2,12 @@
 boost/1.71.0@conan/stable
 OpenSSL/1.1.1c@conan/stable
 botan/2.13.0@_/_
-#yaml-cpp/0.6.3@_/_
+yaml-cpp/0.6.3
 spdlog/1.5.0@_/_
 nlohmann_json/3.7.3@_/_
 cppzmq/4.6.0@bincrafters/stable
 pybind11/2.3.0@conan/stable
+gtest/1.10.0
 
 goblin-engineer/1.0.0a3@jinncrafters/stable
 

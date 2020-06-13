@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.12)
 set(project RocketJoe)
 
 cmake_policy(SET CMP0048 NEW)
-set(CMAKE_PROJECT_VERSION_MAJOR 0)
+set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
@@ -94,14 +94,9 @@ endif(CCACHE_FOUND)
 # ccahe
 #############################################################################################
 
-include_directories(core)
-
-if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-    add_subdirectory(debug_worker)
-endif()
-
-add_subdirectory(core)
-add_subdirectory(rocketjoed)
+add_subdirectory(components)
+add_subdirectory(services)
+add_subdirectory(apps)
 
 #set(CPACK_GENERATOR "DEB")
 #set(CPACK_SET_DESTDIR true)
