@@ -8,32 +8,33 @@
 
 #include <pybind11/embed.h>
 
-#include <goblin-engineer/abstract_manager_service.hpp>
-#include <goblin-engineer/components/root_manager.hpp>
-
-#include <detail/forward.hpp>
-#include <detail/jupyter/pykernel.hpp>
+#include "detail/forward.hpp"
+#include "detail/jupyter/pykernel.hpp"
 
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/python_sandbox/detail/forward.hpp>
 #include <components/python_sandbox/detail/jupyter/pykernel.hpp>
 
-namespace rocketjoe { namespace services {
+namespace components {
+
     namespace py = pybind11;
     using detail::jupyter::pykernel;
 
-    class BOOST_SYMBOL_VISIBLE python_sandbox_t final : public goblin_engineer::abstract_manager_service {
+    class BOOST_SYMBOL_VISIBLE python_interpreter final {
     public:
-        python_sandbox_t(goblin_engineer::components::root_manager*, const python_sandbox_configuration&, components::log_t&);
+        python_interpreter() = delete;
+        python_interpreter(const python_interpreter&) = delete;
+        python_interpreter& operator=(const python_interpreter&) = delete;
+        python_interpreter(const components::python_sandbox_configuration&, components::log_t&);
 
-        ~python_sandbox_t() override = default;
-
-        void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
+        ~python_interpreter();
 
         auto start() -> void;
 
         auto init() -> void;
+
+        void run_script(std::vector<std::string> args);
 
     private:
         auto jupyter_engine_init() -> void;
@@ -42,7 +43,7 @@ namespace rocketjoe { namespace services {
 
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
-        sandbox_mode_t mode_;
+        components::sandbox_mode_t mode_;
         py::scoped_interpreter python_;
         py::module pyrocketjoe;
         std::unique_ptr<python_sandbox::detail::file_manager> file_manager_;
@@ -58,4 +59,4 @@ namespace rocketjoe { namespace services {
         components::log_t log_;
     };
 
-}} // namespace rocketjoe::services
+} // namespace components

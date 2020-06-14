@@ -2,7 +2,7 @@
 
 #include <boost/filesystem.hpp>
 
-namespace rocketjoe {
+namespace components {
 
     enum class sandbox_mode_t : std::uint8_t {
         none = 0,

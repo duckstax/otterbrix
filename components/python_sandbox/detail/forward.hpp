@@ -1,6 +1,6 @@
 #pragma once
 
-namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
+namespace components { namespace python_sandbox { namespace detail {
 
     class data_set;
     class file_manager;
@@ -10,9 +10,9 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
     class file_manager;
     class pipelien_data_set;
 
-}}}}
+}}} // namespace components::python_sandbox::detail
 
-namespace  boost {
+namespace boost {
     template<class T>
     class intrusive_ptr;
 }

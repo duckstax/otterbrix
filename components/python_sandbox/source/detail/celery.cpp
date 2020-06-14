@@ -9,7 +9,7 @@
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
 
-namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
+namespace components { namespace python_sandbox { namespace detail {
 
     constexpr std::size_t priority_zero = 0;
 
@@ -214,4 +214,4 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
                 .def("task", &celery::create_task);
     }
 
-}}}}
+}}}

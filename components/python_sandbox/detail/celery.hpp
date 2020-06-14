@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <queue>
+#include <string>
 #include <unordered_map>
 
 #include <boost/dll.hpp>
@@ -14,7 +14,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
+namespace components { namespace python_sandbox { namespace detail {
 
     using namespace pybind11::literals;
     namespace py = pybind11;
@@ -76,7 +76,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
         task_pending(std::string task_name, py::args args, py::kwargs kwargs, boost::uuids::uuid task_id, std::size_t priority);
 
-        bool operator<(const task_pending &rhs) const;
+        bool operator<(const task_pending& rhs) const;
     };
 
     struct BOOST_SYMBOL_VISIBLE task_answer final {
@@ -85,7 +85,7 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
 
         task_answer(py::object ret_val, std::size_t priority);
 
-        bool operator<(const task_answer &rhs) const;
+        bool operator<(const task_answer& rhs) const;
     };
 
     class worker final : public boost::intrusive_ref_counter<worker> {
@@ -124,6 +124,6 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
         std::unordered_map<boost::uuids::uuid, task_answer, boost::hash<boost::uuids::uuid>> task_answers;
     };
 
-    auto add_celery(py::module &pyrocketjoe) -> void;
+    auto add_celery(py::module& pyrocketjoe) -> void;
 
-}}}}
+}}} // namespace components::python_sandbox::detail

@@ -10,7 +10,7 @@
 
 #include <zmq.hpp>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     namespace nl = nlohmann;
 
@@ -264,4 +264,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         std::string signature_scheme;
     }; // namespace jupyter
 
-}}}} // namespace rocketjoe::services::detail::jupyter
+}}} // namespace rocketjoe::services::detail::jupyter

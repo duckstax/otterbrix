@@ -21,7 +21,7 @@
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     auto execute_ok_reply::identifiers() const -> const std::vector<std::string>& {
         return identifiers_;
@@ -412,7 +412,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         return true;
     }
 
-    auto session::construct_message(std::vector<std::string>  identifiers,
+    auto session::construct_message(std::vector<std::string> identifiers,
                                     nl::json header,
                                     nl::json parent,
                                     nl::json metadata,
@@ -539,7 +539,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                   {"engine_info", {{"engine_uuid", boost::uuids::to_string(reply.engine_info().kernel_identifier())},
                                                    {"engine_id", reply.engine_info().engine_identifier()},
                                                    {"method", "apply"}}}},
-                                  // clang-format on
+                                 // clang-format on
                                  {});
     }
 
@@ -556,7 +556,7 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                   {"engine_info", {{"engine_uuid", boost::uuids::to_string(broadcast.engine_info().kernel_identifier())},
                                                    {"engine_id", broadcast.engine_info().engine_identifier()},
                                                    {"method", "apply"}}}},
-                                  // clang-format on
+                                 // clang-format on
                                  {});
     }
 
@@ -600,4 +600,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
                                  false);
     }
 }
-}}} // namespace rocketjoe::services::detail::jupyter
+}} // namespace components::detail::jupyter

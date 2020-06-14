@@ -9,7 +9,7 @@
 
 #include <zmq.hpp>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     enum class poll_flags : std::uint8_t {
         none = 0,
@@ -88,4 +88,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
     private:
         std::unique_ptr<interpreter_impl> pimpl;
     };
-}}}} // namespace rocketjoe::services::detail::jupyter
+}}} // namespace rocketjoe::services::detail::jupyter
