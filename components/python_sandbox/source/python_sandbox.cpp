@@ -307,12 +307,19 @@ namespace components {
 
     python_interpreter::~python_interpreter() = default;
 
-    void python_interpreter::run_script(std::vector<std::string> args) {
-        /// TODO: alternative PySys_SetArgv
+    void python_interpreter::run_script(const std::vector<std::string>& args) {
+        /// TODO: alternative PySys_SetArgv https://stackoverflow.com/questions/18245140/how-do-you-use-the-python3-c-api-for-a-command-line-driven-app
         py::list tmp;
-        for (auto& i : args) {
-            tmp.append(i);
+
+        auto it =  args.begin();
+        auto end = args.end();
+
+        it = std::next(it);
+
+        for (;it!=end;++it) {
+            tmp.append(*it);
         }
+
         py::module::import("sys").add_object("argv", tmp);
         py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
     }

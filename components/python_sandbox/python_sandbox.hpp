@@ -34,7 +34,7 @@ namespace components {
 
         auto init() -> void;
 
-        void run_script(std::vector<std::string> args);
+        void run_script(const std::vector<std::string>&);
 
     private:
         auto jupyter_engine_init() -> void;
