@@ -19,7 +19,7 @@ void init_service(goblin_engineer::components::root_manager& env, components::co
 
     if (
         (cfg.operating_mode_ == components::operating_mode::master)
-        ||
+        &&
         (cfg.python_configuration_.mode_ != components::sandbox_mode_t::script)) {
         http::router router_;
 

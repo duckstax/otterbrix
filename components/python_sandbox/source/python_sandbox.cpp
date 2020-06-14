@@ -64,7 +64,9 @@ namespace components {
         log_.info(fmt::format("Mode : {0}", configuration.mode_));
         mode_ = configuration.mode_;
         script_path_ = configuration.script_path_;
-        log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
+        if (!configuration.jupyter_connection_path_.empty()) {
+            log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
+        }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
     }
@@ -306,11 +308,12 @@ namespace components {
     python_interpreter::~python_interpreter() = default;
 
     void python_interpreter::run_script(std::vector<std::string> args) {
-        auto sys = py::module::import("sys");
-        auto args_ =  sys.attr("argv").cast<py::list>();
-        for(auto&i:args){
-            args_.append(i);
+        /// TODO: alternative PySys_SetArgv
+        py::list tmp;
+        for (auto& i : args) {
+            tmp.append(i);
         }
+        py::module::import("sys").add_object("argv", tmp);
         py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
     }
 
