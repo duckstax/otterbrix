@@ -30,7 +30,7 @@ public:
     }
 };
 
-void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg, components::log_t& log,zmq::context_t&ctx) {
+void init_service(goblin_engineer::components::root_manager& env, components::configuration& cfg, components::log_t& log,zmq::context_t&ctx) {
     auto zmq_hub = make_manager_service<services::zmq_hub_t>(env, log);
     auto controller = make_service<controller_t>(zmq_hub);
     services::make_listener_zmq_socket(ctx,zmq_hub, services::make_url("tcp", "*", 9999), zmq::socket_type::router, controller);

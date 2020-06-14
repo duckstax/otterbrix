@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
     auto log = components::initialization_logger();
 
-    rocketjoe::configuration cfg_;
+    components::configuration cfg_;
 
     std::vector<std::string> all_args(argv, argv + argc);
 
