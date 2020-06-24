@@ -38,4 +38,6 @@ install(TARGETS
         ARCHIVE DESTINATION lib
 )
 
-add_subdirectory(test)
+if(DEV_MODE)
+    add_subdirectory(test)
+endif()
