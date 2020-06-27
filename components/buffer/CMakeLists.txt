@@ -1,11 +1,16 @@
 set(CURRENT_TARGET buffer)
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        log.hpp
+        buffer.hpp
+        const_buffer.hpp
+        mutable_buffer.hpp
+        type_traits.hpp
 )
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        log.cpp
+        buffer.cpp
+        const_buffer.cpp
+        mutable_buffer.cpp
 )
 
 
@@ -21,7 +26,6 @@ set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_T
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
-        ${Boost_LIBRARIES}
         ${CONAN_LIBS}
 )
 
@@ -32,7 +36,7 @@ target_include_directories(
 )
 
 if(DEV_MODE)
-    #add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
 
 install(TARGETS

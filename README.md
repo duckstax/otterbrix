@@ -52,7 +52,7 @@ logs when the container starts.
 
 brew install cmake lua ccache conan python3
 
-conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
 
 ```
 ### for debian base
@@ -63,7 +63,7 @@ apt install git ccache g++ cmake python3 python3-dev python3-pip
 
 pip3 install conan --upgrade
 
-conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
  
 ```
 
@@ -71,7 +71,7 @@ conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
 
 ```bash
 
-git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
+git clone https://github.com/cyberduckninja/RocketJoe.git rocketjoe
 
 cd rocketjoe
 
