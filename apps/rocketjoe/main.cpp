@@ -196,7 +196,7 @@ int main(int argc, char* argv[]) {
 
     switch (cfg_.python_configuration_.mode_) {
         case components::sandbox_mode_t::none: {
-            log.error("else if( cfg_.python_configuration_.mode_ == components::sandbox_mode_t::none)");
+            log.error("invalid state: none");
             return 1;
         }
         case components::sandbox_mode_t::script: {
