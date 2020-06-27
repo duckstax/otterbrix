@@ -17,8 +17,10 @@ WORKDIR /app
 
 COPY conanfile.txt ./
 
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
-    conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
+    conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan && \
     conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
 
 COPY . ./
@@ -27,7 +29,7 @@ WORKDIR ./build
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
     cmake --build . && \
-    jupyter kernelspec install --user kernels/ipython && \
+    jupyter kernelspec install --user kernels/rocketjoe && \
     mkdir -p rocketjoe
 
 WORKDIR rocketjoe

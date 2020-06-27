@@ -15,13 +15,15 @@ WORKDIR /app
 
 COPY conanfile.txt ./
 
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
-    conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
+    conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan && \
     conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
 
-COPY rocketjoed/test/requirements.txt ./rocketjoed/test/
+COPY apps/rocketjoe/test/requirements.txt ./apps/rocketjoe/test/
 
-RUN pip3 install --no-cache-dir -r rocketjoed/test/requirements.txt
+RUN pip3 install --no-cache-dir -r apps/rocketjoe/test/requirements.txt
 
 COPY . ./
 

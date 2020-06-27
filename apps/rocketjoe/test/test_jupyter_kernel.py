@@ -6,7 +6,7 @@ from jupyter_kernel_mgmt.client import BlockingKernelClient
 
 
 class RocketJoePythonTests(jupyter_kernel_test.KernelTests):
-    kernel_name = 'jupyter'
+    kernel_name = 'rocketjoe'
     language_name = 'python'
     file_extension = '.py'
     code_hello_world = 'print(\'hello, world\')'
@@ -62,71 +62,71 @@ def is_complete_request_2(kc) -> None:
     kc.is_complete("print")
 
 
-def test_ipykernel_kernel_info_request(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_kernel_info_request(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(kernel_info_request, kc)
 
 
-def test_jupyter_kernel_info_request(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_kernel_info_request(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(kernel_info_request, kc)
 
 
-def test_ipykernel_execute_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_execute_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(execute_request_1, kc)
 
 
-def test_jupyter_execute_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_execute_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(execute_request_1, kc)
 
 
-def test_ipykernel_execute_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_execute_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(execute_request_2, kc)
 
 
-def test_jupyter_execute_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_execute_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(execute_request_2, kc)
 
 
-def test_ipykernel_complete_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_complete_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(complete_request_1, kc)
 
 
-def test_jupyter_complete_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_complete_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(complete_request_1, kc)
 
 
-def test_ipykernel_complete_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_complete_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(complete_request_2, kc)
 
 
-def test_jupyter_complete_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_complete_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(complete_request_2, kc)
 
 
-def test_ipykernel_is_complete_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_is_complete_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(is_complete_request_1, kc)
 
 
-def test_jupyter_is_complete_request_1(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_is_complete_request_1(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(is_complete_request_1, kc)
 
 
-def test_ipykernel_is_complete_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/python3') as kc:
+def test_rocketjoe_is_complete_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(is_complete_request_2, kc)
 
 
-def test_jupyter_is_complete_request_2(benchmark) -> None:
-    with jupyter_kernel_mgmt.run_kernel_blocking('spec/jupyter') as kc:
+def test_rocketjoe_is_complete_request_2(benchmark) -> None:
+    with jupyter_kernel_mgmt.run_kernel_blocking('spec/rocketjoe') as kc:
         benchmark(is_complete_request_2, kc)

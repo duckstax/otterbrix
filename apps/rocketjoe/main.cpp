@@ -216,6 +216,10 @@ int main(int argc, char* argv[]) {
             env.startup();
             break;
         }
+        default:{
+            log.error("invalid state");
+            break;
+        }
     }
 
     log.info("Shutdown RocketJoe");
