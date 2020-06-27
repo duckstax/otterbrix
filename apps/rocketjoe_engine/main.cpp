@@ -73,6 +73,9 @@ int main(int argc, char* argv[]) {
         ("help", "Print help")
         ("worker_mode", "Worker Mode")
         ("worker_number",po::value<unsigned short int>(), "Worker Process Mode and run  ")
+        ("jupyter_kernel", "Jupyter kernel mode")
+        ("jupyter_engine", "Ipyparalle mode")
+        ("port_http",po::value<unsigned short int>()->default_value(9999), "Port Http")
         ("jupyter_connection", po::value<boost::filesystem::path>(),"path to jupyter connection file")
         ;
     // clang-format on
@@ -191,9 +194,13 @@ int main(int argc, char* argv[]) {
         process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
     }
 
-    components::python_interpreter vm(cfg_.python_configuration_, log);
-    vm.init();
-    vm.run_script(all_args);
+    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
+    sigint_set.async_wait(
+        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
+            sigint_set.cancel();
+        });
+
+    env.startup();
 
     log.info("Shutdown RocketJoe");
     return 0;
