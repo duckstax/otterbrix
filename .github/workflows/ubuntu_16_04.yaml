@@ -29,14 +29,11 @@ jobs:
           conan user
           conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
           conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
-
-      - uses: seanmiddleditch/gha-setup-ninja@master
-
       - name: build
         env:
           CC: gcc
         run: |
-          cmake . -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+          cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel 2
 
       #- name: install dependons test
