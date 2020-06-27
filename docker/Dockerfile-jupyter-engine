@@ -17,8 +17,10 @@ WORKDIR /app
 
 COPY conanfile.txt ./
 
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
 RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
-    conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan && \
+    conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan && \
     conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
 
 COPY . ./
@@ -27,16 +29,16 @@ WORKDIR ./build
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
     cmake --build . && \
-    jupyter kernelspec install --user kernels/ipython && \
+    jupyter kernelspec install --user kernels/rocketjoe && \
     mkdir -p rocketjoe
 
 WORKDIR rocketjoe
 
 CMD (nohup ipcontroller --debug &) && \
     while [ ! -f /root/.ipython/profile_default/security/ipcontroller-engine.json ]; do sleep 1; done \
-    && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
+    && (nohup ../apps/rocketjoe/rocketjoe --jupyter_engine --worker_mode \
            --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
-    && (nohup ../rocketjoed/rocketjoed --jupyter_engine --worker_mode \
+    && (nohup ../apps/rocketjoe/rocketjoe --jupyter_engine --worker_mode \
            --jupyter_connection /root/.ipython/profile_default/security/ipcontroller-engine.json &) \
     && jupyter notebook --no-browser --allow-root \
            --NotebookApp.allow_remote_access=True --NotebookApp.ip=0.0.0.0

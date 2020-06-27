@@ -12,7 +12,7 @@
 //declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     using namespace pybind11::literals;
 
@@ -118,4 +118,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
 
     auto shell::init_virtualenv(py::object self) -> void {}
 
-}}}}
+}}}

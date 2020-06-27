@@ -15,11 +15,11 @@
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
+namespace components { namespace python_sandbox { namespace detail {
 
     using namespace pybind11::literals;
     namespace py = pybind11;
-    using namespace ::rocketjoe::services::detail::jupyter;
+    using namespace ::components::detail::jupyter;
 
     auto add_jupyter(py::module &pyrocketjoe, context_manager *) -> void  {
         auto pykernel = pyrocketjoe.def_submodule("pykernel");
@@ -140,4 +140,4 @@ namespace rocketjoe { namespace services { namespace python_sandbox { namespace 
         shell_abc.attr("register")(std::move(rocketjoe_shell));
     }
 
-}}}}
+}}}

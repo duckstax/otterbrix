@@ -4,23 +4,21 @@
 
 #include <detail/file_manager.hpp>
 
-namespace rocketjoe { namespace services { namespace python_sandbox { namespace detail {
+namespace components { namespace python_sandbox { namespace detail {
 
-auto add_file_system(py::module &pyrocketjoe, file_manager* fm ) -> void{
-
-    pyrocketjoe.def(
+    auto add_file_system(py::module& pyrocketjoe, file_manager* fm) -> void {
+        pyrocketjoe.def(
             "file_read",
-            [fm](const std::string &path) -> std::unordered_map<std::size_t, std::string> {
+            [fm](const std::string& path) -> std::unordered_map<std::size_t, std::string> {
                 std::unordered_map<std::size_t, std::string> tmp;
-                auto* file =  fm->open(path);
+                auto* file = fm->open(path);
 
-                if(file != nullptr ){
+                if (file != nullptr) {
                     tmp = file->read();
                 }
 
                 return tmp;
-            }
-    );
-}
+            });
+    }
 
-}}}}
+}}} // namespace components::python_sandbox::detail

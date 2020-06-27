@@ -12,6 +12,7 @@
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
+#include <components/python_sandbox/python_sandbox.hpp>
 
 #include "init_service.hpp"
 
@@ -96,7 +97,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    rocketjoe::configuration cfg_;
+    components::configuration cfg_;
 
     if (command_line.count("port_http")) {
         cfg_.port_http_ = command_line["port_http"].as<unsigned short int>();
@@ -156,31 +157,31 @@ int main(int argc, char* argv[]) {
     if (exist_path_script_python_file) {
         log.info("script mode");
         log.info(fmt::format("run: {0}", (cfg_.python_configuration_.script_path_.string())));
-        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::script;
+        cfg_.python_configuration_.mode_ = components::sandbox_mode_t::script;
     }
 
     if (command_line.count("jupyter_kernel")) {
         log.info("jupyter kernel mode");
-        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_kernel;
+        cfg_.python_configuration_.mode_ = components::sandbox_mode_t::jupyter_kernel;
     }
 
     if (command_line.count("jupyter_engine")) {
         log.info("jupyter engine mode");
-        cfg_.python_configuration_.mode_ = rocketjoe::sandbox_mode_t::jupyter_engine;
+        cfg_.python_configuration_.mode_ = components::sandbox_mode_t::jupyter_engine;
     }
 
     if (command_line.count("jupyter_connection")) {
         cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
     }
 
-    cfg_.operating_mode_ = rocketjoe::operating_mode::master;
+    cfg_.operating_mode_ = components::operating_mode::master;
 
     if (command_line.count("worker_mode")) {
         log.info("Worker Mode");
-        cfg_.operating_mode_ = rocketjoe::operating_mode::worker;
+        cfg_.operating_mode_ = components::operating_mode::worker;
     }
 
-    if (cfg_.python_configuration_.mode_ == rocketjoe::sandbox_mode_t::none) {
+    if (cfg_.python_configuration_.mode_ == components::sandbox_mode_t::none) {
         log.error("initialization error: mode is none");
         return 1;
     }
@@ -193,13 +194,33 @@ int main(int argc, char* argv[]) {
         process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
     }
 
-    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
-    sigint_set.async_wait(
-        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
-            sigint_set.cancel();
-        });
+    switch (cfg_.python_configuration_.mode_) {
+        case components::sandbox_mode_t::none: {
+            log.error("invalid state: none");
+            return 1;
+        }
+        case components::sandbox_mode_t::script: {
+            components::python_interpreter vm(cfg_.python_configuration_,log);
+            vm.init();
+            vm.run_script(all_args);
+            break;
+        }
+        case components::sandbox_mode_t::jupyter_kernel:
+        case components::sandbox_mode_t::jupyter_engine: {
+            boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
+            sigint_set.async_wait(
+                [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
+                    sigint_set.cancel();
+                });
 
-    env.startup();
+            env.startup();
+            break;
+        }
+        default:{
+            log.error("invalid state");
+            break;
+        }
+    }
 
     log.info("Shutdown RocketJoe");
     return 0;

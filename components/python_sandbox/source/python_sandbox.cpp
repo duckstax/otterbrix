@@ -9,8 +9,6 @@
 
 #include <pybind11/pybind11.h>
 
-#include <goblin-engineer/abstract_service.hpp>
-
 #include <detail/celery.hpp>
 #include <detail/context.hpp>
 #include <detail/context_manager.hpp>
@@ -19,7 +17,7 @@
 #include <detail/file_system.hpp>
 #include <detail/jupyter.hpp>
 
-namespace rocketjoe { namespace services {
+namespace components {
 
     constexpr static char init_script[] = R"__(
         import sys, os
@@ -47,9 +45,10 @@ namespace rocketjoe { namespace services {
 
     using detail::jupyter::poll_flags;
 
-    python_sandbox_t::python_sandbox_t(goblin_engineer::components::root_manager* env, const python_sandbox_configuration& configuration,components::log_t&log)
-        : goblin_engineer::abstract_manager_service(env, "python_sandbox")
-        , mode_{sandbox_mode_t::none}
+    python_interpreter::python_interpreter(
+        const components::python_sandbox_configuration& configuration,
+        components::log_t& log)
+        : mode_{components::sandbox_mode_t::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
         , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
@@ -65,12 +64,14 @@ namespace rocketjoe { namespace services {
         log_.info(fmt::format("Mode : {0}", configuration.mode_));
         mode_ = configuration.mode_;
         script_path_ = configuration.script_path_;
-        log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
+        if (!configuration.jupyter_connection_path_.empty()) {
+            log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
+        }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
     }
 
-    auto python_sandbox_t::jupyter_kernel_init() -> void {
+    auto python_interpreter::jupyter_kernel_init() -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -136,7 +137,7 @@ namespace rocketjoe { namespace services {
             boost::uuids::random_generator()()}};
     }
 
-    auto python_sandbox_t::jupyter_engine_init() -> void {
+    auto python_interpreter::jupyter_engine_init() -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -222,15 +223,15 @@ namespace rocketjoe { namespace services {
             std::move(identifier)}};
     }
 
-    auto python_sandbox_t::start() -> void {
-        if (mode_ == sandbox_mode_t::script) {
+    auto python_interpreter::start() -> void {
+        if (mode_ == components::sandbox_mode_t::script) {
             commands_exuctor = std::make_unique<std::thread>([this]() {
                 py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
             });
-        } else if (mode_ == sandbox_mode_t::jupyter_kernel ||
-                   mode_ == sandbox_mode_t::jupyter_engine) {
+        } else if (mode_ == components::sandbox_mode_t::jupyter_kernel ||
+                   mode_ == components::sandbox_mode_t::jupyter_engine) {
             commands_exuctor = std::make_unique<std::thread>([this]() {
-                if (mode_ == sandbox_mode_t::jupyter_engine) {
+                if (mode_ == components::sandbox_mode_t::jupyter_engine) {
                     while (!jupyter_kernel->registration()) {
                     }
                 }
@@ -256,7 +257,7 @@ namespace rocketjoe { namespace services {
                 }
             });
             infos_exuctor = std::make_unique<std::thread>([this]() {
-                if (mode_ == sandbox_mode_t::jupyter_kernel) {
+                if (mode_ == components::sandbox_mode_t::jupyter_kernel) {
                     while (true) {
                         if (zmq::poll(jupyter_kernel_infos_polls) == -1) {
                             continue;
@@ -279,31 +280,48 @@ namespace rocketjoe { namespace services {
         }
     }
 
-    void python_sandbox_t::enqueue(goblin_engineer::message, actor_zeta::executor::execution_device*) {}
-
-    auto python_sandbox_t::init() -> void {
+    auto python_interpreter::init() -> void {
         python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
         ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
         python_sandbox::detail::add_celery(pyrocketjoe);
 
-        if (mode_ == sandbox_mode_t::jupyter_kernel ||
-            mode_ == sandbox_mode_t::jupyter_engine) {
+        if (mode_ == components::sandbox_mode_t::jupyter_kernel ||
+            mode_ == components::sandbox_mode_t::jupyter_engine) {
             python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
         }
 
         py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe));
 
-        if (sandbox_mode_t::jupyter_kernel == mode_) {
-            log_.info( "jupyter kernel mode");
+        if (components::sandbox_mode_t::jupyter_kernel == mode_) {
+            log_.info("jupyter kernel mode");
             jupyter_kernel_init();
-        } else if (sandbox_mode_t::jupyter_engine == mode_) {
-            log_.info( "jupyter engine mode");
+        } else if (components::sandbox_mode_t::jupyter_engine == mode_) {
+            log_.info("jupyter engine mode");
             jupyter_engine_init();
         } else {
-            log_.info( "init script mode ");
+            log_.info("init script mode ");
         }
     }
 
-}} // namespace rocketjoe::services
+    python_interpreter::~python_interpreter() = default;
+
+    void python_interpreter::run_script(const std::vector<std::string>& args) {
+        /// TODO: alternative PySys_SetArgv https://stackoverflow.com/questions/18245140/how-do-you-use-the-python3-c-api-for-a-command-line-driven-app
+        py::list tmp;
+
+        auto it =  args.begin();
+        auto end = args.end();
+
+        it = std::next(it);
+
+        for (;it!=end;++it) {
+            tmp.append(*it);
+        }
+
+        py::module::import("sys").add_object("argv", tmp);
+        py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
+    }
+
+} // namespace components

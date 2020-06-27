@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     namespace py = pybind11;
 
@@ -20,4 +20,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         static auto finish_displayhook(py::object self) -> void;
     };
 
-}}}}
+}}}
