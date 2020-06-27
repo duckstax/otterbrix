@@ -28,7 +28,7 @@ jobs:
           pip install conan
           conan user
           conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-          conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+          conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
 
       - uses: seanmiddleditch/gha-setup-ninja@master
 
