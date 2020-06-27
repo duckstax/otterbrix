@@ -109,7 +109,7 @@ namespace nlohmann {
     }
 } // namespace nlohmann
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     namespace nl = nlohmann;
     namespace py = pybind11;
@@ -1636,4 +1636,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         return pimpl->poll(polls);
     }
 
-}}}} // namespace rocketjoe::services::detail::jupyter
+}}} // namespace rocketjoe::services::detail::jupyter

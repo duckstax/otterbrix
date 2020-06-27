@@ -1,22 +1,26 @@
 #include "init_service.hpp"
 
-#include <components/python_sandbox/python_sandbox.hpp>
-
 #include <goblin-engineer/components/http.hpp>
 #include <goblin-engineer/components/root_manager.hpp>
 #include <iostream>
+#include <services/interactive_python_interpreter/interactive_python_interpreter.hpp>
 
 using goblin_engineer::components::make_manager_service;
 using goblin_engineer::components::make_service;
 using goblin_engineer::components::root_manager;
 using namespace goblin_engineer::components;
 
-void init_service(goblin_engineer::components::root_manager& env, rocketjoe::configuration& cfg, components::log_t& log) {
-    auto python = make_manager_service<rocketjoe::services::python_sandbox_t>(env, cfg.python_configuration_, log);
-    python->init();
-    python->start();
+void init_service(goblin_engineer::components::root_manager& env, components::configuration& cfg, components::log_t& log) {
+    if (cfg.python_configuration_.mode_ != components::sandbox_mode_t::script) {
+        auto python = make_manager_service<services::interactive_python_interpreter>(env, cfg.python_configuration_, log);
+        python->init();
+        python->start();
+    }
 
-    if (cfg.operating_mode_ == rocketjoe::operating_mode::master) {
+    if (
+        (cfg.operating_mode_ == components::operating_mode::master)
+        &&
+        (cfg.python_configuration_.mode_ != components::sandbox_mode_t::script)) {
         http::router router_;
 
         router_.http_get(

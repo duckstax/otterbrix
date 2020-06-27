@@ -1,4 +1,4 @@
-set(CURRENT_TARGET rocketjoed)
+set(CURRENT_TARGET rocketjoe)
 
 set(${CURRENT_TARGET}_headers
         configuration.hpp
@@ -20,13 +20,13 @@ target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::configuration
-        rocketjoe::python_sandbox
+        rocketjoe::interactive_python_interpreter
         rocketjoe::log
         rocketjoe::process_pool
         dl
 )
 
-configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/ipython/kernel.json")
+configure_file("kernel.json.in" "${CMAKE_BINARY_DIR}/kernels/rocketjoe/kernel.json")
 
 if (DEV_MODE)
 

@@ -9,7 +9,7 @@
 
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-namespace rocketjoe { namespace services { namespace detail { namespace jupyter {
+namespace components { namespace detail { namespace jupyter {
 
     namespace py = pybind11;
 
@@ -23,4 +23,4 @@ namespace rocketjoe { namespace services { namespace detail { namespace jupyter 
         zmq::socket_t socket;
     };
 
-}}}}
+}}}

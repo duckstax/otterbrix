@@ -1,4 +1,4 @@
-name: ubuntu 18.04
+name: ubuntu 16.04
 on: [push, pull_request]
 jobs:
   run:
@@ -6,7 +6,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-18.04] #[ubuntu-16.04,ubuntu-18.04]
+        operating-system: [ubuntu-16.04]
         python-version: [ 3.6] #,3.7] #,3.8]
     steps:
       - name: Checkout
@@ -29,7 +29,6 @@ jobs:
           conan user
           conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
           conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
-
       - name: build
         env:
           CC: gcc
