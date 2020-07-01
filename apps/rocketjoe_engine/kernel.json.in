@@ -2,7 +2,7 @@
     "display_name": "RocketJoe Kernel",
     "language" : "python",
     "argv": [
-        "@CMAKE_BINARY_DIR@/apps/rocketjoe/rocketjoe", "--jupyter_kernel",
+        "@CMAKE_BINARY_DIR@/apps/rocketjoe_engine/rocketjoe_engine", "--jupyter_kernel",
         "--jupyter_connection", "{connection_file}"
     ]
 }

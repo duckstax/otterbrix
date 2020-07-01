@@ -21,9 +21,9 @@ RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/publi
     conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan && \
     conan install . --build missing -s build_type=Debug -s compiler.libcxx=libstdc++11
 
-COPY apps/rocketjoe/test/requirements.txt ./apps/rocketjoe/test/
+COPY apps/rocketjoe_kernel/test/requirements.txt ./apps/rocketjoe_kernel/test/
 
-RUN pip3 install --no-cache-dir -r apps/rocketjoe/test/requirements.txt
+RUN pip3 install --no-cache-dir -r apps/rocketjoe_kernel/test/requirements.txt
 
 COPY . ./
 
@@ -32,6 +32,6 @@ WORKDIR ./build
 ENV JUPYTER_PATH=/usr/local/share/jupyter
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug -DDEV_MODE=ON && \
-    cmake --build .
+    cmake --build .  --target rocketjoe_kernel
 
 CMD ctest -V

@@ -27,8 +27,8 @@ COPY . ./
 
 WORKDIR ./build
 
-RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug && \
-    cmake --build . && \
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Debug           && \
+    cmake --build .  --target rocketjoe_kernel          && \
     jupyter kernelspec install --user kernels/rocketjoe && \
     mkdir -p rocketjoe
 
