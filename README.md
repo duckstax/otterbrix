@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/jinncrafters/RocketJoe.svg?branch=master)](https://travis-ci.org/jinncrafters/RocketJoe)
+![ubuntu 16.04](https://github.com/cyberduckninja/RocketJoe/workflows/ubuntu%2016.04/badge.svg)
+
+![ubuntu 18.04](https://github.com/cyberduckninja/RocketJoe/workflows/ubuntu%2018.04/badge.svg)
 
 RoсketJoe is a Python worker pool for distributed execution of computational tasks on a CPU or GPU. RocketJoe is intended for splitting two-dimensional dataframe into chunks for processing large volumes of data on a cluster of machines or accelerators, such as GPUs. It is also integrated with Jupyter Notebook for the possibility of interactive work with data and algorithms, as well as their visualization.
 
@@ -18,7 +20,7 @@ RoсketJoe is a Python worker pool for distributed execution of computational ta
 ### Build and start
 1. Clone repository:
 ```bash
-git clone https://github.com/jinncrafters/RocketJoe.git
+git clone https://github.com/cyberduckninja/RocketJoe.git
 cd RocketJoe
 ```
 
@@ -40,7 +42,7 @@ logs when the container starts.
 
 brew install cmake lua ccache conan python3
 
-conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
 
 ```
 ### for debian base
@@ -51,7 +53,7 @@ apt install git ccache g++ cmake python3 python3-dev python3-pip
 
 pip3 install conan --upgrade
 
-conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
+conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
  
 ```
 
@@ -59,7 +61,7 @@ conan remote add jinncrafters https://api.bintray.com/conan/jinncrafters/conan
 
 ```bash
 
-git clone https://github.com/smart-cloud/RocketJoe.git rocketjoe
+git clone https://github.com/cyberduckninja/RocketJoe.git rocketjoe
 
 cd rocketjoe
 
