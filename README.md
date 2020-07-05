@@ -4,7 +4,9 @@
 
 ![ubuntu 20.04](https://github.com/cyberduckninja/RocketJoe/workflows/ubuntu%2020.04/badge.svg)
 
-RoсketJoe is a Python worker pool for distributed execution of computational tasks on a CPU or GPU. RocketJoe is intended for splitting two-dimensional dataframe into chunks for processing large volumes of data on a cluster of machines or accelerators, such as GPUs. It is also integrated with Jupyter Notebook for the possibility of interactive work with data and algorithms, as well as their visualization.
+RoсketJoe is a Python worker pool for distributed execution of computational tasks on a CPU or GPU. 
+RocketJoe is intended for splitting two-dimensional dataframe into chunks for processing large volumes of data on a cluster of machines or accelerators, such as GPUs. 
+It is also integrated with Jupyter Notebook for the possibility of interactive work with data and algorithms, as well as their visualization.
 
 # Roadmap
 - [ ] Integration of the Jupyter Kernel Protocol to simplify data scientists' processing and visualization of data, modeling of any species possible in the Jupyter ecosystem.

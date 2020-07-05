@@ -1,7 +1,0 @@
-pytest == 5.4.2
-pytest-benchmark == 3.2.3
-jupyter_kernel_test == 0.3
-jupyter-kernel-mgmt == 0.5.1
-ipython == 7.14.0
-ipykernel == 5.2.1
-pytest-xprocess == 0.13.1
