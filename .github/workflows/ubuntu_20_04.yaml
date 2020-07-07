@@ -1,4 +1,4 @@
-name: ubuntu 18.04
+name: ubuntu 20.04
 on: [push, pull_request]
 jobs:
   run:
@@ -6,8 +6,8 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-18.04]
-        python-version: [ 3.6]
+        operating-system: [ubuntu-20.04]
+        python-version: [ 3.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v2

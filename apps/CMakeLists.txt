@@ -6,3 +6,5 @@ endif()
 
 add_subdirectory(resource-hub)
 add_subdirectory(rocketjoe)
+add_subdirectory(rocketjoe_engine)
+add_subdirectory(rocketjoe_kernel)

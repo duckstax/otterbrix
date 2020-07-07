@@ -1,4 +1,4 @@
-set(CURRENT_TARGET rocketjoe)
+set(CURRENT_TARGET rocketjoe_engine)
 
 set(${CURRENT_TARGET}_headers
         configuration.hpp
@@ -25,8 +25,6 @@ target_link_libraries(
         rocketjoe::process_pool
         dl
 )
-
-
 
 if (DEV_MODE)
 
