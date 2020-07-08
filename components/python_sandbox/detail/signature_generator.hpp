@@ -21,9 +21,10 @@ inline std::string hex_string(const B& buffer) {
 }
 
 class signature_generator final {
+public:
     signature_generator(const std::string& scheme, const std::string& key)
-        : m_key(key) {
-        m_evp = reinterpret_cast<EVP_MD*>(schemes.at(scheme));
+        : m_key(key)
+        , m_evp(schemes.at(scheme)()) {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
         // OpenSSL 1.0.x
         m_hmac = new HMAC_CTX();
@@ -97,7 +98,7 @@ private:
         {"hmac-sha256", EVP_sha256},
         {"hmac-sha384", EVP_sha384},
         {"hmac-sha512", EVP_sha512}};
-    EVP_MD* m_evp;
+    const EVP_MD* m_evp;
     std::string m_key;
     HMAC_CTX* m_hmac;
 };
