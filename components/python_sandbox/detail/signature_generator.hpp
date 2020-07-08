@@ -1,15 +1,28 @@
 #pragma once
 
+#include <cstddef>
+#include <iomanip>
 #include <map>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
-#include <vector>
 
-class hmac final {
+template<class B>
+inline std::string hex_string(const B& buffer) {
+    std::ostringstream oss;
+    oss << std::hex;
+    for (std::size_t i = 0; i < buffer.size(); ++i) {
+        oss << std::setw(2) << std::setfill('0') << static_cast<int>(buffer[i]);
+    }
+    return oss.str();
+}
 
-    hmac(const std::string& scheme,const std::string& key):m_key(key) {
+class signature_generator final {
+    signature_generator(const std::string& scheme, const std::string& key)
+        : m_key(key) {
         m_evp = reinterpret_cast<EVP_MD*>(schemes.at(scheme));
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
         // OpenSSL 1.0.x
@@ -20,7 +33,7 @@ class hmac final {
 #endif
     }
 
-    ~hmac() {
+    ~signature_generator() {
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
         // OpenSSL 1.0.x
         HMAC_CTX_cleanup(m_hmac);
@@ -29,13 +42,17 @@ class hmac final {
 #endif
     }
 
-    std::string sign() {
+    std::string sign(
+        const std::string& header
+        , const std::string& parent_header
+        , const std::string& meta_data
+        , const std::string& content) {
         HMAC_Init_ex(m_hmac, m_key.c_str(), m_key.size(), m_evp, nullptr);
 
-        HMAC_Update(m_hmac, header.data<const unsigned char>(), header.size());
-        HMAC_Update(m_hmac, parent_header.data<const unsigned char>(), parent_header.size());
-        HMAC_Update(m_hmac, meta_data.data<const unsigned char>(), meta_data.size());
-        HMAC_Update(m_hmac, content.data<const unsigned char>(), content.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(parent_header.c_str()), parent_header.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(meta_data.c_str()), meta_data.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(content.c_str()), content.size());
 
         auto sig = std::vector<unsigned char>(EVP_MD_size(m_evp));
         HMAC_Final(m_hmac, sig.data(), nullptr);
@@ -44,13 +61,18 @@ class hmac final {
         return hex_sig;
     }
 
-    bool verify() {
+    bool verify(
+        const std::string& header
+        , const std::string& parent_header
+        , const std::string& meta_data
+        , const std::string& content
+        , const std::string& signature) {
         HMAC_Init_ex(m_hmac, m_key.c_str(), m_key.size(), m_evp, nullptr);
 
-        HMAC_Update(m_hmac, header.data<const unsigned char>(), header.size());
-        HMAC_Update(m_hmac, parent_header.data<const unsigned char>(), parent_header.size());
-        HMAC_Update(m_hmac, meta_data.data<const unsigned char>(), meta_data.size());
-        HMAC_Update(m_hmac, content.data<const unsigned char>(), content.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(parent_header.c_str()), parent_header.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(meta_data.c_str()), meta_data.size());
+        HMAC_Update(m_hmac, reinterpret_cast<const unsigned char*>(content.c_str()), content.size());
 
         auto sig = std::vector<unsigned char>(EVP_MD_size(m_evp));
         HMAC_Final(m_hmac, sig.data(), nullptr);

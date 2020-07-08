@@ -17,7 +17,7 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/file_manager.hpp
         detail/file_system.hpp
         detail/forward.hpp
-        detail/hmac.hpp
+        detail/signature_generator.hpp
         detail/jupyter.hpp
         detail/mapreduce.hpp
 
