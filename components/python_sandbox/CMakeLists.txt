@@ -17,7 +17,7 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/file_manager.hpp
         detail/file_system.hpp
         detail/forward.hpp
-        detail/signature_generator.hpp
+        detail/hmac.hpp
         detail/jupyter.hpp
         detail/mapreduce.hpp
 
@@ -33,6 +33,7 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
         source/detail/jupyter/shell.cpp
         source/detail/jupyter/zmq_ostream.cpp
         source/detail/jupyter/zmq_socket_shared.cpp
+        source/hmac.cpp
 
         source/detail/celery.cpp
         source/detail/context.cpp

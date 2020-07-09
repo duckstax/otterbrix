@@ -5,8 +5,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "detail/hmac.hpp"
 #include <gtest/gtest.h>
-#include "detail/signature_generator.hpp"
 
 using namespace nlohmann;
 
@@ -26,7 +26,7 @@ TEST(signature, generate) {
     mac->update(content.dump());
     auto botan_sig = Botan::hex_encode(mac->final(), false);
 
-    signature_generator sg("hmac-sha256",signature_key);
+    components::python_sandbox::detail::hmac sg("hmac-sha256",signature_key);
     auto sig = sg.sign(header.dump(),parent_header.dump(),metadata.dump(),content.dump());
     ASSERT_EQ(botan_sig,sig);
     ASSERT_TRUE(sg.verify(header.dump(),parent_header.dump(),metadata.dump(),content.dump(),sig));
