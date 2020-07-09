@@ -35,7 +35,10 @@ namespace components { namespace python_sandbox { namespace detail {
 #endif
     }
     std::string hmac::sign(
-        const std::string& header, const std::string& parent_header, const std::string& meta_data, const std::string& content) {
+        const std::string& header
+        , const std::string& parent_header
+        , const std::string& meta_data
+        , const std::string& content) {
         HMAC_Init_ex(hmac_, key_.c_str(), key_.size(), evp_, nullptr);
 
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());

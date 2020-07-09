@@ -10,6 +10,8 @@
 
 #include <zmq.hpp>
 
+#include "detail/hmac.hpp"
+
 namespace components { namespace detail { namespace jupyter {
 
     namespace nl = nlohmann;
@@ -228,7 +230,7 @@ namespace components { namespace detail { namespace jupyter {
                            nl::json& parent_header,
                            nl::json& metadata,
                            nl::json& content,
-                           std::vector<std::string>& buffers) const -> bool;
+                           std::vector<std::string>& buffers) -> bool;
 
         auto construct_message(std::vector<std::string> identifiers,
                                nl::json header,
@@ -254,14 +256,13 @@ namespace components { namespace detail { namespace jupyter {
                                std::string parent_header,
                                std::string metadata,
                                std::string content,
-                               std::vector<std::string>& buffers) const -> std::string;
+                               std::vector<std::string>& buffers) -> std::string;
 
         constexpr static auto version{"5.3"};
         constexpr static auto delimiter{"<IDS|MSG>"};
         boost::uuids::uuid session_id;
         std::size_t message_count;
-        std::string signature_key;
-        std::string signature_scheme;
+        python_sandbox::detail::hmac hmac_;
     }; // namespace jupyter
 
 }}} // namespace rocketjoe::services::detail::jupyter
