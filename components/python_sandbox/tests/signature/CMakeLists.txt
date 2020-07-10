@@ -8,4 +8,4 @@ target_link_libraries(
         ${CONAN_LIBS}
 )
 
-#add_test(${CURRENT_TARGET} ${CURRENT_TARGET})
+add_test(${CURRENT_TARGET} ${CURRENT_TARGET})
