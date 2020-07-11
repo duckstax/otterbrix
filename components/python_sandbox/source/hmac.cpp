@@ -34,6 +34,7 @@ namespace components { namespace python_sandbox { namespace detail {
         HMAC_CTX_free(hmac_);
 #endif
     }
+
     std::string hmac::sign(
         const std::string& header
         , const std::string& parent_header
@@ -52,8 +53,13 @@ namespace components { namespace python_sandbox { namespace detail {
         std::string hex_sig = hex_string(sig);
         return hex_sig;
     }
+
     bool hmac::verify(
-        const std::string& header, const std::string& parent_header, const std::string& meta_data, const std::string& content, const std::string& signature) {
+        const std::string& header
+        , const std::string& parent_header
+        , const std::string& meta_data
+        , const std::string& content
+        , const std::string& signature) {
         HMAC_Init_ex(hmac_, key_.c_str(), key_.size(), evp_, nullptr);
 
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());
