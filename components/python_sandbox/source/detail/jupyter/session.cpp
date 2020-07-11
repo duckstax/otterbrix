@@ -15,9 +15,6 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include <botan/hex.h>
-#include <botan/mac.h>
-
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
 
@@ -356,16 +353,14 @@ namespace components { namespace detail { namespace jupyter {
     session::session(std::string signature_key, std::string signature_scheme)
         : session_id(boost::uuids::random_generator()())
         , message_count(0)
-        , signature_key(std::move(signature_key))
-        , signature_scheme(std::move(signature_scheme)) {}
+        , hmac_(signature_scheme, signature_key) {}
 
     session::session(std::string signature_key,
                      std::string signature_scheme,
                      boost::uuids::uuid session_id)
         : session_id(std::move(session_id))
         , message_count(0)
-        , signature_key(std::move(signature_key))
-        , signature_scheme(std::move(signature_scheme)) {}
+        , hmac_(signature_scheme, signature_key) {}
 
     auto session::parse_message(std::vector<std::string> msgs,
                                 std::vector<std::string>& identifiers,
@@ -373,7 +368,7 @@ namespace components { namespace detail { namespace jupyter {
                                 nl::json& parent_header,
                                 nl::json& metadata,
                                 nl::json& content,
-                                std::vector<std::string>& buffers) const -> bool {
+                                std::vector<std::string>& buffers)  -> bool {
         // See for a description of the protocol:
         // https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
         auto split_position = std::find(msgs.cbegin(),
@@ -573,31 +568,13 @@ namespace components { namespace detail { namespace jupyter {
         assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
     }
 
-    auto session::compute_signature(std::string header,
-                                    std::string parent_header,
-                                    std::string metadata,
-                                    std::string content,
-                                    std::vector<std::string>& buffers) const -> std::string {
-        std::unique_ptr<Botan::MessageAuthenticationCode> mac;
-
-        if (signature_scheme == "hmac-sha256") {
-            mac = Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
-        }
-
-        if (!mac) {
-            return "";
-        }
-
-        mac->set_key(std::vector<std::uint8_t>(signature_key.begin(),
-                                               signature_key.end()));
-        mac->start();
-        mac->update(std::move(header));
-        mac->update(std::move(parent_header));
-        mac->update(std::move(metadata));
-        mac->update(std::move(content));
-
-        return Botan::hex_encode(mac->final(),
-                                 false);
+    auto session::compute_signature(
+        std::string header,
+        std::string parent_header,
+        std::string metadata,
+        std::string content,
+        std::vector<std::string>& buffers) -> std::string {
+        return hmac_.sign(header, parent_header, metadata, content);
     }
 }
 }} // namespace components::detail::jupyter
