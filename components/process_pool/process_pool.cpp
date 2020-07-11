@@ -26,7 +26,6 @@ namespace components {
     process_pool_t::process_pool_t(const std::string& executable_file, const std::vector<std::string>& args, log_t log)
         : executable_file_(executable_file)
         , args_(args)
-        , worker_counter_(0)
         , log_t_(std::move(log)) {
         log_t_.info("construct process pool");
     }
