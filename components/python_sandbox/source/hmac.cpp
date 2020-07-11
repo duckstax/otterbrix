@@ -2,7 +2,9 @@
 
 #include <cstddef>
 #include <iomanip>
+#include <ostream>
 #include <vector>
+#include <sstream>
 
 namespace components { namespace python_sandbox { namespace detail {
     template<class B>

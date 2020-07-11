@@ -48,7 +48,7 @@ namespace components { namespace python_sandbox { namespace detail {
         context* ctx_;
 
     private:
-        bool serializable_;
+        ///bool serializable_;
         nlohmann::json json_data_set_;
     };
 

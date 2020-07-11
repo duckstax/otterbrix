@@ -118,6 +118,8 @@ namespace components { namespace python_sandbox { namespace detail {
     }
 
     auto celery::create_task(py::args args, py::kwargs kwargs) -> std::function<task(py::function)> const {
+        boost::ignore_unused(args);
+        boost::ignore_unused(kwargs);
         boost::intrusive_ptr<celery> self{this};
 
         return [self{std::move(self)}](auto task_handler) {
