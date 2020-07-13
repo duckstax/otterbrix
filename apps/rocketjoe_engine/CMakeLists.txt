@@ -11,8 +11,8 @@ set(${CURRENT_TARGET}_sources
         main.cpp
 )
 
-find_package(Python3 COMPONENTS Development)
-include_directories(${Python3_INCLUDE_DIRS})
+#find_package(Python3 COMPONENTS Interpreter Development)
+#include_directories(${Python3_INCLUDE_DIRS})
 
 add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers})
 

@@ -11,7 +11,8 @@ set(${CURRENT_TARGET}_sources
         main.cpp
 )
 
-find_package(Python3 COMPONENTS Development)
+find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
 add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers})
@@ -24,6 +25,7 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::process_pool
         dl
+        pybind11::embed
 )
 
 

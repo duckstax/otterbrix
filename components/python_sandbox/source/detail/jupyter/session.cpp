@@ -14,6 +14,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <zmq.hpp>
 #include <zmq_addon.hpp>

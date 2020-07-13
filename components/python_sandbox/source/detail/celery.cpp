@@ -3,6 +3,7 @@
 #include <utility>
 
 #include <boost/uuid/random_generator.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
