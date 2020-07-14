@@ -5,13 +5,12 @@
 */
 #include <nlohmann/json.hpp>
 
-#include "detail/hmac.hpp"
+#include "detail/jupyter/hmac.hpp"
 #include <gtest/gtest.h>
 
 using namespace nlohmann;
 
 TEST(signature, generate) {
-
     json header = json::object();
     json parent_header = json::object();
     json metadata = json::object();
