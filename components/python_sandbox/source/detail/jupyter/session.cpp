@@ -565,7 +565,9 @@ namespace components { namespace detail { namespace jupyter {
             msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
 
-        assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
+        auto result = zmq::send_multipart(socket, std::move(msgs_for_send));
+
+        assert(result);
     }
 
     auto session::compute_signature(
