@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include <pwd.h>
@@ -564,7 +565,11 @@ namespace components { namespace detail { namespace jupyter {
             msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
 
-        assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
+        auto result = zmq::send_multipart(socket, std::move(msgs_for_send));
+
+        if(!result) {
+            throw std::logic_error("Error sending ZeroMQ message");
+        }
     }
 
     auto session::compute_signature(
