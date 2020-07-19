@@ -44,7 +44,7 @@ async def test_kernel() -> None:
         configuration_file.write(str.encode(configuration_json))
         configuration_file.flush()
 
-        with Popen(['/app/build/bin/rocketjoe', '--jupyter_kernel', '--jupyter_connection', configuration_file.name]) as rocketjoe:
+        with Popen(['/app/build/apps/rocketjoe_kernel/rocketjoe_kernel', '--jupyter_connection', configuration_file.name]) as rocketjoe:
             shell_stream = await create_zmq_stream(
                 zmq.DEALER,
                 connect=f'{transport}://{ip}:{shell_port}'

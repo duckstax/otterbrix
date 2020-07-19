@@ -12,7 +12,6 @@
 
 #include <boost/locale/date_time.hpp>
 #include <boost/locale/format.hpp>
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -369,7 +368,7 @@ namespace components { namespace detail { namespace jupyter {
                                 nl::json& parent_header,
                                 nl::json& metadata,
                                 nl::json& content,
-                                std::vector<std::string>& buffers)  -> bool {
+                                std::vector<std::string>& buffers) -> bool {
         // See for a description of the protocol:
         // https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
         auto split_position = std::find(msgs.cbegin(),
