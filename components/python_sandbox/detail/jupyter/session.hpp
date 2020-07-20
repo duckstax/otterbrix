@@ -249,8 +249,6 @@ namespace components { namespace detail { namespace jupyter {
 
         auto construct_message(apply_error_broadcast broadcast) -> std::vector<std::string>;
 
-        auto send(zmq::socket_t& socket, std::vector<std::string> msgs) const -> void;
-
     private:
         auto compute_signature(std::string header,
                                std::string parent_header,

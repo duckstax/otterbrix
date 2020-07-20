@@ -15,9 +15,6 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include <zmq.hpp>
-#include <zmq_addon.hpp>
-
 namespace components { namespace detail { namespace jupyter {
 
     auto execute_ok_reply::identifiers() const -> const std::vector<std::string>& {
@@ -553,23 +550,6 @@ namespace components { namespace detail { namespace jupyter {
                                                    {"method", "apply"}}}},
                                  // clang-format on
                                  {});
-    }
-
-    auto session::send(zmq::socket_t& socket, std::vector<std::string> msgs) const -> void {
-        std::vector<zmq::const_buffer> msgs_for_send;
-
-        msgs_for_send.reserve(msgs.size());
-
-        for (const auto& msg : msgs) {
-            std::cerr << msg << std::endl;
-            msgs_for_send.push_back(zmq::buffer(std::move(msg)));
-        }
-
-        auto result = zmq::send_multipart(socket, std::move(msgs_for_send));
-
-        if(!result) {
-            throw std::logic_error("Error sending ZeroMQ message");
-        }
     }
 
     auto session::compute_signature(

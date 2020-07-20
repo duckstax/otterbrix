@@ -26,7 +26,7 @@ namespace components {
         python_interpreter() = delete;
         python_interpreter(const python_interpreter&) = delete;
         python_interpreter& operator=(const python_interpreter&) = delete;
-        python_interpreter(const components::python_sandbox_configuration&, components::log_t&);
+        python_interpreter(const components::python_sandbox_configuration&, components::log_t&, std::function<void(const std::string&,std::vector<std::string>)>);
 
         ~python_interpreter();
 
@@ -36,11 +36,18 @@ namespace components {
 
         void run_script(const std::vector<std::string>&);
 
+        auto registration(std::vector<std::string>) -> void;
+
+        auto dispatch_shell(std::vector<std::string> msgs) -> void;
+
+        auto dispatch_control(std::vector<std::string> msgs) -> void;
+
     private:
         auto jupyter_engine_init() -> void;
 
         auto jupyter_kernel_init() -> void;
 
+        std::function<void(const std::string&,std::vector<std::string>)> zmq;
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
         components::sandbox_mode_t mode_;
@@ -48,15 +55,9 @@ namespace components {
         py::module pyrocketjoe;
         std::unique_ptr<python_sandbox::detail::file_manager> file_manager_;
         std::unique_ptr<python_sandbox::detail::context_manager> context_manager_;
-        std::unique_ptr<zmq::context_t> zmq_context;
-        zmq::socket_t heartbeat_ping_socket;
-        zmq::socket_t heartbeat_pong_socket;
-        std::vector<zmq::pollitem_t> jupyter_kernel_commands_polls;
-        std::vector<zmq::pollitem_t> jupyter_kernel_infos_polls;
         boost::intrusive_ptr<pykernel> jupyter_kernel;
-        std::unique_ptr<std::thread> commands_exuctor; ///TODO: HACK
-        std::unique_ptr<std::thread> infos_exuctor;    ///TODO: HACK
         components::log_t log_;
+        bool engine_mode;
     };
 
 } // namespace components

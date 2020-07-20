@@ -25,68 +25,14 @@ namespace components { namespace detail { namespace jupyter {
     namespace nl = nlohmann;
     namespace py = pybind11;
 
-    enum class poll_flags : std::uint8_t {
-        none = 0,
-        shell_socket = 1 << 0,
-        control_socket = 1 << 1,
-        heartbeat_socket = 1 << 2
-    };
-
-    constexpr auto operator|(poll_flags a, poll_flags b) noexcept -> poll_flags {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        return static_cast<poll_flags>(static_cast<U>(a) | static_cast<U>(b));
-    }
-
-    constexpr auto operator|=(poll_flags& a, poll_flags b) noexcept -> void {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        a = static_cast<poll_flags>(static_cast<U>(a) | static_cast<U>(b));
-    }
-
-    constexpr auto operator&(poll_flags a, poll_flags b) noexcept -> poll_flags {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        return static_cast<poll_flags>(static_cast<U>(a) & static_cast<U>(b));
-    }
-
-    constexpr auto operator&=(poll_flags& a, poll_flags b) noexcept -> void {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        a = static_cast<poll_flags>(static_cast<U>(a) & static_cast<U>(b));
-    }
-
-    constexpr auto operator^(poll_flags a, poll_flags b) noexcept -> poll_flags {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        return static_cast<poll_flags>(static_cast<U>(a) ^ static_cast<U>(b));
-    }
-
-    constexpr auto operator^=(poll_flags& a, poll_flags b) noexcept -> void {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        a = static_cast<poll_flags>(static_cast<U>(a) ^ static_cast<U>(b));
-    }
-
-    constexpr auto operator~(poll_flags a) noexcept -> poll_flags {
-        using U = typename std::underlying_type<poll_flags>::type;
-
-        return static_cast<poll_flags>(~static_cast<U>(a));
-    }
-
     class BOOST_SYMBOL_VISIBLE pykernel final : public boost::intrusive_ref_counter<pykernel> {
     public:
         pykernel(
                 std::string signature_key
                 , std::string signature_scheme
-                , zmq::socket_t shell_socket
-                , zmq::socket_t control_socket
-                , boost::optional<zmq::socket_t> stdin_socket
-                , zmq::socket_t iopub_socket
-                , boost::optional<zmq::socket_t> heartbeat_socket
-                , boost::optional<zmq::socket_t> registration_socket
                 , bool engine_mode
-                , boost::uuids::uuid identifier);
+                , boost::uuids::uuid identifier
+                , std::function<void(const std::string&,std::vector<std::string>)>);
 
         ~pykernel();
 
@@ -94,9 +40,13 @@ namespace components { namespace detail { namespace jupyter {
 
         pykernel& operator=(const pykernel&) = delete;
 
-        auto registration() -> bool;
+        auto registration() -> std::vector<std::string>;
 
-        auto poll(poll_flags polls) -> bool;
+        auto registration(std::vector<std::string>) -> bool;
+
+        auto dispatch_shell(std::vector<std::string> msgs) -> void;
+
+        auto dispatch_control(std::vector<std::string> msgs) -> void;
 
     private:
         auto topic(std::string topic) const -> std::string;
@@ -121,7 +71,7 @@ namespace components { namespace detail { namespace jupyter {
                         nl::json user_expressions,
                         bool allow_stdin) -> boost::variant<execute_ok_reply,execute_error_reply>;
 
-        auto execute_request(zmq::socket_t& socket,
+        auto execute_request(const std::string&,
                              std::vector<std::string> identifiers,
                              nl::json parent) -> void;
 
@@ -129,14 +79,15 @@ namespace components { namespace detail { namespace jupyter {
                         std::size_t cursor_pos,
                         std::size_t detail_level) -> nl::json;
 
-        auto inspect_request(zmq::socket_t& socket,
-                             std::vector<std::string> identifiers,
-                             nl::json parent) -> void;
+        auto inspect_request(
+            const std::string&,
+            std::vector<std::string> identifiers,
+            nl::json parent) -> void;
 
         auto do_complete(std::string code,
                          std::size_t cursor_pos) -> nl::json;
 
-        auto complete_request(zmq::socket_t& socket,
+        auto complete_request(const std::string&,
                               std::vector<std::string> identifiers,
                               nl::json parent) -> void;
 
@@ -152,25 +103,25 @@ namespace components { namespace detail { namespace jupyter {
 
         auto do_is_complete(std::string code) -> nl::json;
 
-        auto is_complete_request(zmq::socket_t& socket,
+        auto is_complete_request(const std::string&,
                                  std::vector<std::string> identifiers,
                                  nl::json parent) -> void;
 
         auto do_kernel_info() -> nl::json;
 
-        auto kernel_info_request(zmq::socket_t& socket,
+        auto kernel_info_request(const std::string&,
                                  std::vector<std::string> identifiers,
                                  nl::json parent) -> void;
 
         auto do_shutdown(bool restart) -> nl::json;
 
-        auto shutdown_request(zmq::socket_t& socket,
+        auto shutdown_request(const std::string&,
                               std::vector<std::string> identifiers,
                               nl::json parent) -> void;
 
         auto do_interrupt() -> nl::json;
 
-        auto interrupt_request(zmq::socket_t& socket,
+        auto interrupt_request(const std::string&,
                                std::vector<std::string> identifiers,
                                nl::json parent) -> void;
 
@@ -178,37 +129,27 @@ namespace components { namespace detail { namespace jupyter {
                       std::vector<std::string> buffers) -> boost::variant<apply_ok_reply,
                                                                           apply_error_reply>;
 
-        auto apply_request(zmq::socket_t& socket,
-                           std::vector<std::string> identifiers,
-                           nl::json parent,
-                           std::vector<std::string> buffers) -> void;
+        auto apply_request(const std::string&,
+            std::vector<std::string> identifiers,
+            nl::json parent,
+            std::vector<std::string> buffers) -> void;
 
         auto do_clear() -> nl::json;
 
-        auto clear_request(zmq::socket_t& socket,
+        auto clear_request(const std::string&,
                            std::vector<std::string> identifiers,
                            nl::json parent) -> void;
 
         auto do_abort(boost::optional<std::vector<std::string>> identifiers) -> nl::json;
 
-        auto abort_request(zmq::socket_t& socket,
+        auto abort_request(const std::string&,
                            std::vector<std::string> identifiers,
                            nl::json parent) -> void;
 
-        auto abort_reply(zmq::socket_t& socket,
+        auto abort_reply(const std::string&,
                          std::vector<std::string> identifiers,
                          nl::json parent) -> void;
 
-        auto dispatch_shell(std::vector<std::string> msgs) -> bool;
-
-        auto dispatch_control(std::vector<std::string> msgs) -> bool;
-
-        zmq::socket_t shell_socket;
-        zmq::socket_t control_socket;
-        boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
-        boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
-        boost::optional<zmq::socket_t> heartbeat_socket;
-        boost::optional<zmq::socket_t> registration_socket;
         bool engine_mode;
         boost::intrusive_ptr<session> current_session;
         py::object shell;
@@ -221,5 +162,6 @@ namespace components { namespace detail { namespace jupyter {
         bool abort_all;
         std::unordered_set<std::string> aborted;
         std::size_t execution_count;
+        std::function<void(const std::string&,std::vector<std::string>)> zmq_;
     };
 }}} // namespace components::detail::jupyter

@@ -1,11 +1,11 @@
-set(CURRENT_TARGET zmq-hub)
+set(CURRENT_TARGET jupyter)
 
 set(${CURRENT_TARGET}_HEADERS
-        zmq_hub.hpp
+        jupyter.hpp
 )
 
 set(${CURRENT_TARGET}_SOURCES
-        zmq_hub.cpp
+        jupyter.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC
