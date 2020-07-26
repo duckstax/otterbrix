@@ -8,7 +8,7 @@
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace components { namespace python_sandbox { namespace detail {
 

@@ -3,7 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace components { namespace python_sandbox { namespace detail {
 
