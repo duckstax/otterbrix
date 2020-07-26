@@ -10,7 +10,7 @@
 
 #include <zmq.hpp>
 
-#include "detail/hmac.hpp"
+#include "hmac.hpp"
 
 namespace components { namespace detail { namespace jupyter {
 
@@ -265,4 +265,4 @@ namespace components { namespace detail { namespace jupyter {
         python_sandbox::detail::hmac hmac_;
     }; // namespace jupyter
 
-}}} // namespace rocketjoe::services::detail::jupyter
+}}} // namespace components::detail::jupyter

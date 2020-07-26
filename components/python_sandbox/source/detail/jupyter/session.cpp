@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include <pwd.h>
@@ -11,7 +12,6 @@
 
 #include <boost/locale/date_time.hpp>
 #include <boost/locale/format.hpp>
-#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/core/ignore_unused.hpp>
@@ -369,7 +369,7 @@ namespace components { namespace detail { namespace jupyter {
                                 nl::json& parent_header,
                                 nl::json& metadata,
                                 nl::json& content,
-                                std::vector<std::string>& buffers)  -> bool {
+                                std::vector<std::string>& buffers) -> bool {
         // See for a description of the protocol:
         // https://jupyter-client.readthedocs.io/en/stable/messaging.html#general-message-format
         auto split_position = std::find(msgs.cbegin(),
@@ -566,7 +566,11 @@ namespace components { namespace detail { namespace jupyter {
             msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
 
-        assert(zmq::send_multipart(socket, std::move(msgs_for_send)));
+        auto result = zmq::send_multipart(socket, std::move(msgs_for_send));
+
+        if(!result) {
+            throw std::logic_error("Error sending ZeroMQ message");
+        }
     }
 
     auto session::compute_signature(

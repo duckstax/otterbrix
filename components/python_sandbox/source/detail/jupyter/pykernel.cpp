@@ -29,9 +29,9 @@
 #include <zmq_addon.hpp>
 
 #include <detail/jupyter/display_hook.hpp>
-#include <detail/jupyter/shell_display_hook.hpp>
 #include <detail/jupyter/session.hpp>
 #include <detail/jupyter/shell.hpp>
+#include <detail/jupyter/shell_display_hook.hpp>
 #include <detail/jupyter/zmq_socket_shared.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -158,161 +158,6 @@ namespace components { namespace detail { namespace jupyter {
         std::string kwarg_name_;
         std::string success_name_;
         std::string result_name_;
-    };
-
-    class BOOST_SYMBOL_VISIBLE interpreter_impl final {
-    public:
-        interpreter_impl(std::string signature_key,
-                         std::string signature_scheme,
-                         zmq::socket_t shell_socket,
-                         zmq::socket_t control_socket,
-                         boost::optional<zmq::socket_t> stdin_socket,
-                         zmq::socket_t iopub_socket,
-                         boost::optional<zmq::socket_t> heartbeat_socket,
-                         boost::optional<zmq::socket_t> registration_socket,
-                         bool engine_mode,
-                         boost::uuids::uuid identifier);
-
-        ~interpreter_impl();
-
-        interpreter_impl(const interpreter_impl&) = delete;
-
-        interpreter_impl& operator=(const interpreter_impl&) = delete;
-
-        auto registration() -> bool;
-
-        auto poll(poll_flags polls) -> bool;
-
-    private:
-        auto topic(std::string topic) const -> std::string;
-
-        auto publish_status(std::string status,
-                            nl::json) -> void;
-
-        auto set_parent(std::vector<std::string> identifiers,
-                        nl::json parent) -> void;
-
-        auto init_metadata() -> nl::json;
-
-        auto finish_metadata(nl::json& metadata,
-                             execute_ok_reply reply);
-
-        auto finish_metadata(nl::json& metadata,
-                             execute_error_reply reply);
-
-        auto finish_metadata(nl::json& metadata,
-                             apply_ok_reply reply);
-
-        auto finish_metadata(nl::json& metadata,
-                             apply_error_reply reply);
-
-        auto do_execute(std::string code,
-                        bool silent,
-                        bool store_history,
-                        nl::json user_expressions,
-                        bool allow_stdin) -> boost::variant<execute_ok_reply,
-                                                            execute_error_reply>;
-
-        auto execute_request(zmq::socket_t& socket,
-                             std::vector<std::string> identifiers,
-                             nl::json parent) -> void;
-
-        auto do_inspect(std::string code,
-                        std::size_t cursor_pos,
-                        std::size_t detail_level) -> nl::json;
-
-        auto inspect_request(zmq::socket_t& socket,
-                             std::vector<std::string> identifiers,
-                             nl::json parent) -> void;
-
-        auto do_complete(std::string code,
-                         std::size_t cursor_pos) -> nl::json;
-
-        auto complete_request(zmq::socket_t& socket,
-                              std::vector<std::string> identifiers,
-                              nl::json parent) -> void;
-
-        auto history_request(bool output,
-                             bool raw,
-                             const std::string& hist_access_type,
-                             std::int64_t session,
-                             std::size_t start,
-                             boost::optional<std::size_t> stop,
-                             boost::optional<std::size_t> n,
-                             const boost::optional<std::string>& pattern,
-                             bool unique) -> nl::json;
-
-        auto do_is_complete(std::string code) -> nl::json;
-
-        auto is_complete_request(zmq::socket_t& socket,
-                                 std::vector<std::string> identifiers,
-                                 nl::json parent) -> void;
-
-        auto do_kernel_info() -> nl::json;
-
-        auto kernel_info_request(zmq::socket_t& socket,
-                                 std::vector<std::string> identifiers,
-                                 nl::json parent) -> void;
-
-        auto do_shutdown(bool restart) -> nl::json;
-
-        auto shutdown_request(zmq::socket_t& socket,
-                              std::vector<std::string> identifiers,
-                              nl::json parent) -> void;
-
-        auto do_interrupt() -> nl::json;
-
-        auto interrupt_request(zmq::socket_t& socket,
-                               std::vector<std::string> identifiers,
-                               nl::json parent) -> void;
-
-        auto do_apply(std::string msg_id,
-                      std::vector<std::string> buffers) -> boost::variant<apply_ok_reply,
-                                                                          apply_error_reply>;
-
-        auto apply_request(zmq::socket_t& socket,
-                           std::vector<std::string> identifiers,
-                           nl::json parent,
-                           std::vector<std::string> buffers) -> void;
-
-        auto do_clear() -> nl::json;
-
-        auto clear_request(zmq::socket_t& socket,
-                           std::vector<std::string> identifiers,
-                           nl::json parent) -> void;
-
-        auto do_abort(boost::optional<std::vector<std::string>> identifiers) -> nl::json;
-
-        auto abort_request(zmq::socket_t& socket,
-                           std::vector<std::string> identifiers,
-                           nl::json parent) -> void;
-
-        auto abort_reply(zmq::socket_t& socket,
-                         std::vector<std::string> identifiers,
-                         nl::json parent) -> void;
-
-        auto dispatch_shell(std::vector<std::string> msgs) -> bool;
-
-        auto dispatch_control(std::vector<std::string> msgs) -> bool;
-
-        zmq::socket_t shell_socket;
-        zmq::socket_t control_socket;
-        boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
-        boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
-        boost::optional<zmq::socket_t> heartbeat_socket;
-        boost::optional<zmq::socket_t> registration_socket;
-        bool engine_mode;
-        boost::intrusive_ptr<session> current_session;
-        py::object shell;
-        py::object pystdout;
-        py::object pystderr;
-        boost::uuids::uuid identifier;
-        std::uint64_t engine_identifier;
-        std::vector<std::string> parent_identifiers;
-        nl::json parent_header;
-        bool abort_all;
-        std::unordered_set<std::string> aborted;
-        std::size_t execution_count;
     };
 
     static auto input_request(boost::intrusive_ptr<zmq_socket_shared> stdin_socket,
@@ -481,7 +326,7 @@ namespace components { namespace detail { namespace jupyter {
                                                          std::move(result_name_)}));
     }
 
-    interpreter_impl::interpreter_impl(
+    pykernel::pykernel(
         std::string signature_key,
         std::string signature_scheme,
         zmq::socket_t shell_socket,
@@ -581,14 +426,14 @@ namespace components { namespace detail { namespace jupyter {
         }
     }
 
-    interpreter_impl::~interpreter_impl() {
+    pykernel::~pykernel() {
         auto sys = py::module::import("sys");
 
         sys.attr("stdout") = pystdout;
         sys.attr("stderr") = pystderr;
     }
 
-    auto interpreter_impl::registration() -> bool {
+    auto pykernel::registration() -> bool {
         current_session->send(*registration_socket,
                               current_session->construct_message(
                                   {},
@@ -645,7 +490,7 @@ namespace components { namespace detail { namespace jupyter {
         return true;
     }
 
-    auto interpreter_impl::poll(poll_flags polls) -> bool {
+    auto pykernel::poll(poll_flags polls) -> bool {
         if (!engine_mode) {
             if ((polls & poll_flags::heartbeat_socket) ==
                 poll_flags::heartbeat_socket) {
@@ -712,7 +557,7 @@ namespace components { namespace detail { namespace jupyter {
         return true;
     }
 
-    auto interpreter_impl::topic(std::string topic) const -> std::string {
+    auto pykernel::topic(std::string topic) const -> std::string {
         if (engine_mode) {
             return "engine." + std::to_string(engine_identifier);
         } else {
@@ -720,7 +565,7 @@ namespace components { namespace detail { namespace jupyter {
         }
     }
 
-    auto interpreter_impl::publish_status(std::string status,
+    auto pykernel::publish_status(std::string status,
                                           nl::json parent) -> void {
         if (parent.is_null()) {
             parent = parent_header;
@@ -734,7 +579,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::set_parent(std::vector<std::string> identifiers,
+    auto pykernel::set_parent(std::vector<std::string> identifiers,
                                       nl::json parent) -> void {
         parent_identifiers = std::move(identifiers);
         parent_header = parent;
@@ -743,7 +588,7 @@ namespace components { namespace detail { namespace jupyter {
                           py::module::import("json").attr("loads")(parent.dump()));
     }
 
-    auto interpreter_impl::init_metadata() -> nl::json {
+    auto pykernel::init_metadata() -> nl::json {
         return {{"started", (boost::locale::format("{1,ftime='%FT%T%Ez'}") %
                              boost::locale::date_time())
                                 .str(std::locale())},
@@ -751,13 +596,13 @@ namespace components { namespace detail { namespace jupyter {
                 {"engine", boost::uuids::to_string(identifier)}};
     }
 
-    auto interpreter_impl::finish_metadata(nl::json& metadata,
+    auto pykernel::finish_metadata(nl::json& metadata,
                                            execute_ok_reply reply) {
         boost::ignore_unused(reply);
         metadata["status"] = "ok";
     }
 
-    auto interpreter_impl::finish_metadata(nl::json& metadata,
+    auto pykernel::finish_metadata(nl::json& metadata,
                                            execute_error_reply reply) {
         metadata["status"] = "error";
 
@@ -769,13 +614,13 @@ namespace components { namespace detail { namespace jupyter {
                                    {"engine_id", engine_identifier}};
     }
 
-    auto interpreter_impl::finish_metadata(nl::json& metadata,
+    auto pykernel::finish_metadata(nl::json& metadata,
                                            apply_ok_reply reply) {
         boost::ignore_unused(reply);
         metadata["status"] = "ok";
     }
 
-    auto interpreter_impl::finish_metadata(nl::json& metadata,
+    auto pykernel::finish_metadata(nl::json& metadata,
                                            apply_error_reply reply) {
         metadata["status"] = "error";
 
@@ -787,7 +632,7 @@ namespace components { namespace detail { namespace jupyter {
                                    {"engine_id", engine_identifier}};
     }
 
-    auto interpreter_impl::do_execute(std::string code,
+    auto pykernel::do_execute(std::string code,
                                       bool silent,
                                       bool store_history,
                                       nl::json user_expressions,
@@ -853,7 +698,7 @@ namespace components { namespace detail { namespace jupyter {
         }
     }
 
-    auto interpreter_impl::execute_request(zmq::socket_t& socket,
+    auto pykernel::execute_request(zmq::socket_t& socket,
                                            std::vector<std::string> identifiers,
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
@@ -939,7 +784,7 @@ namespace components { namespace detail { namespace jupyter {
                               current_session->construct_message(std::move(reply_error)));
     }
 
-    auto interpreter_impl::do_inspect(std::string code,
+    auto pykernel::do_inspect(std::string code,
                                       std::size_t cursor_pos,
                                       std::size_t detail_level) -> nl::json {
         using data_type = std::unordered_map<std::string,
@@ -970,7 +815,7 @@ namespace components { namespace detail { namespace jupyter {
                 {"metadata", nl::json::object()}};
     }
 
-    auto interpreter_impl::inspect_request(zmq::socket_t& socket,
+    auto pykernel::inspect_request(zmq::socket_t& socket,
                                            std::vector<std::string> identifiers,
                                            nl::json parent) -> void {
         auto content = std::move(parent["content"]);
@@ -986,7 +831,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_complete(std::string code,
+    auto pykernel::do_complete(std::string code,
                                        std::size_t cursor_pos) -> nl::json {
         auto completer = py::module::import("IPython.core.completer");
         auto provisionalcompleter = completer.attr("provisionalcompleter");
@@ -1047,7 +892,7 @@ namespace components { namespace detail { namespace jupyter {
                 {"status", "ok"}};
     }
 
-    auto interpreter_impl::complete_request(zmq::socket_t& socket,
+    auto pykernel::complete_request(zmq::socket_t& socket,
                                             std::vector<std::string> identifiers,
                                             nl::json parent) -> void {
         auto content = std::move(parent["content"]);
@@ -1062,7 +907,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::history_request(bool output,
+    auto pykernel::history_request(bool output,
                                            bool raw,
                                            const std::string& hist_access_type,
                                            std::int64_t session,
@@ -1109,7 +954,7 @@ namespace components { namespace detail { namespace jupyter {
                 {"history", std::move(history)}};
     }
 
-    auto interpreter_impl::do_is_complete(std::string code) -> nl::json {
+    auto pykernel::do_is_complete(std::string code) -> nl::json {
         boost::optional<std::string> indent;
         auto result = shell.attr("input_transformer_manager")
                           .attr("check_complete")(std::move(code))
@@ -1126,7 +971,7 @@ namespace components { namespace detail { namespace jupyter {
                 {"indent", std::move(indent)}};
     }
 
-    auto interpreter_impl::is_complete_request(zmq::socket_t& socket,
+    auto pykernel::is_complete_request(zmq::socket_t& socket,
                                                std::vector<std::string> identifiers,
                                                nl::json parent) -> void {
         auto code = parent["content"]["code"].get<std::string>();
@@ -1140,7 +985,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_kernel_info() -> nl::json {
+    auto pykernel::do_kernel_info() -> nl::json {
         auto sys = py::module::import("sys");
 
         return {{"protocol_version", "5.3"},
@@ -1163,7 +1008,7 @@ namespace components { namespace detail { namespace jupyter {
                 {"help_links", ""}};
     }
 
-    auto interpreter_impl::kernel_info_request(zmq::socket_t& socket,
+    auto pykernel::kernel_info_request(zmq::socket_t& socket,
                                                std::vector<std::string> identifiers,
                                                nl::json parent) -> void {
         current_session->send(socket,
@@ -1175,11 +1020,11 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_shutdown(bool restart) -> nl::json {
+    auto pykernel::do_shutdown(bool restart) -> nl::json {
         return {{"restart", restart}};
     }
 
-    auto interpreter_impl::shutdown_request(zmq::socket_t& socket,
+    auto pykernel::shutdown_request(zmq::socket_t& socket,
                                             std::vector<std::string> identifiers,
                                             nl::json parent) -> void {
         auto content = do_shutdown(parent["content"]["restart"]);
@@ -1200,11 +1045,11 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_interrupt() -> nl::json {
+    auto pykernel::do_interrupt() -> nl::json {
         return nl::json::object();
     }
 
-    auto interpreter_impl::interrupt_request(zmq::socket_t& socket,
+    auto pykernel::interrupt_request(zmq::socket_t& socket,
                                              std::vector<std::string> identifiers,
                                              nl::json parent) -> void {
         current_session->send(socket,
@@ -1216,7 +1061,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_apply(std::string msg_id,
+    auto pykernel::do_apply(std::string msg_id,
                                     std::vector<std::string> buffers) -> boost::variant<apply_ok_reply,
                                                                                         apply_error_reply> {
         auto serialize = py::module::import("ipyparallel").attr("serialize");
@@ -1297,7 +1142,7 @@ namespace components { namespace detail { namespace jupyter {
         return reply;
     }
 
-    auto interpreter_impl::apply_request(zmq::socket_t& socket,
+    auto pykernel::apply_request(zmq::socket_t& socket,
                                          std::vector<std::string> identifiers,
                                          nl::json parent,
                                          std::vector<std::string> buffers) -> void {
@@ -1346,13 +1191,13 @@ namespace components { namespace detail { namespace jupyter {
                               current_session->construct_message(std::move(reply_error)));
     }
 
-    auto interpreter_impl::do_clear() -> nl::json {
+    auto pykernel::do_clear() -> nl::json {
         shell.attr("reset")(false);
 
         return {{"status", "ok"}};
     }
 
-    auto interpreter_impl::clear_request(zmq::socket_t& socket,
+    auto pykernel::clear_request(zmq::socket_t& socket,
                                          std::vector<std::string> identifiers,
                                          nl::json parent) -> void {
         current_session->send(socket,
@@ -1364,7 +1209,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::do_abort(boost::optional<std::vector<std::string>> identifiers) -> nl::json {
+    auto pykernel::do_abort(boost::optional<std::vector<std::string>> identifiers) -> nl::json {
         if (identifiers) {
             aborted.insert(std::make_move_iterator(identifiers->cbegin()),
                            std::make_move_iterator(identifiers->cend()));
@@ -1375,7 +1220,7 @@ namespace components { namespace detail { namespace jupyter {
         return {{"status", "ok"}};
     }
 
-    auto interpreter_impl::abort_request(zmq::socket_t& socket,
+    auto pykernel::abort_request(zmq::socket_t& socket,
                                          std::vector<std::string> identifiers,
                                          nl::json parent) -> void {
         auto msg_ids = parent["content"]["msg_ids"].get<boost::optional<std::vector<std::string>>>();
@@ -1389,7 +1234,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::abort_reply(zmq::socket_t& socket,
+    auto pykernel::abort_reply(zmq::socket_t& socket,
                                        std::vector<std::string> identifiers,
                                        nl::json parent) -> void {
         auto msg_type = parent["header"]["msg_type"].get<std::string>();
@@ -1407,7 +1252,7 @@ namespace components { namespace detail { namespace jupyter {
                                                                  {}));
     }
 
-    auto interpreter_impl::dispatch_shell(std::vector<std::string> msgs) -> bool {
+    auto pykernel::dispatch_shell(std::vector<std::string> msgs) -> bool {
         std::vector<std::string> identifiers;
         nl::json header;
         nl::json parent_header;
@@ -1512,7 +1357,7 @@ namespace components { namespace detail { namespace jupyter {
         return resume;
     }
 
-    auto interpreter_impl::dispatch_control(std::vector<std::string> msgs) -> bool {
+    auto pykernel::dispatch_control(std::vector<std::string> msgs) -> bool {
         std::vector<std::string> identifiers;
         nl::json header;
         nl::json parent_header;
@@ -1611,35 +1456,4 @@ namespace components { namespace detail { namespace jupyter {
         return resume;
     }
 
-    pykernel::pykernel(std::string signature_key,
-                       std::string signature_scheme,
-                       zmq::socket_t shell_socket,
-                       zmq::socket_t control_socket,
-                       boost::optional<zmq::socket_t> stdin_socket,
-                       zmq::socket_t iopub_socket,
-                       boost::optional<zmq::socket_t> heartbeat_socket,
-                       boost::optional<zmq::socket_t> registration_socket,
-                       bool engine_mode,
-                       boost::uuids::uuid identifier)
-        : pimpl(std::make_unique<interpreter_impl>(std::move(signature_key),
-                                                   std::move(signature_scheme),
-                                                   std::move(shell_socket),
-                                                   std::move(control_socket),
-                                                   std::move(stdin_socket),
-                                                   std::move(iopub_socket),
-                                                   std::move(heartbeat_socket),
-                                                   std::move(registration_socket),
-                                                   engine_mode,
-                                                   std::move(identifier))) {}
-
-    pykernel::~pykernel() = default;
-
-    auto pykernel::registration() -> bool {
-        return pimpl->registration();
-    }
-
-    auto pykernel::poll(poll_flags polls) -> bool {
-        return pimpl->poll(polls);
-    }
-
-}}} // namespace rocketjoe::services::detail::jupyter
+}}} // namespace components::detail::jupyter
