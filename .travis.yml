@@ -1,18 +1,6 @@
-os: linux
-dist: bionic
-language: python
-python: "3.7"
-services:
-  - docker
+os: osx
+language: c
 
-cache:
-  - pip
-  - apt
-  - ccache
-
-compiler:
-  - gcc
-  - clang
 
 addons:
   apt:
@@ -25,9 +13,7 @@ addons:
       #- python3-pip
       #- python3-setuptools
 install:
-  - pip install conan
-  - conan user
-  #- pip3 install -r requirements.txt
+  - brew install conan cmake
 script:
   - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
   - conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan

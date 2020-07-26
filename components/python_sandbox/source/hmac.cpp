@@ -42,14 +42,14 @@ namespace components { namespace python_sandbox { namespace detail {
         , const std::string& parent_header
         , const std::string& meta_data
         , const std::string& content) {
-        HMAC_Init_ex(hmac_, key_.c_str(), key_.size(), evp_, nullptr);
+        HMAC_Init_ex(hmac_, key_.c_str(), static_cast<int>(key_.size()), evp_, nullptr);
 
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(parent_header.c_str()), parent_header.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(meta_data.c_str()), meta_data.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(content.c_str()), content.size());
 
-        auto sig = std::vector<unsigned char>(EVP_MD_size(evp_));
+        auto sig = std::vector<unsigned char>(static_cast<unsigned long>(EVP_MD_size(evp_)));
         HMAC_Final(hmac_, sig.data(), nullptr);
 
         std::string hex_sig = hex_string(sig);
@@ -62,14 +62,14 @@ namespace components { namespace python_sandbox { namespace detail {
         , const std::string& meta_data
         , const std::string& content
         , const std::string& signature) {
-        HMAC_Init_ex(hmac_, key_.c_str(), key_.size(), evp_, nullptr);
+        HMAC_Init_ex(hmac_, key_.c_str(), static_cast<int>(key_.size()), evp_, nullptr);
 
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(header.c_str()), header.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(parent_header.c_str()), parent_header.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(meta_data.c_str()), meta_data.size());
         HMAC_Update(hmac_, reinterpret_cast<const unsigned char*>(content.c_str()), content.size());
 
-        auto sig = std::vector<unsigned char>(EVP_MD_size(evp_));
+        auto sig = std::vector<unsigned char>(static_cast<unsigned long>(EVP_MD_size(evp_)));
         HMAC_Final(hmac_, sig.data(), nullptr);
 
         std::string hex_sig = hex_string(sig);

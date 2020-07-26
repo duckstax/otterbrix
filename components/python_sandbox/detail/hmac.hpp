@@ -41,8 +41,8 @@ namespace components { namespace python_sandbox { namespace detail {
             {"hmac-sha256", EVP_sha256},
             {"hmac-sha384", EVP_sha384},
             {"hmac-sha512", EVP_sha512}};
-        const EVP_MD* evp_;
         std::string key_;
+        const EVP_MD* evp_;
         HMAC_CTX* hmac_;
     };
 }}} // namespace components::python_sandbox::detail

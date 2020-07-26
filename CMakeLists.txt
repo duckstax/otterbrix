@@ -16,11 +16,27 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+SET(PYTHON_INCLUDE_PATH /usr/local/opt/python@3.8/Frameworks/Python.framework/Versions/3.8/include/python3.8/)
+SET(PYTHON_LIBRARIES /usr/local/Cellar/python@3.8/3.8.4/Frameworks/Python.framework/Versions/3.8/lib/python3.8/config-3.8-darwin/libpython3.8.dylib)
+SET(PYTHON_EXECUTABLE /usr/local/Cellar/python@3.8/3.8.4/Frameworks/Python.framework/Versions/3.8/bin/python3.8)
+SET(PYTHON_INCLUDE_DIR  /usr/local/opt/python@3.8/Frameworks/Python.framework/Versions/3.8/include/python3.8/)
+
+find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development)
+#find_package(PythonInterp 3 REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
+include_directories(${Python3_INCLUDE_DIRS})
+
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
-# stack track
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+else()
+    # stack track
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+endif()
 
 option(DEV_MODE "developer mode" OFF)
 
@@ -53,11 +69,11 @@ endif ()
 
 # configuration
 #############################################################################################
-#clang tool
+#clang format
 
-include(cmake/clang_tools.cmake)
+include(cmake/clang-format.cmake)
 
-#clang tool
+#clang format
 #############################################################################################
 #conan
 
