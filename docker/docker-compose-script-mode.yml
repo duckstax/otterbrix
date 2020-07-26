@@ -3,4 +3,4 @@ services:
   rocketjoe_jupyter:
     build:
       context: ..
-      dockerfile: Dockerfile-ipyparallel-script-mode
+      dockerfile: Dockerfile-script-mode
