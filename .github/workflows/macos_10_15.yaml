@@ -4,10 +4,10 @@ jobs:
   run:
     name: Run
     runs-on: ${{ matrix.operating-system }}
-      strategy:
-        matrix:
-          operating-system: [macos-10.15]
-          #python-version: [ 3.5]
+    strategy:
+      matrix:
+        operating-system: [macos-10.15]
+        #python-version: [ 3.5]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
