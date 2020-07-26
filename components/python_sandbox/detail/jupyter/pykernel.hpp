@@ -18,7 +18,7 @@
 #include <boost/variant/variant.hpp>
 
 #include "session.hpp"
-#include "zmq_socket_shared.hpp"
+#include "socket_manager.hpp"
 
 namespace components { namespace detail { namespace jupyter {
 
@@ -32,7 +32,7 @@ namespace components { namespace detail { namespace jupyter {
                 , std::string signature_scheme
                 , bool engine_mode
                 , boost::uuids::uuid identifier
-                , std::function<void(const std::string&,std::vector<std::string>)>);
+                , socket_manager);
 
         ~pykernel();
 
@@ -162,6 +162,6 @@ namespace components { namespace detail { namespace jupyter {
         bool abort_all;
         std::unordered_set<std::string> aborted;
         std::size_t execution_count;
-        std::function<void(const std::string&,std::vector<std::string>)> zmq_;
+        socket_manager socket_manager_;
     };
 }}} // namespace components::detail::jupyter

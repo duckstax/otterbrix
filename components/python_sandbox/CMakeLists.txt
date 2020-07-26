@@ -8,7 +8,7 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
         detail/jupyter/session.hpp
         detail/jupyter/shell.hpp
         detail/jupyter/zmq_ostream.hpp
-        detail/jupyter/zmq_socket_shared.hpp
+        detail/jupyter/socket_manager.hpp
 
         detail/celery.hpp
         detail/context.hpp
@@ -32,7 +32,6 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
         source/detail/jupyter/session.cpp
         source/detail/jupyter/shell.cpp
         source/detail/jupyter/zmq_ostream.cpp
-        source/detail/jupyter/zmq_socket_shared.cpp
         source/hmac.cpp
 
         source/detail/celery.cpp
@@ -44,6 +43,7 @@ list(APPEND ${CURRENT_TARGET}_SOURCES
         source/detail/jupyter.cpp
         source/detail/mapreduce.cpp
         source/python_sandbox.cpp
+        source/detail/jupyter/socket_manager.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC

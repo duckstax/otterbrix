@@ -25,15 +25,15 @@ namespace services {
     class zmq_buffer_tt final : public boost::intrusive_ref_counter<zmq_buffer_tt> {
     public:
         zmq_buffer_tt()
-            : id_(-1) {}
+            : id_("") {}
         zmq_buffer_tt(const zmq_buffer_tt&) = delete;
         zmq_buffer_tt& operator=(const zmq_buffer_tt&) = delete;
 
-        zmq_buffer_tt(std::ptrdiff_t fd, std::vector<std::string> msgs)
+        zmq_buffer_tt(const std::string& fd, std::vector<std::string> msgs)
             : id_(fd)
             , msg_(std::move(msgs)) {}
 
-        std::ptrdiff_t id() const {
+        const std::string& id() const {
             return id_;
         }
 
@@ -42,7 +42,7 @@ namespace services {
         }
 
     private:
-        std::ptrdiff_t id_;
+        const std::string id_;
         std::vector<std::string> msg_;
     };
 
@@ -60,9 +60,12 @@ namespace services {
         jupyter() = delete;
         jupyter(const jupyter&) = delete;
         jupyter& operator=(const jupyter&) = delete;
-        jupyter(const components::python_sandbox_configuration&, components::log_t&);
+
+        jupyter(goblin_engineer::components::root_manager*, const components::python_sandbox_configuration&, components::log_t&);
 
         ~jupyter();
+
+        zmq::context_t* zmq_context();
 
         auto start() -> void;
 
@@ -70,7 +73,7 @@ namespace services {
 
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
-        auto write(const std::string&,std::vector<std::string>&) -> void;
+        auto write(const std::string&, std::vector<std::string>&) -> void;
 
     private:
         auto jupyter_engine_init() -> void;
@@ -78,22 +81,21 @@ namespace services {
         auto jupyter_kernel_init() -> void;
 
         boost::filesystem::path jupyter_connection_path_;
-
         components::sandbox_mode_t mode_;
-        std::unique_ptr<zmq::context_t> zmq_context;
-        zmq::socket_t heartbeat_ping_socket;
-        zmq::socket_t heartbeat_pong_socket;
+        std::unique_ptr<zmq::context_t> zmq_context_;
+        std::unique_ptr<zmq::socket_t> heartbeat_ping_socket;
+        std::unique_ptr<zmq::socket_t> heartbeat_pong_socket;
         std::vector<zmq::pollitem_t> jupyter_kernel_commands_polls;
         std::vector<zmq::pollitem_t> jupyter_kernel_infos_polls;
         std::unique_ptr<std::thread> commands_exuctor; ///TODO: HACK
         std::unique_ptr<std::thread> infos_exuctor;    ///TODO: HACK
         components::log_t log_;
-        zmq::socket_t shell_socket;
-        zmq::socket_t control_socket;
-        boost::intrusive_ptr<zmq_socket_shared> stdin_socket;
-        zmq::socket_t iopub_socket;
-        zmq::socket_t heartbeat_socket;
-        zmq::socket_t registration_socket;
+        std::unique_ptr<zmq::socket_t> shell_socket;
+        std::unique_ptr<zmq::socket_t> control_socket;
+        std::unique_ptr<zmq::socket_t> stdin_socket;
+        std::unique_ptr<zmq::socket_t> iopub_socket;
+        std::unique_ptr<zmq::socket_t> heartbeat_socket;
+        std::unique_ptr<zmq::socket_t> registration_socket;
         bool engine_mode;
     };
 

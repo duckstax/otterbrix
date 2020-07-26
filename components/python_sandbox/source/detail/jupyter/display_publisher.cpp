@@ -3,7 +3,6 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <detail/jupyter/session.hpp>
-#include <detail/jupyter/zmq_socket_shared.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -40,9 +39,9 @@ namespace components { namespace detail { namespace jupyter {
         auto current_session{self.attr("current_session")
                                .cast<boost::intrusive_ptr<session>>()};
 
-        current_session->send(**self.attr("iopub_socket")
-                                .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-                            current_session->construct_message(
+        auto iopub = self.attr("iopub_socket").cast<std::function<void(const std::string&,std::vector<std::string>)>>();
+
+       iopub("iopub",current_session->construct_message(
                                 {self.attr("topic").cast<std::string>()},
                                 {{"msg_type", update ? "update_display_data" : "display_data"}},
                                 nl::json::parse(py::module::import("json").attr("dumps")(
@@ -67,9 +66,9 @@ namespace components { namespace detail { namespace jupyter {
         auto current_session{self.attr("current_session")
                                .cast<boost::intrusive_ptr<session>>()};
 
-        current_session->send(**self.attr("iopub_socket")
-                                .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-                            current_session->construct_message(
+        auto iopub = self.attr("iopub_socket").cast<std::function<void(const std::string&,std::vector<std::string>)>>();
+
+        iopub("iopub",current_session->construct_message(
                                 {self.attr("topic").cast<std::string>()},
                                 {{"msg_type", "clear_output"}},
                                 nl::json::parse(py::module::import("json").attr("dumps")(

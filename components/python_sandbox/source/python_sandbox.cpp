@@ -40,14 +40,16 @@ namespace components {
         module_name, _ = os.path.splitext(path)
         import_module(os.path.basename(module_name))
     )__";
+
     namespace nl = nlohmann;
     using namespace py::literals;
 
     python_interpreter::python_interpreter(
+        zmq::context_t*ctx,
         const components::python_sandbox_configuration& configuration,
-        components::log_t& log, std::function<void(const std::string&,std::vector<std::string>)>f)
-        : zmq(std::move(f))
-        , mode_{components::sandbox_mode_t::none}
+        log_t &log,
+        std::function<void(const std::string&,std::vector<std::string>)> f)
+        : mode_{components::sandbox_mode_t::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
         , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
@@ -63,9 +65,32 @@ namespace components {
         }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
+        init(ctx,std::move(f));
+        start();
     }
 
-    auto python_interpreter::jupyter_kernel_init() -> void {
+    python_interpreter::python_interpreter(const python_sandbox_configuration &configuration, log_t &log)
+            : mode_{components::sandbox_mode_t::none}
+            , python_{}
+            , pyrocketjoe{"pyrocketjoe"}
+            , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
+            , context_manager_{std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)}
+            , jupyter_kernel{nullptr}{
+        log_ = log.clone();
+        log_.info("processing env python start ");
+        log_.info(fmt::format("Mode : {0}", configuration.mode_));
+        mode_ = configuration.mode_;
+        script_path_ = configuration.script_path_;
+        if (!configuration.jupyter_connection_path_.empty()) {
+            log_.info(fmt::format("jupyter connection path : {0}", configuration.jupyter_connection_path_.string()));
+        }
+        jupyter_connection_path_ = configuration.jupyter_connection_path_;
+        log_.info("processing env python finish ");
+
+
+    }
+
+    auto python_interpreter::jupyter_kernel_init(zmq::context_t*ctx,std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -80,21 +105,10 @@ namespace components {
 
         std::string transport{configuration["transport"]};
         std::string ip{configuration["ip"]};
-        auto shell_port{std::to_string(configuration["shell_port"]
-                                           .get<std::uint16_t>())};
-        auto control_port{std::to_string(configuration["control_port"]
-                                             .get<std::uint16_t>())};
-        auto stdin_port{std::to_string(configuration["stdin_port"]
-                                           .get<std::uint16_t>())};
-        auto iopub_port{std::to_string(configuration["iopub_port"]
-                                           .get<std::uint16_t>())};
-        auto heartbeat_port{std::to_string(configuration["hb_port"]
-                                               .get<std::uint16_t>())};
-        auto shell_address{transport + "://" + ip + ":" + shell_port};
-        auto control_address{transport + "://" + ip + ":" + control_port};
+        auto stdin_port = std::to_string(configuration["stdin_port"].get<std::uint16_t>());
         auto stdin_address{transport + "://" + ip + ":" + stdin_port};
-        auto iopub_address{transport + "://" + ip + ":" + iopub_port};
-        auto heartbeat_address{transport + "://" + ip + ":" + heartbeat_port};
+        stdin_socket_=std::make_unique<zmq::socket_t>(*ctx, zmq::socket_type::router);
+        stdin_socket_->bind(stdin_address);
 
         engine_mode = false;
         jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
@@ -102,10 +116,10 @@ namespace components {
             std::move(configuration["signature_scheme"]),
             engine_mode,
             boost::uuids::random_generator()(),
-            zmq}};
+            detail::jupyter::make_socket_manager(std::move(f),*stdin_socket_)}};
     }
 
-    auto python_interpreter::jupyter_engine_init() -> void {
+    auto python_interpreter::jupyter_engine_init(std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -118,44 +132,20 @@ namespace components {
 
         std::cerr << configuration.dump(4) << std::endl;
 
-        std::string interface{configuration["interface"]};
-        auto mux_port{std::to_string(configuration["mux"]
-                                         .get<std::uint16_t>())};
-        auto task_port{std::to_string(configuration["task"]
-                                          .get<std::uint16_t>())};
-        auto control_port{std::to_string(configuration["control"]
-                                             .get<std::uint16_t>())};
-        auto iopub_port{std::to_string(configuration["iopub"]
-                                           .get<std::uint16_t>())};
-        auto heartbeat_ping_port{std::to_string(configuration["hb_ping"]
-                                                    .get<std::uint16_t>())};
-        auto heartbeat_pong_port{std::to_string(configuration["hb_pong"]
-                                                    .get<std::uint16_t>())};
-        auto registration_port{std::to_string(configuration["registration"]
-                                                  .get<std::uint16_t>())};
-        auto mux_address{interface + ":" + mux_port};
-        auto task_address{interface + ":" + task_port};
-        auto control_address{interface + ":" + control_port};
-        auto iopub_address{interface + ":" + iopub_port};
-        auto heartbeat_ping_address{interface + ":" + heartbeat_ping_port};
-        auto heartbeat_pong_address{interface + ":" + heartbeat_pong_port};
-        auto registration_address{interface + ":" + registration_port};
-
         auto identifier{boost::uuids::random_generator()()};
-        auto identifier_raw{boost::uuids::to_string(identifier)};
 
         engine_mode=true;
         jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             engine_mode,
-            std::move(identifier),
-            zmq}};
+            identifier,
+            detail::jupyter::make_socket_manager(std::move(f))}};
     }
 
     auto python_interpreter::start() -> void {}
 
-    auto python_interpreter::init() -> void {
+    auto python_interpreter::init(zmq::context_t*ctx,std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
         python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
         ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
@@ -171,10 +161,10 @@ namespace components {
 
         if (components::sandbox_mode_t::jupyter_kernel == mode_) {
             log_.info("jupyter kernel mode");
-            jupyter_kernel_init();
+            jupyter_kernel_init(ctx,std::move(f));
         } else if (components::sandbox_mode_t::jupyter_engine == mode_) {
             log_.info("jupyter engine mode");
-            jupyter_engine_init();
+            jupyter_engine_init(std::move(f));
         } else {
             log_.info("init script mode ");
         }

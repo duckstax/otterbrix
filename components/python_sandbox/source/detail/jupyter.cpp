@@ -11,7 +11,6 @@
 #include <detail/jupyter/session.hpp>
 #include <detail/jupyter/shell.hpp>
 #include <detail/jupyter/zmq_ostream.hpp>
-#include <detail/jupyter/zmq_socket_shared.hpp>
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
@@ -123,7 +122,7 @@ namespace components { namespace python_sandbox { namespace detail {
                                   py::make_tuple(std::move(shell)),
                                   std::move(shell_props))};
 
-        py::class_<zmq_socket_shared, boost::intrusive_ptr<zmq_socket_shared>>(
+        py::class_<socket_manager_t, boost::intrusive_ptr<socket_manager_t>>(
             pykernel, "ZMQSocket"
         );
         py::class_<display_hook>(pykernel, "RocketJoeDisplayHook")

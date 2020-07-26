@@ -1,11 +1,11 @@
 set(CURRENT_TARGET interactive_python_interpreter)
 
 set( ${CURRENT_TARGET}_HEADERS
-        interactive_python_interpreter.hpp
+        interactive_python.hpp
 )
 
 set(${CURRENT_TARGET}_SOURCES
-        interactive_python_interpreter.cpp
+        interactive_python.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET} STATIC

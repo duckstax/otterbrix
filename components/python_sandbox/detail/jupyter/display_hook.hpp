@@ -5,7 +5,8 @@
 #include <pybind11/pybind11.h>
 
 #include <detail/jupyter/session.hpp>
-#include <detail/jupyter/zmq_socket_shared.hpp>
+
+#include "socket_manager.hpp"
 
 namespace components { namespace detail { namespace jupyter {
 
@@ -14,7 +15,7 @@ namespace components { namespace detail { namespace jupyter {
     class display_hook final {
     public:
         display_hook(boost::intrusive_ptr<session> current_session,
-                     boost::intrusive_ptr<zmq_socket_shared> iopub_socket);
+                     socket_manager iopub_socket);
 
         auto set_execution_count(size_t execution_count) -> void;
 
@@ -22,7 +23,7 @@ namespace components { namespace detail { namespace jupyter {
 
     private:
         boost::intrusive_ptr<session> current_session;
-        boost::intrusive_ptr<zmq_socket_shared> iopub_socket;
+        socket_manager iopub_socket;
         size_t execution_count;
     };
 

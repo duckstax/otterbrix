@@ -26,13 +26,12 @@ namespace components {
         python_interpreter() = delete;
         python_interpreter(const python_interpreter&) = delete;
         python_interpreter& operator=(const python_interpreter&) = delete;
-        python_interpreter(const components::python_sandbox_configuration&, components::log_t&, std::function<void(const std::string&,std::vector<std::string>)>);
+
+        python_interpreter(zmq::context_t*,const components::python_sandbox_configuration&, components::log_t&, std::function<void(const std::string&,std::vector<std::string>)>);
+
+        python_interpreter(const components::python_sandbox_configuration&, components::log_t&);
 
         ~python_interpreter();
-
-        auto start() -> void;
-
-        auto init() -> void;
 
         void run_script(const std::vector<std::string>&);
 
@@ -43,11 +42,15 @@ namespace components {
         auto dispatch_control(std::vector<std::string> msgs) -> void;
 
     private:
-        auto jupyter_engine_init() -> void;
 
-        auto jupyter_kernel_init() -> void;
+        auto start() -> void;
 
-        std::function<void(const std::string&,std::vector<std::string>)> zmq;
+        auto init(zmq::context_t*, std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+
+        auto jupyter_engine_init(std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+
+        auto jupyter_kernel_init(zmq::context_t*,std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
         components::sandbox_mode_t mode_;
@@ -58,6 +61,7 @@ namespace components {
         boost::intrusive_ptr<pykernel> jupyter_kernel;
         components::log_t log_;
         bool engine_mode;
+        std::unique_ptr<zmq::socket_t> stdin_socket_;
     };
 
 } // namespace components

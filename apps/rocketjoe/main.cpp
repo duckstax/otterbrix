@@ -146,8 +146,6 @@ int main(int argc, char* argv[]) {
 
     components::python_interpreter vm(cfg_.python_configuration_, log);
 
-    vm.init();
-
     vm.run_script(all_args);
 
     log.info("Shutdown RocketJoe");

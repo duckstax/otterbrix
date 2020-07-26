@@ -3,7 +3,6 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <detail/jupyter/session.hpp>
-#include <detail/jupyter/zmq_socket_shared.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -15,12 +14,13 @@ namespace components { namespace detail { namespace jupyter {
 
     display_hook::display_hook(
         boost::intrusive_ptr<session> current_session,
-        boost::intrusive_ptr<zmq_socket_shared> iopub_socket
+        socket_manager iopub_socket
     ) : current_session{current_session}, iopub_socket{iopub_socket},
         execution_count{0} {}
 
     auto display_hook::set_execution_count(size_t execution_count) -> void {
         this->execution_count = execution_count;
+        py::cpp_function();
     }
 
     auto display_hook::operator()(py::object value) -> void {
@@ -37,8 +37,8 @@ namespace components { namespace detail { namespace jupyter {
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
 
-        current_session->send(
-            **iopub_socket, current_session->construct_message(
+        iopub_socket->socket(
+            "iopub_socket", current_session->construct_message(
                 {"execute_result"}, {{"msg_type", "execute_result"}},
                 {}, {},
                 {{"execution_count", execution_count},

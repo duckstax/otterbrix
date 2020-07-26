@@ -6,7 +6,7 @@
 #include <detail/jupyter/display_publisher.hpp>
 #include <detail/jupyter/session.hpp>
 #include <detail/jupyter/zmq_ostream.hpp>
-#include <detail/jupyter/zmq_socket_shared.hpp>
+#include <detail/jupyter/socket_manager.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -71,9 +71,9 @@ namespace components { namespace detail { namespace jupyter {
         auto current_session{displayhook.attr("current_session")
                                .cast<boost::intrusive_ptr<session>>()};
 
-        current_session->send(**displayhook.attr("iopub_socket")
-                                .cast<boost::intrusive_ptr<zmq_socket_shared>>(),
-                            current_session->construct_message(
+        auto sm = displayhook.attr("iopub_socket").cast<socket_manager>();
+
+        sm->iopub(current_session->construct_message(
                                 {topic.cast<std::string>()}, {{"msg_type", "error"}},
                                 nl::json::parse(py::module::import("json").attr("dumps")(
                                     displayhook.attr("parent")

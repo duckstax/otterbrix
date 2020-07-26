@@ -10,12 +10,14 @@
 
 namespace services {
 
-    class interactive_python_interpreter final : public goblin_engineer::abstract_service {
+    class jupyter;
+
+    class interactive_python final : public goblin_engineer::abstract_service {
     public:
-        interactive_python_interpreter(
-            goblin_engineer::components::root_manager*
-            , const components::python_sandbox_configuration&
-            , components::log_t&);
+        interactive_python(
+            actor_zeta::intrusive_ptr<jupyter>,
+            const components::python_sandbox_configuration&,
+            components::log_t&);
 
     private:
         auto registration(std::vector<std::string>) -> void;
