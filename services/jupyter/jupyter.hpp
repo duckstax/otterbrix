@@ -65,7 +65,7 @@ namespace services {
 
         ~jupyter();
 
-        zmq::context_t* zmq_context();
+        zmq::context_t& zmq_context();
 
         auto start() -> void;
 
@@ -92,7 +92,6 @@ namespace services {
         components::log_t log_;
         std::unique_ptr<zmq::socket_t> shell_socket;
         std::unique_ptr<zmq::socket_t> control_socket;
-        std::unique_ptr<zmq::socket_t> stdin_socket;
         std::unique_ptr<zmq::socket_t> iopub_socket;
         std::unique_ptr<zmq::socket_t> heartbeat_socket;
         std::unique_ptr<zmq::socket_t> registration_socket;

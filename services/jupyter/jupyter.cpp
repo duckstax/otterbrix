@@ -51,6 +51,8 @@ namespace services {
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
         add_handler("write", &jupyter::write);
+        init();
+        start();
     }
 
     auto jupyter::jupyter_kernel_init() -> void {
@@ -72,34 +74,28 @@ namespace services {
                                            .get<std::uint16_t>())};
         auto control_port{std::to_string(configuration["control_port"]
                                              .get<std::uint16_t>())};
-        auto stdin_port{std::to_string(configuration["stdin_port"]
-                                           .get<std::uint16_t>())};
         auto iopub_port{std::to_string(configuration["iopub_port"]
                                            .get<std::uint16_t>())};
         auto heartbeat_port{std::to_string(configuration["hb_port"]
                                                .get<std::uint16_t>())};
         auto shell_address{transport + "://" + ip + ":" + shell_port};
         auto control_address{transport + "://" + ip + ":" + control_port};
-        auto stdin_address{transport + "://" + ip + ":" + stdin_port};
         auto iopub_address{transport + "://" + ip + ":" + iopub_port};
         auto heartbeat_address{transport + "://" + ip + ":" + heartbeat_port};
 
         zmq_context_ = std::make_unique<zmq::context_t>();
         shell_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::router);
         control_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::router);
-        stdin_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::router);
         iopub_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::pub);
         heartbeat_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::rep);
 
         shell_socket->setsockopt(ZMQ_LINGER, 1000);
         control_socket->setsockopt(ZMQ_LINGER, 1000);
-        stdin_socket->setsockopt(ZMQ_LINGER, 1000);
         iopub_socket->setsockopt(ZMQ_LINGER, 1000);
         heartbeat_socket->setsockopt(ZMQ_LINGER, 1000);
 
         shell_socket->bind(shell_address);
         control_socket->bind(control_address);
-        stdin_socket->bind(stdin_address);
         iopub_socket->bind(iopub_address);
         heartbeat_socket->bind(heartbeat_address);
 
@@ -293,8 +289,11 @@ namespace services {
 
     jupyter::~jupyter() = default;
 
-    void jupyter::enqueue(goblin_engineer::message, actor_zeta::executor::execution_device*) {
+    void jupyter::enqueue(goblin_engineer::message msg, actor_zeta::executor::execution_device*) {
+        set_current_message(std::move(msg));
+        dispatch().execute(*this);
     }
+
     auto jupyter::write(const std::string& socket_type, std::vector<std::string>& msg) -> void {
         if ("iopub" == socket_type) {
             send(*iopub_socket, msg);
@@ -311,13 +310,12 @@ namespace services {
         if ("stdion" == socket_type) {
             if (engine_mode) {
                 send(*iopub_socket, msg);
-            } else {
-                send(*stdin_socket, msg);
             }
         }
     }
-    zmq::context_t* jupyter::zmq_context() {
-        return zmq_context_.get();
+
+    zmq::context_t& jupyter::zmq_context() {
+        return *zmq_context_;
     }
 
 } // namespace services

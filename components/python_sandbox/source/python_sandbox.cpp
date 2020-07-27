@@ -45,16 +45,16 @@ namespace components {
     using namespace py::literals;
 
     python_interpreter::python_interpreter(
-        zmq::context_t*ctx,
+        zmq::context_t& ctx,
         const components::python_sandbox_configuration& configuration,
-        log_t &log,
-        std::function<void(const std::string&,std::vector<std::string>)> f)
+        log_t& log,
+        std::function<void(const std::string&, std::vector<std::string>)> f)
         : mode_{components::sandbox_mode_t::none}
         , python_{}
         , pyrocketjoe{"pyrocketjoe"}
         , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
         , context_manager_{std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)}
-        , jupyter_kernel{nullptr}{
+        , jupyter_kernel{nullptr} {
         log_ = log.clone();
         log_.info("processing env python start ");
         log_.info(fmt::format("Mode : {0}", configuration.mode_));
@@ -65,17 +65,17 @@ namespace components {
         }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
-        init(ctx,std::move(f));
+        init(ctx, std::move(f));
         start();
     }
 
-    python_interpreter::python_interpreter(const python_sandbox_configuration &configuration, log_t &log)
-            : mode_{components::sandbox_mode_t::none}
-            , python_{}
-            , pyrocketjoe{"pyrocketjoe"}
-            , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
-            , context_manager_{std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)}
-            , jupyter_kernel{nullptr}{
+    python_interpreter::python_interpreter(const python_sandbox_configuration& configuration, log_t& log)
+        : mode_{components::sandbox_mode_t::none}
+        , python_{}
+        , pyrocketjoe{"pyrocketjoe"}
+        , file_manager_{std::make_unique<python_sandbox::detail::file_manager>()}
+        , context_manager_{std::make_unique<python_sandbox::detail::context_manager>(*file_manager_)}
+        , jupyter_kernel{nullptr} {
         log_ = log.clone();
         log_.info("processing env python start ");
         log_.info(fmt::format("Mode : {0}", configuration.mode_));
@@ -86,11 +86,21 @@ namespace components {
         }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
         log_.info("processing env python finish ");
+        python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
+        ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
+        python_sandbox::detail::add_celery(pyrocketjoe);
+
+        if (mode_ == components::sandbox_mode_t::jupyter_kernel ||
+            mode_ == components::sandbox_mode_t::jupyter_engine) {
+            python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
+        }
+
+        py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe));
     }
 
-    auto python_interpreter::jupyter_kernel_init(zmq::context_t*ctx,std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
+    auto python_interpreter::jupyter_kernel_init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -107,7 +117,8 @@ namespace components {
         std::string ip{configuration["ip"]};
         auto stdin_port = std::to_string(configuration["stdin_port"].get<std::uint16_t>());
         auto stdin_address{transport + "://" + ip + ":" + stdin_port};
-        stdin_socket_=std::make_unique<zmq::socket_t>(*ctx, zmq::socket_type::router);
+        stdin_socket_ = std::make_unique<zmq::socket_t>(ctx, zmq::socket_type::router);
+        stdin_socket_->setsockopt(ZMQ_LINGER, 1000);
         stdin_socket_->bind(stdin_address);
 
         engine_mode = false;
@@ -116,10 +127,10 @@ namespace components {
             std::move(configuration["signature_scheme"]),
             engine_mode,
             boost::uuids::random_generator()(),
-            detail::jupyter::make_socket_manager(std::move(f),*stdin_socket_)}};
+            detail::jupyter::make_socket_manager(std::move(f), static_cast<zmq::socket_ref>(*stdin_socket_))}};
     }
 
-    auto python_interpreter::jupyter_engine_init(std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
+    auto python_interpreter::jupyter_engine_init(std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -134,7 +145,7 @@ namespace components {
 
         auto identifier{boost::uuids::random_generator()()};
 
-        engine_mode=true;
+        engine_mode = true;
         jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
@@ -145,7 +156,7 @@ namespace components {
 
     auto python_interpreter::start() -> void {}
 
-    auto python_interpreter::init(zmq::context_t*ctx,std::function<void(const std::string&,std::vector<std::string>)>f) -> void {
+    auto python_interpreter::init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
         ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
@@ -161,7 +172,7 @@ namespace components {
 
         if (components::sandbox_mode_t::jupyter_kernel == mode_) {
             log_.info("jupyter kernel mode");
-            jupyter_kernel_init(ctx,std::move(f));
+            jupyter_kernel_init(ctx, std::move(f));
         } else if (components::sandbox_mode_t::jupyter_engine == mode_) {
             log_.info("jupyter engine mode");
             jupyter_engine_init(std::move(f));
@@ -176,12 +187,12 @@ namespace components {
         /// TODO: alternative PySys_SetArgv https://stackoverflow.com/questions/18245140/how-do-you-use-the-python3-c-api-for-a-command-line-driven-app
         py::list tmp;
 
-        auto it =  args.begin();
+        auto it = args.begin();
         auto end = args.end();
 
         it = std::next(it);
 
-        for (;it!=end;++it) {
+        for (; it != end; ++it) {
             tmp.append(*it);
         }
 
@@ -198,7 +209,6 @@ namespace components {
     }
 
     auto python_interpreter::registration(std::vector<std::string>) -> void {
-
     }
 
 } // namespace components

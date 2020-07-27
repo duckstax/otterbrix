@@ -9,6 +9,9 @@ namespace services {
         : goblin_engineer::abstract_service(env, "python")
         , log_(log.clone()){
         python_interpreter_ = std::make_unique<components::python_interpreter>(env->zmq_context(), configuration,log,[this](const std::string&socket_name,std::vector<std::string> msg){
+            for(const auto&i: this->message_types()){
+                log_.info(fmt::format("tyoe = {}",i));
+            }
           actor_zeta::send(this->address(),this->addresses("jupyter"),"write",buffer(socket_name,msg));
         });
 

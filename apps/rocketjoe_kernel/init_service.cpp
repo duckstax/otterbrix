@@ -11,5 +11,5 @@ using namespace goblin_engineer::components;
 
 void init_service(goblin_engineer::components::root_manager& env, components::configuration& cfg, components::log_t& log) {
     auto jupyter = make_manager_service<services::jupyter>(env, cfg.python_configuration_, log);
-    make_service<services::interactive_python>(jupyter,cfg.python_configuration_, log);
+    /*auto python = */make_service<services::interactive_python>(jupyter,cfg.python_configuration_, log);
 }
