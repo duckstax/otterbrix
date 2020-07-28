@@ -18,9 +18,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
-# stack track
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+else()
+    # stack track
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+endif()
 
 option(DEV_MODE "developer mode" OFF)
 
@@ -53,11 +58,11 @@ endif ()
 
 # configuration
 #############################################################################################
-#clang tool
+#clang format
 
-include(cmake/clang_tools.cmake)
+include(cmake/clang-format.cmake)
 
-#clang tool
+#clang format
 #############################################################################################
 #conan
 
@@ -93,6 +98,11 @@ endif(CCACHE_FOUND)
 
 # ccahe
 #############################################################################################
+
+SET(PYTHON_EXECUTABLE python3)
+find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 add_subdirectory(components)
 add_subdirectory(services)

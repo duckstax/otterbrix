@@ -3,11 +3,12 @@
 #include <utility>
 
 #include <boost/uuid/random_generator.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <pybind11/functional.h>
 #include <pybind11/stl.h>
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace components { namespace python_sandbox { namespace detail {
 
@@ -118,6 +119,8 @@ namespace components { namespace python_sandbox { namespace detail {
     }
 
     auto celery::create_task(py::args args, py::kwargs kwargs) -> std::function<task(py::function)> const {
+        boost::ignore_unused(args);
+        boost::ignore_unused(kwargs);
         boost::intrusive_ptr<celery> self{this};
 
         return [self{std::move(self)}](auto task_handler) {

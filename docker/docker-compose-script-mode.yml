@@ -1,0 +1,6 @@
+version: '2.0'
+services:
+  rocketjoe_script_mode:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile-script-mode
