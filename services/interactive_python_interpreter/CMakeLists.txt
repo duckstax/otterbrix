@@ -25,6 +25,7 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
         rocketjoe::python_sandbox
         rocketjoe::log
+        rocketjoe::buffer
         goblin-engineer
 )
 

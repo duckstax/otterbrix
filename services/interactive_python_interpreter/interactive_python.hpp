@@ -19,6 +19,7 @@ namespace services {
             const components::python_sandbox_configuration&,
             components::log_t&);
 
+        void async_init(zmq::context_t&, std::function<void(const std::string&,std::vector<std::string>)>);
     private:
         auto registration(std::vector<std::string>) -> void;
 

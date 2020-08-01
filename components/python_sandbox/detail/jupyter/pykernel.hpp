@@ -19,6 +19,7 @@
 
 #include "session.hpp"
 #include "socket_manager.hpp"
+#include <components/log/log.hpp>
 
 namespace components { namespace detail { namespace jupyter {
 
@@ -28,11 +29,12 @@ namespace components { namespace detail { namespace jupyter {
     class BOOST_SYMBOL_VISIBLE pykernel final : public boost::intrusive_ref_counter<pykernel> {
     public:
         pykernel(
-                std::string signature_key
-                , std::string signature_scheme
-                , bool engine_mode
-                , boost::uuids::uuid identifier
-                , socket_manager);
+            components::log_t& log
+            , std::string signature_key
+            , std::string signature_scheme
+            , bool engine_mode
+            , boost::uuids::uuid identifier
+            , socket_manager);
 
         ~pykernel();
 
@@ -149,7 +151,7 @@ namespace components { namespace detail { namespace jupyter {
         auto abort_reply(const std::string&,
                          std::vector<std::string> identifiers,
                          nl::json parent) -> void;
-
+        components::log_t log_;
         bool engine_mode;
         boost::intrusive_ptr<session> current_session;
         py::object shell;

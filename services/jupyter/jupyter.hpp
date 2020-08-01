@@ -22,46 +22,19 @@
 
 namespace services {
 
-    class zmq_buffer_tt final : public boost::intrusive_ref_counter<zmq_buffer_tt> {
-    public:
-        zmq_buffer_tt()
-            : id_("") {}
-        zmq_buffer_tt(const zmq_buffer_tt&) = delete;
-        zmq_buffer_tt& operator=(const zmq_buffer_tt&) = delete;
-
-        zmq_buffer_tt(const std::string& fd, std::vector<std::string> msgs)
-            : id_(fd)
-            , msg_(std::move(msgs)) {}
-
-        const std::string& id() const {
-            return id_;
-        }
-
-        const std::vector<std::string>& msg() const {
-            return msg_;
-        }
-
-    private:
-        const std::string id_;
-        std::vector<std::string> msg_;
-    };
-
-    using zmq_buffer_t = boost::intrusive_ptr<zmq_buffer_tt>;
-
-    template<class... Args>
-    auto buffer(Args&&... args) -> zmq_buffer_t {
-        return boost::intrusive_ptr<zmq_buffer_tt>(new zmq_buffer_tt(std::forward<Args>(args)...));
-    }
-
-    using sender_t = std::function<void(zmq_buffer_t)>;
-
-    class jupyter final : public goblin_engineer::abstract_manager_service {
+    class jupyter  final : public actor_zeta::supervisor {
     public:
         jupyter() = delete;
         jupyter(const jupyter&) = delete;
         jupyter& operator=(const jupyter&) = delete;
 
-        jupyter(goblin_engineer::components::root_manager*, const components::python_sandbox_configuration&, components::log_t&);
+        jupyter( const components::configuration&, components::log_t&);
+
+        auto executor() noexcept -> actor_zeta::abstract_executor&;
+
+        auto join(actor_zeta::actor) -> actor_zeta::actor_address ;
+
+        auto join(actor_zeta::intrusive_ptr<actor_zeta::supervisor> tmp) -> actor_zeta::actor_address;
 
         ~jupyter();
 
@@ -75,10 +48,16 @@ namespace services {
 
         auto write(const std::string&, std::vector<std::string>&) -> void;
 
+        auto pre_init(std::function<void()>)-> void;
+
     private:
         auto jupyter_engine_init() -> void;
 
         auto jupyter_kernel_init() -> void;
+
+        std::unique_ptr<actor_zeta::executor::abstract_executor> coordinator_;
+        std::vector<actor_zeta::intrusive_ptr<actor_zeta::supervisor>> storage_;
+        std::vector<actor_zeta::actor> actor_storage_;
 
         boost::filesystem::path jupyter_connection_path_;
         components::sandbox_mode_t mode_;
@@ -96,6 +75,33 @@ namespace services {
         std::unique_ptr<zmq::socket_t> heartbeat_socket;
         std::unique_ptr<zmq::socket_t> registration_socket;
         bool engine_mode;
+        std::vector<std::function<void()>> init_;
     };
+
+    template<
+        typename Actor,
+        typename Manager,
+        typename... Args
+    >
+    auto make_service(actor_zeta::intrusive_ptr<Manager>&manager, Args&&... args){
+        return manager->join(new Actor(manager,std::forward<Args>(args)...));
+    }
+
+
+    template<
+        typename Root,
+        typename Manager,
+        typename... Args
+    >
+    auto make_manager_service(actor_zeta::intrusive_ptr<Root> app,Args&&... args){
+        actor_zeta::intrusive_ptr<Manager> tmp(
+            new Manager(
+                app,
+                std::forward<Args>(args)...
+            )
+        );
+        app.join(tmp);
+        return tmp;
+    }
 
 } // namespace services

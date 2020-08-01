@@ -12,7 +12,8 @@
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
-#include <components/python_sandbox/python_sandbox.hpp>
+
+#include <services/jupyter/jupyter.hpp>
 
 #include "init_service.hpp"
 
@@ -105,18 +106,13 @@ int main(int argc, char* argv[]) {
     }
 
     cfg_.operating_mode_ = components::operating_mode::master;
-
-    goblin_engineer::components::root_manager env(1, 1000);
-
-    init_service(env, cfg_, log);
-
-    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
-    sigint_set.async_wait(
-        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
-            sigint_set.cancel();
-        });
-
-    env.startup();
+    log.info("1");
+    auto j = actor_zeta::intrusive_ptr<services::jupyter>(new services::jupyter(cfg_,log));
+    log.info("2");
+    init_service(j, cfg_, log);
+    log.info("3");
+    log.info("pre start");
+    j->start();
 
     log.info("Shutdown RocketJoe");
     return 0;
