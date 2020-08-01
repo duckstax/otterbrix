@@ -51,13 +51,16 @@ add_library(rocketjoe_${CURRENT_TARGET} STATIC
             ${${CURRENT_TARGET}_SOURCES}
 )
 
-find_package(Python3 COMPONENTS Development)
-include_directories(${Python3_INCLUDE_DIRS})
-find_package(pybind11 REQUIRED)
-
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+            rocketjoe_${CURRENT_TARGET} PRIVATE
+            iconv
+    )
+endif()
 
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE

@@ -7,6 +7,7 @@
 #include <detail/jupyter/session.hpp>
 #include <detail/jupyter/zmq_ostream.hpp>
 #include <detail/jupyter/socket_manager.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -17,6 +18,7 @@ namespace components { namespace detail { namespace jupyter {
     using namespace pybind11::literals;
 
     auto shell::_default_banner1(py::object self) -> py::object {
+        boost::ignore_unused(self);
         return py::module::import("IPython.core.usage").attr("default_banner");
     }
 
@@ -108,6 +110,7 @@ namespace components { namespace detail { namespace jupyter {
     }
 
     auto shell::init_environment(py::object self) -> void {
+        boost::ignore_unused(self);
         auto environ{py::module::import("os").attr("environ")};
 
         environ["TERM"] = "xterm-color";
@@ -116,6 +119,8 @@ namespace components { namespace detail { namespace jupyter {
         environ["GIT_PAGER"] = "cat";
     }
 
-    auto shell::init_virtualenv(py::object self) -> void {}
+    auto shell::init_virtualenv(py::object self) -> void {
+        boost::ignore_unused(self);
+    }
 
 }}}

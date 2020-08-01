@@ -18,6 +18,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -105,6 +106,8 @@ namespace nlohmann {
     template<typename... Args>
     auto adl_serializer<boost::variant<Args...>>::from_json(const json& data,
                                                             boost::variant<Args...>& variant_data) -> void {
+        boost::ignore_unused(data);
+        boost::ignore_unused(variant_data);
         throw std::runtime_error("Casting from nlohmann::json to boost::variant isn\'t supported");
     }
 } // namespace nlohmann
@@ -211,6 +214,7 @@ namespace components { namespace detail {
     }
 
     static auto unimpl(const std::string& promt = "") -> std::string {
+        boost::ignore_unused(promt);
         throw std::runtime_error("The kernel doesn\'t support an input requests");
     }
 
@@ -490,6 +494,7 @@ namespace components { namespace detail {
     }
 
     auto pykernel::finish_metadata(nl::json& metadata, execute_ok_reply reply) {
+        boost::ignore_unused(reply);
         metadata["status"] = "ok";
     }
 
@@ -505,6 +510,7 @@ namespace components { namespace detail {
     }
 
     auto pykernel::finish_metadata(nl::json& metadata, apply_ok_reply reply) {
+        boost::ignore_unused(reply);
         metadata["status"] = "ok";
     }
 

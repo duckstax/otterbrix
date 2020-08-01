@@ -3,6 +3,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <detail/jupyter/session.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -21,6 +22,7 @@ namespace components { namespace detail { namespace jupyter {
                                     py::dict metadata, py::str source,
                                     py::dict trasistent,
                                     py::bool_ update) -> void {
+        boost::ignore_unused(source);
         auto sys{py::module::import("sys")};
 
         sys.attr("stdout").attr("flush")();

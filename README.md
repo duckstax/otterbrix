@@ -44,7 +44,7 @@ logs when the container starts.
 
 ```bash
 
-brew install cmake lua ccache conan python3
+brew install cmake lua ccache conan python3 libiconv
 
 conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
 

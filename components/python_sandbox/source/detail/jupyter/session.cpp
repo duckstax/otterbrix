@@ -14,6 +14,7 @@
 #include <boost/locale/format.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 namespace components { namespace detail { namespace jupyter {
 
@@ -558,6 +559,7 @@ namespace components { namespace detail { namespace jupyter {
         std::string metadata,
         std::string content,
         std::vector<std::string>& buffers) -> std::string {
+        boost::ignore_unused(buffers);
         return hmac_.sign(header, parent_header, metadata, content);
     }
 }
