@@ -99,7 +99,7 @@ namespace components {
         stdin_socket_ = std::make_unique<zmq::socket_t>(ctx, zmq::socket_type::router);
         stdin_socket_->setsockopt(ZMQ_LINGER, 1000);
         stdin_socket_->bind(stdin_address);
-        log_.info("python_interpreter::jupyter_kernel_init 4");
+
         auto sm = detail::jupyter::make_socket_manager(std::move(f), static_cast<zmq::socket_ref>(*stdin_socket_));
         engine_mode = false;
         jupyter_kernel = boost::intrusive_ptr<pykernel>(new pykernel(

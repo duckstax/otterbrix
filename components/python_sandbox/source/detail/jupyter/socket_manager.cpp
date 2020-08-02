@@ -18,9 +18,11 @@ namespace components { namespace detail { namespace jupyter {
     void socket_manager_t::socket(const std::string& socket_type, std::vector<std::string> msgs) {
         zmq_(socket_type, std::move(msgs));
     }
+
     void socket_manager_t::iopub(std::vector<std::string> msgs) {
         zmq_("iopub", msgs);
     }
+
     std::string socket_manager_t::stdin_socket(std::function<std::string(const std::vector<std::string>&)> f) {
         std::vector<zmq::message_t> msgs;
 

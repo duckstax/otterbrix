@@ -2,6 +2,7 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
+#include <components/python_sandbox/detail/jupyter/socket_manager.hpp>
 #include <detail/jupyter/session.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -47,9 +48,9 @@ namespace components { namespace detail { namespace jupyter {
             auto current_session{self.attr("current_session")
                                      .cast<boost::intrusive_ptr<session>>()};
 
-            auto iopub = self.attr("iopub_socket").cast<std::function<void(const std::string&,std::vector<std::string>)>>();
+            auto sm = self.attr("iopub_socket").cast<socket_manager>();
 
-            iopub("iopub",current_session->construct_message(
+            sm->iopub(current_session->construct_message(
                                       {self.attr("topic").cast<std::string>()},
                                       {{"msg_type", "execute_result"}}, std::move(msg["parent"]),
                                       {}, std::move(msg["content"]), {}

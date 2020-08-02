@@ -300,21 +300,25 @@ namespace services {
     }
 
     auto jupyter::write(components::zmq_buffer_t& msg) -> void {
-        log_.info(" auto jupyter::write(const std::string& socket_type, std::vector<std::string>& msg) -> void {");
+        log_.info(" auto jupyter::write");
         if ("iopub" == msg->id()) {
+            log_.info(" auto jupyter::write iopub");
             return send(*iopub_socket, msg->msg());
         }
 
         if ("shell" == msg->id()) {
+            log_.info(" auto jupyter::write shell");
             return send(*shell_socket, msg->msg());
         }
 
         if ("control" == msg->id()) {
+            log_.info(" auto jupyter::write control");
             return send(*control_socket, msg->msg());
         }
 
         if ("stdion" == msg->id()) {
             if (engine_mode) {
+                log_.info(" auto jupyter::write stddin");
                 return send(*iopub_socket, msg->msg());
             }
         }
