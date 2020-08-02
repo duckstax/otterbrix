@@ -122,7 +122,7 @@ namespace components { namespace detail {
 
         class BOOST_SYMBOL_VISIBLE input_redirection final {
         public:
-            input_redirection(socket_manager manager,
+            input_redirection(const socket_manager& manager,
                               boost::intrusive_ptr<session> current_session,
                               std::vector<std::string> parent_identifiers,
                               nl::json parent_header,
@@ -161,21 +161,24 @@ namespace components { namespace detail {
             std::string result_name_;
         };
 
-        static auto input_request(socket_manager manger,
+        static auto input_request(const socket_manager& manger,
                                   boost::intrusive_ptr<session> current_session,
                                   std::vector<std::string> parent_identifiers,
                                   nl::json parent_header,
                                   const std::string& prompt,
                                   bool password) -> std::string {
+            auto log  = get_logger();
+            log.info( " static auto input_request 0");
             auto sys = py::module::import("sys");
-
+            log.info( " static auto input_request 1");
             sys.attr("stdout").attr("flush")();
+            log.info( " static auto input_request 2");
             sys.attr("stderr").attr("flush")();
-
+            log.info( " static auto input_request 3");
             manger->stdin_socket([&](const std::vector<std::string>& ){
               return "";
             });
-
+            log.info( " static auto input_request 4");
             manger->stdin_socket(current_session->construct_message(std::move(parent_identifiers),
                                                                     {{"msg_type", "input_request"}},
                                                                     std::move(parent_header),
@@ -183,7 +186,7 @@ namespace components { namespace detail {
                                                                     {{"prompt", prompt},
                                                                      {"password", password}},
                                                                     {}));
-
+            log.info( " static auto input_request 5");
         return manger->stdin_socket([&](const std::vector<std::string> msgs_for_parse) {
                 std::vector<std::string> identifiers;
                 nl::json header;
@@ -211,6 +214,7 @@ namespace components { namespace detail {
                 throw std::runtime_error("there is no answer from stdin");
             }
         );
+            log.info( " static auto input_request 6");
     }
 
     static auto unimpl(const std::string& promt = "") -> std::string {
@@ -219,7 +223,7 @@ namespace components { namespace detail {
     }
 
     input_redirection::input_redirection(
-        socket_manager manger,
+        const socket_manager& manger,
         boost::intrusive_ptr<session> current_session,
         std::vector<std::string> parent_identifiers,
         nl::json parent_header,
@@ -337,11 +341,11 @@ namespace components { namespace detail {
         shell.attr("displayhook")
             .attr("current_session") = current_session;
         shell.attr("displayhook")
-            .attr("iopub_socket") = sockets;
+            .attr("iopub_socket") = socket_manager_;
         shell.attr("display_pub")
             .attr("current_session") = current_session;
         shell.attr("display_pub")
-            .attr("iopub_socket") = sockets;
+            .attr("iopub_socket") = socket_manager_;
 
         auto zmq_ostream = pykernel.attr("ZMQOstream");
 
@@ -349,7 +353,7 @@ namespace components { namespace detail {
 
         new_stdout.attr("current_session") = current_session;
 
-        new_stdout.attr("iopub_socket") = sockets;
+        new_stdout.attr("iopub_socket") = socket_manager_;
 
         std::string out_name = "stdout";
 
@@ -359,7 +363,7 @@ namespace components { namespace detail {
 
         new_stderr.attr("current_session") = current_session;
 
-        new_stderr.attr("iopub_socket") = sockets;
+        new_stderr.attr("iopub_socket") = socket_manager_;
 
         std::string err_name = "stderr";
 
@@ -600,10 +604,9 @@ namespace components { namespace detail {
         }
 
         if (!*silent) {
-            auto execution_count = shell.attr("execution_count")
-                                       .cast<std::size_t>();
+            auto execution_count = shell.attr("execution_count").cast<std::size_t>();
 
-            socket_manager_->socket("iopub", current_session->construct_message({topic("execute_input")},
+            socket_manager_->iopub(current_session->construct_message({topic("execute_input")},
                                                                                 {{"msg_type", "execute_input"}},
                                                                                 parent,
                                                                                 {},

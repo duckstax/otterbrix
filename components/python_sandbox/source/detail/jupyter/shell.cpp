@@ -8,6 +8,7 @@
 #include <detail/jupyter/zmq_ostream.hpp>
 #include <detail/jupyter/socket_manager.hpp>
 #include <boost/core/ignore_unused.hpp>
+#include <components/log/log.hpp>
 
 //The bug related to the use of RTTI by the pybind11 library has been fixed: a
 //declaration should be in each translation unit.
@@ -57,24 +58,27 @@ namespace components { namespace detail { namespace jupyter {
 
     auto shell::_showtraceback(py::object self, py::object etype,
                                py::object evalue, py::object stb) -> void {
+        auto log = get_logger();
+        log.info("auto shell::_showtraceback 0");
         auto sys{py::module::import("sys")};
+        log.info("auto shell::_showtraceback 1");
 
         sys.attr("stdout").attr("flush")();
+        log.info("auto shell::_showtraceback 2");
         sys.attr("stderr").attr("flush")();
-
+        log.info("auto shell::_showtraceback 3");
         auto displayhook{self.attr("displayhook")};
         auto topic{py::none()};
-
+        log.info("auto shell::_showtraceback 4");
         if(!displayhook.attr("topic").is_none()) {
             topic = displayhook.attr("topic").attr("replace")("execute_result",
                                                               "error");
         }
-
-        auto current_session{displayhook.attr("current_session")
-                               .cast<boost::intrusive_ptr<session>>()};
-
+        log.info("auto shell::_showtraceback 5");
+        auto current_session{displayhook.attr("current_session").cast<boost::intrusive_ptr<session>>()};
+        log.info("auto shell::_showtraceback 6");
         auto sm = displayhook.attr("iopub_socket").cast<socket_manager>();
-
+        log.info("auto shell::_showtraceback 7");
         sm->iopub(current_session->construct_message(
                                 {topic.cast<std::string>()}, {{"msg_type", "error"}},
                                 nl::json::parse(py::module::import("json").attr("dumps")(
@@ -87,7 +91,7 @@ namespace components { namespace detail { namespace jupyter {
                                 ).cast<std::string>()), {}
                             )
         );
-
+        log.info("auto shell::_showtraceback 8");
         self.attr("_last_traceback") = std::move(stb);
     }
 

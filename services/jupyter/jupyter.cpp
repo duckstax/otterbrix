@@ -16,12 +16,13 @@
 namespace services {
 
     auto send(zmq::socket_ref socket, std::vector<std::string> msgs) -> void {
+        auto log = components::get_logger();
         std::vector<zmq::const_buffer> msgs_for_send;
 
         msgs_for_send.reserve(msgs.size());
 
         for (const auto& msg : msgs) {
-            std::cerr << msg << std::endl;
+            log.info(fmt::format("Socket write: {}", msg));
             msgs_for_send.push_back(zmq::buffer(std::move(msg)));
         }
 
@@ -29,6 +30,8 @@ namespace services {
 
         if (!result) {
             throw std::logic_error("Error sending ZeroMQ message");
+        } else {
+            log.info("Socket write !");
         }
     }
 
