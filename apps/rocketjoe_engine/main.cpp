@@ -13,6 +13,7 @@
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
 #include <components/python_sandbox/python_sandbox.hpp>
+#include <services/jupyter/jupyter.hpp>
 
 #include "init_service.hpp"
 
@@ -107,21 +108,15 @@ int main(int argc, char* argv[]) {
         cfg_.operating_mode_ = components::operating_mode::worker;
     }
 
-    goblin_engineer::components::root_manager env(1, 1000);
     components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
-    init_service(env, cfg_, log);
 
     if (command_line.count("worker_number")) {
         process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
     }
 
-    boost::asio::signal_set sigint_set(env.loop(), SIGINT, SIGTERM);
-    sigint_set.async_wait(
-        [&sigint_set](const boost::system::error_code& /*err*/, int /*num*/) {
-            sigint_set.cancel();
-        });
-
-    env.startup();
+    auto jupyter = services::make_manager_service<services::jupyter>(cfg_,log);
+    init_service(jupyter, cfg_, log);
+    jupyter->start();
 
     log.info("Shutdown RocketJoe");
     return 0;

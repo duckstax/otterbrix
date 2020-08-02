@@ -472,7 +472,7 @@ namespace components { namespace detail {
             parent = parent_header;
         }
 
-        socket_manager_->socket("iopub", current_session->construct_message({topic("status")},
+        socket_manager_->iopub( current_session->construct_message({topic("status")},
                                                          {{"msg_type", "status"}},
                                                          std::move(parent), {},
                                                          {{"execution_state", std::move(status)}},
@@ -916,7 +916,7 @@ namespace components { namespace detail {
                                                                                 {},
                                                                                 content,
                                                                                 {}));
-        socket_manager_->socket("iopub", current_session->construct_message({topic("shutdown")},
+        socket_manager_->iopub( current_session->construct_message({topic("shutdown")},
                                                                             {{"msg_type", "shutdown_reply"}},
                                                                             std::move(parent),
                                                                             {},
@@ -1054,7 +1054,7 @@ namespace components { namespace detail {
             .traceback(reply_error.traceback())
             .engine_info(reply_error.engine_info());
 
-        socket_manager_->socket("iopub", current_session->construct_message(std::move(broadcast_error)));
+        socket_manager_->iopub( current_session->construct_message(std::move(broadcast_error)));
 
         reply_error.identifiers(std::move(identifiers))
             .parent(std::move(parent))
@@ -1219,6 +1219,7 @@ namespace components { namespace detail {
         sys.attr("stderr").attr("flush")();
 
         if (resume) {
+            log_.info(" auto pykernel::dispatch_shell idle");
             publish_status("idle", {});
         }
     }
@@ -1310,6 +1311,7 @@ namespace components { namespace detail {
         sys.attr("stderr").attr("flush")();
 
         if (resume) {
+            log_.info("auto pykernel::dispatch_control( idle");
             publish_status("idle", {});
         }
     }
