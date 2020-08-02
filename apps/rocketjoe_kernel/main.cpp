@@ -11,7 +11,6 @@
 #include "configuration.hpp"
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
-#include <components/process_pool/process_pool.hpp>
 
 #include <services/jupyter/jupyter.hpp>
 
@@ -106,13 +105,9 @@ int main(int argc, char* argv[]) {
     }
 
     cfg_.operating_mode_ = components::operating_mode::master;
-    log.info("1");
-    auto j = actor_zeta::intrusive_ptr<services::jupyter>(new services::jupyter(cfg_,log));
-    log.info("2");
-    init_service(j, cfg_, log);
-    log.info("3");
-    log.info("pre start");
-    j->start();
+    auto jupyter = services::make_manager_service<services::jupyter>(cfg_,log);
+    init_service(jupyter, cfg_, log);
+    jupyter->start();
 
     log.info("Shutdown RocketJoe");
     return 0;

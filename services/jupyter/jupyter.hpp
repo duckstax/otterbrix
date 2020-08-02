@@ -18,6 +18,7 @@
 
 #include <actor-zeta/core.hpp>
 #include <boost/filesystem/path.hpp>
+#include <components/buffer/zmq_buffer.hpp>
 #include <components/configuration/configuration.hpp>
 
 namespace services {
@@ -30,27 +31,28 @@ namespace services {
 
         jupyter( const components::configuration&, components::log_t&);
 
-        auto executor() noexcept -> actor_zeta::abstract_executor&;
+        auto executor() noexcept -> actor_zeta::abstract_executor& override;
 
-        auto join(actor_zeta::actor) -> actor_zeta::actor_address ;
+        auto join(actor_zeta::actor) -> actor_zeta::actor_address override ;
 
-        auto join(actor_zeta::intrusive_ptr<actor_zeta::supervisor> tmp) -> actor_zeta::actor_address;
+        auto join(actor_zeta::intrusive_ptr<actor_zeta::supervisor>) -> actor_zeta::actor_address;
 
-        ~jupyter();
+        ~jupyter() override;
 
         zmq::context_t& zmq_context();
 
         auto start() -> void;
 
-        auto init() -> void;
-
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
-        auto write(const std::string&, std::vector<std::string>&) -> void;
-
-        auto pre_init(std::function<void()>)-> void;
+        auto pre_hook(std::function<void()> f)-> void;
 
     private:
+
+        auto init() -> void;
+
+        auto write(components::zmq_buffer_t&) -> void;
+
         auto jupyter_engine_init() -> void;
 
         auto jupyter_kernel_init() -> void;
@@ -102,6 +104,18 @@ namespace services {
         );
         app.join(tmp);
         return tmp;
+    }
+
+    template<
+        typename Manager,
+        typename... Args
+    >
+    auto make_manager_service(Args&&... args){
+        return actor_zeta::intrusive_ptr<Manager>(
+            new Manager(
+                std::forward<Args>(args)...
+            )
+        );
     }
 
 } // namespace services

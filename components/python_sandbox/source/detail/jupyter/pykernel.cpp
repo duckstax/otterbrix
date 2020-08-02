@@ -324,7 +324,6 @@ namespace components { namespace detail {
         , abort_all(false)
         , execution_count(1)
         , socket_manager_(std::move(sockets)) {
-        log_.info("construct pykernel 0");
         if (engine_mode) {
             current_session = boost::intrusive_ptr<session>(new session(std::move(signature_key),
                                                                         std::move(signature_scheme),
@@ -332,11 +331,9 @@ namespace components { namespace detail {
         } else {
             current_session = boost::intrusive_ptr<session>(new session(std::move(signature_key), std::move(signature_scheme)));
         }
-        log_.info("construct pykernel 1");
         auto pykernel = py::module::import("pyrocketjoe.pykernel");
 
         shell = pykernel.attr("RocketJoeShell")("_init_location_id"_a = "shell.py:1");
-        log_.info("construct pykernel 2");
         shell.attr("displayhook")
             .attr("current_session") = current_session;
         shell.attr("displayhook")
@@ -345,29 +342,29 @@ namespace components { namespace detail {
             .attr("current_session") = current_session;
         shell.attr("display_pub")
             .attr("iopub_socket") = sockets;
-        log_.info("construct pykernel 3");
+
         auto zmq_ostream = pykernel.attr("ZMQOstream");
-        log_.info("construct pykernel 4");
+
         auto new_stdout = zmq_ostream();
-        log_.info("construct pykernel 5");
+
         new_stdout.attr("current_session") = current_session;
-        log_.info("construct pykernel 6");
+
         new_stdout.attr("iopub_socket") = sockets;
-        log_.info("construct pykernel 7");
+
         std::string out_name = "stdout";
-        log_.info("construct pykernel 8");
+
         new_stdout.attr("name") = out_name;
-        log_.info("construct pykernel 9");
+
         auto new_stderr = zmq_ostream();
-        log_.info("construct pykernel 10");
+
         new_stderr.attr("current_session") = current_session;
-        log_.info("construct pykernel 11");
+
         new_stderr.attr("iopub_socket") = sockets;
-        log_.info("construct pykernel 12");
+
         std::string err_name = "stderr";
-        log_.info("construct pykernel 13");
+
         new_stderr.attr("name") = err_name;
-        log_.info("construct pykernel 14");
+
         if (engine_mode) {
             shell.attr("displayhook")
                 .attr("topic") = "engine." + std::to_string(engine_identifier) + topic(".execute_result");
@@ -383,30 +380,30 @@ namespace components { namespace detail {
             new_stdout.attr("topic") = "stream." + std::move(out_name);
             new_stderr.attr("topic") = "stream." + std::move(err_name);
         }
-        log_.info("construct pykernel 15");
+
         display_hook displayhook(current_session, sockets);
-        log_.info("construct pykernel 16");
+
         auto sys = py::module::import("sys");
-        log_.info("construct pykernel 17");
+
         pystdout = sys.attr("stdout");
-        log_.info("construct pykernel 18");
+
         pystderr = sys.attr("stderr");
-        log_.info("construct pykernel 19");
+
         pystdout.attr("flush")();
-        log_.info("construct pykernel 20");
+
         pystderr.attr("flush")();
-        log_.info("construct pykernel 21");
+
 
         sys.attr("stdout") = std::move(new_stdout);
-        log_.info("construct pykernel 22");
+
         sys.attr("stderr") = std::move(new_stderr);
-        log_.info("construct pykernel 23");
+
         sys.attr("displayhook") = std::move(displayhook);
-        log_.info("construct pykernel 24");
+
         if (!engine_mode) {
             publish_status("starting", {});
         }
-        log_.info("construct pykernel 25");
+
     }
 
     pykernel::~pykernel() {

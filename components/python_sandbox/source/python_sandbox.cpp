@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include <boost/uuid/random_generator.hpp>
+#include <utility>
 #include <boost/uuid/uuid_io.hpp>
 
 #include <pybind11/pybind11.h>
@@ -64,7 +65,6 @@ namespace components {
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
 
         if(mode_ == sandbox_mode_t::script){
-            log_.info(" if(mode_ == sandbox_mode_t::script){");
             python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
             ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
@@ -83,19 +83,15 @@ namespace components {
     }
 
     auto python_interpreter::jupyter_kernel_init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
-        log_.info("python_interpreter::jupyter_kernel_init 0");
         std::ifstream connection_file{jupyter_connection_path_.string()};
-        log_.info("python_interpreter::jupyter_kernel_init 1");
         if (!connection_file) {
             throw std::logic_error("File jupyter_connection not found");
         }
-        log_.info("python_interpreter::jupyter_kernel_init 2");
+
         nl::json configuration;
-
         connection_file >> configuration;
+        log_.info(configuration.dump(4));
 
-        std::cerr << configuration.dump(4) << std::endl;
-        log_.info("python_interpreter::jupyter_kernel_init 3");
         std::string transport{configuration["transport"]};
         std::string ip{configuration["ip"]};
         auto stdin_port = std::to_string(configuration["stdin_port"].get<std::uint16_t>());
@@ -105,7 +101,6 @@ namespace components {
         stdin_socket_->bind(stdin_address);
         log_.info("python_interpreter::jupyter_kernel_init 4");
         auto sm = detail::jupyter::make_socket_manager(std::move(f), static_cast<zmq::socket_ref>(*stdin_socket_));
-        log_.info("python_interpreter::jupyter_kernel_init 5");
         engine_mode = false;
         jupyter_kernel = boost::intrusive_ptr<pykernel>(new pykernel(
             log_,
@@ -114,7 +109,6 @@ namespace components {
             engine_mode,
             boost::uuids::random_generator()(),
             sm));
-        log_.info("python_interpreter::jupyter_kernel_init 6");
     }
 
     auto python_interpreter::jupyter_engine_init(std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
@@ -128,7 +122,7 @@ namespace components {
 
         connection_file >> configuration;
 
-        std::cerr << configuration.dump(4) << std::endl;
+        log_.info(configuration.dump(4));
 
         auto identifier{boost::uuids::random_generator()()};
 
@@ -145,20 +139,18 @@ namespace components {
     auto python_interpreter::start() -> void {}
 
     auto python_interpreter::init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
-        log_.info("python_interpreter::init 0");
         python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
-        log_.info("python_interpreter::init 1");
         ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
         python_sandbox::detail::add_celery(pyrocketjoe);
-        log_.info("python_interpreter::init 2");
+
         if (mode_ == components::sandbox_mode_t::jupyter_kernel ||
             mode_ == components::sandbox_mode_t::jupyter_engine) {
             python_sandbox::detail::add_jupyter(pyrocketjoe, context_manager_.get());
         }
-        log_.info("python_interpreter::init 3");
+
         py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe));
-        log_.info("python_interpreter::init 4");
+
         if (components::sandbox_mode_t::jupyter_kernel == mode_) {
             log_.info("jupyter kernel mode");
             jupyter_kernel_init(ctx, std::move(f));
@@ -168,7 +160,6 @@ namespace components {
         } else {
             log_.info("init script mode ");
         }
-        log_.info("python_interpreter::init 5");
     }
 
     python_interpreter::~python_interpreter() = default;
@@ -191,11 +182,11 @@ namespace components {
     }
 
     auto python_interpreter::dispatch_shell(std::vector<std::string> msgs) -> void {
-        jupyter_kernel->dispatch_shell(msgs);
+        jupyter_kernel->dispatch_shell(std::move(msgs));
     }
 
     auto python_interpreter::dispatch_control(std::vector<std::string> msgs) -> void {
-        jupyter_kernel->dispatch_control(msgs);
+        jupyter_kernel->dispatch_control(std::move(msgs));
     }
 
     auto python_interpreter::registration(std::vector<std::string>) -> void {

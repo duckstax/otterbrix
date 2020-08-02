@@ -11,6 +11,8 @@
 
 #include <components/buffer/zmq_buffer.hpp>
 
+#include <fmt/core.h>
+
 namespace services {
 
     auto send(zmq::socket_ref socket, std::vector<std::string> msgs) -> void {
@@ -43,7 +45,7 @@ namespace services {
         , jupyter_kernel_infos_polls{}
         , commands_exuctor{nullptr}
         , infos_exuctor{nullptr}
-        , log_(log.clone()){
+        , log_(log.clone()) {
         log_.info("jupyter start construct");
         log_.info(fmt::format("Mode : {0}", cfg.python_configuration_.mode_));
         mode_ = cfg.python_configuration_.mode_;
@@ -67,7 +69,7 @@ namespace services {
 
         connection_file >> configuration;
 
-        std::cerr << configuration.dump(4) << std::endl;
+        log_.info(configuration.dump(4));
 
         std::string transport{configuration["transport"]};
         std::string ip{configuration["ip"]};
@@ -174,29 +176,11 @@ namespace services {
         engine_mode = true;
     }
 
-    void heartbeat(bool engine_mode, zmq::socket_t& heartbeat_socket) {
-        if (!engine_mode) {
-            std::vector<zmq::message_t> msgs;
-
-            while (zmq::recv_multipart(heartbeat_socket,
-                                       std::back_inserter(msgs),
-                                       zmq::recv_flags::dontwait)) {
-                for (const auto& msg : msgs) {
-                    std::cerr << "Heartbeat: " << msg << std::endl;
-                }
-
-                zmq::send_multipart(heartbeat_socket, std::move(msgs), zmq::send_flags::dontwait);
-            }
-        }
-    }
-
     auto jupyter::start() -> void {
-        log_.info("strat");
         executor().start();
-        for(auto&i:init_){
+        for (auto& i : init_) {
             i();
         }
-        log_.info("  executor().start();");
         infos_exuctor = std::make_unique<std::thread>([this]() {
             if (mode_ == components::sandbox_mode_t::jupyter_kernel) {
                 bool e = true;
@@ -205,7 +189,18 @@ namespace services {
                         continue;
                     }
 
-                    heartbeat(engine_mode, *heartbeat_socket);
+                    if (!engine_mode) {
+                        std::vector<zmq::message_t> msgs;
+                        while (zmq::recv_multipart(*heartbeat_socket,
+                                                   std::back_inserter(msgs),
+                                                   zmq::recv_flags::dontwait)) {
+                            for (const auto& msg : msgs) {
+                                log_.info(fmt::format("Heartbeat: {}", msg.to_string()));
+                            }
+
+                            zmq::send_multipart(*heartbeat_socket, std::move(msgs), zmq::send_flags::dontwait);
+                        }
+                    }
                 }
             } else {
                 zmq::proxy(*heartbeat_ping_socket, *heartbeat_pong_socket);
@@ -253,12 +248,12 @@ namespace services {
                     msgs_for_parse.reserve(msgs.size());
 
                     for (const auto& msg : msgs) {
-                        std::cerr << "Shell: " << msg << std::endl;
+                        log_.info(fmt::format("Shell: {}", msg.to_string()));
                         msgs_for_parse.push_back(std::move(msg.to_string()));
                     }
-                    std::cerr << executor().num_workers() << std::endl;
-                    std::cerr << executor().max_throughput() << std::endl;
-                    actor_zeta::send(actor_zeta::actor_address(this), addresses("python"), "shell", components::buffer("shell", msgs_for_parse));
+
+                    auto py = addresses("python");
+                    actor_zeta::send(py, actor_zeta::actor_address(this), "shell", components::buffer("shell", msgs_for_parse));
                 }
             }
 
@@ -271,11 +266,11 @@ namespace services {
                     msgs_for_parse.reserve(msgs.size());
 
                     for (const auto& msg : msgs) {
-                        std::cerr << "Control: " << msg << std::endl;
+                        log_.info(fmt::format("Control: {}", msg.to_string()));
                         msgs_for_parse.push_back(std::move(msg.to_string()));
                     }
-
-                    actor_zeta::send(actor_zeta::actor_address(this), addresses("python"), "control", components::buffer("control", msgs_for_parse));
+                    auto py = addresses("python");
+                    actor_zeta::send(py, actor_zeta::actor_address(this), "control", components::buffer("control", msgs_for_parse));
                 }
             }
         }
@@ -296,28 +291,34 @@ namespace services {
     jupyter::~jupyter() = default;
 
     void jupyter::enqueue(goblin_engineer::message msg, actor_zeta::executor::execution_device*) {
-        set_current_message(std::move(msg));
+        auto tmp = std::move(msg);
+        log_.info(fmt::format("message command: {}", std::string(tmp.command().data(), tmp.command().size())));
+        log_.info(fmt::format("message sender: {}", std::string(tmp.sender()->name().data(), tmp.sender()->name().size())));
+        log_.info(fmt::format("actor name: {}", std::string(this->name().data(), this->name().size())));
+        set_current_message(std::move(tmp));
         dispatch().execute(*this);
     }
 
-    auto jupyter::write(const std::string& socket_type, std::vector<std::string>& msg) -> void {
-        if ("iopub" == socket_type) {
-            send(*iopub_socket, msg);
+    auto jupyter::write(components::zmq_buffer_t& msg) -> void {
+        log_.info(" auto jupyter::write(const std::string& socket_type, std::vector<std::string>& msg) -> void {");
+        if ("iopub" == msg->id()) {
+            return send(*iopub_socket, msg->msg());
         }
 
-        if ("shell" == socket_type) {
-            send(*shell_socket, msg);
+        if ("shell" == msg->id()) {
+            return send(*shell_socket, msg->msg());
         }
 
-        if ("control" == socket_type) {
-            send(*control_socket, msg);
+        if ("control" == msg->id()) {
+            return send(*control_socket, msg->msg());
         }
 
-        if ("stdion" == socket_type) {
+        if ("stdion" == msg->id()) {
             if (engine_mode) {
-                send(*iopub_socket, msg);
+                return send(*iopub_socket, msg->msg());
             }
         }
+        log_.info("Non write");
     }
 
     zmq::context_t& jupyter::zmq_context() {
@@ -328,18 +329,15 @@ namespace services {
         return *coordinator_;
     }
 
-    auto jupyter::join(actor_zeta::actor address) -> actor_zeta::actor_address {
-        auto tmp = std::move(address);
-        auto tmp_2 = tmp->address();
-        actor_storage_.emplace_back(std::move(tmp));
-        log_.info(" auto jupyter::join(actor_zeta::actor) -> actor_zeta::actor_address {");
-        actor_zeta::actor_address tmp1(this);
-        actor_zeta::link_imp(tmp1, tmp_2);
-        return tmp_2;
+    auto jupyter::join(actor_zeta::actor tmp) -> actor_zeta::actor_address {
+        auto actor = std::move(tmp);
+        auto address = actor->address();
+        actor_zeta::link(*this, address);
+        actor_storage_.emplace_back(std::move(actor));
+        return address;
     }
 
     auto jupyter::join(actor_zeta::intrusive_ptr<actor_zeta::supervisor> tmp) -> actor_zeta::actor_address {
-        log_.info(" auto jupyter::join(actor_zeta::intrusive_ptr<actor_zeta::supervisor> tmp)");
         auto supervisor = std::move(tmp);
         auto address = supervisor->address();
         actor_zeta::link(*this, address);
@@ -347,7 +345,7 @@ namespace services {
         return address;
     }
 
-    auto jupyter::pre_init(std::function<void()> f) -> void {
+    auto jupyter::pre_hook(std::function<void()> f) -> void {
         init_.emplace_back(std::move(f));
     }
 
