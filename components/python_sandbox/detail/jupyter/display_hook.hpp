@@ -23,7 +23,7 @@ namespace components { namespace detail { namespace jupyter {
 
     private:
         boost::intrusive_ptr<session> current_session;
-        socket_manager iopub_socket;
+        socket_manager socket_manager_;
         size_t execution_count;
     };
 

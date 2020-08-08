@@ -15,12 +15,11 @@ namespace components { namespace detail { namespace jupyter {
     display_hook::display_hook(
         boost::intrusive_ptr<session> current_session,
         socket_manager iopub_socket
-    ) : current_session{current_session}, iopub_socket{iopub_socket},
+    ) : current_session{current_session}, socket_manager_{iopub_socket},
         execution_count{0} {}
 
     auto display_hook::set_execution_count(size_t execution_count) -> void {
         this->execution_count = execution_count;
-        py::cpp_function();
     }
 
     auto display_hook::operator()(py::object value) -> void {
@@ -37,8 +36,7 @@ namespace components { namespace detail { namespace jupyter {
         sys.attr("stdout").attr("flush")();
         sys.attr("stderr").attr("flush")();
 
-        iopub_socket->socket(
-            "iopub_socket", current_session->construct_message(
+        socket_manager_->iopub( current_session->construct_message(
                 {"execute_result"}, {{"msg_type", "execute_result"}},
                 {}, {},
                 {{"execution_count", execution_count},
