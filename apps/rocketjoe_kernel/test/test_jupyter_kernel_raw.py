@@ -119,4 +119,5 @@ async def test_kernel() -> None:
                 rocketjoe.kill()
 
 logging.basicConfig(level=logging.DEBUG)
-asyncio.run(test_kernel())
+loop = asyncio.get_event_loop()
+loop.run_until_complete(test_kernel())
