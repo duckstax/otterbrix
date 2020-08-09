@@ -1115,11 +1115,15 @@ namespace components { namespace detail {
         std::vector<std::string> identifiers,
         nl::json parent) -> void {
         auto msg_type = parent["header"]["msg_type"].get<std::string>();
-        log_.info(fmt::format("auto pykernel::abort_reply msg type :  {}", msg_type));
-        boost::replace_all(msg_type, "request", "reply");
-        log_.info(fmt::format("auto pykernel::abort_reply 1 msg type :  {}",msg_type));
+        log_.info(fmt::format("auto pykernel::abort_reply msg type :  {}",std::string(std::make_move_iterator(std::make_reverse_iterator(msg_type.crend())),
+                                                                                      std::make_move_iterator(std::make_reverse_iterator(std::find(msg_type.crbegin(),
+                                                                                                                                                   msg_type.crend(),
+                                                                                                                                                   '_'))))));
         socket_manager_->socket(socket_type, current_session->construct_message(std::move(identifiers),
-                                                                                {{"msg_type", std::string(msg_type)}},
+                                                                                {{"msg_type", std::string(std::make_move_iterator(std::make_reverse_iterator(msg_type.crend())),
+                                                                                                          std::make_move_iterator(std::make_reverse_iterator(std::find(msg_type.crbegin(),
+                                                                                                                                                                       msg_type.crend(),
+                                                                                                                                                                       '_'))))}},
                                                                                 std::move(parent),
                                                                                 {{"status", "aborted"},
                                                                                  {"engine", boost::uuids::to_string(identifier)}},
@@ -1159,6 +1163,7 @@ namespace components { namespace detail {
             abort_reply(socket_type,
                         std::move(identifiers),
                         std::move(parent));
+            publish_status("idle", {});
             log_.info("pykernel::dispatch_shell  if (abort_all) { ");
             return;
         }
@@ -1172,6 +1177,7 @@ namespace components { namespace detail {
             abort_reply(socket_type,
                         std::move(identifiers),
                         std::move(parent));
+            publish_status("idle", {});
             log_.info("pykernel::dispatch_shell   if (abort != aborted.cend()) { ");
             return;
         }
@@ -1260,6 +1266,7 @@ namespace components { namespace detail {
             abort_reply(socket_type,
                         std::move(identifiers),
                         std::move(parent));
+            publish_status("idle", {});
             return;
         }
 
