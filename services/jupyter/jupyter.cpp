@@ -211,27 +211,21 @@ namespace services {
         });
 
         if (mode_ == components::sandbox_mode_t::jupyter_engine) {
-            /*
-                auto tmp = jupyter_kernel->registration();
-                send(registration_socket, tmp);
-                std::vector<zmq::message_t> msgs;
+            auto py = addresses("python");
+            std::vector<zmq::message_t> msgs;
 
-                if (!zmq::recv_multipart(*registration_socket,
-                                         std::back_inserter(msgs))) {
-                    return false;
-                }
+            if (!zmq::recv_multipart(*registration_socket, std::back_inserter(msgs))) {
+            }
 
-                std::vector<std::string> msgs_for_parse;
+            std::vector<std::string> msgs_for_parse;
+            msgs_for_parse.reserve(msgs.size());
 
-                msgs_for_parse.reserve(msgs.size());
+            for (const auto& msg : msgs) {
+                log_.info(fmt::format("Registration: {}", msg.to_string()));
+                msgs_for_parse.push_back(std::move(msg.to_string()));
+            }
 
-                for (const auto& msg : msgs) {
-                    std::cerr << "Registration: " << msg << std::endl;
-                    msgs_for_parse.push_back(std::move(msg.to_string()));
-                }
-
-                jupyter_kernel->registration(std::move(msgs_for_parse));
-                 */
+            actor_zeta::send(py, self(), "shell", components::buffer("shell", msgs_for_parse));
         }
 
         bool e = true;
@@ -329,6 +323,12 @@ namespace services {
                 return send(*iopub_socket, msg->msg());
             }
         }
+
+        if ("registration" == msg->id()) {
+            log_.info(" auto jupyter::write registration");
+            return send(*registration_socket, msg->msg());
+        }
+
         log_.info("Non write");
     }
 

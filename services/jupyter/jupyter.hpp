@@ -23,17 +23,17 @@
 
 namespace services {
 
-    class jupyter  final : public actor_zeta::supervisor {
+    class jupyter final : public actor_zeta::supervisor {
     public:
         jupyter() = delete;
         jupyter(const jupyter&) = delete;
         jupyter& operator=(const jupyter&) = delete;
 
-        jupyter( const components::configuration&, components::log_t&);
+        jupyter(const components::configuration&, components::log_t&);
 
         auto executor() noexcept -> actor_zeta::abstract_executor& override;
 
-        auto join(actor_zeta::actor) -> actor_zeta::actor_address override ;
+        auto join(actor_zeta::actor) -> actor_zeta::actor_address override;
 
         auto join(actor_zeta::intrusive_ptr<actor_zeta::supervisor>) -> actor_zeta::actor_address;
 
@@ -45,13 +45,12 @@ namespace services {
 
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
-        auto pre_hook(std::function<void()> f)-> void;
-
-    private:
-
-        auto init() -> void;
+        auto pre_hook(std::function<void()> f) -> void;
 
         auto write(components::zmq_buffer_t&) -> void;
+
+    private:
+        auto init() -> void;
 
         auto jupyter_engine_init() -> void;
 
@@ -83,39 +82,31 @@ namespace services {
     template<
         typename Actor,
         typename Manager,
-        typename... Args
-    >
-    auto make_service(actor_zeta::intrusive_ptr<Manager>&manager, Args&&... args){
-        return manager->join(new Actor(manager,std::forward<Args>(args)...));
+        typename... Args>
+    auto make_service(actor_zeta::intrusive_ptr<Manager>& manager, Args&&... args) {
+        return manager->join(new Actor(manager, std::forward<Args>(args)...));
     }
-
 
     template<
         typename Root,
         typename Manager,
-        typename... Args
-    >
-    auto make_manager_service(actor_zeta::intrusive_ptr<Root> app,Args&&... args){
+        typename... Args>
+    auto make_manager_service(actor_zeta::intrusive_ptr<Root> app, Args&&... args) {
         actor_zeta::intrusive_ptr<Manager> tmp(
             new Manager(
                 app,
-                std::forward<Args>(args)...
-            )
-        );
+                std::forward<Args>(args)...));
         app.join(tmp);
         return tmp;
     }
 
     template<
         typename Manager,
-        typename... Args
-    >
-    auto make_manager_service(Args&&... args){
+        typename... Args>
+    auto make_manager_service(Args&&... args) {
         return actor_zeta::intrusive_ptr<Manager>(
             new Manager(
-                std::forward<Args>(args)...
-            )
-        );
+                std::forward<Args>(args)...));
     }
 
 } // namespace services

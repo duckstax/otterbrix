@@ -5,8 +5,8 @@
 #include <iostream>
 
 #include <boost/uuid/random_generator.hpp>
-#include <utility>
 #include <boost/uuid/uuid_io.hpp>
+#include <utility>
 
 #include <pybind11/pybind11.h>
 
@@ -64,7 +64,7 @@ namespace components {
         }
         jupyter_connection_path_ = configuration.jupyter_connection_path_;
 
-        if(mode_ == sandbox_mode_t::script){
+        if (mode_ == sandbox_mode_t::script) {
             python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
 
             ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
@@ -189,11 +189,16 @@ namespace components {
         jupyter_kernel->dispatch_control(std::move(msgs));
     }
 
-    auto python_interpreter::registration(std::vector<std::string>) -> void {
+    auto python_interpreter::registration(std::vector<std::string>& buffer) -> void {
+        jupyter_kernel->registration(std::move(buffer));
     }
 
     auto python_interpreter::stop_session() -> void {
         jupyter_kernel->stop_session();
+    }
+
+    auto python_interpreter::registration() -> std::vector<std::string> {
+        return jupyter_kernel->registration();
     }
 
 } // namespace components

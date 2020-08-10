@@ -33,23 +33,24 @@ namespace components {
 
         void run_script(const std::vector<std::string>&);
 
-        auto registration(std::vector<std::string>) -> void;
+        auto registration(std::vector<std::string>&) -> void;
+
+        auto registration() -> std::vector<std::string>;
 
         auto dispatch_shell(std::vector<std::string> msgs) -> void;
 
         auto dispatch_control(std::vector<std::string> msgs) -> void;
 
-        auto init(zmq::context_t&, std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+        auto init(zmq::context_t&, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
         auto stop_session() -> void;
 
     private:
-
         auto start() -> void;
 
-        auto jupyter_engine_init(std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+        auto jupyter_engine_init(std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
-        auto jupyter_kernel_init(zmq::context_t&,std::function<void(const std::string&,std::vector<std::string>)>) -> void;
+        auto jupyter_kernel_init(zmq::context_t&, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;

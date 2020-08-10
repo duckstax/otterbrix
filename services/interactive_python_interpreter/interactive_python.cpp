@@ -17,18 +17,30 @@ namespace services {
         add_handler("control", &interactive_python::dispatch_control);
         add_handler("start_session", &interactive_python::start_session);
         add_handler("stop_session", &interactive_python::stop_session);
-        env->pre_hook([this, env]() {
-            async_init(env->zmq_context(),
-                       [this](const std::string& socket_name, std::vector<std::string> msg) {
-                           auto jupyter = this->addresses("jupyter");
-                           actor_zeta::send(jupyter, this->address(), "write", components::buffer(socket_name, msg));
-                       });
-        });
+        add_handler("registration", &interactive_python::registration);
+        /// TODO: hack
+        if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
+            env->pre_hook(
+                [this, env]() mutable {
+                    auto result = components::buffer("registration", python_interpreter_->registration());
+                    env->write(result);
+                });
+        }
+
+        env->pre_hook(
+            [this, env]() {
+                async_init(env->zmq_context(),
+                           [this](const std::string& socket_name, std::vector<std::string> msg) {
+                               auto jupyter = this->addresses("jupyter");
+                               actor_zeta::send(jupyter, this->address(), "write", components::buffer(socket_name, msg));
+                           });
+            });
 
         log_.info("construct  interactive_python finish");
     }
 
-    auto interactive_python::registration(std::vector<std::string>) -> void {
+    auto interactive_python::registration(std::vector<std::string>& msgs) -> void {
+        python_interpreter_->registration(msgs);
     }
 
     auto interactive_python::dispatch_shell(components::zmq_buffer_t& msgs) -> void {
