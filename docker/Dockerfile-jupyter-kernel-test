@@ -32,6 +32,6 @@ WORKDIR ./build
 ENV JUPYTER_PATH=/usr/local/share/jupyter
 
 RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
-    cmake --build .  --target rocketjoe_kernel
+    cmake --build .
 
 CMD ctest -V
