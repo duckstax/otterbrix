@@ -28,6 +28,10 @@ namespace services {
 
         auto dispatch_control(components::zmq_buffer_t&) -> void;
 
+        auto stop_session() -> void;
+
+        auto start_session() -> void;
+
         components::log_t log_;
         std::unique_ptr<components::python_interpreter> python_interpreter_;
     };

@@ -236,11 +236,14 @@ namespace services {
 
         bool e = true;
         while (e) {
+            auto py = addresses("python");
             if (zmq::poll(jupyter_kernel_commands_polls) == -1) {
                 continue;
             }
 
             std::vector<zmq::message_t> msgs;
+
+            actor_zeta::send(py, self(), "start_session");
 
             if (jupyter_kernel_commands_polls[0].revents & ZMQ_POLLIN) {
                 while (zmq::recv_multipart(*shell_socket,
@@ -255,8 +258,7 @@ namespace services {
                         msgs_for_parse.push_back(std::move(msg.to_string()));
                     }
 
-                    auto py = addresses("python");
-                    actor_zeta::send(py, actor_zeta::actor_address(this), "shell", components::buffer("shell", msgs_for_parse));
+                    actor_zeta::send(py, self(), "shell", components::buffer("shell", msgs_for_parse));
                 }
             }
 
@@ -272,10 +274,12 @@ namespace services {
                         log_.info(fmt::format("Control: {}", msg.to_string()));
                         msgs_for_parse.push_back(std::move(msg.to_string()));
                     }
-                    auto py = addresses("python");
-                    actor_zeta::send(py, actor_zeta::actor_address(this), "control", components::buffer("control", msgs_for_parse));
+
+                    actor_zeta::send(py, self(), "control", components::buffer("control", msgs_for_parse));
                 }
             }
+
+            actor_zeta::send(py, self(), "stop_session");
         }
     }
 

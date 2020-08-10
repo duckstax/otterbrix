@@ -50,6 +50,8 @@ namespace components { namespace detail { namespace jupyter {
 
         auto dispatch_control(std::vector<std::string> msgs) -> void;
 
+        auto stop_session() -> void ;
+
     private:
         auto topic(std::string topic) const -> std::string;
 

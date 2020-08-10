@@ -15,6 +15,8 @@ namespace services {
         log_.info("python_interpreter_");
         add_handler("shell", &interactive_python::dispatch_shell);
         add_handler("control", &interactive_python::dispatch_control);
+        add_handler("start_session", &interactive_python::start_session);
+        add_handler("stop_session", &interactive_python::stop_session);
         env->pre_hook([this, env]() {
             async_init(env->zmq_context(),
                        [this](const std::string& socket_name, std::vector<std::string> msg) {
@@ -39,6 +41,15 @@ namespace services {
 
     void interactive_python::async_init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) {
         python_interpreter_->init(ctx, std::move(f));
+    }
+
+    auto interactive_python::stop_session() -> void {
+        log_.info("Run stop_session");
+        python_interpreter_->stop_session();
+    }
+
+    auto interactive_python::start_session() -> void {
+        log_.info("Run start_session");
     }
 
 } // namespace services

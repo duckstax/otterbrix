@@ -1331,5 +1331,9 @@ namespace components { namespace detail {
         }
     }
 
+    auto pykernel::stop_session() -> void {
+        abort_all = false;
+    }
+
 }}
 } // namespace components::detail::jupyter

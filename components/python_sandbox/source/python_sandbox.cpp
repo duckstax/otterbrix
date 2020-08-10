@@ -192,4 +192,8 @@ namespace components {
     auto python_interpreter::registration(std::vector<std::string>) -> void {
     }
 
+    auto python_interpreter::stop_session() -> void {
+        jupyter_kernel->stop_session();
+    }
+
 } // namespace components

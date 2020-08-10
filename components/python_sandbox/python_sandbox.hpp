@@ -41,6 +41,8 @@ namespace components {
 
         auto init(zmq::context_t&, std::function<void(const std::string&,std::vector<std::string>)>) -> void;
 
+        auto stop_session() -> void;
+
     private:
 
         auto start() -> void;
