@@ -19,14 +19,6 @@ namespace services {
         add_handler("stop_session", &interactive_python::stop_session);
         add_handler("registration", &interactive_python::registration);
         /// TODO: hack
-        if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
-            env->pre_hook(
-                [this, env]() mutable {
-                    auto result = components::buffer("registration", python_interpreter_->registration());
-                    env->write(result);
-                });
-        }
-
         env->pre_hook(
             [this, env]() {
                 async_init(env->zmq_context(),
@@ -35,6 +27,15 @@ namespace services {
                                actor_zeta::send(jupyter, this->address(), "write", components::buffer(socket_name, msg));
                            });
             });
+
+        /// TODO: hack
+        if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
+            env->pre_hook(
+                [this, env]() mutable {
+                  auto result = components::buffer("registration", python_interpreter_->registration());
+                  env->write(result);
+                });
+        }
 
         log_.info("construct  interactive_python finish");
     }
