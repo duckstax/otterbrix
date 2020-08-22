@@ -184,15 +184,16 @@ namespace services {
         for (auto& i : init_) {
             i();
         }
-        infos_exuctor = std::make_unique<std::thread>([this]() {
-            if (mode_ == components::sandbox_mode_t::jupyter_kernel) {
-                bool e = true;
-                while (e) {
-                    if (zmq::poll(jupyter_kernel_infos_polls) == -1) {
-                        continue;
-                    }
 
-                    if (!engine_mode) {
+        if (mode_ == components::sandbox_mode_t::jupyter_kernel) {
+            log_.info("jupyter kernel heartbeat");
+            infos_exuctor = std::make_unique<std::thread>(
+                [this]() {
+                    bool e = true;
+                    while (e) {
+                        if (zmq::poll(jupyter_kernel_infos_polls) == -1) {
+                            continue;
+                        }
                         std::vector<zmq::message_t> msgs;
                         while (zmq::recv_multipart(*heartbeat_socket,
                                                    std::back_inserter(msgs),
@@ -204,11 +205,16 @@ namespace services {
                             zmq::send_multipart(*heartbeat_socket, std::move(msgs), zmq::send_flags::dontwait);
                         }
                     }
-                }
-            } else {
-                zmq::proxy(*heartbeat_ping_socket, *heartbeat_pong_socket);
-            }
-        });
+                });
+        } else if (mode_ == components::sandbox_mode_t::jupyter_engine) {
+            log_.info("jupyter engine heartbeat");
+            infos_exuctor = std::make_unique<std::thread>(
+                [this]() {
+                    zmq::proxy(*heartbeat_ping_socket, *heartbeat_pong_socket);
+                });
+        } else {
+            log_.error("Error not heartbeat");
+        }
 
         if (mode_ == components::sandbox_mode_t::jupyter_engine) {
             auto py = addresses("python");
