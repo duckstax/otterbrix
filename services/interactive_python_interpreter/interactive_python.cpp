@@ -2,6 +2,8 @@
 #include <components/buffer/zmq_buffer.hpp>
 #include <services/jupyter/jupyter.hpp>
 
+#include <boost/uuid/random_generator.hpp>
+
 namespace services {
 
     interactive_python::interactive_python(
@@ -18,10 +20,14 @@ namespace services {
         add_handler("start_session", &interactive_python::start_session);
         add_handler("stop_session", &interactive_python::stop_session);
         add_handler("registration", &interactive_python::registration);
+
+        auto identifier = boost::uuids::random_generator()();
+
         /// TODO: hack
         env->pre_hook(
-            [this, env]() {
+            [this, env, identifier]() {
                 async_init(env->zmq_context(),
+                           std::move(identifier),
                            [this](const std::string& socket_name, std::vector<std::string> msg) {
                                auto jupyter = this->addresses("jupyter");
                                actor_zeta::send(jupyter, this->address(), "write", components::buffer(socket_name, msg));
@@ -31,7 +37,10 @@ namespace services {
         /// TODO: hack
         if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
             env->pre_hook(
-                [this, env]() mutable {
+                [this, env, identifier]() mutable {
+                  auto jupyter = this->addresses("jupyter");
+                  actor_zeta::send(jupyter, this->address(), "identifier", std::move(identifier));
+
                   auto result = components::buffer("registration", python_interpreter_->registration());
                   env->write(result);
                 });
@@ -40,7 +49,7 @@ namespace services {
         log_.info("construct  interactive_python finish");
     }
 
-    auto interactive_python::registration(std::vector<std::string>& msgs) -> void {
+    auto interactive_python::registration(std::vector<std::string> msgs) -> void {
         python_interpreter_->registration(msgs);
     }
 
@@ -52,8 +61,8 @@ namespace services {
         python_interpreter_->dispatch_control(msgs->msg());
     }
 
-    void interactive_python::async_init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) {
-        python_interpreter_->init(ctx, std::move(f));
+    void interactive_python::async_init(zmq::context_t& ctx, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)> f) {
+        python_interpreter_->init(ctx, std::move(identifier), std::move(f));
     }
 
     auto interactive_python::stop_session() -> void {

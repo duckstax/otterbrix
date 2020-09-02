@@ -4,7 +4,6 @@
 #include <exception>
 #include <iostream>
 
-#include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <utility>
 
@@ -82,7 +81,7 @@ namespace components {
         log_.info("processing env python finish ");
     }
 
-    auto python_interpreter::jupyter_kernel_init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
+    auto python_interpreter::jupyter_kernel_init(zmq::context_t& ctx, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
         if (!connection_file) {
             throw std::logic_error("File jupyter_connection not found");
@@ -107,11 +106,11 @@ namespace components {
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             engine_mode,
-            boost::uuids::random_generator()(),
+            std::move(identifier),
             sm));
     }
 
-    auto python_interpreter::jupyter_engine_init(std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
+    auto python_interpreter::jupyter_engine_init(boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         std::ifstream connection_file{jupyter_connection_path_.string()};
 
         if (!connection_file) {
@@ -124,21 +123,19 @@ namespace components {
 
         log_.info(configuration.dump(4));
 
-        auto identifier{boost::uuids::random_generator()()};
-
         engine_mode = true;
         jupyter_kernel = boost::intrusive_ptr<pykernel>{new pykernel{
             log_,
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             engine_mode,
-            identifier,
+            std::move(identifier),
             detail::jupyter::make_socket_manager(std::move(f))}};
     }
 
     auto python_interpreter::start() -> void {}
 
-    auto python_interpreter::init(zmq::context_t& ctx, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
+    auto python_interpreter::init(zmq::context_t& ctx, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)> f) -> void {
         python_sandbox::detail::add_file_system(pyrocketjoe, file_manager_.get());
         ///python_sandbox::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
@@ -153,10 +150,10 @@ namespace components {
 
         if (components::sandbox_mode_t::jupyter_kernel == mode_) {
             log_.info("jupyter kernel mode");
-            jupyter_kernel_init(ctx, std::move(f));
+            jupyter_kernel_init(ctx, std::move(identifier), std::move(f));
         } else if (components::sandbox_mode_t::jupyter_engine == mode_) {
             log_.info("jupyter engine mode");
-            jupyter_engine_init(std::move(f));
+            jupyter_engine_init(std::move(identifier), std::move(f));
         } else {
             log_.info("init script mode ");
         }

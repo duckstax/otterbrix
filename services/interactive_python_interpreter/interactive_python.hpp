@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/uuid/uuid.hpp>
+
 #include <components/buffer/zmq_buffer.hpp>
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
@@ -20,10 +22,10 @@ namespace services {
             const components::python_sandbox_configuration&,
             components::log_t&);
 
-        void async_init(zmq::context_t&, std::function<void(const std::string&, std::vector<std::string>)>);
+        void async_init(zmq::context_t&, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)>);
 
     private:
-        auto registration(std::vector<std::string>&) -> void;
+        auto registration(std::vector<std::string>) -> void;
 
         auto dispatch_shell(components::zmq_buffer_t&) -> void;
 

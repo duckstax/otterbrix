@@ -5,6 +5,7 @@
 #include <queue>
 #include <unordered_set>
 
+#include <boost/uuid/uuid.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
@@ -46,6 +47,8 @@ namespace services {
         void enqueue(goblin_engineer::message, actor_zeta::execution_device*) override;
 
         auto pre_hook(std::function<void()> f) -> void;
+
+        auto identifier(boost::uuids::uuid identifier) -> void;
 
         auto write(components::zmq_buffer_t&) -> void;
 

@@ -4,6 +4,7 @@
 #include <thread>
 
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 #include <pybind11/embed.h>
@@ -41,16 +42,16 @@ namespace components {
 
         auto dispatch_control(std::vector<std::string> msgs) -> void;
 
-        auto init(zmq::context_t&, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
+        auto init(zmq::context_t&, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
         auto stop_session() -> void;
 
     private:
         auto start() -> void;
 
-        auto jupyter_engine_init(std::function<void(const std::string&, std::vector<std::string>)>) -> void;
+        auto jupyter_engine_init(boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
-        auto jupyter_kernel_init(zmq::context_t&, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
+        auto jupyter_kernel_init(zmq::context_t&, boost::uuids::uuid identifier, std::function<void(const std::string&, std::vector<std::string>)>) -> void;
 
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
