@@ -36,11 +36,11 @@ jobs:
           cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel 2
 
-      #- name: install dependons test
-      #  run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
+      - name: install dependons test
+        run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
 
-      #- name: install kernel
-      #  run: jupyter kernelspec install --user kernels/ipython
+      - name: install kernel
+        run: jupyter kernelspec install --user kernels/rocketjoe
 
-      #- name: run test
-      #  run: ctest #pytest core/rocketjoe/python_sandbox/test_python_kernel.py
+      - name: run test
+        run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
