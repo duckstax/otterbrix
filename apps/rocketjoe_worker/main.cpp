@@ -71,8 +71,6 @@ int main(int argc, char* argv[]) {
     // clang-format off
     command_line_description.add_options()
         ("help", "Print help")
-        /// TODO: add support joblib ("worker_mode", "Worker Mode")
-        /// TODO: add support joblib ("worker_number",po::value<unsigned short int>(), "Worker Process Mode and run  ")
         ;
     // clang-format on
     po::variables_map command_line;
@@ -97,7 +95,7 @@ int main(int argc, char* argv[]) {
     components::configuration cfg_;
 
     cfg_.python_configuration_.mode_= components::sandbox_mode_t::script;
-    cfg_.operating_mode_ = components::operating_mode::master;
+    cfg_.operating_mode_ = components::operating_mode::worker;
 
     int number_of_python_files = 0;
 
@@ -139,11 +137,6 @@ int main(int argc, char* argv[]) {
         log.info("script mode");
         log.info(fmt::format("run: {0}", (cfg_.python_configuration_.script_path_.string())));
         cfg_.python_configuration_.mode_ = components::sandbox_mode_t::script;
-    }
-
-    if (command_line.count("worker_mode")) {
-        log.info("Worker Mode");
-        cfg_.operating_mode_ = components::operating_mode::worker;
     }
 
     goblin_engineer::components::root_manager env(1, 1000);
