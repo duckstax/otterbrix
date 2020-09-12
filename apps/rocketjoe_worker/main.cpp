@@ -141,13 +141,11 @@ int main(int argc, char* argv[]) {
 
     goblin_engineer::components::root_manager env(1, 1000);
 
-    /// TODO: add support joblib components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
+    components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
 
     init_service(env, cfg_, log);
 
-    /// TODO: add support joblib if (command_line.count("worker_number")) {
-    /// process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
-    /// }
+    process_pool.add_worker_process();
 
     components::python_interpreter vm(cfg_.python_configuration_, log);
 
