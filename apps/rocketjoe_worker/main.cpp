@@ -101,25 +101,37 @@ int main(int argc, char* argv[]) {
 
     int number_of_python_files = 0;
 
-    /// TODO: print non-existing files
     for (const auto& i : all_args) {
         boost::filesystem::path p(i);
         auto non_empty = boost::filesystem::exists(p);
         auto extension = p.extension();
-        if ((non_empty && extension == ".py")) {
-            if (number_of_python_files == 0) {
-                cfg_.python_configuration_.script_path_ = i;
+        if (extension == ".py") {
+            if (non_empty) {
+                if (number_of_python_files == 0) {
+                    cfg_.python_configuration_.script_path_ = i;
+                }
+                number_of_python_files++;
+            } else {
+                log.warn(fmt::format("File {0} not exists!", i));
             }
-            number_of_python_files++;
+        } else if (&i != &(all_args.front())) { // no warning if my own executable name
+            log.warn(fmt::format("File {0} haven't \"*.py\" extension, so it is ignored!", i));
         }
     }
 
     bool exist_path_script_python_file = !cfg_.python_configuration_.script_path_.empty();
 
+    if (number_of_python_files == 0) {
+        log.error("No Python3 files to run!");
+        log.error(fmt::format("Number of Python3 files: {0}", number_of_python_files));
+        log.error("No Python3 files to run!");
+        return 1;
+    }
+
     if (number_of_python_files > 1) {
-        log.error("More than one file to run!");
-        log.error(fmt::format("Number of files: {0}", number_of_python_files));
-        log.error("More than one file to run!");
+        log.error("More than one Python3 file to run!");
+        log.error(fmt::format("Number of Python3 files: {0}", number_of_python_files));
+        log.error("More than one Python3 file to run!");
         return 1;
     }
 
