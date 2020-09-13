@@ -33,7 +33,7 @@ jobs:
         env:
           CC: gcc
         run: |
-          cmake . -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
           cmake --build . --parallel 2
 
       - name: install dependons test
@@ -42,5 +42,5 @@ jobs:
       - name: install kernel
         run: jupyter kernelspec install --user kernels/rocketjoe
 
-      - name: run test
+      - name: run test base
         run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
