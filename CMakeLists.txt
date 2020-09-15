@@ -31,29 +31,28 @@ option(DEV_MODE "developer mode" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
-if (DEV_MODE)
-    enable_testing()
-    if(NOT WIN32)
-        add_compile_options(
-                -Wall
-                -Wextra
-                -Wpedantic
+enable_testing()
+if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    add_compile_options(
+            -Wall
+            -Wextra
+            -Wpedantic
 
-                #-Wredundant-move # not work gcc
-                -Wcast-align
-                -Wcast-qual
-                -Wconversion
-                -Wctor-dtor-privacy
-                -Wenum-compare
-                -Wfloat-equal
-                -Wnon-virtual-dtor
-                -Wold-style-cast
-                -Woverloaded-virtual
-                -Wredundant-decls
-                -Wsign-conversion
-                -Wsign-promo
-        )
-    endif()
+            -Wcast-align
+            -Wcast-qual
+            -Wconversion
+            -Wctor-dtor-privacy
+            -Wenum-compare
+            -Wfloat-equal
+            -Wnon-virtual-dtor
+            -Wold-style-cast
+            -Woverloaded-virtual
+            -Wredundant-decls
+            -Wsign-conversion
+            -Wsign-promo
+    )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W4 /WX)
 endif ()
 
 # configuration
