@@ -74,6 +74,8 @@ mkdir build
 
 cd build
 
+conan install .
+
 cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release
 
 cmake --build .
