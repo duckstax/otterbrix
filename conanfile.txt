@@ -8,12 +8,15 @@ nlohmann_json/3.7.3@_/_
 cppzmq/4.6.0@bincrafters/stable
 pybind11/2.3.0@conan/stable
 gtest/1.10.0
+rabbitmq-c/0.10.0
 
 goblin-engineer/1.0.0a3@cyberduckninja/stable
 
 [options]
 OpenSSL:shared = True
 goblin-engineer:http_component = True
+rabbitmq-c:shared = True
+rabbitmq-c:ssl = False
 
 [generators]
 cmake

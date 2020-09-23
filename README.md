@@ -70,11 +70,11 @@ git clone https://github.com/cyberduckninja/RocketJoe.git rocketjoe
 
 cd rocketjoe
 
+conan install .
+
 mkdir build
 
 cd build
-
-conan install .
 
 cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release
 
