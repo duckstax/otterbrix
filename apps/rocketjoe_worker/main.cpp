@@ -11,7 +11,6 @@
 #include "configuration.hpp"
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
-#include <components/process_pool/process_pool.hpp>
 #include <components/python_sandbox/python_sandbox.hpp>
 
 #include "init_service.hpp"
@@ -141,11 +140,7 @@ int main(int argc, char* argv[]) {
 
     goblin_engineer::components::root_manager env(1, 1000);
 
-    components::process_pool_t process_pool(all_args[0], {"--worker_mode"}, log);
-
     init_service(env, cfg_, log);
-
-    process_pool.add_worker_process();
 
     components::python_interpreter vm(cfg_.python_configuration_, log);
 
