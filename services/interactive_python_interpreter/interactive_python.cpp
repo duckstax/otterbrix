@@ -36,6 +36,7 @@ namespace services {
 
         /// TODO: hack
         if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
+            log.info("   if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine)");
             env->pre_hook(
                 [this, env, identifier]() mutable {
                   auto jupyter = this->addresses("jupyter");
