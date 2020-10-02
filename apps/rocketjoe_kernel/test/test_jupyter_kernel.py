@@ -1,8 +1,5 @@
 # Don't import KernelTests
 import jupyter_kernel_test
-import jupyter_kernel_mgmt
-from jupyter_kernel_mgmt.discovery import KernelFinder
-from jupyter_kernel_mgmt.client import BlockingKernelClient
 
 
 class RocketJoePythonTests(jupyter_kernel_test.KernelTests):

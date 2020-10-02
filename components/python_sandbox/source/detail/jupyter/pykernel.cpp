@@ -321,8 +321,8 @@ namespace components { namespace detail {
         , bool engine_mode
         , boost::uuids::uuid identifier
         , socket_manager sockets)
-        : engine_mode(engine_mode)
-        , log_(log.clone())
+        : log_(log.clone())
+        , engine_mode(engine_mode)
         , identifier(std::move(identifier))
         , engine_identifier(0)
         , parent_header(nl::json::object())

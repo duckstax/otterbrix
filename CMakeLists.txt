@@ -3,14 +3,12 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-set(project RocketJoe)
-
 cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-PROJECT(${project} VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
+PROJECT(RocketJoe VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -32,8 +30,12 @@ option(DEV_MODE "developer mode" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
 enable_testing()
+
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     add_compile_options(
+
+            #-Werror
+
             -Wall
             -Wextra
             -Wpedantic
@@ -57,11 +59,17 @@ endif ()
 
 # configuration
 #############################################################################################
-#clang format
+#clang tools
+
+option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
+
+if(ADDRESS_SANITIZER)
+    include(cmake/address_sanitizer.cmake)
+endif()
 
 include(cmake/clang-format.cmake)
 
-#clang format
+#clang tools
 #############################################################################################
 #conan
 
