@@ -1,7 +1,7 @@
 #include "init_service.hpp"
 
 #include <goblin-engineer/components/root_manager.hpp>
-#include <services/interactive_python_interpreter/interactive_python.hpp>
+#include <services/interactive_python/interactive_python.hpp>
 
 using goblin_engineer::components::make_manager_service;
 using goblin_engineer::components::make_service;

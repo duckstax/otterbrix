@@ -8,7 +8,7 @@ set(${CURRENT_TARGET}_SOURCES
         jupyter.cpp
 )
 
-add_library(rocketjoe_${CURRENT_TARGET} STATIC
+add_library(rocketjoe_${CURRENT_TARGET}
         ${${CURRENT_TARGET}_HEADERS}
         ${${CURRENT_TARGET}_SOURCES}
 )

@@ -10,7 +10,7 @@ list(APPEND CURRENT_TARGET_SOURCES
 )
 
 
-add_library(rocketjoe_${CURRENT_TARGET} STATIC
+add_library(rocketjoe_${CURRENT_TARGET}
             ${CURRENT_TARGET_HEADERS}
             ${CURRENT_TARGET_SOURCES}
 )

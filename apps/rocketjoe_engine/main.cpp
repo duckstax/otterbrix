@@ -12,7 +12,7 @@
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
-#include <components/python_sandbox/python_sandbox.hpp>
+#include <components/python/python.hpp>
 #include <services/jupyter/jupyter.hpp>
 
 #include "init_service.hpp"
