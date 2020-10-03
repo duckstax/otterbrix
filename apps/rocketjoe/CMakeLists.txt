@@ -29,9 +29,7 @@ target_link_libraries(
 
 if (DEV_MODE)
 
-    find_program(PYTEST NAMES pytest)
-    configure_file("test/test_rocketjoe.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_rocketjoe.py")
-    add_test(NAME "test_rocketjoe.py" COMMAND "python3" "${CMAKE_CURRENT_BINARY_DIR}/test/test_rocketjoe.py")
+
 
 endif ()
 
