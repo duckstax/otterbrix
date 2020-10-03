@@ -41,6 +41,13 @@ add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 
 set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(
+            rocketjoe_${CURRENT_TARGET} PRIVATE
+            iconv
+    )
+endif()
+
 target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
@@ -49,13 +56,6 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::buffer
 )
-
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_link_libraries(
-            rocketjoe_${CURRENT_TARGET} PRIVATE
-            iconv
-    )
-endif()
 
 target_include_directories(rocketjoe_${CURRENT_TARGET} PUBLIC "")
 
