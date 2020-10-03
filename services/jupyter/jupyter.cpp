@@ -56,7 +56,6 @@ namespace services {
             log_.info(fmt::format("jupyter connection path : {0}", cfg.python_configuration_.jupyter_connection_path_.string()));
         }
         jupyter_connection_path_ = cfg.python_configuration_.jupyter_connection_path_;
-        add_handler("identifier", &jupyter::identifier);
         add_handler("write", &jupyter::write);
         init();
         log_.info("jupyter finish construct");
@@ -158,7 +157,13 @@ namespace services {
 
         registration_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::dealer);
 
+        identifier_ = boost::uuids::random_generator()();
+        auto identifier_raw = boost::uuids::to_string(identifier_);
+        shell_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
+        control_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
+        iopub_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
         heartbeat_ping_socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
+        heartbeat_pong_socket->setsockopt(ZMQ_ROUTING_ID,identifier_raw.c_str(),identifier_raw.size());
 
         shell_socket->connect(mux_address);
         shell_socket->connect(task_address);
@@ -298,17 +303,6 @@ namespace services {
         log_.info(fmt::format("actor name: {}", std::string(this->name().data(), this->name().size())));
         set_current_message(std::move(tmp));
         dispatch().execute(*this);
-    }
-
-    auto jupyter::identifier(boost::uuids::uuid identifier) -> void {
-        auto identifier_raw = boost::uuids::to_string(identifier);
-
-        if (mode_ == components::sandbox_mode_t::jupyter_engine) {
-            shell_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
-            control_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
-            iopub_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
-            heartbeat_pong_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
-        }
     }
 
     auto jupyter::write(components::zmq_buffer_t& msg) -> void {

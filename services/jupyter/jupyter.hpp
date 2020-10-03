@@ -50,6 +50,10 @@ namespace services {
 
         auto identifier(boost::uuids::uuid identifier) -> void;
 
+        auto identifier() const  -> const boost::uuids::uuid& {
+            return  identifier_;
+        }
+
         auto write(components::zmq_buffer_t&) -> void;
 
     private:
@@ -79,6 +83,7 @@ namespace services {
         std::unique_ptr<zmq::socket_t> heartbeat_socket;
         std::unique_ptr<zmq::socket_t> registration_socket;
         bool engine_mode;
+        boost::uuids::uuid identifier_;
         std::vector<std::function<void()>> init_;
     };
 

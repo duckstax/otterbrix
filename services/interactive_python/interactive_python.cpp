@@ -29,7 +29,7 @@ namespace services {
         add_handler("stop_session", &interactive_python_t::stop_session);
         add_handler("registration", &interactive_python_t::registration);
 
-        auto identifier = boost::uuids::random_generator()();
+        auto identifier = env->identifier();
 
         /// TODO: hack
         env->pre_hook(
@@ -46,10 +46,8 @@ namespace services {
         if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine) {
             log.info("   if (configuration.mode_ == components::sandbox_mode_t::jupyter_engine)");
             env->pre_hook(
-                [this, env, identifier]() mutable {
+                [this, env]() mutable {
                     auto jupyter = this->addresses("jupyter");
-                    actor_zeta::send(jupyter, this->address(), "identifier", std::move(identifier));
-
                     auto result = components::buffer("registration", registration_step_one());
                     env->write(result);
                 });

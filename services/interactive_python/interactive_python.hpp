@@ -41,7 +41,6 @@ namespace services {
         void load(components::python_t&);
     private:
 
-
         auto jupyter_kernel_init(zmq::context_t& , boost::uuids::uuid , std::function<void(const std::string&, std::vector<std::string>)> ) -> void;
 
         auto jupyter_engine_init(boost::uuids::uuid , std::function<void(const std::string&, std::vector<std::string>)> ) -> void;
