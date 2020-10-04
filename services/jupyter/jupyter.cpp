@@ -157,7 +157,6 @@ namespace services {
 
         registration_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::dealer);
 
-        identifier_ = boost::uuids::random_generator()();
         auto identifier_raw = boost::uuids::to_string(identifier_);
         shell_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
         control_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
@@ -283,6 +282,7 @@ namespace services {
     }
 
     auto jupyter::init() -> void {
+        identifier_ = boost::uuids::random_generator()();
         if (components::sandbox_mode_t::jupyter_kernel == mode_) {
             log_.info("jupyter kernel mode");
             jupyter_kernel_init();
