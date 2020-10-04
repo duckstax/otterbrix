@@ -38,5 +38,4 @@ RUN  jupyter kernelspec install --user kernels/rocketjoe
 CMD ctest -V
 CMD pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
 CMD pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
-CMD pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmarking.py
 CMD pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_raw.py

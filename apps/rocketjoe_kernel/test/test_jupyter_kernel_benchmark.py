@@ -4,6 +4,11 @@ import jupyter_kernel_mgmt
 from jupyter_kernel_mgmt.discovery import KernelFinder
 from jupyter_kernel_mgmt.client import BlockingKernelClient
 
+
+# import jupyter_kernel_mgmt
+# from jupyter_kernel_mgmt.discovery import KernelFinder
+# from jupyter_kernel_mgmt.client import BlockingKernelClient
+
 def kernel_info_request(kc) -> None:
     kc.kernel_info()
 
