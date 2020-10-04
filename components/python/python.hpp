@@ -43,7 +43,6 @@ namespace components {
         std::unique_ptr<python::detail::file_manager> file_manager_;
         std::unique_ptr<python::detail::context_manager> context_manager_;
         components::log_t log_;
-        bool engine_mode;
     };
 
     template<typename Module>
