@@ -50,6 +50,6 @@ namespace services {
         boost::filesystem::path jupyter_connection_path_;
         std::unique_ptr<components::python_t> python_interpreter_;
         std::unique_ptr<zmq::socket_t> stdin_socket_;
-        boost::intrusive_ptr<interactive_python_interpreter::jupyter::pykernel> jupyter_kernel_;
+        boost::intrusive_ptr<interactive_python::jupyter::pykernel> jupyter_kernel_;
     };
 } // namespace services

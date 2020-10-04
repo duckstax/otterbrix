@@ -112,9 +112,9 @@ namespace services {
         stdin_socket_->setsockopt(ZMQ_LINGER, 1000);
         stdin_socket_->bind(stdin_address);
 
-        auto sm = interactive_python_interpreter::jupyter::make_socket_manager(std::move(f), static_cast<zmq::socket_ref>(*stdin_socket_));
+        auto sm = interactive_python::jupyter::make_socket_manager(std::move(f), static_cast<zmq::socket_ref>(*stdin_socket_));
         bool engine_mode = false;
-        jupyter_kernel_ = boost::intrusive_ptr<interactive_python_interpreter::jupyter::pykernel>(new interactive_python_interpreter::jupyter::pykernel(
+        jupyter_kernel_ = boost::intrusive_ptr<interactive_python::jupyter::pykernel>(new interactive_python::jupyter::pykernel(
             log_,
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
@@ -137,16 +137,16 @@ namespace services {
         log_.info(configuration.dump(4));
 
         bool engine_mode = true;
-        jupyter_kernel_ = boost::intrusive_ptr<interactive_python_interpreter::jupyter::pykernel>{new interactive_python_interpreter::jupyter::pykernel{
+        jupyter_kernel_ = boost::intrusive_ptr<interactive_python::jupyter::pykernel>{new interactive_python::jupyter::pykernel{
             log_,
             std::move(configuration["key"]),
             std::move(configuration["signature_scheme"]),
             engine_mode,
             std::move(identifier),
-            interactive_python_interpreter::jupyter::make_socket_manager(std::move(f))}};
+            interactive_python::jupyter::make_socket_manager(std::move(f))}};
     }
     void interactive_python_t::load(components::python_t&vm) {
-        services::interactive_python_interpreter::add_jupyter(vm.module("pyrocketjoe"));
+        services::interactive_python::add_jupyter(vm.module("pyrocketjoe"));
     }
 
 } // namespace services

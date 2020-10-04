@@ -9,7 +9,7 @@
 //declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     using namespace pybind11::literals;
 

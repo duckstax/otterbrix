@@ -5,7 +5,7 @@
 #include <vector>
 #include <sstream>
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
     template<class B>
     std::string hex_string(const B& buffer) {
         std::ostringstream oss;

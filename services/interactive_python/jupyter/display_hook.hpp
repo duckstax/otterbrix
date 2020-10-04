@@ -8,7 +8,7 @@
 
 #include "socket_manager.hpp"
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     namespace py = pybind11;
 

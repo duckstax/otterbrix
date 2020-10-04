@@ -21,7 +21,7 @@
 #include "socket_manager.hpp"
 #include <components/log/log.hpp>
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     namespace nl = nlohmann;
     namespace py = pybind11;

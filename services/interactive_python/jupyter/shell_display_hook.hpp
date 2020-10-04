@@ -2,7 +2,7 @@
 
 #include <pybind11/pybind11.h>
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     namespace py = pybind11;
 

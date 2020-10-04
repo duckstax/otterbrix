@@ -15,9 +15,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 using namespace pybind11::literals;
 namespace py = pybind11;
-using namespace  services::interactive_python_interpreter::jupyter;
+using namespace  services::interactive_python::jupyter;
 
-namespace services { namespace interactive_python_interpreter {
+namespace services { namespace interactive_python {
 
     auto add_jupyter(py::module &pyrocketjoe) -> void  {
         auto pykernel = pyrocketjoe.def_submodule("pykernel");

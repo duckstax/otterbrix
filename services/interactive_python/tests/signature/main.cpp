@@ -29,7 +29,7 @@ TEST(signature, generate) {
     */
 
     auto botan_sig = "7efced7d709cbf82afa815dceb698218451842b14fe5d6670d573f046ea134f8";
-    services::interactive_python_interpreter::jupyter::hmac sg("hmac-sha256", signature_key);
+    services::interactive_python::jupyter::hmac sg("hmac-sha256", signature_key);
     auto sig = sg.sign(header.dump(), parent_header.dump(), metadata.dump(), content.dump());
     ASSERT_EQ(botan_sig, sig);
     ASSERT_TRUE(sg.verify(header.dump(), parent_header.dump(), metadata.dump(), content.dump(), sig));

@@ -113,7 +113,7 @@ namespace nlohmann {
     }
 } // namespace nlohmann
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
         namespace nl = nlohmann;
         namespace py = pybind11;
@@ -532,7 +532,7 @@ namespace services { namespace interactive_python_interpreter { namespace jupyte
                               nl::json user_expressions,
                               bool allow_stdin) -> boost::variant<execute_ok_reply,
                                                                   execute_error_reply> {
-        log_.info("auto pykernel::do_execute 0");
+
         // Scope guard performing the temporary monkey patching of input and
         // getpass with a function sending input_request messages.
         input_redirection input_guard(socket_manager_,
@@ -540,30 +540,30 @@ namespace services { namespace interactive_python_interpreter { namespace jupyte
                                       parent_identifiers,
                                       parent_header,
                                       allow_stdin);
-        log_.info("auto pykernel::do_execute 1");
+
         auto result = shell.attr("run_cell")(std::move(code),
                                              store_history,
                                              silent);
-        log_.info("auto pykernel::do_execute 2");
+
         if (py::hasattr(result, "execution_count")) {
             execution_count = result.attr("execution_count").cast<std::size_t>() - 1;
         }
-        log_.info("auto pykernel::do_execute 3");
+
         py::module::import("sys")
             .attr("displayhook")
             .attr("set_execution_count")(execution_count);
-        log_.info("auto pykernel::do_execute 4");
+
         auto json = py::module::import("json");
         auto json_loads = json.attr("loads");
         auto json_dumps = json.attr("dumps");
         auto payload = nl::json::parse(json_dumps(shell.attr("payload_manager")
                                                       .attr("read_payload")())
                                            .cast<std::string>());
-        log_.info("auto pykernel::do_execute 5");
+
         shell
             .attr("payload_manager")
             .attr("clear_payload")();
-        log_.info("auto pykernel::do_execute 6");
+
         if (result.attr("success").cast<bool>()) {
             user_expressions = nl::json::parse(json_dumps(shell.attr("user_expressions")(json_loads(user_expressions.dump()))).cast<std::string>());
             execute_ok_reply reply;

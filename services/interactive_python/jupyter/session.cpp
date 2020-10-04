@@ -16,7 +16,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/core/ignore_unused.hpp>
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     auto execute_ok_reply::identifiers() const -> const std::vector<std::string>& {
         return identifiers_;

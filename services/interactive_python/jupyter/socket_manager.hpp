@@ -7,7 +7,7 @@
 
 #include <zmq.hpp>
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     class socket_manager_t final : public boost::intrusive_ref_counter<socket_manager_t> {
     public:

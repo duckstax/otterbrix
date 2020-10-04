@@ -5,7 +5,8 @@
 
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+
+namespace services { namespace interactive_python { namespace jupyter {
 
     class hmac final {
     public:

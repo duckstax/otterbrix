@@ -9,7 +9,7 @@
 //declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace services { namespace interactive_python_interpreter { namespace jupyter {
+namespace services { namespace interactive_python { namespace jupyter {
 
     socket_manager_t::socket_manager_t(std::function<void(const std::string&, std::vector<std::string>)> f, zmq::socket_ref stdin_socket)
         : zmq_(std::move(f))
