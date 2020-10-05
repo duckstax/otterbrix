@@ -12,7 +12,7 @@
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/process_pool/process_pool.hpp>
-#include <components/python_sandbox/python_sandbox.hpp>
+#include <components/python/python.hpp>
 
 #include "init_service.hpp"
 
@@ -144,9 +144,7 @@ int main(int argc, char* argv[]) {
     /// process_pool.add_worker_process(command_line["worker_number"].as<std::size_t>()); /// todo hack
     /// }
 
-    components::python_interpreter vm(cfg_.python_configuration_, log);
-
-    vm.init();
+    components::python_t vm(cfg_.python_configuration_, log);
 
     vm.run_script(all_args);
 

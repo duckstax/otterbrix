@@ -16,8 +16,9 @@ add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::jupyter
         rocketjoe::configuration
-        rocketjoe::interactive_python_interpreter
+        rocketjoe::interactive_python
         rocketjoe::log
         rocketjoe::process_pool
         dl

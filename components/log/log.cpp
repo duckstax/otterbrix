@@ -29,15 +29,15 @@ namespace components {
 
     auto initialization_logger() -> log_t {
         auto name = fmt::format("logs/{0}.txt", boost::this_process::get_id());
-        spdlog::init_thread_pool(8192, 1);
+        ///spdlog::init_thread_pool(8192, 1);
         auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(name, true);
         std::vector<spdlog::sink_ptr> sinks{stdout_sink, file_sink};
-        auto logger = std::make_shared<spdlog::async_logger>(
+        auto logger = std::make_shared<spdlog::logger>(///async_logger
             __default__,
-            sinks.begin(), sinks.end(),
-            spdlog::thread_pool(),
-            spdlog::async_overflow_policy::block);
+            sinks.begin(), sinks.end()//,
+            /*spdlog::thread_pool(),*/
+            /*spdlog::async_overflow_policy::block*/);
 
         spdlog::flush_every(std::chrono::seconds(1)); //todo: hack
         logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] [pid %P tid %t] %v");

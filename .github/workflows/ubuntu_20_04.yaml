@@ -45,3 +45,10 @@ jobs:
 
       - name: run test base
         run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
+
+      - name: run benchmark base
+        run: |
+            pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
+
+     # name: run test kernel_info
+     #   run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_raw.py

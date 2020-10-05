@@ -19,7 +19,7 @@ target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::configuration
-        rocketjoe::interactive_python_interpreter
+        rocketjoe::python_sandbox
         rocketjoe::log
         rocketjoe::process_pool
         dl
@@ -29,9 +29,7 @@ target_link_libraries(
 
 if (DEV_MODE)
 
-    find_program(PYTEST NAMES pytest)
-    configure_file("test/test_rocketjoe.py" "${CMAKE_CURRENT_BINARY_DIR}/test/test_rocketjoe.py")
-    add_test(NAME "test_rocketjoe.py" COMMAND "python3" "${CMAKE_CURRENT_BINARY_DIR}/test/test_rocketjoe.py")
+
 
 endif ()
 
