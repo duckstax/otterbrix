@@ -20,7 +20,6 @@ public:
 private:
   std::string executable_file_;
   std::vector<std::string> args_;
-  std::uint64_t worker_counter_;
   boost::process::group g_;
   log_t log_t_;
 };

@@ -3,14 +3,12 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-set(project RocketJoe)
-
 cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-PROJECT(${project} VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
+PROJECT(RocketJoe VERSION "${CMAKE_PROJECT_VERSION}" )
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -18,46 +16,60 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)#-DBOOST_ASIO_NO_EXTENSIONS")
-# stack track
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+else()
+    # stack track
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+endif()
 
 option(DEV_MODE "developer mode" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
-if (DEV_MODE)
-    enable_testing()
-    if(NOT WIN32)
-        add_compile_options(
-                -Wall
-                -Wextra
-                -Wpedantic
+enable_testing()
 
-                #-Wredundant-move # not work gcc
-                -Wcast-align
-                -Wcast-qual
-                -Wconversion
-                -Wctor-dtor-privacy
-                -Wenum-compare
-                -Wfloat-equal
-                -Wnon-virtual-dtor
-                -Wold-style-cast
-                -Woverloaded-virtual
-                -Wredundant-decls
-                -Wsign-conversion
-                -Wsign-promo
-        )
-    endif()
+if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
+    add_compile_options(
+
+            #-Werror
+
+            -Wall
+            -Wextra
+            -Wpedantic
+
+            -Wcast-align
+            -Wcast-qual
+            -Wconversion
+            -Wctor-dtor-privacy
+            -Wenum-compare
+            -Wfloat-equal
+            -Wnon-virtual-dtor
+            -Wold-style-cast
+            -Woverloaded-virtual
+            -Wredundant-decls
+            -Wsign-conversion
+            -Wsign-promo
+    )
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    add_compile_options(/W4 /WX)
 endif ()
 
 # configuration
 #############################################################################################
-#clang tool
+#clang tools
 
-include(cmake/clang_tools.cmake)
+option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
 
-#clang tool
+if(ADDRESS_SANITIZER)
+    include(cmake/address_sanitizer.cmake)
+endif()
+
+include(cmake/clang-format.cmake)
+
+#clang tools
 #############################################################################################
 #conan
 
@@ -94,6 +106,11 @@ endif(CCACHE_FOUND)
 
 # ccahe
 #############################################################################################
+
+SET(PYTHON_EXECUTABLE python3)
+find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development)
+include_directories(${Python3_INCLUDE_DIRS})
 
 add_subdirectory(components)
 add_subdirectory(services)

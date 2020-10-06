@@ -1,0 +1,53 @@
+name: ubuntu 16.04
+on: [push, pull_request]
+jobs:
+  run:
+    name: Run
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-16.04]
+        python-version: [3.6] # IPython 7.14.0 is not supporting Python 3.5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies
+        run: |
+            sudo apt-get update \
+            && sudo apt-get install -y \
+            python3-pip python3-dev
+
+      - name: install conan
+        run: |
+          pip install conan
+          conan user
+          conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+          conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
+          cmake --build . --parallel 2
+
+      - name: install dependons test
+        run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
+
+      - name: install kernel
+        run: jupyter kernelspec install --user kernels/rocketjoe
+
+      - name: run test base
+        run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
+
+      - name: run benchmark base
+        run: |
+            pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
+
+      #- name: run test kernel_info
+      #  run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_raw.py

@@ -1,3 +1,4 @@
 include_directories(${CMAKE_SOURCE_DIR})
-add_subdirectory(storage)
-add_subdirectory(zmq-hub)
+
+add_subdirectory(interactive_python)
+add_subdirectory(jupyter)
