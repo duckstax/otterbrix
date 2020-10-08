@@ -19,7 +19,7 @@ target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::configuration
-        rocketjoe::interactive_python_interpreter
+        rocketjoe::python_sandbox
         rocketjoe::log
         rocketjoe::process_pool
         dl

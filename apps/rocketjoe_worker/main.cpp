@@ -11,7 +11,7 @@
 #include "configuration.hpp"
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
-#include <components/python_sandbox/python_sandbox.hpp>
+#include <components/python/python.hpp>
 
 #include "init_service.hpp"
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[]) {
 
     init_service(env, cfg_, log);
 
-    components::python_interpreter vm(cfg_.python_configuration_, log);
+    components::python_t vm(cfg_.python_configuration_, log);
 
     vm.init();
 
