@@ -11,13 +11,17 @@ set(${CURRENT_TARGET}_sources
         main.cpp
 )
 
-include_directories(${Python3_INCLUDE_DIRS})
+include_directories(
+    ${Python3_INCLUDE_DIRS}
+    "../../components/url/include"
+)
 
 add_executable(${CURRENT_TARGET} ${${CURRENT_TARGET}_sources} ${${CURRENT_TARGET}_headers})
 
 target_link_libraries(
         ${CURRENT_TARGET} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::amqp
         rocketjoe::configuration
         rocketjoe::python_sandbox
         rocketjoe::log

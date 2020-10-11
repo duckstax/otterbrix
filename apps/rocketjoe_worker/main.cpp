@@ -9,6 +9,7 @@
 #include <boost/program_options/variables_map.hpp>
 
 #include "configuration.hpp"
+#include <components/amqp/amqp_consumer.hpp>
 #include <components/configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include <components/python/python.hpp>

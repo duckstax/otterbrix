@@ -1,4 +1,5 @@
 #include <string>
+#define BOOST_URL_HEADER_ONLY
 #include <boost/url.hpp>
 
 class amqp_consumer {
@@ -8,7 +9,7 @@ public:
 	void start_loop();
 
 private:
-	char* get_host() const;
+	const char* get_host() const;
 
 	int get_port() const;
 
