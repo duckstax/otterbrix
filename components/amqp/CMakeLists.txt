@@ -28,6 +28,7 @@ target_include_directories(
         rocketjoe_${CURRENT_TARGET}
         PUBLIC
         "../../.."
+        "../url/include"
 )
 
 install(TARGETS
