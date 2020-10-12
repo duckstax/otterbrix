@@ -143,11 +143,19 @@ int main(int argc, char* argv[]) {
 
     init_service(env, cfg_, log);
 
-    components::python_t vm(cfg_.python_configuration_, log);
+    //components::python_t vm(cfg_.python_configuration_, log);
 
-    vm.init();
+    //vm.init();
 
-    vm.run_script(all_args);
+    //vm.run_script(all_args);
+
+    try {
+        amqp_consumer con("amqp://guest:123@");
+        con.start_loop();
+    } catch (std::exception& ex) {
+        log.error(ex.what());
+        throw ex;
+    }
 
     log.info("Shutdown RocketJoe");
     return 0;
