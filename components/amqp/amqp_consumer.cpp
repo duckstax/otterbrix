@@ -13,9 +13,9 @@ amqp_consumer::amqp_consumer(const std::string& url) : _url(url) {
     }
 }
 
-const char* amqp_consumer::get_host() const {
+std::string amqp_consumer::get_host() const {
     if (_url.host().size()) {
-        return std::string{_url.host()}.c_str();
+        return _url.host();
     }
     return "localhost";
 }
@@ -28,16 +28,16 @@ int amqp_consumer::get_port() const {
     return 5672;
 }
 
-const char* amqp_consumer::get_user() const {
+std::string amqp_consumer::get_user() const {
     if (_url.user().size()) {
-        return std::string{_url.user()}.c_str();
+        return _url.user();
     }
     return "guest";
 }
 
-const char* amqp_consumer::get_password() const {
+std::string amqp_consumer::get_password() const {
     if (_url.password().size()) {
-        return std::string{_url.password()}.c_str();
+        return _url.password();
     }
     return "guest";
 }
@@ -53,12 +53,12 @@ void amqp_consumer::start_loop() {
         throw std::runtime_error("Cannot create socket");
     }
 
-    error = amqp_socket_open(socket, get_host(), get_port());
+    error = amqp_socket_open(socket, get_host().c_str(), get_port());
     if (error) {
-        throw std::runtime_error("Cannot listen on " + std::string(get_host()) + ":" + std::to_string(get_port()));
+        throw std::runtime_error("Cannot listen on " + get_host() + ":" + std::to_string(get_port()));
     }
 
-    amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user(), get_password());
+    amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str());
 
     amqp_channel_open(conn, 1);
 

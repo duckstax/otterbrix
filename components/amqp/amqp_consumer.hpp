@@ -9,13 +9,13 @@ public:
     void start_loop();
 
 private:
-    const char* get_host() const;
+    std::string get_host() const;
 
     int get_port() const;
 
-    const char* get_user() const;
+    std::string get_user() const;
 
-    const char* get_password() const;
+    std::string get_password() const;
 
     boost::url _url;
 };

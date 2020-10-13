@@ -150,7 +150,7 @@ int main(int argc, char* argv[]) {
     //vm.run_script(all_args);
 
     try {
-        amqp_consumer con("amqp://guest:123@");
+        amqp_consumer con("amqp://guest:123@localhost");
         con.start_loop();
     } catch (std::exception& ex) {
         log.error(ex.what());
