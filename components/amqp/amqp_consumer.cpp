@@ -62,7 +62,16 @@ void amqp_consumer::start_loop() {
 
     amqp_channel_open(conn, 1);
 
-    // TODO binding to queue
+    amqp_queue_declare_ok_t* declared = amqp_queue_declare(
+        conn, 1, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
+
+    amqp_bytes_t queuename = amqp_bytes_malloc_dup(declared->queue);
+
+    amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes("celery(direct)"),
+        amqp_cstring_bytes("celery"), amqp_empty_table);
+
+    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, 0, 1, 0,
+        amqp_empty_table);
 
     get_logger().info("Listening for queue");
 
