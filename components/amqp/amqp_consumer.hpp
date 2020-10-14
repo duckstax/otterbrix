@@ -1,6 +1,7 @@
 #include <string>
 #define BOOST_URL_HEADER_ONLY
 #include <boost/url.hpp>
+#include <amqp.h>
 
 class amqp_consumer {
 public:
@@ -16,6 +17,8 @@ private:
     std::string get_user() const;
 
     std::string get_password() const;
+
+    void die_on_amqp_error(amqp_rpc_reply_t x, const char* context) const;
 
     boost::url _url;
 };
