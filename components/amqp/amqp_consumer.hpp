@@ -18,7 +18,7 @@ private:
 
     std::string get_password() const;
 
-    void die_on_amqp_error(amqp_rpc_reply_t x, const char* context) const;
+    void throw_on_amqp_error(amqp_rpc_reply_t x, const char* context) const;
 
     boost::url _url;
 };

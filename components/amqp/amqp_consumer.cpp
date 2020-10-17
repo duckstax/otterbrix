@@ -41,17 +41,17 @@ std::string amqp_consumer::get_password() const {
     return "guest";
 }
 
-void amqp_consumer::die_on_amqp_error(amqp_rpc_reply_t x, const char* context) const {
+void amqp_consumer::throw_on_amqp_error(amqp_rpc_reply_t x, const char* context) const {
   switch (x.reply_type) {
     case AMQP_RESPONSE_NORMAL:
       return;
 
     case AMQP_RESPONSE_NONE:
-      fprintf(stderr, "%s: missing RPC reply type!\n", context);
+      throw std::runtime_error("%s: missing RPC reply type!\n", context);
       break;
 
     case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-      fprintf(stderr, "%s: %s\n", context, amqp_error_string2(x.library_error));
+      throw std::runtime_error("%s: %s\n", context, amqp_error_string2(x.library_error));
       break;
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -59,27 +59,25 @@ void amqp_consumer::die_on_amqp_error(amqp_rpc_reply_t x, const char* context) c
         case AMQP_CONNECTION_CLOSE_METHOD: {
           amqp_connection_close_t *m =
               (amqp_connection_close_t *)x.reply.decoded;
-          fprintf(stderr, "%s: server connection error %uh, message: %.*s\n",
+          throw std::runtime_error("%s: server connection error %uh, message: %.*s\n",
                   context, m->reply_code, (int)m->reply_text.len,
                   (char *)m->reply_text.bytes);
           break;
         }
         case AMQP_CHANNEL_CLOSE_METHOD: {
           amqp_channel_close_t *m = (amqp_channel_close_t *)x.reply.decoded;
-          fprintf(stderr, "%s: server channel error %uh, message: %.*s\n",
+          throw std::runtime_error("%s: server channel error %uh, message: %.*s\n",
                   context, m->reply_code, (int)m->reply_text.len,
                   (char *)m->reply_text.bytes);
           break;
         }
         default:
-          fprintf(stderr, "%s: unknown server error, method id 0x%08X\n",
+          throw std::runtime_error("%s: unknown server error, method id 0x%08X\n",
                   context, x.reply.id);
           break;
       }
       break;
   }
-
-  std::exit(1);
 }
 
 void amqp_consumer::start_loop() {
@@ -98,14 +96,14 @@ void amqp_consumer::start_loop() {
         throw std::runtime_error("Cannot listen on " + get_host() + ":" + std::to_string(get_port()));
     }
 
-    die_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str()), "Cannot login");
+    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str()), "Cannot login");
 
     amqp_channel_open(conn, 1);
-    die_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot open channel");
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot open channel");
 
     amqp_queue_declare_ok_t* declared = amqp_queue_declare(
         conn, 1, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
-    die_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot declare queue");
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot declare queue");
 
     amqp_bytes_t queuename = amqp_bytes_malloc_dup(declared->queue);
 
@@ -113,11 +111,11 @@ void amqp_consumer::start_loop() {
     std::string binding_key = "celery";
     amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes(exchange.c_str()),
         amqp_cstring_bytes(binding_key.c_str()), amqp_empty_table);
-    die_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot bind queue");
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot bind queue");
 
     amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, 0, 1, 0,
         amqp_empty_table);
-    die_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot consume queue");
+    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot consume queue");
 
     get_logger().info("Listening for queue");
 
