@@ -22,6 +22,7 @@ target_link_libraries(
         rocketjoe_${CURRENT_TARGET} PRIVATE
         rocketjoe::log
         rocketjoe::buffer
+        rocketjoe::ssh_forwarder
         ${CONAN_LIBS}
 )
 

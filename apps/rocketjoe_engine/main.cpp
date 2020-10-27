@@ -75,6 +75,9 @@ int main(int argc, char* argv[]) {
         ("worker_mode", "Worker Mode")
         ("worker_number",po::value<unsigned short int>(), "Worker Process Mode and run  ")
         ("jupyter_connection", po::value<boost::filesystem::path>(),"path to jupyter connection file")
+        ("ssh", "Connect to ipcontroller via SSH")
+        ("ssh_host", po::value<std::string>(), "ipcontroller host")
+        ("ssh_port", po::value<std::uint16_t>(), "ipcontroller port")
         ;
     // clang-format on
     po::variables_map command_line;
@@ -101,6 +104,18 @@ int main(int argc, char* argv[]) {
 
     if (command_line.count("jupyter_connection")) {
         cfg_.python_configuration_.jupyter_connection_path_ = command_line["jupyter_connection"].as<boost::filesystem::path>();
+    }
+
+    if (command_line.count("ssh")) {
+        cfg_.python_configuration_.ssh_ = true;
+    }
+
+    if (command_line.count("ssh_host")) {
+        cfg_.python_configuration_.ssh_host_ = command_line["ssh_host"].as<std::string>();
+    }
+
+    if (command_line.count("ssh_port")) {
+        cfg_.python_configuration_.ssh_port_ = command_line["ssh_port"].as<std::uint16_t>();
     }
 
     if (command_line.count("worker_mode")) {

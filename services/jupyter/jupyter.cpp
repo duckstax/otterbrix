@@ -56,6 +56,9 @@ namespace services {
             log_.info(fmt::format("jupyter connection path : {0}", cfg.python_configuration_.jupyter_connection_path_.string()));
         }
         jupyter_connection_path_ = cfg.python_configuration_.jupyter_connection_path_;
+        ssh_ = cfg.python_configuration_.ssh_;
+        ssh_host_ = cfg.python_configuration_.ssh_host_;
+        ssh_port_ = cfg.python_configuration_.ssh_port_;
         add_handler("write", &jupyter::write);
         init();
         log_.info("jupyter finish construct");
@@ -112,7 +115,7 @@ namespace services {
     }
 
     auto jupyter::jupyter_engine_init() -> void {
-        std::ifstream connection_file{jupyter_connection_path_.string()};
+        auto connection_file = std::ifstream(jupyter_connection_path_.string());
 
         if (!connection_file) {
             throw std::logic_error("File jupyter_connection not found");
@@ -124,28 +127,69 @@ namespace services {
 
         log_.info(configuration.dump(4));
 
-        std::string interface{configuration["interface"]};
-        auto mux_port{std::to_string(configuration["mux"]
-                                         .get<std::uint16_t>())};
-        auto task_port{std::to_string(configuration["task"]
-                                          .get<std::uint16_t>())};
-        auto control_port{std::to_string(configuration["control"]
-                                             .get<std::uint16_t>())};
-        auto iopub_port{std::to_string(configuration["iopub"]
-                                           .get<std::uint16_t>())};
-        auto heartbeat_ping_port{std::to_string(configuration["hb_ping"]
-                                                    .get<std::uint16_t>())};
-        auto heartbeat_pong_port{std::to_string(configuration["hb_pong"]
-                                                    .get<std::uint16_t>())};
-        auto registration_port{std::to_string(configuration["registration"]
-                                                  .get<std::uint16_t>())};
-        auto mux_address{interface + ":" + mux_port};
-        auto task_address{interface + ":" + task_port};
-        auto control_address{interface + ":" + control_port};
-        auto iopub_address{interface + ":" + iopub_port};
-        auto heartbeat_ping_address{interface + ":" + heartbeat_ping_port};
-        auto heartbeat_pong_address{interface + ":" + heartbeat_pong_port};
-        auto registration_address{interface + ":" + registration_port};
+        auto remote_interface = configuration["interface"].get<std::string>();
+        auto local_interface = remote_interface;
+
+        if (ssh_) {
+            local_interface = "tcp://127.0.0.1";
+        }
+
+        auto mux_port = configuration["mux"].get<std::uint16_t>();
+        auto task_port = configuration["task"].get<std::uint16_t>();
+        auto control_port = configuration["control"].get<std::uint16_t>();
+        auto iopub_port = configuration["iopub"].get<std::uint16_t>();
+        auto heartbeat_ping_port = configuration["hb_ping"]
+                                       .get<std::uint16_t>();
+        auto heartbeat_pong_port = configuration["hb_pong"]
+                                       .get<std::uint16_t>();
+        auto registration_port = configuration["registration"]
+                                     .get<std::uint16_t>();
+        auto mux_address = local_interface + ":" + std::to_string(mux_port);
+        auto task_address = local_interface + ":" + std::to_string(task_port);
+        auto control_address = local_interface + ":" + std::to_string(control_port);
+        auto iopub_address = local_interface + ":" + std::to_string(iopub_port);
+        auto heartbeat_ping_address = local_interface + ":" + std::to_string(heartbeat_ping_port);
+        auto heartbeat_pong_address = local_interface + ":" + std::to_string(heartbeat_pong_port);
+        auto registration_address = local_interface + ":" + std::to_string(registration_port);
+
+        if (ssh_) {
+            auto ssh_local_interface = local_interface.substr(6);
+            components::ssh_remote_t ssh_remote = {ssh_host_, ssh_port_};
+            std::vector<components::ssh_socket_forward_t> ssh_socket_forwards = {
+                {ssh_local_interface,
+                 mux_port,
+                 remote_interface,
+                 mux_port},
+                {ssh_local_interface,
+                 task_port,
+                 remote_interface,
+                 task_port},
+                {ssh_local_interface,
+                 control_port,
+                 remote_interface,
+                 control_port},
+                {ssh_local_interface,
+                 iopub_port,
+                 remote_interface,
+                 iopub_port},
+                {ssh_local_interface,
+                 heartbeat_ping_port,
+                 remote_interface,
+                 heartbeat_ping_port},
+                {ssh_local_interface,
+                 heartbeat_pong_port,
+                 remote_interface,
+                 heartbeat_pong_port},
+                {ssh_local_interface,
+                 registration_port,
+                 remote_interface,
+                 registration_port}};
+
+            ssh_forwarder_ = std::make_unique<components::ssh_forwarder_t>(
+                ssh_remote,
+                ssh_socket_forwards
+            );
+        }
 
         zmq_context_ = std::make_unique<zmq::context_t>();
         shell_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::router);
@@ -158,11 +202,11 @@ namespace services {
         registration_socket = std::make_unique<zmq::socket_t>(*zmq_context_, zmq::socket_type::dealer);
 
         auto identifier_raw = boost::uuids::to_string(identifier_);
-        shell_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
-        control_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
-        iopub_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(),identifier_raw.size());
+        shell_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
+        control_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
+        iopub_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
         heartbeat_ping_socket->setsockopt(ZMQ_SUBSCRIBE, "", 0);
-        heartbeat_pong_socket->setsockopt(ZMQ_ROUTING_ID,identifier_raw.c_str(),identifier_raw.size());
+        heartbeat_pong_socket->setsockopt(ZMQ_ROUTING_ID, identifier_raw.c_str(), identifier_raw.size());
 
         shell_socket->connect(mux_address);
         shell_socket->connect(task_address);
@@ -320,13 +364,6 @@ namespace services {
         if ("control" == msg->id()) {
             log_.info(" auto jupyter::write control");
             return send(*control_socket, msg->msg());
-        }
-
-        if ("stdion" == msg->id()) {
-            if (engine_mode) {
-                log_.info(" auto jupyter::write stddin");
-                return send(*iopub_socket, msg->msg());
-            }
         }
 
         if ("registration" == msg->id()) {

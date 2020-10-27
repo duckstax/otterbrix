@@ -8,7 +8,8 @@ RUN apt update && \
         ninja-build \
         python3-pip \
         ipython3 \
-        jupyter && \
+        jupyter \
+        openssh-client && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
     pip3 install --no-cache-dir conan ipyparallel

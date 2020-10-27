@@ -5,9 +5,9 @@
 #include <queue>
 #include <unordered_set>
 
-#include <boost/uuid/uuid.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include <zmq.hpp>
 #include <zmq_addon.hpp>
@@ -21,6 +21,7 @@
 #include <boost/filesystem/path.hpp>
 #include <components/buffer/zmq_buffer.hpp>
 #include <components/configuration/configuration.hpp>
+#include <components/ssh_forwarder/ssh_forwarder.hpp>
 
 namespace services {
 
@@ -50,8 +51,8 @@ namespace services {
 
         auto identifier(boost::uuids::uuid identifier) -> void;
 
-        auto identifier() const  -> const boost::uuids::uuid& {
-            return  identifier_;
+        auto identifier() const -> const boost::uuids::uuid& {
+            return identifier_;
         }
 
         auto write(components::zmq_buffer_t&) -> void;
@@ -69,6 +70,10 @@ namespace services {
 
         boost::filesystem::path jupyter_connection_path_;
         components::sandbox_mode_t mode_;
+        bool ssh_;
+        std::string ssh_host_;
+        std::uint16_t ssh_port_;
+        std::unique_ptr<components::ssh_forwarder_t> ssh_forwarder_;
         std::unique_ptr<zmq::context_t> zmq_context_;
         std::unique_ptr<zmq::socket_t> heartbeat_ping_socket;
         std::unique_ptr<zmq::socket_t> heartbeat_pong_socket;

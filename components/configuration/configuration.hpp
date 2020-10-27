@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include <boost/filesystem.hpp>
 
 namespace components {
@@ -23,6 +25,9 @@ namespace components {
         boost::filesystem::path jupyter_connection_path_;
         boost::filesystem::path script_path_;
         sandbox_mode_t mode_;
+        bool ssh_ = false;
+        std::string ssh_host_;
+        std::uint16_t ssh_port_;
     };
 
     struct configuration final {
