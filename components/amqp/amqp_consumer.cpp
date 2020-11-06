@@ -2,6 +2,7 @@
 
 #include <amqp_tcp_socket.h>
 
+#include <boost/format.hpp>
 #include <components/log/log.hpp>
 
 using namespace components;
@@ -47,11 +48,11 @@ void amqp_consumer::throw_on_amqp_error(amqp_rpc_reply_t x, const char* context)
       return;
 
     case AMQP_RESPONSE_NONE:
-      //throw std::runtime_error("%s: missing RPC reply type!\n", context);
+      throw std::runtime_error((boost::format("%s: missing RPC reply type!") % context).str());
       break;
 
     case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-      //throw std::runtime_error("%s: %s\n", context, amqp_error_string2(x.library_error));
+      throw std::runtime_error((boost::format("%s: %s") % context % amqp_error_string2(x.library_error)).str());
       break;
 
     case AMQP_RESPONSE_SERVER_EXCEPTION:
@@ -59,21 +60,21 @@ void amqp_consumer::throw_on_amqp_error(amqp_rpc_reply_t x, const char* context)
         case AMQP_CONNECTION_CLOSE_METHOD: {
           amqp_connection_close_t *m =
               (amqp_connection_close_t *)x.reply.decoded;
-          /*throw std::runtime_error("%s: server connection error %uh, message: %.*s\n",
-                  context, m->reply_code, (int)m->reply_text.len,
-                  (char *)m->reply_text.bytes);*/
+          throw std::runtime_error((boost::format("%s: server connection error %uh, message: %.*s") %
+                  context % m->reply_code % (int)m->reply_text.len %
+                  (char *)m->reply_text.bytes).str());
           break;
         }
         case AMQP_CHANNEL_CLOSE_METHOD: {
           amqp_channel_close_t *m = (amqp_channel_close_t *)x.reply.decoded;
-          /*throw std::runtime_error("%s: server channel error %uh, message: %.*s\n",
-                  context, m->reply_code, (int)m->reply_text.len,
-                  (char *)m->reply_text.bytes);*/
+          throw std::runtime_error((boost::format("%s: server channel error %uh, message: %.*s") %
+                  context % m->reply_code % (int)m->reply_text.len %
+                  (char *)m->reply_text.bytes).str());
           break;
         }
         default:
-          /*throw std::runtime_error("%s: unknown server error, method id 0x%08X\n",
-                  context, x.reply.id);*/
+          throw std::runtime_error((boost::format("%s: unknown server error, method id 0x%08X") %
+                  context % x.reply.id).str());
           break;
       }
       break;
