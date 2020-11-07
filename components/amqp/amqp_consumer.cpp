@@ -127,6 +127,7 @@ void amqp_consumer::start_loop() {
         amqp_maybe_release_buffers(conn);
         ret = amqp_consume_message(conn, &envelope, NULL, 0);
         if (ret.reply_type != AMQP_RESPONSE_NORMAL) {
+            amqp_bytes_free(queuename);
             amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS);
             amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
             amqp_destroy_connection(conn);
