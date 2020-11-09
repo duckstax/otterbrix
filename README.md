@@ -48,6 +48,8 @@ brew install cmake lua ccache conan python3 libiconv
 
 conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
 
+conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+
 ```
 ### for debian base
 
@@ -58,6 +60,8 @@ apt install git ccache g++ cmake python3 python3-dev python3-pip ninja-build
 pip3 install conan --upgrade
 
 conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
+
+conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
  
 ```
 Hint: on Ubuntu 16.04 (and may be some another) you should install actual cmake manually.
