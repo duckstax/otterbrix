@@ -11,6 +11,7 @@ gtest/1.10.0
 rabbitmq-c/0.10.0
 
 goblin-engineer/1.0.0a3@cyberduckninja/stable
+boost-url/alpha@cyberduckninja/stable
 
 [options]
 OpenSSL:shared = True

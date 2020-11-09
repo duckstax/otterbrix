@@ -1,5 +1,4 @@
 include_directories(${CMAKE_SOURCE_DIR})
-add_subdirectory(url)
 add_subdirectory(amqp)
 add_subdirectory(buffer)
 add_subdirectory(configuration)
