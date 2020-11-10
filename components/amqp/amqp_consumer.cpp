@@ -96,7 +96,7 @@ void amqp_consumer::start_loop() {
 
     error = amqp_socket_open(socket, get_host().c_str(), get_port());
     if (error) {
-        throw std::runtime_error("Cannot listen on " + get_host() + ":" + std::to_string(get_port()));
+        throw std::runtime_error("Cannot connect to " + get_host() + ":" + std::to_string(get_port()));
     }
 
     throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str()), "Cannot login");
@@ -104,8 +104,9 @@ void amqp_consumer::start_loop() {
     amqp_channel_open(conn, 1);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot open channel");
 
+    std::string queue = "celery";
     amqp_queue_declare_ok_t* declared = amqp_queue_declare(
-        conn, 1, amqp_empty_bytes, 0, 0, 0, 1, amqp_empty_table);
+        conn, 1, amqp_cstring_bytes(queue.c_str()), false, true, false, false, amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot declare queue");
 
     amqp_bytes_t queuename = amqp_bytes_malloc_dup(declared->queue);
@@ -116,11 +117,12 @@ void amqp_consumer::start_loop() {
         amqp_cstring_bytes(binding_key.c_str()), amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot bind queue");
 
-    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, 0, 1, 0,
+    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, false, true, false,
         amqp_empty_table);
     throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot consume queue");
 
-    get_logger().info("Listening for queue");
+    get_logger().info("Connected to " + get_host() + ":" + std::to_string(get_port()) + " and listening");
+    get_logger().info("queue=" + queue + ", exchange=" + exchange + ", key=" + binding_key);
 
     while (true) {
         amqp_rpc_reply_t ret;
