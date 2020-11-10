@@ -138,8 +138,20 @@ void amqp_consumer::start_loop() {
             break;
         }
 
-        // TODO process message - call task (how pass task context here?)
-
+        // TODO process message
+        get_logger().info("msg");
+        get_logger().info(std::string(static_cast<char*>(envelope.message.properties.content_type.bytes)));
+        get_logger().info(std::string(static_cast<char*>(envelope.message.body.bytes)));
+        get_logger().info(std::to_string(envelope.message.properties.headers.num_entries));
+        for (int i = 0; i < envelope.message.properties.headers.num_entries; i++) {
+            auto& entry = envelope.message.properties.headers.entries[i];
+            auto str1 = std::string(static_cast<char*>(entry.key.bytes));
+            std::string str2;
+            if (entry.value.value.bytes.len) {
+                str2 = std::string(static_cast<char*>(entry.value.value.bytes.bytes));
+            }
+            get_logger().info(str1 + "=" + str2);
+        }
         amqp_destroy_envelope(&envelope);
     }
 }
