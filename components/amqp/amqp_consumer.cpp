@@ -42,43 +42,45 @@ std::string amqp_consumer::get_password() const {
     return "guest";
 }
 
-void amqp_consumer::throw_on_amqp_error(amqp_rpc_reply_t x, const char* context) const {
-  switch (x.reply_type) {
-    case AMQP_RESPONSE_NORMAL:
-      return;
+amqp_err_reply amqp_consumer::get_amqp_error_reply(const amqp_rpc_reply_t& reply) const {
+    auto* raw = static_cast<amqp_connection_close_t*>(reply.reply.decoded);
+    return amqp_err_reply{raw->reply_code, static_cast<char*>(raw->reply_text.bytes)};
+}
 
-    case AMQP_RESPONSE_NONE:
-      throw std::runtime_error((boost::format("%s: missing RPC reply type!") % context).str());
-      break;
+void amqp_consumer::throw_on_amqp_error(const amqp_rpc_reply_t& reply, const std::string& context) const {
+    switch (reply.reply_type) {
+        case AMQP_RESPONSE_NORMAL:
+            return;
 
-    case AMQP_RESPONSE_LIBRARY_EXCEPTION:
-      throw std::runtime_error((boost::format("%s: %s") % context % amqp_error_string2(x.library_error)).str());
-      break;
+        case AMQP_RESPONSE_NONE:
+            throw std::runtime_error((boost::format("%s: missing RPC reply type!") % context).str());
+            break;
 
-    case AMQP_RESPONSE_SERVER_EXCEPTION:
-      switch (x.reply.id) {
-        case AMQP_CONNECTION_CLOSE_METHOD: {
-          amqp_connection_close_t *m =
-              (amqp_connection_close_t *)x.reply.decoded;
-          throw std::runtime_error((boost::format("%s: server connection error %uh, message: %.*s") %
-                  context % m->reply_code % (int)m->reply_text.len %
-                  (char *)m->reply_text.bytes).str());
-          break;
-        }
-        case AMQP_CHANNEL_CLOSE_METHOD: {
-          amqp_channel_close_t *m = (amqp_channel_close_t *)x.reply.decoded;
-          throw std::runtime_error((boost::format("%s: server channel error %uh, message: %.*s") %
-                  context % m->reply_code % (int)m->reply_text.len %
-                  (char *)m->reply_text.bytes).str());
-          break;
-        }
-        default:
-          throw std::runtime_error((boost::format("%s: unknown server error, method id 0x%08X") %
-                  context % x.reply.id).str());
-          break;
-      }
-      break;
-  }
+        case AMQP_RESPONSE_LIBRARY_EXCEPTION:
+            throw std::runtime_error((boost::format("%s: %s") % context % amqp_error_string2(reply.library_error)).str());
+            break;
+
+        case AMQP_RESPONSE_SERVER_EXCEPTION:
+            switch (reply.reply.id) {
+                case AMQP_CONNECTION_CLOSE_METHOD: {
+                    auto err_reply = get_amqp_error_reply(reply);
+                    throw std::runtime_error((boost::format("%s: server connection error %u, message: %s") %
+                                    context % err_reply.code % err_reply.text).str());
+                    break;
+                }
+                case AMQP_CHANNEL_CLOSE_METHOD: {
+                    auto err_reply = get_amqp_error_reply(reply);
+                    throw std::runtime_error((boost::format("%s: server channel error %u, message: %s") %
+                                    context % err_reply.code % err_reply.text).str());
+                    break;
+                }
+                default:
+                    throw std::runtime_error((boost::format("%s: unknown server error, method id 0x%08X") %
+                                    context % reply.reply.id).str());
+                    break;
+            }
+            break;
+    }
 }
 
 void amqp_consumer::start_loop() {
