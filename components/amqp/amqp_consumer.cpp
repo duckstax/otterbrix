@@ -83,6 +83,27 @@ void amqp_consumer::throw_on_amqp_error(const amqp_rpc_reply_t& reply, const std
     }
 }
 
+std::string amqp_consumer::bytes_to_str(const amqp_bytes_t& bytes) const {
+    if (!bytes.len) {
+        return "";
+    }
+    return static_cast<char*>(bytes.bytes);
+}
+
+const amqp_table_entry_t* amqp_consumer::get_amqp_entry_by_key(const amqp_table_t& table, const std::string& key) {
+    assert(table != NULL);
+    for (int i = 0; i < table.num_entries; ++i) {
+        if (bytes_to_str(table.entries[i].key) == key) {
+            return &table.entries[i];
+        }
+    }
+    return NULL;
+}
+
+const amqp_bytes_t& amqp_consumer::get_amqp_value_bytes(const amqp_field_value_t& value) const {
+    return value.value.bytes;
+}
+
 void amqp_consumer::start_loop() {
     amqp_socket_t* socket = NULL;
     amqp_connection_state_t conn;
@@ -139,19 +160,30 @@ void amqp_consumer::start_loop() {
         }
 
         // TODO process message
-        get_logger().info("msg");
-        get_logger().info(std::string(static_cast<char*>(envelope.message.properties.content_type.bytes)));
-        get_logger().info(std::string(static_cast<char*>(envelope.message.body.bytes)));
-        get_logger().info(std::to_string(envelope.message.properties.headers.num_entries));
-        for (int i = 0; i < envelope.message.properties.headers.num_entries; i++) {
-            auto& entry = envelope.message.properties.headers.entries[i];
-            auto str1 = std::string(static_cast<char*>(entry.key.bytes));
-            std::string str2;
-            if (entry.value.value.bytes.len) {
-                str2 = std::string(static_cast<char*>(entry.value.value.bytes.bytes));
-            }
-            get_logger().info(str1 + "=" + str2);
+        auto ignore_msg_with_err = [&](const std::string& err) {
+            get_logger().error(err);
+            amqp_destroy_envelope(&envelope);
+        };
+
+        const auto& msg = envelope.message;
+
+        const auto* task_en = get_amqp_entry_by_key(msg.properties.headers, "task");
+        if (task_en == NULL) {
+            ignore_msg_with_err("Wrong message: no task property"); continue;
         }
+        auto task = bytes_to_str(get_amqp_value_bytes(task_en->value));
+        if (!task.size()) {
+            ignore_msg_with_err("Wrong message: task property is empty"); continue;
+        }
+        get_logger().info(task);
+
+        get_logger().info(bytes_to_str(msg.properties.content_type));
+
+        auto body = bytes_to_str(msg.body);
+        get_logger().info(body);
+
+        // TODO: call task
+
         amqp_destroy_envelope(&envelope);
     }
 }
