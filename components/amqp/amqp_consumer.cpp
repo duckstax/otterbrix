@@ -91,13 +91,13 @@ std::string amqp_consumer::bytes_to_str(const amqp_bytes_t& bytes) const {
 }
 
 const amqp_table_entry_t* amqp_consumer::get_amqp_entry_by_key(const amqp_table_t& table, const std::string& key) {
-    assert(table != NULL);
+    assert(table != nullptr);
     for (int i = 0; i < table.num_entries; ++i) {
         if (bytes_to_str(table.entries[i].key) == key) {
             return &table.entries[i];
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 const amqp_bytes_t& amqp_consumer::get_amqp_value_bytes(const amqp_field_value_t& value) const {
@@ -105,7 +105,7 @@ const amqp_bytes_t& amqp_consumer::get_amqp_value_bytes(const amqp_field_value_t
 }
 
 void amqp_consumer::start_loop() {
-    amqp_socket_t* socket = NULL;
+    amqp_socket_t* socket = nullptr;
     amqp_connection_state_t conn;
     int error = 0;
 
@@ -150,7 +150,7 @@ void amqp_consumer::start_loop() {
         amqp_envelope_t envelope;
 
         amqp_maybe_release_buffers(conn);
-        ret = amqp_consume_message(conn, &envelope, NULL, 0);
+        ret = amqp_consume_message(conn, &envelope, nullptr, 0);
         if (ret.reply_type != AMQP_RESPONSE_NORMAL) {
             amqp_bytes_free(queuename);
             amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS);
@@ -168,7 +168,7 @@ void amqp_consumer::start_loop() {
         const auto& msg = envelope.message;
 
         const auto* task_en = get_amqp_entry_by_key(msg.properties.headers, "task");
-        if (task_en == NULL) {
+        if (task_en == nullptr) {
             ignore_msg_with_err("Wrong message: no task property"); continue;
         }
         auto task = bytes_to_str(get_amqp_value_bytes(task_en->value));
