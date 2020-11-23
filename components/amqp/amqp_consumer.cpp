@@ -1,17 +1,8 @@
 #include "amqp_consumer.hpp"
 
-#include <amqp_tcp_socket.h>
-
 #include <boost/format.hpp>
-#include <components/log/log.hpp>
 
 using namespace components;
-
-amqp_consumer::amqp_consumer(const std::string& url) : _url(url) {
-    if (_url.scheme() != "amqp") {
-        throw std::runtime_error("URL scheme must be: amqp, provided: " + std::string{_url.scheme()});
-    }
-}
 
 std::string amqp_consumer::get_host() const {
     if (_url.host().size()) {
@@ -104,64 +95,64 @@ const amqp_bytes_t& amqp_consumer::get_amqp_value_bytes(const amqp_field_value_t
     return value.value.bytes;
 }
 
-void amqp_consumer::start_loop() {
-    amqp_socket_t* socket = nullptr;
-    amqp_connection_state_t conn;
-    int error = 0;
+amqp_consumer::amqp_consumer(const std::string& url, std::string queue, std::string exchange, std::string binding_key)
+        : _url(url), _log(get_logger()) {
+    if (_url.scheme() != "amqp") {
+        throw std::runtime_error("URL scheme must be: amqp, provided: " + std::string{_url.scheme()});
+    }
 
-    conn = amqp_new_connection();
-    socket = amqp_tcp_socket_new(conn);
-    if (!socket) {
+    _conn = amqp_new_connection();
+    _socket = amqp_tcp_socket_new(_conn);
+    if (!_socket) {
         throw std::runtime_error("Cannot create socket");
     }
 
-    error = amqp_socket_open(socket, get_host().c_str(), get_port());
+    int error = 0;
+    error = amqp_socket_open(_socket, get_host().c_str(), get_port());
     if (error) {
         throw std::runtime_error("Cannot connect to " + get_host() + ":" + std::to_string(get_port()));
     }
 
-    throw_on_amqp_error(amqp_login(conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str()), "Cannot login");
+    throw_on_amqp_error(amqp_login(_conn, "/", 0, 131072, 0, AMQP_SASL_METHOD_PLAIN, get_user().c_str(), get_password().c_str()), "Cannot login");
 
-    amqp_channel_open(conn, 1);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot open channel");
+    amqp_channel_open(_conn, 1);
+    throw_on_amqp_error(amqp_get_rpc_reply(_conn), "Cannot open channel");
 
-    std::string queue = "celery";
     amqp_queue_declare_ok_t* declared = amqp_queue_declare(
-        conn, 1, amqp_cstring_bytes(queue.c_str()), false, true, false, false, amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot declare queue");
+        _conn, 1, amqp_cstring_bytes(queue.c_str()), false, true, false, false, amqp_empty_table);
+    throw_on_amqp_error(amqp_get_rpc_reply(_conn), "Cannot declare queue");
 
-    amqp_bytes_t queuename = amqp_bytes_malloc_dup(declared->queue);
+    _queuename = amqp_bytes_malloc_dup(declared->queue);
 
-    std::string exchange = "celery";
-    std::string binding_key = "celery";
-    amqp_queue_bind(conn, 1, queuename, amqp_cstring_bytes(exchange.c_str()),
+    amqp_queue_bind(_conn, 1, _queuename, amqp_cstring_bytes(exchange.c_str()),
         amqp_cstring_bytes(binding_key.c_str()), amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot bind queue");
+    throw_on_amqp_error(amqp_get_rpc_reply(_conn), "Cannot bind queue");
 
-    amqp_basic_consume(conn, 1, queuename, amqp_empty_bytes, false, true, false,
+    amqp_basic_consume(_conn, 1, _queuename, amqp_empty_bytes, false, true, false,
         amqp_empty_table);
-    throw_on_amqp_error(amqp_get_rpc_reply(conn), "Cannot consume queue");
+    throw_on_amqp_error(amqp_get_rpc_reply(_conn), "Cannot consume queue");
 
-    get_logger().info("Connected to " + get_host() + ":" + std::to_string(get_port()) + " and listening");
-    get_logger().info("queue=" + queue + ", exchange=" + exchange + ", key=" + binding_key);
+    _log.info("Connected to " + get_host() + ":" + std::to_string(get_port()) + " and listening");
+    _log.info("queue=" + queue + ", exchange=" + exchange + ", key=" + binding_key);
+}
 
+void amqp_consumer::start_loop() {
     while (true) {
         amqp_rpc_reply_t ret;
         amqp_envelope_t envelope;
 
-        amqp_maybe_release_buffers(conn);
-        ret = amqp_consume_message(conn, &envelope, nullptr, 0);
+        amqp_maybe_release_buffers(_conn);
+        ret = amqp_consume_message(_conn, &envelope, nullptr, 0);
         if (ret.reply_type != AMQP_RESPONSE_NORMAL) {
-            amqp_bytes_free(queuename);
-            amqp_channel_close(conn, 1, AMQP_REPLY_SUCCESS);
-            amqp_connection_close(conn, AMQP_REPLY_SUCCESS);
-            amqp_destroy_connection(conn);
+            amqp_bytes_free(_queuename);
+            amqp_channel_close(_conn, 1, AMQP_REPLY_SUCCESS);
+            amqp_connection_close(_conn, AMQP_REPLY_SUCCESS);
+            amqp_destroy_connection(_conn);
             break;
         }
 
-        // TODO process message
         auto ignore_msg_with_err = [&](const std::string& err) {
-            get_logger().error(err);
+            _log.error(err);
             amqp_destroy_envelope(&envelope);
         };
 
@@ -175,12 +166,12 @@ void amqp_consumer::start_loop() {
         if (!task.size()) {
             ignore_msg_with_err("Wrong message: task property is empty"); continue;
         }
-        get_logger().info(task);
+        _log.info(task);
 
-        get_logger().info(bytes_to_str(msg.properties.content_type));
+        _log.info(bytes_to_str(msg.properties.content_type));
 
         auto body = bytes_to_str(msg.body);
-        get_logger().info(body);
+        _log.info(body);
 
         // TODO: call task
 
