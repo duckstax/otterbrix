@@ -169,14 +169,12 @@ void amqp_consumer::start_loop() {
         if (!task.size()) {
             ignore_msg_with_err("Wrong message: task property is empty"); continue;
         }
-        _log.info(task);
 
-        _log.info(bytes_to_str(msg.properties.content_type));
+        //_log.info(bytes_to_str(msg.properties.content_type));
 
         auto body = bytes_to_str(msg.body);
-        _log.info(body);
 
-        on_task(task);
+        on_task(task, body);
 
         amqp_destroy_envelope(&envelope);
     }

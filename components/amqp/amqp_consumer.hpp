@@ -19,7 +19,7 @@ public:
 
     void start_loop();
 
-    std::function<void(const std::string&)> on_task;
+    std::function<void(const std::string&, const std::string&)> on_task;
 
 private:
     std::string get_host() const;

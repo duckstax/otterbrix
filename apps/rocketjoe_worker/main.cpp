@@ -151,8 +151,13 @@ int main(int argc, char* argv[]) {
 
     try {
         amqp_consumer con("amqp://guest:guest@127.0.0.1:5672");
-        con.on_task = [&](const std::string& task) {
-            log.info(task);
+        con.on_task = [&](const std::string& task, const std::string& body) {
+            log.info("Called " + task);
+            try {
+                vm.call_task(task, body);
+            } catch (std::exception& ex) {
+                log.error("Task " + task + " failed: " + ex.what());
+            }
         };
         con.start_loop();
     } catch (std::exception& ex) {

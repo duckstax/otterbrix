@@ -3,7 +3,9 @@
 #include <iostream>
 
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/algorithm/string.hpp>
 #include <pybind11/pybind11.h>
+#include <nlohmann/json.hpp>
 
 #include <detail/celery.hpp>
 #include <detail/context.hpp>
@@ -11,6 +13,8 @@
 #include <detail/data_set.hpp>
 #include <detail/file_manager.hpp>
 #include <detail/file_system.hpp>
+
+using json = nlohmann::json;
 
 namespace components {
 
@@ -87,6 +91,33 @@ namespace components {
 
         py::module::import("sys").add_object("argv", tmp);
         py::exec(load_script, py::globals(), py::dict("path"_a = script_path_.string()));
+    }
+
+    void python_t::call_task(const std::string& task, const std::string& body) {
+        std::vector<std::string> parts;
+        boost::algorithm::split(parts, task, boost::algorithm::is_any_of("."));
+        if (parts.size() != 2) {
+            throw std::runtime_error("Task ID is invalid");
+        }
+
+        auto jbody = json::parse(body);
+        if (!jbody.is_array()) {
+            throw std::runtime_error("Task body is not JSON array");
+        }
+        auto jargs = jbody[0];
+        if (!jargs.is_array()) {
+            throw std::runtime_error("Task body 1st item is not JSON array");
+        }
+        py::list args;
+        for (auto& jarg : jargs) {
+            if (jarg.is_number()) {
+                args.append(jarg.get<int>());
+            } else if (jarg.is_string()) {
+                args.append(jarg.get<std::string>());
+            }
+        }
+
+        py::module::import(parts[0].c_str()).attr(parts[1].c_str())(*args);
     }
 
 } // namespace components
