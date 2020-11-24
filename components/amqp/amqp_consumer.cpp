@@ -137,6 +137,9 @@ amqp_consumer::amqp_consumer(const std::string& url, std::string queue, std::str
 }
 
 void amqp_consumer::start_loop() {
+    if (!on_task) {
+        throw std::runtime_error("No on_task handler set");
+    }
     while (true) {
         amqp_rpc_reply_t ret;
         amqp_envelope_t envelope;
@@ -173,7 +176,7 @@ void amqp_consumer::start_loop() {
         auto body = bytes_to_str(msg.body);
         _log.info(body);
 
-        // TODO: call task
+        on_task(task);
 
         amqp_destroy_envelope(&envelope);
     }
