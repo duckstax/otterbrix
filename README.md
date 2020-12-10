@@ -87,3 +87,42 @@ cmake --build .
 ./apps/rocketjoe/rocketjoe 
  
 ```
+
+### Тестирование 
+
+1.
+Скачать ветку:
+```
+git clone https://github.com/maslenitsa93/RocketJoe -b fix-readme-and-workers
+
+```
+
+2.
+Этапы с Docker не выполнять. Установить все необходимые зависимости:
+https://github.com/maslenitsa93/RocketJoe/tree/fix-readme-and-workers#setup-developers-environments
+
+3.
+Собрать по инструкции https://github.com/maslenitsa93/RocketJoe/tree/fix-readme-and-workers#build
+
+4. В папке build создать стандартный тестовый файл tasks.py
+```
+from celery import Celery
+
+app = Celery('tasks', broker='pyamqp://guest@localhost//')
+
+@app.task
+def writeconsole(msg):
+    print(msg)
+```
+
+5. Запустить воркер
+```
+rocketjoe_worker tasks.py
+```
+
+6. Отдельно запустить Python в папке, где лежит tasks.py, и выполнить следующие строки:
+```
+from tasks import add
+add.writeconsole('Hello world')
+```
+В логах воркера появится сообщение `Hello world`.
