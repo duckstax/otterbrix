@@ -23,6 +23,19 @@
 #include <boost/stacktrace.hpp>
 #include <csignal>
 
+enum LogLevels {
+    DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL
+};
+
+std::map<std::string, LogLevels> LogLevelStrs = {
+    {"DEBUG", DEBUG},
+    {"INFO", INFO},
+    {"WARNING", WARNING},
+    {"ERROR", ERROR},
+    {"CRITICAL", CRITICAL},
+    {"FATAL", FATAL}
+};
+
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
     std::cerr << "signal called:"
@@ -71,6 +84,9 @@ int main(int argc, char* argv[]) {
     // clang-format off
     command_line_description.add_options()
         ("help", "Print help")
+        ("loglevel",
+            po::value<std::string>()->default_value("INFO"),
+            "DEBUG, INFO, WARNING, ERROR, CRITICAL, or FATAL")
         ;
     // clang-format on
     po::variables_map command_line;
@@ -99,7 +115,11 @@ int main(int argc, char* argv[]) {
 
     int number_of_python_files = 0;
 
+    std::vector<std::string> cleaned_args;
+
     for (const auto& i : all_args) {
+        if (i.find("--loglevel") == 0) continue;
+        cleaned_args.push_back(i);
         boost::filesystem::path p(i);
         auto non_empty = boost::filesystem::exists(p);
         auto extension = p.extension();
@@ -145,14 +165,16 @@ int main(int argc, char* argv[]) {
 
     components::python_t vm(cfg_.python_configuration_, log);
 
-    vm.init();
+    //vm.init();
 
-    vm.run_script(all_args);
+    //vm.run_script(cleaned_args);
+
+    auto log_level = LogLevelStrs[command_line["loglevel"].as<std::string>()];
 
     try {
         amqp_consumer con("amqp://guest:guest@127.0.0.1:5672");
         con.on_task = [&](const std::string& task, const std::string& body) {
-            log.info("Called " + task);
+            if (log_level <= INFO) log.info("Called " + task);
             try {
                 vm.call_task(task, body);
             } catch (std::exception& ex) {
