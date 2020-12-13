@@ -133,3 +133,6 @@ from tasks import add
 add.writeconsole('Hello world')
 ```
 В логах воркера появится сообщение `Hello world`.
+
+7. Настройка лимитов возможна с помощью файла конфигурации Celery
+https://docs.celeryproject.org/en/stable/userguide/workers.html
