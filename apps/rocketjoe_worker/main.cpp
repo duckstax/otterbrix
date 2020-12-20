@@ -23,17 +23,17 @@
 #include <boost/stacktrace.hpp>
 #include <csignal>
 
-enum LogLevels {
+enum class LogLevels {
     DEBUG, INFO, WARNING, ERROR, CRITICAL, FATAL
 };
 
 std::map<std::string, LogLevels> LogLevelStrs = {
-    {"DEBUG", DEBUG},
-    {"INFO", INFO},
-    {"WARNING", WARNING},
-    {"ERROR", ERROR},
-    {"CRITICAL", CRITICAL},
-    {"FATAL", FATAL}
+    {"DEBUG", LogLevels::DEBUG},
+    {"INFO", LogLevels::INFO},
+    {"WARNING", LogLevels::WARNING},
+    {"ERROR", LogLevels::ERROR},
+    {"CRITICAL", LogLevels::CRITICAL},
+    {"FATAL", LogLevels::FATAL}
 };
 
 void my_signal_handler(int signum) {
@@ -174,7 +174,7 @@ int main(int argc, char* argv[]) {
     try {
         amqp_consumer con("amqp://guest:guest@127.0.0.1:5672");
         con.on_task = [&](const std::string& task, const std::string& body) {
-            if (log_level <= INFO) log.info("Called " + task);
+            if (log_level <= LogLevels::INFO) log.info("Called " + task);
             try {
                 vm.call_task(task, body);
             } catch (std::exception& ex) {

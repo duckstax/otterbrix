@@ -4,6 +4,14 @@
 
 using namespace components;
 
+std::string bytes_to_str(const amqp_bytes_t& bytes) {
+    if (!bytes.len) {
+        return "";
+    }
+    return static_cast<char*>(bytes.bytes);
+}
+
+
 std::string amqp_consumer::get_host() const {
     if (_url.host().size()) {
         return _url.host();
@@ -72,13 +80,6 @@ void amqp_consumer::throw_on_amqp_error(const amqp_rpc_reply_t& reply, const std
             }
             break;
     }
-}
-
-std::string amqp_consumer::bytes_to_str(const amqp_bytes_t& bytes) const {
-    if (!bytes.len) {
-        return "";
-    }
-    return static_cast<char*>(bytes.bytes);
 }
 
 const amqp_table_entry_t* amqp_consumer::get_amqp_entry_by_key(const amqp_table_t& table, const std::string& key) {
