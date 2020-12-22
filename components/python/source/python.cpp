@@ -7,7 +7,6 @@
 #include <pybind11/pybind11.h>
 #include <nlohmann/json.hpp>
 
-#include <detail/celery.hpp>
 #include <detail/context.hpp>
 #include <detail/context_manager.hpp>
 #include <detail/data_set.hpp>
@@ -69,9 +68,7 @@ namespace components {
         python::detail::add_file_system(pyrocketjoe_, file_manager_.get());
         ///python::detail::add_mapreduce(pyrocketjoe, context_manager_.get());
 
-        python::detail::add_celery(pyrocketjoe_);
         log_.info("auto python_t::init() -> void {");
-        py::exec(init_script, py::globals(), py::dict("pyrocketjoe"_a = pyrocketjoe_));
     }
 
     python_t::~python_t() = default;
