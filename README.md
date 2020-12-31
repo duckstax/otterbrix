@@ -81,7 +81,7 @@ git clone https://github.com/cyberduckninja/RocketJoe.git rocketjoe
 
 cd rocketjoe
 
-conan install .
+conan install . --build=boost
 
 mkdir build
 
