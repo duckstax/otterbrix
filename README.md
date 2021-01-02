@@ -107,9 +107,11 @@ git clone https://github.com/maslenitsa93/RocketJoe -b fix-readme-and-workers
 2.
 Этапы с Docker не выполнять. Установить все необходимые зависимости:
 https://github.com/maslenitsa93/RocketJoe/tree/fix-readme-and-workers#setup-developers-environments
+Тестировала на Ubuntu 20 и Python 3.8.
 
 3.
 Собрать по инструкции https://github.com/maslenitsa93/RocketJoe/tree/fix-readme-and-workers#build
+На Ubuntu 20 использовала родной cmake.
 
 4. В папке build создать стандартный тестовый файл tasks.py
 ```
@@ -136,3 +138,7 @@ add.writeconsole('Hello world')
 
 7. Настройка лимитов возможна с помощью файла конфигурации Celery
 https://docs.celeryproject.org/en/stable/userguide/workers.html
+
+8. В случае с этими тест-кейсами
+https://github.com/Sibuken/celery_test_cases
+нужно содержимое папки app положить рядом с rocketjoe_worker (бинарником) и запустить его, как и в пункте 5. Затем делать вызовы аналогично пункту 6.
