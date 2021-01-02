@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:latest
+    env_file:
+      - ./.env
+    ports:
+      - "5673:5672"
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker_config/celery/Dockerfile
+    image: test_case_worker
+    depends_on:
+      - rabbit
+    env_file:
+      - .env
