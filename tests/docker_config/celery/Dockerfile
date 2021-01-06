@@ -1,28 +1,34 @@
-FROM python:3.8-slim as compile-image
+FROM debian:buster-backports
 
-RUN apt-get update && apt-get install -y --no-install-recommends gcc build-essential libpq-dev git
-
-RUN mkdir -m 777 /app
-COPY ./requirements.txt /
-COPY ./app /app
-WORKDIR /venv
-RUN python -m venv .
-RUN /venv/bin/pip install --upgrade pip && /venv/bin/pip install --no-cache-dir -r /requirements.txt
-
-
-FROM python:3.8-slim AS runtime-image
-
-RUN apt-get update && apt-get install -y  --no-install-recommends netcat
-
-COPY --from=compile-image /app /app
-COPY --from=compile-image /venv /venv
-
-COPY ./docker_config/celery/start.sh /start.sh
-RUN sed -i 's/\r//' /start.sh
-RUN chmod +x /start.sh
-
-ENV PATH="/venv/bin:$PATH"
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
+        build-essential \
+        cmake \
+        ninja-build \
+        python3-pip && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    pip3 install --no-cache-dir conan
 
 WORKDIR /app
 
-CMD ["/start.sh"]
+COPY conanfile.txt ./
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
+
+RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan && \
+    conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan  && \
+    conan install . --build missing -s build_type=Release -s compiler.libcxx=libstdc++11
+
+COPY . ./
+
+WORKDIR ./build
+
+COPY tests/app/tasks.py ./
+
+RUN cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
+    cmake --build .  --target rocketjoe_worker
+
+CMD ["./apps/rocketjoe_worker/rocketjoe_worker", "tasks.py"]
+
