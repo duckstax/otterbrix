@@ -40,7 +40,7 @@ logs when the container starts.
 
 ## Setup Developers Environments 
 
-### for mac os x 
+### for mac os
 
 ```bash
 
