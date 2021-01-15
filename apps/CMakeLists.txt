@@ -6,4 +6,5 @@ endif()
 
 add_subdirectory(rocketjoe)
 add_subdirectory(rocketjoe_engine)
+add_subdirectory(rocketjoe_worker)
 add_subdirectory(rocketjoe_kernel)

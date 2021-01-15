@@ -1,7 +1,6 @@
 set(CURRENT_TARGET python_sandbox)
 
 list(APPEND ${CURRENT_TARGET}_HEADERS
-        detail/celery.hpp
         detail/context.hpp
         detail/context_manager.hpp
         detail/data_set.hpp
@@ -13,7 +12,6 @@ list(APPEND ${CURRENT_TARGET}_HEADERS
 )
 
 list(APPEND ${CURRENT_TARGET}_SOURCES
-        source/detail/celery.cpp
         source/detail/context.cpp
         source/detail/context_manager.cpp
         source/detail/data_set.cpp
