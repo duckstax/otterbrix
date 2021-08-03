@@ -411,8 +411,7 @@ luac.out
 
 
 .idea
-cmake-build-debug
-cmake-build-release
+cmake-build-*
 venv/
 conan_paths.cmake
 conanbuildinfo.cmake
@@ -423,3 +422,5 @@ thirdparty/actor-zeta
 thirdparty/cxxopts/include
 
 **/.#session.*
+build
+.vscode
