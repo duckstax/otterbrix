@@ -11,6 +11,7 @@ namespace kv {
         static constexpr auto select = "select";
         static constexpr auto insert = "insert";
         static constexpr auto erase = "erase";
+        static constexpr auto ws_dispatch = "ws_dispatch";
     } // namespace dispatcher
 
     namespace database {

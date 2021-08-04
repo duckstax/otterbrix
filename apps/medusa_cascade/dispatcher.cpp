@@ -1,5 +1,8 @@
 #include "dispatcher.hpp"
+#include "dto.hpp"
+#include "protocol.hpp"
 #include "tracy/tracy.hpp"
+#include <msgpack.hpp>
 
 namespace kv {
 
@@ -28,6 +31,68 @@ namespace kv {
         ZoneScoped;
         set_current_message(std::move(msg));
         execute(*this);
+    }
+
+    dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
+        : goblin_engineer::abstract_service(manager_database, "dispatcher")
+        , log_(log.clone()) {
+        add_handler(dispatcher::create_collection, &dispatcher_t::create_collection);
+        add_handler(dispatcher::create_database, &dispatcher_t::create_database);
+        add_handler(dispatcher::select, &dispatcher_t::select);
+        add_handler(dispatcher::insert, &dispatcher_t::insert);
+        add_handler(dispatcher::erase, &dispatcher_t::erase);
+        add_handler(dispatcher::ws_dispatch, &dispatcher_t::ws_dispatch);
+    }
+
+    void dispatcher_t::ws_dispatch(session_id id, std::string& request, size_t size) {
+        auto req = std::move(request);
+
+        msgpack::object_handle oh = msgpack::unpack(req.data(), size);
+        msgpack::object o = oh.get();
+
+        protocol_t proto;
+        o.convert(req);
+
+        session_t session;
+        session.id_ = id;
+
+        ///msgpack::object obj(my, z);
+        switch (static_cast<protocol_op>(proto.op)) {
+            case protocol_op::create_collection:
+                break;
+            case protocol_op::create_database:
+                break;
+            case protocol_op::select: {
+                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
+                msgpack::object obj = oh.get();
+                auto query = std::move(obj.as<select_t>());
+                return goblin_engineer::send(self(), self(), "select", std::move(session), std::move(query));
+            }
+
+            case protocol_op::insert: {
+                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
+                msgpack::object obj = oh.get();
+                auto query = std::move(obj.as<insert_t>());
+                return goblin_engineer::send(self(), self(), "insert", std::move(session), std::move(query));
+            }
+            case protocol_op::erase: {
+                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
+                msgpack::object obj = oh.get();
+                auto query = std::move(obj.as<erase_t>());
+                return goblin_engineer::send(self(), self(), "erase", std::move(session), std::move(query));
+            }
+        }
+    }
+    void dispatcher_t::erase(session_t session, const erase_t& value) {
+        goblin_engineer::send(addresses("collection"), self(), "erase", std::move(session), std::move(value));
+    }
+
+    void dispatcher_t::insert(session_t session, const insert_t& value) {
+        goblin_engineer::send(addresses("collection"), self(), "insert", std::move(session), std::move(value));
+    }
+
+    void dispatcher_t::select(session_t session, const select_t& value) {
+        goblin_engineer::send(addresses("collection"), self(), "select", std::move(session), std::move(value));
     }
 
 } // namespace kv

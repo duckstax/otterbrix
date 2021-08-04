@@ -1,5 +1,7 @@
 #pragma once
 #include "forward.hpp"
+#include "network_service/network_service.hpp"
+#include "protocol.hpp"
 #include "route.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
@@ -19,19 +21,14 @@ namespace kv {
         goblin_engineer::executor_ptr e_;
     };
 
-    using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
+    ///using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
+    using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<network_service_t>;
 
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:
-        dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
-            : goblin_engineer::abstract_service(manager_database, "dispatcher")
-            , log_(log.clone()) {
-            add_handler(dispatcher::create_collection, &dispatcher_t::create_collection);
-            add_handler(dispatcher::create_database, &dispatcher_t::create_database);
-            add_handler(dispatcher::select, &dispatcher_t::select);
-            add_handler(dispatcher::insert, &dispatcher_t::insert);
-            add_handler(dispatcher::erase, &dispatcher_t::erase);
-        }
+        dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log);
+
+        void ws_dispatch(session_id id, std::string& request, size_t size);
 
         void create_database() {
         }
@@ -39,16 +36,14 @@ namespace kv {
         void create_collection() {
         }
 
-        void select(session_id_t session_id) {
-        }
+        void select(session_t session, const select_t& value);
 
-        void insert(session_id_t session_id) {
-        }
+        void insert(session_t session, const insert_t& value);
 
-        void erase(session_id_t session_id) {
-        }
+        void erase(session_t session, const erase_t& value);
 
     private:
         log_t log_;
+        msgpack::zone zone_;
     };
 } // namespace kv

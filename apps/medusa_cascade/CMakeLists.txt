@@ -4,11 +4,18 @@ include_directories(../../components)
 include_directories(../../services)
 
 set(${PROJECT_NAME}_headers
-        dispatcher.hpp
+        collection.hpp
         database.hpp
+        dispatcher.cpp
+        dispatcher.hpp
+        dto.hpp
+        forward.hpp
+        protocol.hpp
+        route.hpp
 )
 
 set(${PROJECT_NAME}_sources
+        collection.cpp
         database.cpp
         dispatcher.cpp
         main.cpp
