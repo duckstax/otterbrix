@@ -53,7 +53,7 @@ namespace kv {
         session.id_ = id;
         session.uid_ = string_generator_(protocol.uid_);
 
-        switch (static_cast<protocol_op>(protocol.op_type)) {
+        switch (protocol.op_type) {
             case protocol_op::create_collection:
                 break;
             case protocol_op::create_database:

@@ -26,6 +26,7 @@ using query_t = std::string;
 using session_id = std::uintptr_t;
 
 struct session_t {
+    session_t()=default;
     session_id id_;
     boost::uuids::uuid uid_;
 };

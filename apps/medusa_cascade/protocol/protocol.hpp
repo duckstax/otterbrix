@@ -1,12 +1,13 @@
 #pragma once
 #include "base.hpp"
-#include "select.hpp"
 #include "insert.hpp"
+#include "select.hpp"
 #include <msgpack.hpp>
 #include <variant>
 
 class protocol_t {
 public:
+    using storage_t = std::variant<select_t, insert_t, erase_t>;
     protocol_t() = default;
     template<class T>
     protocol_t(const std::string& uid, protocol_op opType, T&& data)
@@ -14,10 +15,9 @@ public:
         , op_type(opType)
         , data_(data) {}
 
-
     std::string uid_;
     protocol_op op_type;
-    std::variant<select_t, insert_t, erase_t>  data_;
+    storage_t data_;
 };
 
 // User defined class template specialization
@@ -37,20 +37,23 @@ namespace msgpack {
                     }
 
                     uint32_t op = o.via.array.ptr[1].as<uint32_t>();
-                    std::variant<select_t, insert_t, erase_t> data;
+                    protocol_t::storage_t data;
                     switch (static_cast<protocol_op>(op)) {
                         case protocol_op::create_collection:
                             break;
                         case protocol_op::create_database:
                             break;
                         case protocol_op::select: {
-                            data.emplace<select_t>(o.via.array.ptr[2].as<select_t>() );
+                            data.emplace<select_t>(o.via.array.ptr[2].as<select_t>());
+                            break;
                         }
 
                         case protocol_op::insert: {
-                            data.emplace<insert_t>(o.via.array.ptr[2].as<insert_t>() );
+                            data.emplace<insert_t>(o.via.array.ptr[2].as<insert_t>());
+                            break;
                         }
                         case protocol_op::erase: {
+                            break;
                         }
                     }
 
@@ -67,7 +70,7 @@ namespace msgpack {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, protocol_t const& v) const {
                     o.pack_array(3);
-                    o.pack_str_body(v.uid_.data(),v.uid_.size());
+                    o.pack_str_body(v.uid_.data(), v.uid_.size());
                     o.pack_uint32(v.op_type);
 
                     switch (static_cast<protocol_op>(v.op_type)) {
@@ -77,12 +80,12 @@ namespace msgpack {
                             break;
                         case protocol_op::select: {
                             auto data = std::get<select_t>(v.data_);
-                            msgpack::pack(o,data);
+                            msgpack::pack(o, data);
                         }
 
                         case protocol_op::insert: {
                             auto data = std::get<insert_t>(v.data_);
-                            msgpack::pack(o,data);
+                            msgpack::pack(o, data);
                         }
                         case protocol_op::erase: {
                         }
@@ -116,7 +119,6 @@ namespace msgpack {
                         case protocol_op::erase: {
                         }
                     }
-
                 }
             };
 

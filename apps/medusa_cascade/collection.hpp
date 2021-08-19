@@ -2,13 +2,13 @@
 #include <memory>
 #include <unordered_map>
 
+#include <apps/medusa_cascade/protocol/base.hpp>
 #include <goblin-engineer/core.hpp>
 
 #include "log/log.hpp"
 
 #include "forward.hpp"
-#include "protocol/select.hpp"
-#include "protocol/insert.hpp"
+#include "protocol/forward.hpp"
 #include "route.hpp"
 
 namespace kv {
@@ -31,11 +31,11 @@ namespace kv {
     public:
         collection_t(database_ptr database, log_t& log);
 
-        void select(session_id_t session_id, query_t& query);
+        void select(const session_t& session_id, const select_t& query);
 
-        void insert(session_id_t session_id, insert_t& value);
+        void insert(const session_t& session_id, const insert_t& value);
 
-        void erase(session_id_t session_id, query_t& query);
+        void erase(const session_t& session_id, const erase_t& query);
 
     private:
         log_t log_;
