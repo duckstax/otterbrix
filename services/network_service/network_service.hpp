@@ -10,19 +10,9 @@
 
 #include "log/log.hpp"
 #include <goblin-engineer/core.hpp>
-
-
+#include "excutor.hpp"
 
 namespace ge = goblin_engineer;
-
-namespace detail {
-    struct thread_pool_deleter final {
-        void operator()(actor_zeta::abstract_executor* ptr) {
-            ptr->stop();
-            delete ptr;
-        }
-    };
-} // namespace detail
 
 class network_service_t final : public goblin_engineer::abstract_manager_service {
 public:
@@ -55,7 +45,7 @@ public:
         type_t type_;
     };
     using clients_t = std::vector<client_t>;
-    using coord_t = std::unique_ptr<actor_zeta::abstract_executor, detail::thread_pool_deleter>;
+
 
     network_service_t(std::string name, net::io_context&, tcp::endpoint, const clients_t&,
                       size_t num_workers, size_t max_throughput, log_t& log);
@@ -79,7 +69,7 @@ public:
 private:
     std::atomic_int actor_index_ = 0;
 
-    coord_t coordinator_;
+    goblin_engineer::executor_ptr coordinator_;
     net::io_context& io_context_;
     net::strand<net::io_context::executor_type> ioc_read_;
     net::strand<net::io_context::executor_type> ioc_write_;

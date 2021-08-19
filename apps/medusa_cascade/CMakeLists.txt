@@ -4,17 +4,22 @@ include_directories(../../components)
 include_directories(../../services)
 
 set(${PROJECT_NAME}_headers
+
+        protocol/base.hpp
+        protocol/dto.hpp
+        protocol/select.hpp
+
         collection.hpp
         database.hpp
         dispatcher.cpp
         dispatcher.hpp
-        dto.hpp
         forward.hpp
-        protocol.hpp
         route.hpp
 )
 
 set(${PROJECT_NAME}_sources
+        protocol/base.cpp
+        protocol/select.cpp
         collection.cpp
         database.cpp
         dispatcher.cpp
@@ -31,3 +36,5 @@ target_link_libraries(
         network_service
         dl
 )
+
+add_subdirectory(test)

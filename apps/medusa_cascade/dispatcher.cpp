@@ -1,5 +1,5 @@
 #include "dispatcher.hpp"
-#include "dto.hpp"
+#include "apps/medusa_cascade/protocol/dto.hpp"
 #include "protocol.hpp"
 #include "tracy/tracy.hpp"
 #include <msgpack.hpp>
@@ -46,15 +46,11 @@ namespace kv {
 
     void dispatcher_t::ws_dispatch(session_id id, std::string& request, size_t size) {
         auto req = std::move(request);
-
-        msgpack::object_handle oh = msgpack::unpack(req.data(), size);
-        msgpack::object o = oh.get();
-
-        protocol_t proto;
-        o.convert(req);
+        auto o = msgpack::unpack(zone_, req.data(), size);
 
         session_t session;
         session.id_ = id;
+        session.uid_ = string_generator_(o.convert_if_not_nil());
 
         ///msgpack::object obj(my, z);
         switch (static_cast<protocol_op>(proto.op)) {

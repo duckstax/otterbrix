@@ -6,6 +6,7 @@
 #include <exception>
 
 #include "plain_websocket_session.hpp"
+#include "excutor.hpp"
 
 constexpr bool reuse_address = true;
 using wrk_shared = actor_zeta::executor_t<actor_zeta::work_sharing>;
@@ -20,7 +21,7 @@ network_service_t::network_service_t(
     log_t& log,
     address_book addresses)
     : goblin_engineer::abstract_manager_service(network_service_routes::name)
-    , coordinator_(new wrk_shared(num_workers, max_throughput), detail::thread_pool_deleter())
+    , coordinator_(new wrk_shared(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter())
     , io_context_(ioc)
     , ioc_read_(net::make_strand(ioc))
     , ioc_write_(net::make_strand(ioc))

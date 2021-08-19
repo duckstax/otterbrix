@@ -5,6 +5,7 @@
 #include "route.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 namespace kv {
     class manager_dispatcher_t final : public goblin_engineer::abstract_manager_service {
@@ -44,6 +45,7 @@ namespace kv {
 
     private:
         log_t log_;
+        boost::uuids::string_generator string_generator_;
         msgpack::zone zone_;
     };
 } // namespace kv

@@ -1,5 +1,7 @@
 #include "dto.hpp"
 #include "tracy/tracy.hpp"
+#include <apps/medusa_cascade/protocol/dto.hpp>
+#include <variant>
 
 void make_http_client_request(
     const std::string& host,
