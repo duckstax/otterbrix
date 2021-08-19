@@ -6,8 +6,9 @@ include_directories(../../services)
 set(${PROJECT_NAME}_headers
 
         protocol/base.hpp
-        protocol/dto.hpp
+        protocol/protocol.hpp
         protocol/select.hpp
+        protocol/insert.hpp
 
         collection.hpp
         database.hpp
@@ -20,6 +21,8 @@ set(${PROJECT_NAME}_headers
 set(${PROJECT_NAME}_sources
         protocol/base.cpp
         protocol/select.cpp
+        protocol/insert.cpp
+
         collection.cpp
         database.cpp
         dispatcher.cpp

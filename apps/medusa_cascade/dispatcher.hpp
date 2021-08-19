@@ -1,7 +1,7 @@
 #pragma once
 #include "forward.hpp"
 #include "network_service/network_service.hpp"
-#include "protocol.hpp"
+#include "protocol/forward.hpp"
 #include "route.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>

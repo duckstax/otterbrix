@@ -8,7 +8,6 @@ struct select_t {
     std::vector<std::string> keys_;
 };
 
-// User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {

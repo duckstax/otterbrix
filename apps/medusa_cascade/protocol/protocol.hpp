@@ -1,35 +1,23 @@
-#include "protocol.hpp"
+#pragma once
+#include "base.hpp"
+#include "select.hpp"
+#include "insert.hpp"
 #include <msgpack.hpp>
 #include <variant>
-/*
-struct protocol_t {
-    protocol_t() = default;
-    protocol_t(uint64_t uuid1, uint64_t uuid2, uint32_t op, const std::string& body)
-    : uuid1(uuid1)
-    , uuid2(uuid2)
-    , op(op)
-    , body(std::move(body)) {}
-    uint64_t uuid1;
-    uint64_t uuid2;
-    uint32_t op;
-    std::string body;
-    MSGPACK_DEFINE(uuid1, uuid2, op, body);
-};
- */
 
 class protocol_t {
 public:
     protocol_t() = default;
     template<class T>
-    protocol_t(const std::string& uid, int32_t opType, T&& data)
+    protocol_t(const std::string& uid, protocol_op opType, T&& data)
         : uid_(uid)
         , op_type(opType)
         , data_(data) {}
 
 
     std::string uid_;
-    uint32_t op_type;
-    std::variant<select_t, insert_t, erase_t> data_;
+    protocol_op op_type;
+    std::variant<select_t, insert_t, erase_t>  data_;
 };
 
 // User defined class template specialization
@@ -56,14 +44,11 @@ namespace msgpack {
                         case protocol_op::create_database:
                             break;
                         case protocol_op::select: {
-                            auto a = o.via.array.ptr[2].as<msgpack::object_array>();
-                            std::vector<std::string> keys;
-                            keys.reserve(a.ptr[1].as<uint32_t>());
-
-                            data.emplace<select_t>(a.ptr[0].as<std::string>(), keys);
+                            data.emplace<select_t>(o.via.array.ptr[2].as<select_t>() );
                         }
 
                         case protocol_op::insert: {
+                            data.emplace<insert_t>(o.via.array.ptr[2].as<insert_t>() );
                         }
                         case protocol_op::erase: {
                         }
@@ -71,7 +56,7 @@ namespace msgpack {
 
                     v = protocol_t(
                         o.via.array.ptr[0].as<std::string>(),
-                        op,
+                        static_cast<protocol_op>(op),
                         std::move(data));
                     return o;
                 }
@@ -83,7 +68,7 @@ namespace msgpack {
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, protocol_t const& v) const {
                     o.pack_array(3);
                     o.pack_str_body(v.uid_.data(),v.uid_.size());
-                    o.pack_fix_uint32(v.op_type);
+                    o.pack_uint32(v.op_type);
 
                     switch (static_cast<protocol_op>(v.op_type)) {
                         case protocol_op::create_collection:
@@ -92,9 +77,12 @@ namespace msgpack {
                             break;
                         case protocol_op::select: {
                             auto data = std::get<select_t>(v.data_);
+                            msgpack::pack(o,data);
                         }
 
                         case protocol_op::insert: {
+                            auto data = std::get<insert_t>(v.data_);
+                            msgpack::pack(o,data);
                         }
                         case protocol_op::erase: {
                         }
@@ -108,11 +96,27 @@ namespace msgpack {
             struct object_with_zone<protocol_t> {
                 void operator()(msgpack::object::with_zone& o, protocol_t const& v) const {
                     o.type = type::ARRAY;
-                    o.via.array.size = 2;
-                    o.via.array.ptr = static_cast<msgpack::object*>(
-                        o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
-                    o.via.array.ptr[0] = msgpack::object(v.get_name(), o.zone);
-                    o.via.array.ptr[1] = msgpack::object(v.get_age(), o.zone);
+                    o.via.array.size = 3;
+                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr[0] = msgpack::object(v.uid_, o.zone);
+                    o.via.array.ptr[1] = msgpack::object(static_cast<uint32_t>(v.op_type), o.zone);
+
+                    switch (static_cast<protocol_op>(v.op_type)) {
+                        case protocol_op::create_collection:
+                            break;
+                        case protocol_op::create_database:
+                            break;
+                        case protocol_op::select: {
+                            o.via.array.ptr[2] = msgpack::object(std::get<select_t>(v.data_), o.zone);
+                        }
+
+                        case protocol_op::insert: {
+                            o.via.array.ptr[2] = msgpack::object(std::get<insert_t>(v.data_), o.zone);
+                        }
+                        case protocol_op::erase: {
+                        }
+                    }
+
                 }
             };
 

@@ -1,5 +1,6 @@
 #include "database.hpp"
 #include "dispatcher.hpp"
+#include "collection.hpp"
 
 #include <components/log/log.hpp>
 #include <goblin-engineer/core.hpp>

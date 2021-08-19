@@ -10,7 +10,7 @@
 #include <string>
 
 enum class protocol_op : uint32_t {
-    create_collection,
+    create_collection = 0x00,
     create_database,
     select,
     insert,
@@ -28,16 +28,6 @@ using session_id = std::uintptr_t;
 struct session_t {
     session_id id_;
     boost::uuids::uuid uid_;
-};
-
-
-
-struct insert_t final {
-    insert_t() = default;
-    std::string uid_;
-    std::string name_table_;
-    std::vector<std::string> column_name_;
-    std::vector<std::string> values_;
 };
 
 

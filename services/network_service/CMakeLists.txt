@@ -5,7 +5,7 @@ include_directories(${ROOT_PATH}/components)
 set(${PROJECT_NAME}_SOURCES
         context.cpp
         detect_session.cpp
-        dto.cpp
+        protocol.cpp
         http_client.cpp
         http_session.cpp
         network_service.cpp

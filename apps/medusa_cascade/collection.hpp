@@ -7,7 +7,8 @@
 #include "log/log.hpp"
 
 #include "forward.hpp"
-#include "protocol.hpp"
+#include "protocol/select.hpp"
+#include "protocol/insert.hpp"
 #include "route.hpp"
 
 namespace kv {

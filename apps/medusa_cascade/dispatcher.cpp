@@ -1,6 +1,7 @@
 #include "dispatcher.hpp"
-#include "apps/medusa_cascade/protocol/dto.hpp"
-#include "protocol.hpp"
+#include "apps/medusa_cascade/protocol/protocol.hpp"
+#include "protocol/select.hpp"
+#include "protocol/insert.hpp"
 #include "tracy/tracy.hpp"
 #include <msgpack.hpp>
 
@@ -46,36 +47,26 @@ namespace kv {
 
     void dispatcher_t::ws_dispatch(session_id id, std::string& request, size_t size) {
         auto req = std::move(request);
-        auto o = msgpack::unpack(zone_, req.data(), size);
-
+        auto obj = msgpack::unpack(zone_, req.data(), size);
+        auto protocol = std::move(obj.as<protocol_t>());
         session_t session;
         session.id_ = id;
-        session.uid_ = string_generator_(o.convert_if_not_nil());
+        session.uid_ = string_generator_(protocol.uid_);
 
-        ///msgpack::object obj(my, z);
-        switch (static_cast<protocol_op>(proto.op)) {
+        switch (static_cast<protocol_op>(protocol.op_type)) {
             case protocol_op::create_collection:
                 break;
             case protocol_op::create_database:
                 break;
             case protocol_op::select: {
-                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
-                msgpack::object obj = oh.get();
-                auto query = std::move(obj.as<select_t>());
-                return goblin_engineer::send(self(), self(), "select", std::move(session), std::move(query));
+                return goblin_engineer::send(self(), self(), "select", std::move(session), std::move(std::get<select_t>(protocol.data_)));
             }
 
             case protocol_op::insert: {
-                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
-                msgpack::object obj = oh.get();
-                auto query = std::move(obj.as<insert_t>());
-                return goblin_engineer::send(self(), self(), "insert", std::move(session), std::move(query));
+                return goblin_engineer::send(self(), self(), "insert", std::move(session), std::move(std::get<insert_t>(protocol.data_)));
             }
             case protocol_op::erase: {
-                msgpack::object_handle oh = msgpack::unpack(proto.body.data(), proto.body.size());
-                msgpack::object obj = oh.get();
-                auto query = std::move(obj.as<erase_t>());
-                return goblin_engineer::send(self(), self(), "erase", std::move(session), std::move(query));
+                return goblin_engineer::send(self(), self(), "erase", std::move(session), std::move(std::get<erase_t>(protocol.data_)));
             }
         }
     }

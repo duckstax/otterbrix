@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 
-# WS client example
-
 import asyncio
 import websockets
+import msgpack
+import uuid
+
 
 
 async def hello():
     uri = "ws://localhost:9999"
     async with websockets.connect(uri) as websocket:
-        name = "Mr.Test"
+        data = msgpack.packb([str(uuid.uuid4()),2,["1qaz",["key"]]], use_bin_type=True)
 
-        await websocket.send(name)
-        print(f"> {name}")
+
+        await websocket.send(data)
+        print(f"> {data}")
 
         greeting = await websocket.recv()
         print(f"< {greeting}")
