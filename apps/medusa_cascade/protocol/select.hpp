@@ -13,7 +13,7 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<select_t> {
+            struct convert<select_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, select_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
@@ -31,7 +31,7 @@ namespace msgpack {
             };
 
             template<>
-            struct pack<select_t> {
+            struct pack<select_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, select_t const& v) const {
                     o.pack_array(3);
@@ -45,7 +45,7 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<select_t> {
+            struct object_with_zone<select_t> final {
                 void operator()(msgpack::object::with_zone& o, select_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;

@@ -5,7 +5,7 @@
 #include <msgpack.hpp>
 #include <variant>
 
-class protocol_t {
+class protocol_t final {
 public:
     using storage_t = std::variant<select_t, insert_t, erase_t>;
     protocol_t() = default;
@@ -26,7 +26,7 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<protocol_t> {
+            struct convert<protocol_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, protocol_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
@@ -66,7 +66,7 @@ namespace msgpack {
             };
 
             template<>
-            struct pack<protocol_t> {
+            struct pack<protocol_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, protocol_t const& v) const {
                     o.pack_array(3);
@@ -96,7 +96,7 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<protocol_t> {
+            struct object_with_zone<protocol_t> final {
                 void operator()(msgpack::object::with_zone& o, protocol_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 3;

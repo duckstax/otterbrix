@@ -19,26 +19,26 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<insert_t> {
+            struct convert<insert_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, insert_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
 
-                    if (o.via.array.size != 2) {
+                    if (o.via.array.size != 3) {
                         throw msgpack::type_error();
                     }
 
                     v = insert_t(
                         o.via.array.ptr[0].as<std::string>()
                             ,o.via.array.ptr[1].as<std::vector<std::string>>()
-                            ,o.via.array.ptr[1].as<std::vector<std::string>>());
+                            ,o.via.array.ptr[2].as<std::vector<std::string>>());
                     return o;
                 }
             };
 
             template<>
-            struct pack<insert_t> {
+            struct pack<insert_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, insert_t const& v) const {
                     o.pack_array(3);
@@ -56,7 +56,7 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<insert_t> {
+            struct object_with_zone<insert_t> final {
                 void operator()(msgpack::object::with_zone& o, insert_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;
