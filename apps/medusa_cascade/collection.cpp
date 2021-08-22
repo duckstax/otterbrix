@@ -1,8 +1,8 @@
 #include "collection.hpp"
 #include "database.hpp"
 
-#include "protocol/select.hpp"
 #include "protocol/insert.hpp"
+#include "protocol/request_select.hpp"
 
 namespace kv {
     collection_t::collection_t(database_ptr database, log_t& log)

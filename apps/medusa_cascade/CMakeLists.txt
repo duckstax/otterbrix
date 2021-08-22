@@ -7,8 +7,9 @@ set(${PROJECT_NAME}_headers
 
         protocol/base.hpp
         protocol/protocol.hpp
-        protocol/select.hpp
+        protocol/request_select.hpp
         protocol/insert.hpp
+        protocol/response_select.hpp
 
         collection.hpp
         database.hpp
@@ -20,7 +21,8 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_sources
         protocol/base.cpp
-        protocol/select.cpp
+        protocol/request_select.cpp
+        protocol/response_select.cpp
         protocol/insert.cpp
 
         collection.cpp
