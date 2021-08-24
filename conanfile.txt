@@ -5,6 +5,7 @@ yaml-cpp/0.6.3
 spdlog/1.5.0@_/_
 pybind11/2.3.0@conan/stable
 msgpack/3.3.0
+sol2/3.2.3
 
 goblin-engineer/1.0.0a4@cyberduckninja/stable
 

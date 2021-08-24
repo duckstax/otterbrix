@@ -1,5 +1,5 @@
-#include "../protocol/protocol.hpp"
-#include "../protocol/request_select.hpp"
+#include "apps/medusa_cascade/protocol/protocol.hpp"
+#include "apps/medusa_cascade/protocol/request_select.hpp"
 #include <iostream>
 #include <msgpack.hpp>
 

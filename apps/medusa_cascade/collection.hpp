@@ -2,7 +2,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include <apps/medusa_cascade/protocol/base.hpp>
+#include "components/protocol/base.hpp"
 #include <goblin-engineer/core.hpp>
 
 #include "log/log.hpp"
