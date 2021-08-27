@@ -1,8 +1,8 @@
 [requires]
 boost/1.75.0
 openssl/1.1.1c
-yaml-cpp/0.6.3
-spdlog/1.5.0@_/_
+yaml-cpp/0.7.0
+spdlog/1.9.2
 pybind11/2.3.0@conan/stable
 msgpack/3.3.0
 sol2/3.2.3
