@@ -7,7 +7,7 @@ struct response_select_t final {
 };
 
 
-
+/*
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
@@ -58,3 +58,4 @@ namespace msgpack {
         } // namespace adaptor
     }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack
+ */

@@ -49,20 +49,7 @@ tuple make_tuple(std::vector<tuple_type>& types){
     return tuple(types.size());
 }
 
-
-class index {
-public:
-
-};
-
-
-class hash_index: public index {
-public:
-
-private:
-};
-
-class schema {
+class schema final {
 public:
     std::uint32_t name_to_pos(std::string& name){
         return static_cast<uint32_t>(mapper_.at(name).back());
@@ -72,9 +59,11 @@ private:
 };
 
 class col_t final {
+public:
+
+private:
     schema schema_;
-    std::unordered_map<std::string,std::uint32_t> mapper;
+    std::unordered_map<std::string,std::uint32_t> object_id_to_pos_;
     std::vector<tuple> storage_;
-    std::unordered_map<std::string,std::unique_ptr<index>>;
 };
 
