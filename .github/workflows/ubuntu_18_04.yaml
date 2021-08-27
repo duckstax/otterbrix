@@ -27,8 +27,7 @@ jobs:
         run: |
           pip install conan
           conan user
-          conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-          conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
+          conan remote add cyberduckninja http://conan.cyberduckninja.com:9300
 
       - name: build
         env:
