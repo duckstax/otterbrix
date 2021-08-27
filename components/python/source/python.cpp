@@ -12,6 +12,8 @@
 #include <detail/file_manager.hpp>
 #include <detail/file_system.hpp>
 
+#include <../log/log.hpp>
+
 namespace components {
 
     constexpr static char init_script[] = R"__(
