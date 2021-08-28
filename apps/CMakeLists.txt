@@ -7,5 +7,5 @@ endif()
 #add_subdirectory(rocketjoe)
 #add_subdirectory(rocketjoe_engine)
 #add_subdirectory(rocketjoe_kernel)
-
+add_subdirectory(duck_charmer)
 add_subdirectory(medusa_cascade)

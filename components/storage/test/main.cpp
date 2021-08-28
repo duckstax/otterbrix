@@ -11,5 +11,7 @@ int main() {
     std::cerr << sizeof(void*) << std::endl;
     std::cerr << sizeof(std::unique_ptr<std::string>) << std::endl;
     std::cerr << sizeof(std::any) << std::endl;
+    std::cerr << sizeof(std::pair<int,int>) << std::endl;
+    std::cerr << sizeof(std::pair<std::unique_ptr<std::string>,std::unique_ptr<std::string>>) << std::endl;
 
 }

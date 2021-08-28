@@ -1,12 +1,23 @@
-project(storage CXX)
+project(storage_base CXX)
 
 list(APPEND ${PROJECT_NAME}_HEADERS
-        tuple.hpp
-
+        collection.hpp
+        database.hpp
+        document.hpp
+        wrapper_client.hpp
+        wrapper_collection.hpp
+        wrapper_database.hpp
+        wrapper_document.hpp
 )
 
 list(APPEND ${PROJECT_NAME}_SOURCES
-        tuple.cpp
+        collection.cpp
+        database.cpp
+        document.cpp
+        wrapper_client.cpp
+        wrapper_collection.cpp
+        wrapper_database.cpp
+        wrapper_document.cpp
 )
 
 

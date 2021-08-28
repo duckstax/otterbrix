@@ -4,17 +4,12 @@ include_directories(../../components)
 include_directories(../../services)
 
 set(${PROJECT_NAME}_headers
-        collection.hpp
-        database.hpp
         dispatcher.cpp
         dispatcher.hpp
         forward.hpp
-        route.hpp
-)
+        )
 
 set(${PROJECT_NAME}_sources
-        collection.cpp
-        database.cpp
         dispatcher.cpp
         main.cpp
 )
@@ -27,6 +22,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::protocol
         rocketjoe::log
+        rocketjoe::storage
         network_service
         dl
 )

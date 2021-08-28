@@ -7,11 +7,35 @@
 #include <memory>
 
 enum class tuple_type : char {
+    int8_t,
+    int16_t,
+    int32_t,
+    int64_t,
+    uint8_t,
+    uint16_t,
+    uint32_t,
+    uint64_t,
+    float_t,
+    double_t,
     string_t,
     struct_t,
+    array_t,
+    map_t,
+    key_t, /// -> int8_t,int16_t,int32_t,int64_t,uint8_t,uint16_t,uint32_t,uint64_t,float_t,double_t,string_t,
+    keyvalue_t,
     void_t,
 };
 
+// tuple <keyvalue_t,string_t,>
+using key__t =  std::variant< int8_t,
+                           int16_t,
+                           int32_t,
+                           int64_t,
+                           uint8_t,
+                           uint16_t,
+                           uint32_t,
+                           uint64_t,
+                           std::unique_ptr<std::string>>;
 using storage_t =  std::variant<std::uint64_t,std::int64_t,float,double,std::unique_ptr<std::string>>;
 
 class metadata_t final {
@@ -60,7 +84,7 @@ private:
 
 class col_t final {
 public:
-
+    void insert(){}
 private:
     schema schema_;
     std::unordered_map<std::string,std::uint32_t> object_id_to_pos_;

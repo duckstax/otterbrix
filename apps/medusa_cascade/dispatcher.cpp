@@ -4,6 +4,7 @@
 #include "protocol/request_select.hpp"
 #include "tracy/tracy.hpp"
 #include <msgpack.hpp>
+#include <services/storage/route.hpp>
 
 namespace kv {
 
