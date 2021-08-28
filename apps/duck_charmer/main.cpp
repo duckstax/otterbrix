@@ -1,9 +1,9 @@
 #include <pybind11/pybind11.h>
 
-#include "components/wrapper/wrapper_client.hpp"
-#include "components/wrapper/wrapper_database.hpp"
-#include "components/wrapper/wrapper_collection.hpp"
-#include "components/wrapper/wrapper_document.hpp"
+#include "components/storage/wrapper_client.hpp"
+#include "components/storage/wrapper_database.hpp"
+#include "components/storage/wrapper_collection.hpp"
+#include "components/storage/wrapper_document.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
