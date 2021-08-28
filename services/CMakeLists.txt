@@ -1,5 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(../components)
 add_subdirectory(network_service)
-add_subdirectory(interactive_python)
+#add_subdirectory(interactive_python)
 #add_subdirectory(jupyter)
