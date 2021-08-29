@@ -111,6 +111,10 @@ find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
+include_directories(components)
+include_directories(services)
+
+
 add_subdirectory(components)
 add_subdirectory(services)
 add_subdirectory(apps)

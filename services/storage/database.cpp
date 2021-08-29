@@ -2,7 +2,7 @@
 
 #include "tracy/tracy.hpp"
 
-namespace kv {
+namespace services::storage {
 
     manager_database_t::manager_database_t(log_t& log, size_t num_workers, size_t max_throughput)
         : goblin_engineer::abstract_manager_service("manager_database")

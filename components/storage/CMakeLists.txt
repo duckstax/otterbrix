@@ -1,25 +1,12 @@
 project(storage_base CXX)
 
-list(APPEND ${PROJECT_NAME}_HEADERS
-        collection.hpp
-        database.hpp
+set( ${PROJECT_NAME}_HEADERS
         document.hpp
-        wrapper_client.hpp
-        wrapper_collection.hpp
-        wrapper_database.hpp
-        wrapper_document.hpp
-)
+        )
 
-list(APPEND ${PROJECT_NAME}_SOURCES
-        collection.cpp
-        database.cpp
+set(${PROJECT_NAME}_SOURCES
         document.cpp
-        wrapper_client.cpp
-        wrapper_collection.cpp
-        wrapper_database.cpp
-        wrapper_document.cpp
-)
-
+        )
 
 add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_HEADERS}

@@ -5,7 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace friedrichdb::core {
+namespace components::storage {
 
     class document_t final {
     public:

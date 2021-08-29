@@ -9,7 +9,7 @@
 #include "forward.hpp"
 #include "route.hpp"
 
-namespace kv {
+namespace services::storage {
 
     class manager_database_t final : public goblin_engineer::abstract_manager_service {
     public:

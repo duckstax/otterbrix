@@ -11,9 +11,9 @@ int main(int argc, char* argv[]) {
     auto log = initialization_logger("medusa_cascade", log_dir);
     log.set_level(log_t::level::trace);
 
-    auto manager_database = goblin_engineer::make_manager_service<kv::manager_database_t>(log, 1, 1000);
-    auto database = goblin_engineer::make_manager_service<kv::database_t>(manager_database, log, 1, 1000);
-    auto collection = goblin_engineer::make_service<kv::collection_t>(database, log);
+    auto manager_database = goblin_engineer::make_manager_service<services::storage::manager_database_t>(log, 1, 1000);
+    auto database = goblin_engineer::make_manager_service<<services::storage::database_t>(manager_database, log, 1, 1000);
+    auto collection = goblin_engineer::make_service<<services::storage::collection_t>(database, log);
 
     //auto manager_dispatcher = goblin_engineer::make_manager_service<kv::manager_dispatcher_t>(log, 1, 1000);
     //auto dispatcher = goblin_engineer::make_service<kv::dispatcher_t>(manager_dispatcher, log);

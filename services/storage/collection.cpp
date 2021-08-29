@@ -4,7 +4,7 @@
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
 
-namespace kv {
+namespace services::storage {
     collection_t::collection_t(database_ptr database, log_t& log)
         : goblin_engineer::abstract_service(database, "collection")
         , log_(log.clone()) {

@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "friedrichdb/core/document.hpp"
+#include "components/storage/document.hpp"
 
 namespace py = pybind11;
 

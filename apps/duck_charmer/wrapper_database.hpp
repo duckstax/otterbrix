@@ -1,9 +1,4 @@
 #pragma once
-
-#include "components/storage/database.hpp"
-#include "components/storage/collection.hpp"
-#include "components/storage/document.hpp"
-
 #include <memory>
 #include <iostream>
 
@@ -17,8 +12,6 @@
 #include "wrapper_collection.hpp"
 
 namespace py = pybind11;
-
-
 
 class PYBIND11_EXPORT wrapper_database final : public boost::intrusive_ref_counter<wrapper_database> {
 public:

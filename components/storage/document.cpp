@@ -1,6 +1,6 @@
 #include <components/storage/document.hpp>
 
-namespace friedrichdb::core {
+namespace components::storage {
 
     auto make_document() -> document_ptr {
         return std::make_unique<document_t>();

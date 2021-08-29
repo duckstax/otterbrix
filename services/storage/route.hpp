@@ -1,6 +1,7 @@
 #pragma once
 
-namespace kv {
+namespace services::storage {
+
     namespace manager_database {
         static constexpr auto create_database = "create_database";
     }
