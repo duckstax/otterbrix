@@ -15,7 +15,7 @@
 namespace services::storage {
 
     class collection_t final : public goblin_engineer::abstract_service {
-
+    public:
         collection_t(database_ptr database, log_t& log);
 
 
