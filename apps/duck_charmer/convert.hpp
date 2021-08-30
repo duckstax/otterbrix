@@ -7,8 +7,8 @@
 
 namespace py = pybind11;
 
-void to_document(const py::handle &source, friedrichdb::core::document_t& target);
+void to_document(const py::handle &source, components::storage::document_t& target);
 
-auto  from_object(const std::string& key, friedrichdb::core::document_t& target) -> py::object ;
+auto  from_object(const std::string& key, components::storage::document_t& target) -> py::object ;
 
-void  update_document(const py::handle &source, friedrichdb::core::document_t& target) ;
+void  update_document(const py::handle &source, components::storage::document_t& target) ;

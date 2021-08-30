@@ -1,11 +1,8 @@
 #include "wrapper_database.hpp"
 
 
-
-wrapper_database::wrapper_database(wrapper_database::pointer ptr) :ptr_(ptr) {}
-
 wrapper_database::~wrapper_database() {
-    ptr_.release();
+
 }
 
 

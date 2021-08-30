@@ -15,17 +15,12 @@ namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_database final : public boost::intrusive_ref_counter<wrapper_database> {
 public:
-    using type_t =  friedrichdb::core::database_t;
-    using pointer =type_t*;
-    using unique = std::unique_ptr<type_t>;
-
-    explicit wrapper_database(pointer ptr);
     ~wrapper_database();
     auto collection_names() -> py::list;
     wrapper_collection_ptr create(const std::string& name);
     bool drop_collection(const std::string& name);
 private:
-    unique ptr_;
+
 };
 
 using wrapper_database_ptr = boost::intrusive_ptr<wrapper_database>;

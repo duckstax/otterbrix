@@ -10,11 +10,13 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+#include <components/storage/document.hpp>
+
 namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
 public:
-    using type_t =  friedrichdb::core::document_t;
+    using type_t =  components::storage::document_t;
     using pointer = type_t*;
     using unique = std::unique_ptr<type_t>;
 

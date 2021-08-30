@@ -24,7 +24,7 @@ namespace services::storage {
             if (is_document) {
                 auto doc = friedrichdb::core::make_document();
                 to_document(document,*doc);
-                ptr_->insert(document["_id"].cast<std::string>(), std::move(doc));
+                insert_(document["_id"].cast<std::string>(), std::move(doc));
             }
         }
 
@@ -97,13 +97,13 @@ namespace services::storage {
                 if (is_document) {
                     auto doc = friedrichdb::core::make_document();
                     to_document(document,*doc);
-                    ptr_->insert(document["_id"].cast<std::string>(), std::move(doc));
+                    insert_(document["_id"].cast<std::string>(), std::move(doc));
                 }
             }
         }
 
         std::size_t size() const {
-            return ptr_->size();
+            return size_();
         }
 
         void update(py::dict fields, py::object cond) {
@@ -159,8 +159,7 @@ namespace services::storage {
         }
 
         void drop() {
-            cache_.clear();
-            ptr_->drop();
+           drop_();
         }
 
         using storage_t = std::unordered_map<std::string, document_ptr>;

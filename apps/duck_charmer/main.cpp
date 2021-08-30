@@ -55,8 +55,6 @@ protected:
     services::storage::database_ptr database;
     services::storage::collection_ptr collection;
 
-
-
 };
 
 spaces* spaces::instance_ = nullptr;
