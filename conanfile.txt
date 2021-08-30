@@ -12,6 +12,7 @@ goblin-engineer/1.0.0a4@cyberduckninja/stable
 
 [options]
 actor-zeta:cxx_standard=17
+actor-zeta:shared=True
 goblin-engineer:cxx_standard=17
 OpenSSL:shared = True
 

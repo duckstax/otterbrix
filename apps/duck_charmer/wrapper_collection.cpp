@@ -10,22 +10,25 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 
 void wrapper_collection::insert(const py::handle &document) {
+    /*
     auto is_document = py::isinstance<py::dict>(document);
     if (is_document) {
         auto doc = friedrichdb::core::make_document();
         to_document(document,*doc);
         ptr_->insert(document["_id"].cast<std::string>(), std::move(doc));
     }
+     */
 }
 
 wrapper_collection::~wrapper_collection() {
-    ptr_.release();
+   /// ptr_.release();
 }
 
-wrapper_collection::wrapper_collection(wrapper_collection::pointer ptr) :ptr_(ptr) {}
+///wrapper_collection::wrapper_collection(wrapper_collection::pointer ptr) :ptr_(ptr) {}
 
 
 auto wrapper_collection::get(py::object cond) -> py::object {
+    /*
     auto is_not_empty = !cond.is(py::none());
     if (is_not_empty) {
         wrapper_document_ptr tmp;
@@ -46,11 +49,12 @@ auto wrapper_collection::get(py::object cond) -> py::object {
         return py::none();
 
     }
-
+*/
 }
 
 
 auto wrapper_collection::search(py::object cond) -> py::list {
+    /*
     py::list tmp;
     wrapper_document_ptr doc;
     for (auto &i:*ptr_) {
@@ -66,9 +70,11 @@ auto wrapper_collection::search(py::object cond) -> py::list {
         }
     }
     return tmp;
+     */
 }
 
 auto wrapper_collection::all() -> py::list {
+    /*
     py::list tmp;
     wrapper_document_ptr doc;
     for (auto &i:*ptr_) {
@@ -83,9 +89,11 @@ auto wrapper_collection::all() -> py::list {
         tmp.append(doc);
     }
     return tmp;
+     */
 }
 
 void wrapper_collection::insert_many(py::iterable iterable) {
+    /*
     auto iter = py::iter(iterable);
     for(;iter!= py::iterator::sentinel();++iter) {
         auto document = *iter;
@@ -96,13 +104,15 @@ void wrapper_collection::insert_many(py::iterable iterable) {
             ptr_->insert(document["_id"].cast<std::string>(), std::move(doc));
         }
     }
+     */
 }
 
 std::size_t wrapper_collection::size() const {
-    return ptr_->size();
+   // return ptr_->size();
 }
 
 void wrapper_collection::update(py::dict fields, py::object cond) {
+    /*
     auto is_document = py::isinstance<py::dict>(fields);
     auto is_none = fields.is(py::none());
     if (is_none and is_document) {
@@ -128,10 +138,11 @@ void wrapper_collection::update(py::dict fields, py::object cond) {
     }
 
     throw pybind11::type_error(" note cond ");
-
+*/
 }
 
 void wrapper_collection::remove(py::object cond) {
+    /*
     auto is_not_empty = !cond.is(py::none());
     if (is_not_empty) {
         wrapper_document_ptr tmp;
@@ -152,11 +163,12 @@ void wrapper_collection::remove(py::object cond) {
             }
         }
     }
+     */
 }
 
 void wrapper_collection::drop() {
-    cache_.clear();
-    ptr_->drop();
+   /// cache_.clear();
+//    ptr_->drop();
 }
 
 /*
