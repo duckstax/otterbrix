@@ -14,7 +14,7 @@ namespace services::storage {
     }
 
 
-    void collection_t::insert(const py::handle& document) {
+    void collection_t::insert(document_t& document) {
         auto is_document = py::isinstance<py::dict>(document);
         if (is_document) {
             auto doc = friedrichdb::core::make_document();
@@ -23,7 +23,7 @@ namespace services::storage {
         }
     }
 
-    auto collection_t::get(conditional_expression& cond) -> py::object {
+    auto collection_t::get(components::storage::conditional_expression& cond) ->void {
         auto is_not_empty = !cond.is(py::none());
         if (is_not_empty) {
             wrapper_document_ptr tmp;
@@ -47,7 +47,7 @@ namespace services::storage {
 
     }
 
-    auto collection_t::search( cond) -> py::list {
+    auto collection_t::search(components::storage::conditional_expression& cond) -> void {
         py::list tmp;
         wrapper_document_ptr doc;
         for (auto &i:*ptr_) {
@@ -65,7 +65,7 @@ namespace services::storage {
         return tmp;
     }
 
-    auto collection_t::all() -> py::list {
+    auto collection_t::all() -> void {
         py::list tmp;
         wrapper_document_ptr doc;
         for (auto &i:*ptr_) {
@@ -99,7 +99,7 @@ namespace services::storage {
         return size_();
     }
 
-    void collection_t::update(py::dict fields, py::object cond) {
+    void collection_t::update(components::storage::document_t fields, components::storage::conditional_expression& cond) {
         auto is_document = py::isinstance<py::dict>(fields);
         auto is_none = fields.is(py::none());
         if (is_none and is_document) {
@@ -128,7 +128,7 @@ namespace services::storage {
 
     }
 
-    void collection_t::remove(py::object cond) {
+    void collection_t::remove(components::storage::conditional_expression& cond) {
         auto is_not_empty = !cond.is(py::none());
         if (is_not_empty) {
             wrapper_document_ptr tmp;
@@ -155,7 +155,7 @@ namespace services::storage {
         drop_();
     }
 
-    void collection_t::insert_(const std::string& uid, document_ptr document) {
+    void collection_t::insert_(const std::string& uid, document_t& document) {
         storage_.emplace(uid, std::move(document));
     }
 
