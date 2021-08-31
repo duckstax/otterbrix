@@ -7,6 +7,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
+#include <log/log.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
@@ -28,6 +29,7 @@ private:
         cv_.notify_all();
         i = 1;
     }
+    log_t log_;
     int i = 0;
     goblin_engineer::actor_address dispatcher_;
     std::mutex mtx_;

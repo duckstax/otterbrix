@@ -11,7 +11,6 @@
 class PYBIND11_EXPORT spaces final {
 public:
     spaces(spaces& other) = delete;
-
     void operator=(const spaces&) = delete;
 
     static spaces* get_instance();
@@ -25,15 +24,13 @@ public:
     }
 */
 
-    goblin_engineer::actor_address dispatcher() {
-        return goblin_engineer::actor_address(dispatcher_);
-    }
+    goblin_engineer::actor_address dispatcher();
 
 protected:
     spaces();
 
     static spaces* instance_;
-
+    log_t log_;
     services::storage::manager_database_ptr manager_database_;
     services::storage::database_ptr database_;
     goblin_engineer::actor_address collection_;

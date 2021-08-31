@@ -24,7 +24,7 @@ namespace services::storage {
         using iterator = typename storage_t::iterator;
 
         collection_t(database_ptr database, log_t& log);
-        void insert(const document_t& document);
+        void insert(document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
         auto search(components::storage::conditional_expression& cond) -> void;
         auto all() -> void;

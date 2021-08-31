@@ -14,14 +14,11 @@ namespace services::storage {
     class manager_database_t final : public goblin_engineer::abstract_manager_service {
     public:
         manager_database_t(log_t& log, size_t num_workers, size_t max_throughput);
-
         auto executor() noexcept -> goblin_engineer::abstract_executor* final override;
         auto get_executor() noexcept -> goblin_engineer::abstract_executor* final override;
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
         ~manager_database_t();
-        void create( session_t session,std::string& name ) {
-            goblin_engineer::send(addresses("dispatcher"),self(),"",session,addresses("database"));
-        }
+        void create( session_t& session,std::string& name );
 
     private:
         log_t log_;

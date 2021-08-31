@@ -8,46 +8,37 @@ namespace services::storage {
     collection_t::collection_t(database_ptr database, log_t& log)
         : goblin_engineer::abstract_service(database, "collection")
         , log_(log.clone()) {
-        add_handler(collection::select, &collection_t::select);
-        add_handler(collection::insert, &collection_t::insert);
-        add_handler(collection::erase, &collection_t::erase);
+       /// add_handler(collection::select, &collection_t::select);
+        //add_handler(collection::insert, &collection_t::insert);
+        //add_handler(collection::erase, &collection_t::erase);
     }
 
 
     void collection_t::insert(document_t& document) {
+        /*
         auto is_document = py::isinstance<py::dict>(document);
         if (is_document) {
             auto doc = friedrichdb::core::make_document();
             to_document(document,*doc);
             insert_(document["_id"].cast<std::string>(), std::move(doc));
         }
+         */
     }
 
     auto collection_t::get(components::storage::conditional_expression& cond) ->void {
-        auto is_not_empty = !cond.is(py::none());
-        if (is_not_empty) {
-            wrapper_document_ptr tmp;
-            //std::cerr << ptr_->size() << std::endl;
-            for (auto &i:*ptr_) {
-                auto result = cache_.find(i.first);
-                if (result == cache_.end()) {
-                    auto it = cache_.emplace(i.first, wrapper_document_ptr(new wrapper_document(i.second.get())));
-                    tmp = it.first->second;
-                } else {
-                    tmp = result->second;
-                }
-                if (cond(tmp).cast<bool>()) {
-                    return py::cast(tmp);
+
+            for (auto &i:*this) {
+                if (cond.check(i.second)) {
+                   /// return py::cast(tmp);
                 }
             }
 
-            return py::none();
 
-        }
 
     }
 
     auto collection_t::search(components::storage::conditional_expression& cond) -> void {
+        /*
         py::list tmp;
         wrapper_document_ptr doc;
         for (auto &i:*ptr_) {
@@ -63,9 +54,11 @@ namespace services::storage {
             }
         }
         return tmp;
+         */
     }
 
     auto collection_t::all() -> void {
+        /*
         py::list tmp;
         wrapper_document_ptr doc;
         for (auto &i:*ptr_) {
@@ -80,6 +73,7 @@ namespace services::storage {
             tmp.append(doc);
         }
         return tmp;
+         */
     }
 /*
     void collection_t::insert_many(py::iterable iterable) {
@@ -99,7 +93,8 @@ namespace services::storage {
         return size_();
     }
 
-    void collection_t::update(components::storage::document_t fields, components::storage::conditional_expression& cond) {
+    void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {
+        /*
         auto is_document = py::isinstance<py::dict>(fields);
         auto is_none = fields.is(py::none());
         if (is_none and is_document) {
@@ -125,10 +120,11 @@ namespace services::storage {
         }
 
         throw pybind11::type_error(" note cond ");
-
+*/
     }
 
     void collection_t::remove(components::storage::conditional_expression& cond) {
+        /*
         auto is_not_empty = !cond.is(py::none());
         if (is_not_empty) {
             wrapper_document_ptr tmp;
@@ -149,6 +145,7 @@ namespace services::storage {
                 }
             }
         }
+         */
     }
 
     void collection_t::drop() {
@@ -160,12 +157,14 @@ namespace services::storage {
     }
 
     document_t* collection_t::get_(const std::string& uid) {
+        /*
         auto it = storage_.find(uid);
         if (it == storage_.end()) {
             return nullptr;
         } else {
             it->second.get();
         }
+         */
     }
 
     std::size_t collection_t::size_() const {

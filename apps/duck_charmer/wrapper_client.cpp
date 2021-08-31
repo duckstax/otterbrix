@@ -11,6 +11,7 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 using services::storage::session_t;
 wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
+    log_.debug("wrapper_client::get_or_create name database: {}",name);
     goblin_engineer::send(
         dispatcher_,
         goblin_engineer::actor_address(),
@@ -21,9 +22,10 @@ wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
             tmp_ = boost::intrusive_ptr<wrapper_database>(new wrapper_database(address));
             d();
         }));
-
+    log_.debug("wrapper_client::get_or_create send -> dispatcher: {}",dispatcher_->type());
     std::unique_lock<std::mutex> lk(mtx_);
     cv_.wait(lk, [this]() { return i == 1; });
+    log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
     return tmp_;
     /*
     auto it = storage_.find(name);
@@ -38,6 +40,8 @@ wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
 
 wrapper_client::wrapper_client() {
     dispatcher_ = spaces::get_instance()->dispatcher();
+    log_ = get_logger();
+    log_.debug("wrapper_client::wrapper_client()");
 }
 
 auto wrapper_client::database_names() -> py::list {

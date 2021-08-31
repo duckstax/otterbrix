@@ -7,6 +7,7 @@ manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_
     , log_(log.clone())
     , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
     ZoneScoped;
+    log_.debug("manager_dispatcher_t start thread pool");
     e_->start();
 }
 
@@ -33,7 +34,8 @@ dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     : goblin_engineer::abstract_service(manager_database, "dispatcher")
     , log_(log.clone()) {
   ///  add_handler(dispatcher::create_collection, &dispatcher_t::create_collection);
-    add_handler("create_database_init", &dispatcher_t::create_database_init);
+    add_handler("create_database", &dispatcher_t::create_database);
+    add_handler("create_database_finish", &dispatcher_t::create_database_finish);
     ///add_handler(dispatcher::select, &dispatcher_t::select);
     ///add_handler(dispatcher::insert, &dispatcher_t::insert);
    /// add_handler(dispatcher::erase, &dispatcher_t::erase);

@@ -27,10 +27,10 @@ class  dispatcher_t final : public goblin_engineer::abstract_service {
 public:
     dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log);
 
-    void create_database_init(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+    void create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
         log_.debug("create_database_init: {}", name);
         create_database_callback_ = std::move(callback);
-        goblin_engineer::send(addresses("manager_database"), self(), "create", name);
+        goblin_engineer::send(addresses("manager_database"), self(), "create_database",session, name);
     }
 
     void create_database_finish(session_t& session, goblin_engineer::actor_address address) {

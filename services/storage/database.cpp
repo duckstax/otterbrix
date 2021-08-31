@@ -10,6 +10,7 @@ namespace services::storage {
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         ZoneScoped;
         add_handler(manager_database::create_database, &manager_database_t::create);
+        log_.debug("manager_database_t start thread pool");
         e_->start();
     }
 
@@ -30,6 +31,16 @@ namespace services::storage {
         ZoneScoped;
         set_current_message(std::move(msg));
         execute(*this);
+    }
+
+    void manager_database_t::create(session_t& session, std::string& name) {
+        log_.debug("manager_database_t:create {}", name);
+        auto dispatcher = addresses("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher->type());
+        //all_view_address();
+        auto database =  addresses("database");
+        log_.debug("database : {}", database->type());
+        goblin_engineer::send(dispatcher,self(),"create_database_finish",session,database);
     }
 
     database_t::database_t(manager_database_ptr supervisor, log_t& log, size_t num_workers, size_t max_throughput)
