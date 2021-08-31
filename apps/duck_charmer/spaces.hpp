@@ -8,8 +8,7 @@
 
 #include "dispatcher.hpp"
 
-
-class spaces final {
+class PYBIND11_EXPORT spaces final {
 public:
     spaces(spaces& other) = delete;
 
@@ -25,8 +24,13 @@ public:
         return value_;
     }
 */
+
+    goblin_engineer::actor_address dispatcher() {
+        return goblin_engineer::actor_address(dispatcher_);
+    }
+
 protected:
-    spaces() ;
+    spaces();
 
     static spaces* instance_;
 

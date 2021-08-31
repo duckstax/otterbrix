@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-#include <iostream>
-#include <mutex>
 #include <condition_variable>
+#include <iostream>
+#include <memory>
+#include <mutex>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -20,17 +20,18 @@ class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_cou
 public:
     ~wrapper_collection();
 
-    void insert(const py::handle &document);
+    void insert(const py::handle& document);
     void insert_many(py::iterable);
     auto get(py::object cond) -> py::object;
     auto search(py::object cond) -> py::list;
     auto all() -> py::list;
-    std::size_t size() const ;
-    void update(py::dict fields,py::object cond);
+    std::size_t size() const;
+    void update(py::dict fields, py::object cond);
     void remove(py::object cond);
     void drop();
+
 private:
-   std::mutex mtx_;
+    std::mutex mtx_;
 };
 
 using wrapper_collection_ptr = boost::intrusive_ptr<wrapper_collection>;

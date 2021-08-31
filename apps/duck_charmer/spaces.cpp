@@ -1,6 +1,6 @@
 #include "spaces.hpp"
 #include <goblin-engineer/core.hpp>
-spaces::spaces(){
+spaces::spaces() {
     std::string log_dir("/tmp/docker_logs/");
     auto log = initialization_logger("duck_charmer", log_dir);
     log.set_level(log_t::level::trace);

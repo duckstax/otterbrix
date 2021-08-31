@@ -1,15 +1,14 @@
 #include "wrapper_collection.hpp"
 
+#include "convert.hpp"
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include "convert.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-
-void wrapper_collection::insert(const py::handle &document) {
+void wrapper_collection::insert(const py::handle& document) {
     /*
     auto is_document = py::isinstance<py::dict>(document);
     if (is_document) {
@@ -21,11 +20,10 @@ void wrapper_collection::insert(const py::handle &document) {
 }
 
 wrapper_collection::~wrapper_collection() {
-   /// ptr_.release();
+    /// ptr_.release();
 }
 
 ///wrapper_collection::wrapper_collection(wrapper_collection::pointer ptr) :ptr_(ptr) {}
-
 
 auto wrapper_collection::get(py::object cond) -> py::object {
     /*
@@ -51,7 +49,6 @@ auto wrapper_collection::get(py::object cond) -> py::object {
     }
 */
 }
-
 
 auto wrapper_collection::search(py::object cond) -> py::list {
     /*
@@ -108,7 +105,7 @@ void wrapper_collection::insert_many(py::iterable iterable) {
 }
 
 std::size_t wrapper_collection::size() const {
-   // return ptr_->size();
+    // return ptr_->size();
 }
 
 void wrapper_collection::update(py::dict fields, py::object cond) {
@@ -167,8 +164,8 @@ void wrapper_collection::remove(py::object cond) {
 }
 
 void wrapper_collection::drop() {
-   /// cache_.clear();
-//    ptr_->drop();
+    /// cache_.clear();
+    //    ptr_->drop();
 }
 
 /*

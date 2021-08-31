@@ -24,9 +24,9 @@ spaces* spaces::get_instance() {
     return instance_;
 }
 
-PYBIND11_MODULE(friedrich_db, m) {
+PYBIND11_MODULE(duck_charmer, m) {
     py::class_<wrapper_client>(m, "Client")
-        ///.def(py::init<>(),[](){})
+        .def(py::init<>())
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names);
 

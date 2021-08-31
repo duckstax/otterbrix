@@ -1,6 +1,5 @@
 #include "wrapper_document.hpp"
 
-
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
@@ -10,7 +9,8 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-wrapper_document::wrapper_document(wrapper_document::pointer ptr) :ptr_(ptr) {}
+wrapper_document::wrapper_document(wrapper_document::pointer ptr)
+    : ptr_(ptr) {}
 
 wrapper_document::~wrapper_document() {
     ptr_.release();
@@ -21,5 +21,5 @@ auto wrapper_document::print() -> std::string {
 }
 
 auto wrapper_document::get(const std::string& key) -> py::object {
-    return from_object(key,*ptr_);
+    return from_object(key, *ptr_);
 }

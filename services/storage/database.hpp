@@ -19,8 +19,8 @@ namespace services::storage {
         auto get_executor() noexcept -> goblin_engineer::abstract_executor* final override;
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
         ~manager_database_t();
-        void create() {
-
+        void create( session_t session,std::string& name ) {
+            goblin_engineer::send(addresses("dispatcher"),self(),"",session,addresses("database"));
         }
 
     private:

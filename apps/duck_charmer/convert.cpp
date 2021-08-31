@@ -15,8 +15,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 using components::storage::document_t;
 using json = nlohmann::json;
 
-
-inline json to_json(const py::handle &obj) {
+inline json to_json(const py::handle& obj) {
     if (obj.ptr() == nullptr || obj.is_none()) {
         return nullptr;
     }
@@ -53,7 +52,7 @@ inline json to_json(const py::handle &obj) {
     throw std::runtime_error("to_json not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-inline document_t to__(const py::handle &obj) {
+inline document_t to__(const py::handle& obj) {
     /*
     if (obj.ptr() == nullptr || obj.is_none()) {
         return nullptr;
@@ -94,86 +93,84 @@ inline document_t to__(const py::handle &obj) {
     throw std::runtime_error("to_json not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-void to_document( const py::handle &source, document_t& target);
+void to_document(const py::handle& source, document_t& target);
 
-void to_document_inner(std::string&& key, const py::handle &source, document_t& target) {
+void to_document_inner(std::string&& key, const py::handle& source, document_t& target) {
     if (source.ptr() == nullptr || source.is_none()) {
         target.add(std::move(key));
         return;
     }
     if (py::isinstance<py::bool_>(source)) {
-        target.add(std::move(key),source.cast<bool>());
+        target.add(std::move(key), source.cast<bool>());
         return;
     }
     if (py::isinstance<py::int_>(source)) {
         ///std::cerr << "0 to_document_inner int" << std::endl;
-        target.add(std::move(key),source.cast<long>());
+        target.add(std::move(key), source.cast<long>());
         return;
     }
     if (py::isinstance<py::float_>(source)) {
-        target.add(std::move(key),source.cast<double>());
-        return ;
+        target.add(std::move(key), source.cast<double>());
+        return;
     }
     if (py::isinstance<py::bytes>(source)) {
         py::module base64 = py::module::import("base64");
-        target.add(std::move(key),base64.attr("b64encode")(source).attr("decode")("utf-8").cast<std::string>());
-        return ;
+        target.add(std::move(key), base64.attr("b64encode")(source).attr("decode")("utf-8").cast<std::string>());
+        return;
     }
     if (py::isinstance<py::str>(source)) {
-        target.add(std::move(key),source.cast<std::string>());
+        target.add(std::move(key), source.cast<std::string>());
         return;
     }
 
-
     if (py::isinstance<py::tuple>(source) || py::isinstance<py::list>(source)) {
-        auto inner_doc = document_t::to_array() ;
+        auto inner_doc = document_t::to_array();
         for (const py::handle value : source) {
             inner_doc.append(to__(value));
         }
-        target.add(std::move(key),std::move(inner_doc));
-        return ;
+        target.add(std::move(key), std::move(inner_doc));
+        return;
     }
     if (py::isinstance<py::dict>(source)) {
         document_t inner_doc;
-        to_document(source,inner_doc);
-        target.add(std::move(key),std::move(inner_doc));
-        return ;
+        to_document(source, inner_doc);
+        target.add(std::move(key), std::move(inner_doc));
+        return;
     }
 
     throw std::runtime_error("to_document not implemented for this type of object: " + py::repr(source).cast<std::string>());
 }
 
-void to_document( const py::handle &source, document_t& target) {
+void to_document(const py::handle& source, document_t& target) {
     for (const py::handle key : source) {
         to_document_inner(py::str(key).cast<std::string>(), source[key], target);
     }
 }
 
-void update_document_inner(std::string&& key, const py::handle &obj,document_t& target) {
-
+void update_document_inner(std::string&& key, const py::handle& obj, document_t& target) {
     if (obj.ptr() == nullptr || obj.is_none()) {
         target.update(key);
-        return ;
+        return;
     }
     if (py::isinstance<py::bool_>(obj)) {
-        target.update(key,obj.cast<bool>());
-        return ;
+        target.update(key, obj.cast<bool>());
+        return;
     }
     if (py::isinstance<py::int_>(obj)) {
-        target.update(key,obj.cast<long>());
-        return ;
+        target.update(key, obj.cast<long>());
+        return;
     }
     if (py::isinstance<py::float_>(obj)) {
-        target.update(key,obj.cast<double>());
-        return ;
+        target.update(key, obj.cast<double>());
+        return;
     }
     if (py::isinstance<py::bytes>(obj)) {
         py::module base64 = py::module::import("base64");
         target.update(key, base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>());
     }
     if (py::isinstance<py::str>(obj)) {
-        target.update(key,obj.cast<std::string>());
-        return ;
+        target.update(key, obj.cast<std::string>());
+        return;
     }
     /*
     if (py::isinstance<py::tuple>(obj) || py::isinstance<py::list>(obj)) {
@@ -194,8 +191,7 @@ void update_document_inner(std::string&& key, const py::handle &obj,document_t& 
     throw std::runtime_error("update_document_inner not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-
-auto  from_object(const std::string& key, document_t& target) -> py::object {
+auto from_object(const std::string& key, document_t& target) -> py::object {
     auto value = target.get(key);
     if (value.is_null()) {
         return py::none();
@@ -205,7 +201,7 @@ auto  from_object(const std::string& key, document_t& target) -> py::object {
         return py::int_(value.as_int32());
     } else if (value.is_float()) {
         return py::float_(value.as_double());
-    }  else if (value.is_string()) {
+    } else if (value.is_string()) {
         return py::str(value.as_string());
     } /*else if (target.get(key).is_array()) {
         py::list obj;
@@ -225,12 +221,10 @@ auto  from_object(const std::string& key, document_t& target) -> py::object {
     */
 }
 
-void update_document( const py::handle &source, document_t &target) {
-
+void update_document(const py::handle& source, document_t& target) {
     for (const py::handle key : source) {
         //std::cerr << py::str(key).cast<std::string>()  << std::endl;
-        update_document_inner(py::str(key).cast<std::string>(), source[key],target);
-
+        update_document_inner(py::str(key).cast<std::string>(), source[key], target);
     }
 
     ///throw std::runtime_error("update_document not implemented for this type of object: " + py::repr(source).cast<std::string>());

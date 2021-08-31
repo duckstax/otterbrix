@@ -21,15 +21,6 @@ std::string_view to_string_view(protocol_op);
 
 using composition_key_t = std::string;
 
-using session_id = std::uintptr_t;
-
-struct session_t final {
-    session_t()=default;
-    session_id id_;
-    boost::uuids::uuid uid_;
-};
-
-
 struct erase_t final {
     erase_t() = default;
     std::string uid_;
