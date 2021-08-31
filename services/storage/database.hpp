@@ -20,6 +20,7 @@ namespace services::storage {
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
         ~manager_database_t();
         void create() {
+
         }
 
     private:

@@ -8,58 +8,16 @@
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
-#include <goblin-engineer/core.hpp>
 
-#include "components/log/log.hpp"
-
-#include "services/storage/database.hpp"
-#include "services/storage/collection.hpp"
+#include "spaces.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-class spaces final {
-public:
-    spaces(spaces& other) = delete;
-
-    void operator=(const spaces&) = delete;
-
-    static spaces* get_instance(const std::string& value);
-/*
-    void SomeBusinessLogic() {
-        // ...
-    }
-
-    std::string value() const {
-        return value_;
-    }
-*/
-protected:
-    spaces(){
-        std::string log_dir("/tmp/docker_logs/");
-        auto log = initialization_logger("duck_charmer", log_dir);
-        log.set_level(log_t::level::trace);
-
-        manager_database_ = goblin_engineer::make_manager_service<services::storage::manager_database_t>(log, 1, 1000);
-        database_ = goblin_engineer::make_manager_service<services::storage::database_t>(manager_database_, log, 1, 1000);
-        collection_ = goblin_engineer::make_service<services::storage::collection_t>(database_, log);
-
-        //auto manager_dispatcher = goblin_engineer::make_manager_service<kv::manager_dispatcher_t>(log, 1, 1000);
-        //auto dispatcher = goblin_engineer::make_service<kv::dispatcher_t>(manager_dispatcher, log);
-    }
-
-    static spaces* instance_;
-
-    services::storage::manager_database_ptr manager_database_;
-    services::storage::database_ptr database_;
-   goblin_engineer::actor_address collection_;
-
-};
-
 spaces* spaces::instance_ = nullptr;
 
-spaces* spaces::get_instance(const std::string& value) {
+spaces* spaces::get_instance() {
     if (instance_ == nullptr) {
         instance_ = new spaces();
     }
@@ -68,7 +26,7 @@ spaces* spaces::get_instance(const std::string& value) {
 
 PYBIND11_MODULE(friedrich_db, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init<>())
+        ///.def(py::init<>(),[](){})
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names);
 

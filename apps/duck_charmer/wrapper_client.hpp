@@ -1,7 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <iostream>
+#include <mutex>
+#include <condition_variable>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -22,5 +23,13 @@ public:
     wrapper_database_ptr get_or_create(const std::string& name);
     auto database_names() -> py::list;
 private:
+    wrapper_database_ptr tmp_;
+    void d() {
+        cv_.notify_all();
+        i = 1;
+    }
+    int i=0;
+    std::mutex mtx_;
+    std::condition_variable cv_;
     std::unordered_map<std::string, boost::intrusive_ptr<wrapper_database>> storage_;
 };

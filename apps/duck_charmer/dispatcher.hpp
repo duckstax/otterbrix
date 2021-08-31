@@ -1,12 +1,10 @@
 #pragma once
-#include "forward.hpp"
 #include "network_service/network_service.hpp"
 #include "protocol/forward.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
-namespace kv {
     class manager_dispatcher_t final : public goblin_engineer::abstract_manager_service {
     public:
         manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput);
@@ -21,16 +19,23 @@ namespace kv {
         goblin_engineer::executor_ptr e_;
     };
 
-    ///using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
-    using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<network_service_t>;
+    using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
 
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:
         dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log);
 
-        void ws_dispatch(session_id id, std::string& request, size_t size);
 
-        void create_database() {
+
+        void create_database_init( session_t session,std::string& name,std::function<void(void)>&callback) {
+            log_.debug("create_database_init: {}",name);
+            create_database_callback_=std::move(callback);
+            goblin_engineer::send();
+        }
+
+        void create_database_finish( session_t session,  std::string& name) {
+            log_.debug("create_database_finish: {}",name);
+            create_database_callback_();
         }
 
         void create_collection() {
@@ -43,8 +48,7 @@ namespace kv {
         void erase(session_t session, const erase_t& value);
 
     private:
+        std::function<void(void)> create_database_callback_;
         log_t log_;
         boost::uuids::string_generator string_generator_;
-        msgpack::zone zone_;
     };
-} // namespace kv

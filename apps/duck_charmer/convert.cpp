@@ -12,7 +12,7 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-using friedrichdb::core::document_t;
+using components::storage::document_t;
 using json = nlohmann::json;
 
 
@@ -94,9 +94,9 @@ inline document_t to__(const py::handle &obj) {
     throw std::runtime_error("to_json not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-void to_document( const py::handle &source, friedrichdb::core::document_t& target);
+void to_document( const py::handle &source, document_t& target);
 
-void to_document_inner(std::string&& key, const py::handle &source, friedrichdb::core::document_t& target) {
+void to_document_inner(std::string&& key, const py::handle &source, document_t& target) {
     if (source.ptr() == nullptr || source.is_none()) {
         target.add(std::move(key));
         return;
@@ -126,7 +126,7 @@ void to_document_inner(std::string&& key, const py::handle &source, friedrichdb:
 
 
     if (py::isinstance<py::tuple>(source) || py::isinstance<py::list>(source)) {
-        auto inner_doc = friedrichdb::core::document_t::to_array() ;
+        auto inner_doc = document_t::to_array() ;
         for (const py::handle value : source) {
             inner_doc.append(to__(value));
         }
@@ -134,7 +134,7 @@ void to_document_inner(std::string&& key, const py::handle &source, friedrichdb:
         return ;
     }
     if (py::isinstance<py::dict>(source)) {
-        friedrichdb::core::document_t inner_doc;
+        document_t inner_doc;
         to_document(source,inner_doc);
         target.add(std::move(key),std::move(inner_doc));
         return ;
@@ -143,13 +143,13 @@ void to_document_inner(std::string&& key, const py::handle &source, friedrichdb:
     throw std::runtime_error("to_document not implemented for this type of object: " + py::repr(source).cast<std::string>());
 }
 
-void to_document( const py::handle &source, friedrichdb::core::document_t& target) {
+void to_document( const py::handle &source, document_t& target) {
     for (const py::handle key : source) {
         to_document_inner(py::str(key).cast<std::string>(), source[key], target);
     }
 }
 
-void update_document_inner(std::string&& key, const py::handle &obj,friedrichdb::core::document_t& target) {
+void update_document_inner(std::string&& key, const py::handle &obj,document_t& target) {
 
     if (obj.ptr() == nullptr || obj.is_none()) {
         target.update(key);
@@ -195,7 +195,7 @@ void update_document_inner(std::string&& key, const py::handle &obj,friedrichdb:
 }
 
 
-auto  from_object(const std::string& key, friedrichdb::core::document_t& target) -> py::object {
+auto  from_object(const std::string& key, document_t& target) -> py::object {
     auto value = target.get(key);
     if (value.is_null()) {
         return py::none();
@@ -225,7 +225,7 @@ auto  from_object(const std::string& key, friedrichdb::core::document_t& target)
     */
 }
 
-void update_document( const py::handle &source, friedrichdb::core::document_t &target) {
+void update_document( const py::handle &source, document_t &target) {
 
     for (const py::handle key : source) {
         //std::cerr << py::str(key).cast<std::string>()  << std::endl;
