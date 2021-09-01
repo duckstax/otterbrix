@@ -26,3 +26,7 @@ spaces::spaces() {
     goblin_engineer::link(*database_,tmp);
 
 }
+
+log_t& spaces::get_log() {
+    return log_;
+}

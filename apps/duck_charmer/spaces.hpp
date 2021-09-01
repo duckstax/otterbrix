@@ -14,22 +14,14 @@ public:
     void operator=(const spaces&) = delete;
 
     static spaces* get_instance();
-    /*
-    void SomeBusinessLogic() {
-        // ...
-    }
-
-    std::string value() const {
-        return value_;
-    }
-*/
-
+    log_t& get_log();
     goblin_engineer::actor_address dispatcher();
 
 protected:
     spaces();
 
     static spaces* instance_;
+
     log_t log_;
     services::storage::manager_database_ptr manager_database_;
     services::storage::database_ptr database_;

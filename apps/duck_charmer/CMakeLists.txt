@@ -28,8 +28,6 @@ include_directories(${PROJECT_SOURCE_DIR}
 
 )
 
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
 pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
 
 target_link_libraries(

@@ -23,7 +23,7 @@ wrapper_collection::~wrapper_collection() {
     /// ptr_.release();
 }
 
-///wrapper_collection::wrapper_collection(wrapper_collection::pointer ptr) :ptr_(ptr) {}
+wrapper_collection::wrapper_collection(log_t&log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database) :log_(log),dispatcher_(dispatcher_),database_(database) {}
 
 auto wrapper_collection::get(py::object cond) -> py::object {
     /*
@@ -228,3 +228,8 @@ void wrapper_collection::update(py::dict fields, py::object cond, py::iterable d
 }
 
  */
+
+void wrapper_collection::d_() {
+    cv_.notify_all();
+    i = 1;
+}

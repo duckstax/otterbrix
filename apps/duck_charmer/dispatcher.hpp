@@ -38,8 +38,17 @@ public:
         create_database_callback_(address);
     }
 
-    void create_collection() {
+    void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+        log_.debug("create_database_init: {}", name);
+        create_database_callback_ = std::move(callback);
+        goblin_engineer::send(addresses("manager_database"), self(), "create_database",session, name);
     }
+
+    void create_collection_finish(session_t& session, goblin_engineer::actor_address address) {
+        log_.debug("create_database_finish: {}", address->type());
+        create_database_callback_(address);
+    }
+
 /*
     void select(session_t session, const select_t& value);
 

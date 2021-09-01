@@ -13,11 +13,14 @@
 #include <pybind11/stl_bind.h>
 
 #include "wrapper_document.hpp"
+#include <log/log.hpp>
+#include <goblin-engineer/core.hpp>
 
 namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
 public:
+    wrapper_collection(log_t& log,goblin_engineer::actor_address,goblin_engineer::actor_address);
     ~wrapper_collection();
 
     void insert(const py::handle& document);
@@ -31,7 +34,13 @@ public:
     void drop();
 
 private:
+    void d_();
+    goblin_engineer::actor_address database_;
+    goblin_engineer::actor_address dispatcher_;
+    log_t log_;
+    std::atomic_int i = 0;
     std::mutex mtx_;
+    std::condition_variable cv_;
 };
 
 using wrapper_collection_ptr = boost::intrusive_ptr<wrapper_collection>;

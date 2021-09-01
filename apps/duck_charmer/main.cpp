@@ -26,18 +26,21 @@ spaces* spaces::get_instance() {
 
 PYBIND11_MODULE(duck_charmer, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init<>())
+        .def(py::init([](){
+            auto* spaces =  spaces::get_instance();
+            auto dispatcher =  spaces->dispatcher();
+            auto log = spaces::get_instance()->get_log().clone();
+            return new wrapper_client(log,dispatcher);
+        }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names);
 
     py::class_<wrapper_database, boost::intrusive_ptr<wrapper_database>>(m, "DataBase")
-        ///.def(py::init<friedrichdb::core::database_t*>())
         .def("collection_names", &wrapper_database::collection_names)
         .def("drop_collection", &wrapper_database::drop_collection)
         .def("__getitem__", &wrapper_database::create);
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
-        ///.def(py::init<friedrichdb::core::collection_t*>())
         .def("insert", &wrapper_collection::insert)
         .def("insert_many", &wrapper_collection::insert_many)
         .def("get", &wrapper_collection::get, py::arg("cond"))
@@ -49,7 +52,6 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("__len__", &wrapper_collection::size);
 
     py::class_<wrapper_document, boost::intrusive_ptr<wrapper_document>>(m, "Document")
-        ///.def(py::init<friedrichdb::core::document_t*>())
         .def("__repr__", &wrapper_document::print)
         .def("__getitem__", &wrapper_document::get)
         .def("get", &wrapper_document::get);
