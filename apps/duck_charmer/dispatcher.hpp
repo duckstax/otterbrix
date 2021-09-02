@@ -26,39 +26,12 @@ using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher
 class  dispatcher_t final : public goblin_engineer::abstract_service {
 public:
     dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log);
-
-    void create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
-        log_.debug("create_database_init: {}", name);
-        create_database_callback_ = std::move(callback);
-        goblin_engineer::send(addresses("manager_database"), self(), "create_database",session, name);
-    }
-
-    void create_database_finish(session_t& session, goblin_engineer::actor_address address) {
-        log_.debug("create_database_finish: {}", address->type());
-        create_database_callback_(address);
-    }
-
-    void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
-        log_.debug("create_database_init: {}", name);
-        create_database_callback_ = std::move(callback);
-        goblin_engineer::send(addresses("manager_database"), self(), "create_database",session, name);
-    }
-
-    void create_collection_finish(session_t& session, goblin_engineer::actor_address address) {
-        log_.debug("create_database_finish: {}", address->type());
-        create_database_callback_(address);
-    }
-
-/*
-    void select(session_t session, const select_t& value);
-
-    void insert(session_t session, const insert_t& value);
-
-    void erase(session_t session, const erase_t& value);
-    */
+    void create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
+    void create_database_finish(session_t& session, goblin_engineer::actor_address address);
+    void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
+    void create_collection_finish(session_t& session, goblin_engineer::actor_address address);
 
 private:
-    std::function<void(goblin_engineer::actor_address)> create_database_callback_;
+    std::function<void(goblin_engineer::actor_address)> create_database_and_collection_callback_;
     log_t log_;
-    ///boost::uuids::string_generator string_generator_;
 };

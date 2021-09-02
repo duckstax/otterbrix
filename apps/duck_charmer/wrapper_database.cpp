@@ -13,7 +13,12 @@ auto wrapper_database::collection_names() -> py::list {
 }
 
 bool wrapper_database::drop_collection(const std::string& name) {
-    ////return ptr_->drop(name);
+    log_.debug("start wrapper_database::drop_collection: {}",name);
+
+    std::unique_lock<std::mutex> lk(mtx_);
+    cv_.wait(lk, [this]() { return i == 1; });
+    log_.debug("finish wrapper_database::drop_collection: {}",name);
+    return drop_collection_;
 }
 
 wrapper_collection_ptr wrapper_database::create(const std::string& name) {

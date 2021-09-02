@@ -33,50 +33,26 @@ auto manager_dispatcher_t::enqueue_base(goblin_engineer::message_ptr msg, actor_
 dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     : goblin_engineer::abstract_service(manager_database, "dispatcher")
     , log_(log.clone()) {
-  ///  add_handler(dispatcher::create_collection, &dispatcher_t::create_collection);
     add_handler("create_database", &dispatcher_t::create_database);
     add_handler("create_database_finish", &dispatcher_t::create_database_finish);
-    ///add_handler(dispatcher::select, &dispatcher_t::select);
-    ///add_handler(dispatcher::insert, &dispatcher_t::insert);
-   /// add_handler(dispatcher::erase, &dispatcher_t::erase);
-    ///add_handler(dispatcher::ws_dispatch, &dispatcher_t::ws_dispatch);
+    add_handler("create_collection", &dispatcher_t::create_collection);
+    add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
 }
-/*
-    void dispatcher_t::ws_dispatch(session_id id, std::string& request, size_t size) {
-        auto req = std::move(request);
-        auto obj = msgpack::unpack(zone_, req.data(), size);
-        auto protocol = std::move(obj.as<protocol_t>());
-        session_t session;
-        session.id_ = id;
-        session.uid_ = string_generator_(protocol.uid_);
-
-        switch (protocol.op_type) {
-            case protocol_op::create_collection:
-                break;
-            case protocol_op::create_database:
-                break;
-            case protocol_op::select: {
-                return goblin_engineer::send(self(), self(), "select", std::move(session), std::move(std::get<select_t>(protocol.data_)));
-            }
-
-            case protocol_op::insert: {
-                return goblin_engineer::send(self(), self(), "insert", std::move(session), std::move(std::get<insert_t>(protocol.data_)));
-            }
-            case protocol_op::erase: {
-                return goblin_engineer::send(self(), self(), "erase", std::move(session), std::move(std::get<erase_t>(protocol.data_)));
-            }
-        }
-    }
-    */
-/*
-void dispatcher_t::erase(session_t session, const erase_t& value) {
-    goblin_engineer::send(addresses("collection"), self(), "erase", std::move(session), std::move(value));
+void dispatcher_t::create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+    log_.debug("create_database_init: {}", name);
+    create_database_and_collection_callback_ = std::move(callback);
+    goblin_engineer::send(addresses("manager_database"), self(), "create_database", session, name);
 }
-
-void dispatcher_t::insert(session_t session, const insert_t& value) {
-    goblin_engineer::send(addresses("collection"), self(), "insert", std::move(session), std::move(value));
+void dispatcher_t::create_database_finish(session_t& session, goblin_engineer::actor_address address) {
+    log_.debug("create_database_finish: {}", address->type());
+    create_database_and_collection_callback_(address);
 }
-
-void dispatcher_t::select(session_t session, const select_t& value) {
-    goblin_engineer::send(addresses("collection"), self(), "select", std::move(session), std::move(value));
-}*/
+void dispatcher_t::create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+    log_.debug("create_collection: {}", name);
+    create_database_and_collection_callback_ = std::move(callback);
+    goblin_engineer::send(addresses("manager_database"), self(), "create_database", session, name);
+}
+void dispatcher_t::create_collection_finish(session_t& session, goblin_engineer::actor_address address) {
+    log_.debug("create_collection_finish: {}", address->type());
+    create_database_and_collection_callback_(address);
+}

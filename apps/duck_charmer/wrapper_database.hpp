@@ -25,6 +25,7 @@ public:
 
 private:
     void d_();
+    bool drop_collection_;
     wrapper_collection_ptr tmp_;
     goblin_engineer::actor_address database_;
     goblin_engineer::actor_address dispatcher_;

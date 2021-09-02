@@ -23,7 +23,13 @@ wrapper_collection::~wrapper_collection() {
     /// ptr_.release();
 }
 
-wrapper_collection::wrapper_collection(log_t&log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database) :log_(log),dispatcher_(dispatcher_),database_(database) {}
+wrapper_collection::wrapper_collection(log_t& log, goblin_engineer::actor_address dispatcher, goblin_engineer::actor_address database, goblin_engineer::actor_address collection)
+    : log_(log.clone())
+    , dispatcher_(dispatcher)
+    , database_(database)
+    , collection_(collection) {
+    log_.debug("wrapper_collection");
+}
 
 auto wrapper_collection::get(py::object cond) -> py::object {
     /*

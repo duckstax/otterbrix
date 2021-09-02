@@ -20,7 +20,7 @@ namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
 public:
-    wrapper_collection(log_t& log,goblin_engineer::actor_address,goblin_engineer::actor_address);
+    wrapper_collection(log_t& log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database,goblin_engineer::actor_address collection);
     ~wrapper_collection();
 
     void insert(const py::handle& document);
@@ -35,8 +35,9 @@ public:
 
 private:
     void d_();
-    goblin_engineer::actor_address database_;
     goblin_engineer::actor_address dispatcher_;
+    goblin_engineer::actor_address database_;
+    goblin_engineer::actor_address collection_;
     log_t log_;
     std::atomic_int i = 0;
     std::mutex mtx_;
