@@ -1,6 +1,7 @@
 #include "dispatcher.hpp"
 #include "tracy/tracy.hpp"
 #include <services/storage/route.hpp>
+#include <components/storage/document.hpp>
 namespace dispatcher = services::storage::dispatcher;
 manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput)
     : goblin_engineer::abstract_manager_service("manager_dispatcher")
@@ -37,6 +38,8 @@ dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     add_handler("create_database_finish", &dispatcher_t::create_database_finish);
     add_handler("create_collection", &dispatcher_t::create_collection);
     add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
+    add_handler("insert", &dispatcher_t::insert);
+    add_handler("insert_finish", &dispatcher_t::insert_finish);
 }
 void dispatcher_t::create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_database_init: {}", name);
@@ -55,4 +58,13 @@ void dispatcher_t::create_collection(session_t& session, std::string& name, std:
 void dispatcher_t::create_collection_finish(session_t& session, goblin_engineer::actor_address address) {
     log_.debug("create_collection_finish: {}", address->type());
     create_database_and_collection_callback_(address);
+}
+void dispatcher_t::insert(session_t& session, std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback) {
+    log_.debug("dispatcher_t::insert: {}", collection);
+    insert_callback_ = std::move(callback);
+    goblin_engineer::send(addresses("collection"), self(), "insert", session,collection,std::move(document) );
+}
+void dispatcher_t::insert_finish(session_t& session, result_insert_one& result) {
+    log_.debug("dispatcher_t::insert_finish");
+    insert_callback_(result);
 }

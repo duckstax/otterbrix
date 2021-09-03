@@ -24,7 +24,7 @@ namespace services::storage {
         using iterator = typename storage_t::iterator;
 
         collection_t(database_ptr database, log_t& log);
-        void insert(document_t& document);
+        void insert(session_t& session_t,std::string& collection,document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
         auto search(components::storage::conditional_expression& cond) -> void;
         auto all() -> void;
@@ -35,7 +35,7 @@ namespace services::storage {
         void drop();
 
     private:
-        void insert_(const std::string& uid, document_t& document);
+        void insert_(const std::string& uid, document_t&& document);
         document_t* get_(const std::string& uid);
         std::size_t size_() const;
         auto begin() -> iterator;

@@ -76,6 +76,11 @@ namespace components::storage {
             auto tmp = std::move(value);
             json_= json_t(tmp.extract());
         }*/
+        template<class T>
+        T get_as(std::string key){
+            std::cerr << json_[std::move(key)].type_name() << std::endl;
+            return json_[std::move(key)].get<T>();
+        }
 
         void append(const std::string& key,bool value){
             if(json_.contains(key)){

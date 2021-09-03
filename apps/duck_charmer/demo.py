@@ -6,12 +6,8 @@ from duck_charmer import Client,DataBase, Collection
 
 client = Client()
 friedrich_database = client["FriedrichDatabase"]
-print(friedrich_database.collection_names())
 friedrich_collection = friedrich_database["FriedrichCollection"]
-print(friedrich_database.collection_names())
-#friedrich_collection.delete_many({})  # should delete all records in the collection
 
-# insert 100 integers, strings, floats, booleans, arrays, and objects
 for num in range(100):
     new_obj = {}
     new_obj['count'] = num

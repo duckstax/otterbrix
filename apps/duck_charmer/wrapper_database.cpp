@@ -30,7 +30,7 @@ wrapper_collection_ptr wrapper_database::create(const std::string& name) {
         session_t(),
         name,
         std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
-            tmp_ = boost::intrusive_ptr<wrapper_collection>(new wrapper_collection(log_,dispatcher_,address));
+            tmp_ = boost::intrusive_ptr<wrapper_collection>(new wrapper_collection(log_,dispatcher_,database_,address));
             d_();
         }));
     log_.debug("wrapper_client::get_or_create send -> dispatcher: {}",dispatcher_->type());

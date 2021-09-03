@@ -3,11 +3,13 @@ project(storage)
 set( ${PROJECT_NAME}_HEADERS
         collection.hpp
         database.hpp
+        result_insert_one.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
         collection.cpp
         database.cpp
+        result_insert_one.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

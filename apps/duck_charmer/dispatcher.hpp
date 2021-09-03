@@ -4,6 +4,8 @@
 #include <log/log.hpp>
 
 #include "storage/forward.hpp"
+#include <storage/document.hpp>
+#include <storage/result_insert_one.hpp>
 
 using services::storage::session_t;
 
@@ -30,8 +32,11 @@ public:
     void create_database_finish(session_t& session, goblin_engineer::actor_address address);
     void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
     void create_collection_finish(session_t& session, goblin_engineer::actor_address address);
+    void insert(session_t& session,std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback);
+    void insert_finish(session_t& session,result_insert_one&result);
 
 private:
     std::function<void(goblin_engineer::actor_address)> create_database_and_collection_callback_;
+    std::function<void(result_insert_one&)> insert_callback_;
     log_t log_;
 };

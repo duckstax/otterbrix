@@ -13,8 +13,10 @@
 #include <pybind11/stl_bind.h>
 
 #include "wrapper_document.hpp"
-#include <log/log.hpp>
 #include <goblin-engineer/core.hpp>
+#include <log/log.hpp>
+#include <storage/result_insert_one.hpp>
+#include <storage/forward.hpp>
 
 namespace py = pybind11;
 
@@ -22,9 +24,9 @@ class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_cou
 public:
     wrapper_collection(log_t& log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database,goblin_engineer::actor_address collection);
     ~wrapper_collection();
-
-    void insert(const py::handle& document);
+    //not  using  base api  for example or test
     void insert_many(py::iterable);
+    bool insert(const py::handle& document);
     auto get(py::object cond) -> py::object;
     auto search(py::object cond) -> py::list;
     auto all() -> py::list;
@@ -35,10 +37,12 @@ public:
 
 private:
     void d_();
+    services::storage::session_t session_;
+    result_insert_one insert_result_ ;
     goblin_engineer::actor_address dispatcher_;
     goblin_engineer::actor_address database_;
     goblin_engineer::actor_address collection_;
-    log_t log_;
+    mutable log_t log_;
     std::atomic_int i = 0;
     std::mutex mtx_;
     std::condition_variable cv_;

@@ -3,38 +3,35 @@
 
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
+#include "result_insert_one.hpp"
 
 namespace services::storage {
     collection_t::collection_t(database_ptr database, log_t& log)
         : goblin_engineer::abstract_service(database, "collection")
         , log_(log.clone()) {
-       /// add_handler(collection::select, &collection_t::select);
-        //add_handler(collection::insert, &collection_t::insert);
+        /// add_handler(collection::select, &collection_t::select);
+        add_handler(collection::insert, &collection_t::insert);
         //add_handler(collection::erase, &collection_t::erase);
     }
 
-
-    void collection_t::insert(document_t& document) {
-        /*
-        auto is_document = py::isinstance<py::dict>(document);
-        if (is_document) {
-            auto doc = friedrichdb::core::make_document();
-            to_document(document,*doc);
-            insert_(document["_id"].cast<std::string>(), std::move(doc));
-        }
-         */
+    void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
+        log_.debug("collection_t::insert");
+        auto id = document.get_as<std::string>("_id");
+        insert_(id, std::move(document));
+        auto dispatcher = addresses("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher->type());
+        //all_view_address();
+        auto database = addresses("database");
+        log_.debug("database : {}", database->type());
+        goblin_engineer::send(dispatcher, self(), "insert_finish", session, result_insert_one(true));
     }
 
-    auto collection_t::get(components::storage::conditional_expression& cond) ->void {
-
-            for (auto &i:*this) {
-                if (cond.check(i.second)) {
-                   /// return py::cast(tmp);
-                }
+    auto collection_t::get(components::storage::conditional_expression& cond) -> void {
+        for (auto& i : *this) {
+            if (cond.check(i.second)) {
+                /// return py::cast(tmp);
             }
-
-
-
+        }
     }
 
     auto collection_t::search(components::storage::conditional_expression& cond) -> void {
@@ -75,7 +72,7 @@ namespace services::storage {
         return tmp;
          */
     }
-/*
+    /*
     void collection_t::insert_many(py::iterable iterable) {
         auto iter = py::iter(iterable);
         for(;iter!= py::iterator::sentinel();++iter) {
@@ -152,7 +149,7 @@ namespace services::storage {
         drop_();
     }
 
-    void collection_t::insert_(const std::string& uid, document_t& document) {
+    void collection_t::insert_(const std::string& uid, document_t&& document) {
         storage_.emplace(uid, std::move(document));
     }
 
@@ -186,4 +183,4 @@ namespace services::storage {
         storage_.erase(key);
     }
 
-}
+} // namespace services::storage
