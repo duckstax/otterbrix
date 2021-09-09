@@ -3,7 +3,7 @@ boost/1.75.0
 openssl/1.1.1c
 yaml-cpp/0.7.0
 spdlog/1.9.2
-pybind11/2.3.0@conan/stable
+pybind11/2.4.3
 msgpack/3.3.0
 nlohmann_json/3.10.2
 sol2/3.2.3

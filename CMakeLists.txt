@@ -75,23 +75,9 @@ include(cmake/clang-format.cmake)
 #############################################################################################
 #conan
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.15/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
-
-include(${CMAKE_BINARY_DIR}/conan.cmake)
-
-if (CONAN_EXPERIMENTAL_INCLUDE)
-    set(CONAN_SYSTEM_INCLUDES "On")
-endif ()
-
-conan_cmake_run(
-        CONANFILE conanfile.txt
-        BASIC_SETUP
-        BUILD missing
-        NO_OUTPUT_DIRS
-)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
+conan_basic_setup(NO_OUTPUT_DIRS)
 
 # conan
 #############################################################################################
@@ -109,7 +95,8 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 SET(PYTHON_EXECUTABLE python3)
-find_package(pybind11 REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+#find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
 
