@@ -34,7 +34,6 @@ public:
     static error_code get_code(const std::exception&) noexcept;
 
     const error_code code;
-    std::shared_ptr<backtrace_t> backtrace;
 };
 
 #define _throw_if(BAD, ERROR, MESSAGE) \

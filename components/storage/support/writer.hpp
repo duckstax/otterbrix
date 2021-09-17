@@ -29,6 +29,9 @@ public:
 
     void pad_to_even_length();
 
+    static slice_t encode_base64(slice_t data);
+    static slice_t decode_base64(slice_t data);
+
     void write_base64(slice_t data);
     void write_decoded_base64(slice_t base64str);
 

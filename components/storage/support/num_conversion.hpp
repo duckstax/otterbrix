@@ -22,8 +22,8 @@ static inline bool parse_unsigned_integer(const char *str NONNULL, uint64_t &r, 
 
 double parse_double(const char *str NONNULL) noexcept;
 
-size_t write_float(double n, char *dst, size_t capacity);
-size_t write_float(float n, char *dst, size_t capacity);
+size_t write_float(float f, char *dst, size_t capacity);
+size_t write_float(double d, char *dst, size_t capacity);
 static inline size_t write_double(double n, char *dst, size_t c)  { return write_float(n, dst, c); }
 
 }

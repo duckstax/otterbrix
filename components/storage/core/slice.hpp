@@ -6,19 +6,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
+#include <string_view>
 
 #ifndef assert
 #   include <assert.h>
 #endif
 #ifndef assert_precondition
 #   define assert_precondition(e) assert(e)
-#endif
-
-#ifdef __has_include
-#   if __has_include(<std::string_view>)
-#       include <std::string_view>
-#       define SUPPORTS_STRING_VIEW
-#   endif
 #endif
 
 #define SLICE(S)    (int)(S).size, (const char*)(S).buf
@@ -105,10 +99,8 @@ struct pure_slice_t
 
     operator slice_t_c () const noexcept        { return {buf, size}; }
 
-#ifdef SUPPORTS_STRING_VIEW
     constexpr pure_slice_t(std::string_view str) noexcept : pure_slice_t(str.data(), str.length()) {}
     operator std::string_view() const noexcept STEPOVER { return std::string_view((const char*)buf, size); }
-#endif
     constexpr pure_slice_t(std::nullptr_t) noexcept   : pure_slice_t() {}
     constexpr pure_slice_t(const char* str) noexcept  : buf(str), size(_strlen(str)) {}
     pure_slice_t(const std::string& str) noexcept     : buf(&str[0]), size(str.size()) {}
@@ -163,9 +155,7 @@ struct slice_t : public pure_slice_t
     explicit slice_t(const slice_result_t_c &sr) STEPOVER        : pure_slice_t(sr.buf, sr.size) { }
     slice_t& operator= (heap_slice_t_c s) noexcept        { set(s.buf, s.size); return *this; }
 
-#ifdef SUPPORTS_STRING_VIEW
     constexpr slice_t(std::string_view str) noexcept STEPOVER    : pure_slice_t(str) {}
-#endif
 };
 
 
@@ -242,10 +232,8 @@ struct alloc_slice_t : public pure_slice_t
     alloc_slice_t& operator= (heap_slice_t_c) noexcept;
     operator heap_slice_t_c () const noexcept                           { return {buf, size}; }
 
-#ifdef SUPPORTS_STRING_VIEW
     explicit alloc_slice_t(std::string_view str) STEPOVER               : alloc_slice_t(slice_t(str)) {}
     alloc_slice_t& operator=(std::string_view str)                      { *this = (slice_t)str; return *this; }
-#endif
 
     alloc_slice_t& retain() noexcept         { retain_buf_c(buf); return *this; }
     inline void release() noexcept           { release_buf_c(buf); }
@@ -265,9 +253,7 @@ struct nonnull_slice : public slice_t
     constexpr nonnull_slice(const char *str NONNULL)              : slice_t(str) {}
     nonnull_slice(alloc_slice_t s)                                : nonnull_slice(s.buf, s.size) {}
     nonnull_slice(const std::string &str)                         : nonnull_slice(str.data(), str.size()) {}
-#ifdef SUPPORTS_STRING_VIEW
     nonnull_slice(std::string_view str)                           : nonnull_slice(str.data(), str.size()) {}
-#endif
     nonnull_slice(std::nullptr_t) = delete;
     nonnull_slice(null_slice_t)   = delete;
 };

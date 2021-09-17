@@ -27,8 +27,6 @@ set( ${PROJECT_NAME}_HEADERS
         mutable/mutable_dict.hpp
         mutable/mutable_value.hpp
         mutable/value_slot.hpp
-        support/backtrace.hpp
-        support/base64.hpp
         support/better_assert.hpp
         support/bitmap.hpp
         support/concurrent_arena.hpp
@@ -59,15 +57,6 @@ set( ${PROJECT_NAME}_HEADERS
         tree/mutable_hash_tree.hpp
         tree/mutable_node.hpp
         tree/node_ref.hpp
-        vendor/cdecode.hpp
-        vendor/cencode.hpp
-        vendor/date.hpp
-        vendor/decode.hpp
-        vendor/encode.hpp
-        vendor/jsonsl.hpp
-        vendor/swift_dtoa.hpp
-        vendor/wyhash32.hpp
-        vendor/wyhash.hpp
         )
 
 set(${PROJECT_NAME}_SOURCES
@@ -90,8 +79,6 @@ set(${PROJECT_NAME}_SOURCES
         mutable/mutable_dict.cpp
         mutable/mutable_value.cpp
         mutable/value_slot.cpp
-        support/backtrace.cpp
-        support/base64.cpp
         support/better_assert.cpp
         support/bitmap.cpp
         support/concurrent_arena.cpp
@@ -111,10 +98,6 @@ set(${PROJECT_NAME}_SOURCES
         tree/key_tree.cpp
         tree/mutable_hash_tree.cpp
         tree/node_ref.cpp
-        vendor/cdecode.cpp
-        vendor/cencode.cpp
-        vendor/jsonsl.cpp
-        vendor/swift_dtoa.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -130,6 +113,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        boost_json
         dl
 )
 
@@ -141,7 +125,6 @@ target_include_directories(
         mutable
         support
         tree
-        vendor
 )
 
 add_subdirectory(test)

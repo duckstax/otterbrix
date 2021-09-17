@@ -2,14 +2,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cstddef>
+#include <functional>
 #include "better_assert.hpp"
-
-namespace storage::wyhash {
-    #include "wyhash.hpp"
-}
-namespace storage::wyhash32 {
-    #include "wyhash32.hpp"
-}
 
 #ifdef _MSC_VER
 #include <Windows.h>
@@ -48,12 +42,8 @@ bool slice_c_to_cstring(slice_t_c s, char* buffer, size_t capacity) noexcept {
 }
 
 uint32_t hash_slice_c(slice_t_c s) noexcept {
-    if (sizeof(void*) >= 8) {
-        return (uint32_t) storage::wyhash::wyhash(s.buf, s.size, 0, storage::wyhash::_wyp);
-    } else {
-        static constexpr unsigned seed = 0x91BAC172;
-        return storage::wyhash32::wyhash32(s.buf, s.size, seed);
-    }
+    std::hash<std::string> hash;
+    return uint32_t(hash(static_cast<std::string>(s)));
 }
 
 

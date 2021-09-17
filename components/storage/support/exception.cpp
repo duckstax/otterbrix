@@ -1,6 +1,5 @@
 #include "exception.hpp"
 #include "platform_compat.hpp"
-#include "backtrace.hpp"
 #include <errno.h>
 #include <stdarg.h>
 #include <memory>
@@ -29,9 +28,8 @@ static const char* const kErrorNames[] = {
 
 
 exception_t::exception_t(error_code code_, const std::string &what)
-    :std::runtime_error(what)
-    ,code(code_)
-    ,backtrace(backtrace_t::capture(2))
+    : std::runtime_error(what)
+    , code(code_)
 {}
 
 void exception_t::_throw(error_code code, const char *what, ...) {

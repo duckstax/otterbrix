@@ -1,7 +1,7 @@
 #include "parse_date.hpp"
-#include "date.hpp"
 #include "exception.hpp"
 
+#include "date/date.h"
 #include <stdint.h>
 #include <stdarg.h>
 #include <ctype.h>

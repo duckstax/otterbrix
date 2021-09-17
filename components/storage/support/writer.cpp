@@ -1,8 +1,7 @@
 #include "writer.hpp"
 #include "platform_compat.hpp"
 #include "exception.hpp"
-#include "decode.hpp"
-#include "encode.hpp"
+#include "boost/beast/core/detail/base64.hpp"
 #include <algorithm>
 #include "better_assert.hpp"
 
@@ -250,30 +249,32 @@ bool writer_t::write_output_to_file(FILE *f) {
     return result;
 }
 
+slice_t writer_t::encode_base64(slice_t data) {
+    using namespace boost::beast::detail;
+    auto dst = new char[base64::encoded_size(data.size)];
+    auto size = boost::beast::detail::base64::encode(dst, data.buf, data.size);
+    return slice_t(dst, size);
+}
+
+slice_t writer_t::decode_base64(slice_t data) {
+    using namespace boost::beast::detail;
+    auto dst = new char[base64::decoded_size(data.size)];
+    auto size = base64::decode(dst, static_cast<const char *>(data.buf), data.size).first;
+    return slice_t(dst, size);
+}
+
 void writer_t::write_base64(slice_t data) {
-    size_t base64size = ((data.size + 2) / 3) * 4;
-    char *dst;
-    if (_output_file)
-        dst = (char*)slice_t::new_bytes(base64size);
-    else
-        dst = (char*)reserve_space(base64size);
-    base64::encoder_t enc;
-    enc.set_chars_per_line(0);
-    size_t written = enc.encode(data.buf, data.size, dst);
-    written += enc.encode_end(dst + written);
+    auto base64str = encode_base64(data);
     if (_output_file) {
-        write(dst, written);
-        free(dst);
+        auto dst = static_cast<char*>(slice_t::new_bytes(base64str.size));
+        strncpy(dst, static_cast<const char*>(base64str.buf), base64str.size);
+    } else {
+        write(base64str);
     }
-    assert_postcondition((size_t)written == base64size);
-    (void)written;
 }
 
 void writer_t::write_decoded_base64(slice_t base64str) {
-    base64::decoder_t dec;
-    std::vector<char> buf((base64str.size + 3) / 4 * 3);
-    size_t len = dec.decode(base64str.buf, base64str.size, buf.data());
-    write(buf.data(), len);
+    write(decode_base64(base64str));
 }
 
 void *writer_t::reserve_space(size_t length) {

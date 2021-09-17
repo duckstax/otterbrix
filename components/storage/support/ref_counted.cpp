@@ -1,5 +1,4 @@
 #include "ref_counted.hpp"
-#include "backtrace.hpp"
 #include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +27,7 @@ static void fail(const ref_counted_t *obj, const char *what, int ref_count, bool
     char *message;
     asprintf(&message,
              "ref_counted_t object <%s @ %p> %s while it had an invalid ref_count of %d (0x%x)",
-             unmangle(typeid(*obj)).c_str(), obj, what, ref_count, ref_count);
+             typeid(*obj).name(), obj, what, ref_count, ref_count);
 #ifdef WarnError
     WarnError("%s", message);
 #else
