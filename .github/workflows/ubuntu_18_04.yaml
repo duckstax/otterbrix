@@ -23,12 +23,19 @@ jobs:
             && sudo apt-get install -y \
             python3-pip python3-dev
 
-      - name: install conan
+      - name: conan installation and configuration
         run: |
-          pip install conan
+          pip install conan==1.40.0
           conan user
-          conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-          conan remote add cyberduckninja https://api.bintray.com/conan/cyberduckninja/conan
+          conan profile new default --detect --force
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan config set general.parallel_download=$(nproc)
+          conan config set general.cpu_count=$(nproc)
+          conan remote add cyberduckninja http://conan.cyberduckninja.com:9300
+
+      - name: download dependencies
+        run: |
+          conan install . --build missing -s build_type=Release
 
       - name: build
         env:
@@ -36,19 +43,3 @@ jobs:
         run: |
           cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
           cmake --build . --parallel 2
-
-      # - name: install dependons test
-      #   run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
-
-      # - name: install kernel
-      #   run: jupyter kernelspec install --user kernels/rocketjoe
-
-      # - name: run test base
-      #   run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
-
-      # - name: run benchmark base
-      #   run: |
-      #       pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
-
-      #- name: run test kernel_info
-      #  run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_raw.py

@@ -13,6 +13,7 @@
 #include <detail/file_manager.hpp>
 #include <detail/file_system.hpp>
 
+#include <../log/log.hpp>
 using json = nlohmann::json;
 
 namespace components {

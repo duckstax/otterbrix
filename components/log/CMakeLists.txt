@@ -8,7 +8,6 @@ list(APPEND CURRENT_${TARGET_HEADERS}
         log.cpp
 )
 
-
 add_library(rocketjoe_${CURRENT_TARGET}
             ${CURRENT_${TARGET_HEADERS}}
             ${CURRENT_${TARGET_HEADERS}}

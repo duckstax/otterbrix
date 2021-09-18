@@ -20,7 +20,6 @@ target_link_libraries(
         rocketjoe::configuration
         rocketjoe::interactive_python
         rocketjoe::log
-        rocketjoe::process_pool
         dl
 )
 

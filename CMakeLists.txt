@@ -10,7 +10,7 @@ set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
 PROJECT(RocketJoe VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -28,6 +28,8 @@ endif()
 option(DEV_MODE "developer mode" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 enable_testing()
 
@@ -73,23 +75,9 @@ include(cmake/clang-format.cmake)
 #############################################################################################
 #conan
 
-if(NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
-    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
-    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.15/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
-endif()
-
-include(${CMAKE_BINARY_DIR}/conan.cmake)
-
-if (CONAN_EXPERIMENTAL_INCLUDE)
-    set(CONAN_SYSTEM_INCLUDES "On")
-endif ()
-
-conan_cmake_run(
-        CONANFILE conanfile.txt
-        BASIC_SETUP
-        BUILD missing
-        NO_OUTPUT_DIRS
-)
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
+conan_basic_setup(NO_OUTPUT_DIRS)
 
 # conan
 #############################################################################################
@@ -107,9 +95,14 @@ endif(CCACHE_FOUND)
 #############################################################################################
 
 SET(PYTHON_EXECUTABLE python3)
-find_package(pybind11 REQUIRED)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+#find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
+
+include_directories(components)
+include_directories(services)
+
 
 add_subdirectory(components)
 add_subdirectory(services)
