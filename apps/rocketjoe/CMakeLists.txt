@@ -21,7 +21,6 @@ target_link_libraries(
         rocketjoe::configuration
         rocketjoe::python_sandbox
         rocketjoe::log
-        rocketjoe::process_pool
         dl
 )
 
