@@ -36,18 +36,18 @@ jobs:
           cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
           cmake --build . --parallel 2
 
-      - name: install dependons test
-        run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
+      # - name: install dependons test
+      #   run: pip install -r apps/rocketjoe_kernel/test/requirements.txt
 
-      - name: install kernel
-        run: jupyter kernelspec install --user kernels/rocketjoe
+      # - name: install kernel
+      #   run: jupyter kernelspec install --user kernels/rocketjoe
 
-      - name: run test base
-        run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
+      # - name: run test base
+      #   run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel.py
 
-      - name: run benchmark base
-        run: |
-            pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
+      # - name: run benchmark base
+      #   run: |
+      #       pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_benchmark.py
 
       #- name: run test kernel_info
       #  run: pytest apps/rocketjoe_kernel/test/test_jupyter_kernel_raw.py

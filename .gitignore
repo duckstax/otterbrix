@@ -225,6 +225,8 @@ pip-selfcheck.json
 *.msi
 *.msm
 *.msp
+conan.lock
+graph_info.json
 ### Eclipse template
 
 .metadata

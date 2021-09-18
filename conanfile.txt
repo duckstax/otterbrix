@@ -7,7 +7,6 @@ pybind11/2.4.3
 msgpack/3.3.0
 nlohmann_json/3.10.2
 sol2/3.2.3
-
 goblin-engineer/1.0.0a4@cyberduckninja/stable
 
 [options]
@@ -16,6 +15,8 @@ actor-zeta:fPIC=True
 goblin-engineer:cxx_standard=17
 goblin-engineer:fPIC=True
 OpenSSL:shared = True
+#rabbitmq-c:shared = True
+#rabbitmq-c:ssl = False
 
 [generators]
 cmake

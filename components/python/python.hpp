@@ -29,6 +29,8 @@ namespace components {
 
         void run_script(const std::vector<std::string>&);
 
+        void call_task(const std::string& task, const std::string& body);
+
         auto init() -> void;
 
         auto module(const std::string&/**/) -> py::module& {
