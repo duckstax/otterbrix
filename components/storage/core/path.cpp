@@ -29,6 +29,11 @@ bool path_t::element_t::operator== (const element_t &e) const {
     return _key ? (_key == e._key) : (_index == e._index);
 }
 
+path_t::element_t &path_t::element_t::operator=(path_t::element_t &&other) {
+    this->~element_t();
+    return *new(this) element_t(std::move(other));
+}
+
 bool path_t::element_t::is_key() const {
     return _key != nullptr;
 }
@@ -115,11 +120,11 @@ void path_t::drop(size_t num_to_drop_from_start) {
     _path.erase(_path.begin(), _path.begin() + num_to_drop_from_start);
 }
 
-const small_vector_t<path_t::element_t, 4> &path_t::path() const {
+const small_vector<path_t::element_t, 4> &path_t::path() const {
     return _path;
 }
 
-small_vector_t<path_t::element_t, 4> &path_t::path() {
+small_vector<path_t::element_t, 4> &path_t::path() {
     return _path;
 }
 

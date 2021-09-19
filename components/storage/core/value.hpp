@@ -101,8 +101,7 @@ namespace storage { namespace impl {
 
     protected:
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
-        :_byte {(uint8_t)((tag<<4) | tiny),
-                (uint8_t)byte1}
+            : _byte {(uint8_t)((tag<<4) | tiny), (uint8_t)byte1}
         { }
 
         static const value_t* find_root(slice_t) noexcept PURE;

@@ -1,6 +1,5 @@
 #include "json_encoder.hpp"
 #include "storage_impl.hpp"
-#include "small_vector.hpp"
 #include "parse_date.hpp"
 #include <algorithm>
 #include "better_assert.hpp"
@@ -222,7 +221,7 @@ void json_encoder_t::write_dict(const dict_t *dict) {
             const value_t *value;
             bool operator< (const kv &other) const  { return key < other.key; }
         };
-        small_vector_t<kv, 4> items;
+        small_vector<kv, 4> items;
         items.reserve(dict->count());
         for (auto iter = dict->begin(); iter; ++iter)
             items.push_back({iter.key_string(), iter.value()});

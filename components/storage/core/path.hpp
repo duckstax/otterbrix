@@ -1,11 +1,13 @@
 #pragma once
 
 #include "dict.hpp"
-#include "small_vector.hpp"
 #include "function_ref.hpp"
 #include <iosfwd>
 #include <memory>
 #include <string>
+#include <boost/container/small_vector.hpp>
+
+using boost::container::small_vector;
 
 namespace storage { namespace impl {
 
@@ -23,6 +25,7 @@ public:
         element_t(int32_t array_index);
         element_t(const element_t &e);
         bool operator== (const element_t &e) const;
+        element_t &operator=(element_t &&other);
         bool is_key() const;
         dict_t::key_t& key() const;
         slice_t key_str() const;
@@ -53,8 +56,8 @@ public:
 
     void drop(size_t num_to_drop_from_start);
 
-    const small_vector_t<element_t, 4>& path() const;
-    small_vector_t<element_t, 4>& path();
+    const small_vector<element_t, 4>& path() const;
+    small_vector<element_t, 4>& path();
     bool empty() const;
     size_t size() const;
 
@@ -75,7 +78,7 @@ private:
     using each_component_callback = function_ref<bool(char, slice_t, int32_t)>;
     static void for_each_component(slice_t in, bool at_start, each_component_callback);
 
-    small_vector_t<element_t, 4> _path;
+    small_vector<element_t, 4> _path;
 };
 
 } }

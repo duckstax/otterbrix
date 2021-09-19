@@ -25,7 +25,7 @@ struct mem_entry_t
     bool operator< (const mem_entry_t &other) const  { return end_of_range < other.end_of_range; }
 };
 
-using memory_map_t = small_vector_t<mem_entry_t, 10>;
+using memory_map_t = small_vector<mem_entry_t, 10>;
 
 static memory_map_t *memory_map;
 static std::mutex mutex;

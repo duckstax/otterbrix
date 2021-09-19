@@ -1,10 +1,12 @@
 #pragma once
 
 #include "slice.hpp"
-#include "small_vector.hpp"
 #include <stdio.h>
 #include <vector>
+#include <boost/container/small_vector.hpp>
 #include "better_assert.hpp"
+
+using boost::container::small_vector;
 
 namespace storage {
 
@@ -103,7 +105,7 @@ private:
     void assert_length_correct() const;
 
     slice_t _available;
-    small_vector_t<slice_t, 4> _chunks;
+    small_vector<slice_t, 4> _chunks;
     size_t _chunk_size;
     size_t _length {0};
     FILE* _output_file;
