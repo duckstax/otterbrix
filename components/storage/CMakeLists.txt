@@ -127,9 +127,6 @@ target_include_directories(
         tree
 )
 
-add_subdirectory(test)
-
-
 if (DEV_MODE)
-#    add_subdirectory(test)
+    add_subdirectory(test)
 endif()
