@@ -14,8 +14,6 @@ struct alloc_slice_t;
 
 }
 
-extern "C" {
-
 struct slice_t_c
 {
     const void *buf;
@@ -68,8 +66,6 @@ static inline void release_slice_result_c(slice_result_t_c s) noexcept {
 }
 
 void wipe_memory(void *dst, size_t size) noexcept;
-
-}
 
 PURE static inline bool operator== (slice_t_c s1, slice_t_c s2) { return is_equal_slice_c(s1, s2); }
 PURE static inline bool operator!= (slice_t_c s1, slice_t_c s2) { return !(s1 == s2); }

@@ -3,11 +3,9 @@
 #include <type_traits>
 
 #ifndef _MSC_VER
-extern "C" {
 extern int __builtin_popcount(unsigned int);
 extern int __builtin_popcountl(unsigned long);
 extern int __builtin_popcountll(unsigned long long);
-}
 #endif
 
 namespace storage {

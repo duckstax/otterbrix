@@ -488,11 +488,6 @@ void shared_key_scope_free(shared_key_scope scope) {
     delete (scope_t*) scope;
 }
 
-extern "C" {
-    shared_keys_t_c shared_keys_create() noexcept;
-    shared_keys_t_c shared_keys_create_from_state_data(slice_t_c data) noexcept;
-}
-    
 shared_keys_t_c shared_keys_create() noexcept {
     return shared_keys_new();
 }

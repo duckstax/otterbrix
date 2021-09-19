@@ -8,8 +8,6 @@
 #include "deep_iterator.hpp"
 #include "doc.hpp"
 
-extern "C" {
-
 namespace storage {
 
 using encode_format = storage::impl::encode_format;
@@ -429,8 +427,6 @@ static inline void mutable_dict_set_array(mutable_dict_t_c d, slice_t_c key, arr
 }
 static inline void mutable_dict_set_dict(mutable_dict_t_c d, slice_t_c key, dict_t_c val) {
     slot_set_value(mutable_dict_set(d, key), (value_t_c)val);
-}
-
 }
 
 }
