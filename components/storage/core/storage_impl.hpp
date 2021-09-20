@@ -14,8 +14,7 @@ namespace storage { namespace impl {
 
 enum class encode_format {
     internal,
-    json,
-    json5
+    json
 };
 
 
@@ -54,7 +53,6 @@ inline encoder_impl_t::encoder_impl_t(encode_format format, size_t reserve_size,
         encoder->unique_strings(unique_strings);
     } else {
         json_encoder.reset(new json_encoder_t(reserve_size));
-        json_encoder->set_json5(format == encode_format::json5);
     }
 }
 

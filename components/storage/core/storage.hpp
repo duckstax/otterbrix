@@ -43,9 +43,8 @@ public:
     inline dict_t as_dict() const;
 
     inline alloc_slice_t to_string() const;
-    inline alloc_slice_t to_json(bool json5 = false, bool canonical = false) const;
+    inline alloc_slice_t to_json(bool canonical = false) const;
     inline std::string to_json_string() const         { return std::string(to_json()); }
-    inline alloc_slice_t to_json5() const             { return to_json(true); }
     inline std::string to_std_string() const          { return as_string().as_string(); }
 
     explicit operator bool() const                    { return _val != nullptr; }
@@ -466,12 +465,6 @@ public:
 };
 
 
-class json5_encoder_t : public encoder_t {
-public:
-    json5_encoder_t()                     : encoder_t(encode_format::json5) {}
-};
-
-
 class shared_encoder_t : public encoder_t {
 public:
     explicit shared_encoder_t(encoder_t_c enc)  : encoder_t(enc) {}
@@ -526,8 +519,8 @@ inline dict_t value_t::as_dict() const            { return value_as_dict(_val); 
 
 inline alloc_slice_t value_t::to_string() const   { return value_to_string(_val); }
 
-inline alloc_slice_t value_t::to_json(bool json5, bool canonical) const {
-    return value_to_jsonx(_val, json5, canonical);
+inline alloc_slice_t value_t::to_json(bool canonical) const {
+    return value_to_json(_val, canonical);
 }
 
 inline value_t value_t::operator[] (const key_path_t &kp) const {

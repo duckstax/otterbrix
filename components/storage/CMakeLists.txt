@@ -37,7 +37,6 @@ set( ${PROJECT_NAME}_HEADERS
         support/endianness.hpp
         support/exception.hpp
         support/function_ref.hpp
-        support/json5.hpp
         support/json_encoder.hpp
         support/num_conversion.hpp
         support/parse_date.hpp
@@ -84,7 +83,6 @@ set(${PROJECT_NAME}_SOURCES
         support/concurrent_arena.cpp
         support/concurrent_map.cpp
         support/exception.cpp
-        support/json5.cpp
         support/json_encoder.cpp
         support/num_conversion.cpp
         support/parse_date.cpp

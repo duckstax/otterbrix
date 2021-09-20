@@ -227,18 +227,12 @@ shared_keys_t* value_t::shared_keys() const noexcept {
     return doc_t::shared_keys(this);
 }
 
-template <int VER>
 alloc_slice_t value_t::to_json(bool canonical) const {
     json_encoder_t encoder;
-    if (VER >= 5)
-        encoder.set_json5(true);
     encoder.set_canonical(canonical);
     encoder.write_value(this);
     return encoder.finish();
 }
-
-template alloc_slice_t value_t::to_json<1>(bool canonical) const;
-template alloc_slice_t value_t::to_json<5>(bool canonical) const;
 
 std::string value_t::to_json_string() const {
     return to_json().as_string();

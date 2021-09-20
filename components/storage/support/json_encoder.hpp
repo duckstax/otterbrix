@@ -12,7 +12,6 @@ class json_encoder_t {
 public:
     json_encoder_t(size_t reserve_output_size = 256);
 
-    void set_json5(bool json5);
     void set_canonical(bool canonical);
 
     bool empty() const;
@@ -85,7 +84,6 @@ private:
     }
 
     writer_t _out;
-    bool _json5 {false};
     bool _canonical {false};
     bool _first {true};
 };

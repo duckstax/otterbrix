@@ -82,10 +82,7 @@ value_t_c value_from_data(slice_t_c data, trust_type trust) noexcept PURE;
 slice_result_t_c data_convert_json(slice_t_c json, error_code *out_error) noexcept;
 slice_result_t_c data_dump(slice_t_c data) noexcept;
 
-slice_result_t_c value_to_json(value_t_c) noexcept;
-slice_result_t_c value_to_json5(value_t_c v) noexcept;
-slice_result_t_c value_to_jsonx(value_t_c v, bool json5, bool canonical_form) noexcept;
-slice_result_t_c json5_to_json(slice_t_c json5, slice_result_t_c *out_error_message, size_t *out_error_pos, error_code *out_error) noexcept;
+slice_result_t_c value_to_json(value_t_c v, bool canonical_form = false) noexcept;
 
 const char* dump(value_t_c v) noexcept;
 const char* dump_data(slice_t_c data) noexcept;

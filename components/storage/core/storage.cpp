@@ -2,7 +2,6 @@
 #include "mutable_dict.h"
 #include "json_delta.hpp"
 #include "storage.h"
-#include "json5.hpp"
 #include "better_assert.hpp"
 
 #define CATCH_ERROR(out_error) \
@@ -160,12 +159,11 @@ value_t_c value_new_data(slice_t_c data) noexcept {
     return nullptr;
 }
 
-slice_result_t_c value_to_jsonx(value_t_c v, bool json5, bool canonical_form) noexcept
+slice_result_t_c value_to_json(value_t_c v, bool canonical_form) noexcept
 {
     if (v) {
         try {
             json_encoder_t encoder;
-            encoder.set_json5(json5);
             encoder.set_canonical(canonical_form);
             encoder.write_value(v);
             return to_slice_result(encoder.finish());
@@ -174,40 +172,10 @@ slice_result_t_c value_to_jsonx(value_t_c v, bool json5, bool canonical_form) no
     return {nullptr, 0};
 }
 
-slice_result_t_c value_to_json(value_t_c v) noexcept {
-    return value_to_jsonx(v, false, false);
-}
-
-slice_result_t_c value_to_json5(value_t_c v) noexcept {
-    return value_to_jsonx(v, true,  false);
-}
-
 slice_result_t_c data_convert_json(slice_t_c json, error_code *out_error) noexcept {
     encoder_impl_t e(encode_format::internal, json.size);
     encoder_convert_json(&e, json);
     return encoder_finish(&e, out_error);
-}
-
-slice_result_t_c json5_to_json(slice_t_c json5, slice_result_t_c *out_error_message, size_t *out_error_pos, error_code *out_error) noexcept {
-    alloc_slice_t error_message;
-    size_t error_pos = 0;
-    try {
-        std::string json = convert_json5((std::string((char*)json5.buf, json5.size)));
-        return to_slice_result(alloc_slice_t(json));
-    } catch (const json5_error &x) {
-        error_message = alloc_slice_t(x.what());
-        error_pos = x.input_pos;
-        if (out_error)
-            *out_error = error_code::json_error;
-    } catch (const std::exception &x) {
-        error_message = alloc_slice_t(x.what());
-        record_error(x, out_error);
-    }
-    if (out_error_message)
-        *out_error_message = to_slice_result(std::move(error_message));
-    if (out_error_pos)
-        *out_error_pos = error_pos;
-    return {};
 }
 
 slice_result_t_c data_dump(slice_t_c data) noexcept {
@@ -928,7 +896,7 @@ bool encode_applying_json_delta(value_t_c old, slice_t_c json_delta, encoder_t_c
         encoder_t *enc = encoder->encoder.get();
         if (!enc)
             exception_t::_throw(error_code::encode_error, "encode_applying_json_delta cannot encode JSON");
-        json_delta_t::apply(old, json_delta, false, *enc);
+        json_delta_t::apply(old, json_delta, *enc);
         return true;
     } catch (const std::exception &x) {
         encoder->record_exception(x);

@@ -13,11 +13,11 @@ public:
     static size_t min_string_diff_length;
     static float text_diff_timeout;
 
-    static alloc_slice_t create(const value_t *old, const value_t *nuu, bool json5 = false);
+    static alloc_slice_t create(const value_t *old, const value_t *nuu);
     static bool create(const value_t *old, const value_t *nuu, json_encoder_t &enc);
 
-    static alloc_slice_t apply(const value_t *old, slice_t json_delta, bool is_json5 = false);
-    static void apply(const value_t *old, slice_t json_delta, bool is_json5, encoder_t &enc);
+    static alloc_slice_t apply(const value_t *old, slice_t json_delta);
+    static void apply(const value_t *old, slice_t json_delta, encoder_t &enc);
 
 private:
     struct path_item;

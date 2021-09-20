@@ -1,7 +1,6 @@
 #include "json_delta.hpp"
 #include "json_encoder.hpp"
 #include "json_converter.hpp"
-#include "json5.hpp"
 #include "exception.hpp"
 #include "temp_array.hpp"
 #include "diff_match_patch.hpp"
@@ -36,9 +35,8 @@ struct json_delta_t::path_item {
 };
 
 
-alloc_slice_t json_delta_t::create(const value_t *old, const value_t *nuu, bool json5) {
+alloc_slice_t json_delta_t::create(const value_t *old, const value_t *nuu) {
     json_encoder_t enc;
-    enc.set_json5(json5);
     create(old, nuu, enc);
     return enc.finish();
 }
@@ -171,19 +169,14 @@ bool json_delta_t::_write(const value_t *old, const value_t *nuu, path_item *pat
     return true;
 }
 
-alloc_slice_t json_delta_t::apply(const value_t *old, slice_t json_delta, bool is_json5) {
+alloc_slice_t json_delta_t::apply(const value_t *old, slice_t json_delta) {
     encoder_t enc;
-    apply(old, json_delta, is_json5, enc);
+    apply(old, json_delta, enc);
     return enc.finish();
 }
 
-void json_delta_t::apply(const value_t *old, slice_t json_delta, bool is_json5, encoder_t &enc) {
+void json_delta_t::apply(const value_t *old, slice_t json_delta, encoder_t &enc) {
     assert_precondition(json_delta);
-    std::string json5;
-    if (is_json5) {
-        json5 = convert_json5(std::string(json_delta));
-        json_delta = slice_t(json5);
-    }
     auto sk = old->shared_keys();
     alloc_slice_t data = json_converter_t::convert_json(json_delta, sk);
     scope_t scope(data, sk);

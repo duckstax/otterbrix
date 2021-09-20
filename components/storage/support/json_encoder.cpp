@@ -6,24 +6,9 @@
 
 namespace storage { namespace impl {
 
-static inline bool can_be_unquoted_json5_key(slice_t key) {
-    if (key.size == 0 || isdigit(key[0]))
-        return false;
-    for (unsigned i = 0; i < key.size; i++) {
-        if (!isalnum(key[i]) && key[i] != '_' && key[i] != '$')
-            return false;
-    }
-    return true;
-}
-
-
 json_encoder_t::json_encoder_t(size_t reserve_output_size)
     : _out(reserve_output_size)
 {}
-
-void json_encoder_t::set_json5(bool json5) {
-    _json5 = json5;
-}
 
 void json_encoder_t::set_canonical(bool canonical) {
     _canonical = canonical;
@@ -128,12 +113,7 @@ void json_encoder_t::write_data(slice_t d) {
 
 void json_encoder_t::write_key(slice_t s) {
     assert_precondition(s);
-    if (_json5 && can_be_unquoted_json5_key(s)) {
-        comma();
-        _out.write((char*)s.buf, s.size);
-    } else {
-        write_string(s);
-    }
+    write_string(s);
     _out << ':';
     _first = true;
 }
