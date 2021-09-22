@@ -1,7 +1,7 @@
 #include "doc.hpp"
 #include "shared_keys.hpp"
 #include "pointer.hpp"
-#include "json_converter.hpp"
+#include "json_coder.hpp"
 #include "exception.hpp"
 #include "mutable_dict.h"
 #include "mutable_array.h"
@@ -249,7 +249,7 @@ retained_t<doc_t> doc_t::from_slice(const alloc_slice_t &slice, trust_type trust
 }
 
 retained_t<doc_t> doc_t::from_json(slice_t json, shared_keys_t *sk) {
-    return new doc_t(json_converter_t::convert_json(json, sk), trust_type::trusted, sk);
+    return new doc_t(json_coder::from_json(json, sk), trust_type::trusted, sk);
 }
 
 retained_const_t<doc_t> doc_t::containing(const value_t *src) noexcept {

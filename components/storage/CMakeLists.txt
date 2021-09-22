@@ -9,8 +9,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/doc.hpp
         core/encoder.hpp
         core/internal.hpp
-        core/json_converter.hpp
-        core/json_delta.hpp
         core/mutable.hpp
         core/path.hpp
         core/pointer.hpp
@@ -20,6 +18,8 @@ set( ${PROJECT_NAME}_HEADERS
         core/storage.hpp
         core/storage_impl.hpp
         core/value.hpp
+        json/json_delta.hpp
+        json/json_coder.hpp
         mutable/mutable_array.h
         mutable/mutable_array.hpp
         mutable/mutable_dict.h
@@ -36,7 +36,6 @@ set( ${PROJECT_NAME}_HEADERS
         support/endianness.hpp
         support/exception.hpp
         support/function_ref.hpp
-        support/json_encoder.hpp
         support/num_conversion.hpp
         support/parse_date.hpp
         support/platform_compat.hpp
@@ -64,8 +63,6 @@ set(${PROJECT_NAME}_SOURCES
         core/dict.cpp
         core/doc.cpp
         core/encoder.cpp
-        core/json_converter.cpp
-        core/json_delta.cpp
         core/path.cpp
         core/pointer.cpp
         core/shared_keys.cpp
@@ -73,6 +70,8 @@ set(${PROJECT_NAME}_SOURCES
         core/storage.cpp
         core/value.cpp
         core/value_dump.cpp
+        json/json_delta.cpp
+        json/json_coder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
         mutable/mutable_value.cpp
@@ -82,7 +81,6 @@ set(${PROJECT_NAME}_SOURCES
         support/concurrent_arena.cpp
         support/concurrent_map.cpp
         support/exception.cpp
-        support/json_encoder.cpp
         support/num_conversion.cpp
         support/parse_date.cpp
         support/ref_counted.cpp
@@ -119,6 +117,7 @@ target_include_directories(
         PUBLIC
         "${PROJECT_SOURCE_DIR}/components/storage/"
         core
+        json
         mutable
         support
         tree

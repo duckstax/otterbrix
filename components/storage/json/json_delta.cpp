@@ -1,6 +1,5 @@
 #include "json_delta.hpp"
-#include "json_encoder.hpp"
-#include "json_converter.hpp"
+#include "json_coder.hpp"
 #include "exception.hpp"
 #include "temp_array.hpp"
 #include "diff_match_patch.hpp"
@@ -178,7 +177,7 @@ alloc_slice_t json_delta_t::apply(const value_t *old, slice_t json_delta) {
 void json_delta_t::apply(const value_t *old, slice_t json_delta, encoder_t &enc) {
     assert_precondition(json_delta);
     auto sk = old->shared_keys();
-    alloc_slice_t data = json_converter_t::convert_json(json_delta, sk);
+    alloc_slice_t data = json_coder::from_json(json_delta, sk);
     scope_t scope(data, sk);
     const value_t *delta = value_t::from_trusted_data(data);
     json_delta_t(enc)._apply(old, delta);

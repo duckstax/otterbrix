@@ -9,7 +9,7 @@
 #include "exception.hpp"
 #include "varint.hpp"
 #include "platform_compat.hpp"
-#include "json_encoder.hpp"
+#include "json_coder.hpp"
 #include "parse_date.hpp"
 #include <math.h>
 #include "better_assert.hpp"

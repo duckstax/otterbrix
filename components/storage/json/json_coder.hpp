@@ -1,12 +1,24 @@
 #pragma once
 
-#include "writer.hpp"
-#include "value.hpp"
 #include "exception.hpp"
 #include "num_conversion.hpp"
+#include "value.hpp"
+#include "encoder.hpp"
+#include "slice.hpp"
 #include <stdio.h>
 
+namespace boost { namespace json {
+class value;
+} }
+
 namespace storage { namespace impl {
+
+class json_coder {
+public:
+    static alloc_slice_t from_json(encoder_t &enc, slice_t json);
+    static alloc_slice_t from_json(slice_t json, shared_keys_t *sk = nullptr);
+};
+
 
 class json_encoder_t {
 public:
@@ -87,5 +99,6 @@ private:
     bool _canonical {false};
     bool _first {true};
 };
+
 
 } }

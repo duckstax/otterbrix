@@ -4,9 +4,8 @@
 #include "array.hpp"
 #include "dict.hpp"
 #include "encoder.hpp"
-#include "json_converter.hpp"
 #include "shared_keys.hpp"
-#include "json_encoder.hpp"
+#include "json_coder.hpp"
 #include "exception.hpp"
 #include <memory>
 
@@ -24,7 +23,6 @@ struct encoder_impl_t {
     std::string error_message;
     std::unique_ptr<encoder_t> encoder;
     std::unique_ptr<json_encoder_t> json_encoder;
-    std::unique_ptr<json_converter_t> json_converter;
     void* extra_info {nullptr};
 
     encoder_impl_t(encode_format format, size_t reserve_size = 0, bool unique_strings = true);
@@ -89,8 +87,6 @@ inline void encoder_impl_t::record_exception(const std::exception &x) noexcept {
 inline void encoder_impl_t::reset() {
     if (encoder)
         encoder->reset();
-    if (json_converter)
-        json_converter->reset();
     if (json_encoder) {
         json_encoder->reset();
     }

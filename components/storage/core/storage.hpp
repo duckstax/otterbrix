@@ -29,6 +29,7 @@ using impl_shared_keys_t = storage::impl::shared_keys_t*;
 using impl_key_path_t = storage::impl::path_t*;
 using impl_deep_iterator_t = storage::impl::deep_iterator_t*;
 using impl_doc_t = const storage::impl::doc_t*;
+using json_coder = storage::impl::json_coder;
 
 using time_stamp = int64_t;
 constexpr time_stamp time_stamp_none = INT64_MIN;
@@ -177,7 +178,6 @@ public:
     class iterator_t : private impl::dict_iterator_t {
     public:
         iterator_t(dict_t dict);
-        //iterator_t(const dict_iterator_t &i); //delete
         uint32_t count() const;
         value_t key() const;
         slice_t key_string() const;

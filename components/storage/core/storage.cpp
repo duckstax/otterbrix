@@ -301,11 +301,6 @@ dict_t::iterator_t::iterator_t(dict_t dict) {
     dict_iterator_t(static_cast<impl_dict_t>(dict));
 }
 
-//delete
-//dict_t::iterator_t::iterator_t(const dict_iterator_t &i)
-//    : dict_iterator_t(i)
-//{}
-
 uint32_t dict_t::iterator_t::count() const {
     return dict_iterator_t::count();
 }
@@ -981,18 +976,8 @@ bool encoder_t::convert_json(nonnull_slice json) {
     if (!_enc->has_error()) {
         try {
             if (_enc->is_internal()) {
-                auto jc = _enc->json_converter.get();
-                if (jc) {
-                    jc->reset();
-                } else {
-                    jc = new impl::json_converter_t(*_enc->encoder);
-                    _enc->json_converter.reset(jc);
-                }
-                if (jc->encode_json(json)) {
+                if (json_coder::from_json(json)) {
                     return true;
-                } else {
-                    _enc->error = jc->error();
-                    _enc->error_message = jc->error_message();
                 }
             } else {
                 _enc->json_encoder->write_json(json);
