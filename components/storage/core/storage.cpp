@@ -1,907 +1,1163 @@
+#include "storage.hpp"
 #include "mutable_array.h"
 #include "mutable_dict.h"
 #include "json_delta.hpp"
-#include "storage.h"
 #include "better_assert.hpp"
 
 #define CATCH_ERROR(out_error) \
-    catch (const std::exception &x) { record_error(x, out_error); }
+    catch (const std::exception &x) { storage::impl::record_error(x, out_error); }
 
 #define ENCODER_DO(E, METHOD) \
-    (E->is_internal() ? E->encoder->METHOD : E->json_encoder->METHOD)
+    E->is_internal() ? E->encoder->METHOD : E->json_encoder->METHOD
 
 #define ENCODER_TRY(E, METHOD) \
     try{ \
-    if (!E->has_error()) { \
-    ENCODER_DO(E, METHOD); \
-    return true; \
-} \
-} catch (const std::exception &x) { \
-    E->record_exception(x); \
-} \
+        if (!E->has_error()) { \
+            ENCODER_DO(E, METHOD); \
+            return true; \
+        } \
+    } catch (const std::exception &x) { \
+        E->record_exception(x); \
+    } \
     return false;
-
-
-using namespace storage::impl;
 
 namespace storage {
 
-const value_t_c null_value_c  = storage::impl::value_t::null_value;
-const array_t_c empty_array_c = storage::impl::array_t::empty_array;
-const dict_t_c empty_dict_c   = storage::impl::dict_t::empty_dict;
+const impl_value_t null_value  = storage::impl::value_t::null_value;
+const impl_array_t empty_array = storage::impl::array_t::empty_array;
+const impl_dict_t empty_dict   = storage::impl::dict_t::empty_dict;
 
 
-static slice_result_t_c to_slice_result(alloc_slice_t &&s) {
-    s.retain();
-    return {(void*)s.buf, s.size};
+value_t::value_t(impl_value_t v)
+    : _val(v)
+{}
+
+value_t value_t::null() {
+    return value_t(null_value);
 }
 
-value_t_c value_from_data(slice_t_c data, trust_type trust) noexcept {
-    return trust == trust_type::trusted ? value_t::from_trusted_data(data) : value_t::from_data(data);
+std::string value_t::to_json_string() const {
+    return std::string(to_json());
 }
 
-const char* dump(value_t_c v) noexcept {
-    slice_result_t_c json = value_to_json(v);
-    auto cstr = (char*)malloc(json.size + 1);
-    memcpy(cstr, json.buf, json.size);
-    cstr[json.size] = 0;
-    return cstr;
+std::string value_t::to_std_string() const {
+    return as_string().as_string();
 }
 
-const char* dump_data(slice_t_c data) noexcept {
-    return dump(value_t::from_data(data));
+value_t::operator bool() const {
+    return _val != nullptr;
 }
 
-value_type value_get_type(value_t_c v) noexcept {
-    if (_usually_false(v == NULL))
-        return value_type::undefined;
-    auto type = v->type();
-    if (_usually_false(type == value_type::null) && v->is_undefined())
-        type = value_type::undefined;
+bool value_t::operator!() const {
+    return _val == nullptr;
+}
+
+bool value_t::operator==(value_t v) const {
+    return _val == v._val;
+}
+
+bool value_t::operator==(impl_value_t v) const {
+    return _val == v;
+}
+
+bool value_t::operator!=(value_t v) const {
+    return _val != v._val;
+}
+
+bool value_t::operator!=(impl_value_t v) const {
+    return _val != v;
+}
+
+bool value_t::is_equals(value_t v) const {
+    if (_val == nullptr)
+        return v._val == nullptr;
+    return _val->is_equal(v._val);
+}
+
+value_t &value_t::operator=(value_t v) {
+    _val = v._val;
+    return *this;
+}
+
+value_t &value_t::operator=(std::nullptr_t) {
+    _val = nullptr; return *this;
+}
+
+value_t value_t::from_data(slice_t data, trust_type trust) {
+    return trust == trust_type::trusted ? impl::value_t::from_trusted_data(data) : impl::value_t::from_data(data);
+}
+
+storage::value_t::operator impl_value_t() const {
+    return _val;
+}
+
+value_type value_t::type() const {
+    if (_val == nullptr) return value_type::undefined;
+    auto type = _val->type();
+    if (type == value_type::null && _val->is_undefined()) type = value_type::undefined;
     return type;
 }
 
-bool value_is_integer(value_t_c v) noexcept {
-    return v && v->is_int();
+bool value_t::is_integer() const {
+    return _val && _val->is_int();
 }
 
-bool value_is_unsigned(value_t_c v) noexcept {
-    return v && v->is_unsigned();
+bool value_t::is_unsigned() const {
+    return _val && _val->is_unsigned();
 }
 
-bool value_is_double(value_t_c v) noexcept {
-    return v && v->is_double();
+bool value_t::is_double() const {
+    return _val && _val->is_double();
 }
 
-bool value_as_bool(value_t_c v) noexcept {
-    return v && v->as_bool();
+bool value_t::is_mutable() const {
+    return _val && _val->is_mutable();
 }
 
-int64_t value_as_int(value_t_c v) noexcept {
-    return v ? v->as_int() : 0;
+bool value_t::as_bool() const {
+    return _val && _val->as_bool();
 }
 
-uint64_t value_as_unsigned(value_t_c v) noexcept {
-    return v ? v->as_unsigned() : 0;
+int64_t value_t::as_int() const {
+    return _val ? _val->as_int() : 0;
 }
 
-float value_as_float(value_t_c v) noexcept {
-    return v ? v->as_float() : 0.0f;
+uint64_t value_t::as_unsigned() const {
+    return _val ? _val->as_unsigned() : 0;
 }
 
-double value_as_double(value_t_c v) noexcept {
-    return v ? v->as_double() : 0.0;
+float value_t::as_float() const {
+    return _val ? _val->as_float() : 0.0f;
 }
 
-slice_t_c value_as_string(value_t_c v) noexcept {
-    return v ? (slice_t_c)v->as_string() : slice_null_c;
+double value_t::as_double() const {
+    return _val ? _val->as_double() : 0.0;
 }
 
-slice_t_c value_as_data(value_t_c v) noexcept {
-    return v ? (slice_t_c)v->as_data() : slice_null_c;
+time_stamp value_t::as_time_stamp() const {
+    return _val ? _val->as_time_stamp() : time_stamp_none;
 }
 
-array_t_c value_as_array(value_t_c v) noexcept {
-    return v ? v->as_array() : nullptr;
+slice_t value_t::as_string() const {
+    return _val ? static_cast<slice_t_c>(_val->as_string()) : slice_null_c;
 }
 
-dict_t_c value_as_dict(value_t_c v) noexcept {
-    return v ? v->as_dict() : nullptr;
+slice_t value_t::as_data() const {
+    return _val ? static_cast<slice_t_c>(_val->as_data()) : slice_null_c;
 }
 
-time_stamp value_as_timestamp(value_t_c v) noexcept {
-    return v ? v->as_time_stamp() : time_stamp_none;
+array_t value_t::as_array() const {
+    return _val ? _val->as_array() : nullptr;
 }
 
-value_t_c value_retain(value_t_c v) noexcept {
-    return retain(v);
+dict_t value_t::as_dict() const {
+    return _val ? _val->as_dict() : nullptr;
 }
 
-void value_release(value_t_c v) noexcept {
-    release(v);
+alloc_slice_t value_t::to_string() const {
+    return _val ? _val->to_string() : alloc_slice_t();
 }
 
-bool value_is_mutable(value_t_c v) noexcept {
-    return v && v->is_mutable();
+alloc_slice_t value_t::to_json(bool canonical) const {
+    return _val ? _val->to_json(canonical) : alloc_slice_t();
 }
 
-doc_t_c value_find_doc(value_t_c v) noexcept {
-    return v ? retain(doc_t::containing(v).get()) : nullptr;
+value_t value_t::operator[] (const key_path_t &kp) const {
+    return kp._path->eval(_val);
 }
 
-bool value_is_equals(value_t_c v1, value_t_c v2) noexcept {
-    if (_usually_true(v1 != nullptr))
-        return v1->is_equal(v2);
-    else
-        return v2 == nullptr;
+doc_t value_t::find_doc() const {
+    return doc_t(_val);
 }
 
-slice_result_t_c value_to_string(value_t_c v) noexcept {
-    if (v) {
-        try {
-            return to_slice_result(v->to_string());
-        } CATCH_ERROR(nullptr);
-    }
-    return {nullptr, 0};
+
+array_t::iterator_t::iterator_t(array_t array)
+    : array_iterator_t(static_cast<impl_array_t>(array))
+{}
+
+array_t::iterator_t::iterator_t(const array_iterator_t &i)
+    : array_iterator_t(i)
+{}
+
+value_t array_t::iterator_t::value() const {
+    return array_iterator_t::value();
 }
 
-value_t_c value_new_string(slice_t_c str) noexcept {
-    try {
-        return retain(internal::heap_value_t::create(str))->as_value();
-    } CATCH_ERROR(nullptr);
-    return nullptr;
+uint32_t array_t::iterator_t::count() const {
+    return array_iterator_t::count();
 }
 
-value_t_c value_new_data(slice_t_c data) noexcept {
-    try {
-        return retain(internal::heap_value_t::create_data(data))->as_value();
-    } CATCH_ERROR(nullptr);
-    return nullptr;
+bool array_t::iterator_t::next() {
+    auto& iter = *static_cast<array_iterator_t*>(this);
+    ++iter;
+    return (bool)iter;
 }
 
-slice_result_t_c value_to_json(value_t_c v, bool canonical_form) noexcept
+impl_value_t array_t::iterator_t::operator ->() const {
+    return impl_value_t(value());
+}
+
+value_t array_t::iterator_t::operator *() const {
+    return value();
+}
+
+storage::array_t::iterator_t::operator bool() const {
+    return (bool)value();
+}
+
+array_t::iterator_t &array_t::iterator_t::operator++() {
+    next();
+    return *this;
+}
+
+bool array_t::iterator_t::operator!=(const array_t::iterator_t &) {
+    return value() != nullptr;
+}
+
+value_t array_t::iterator_t::operator[](unsigned n) const {
+    return array_iterator_t::operator[](n);
+}
+
+
+array_t::array_t()
+    : value_t()
+{}
+
+array_t::array_t(impl_array_t a)
+    : value_t(a)
+{}
+
+array_t::operator impl_array_t() const {
+    return static_cast<impl_array_t>(_val);
+}
+
+array_t array_t::empty_array() {
+    return array_t(storage::empty_array);
+}
+
+value_t array_t::operator[](int index) const {
+    return get(index);
+}
+
+value_t array_t::operator[](const key_path_t &kp) const {
+    return value_t::operator[](kp);
+}
+
+array_t &array_t::operator=(array_t a) {
+    _val = a._val;
+    return *this;
+}
+
+array_t &array_t::operator=(std::nullptr_t) {
+    _val = nullptr;
+    return *this;
+}
+
+array_t::iterator_t array_t::begin() const {
+    return iterator_t(*this);
+}
+
+array_t::iterator_t array_t::end() const {
+    return iterator_t();
+}
+
+uint32_t array_t::count() const {
+    return _val ? static_cast<impl_array_t>(_val)->count() : 0;
+}
+
+bool array_t::empty() const {
+    return _val ? static_cast<impl_array_t>(_val)->count() : true;
+}
+
+value_t array_t::get(uint32_t index) const {
+    return _val ? static_cast<impl_array_t>(_val)->get(index) : nullptr;
+}
+
+
+dict_t::key_t::key_t(nonnull_slice string)
+    : key_t(alloc_slice_t(string))
+{}
+
+dict_t::key_t::key_t(alloc_slice_t string)
+    : _str(std::move(string))
+    , _key(impl::key_t(_str))
 {
-    if (v) {
-        try {
-            json_encoder_t encoder;
-            encoder.set_canonical(canonical_form);
-            encoder.write_value(v);
-            return to_slice_result(encoder.finish());
-        } CATCH_ERROR(nullptr);
-    }
-    return {nullptr, 0};
 }
 
-slice_result_t_c data_convert_json(slice_t_c json, error_code *out_error) noexcept {
-    encoder_impl_t e(encode_format::internal, json.size);
-    encoder_convert_json(&e, json);
-    return encoder_finish(&e, out_error);
+const alloc_slice_t &dict_t::key_t::string() const {
+    return _str;
 }
 
-slice_result_t_c data_dump(slice_t_c data) noexcept {
+storage::dict_t::key_t::operator const alloc_slice_t &() const {
+    return _str;
+}
+
+storage::dict_t::key_t::operator nonnull_slice() const {
+    return _str;
+}
+
+
+dict_t::iterator_t::iterator_t(dict_t dict) {
+    dict_iterator_t(static_cast<impl_dict_t>(dict));
+}
+
+//delete
+//dict_t::iterator_t::iterator_t(const dict_iterator_t &i)
+//    : dict_iterator_t(i)
+//{}
+
+uint32_t dict_t::iterator_t::count() const {
+    return dict_iterator_t::count();
+}
+
+value_t dict_t::iterator_t::key() const {
+    return dict_iterator_t::key();
+}
+
+slice_t dict_t::iterator_t::key_string() const {
+    return dict_iterator_t::key_string();
+}
+
+value_t dict_t::iterator_t::value() const {
+    return dict_iterator_t::value();
+}
+
+bool dict_t::iterator_t::next() {
+    auto& iter = *static_cast<dict_iterator_t*>(this);
+    ++iter;
+    return (bool)iter;
+}
+
+impl_value_t dict_t::iterator_t::operator ->() const {
+    return impl_value_t(value());
+}
+
+value_t dict_t::iterator_t::operator *() const {
+    return value();
+}
+
+storage::dict_t::iterator_t::operator bool() const {
+    return (bool)value();
+}
+
+dict_t::iterator_t &dict_t::iterator_t::operator++() {
+    next(); return *this;
+}
+
+bool dict_t::iterator_t::operator!=(const dict_t::iterator_t &) const {
+    return value() != nullptr;
+}
+
+
+dict_t::dict_t()
+    : value_t()
+{}
+
+dict_t::dict_t(impl_dict_t d)
+    : value_t(d)
+{}
+
+storage::dict_t::operator impl_dict_t() const {
+    return static_cast<impl_dict_t>(_val);
+}
+
+dict_t dict_t::empty_dict() {
+    return dict_t(storage::empty_dict);
+}
+
+value_t dict_t::get(const char *key) const {
+    return get(slice_t(key));
+}
+
+value_t dict_t::operator[](nonnull_slice key) const {
+    return get(key);
+}
+
+value_t dict_t::operator[](const char *key) const {
+    return get(key);
+}
+
+value_t dict_t::operator[](const key_path_t &kp) const {
+    return value_t::operator[](kp);
+}
+
+dict_t &dict_t::operator=(dict_t d) {
+    _val = d._val; return *this;
+}
+
+dict_t &dict_t::operator=(std::nullptr_t) {
+    _val = nullptr; return *this;
+}
+
+value_t dict_t::operator[](dict_t::key_t &key) const {
+    return get(key);
+}
+
+dict_t::iterator_t dict_t::begin() const {
+    return iterator_t(*this);
+}
+
+dict_t::iterator_t dict_t::end() const {
+    return iterator_t();
+}
+
+uint32_t dict_t::count() const {
+    return _val ? static_cast<impl_dict_t>(_val)->count() : 0;
+}
+
+bool dict_t::empty() const {
+    return _val ? static_cast<impl_dict_t>(_val)->empty() : true;
+}
+
+value_t dict_t::get(nonnull_slice key) const {
+    return _val ? static_cast<impl_dict_t>(_val)->get(key) : nullptr;
+}
+
+value_t dict_t::get(dict_t::key_t &key) const {
+    return get(static_cast<nonnull_slice>(key));
+}
+
+
+key_path_t::key_path_t(nonnull_slice spec, error_code *error) {
     try {
-        return to_slice_result(alloc_slice_t(value_t::dump(data)));
-    } CATCH_ERROR(nullptr);
-    return {nullptr, 0};
+        _path = new impl::path_t(spec);
+    } CATCH_ERROR(error);
 }
 
-uint32_t array_count(array_t_c a) noexcept {
-    return a ? a->count() : 0;
+key_path_t::key_path_t(key_path_t &&kp)
+    : _path(kp._path) {
+    kp._path = nullptr;
 }
 
-bool array_is_empty(array_t_c a) noexcept {
-    return a ? a->empty() : true;
+key_path_t &key_path_t::operator=(key_path_t &&kp) {
+    delete _path;
+    _path = kp._path;
+    kp._path = nullptr;
+    return *this;
 }
 
-value_t_c array_get(array_t_c a, uint32_t index) noexcept {
-    return a ? a->get(index) : nullptr;
+key_path_t::key_path_t(const key_path_t &kp)
+    : key_path_t(std::string(kp), nullptr)
+{}
+
+key_path_t::~key_path_t() {
+    delete _path;
 }
 
-void array_iterator_begin(array_t_c a, array_iterator_t_c* i) noexcept {
-    static_assert(sizeof(array_iterator_t_c) >= sizeof(array_t::iterator), "array_iterator_t_c is too small");
-    new (i) array_t::iterator(a);
+storage::key_path_t::operator bool() const {
+    return _path != nullptr;
 }
 
-uint32_t array_iterator_get_count(const array_iterator_t_c* i) noexcept {
-    return ((array_t::iterator*)i)->count();
+storage::key_path_t::operator impl_key_path_t() const {
+    return _path;
 }
 
-value_t_c array_iterator_get_value(const array_iterator_t_c* i) noexcept {
-    return ((array_t::iterator*)i)->value();
+value_t key_path_t::eval(value_t root) const {
+    return _path->eval(root);
 }
 
-value_t_c array_iterator_get_value_at(const array_iterator_t_c *i, uint32_t offset) noexcept {
-    return (*(array_t::iterator*)i)[offset];
-}
-
-bool array_iterator_next(array_iterator_t_c* i) noexcept {
+value_t key_path_t::eval(nonnull_slice specifier, value_t root, error_code *error) {
     try {
-        auto& iter = *(array_t::iterator*)i;
-        ++iter;
-        return (bool)iter;
-    } CATCH_ERROR(nullptr);
-    return false;
-}
-
-static mutable_array_t_c _new_mutable_array(array_t_c a, copy_flags flags) noexcept {
-    try {
-        return (mutable_array_t*)retain(mutable_array_t::new_array(a, copy_flags(flags)));
-    } CATCH_ERROR(nullptr);
+        auto key = key_path_t(specifier, error);
+        return key.eval(root);
+    } CATCH_ERROR(error);
     return nullptr;
 }
 
-mutable_array_t_c mutable_array_new(void) noexcept {
-    return _new_mutable_array(nullptr, copy_flags::deep_copy);
+key_path_t::operator std::string() const {
+    return _path->operator std::string();
 }
 
-mutable_array_t_c array_mutable_copy(array_t_c a, copy_flags flags) noexcept {
-    return a ? _new_mutable_array(a, flags) : nullptr;
+bool key_path_t::operator==(const key_path_t &kp) const {
+    if (_path == nullptr) return kp._path == nullptr;
+    return *_path == *kp._path;
 }
 
-mutable_array_t_c array_as_mutable(array_t_c a) noexcept {
-    return a ? a->as_mutable() : nullptr;
+
+deep_iterator_t::deep_iterator_t(value_t v)
+    : _i(new impl::deep_iterator_t(static_cast<impl_value_t>(v)))
+{}
+
+deep_iterator_t::~deep_iterator_t() {
+    delete _i;
 }
 
-array_t_c mutable_array_get_source(mutable_array_t_c a) noexcept {
-    return a ? a->source() : nullptr;
+value_t deep_iterator_t::value() const {
+    return _i->value();
 }
 
-bool mutable_array_is_changed(mutable_array_t_c a) noexcept {
-    return a && a->is_changed();
+slice_t deep_iterator_t::key() const {
+    return _i->key_string();
 }
 
-void mutable_array_set_changed(mutable_array_t_c a, bool c) noexcept {
-    if (a) a->set_changed(c);
+uint32_t deep_iterator_t::index() const {
+    return _i->index();
 }
 
-void mutable_array_resize(mutable_array_t_c a, uint32_t size) noexcept {
-    a->resize(size);
+value_t deep_iterator_t::parent() const {
+    return _i->parent();
 }
 
-slot_t_c mutable_array_set(mutable_array_t_c array, uint32_t index) noexcept {
-    return &array->setting(index);
+size_t deep_iterator_t::depth() const {
+    return _i->path().size();
 }
 
-slot_t_c mutable_array_append(mutable_array_t_c a) noexcept {
-    return &a->appending();
+alloc_slice_t deep_iterator_t::path_string() const {
+    return alloc_slice_t(_i->path_string());
 }
 
-void mutable_array_insert(mutable_array_t_c a, uint32_t first_index, uint32_t count) noexcept {
-    if (a) a->insert(first_index, count);
+alloc_slice_t deep_iterator_t::json_pointer() const {
+    return alloc_slice_t(_i->json_pointer());
 }
 
-void mutable_array_remove(mutable_array_t_c a, uint32_t first_index, uint32_t count) noexcept {
-    if(a) a->remove(first_index, count);
+void deep_iterator_t::skip_children() {
+    _i->skip_children();
 }
 
-mutable_array_t_c mutable_array_get_mutable_array(mutable_array_t_c a, uint32_t index) noexcept {
-    return a ? a->get_mutable_array(index) : nullptr;
+bool deep_iterator_t::next() {
+    _i->next();
+    return _i->value() != nullptr;
 }
 
-mutable_dict_t_c mutable_array_get_mutable_dict(mutable_array_t_c a, uint32_t index) noexcept {
-    return a ? a->get_mutable_dict(index) : nullptr;
+storage::deep_iterator_t::operator bool() const {
+    return value() != nullptr;
 }
 
-uint32_t dict_count(dict_t_c d)  noexcept {
-    return d ? d->count() : 0;
+deep_iterator_t &deep_iterator_t::operator++() {
+    next();
+    return *this;
 }
 
-bool dict_is_empty(dict_t_c d) noexcept {
-    return d ? d->empty() : true;
+
+shared_keys_t::shared_keys_t()
+    : _sk(nullptr)
+{}
+
+shared_keys_t::shared_keys_t(impl_shared_keys_t sk)
+    : _sk(retain(sk))
+{}
+
+shared_keys_t::~shared_keys_t() {
+    release(_sk);
 }
 
-value_t_c dict_get(dict_t_c d, slice_t_c key_string) noexcept {
-    return d ? d->get(key_string) : nullptr;
+shared_keys_t shared_keys_t::create() {
+    return shared_keys_t(retain(new impl::shared_keys_t()), 1);
 }
 
-void dict_iterator_begin(dict_t_c d, dict_iterator_t_c* i) noexcept {
-    static_assert(sizeof(dict_iterator_t_c) >= sizeof(dict_t::iterator), "dict_iterator_t_c is too small");
-    new (i) dict_t::iterator(d);
+bool shared_keys_t::load_state(slice_t data) {
+    return _sk->load_from(data);
 }
 
-value_t_c dict_iterator_get_key(const dict_iterator_t_c* i) noexcept {
-    return ((dict_t::iterator*)i)->key();
+bool shared_keys_t::load_state(value_t state) {
+    return _sk->load_from(state);
 }
 
-slice_t_c dict_iterator_get_key_string(const dict_iterator_t_c* i) noexcept {
-    return ((dict_t::iterator*)i)->key_string();
+alloc_slice_t shared_keys_t::state_data() const {
+    return _sk->state_data();
 }
 
-value_t_c dict_iterator_get_value(const dict_iterator_t_c* i) noexcept {
-    return ((dict_t::iterator*)i)->value();
+unsigned shared_keys_t::count() const {
+    return static_cast<unsigned>(_sk->count());
 }
 
-uint32_t dict_iterator_get_count(const dict_iterator_t_c* i) noexcept {
-    return ((dict_t::iterator*)i)->count();
+void shared_keys_t::revert_to_count(unsigned count) {
+    _sk->revert_to_count(count);
 }
 
-bool dict_iterator_next(dict_iterator_t_c* i) noexcept {
+storage::shared_keys_t::operator impl_shared_keys_t() const {
+    return _sk;
+}
+
+bool shared_keys_t::operator==(shared_keys_t other) const {
+    return _sk == other._sk;
+}
+
+shared_keys_t::shared_keys_t(const shared_keys_t &other) noexcept
+    : _sk(retain(other._sk))
+{}
+
+shared_keys_t::shared_keys_t(shared_keys_t &&other) noexcept
+    : _sk(other._sk) {
+    other._sk = nullptr;
+}
+
+shared_keys_t::shared_keys_t(impl_shared_keys_t sk, int)
+    : _sk(sk)
+{}
+
+void shared_keys_t::write_state(const encoder_t &enc) {
+    _sk->write_state(*enc.get_encoder());
+}
+
+shared_keys_t shared_keys_t::create(slice_t state) {
+    auto sk = create();
+    sk.load_state(state);
+    return sk;
+}
+
+shared_keys_t& shared_keys_t::operator= (const shared_keys_t &other) {
+    auto sk = retain(other._sk);
+    release(_sk);
+    _sk = sk;
+    return *this;
+}
+
+shared_keys_t& shared_keys_t::operator= (shared_keys_t &&other) noexcept {
+    release(_sk);
+    _sk = other._sk;
+    other._sk = nullptr;
+    return *this;
+}
+
+
+doc_t::doc_t(alloc_slice_t data, trust_type trust, shared_keys_t sk, slice_t extern_dest) noexcept
+    : _doc(retain(new impl::doc_t(data, trust, sk, extern_dest)))
+{}
+
+alloc_slice_t doc_t::dump(nonnull_slice data) {
     try {
-        auto& iter = *(dict_t::iterator*)i;
-        ++iter;
-        if (iter)
-            return true;
-        iter.~dict_iterator_t();
+        return alloc_slice_t(impl::value_t::dump(data));
     } CATCH_ERROR(nullptr);
-    return false;
+    return alloc_slice_t();
 }
 
-void dict_iterator_end(dict_iterator_t_c* i) noexcept {
-    ((dict_t::iterator*)i)->~dict_iterator_t();
+doc_t::doc_t()
+    : _doc(nullptr)
+{}
+
+doc_t::doc_t(impl_doc_t d, bool is_retain)
+    : _doc(d) {
+    if (is_retain) retain(_doc);
 }
 
-dict_key_t_c dict_key_init(slice_t_c string) noexcept {
-    dict_key_t_c key;
-    static_assert(sizeof(dict_key_t_c) >= sizeof(dict_t::key_t), "dict_key_t_c is too small");
-    new (&key) dict_t::key_t(string);
-    return key;
+doc_t::doc_t(const doc_t &other) noexcept
+    : _doc(retain(other._doc))
+{}
+
+doc_t::doc_t(doc_t &&other) noexcept
+    : _doc(other._doc) {
+    other._doc = nullptr;
 }
 
-slice_t_c dict_key_get_string(const dict_key_t_c *key) noexcept {
-    auto real_key = (const dict_t::key_t*)key;
-    return real_key->string();
+doc_t::~doc_t() {
+    release(_doc);
 }
 
-value_t_c dict_get_with_key(dict_t_c d, dict_key_t_c *k) noexcept {
-    if (!d)
-        return nullptr;
-    auto &key = *(dict_t::key_t*)k;
-    return d->get(key);
+slice_t doc_t::data() const {
+    return _doc ? _doc->data() : slice_t();
 }
 
-static mutable_dict_t_c _new_mutable_dict(dict_t_c d, copy_flags flags) noexcept {
+alloc_slice_t doc_t::alloced_data() const {
+    return _doc ? _doc->alloced_data() : alloc_slice_t();
+}
+
+shared_keys_t doc_t::shared_keys() const {
+    return _doc ? _doc->shared_keys() : nullptr;
+}
+
+value_t doc_t::root() const {
+    return _doc ? _doc->root() : nullptr;
+}
+
+storage::doc_t::operator bool() const {
+    return root() != nullptr;
+}
+
+array_t doc_t::as_array() const {
+    return root().as_array();
+}
+
+dict_t doc_t::as_dict() const {
+    return root().as_dict();
+}
+
+storage::doc_t::operator value_t() const {
+    return root();
+}
+
+storage::doc_t::operator dict_t() const {
+    return as_dict();
+}
+
+storage::doc_t::operator impl_dict_t() const {
+    return as_dict();
+}
+
+value_t doc_t::operator[](int index) const {
+    return as_array().get(index);
+}
+
+value_t doc_t::operator[](slice_t key) const {
+    return as_dict().get(key);
+}
+
+value_t doc_t::operator[](const char *key) const {
+    return as_dict().get(key);
+}
+
+value_t doc_t::operator[](const key_path_t &kp) const {
+    return root().operator[](kp);
+}
+
+bool doc_t::operator==(const doc_t &d) const {
+    return _doc == d._doc;
+}
+
+storage::doc_t::operator impl_doc_t() const {
+    return _doc;
+}
+
+impl_doc_t doc_t::detach() {
+    auto d = _doc;
+    _doc = nullptr;
+    return d;
+}
+
+doc_t doc_t::containing(value_t v) {
+    return doc_t(v ? retain(impl::doc_t::containing(v).get()) : nullptr, false);
+}
+
+bool doc_t::set_associated(void *p, const char *t) {
+    return _doc && const_cast<impl::doc_t*>(_doc)->set_associated(p, t);
+}
+
+void *doc_t::associated(const char *type) const {
+    return _doc ? _doc->get_associated(type) : nullptr;
+}
+
+doc_t::doc_t(impl_value_t v)
+    : _doc(v ? retain(impl::doc_t::containing(v).get()) : nullptr)
+{}
+
+doc_t doc_t::from_json(nonnull_slice json, error_code *out_error) {
     try {
-        return (mutable_dict_t*)retain(mutable_dict_t::new_dict(d, copy_flags(flags)));
-    } CATCH_ERROR(nullptr);
-    return nullptr;
-}
-
-mutable_dict_t_c mutable_dict_new(void) noexcept {
-    return _new_mutable_dict(nullptr, copy_flags::default_copy);
-}
-
-mutable_dict_t_c dict_mutable_copy(dict_t_c d, copy_flags flags) noexcept {
-    return d ? _new_mutable_dict(d, flags) : nullptr;
-}
-
-mutable_dict_t_c dict_as_mutable(dict_t_c d) noexcept {
-    return d ? d->as_mutable() : nullptr;
-}
-
-dict_t_c mutable_dict_get_source(mutable_dict_t_c d) noexcept {
-    return d ? d->source() : nullptr;
-}
-
-bool mutable_dict_is_changed(mutable_dict_t_c d) noexcept {
-    return d && d->is_changed();
-}
-
-void mutable_dict_set_changed(mutable_dict_t_c d, bool changed) noexcept {
-    if (d) d->set_changed(changed);
-}
-
-slot_t_c mutable_dict_set(mutable_dict_t_c dict, slice_t_c k) noexcept {
-    return &dict->setting(k);
-}
-
-void mutable_dict_remove(mutable_dict_t_c d, slice_t_c key) noexcept {
-    if(d) d->remove(key);
-}
-
-void mutable_dict_remove_all(mutable_dict_t_c d) noexcept {
-    if(d) d->remove_all();
-}
-
-mutable_array_t_c mutable_dict_get_mutable_array(mutable_dict_t_c d, slice_t_c key) noexcept {
-    return d ? d->get_mutable_array(key) : nullptr;
-}
-
-mutable_dict_t_c mutable_dict_get_mutable_dict(mutable_dict_t_c d, slice_t_c key) noexcept {
-    return d ? d->get_mutable_dict(key) : nullptr;
-}
-
-shared_keys_t_c shared_keys_new() noexcept {
-    return retain(new shared_keys_t());
-}
-
-shared_keys_t_c shared_keys_retain(shared_keys_t_c sk) noexcept {
-    return retain(sk);
-}
-
-void shared_keys_release(shared_keys_t_c sk) noexcept {
-    release(sk);
-}
-
-unsigned shared_keys_count(shared_keys_t_c sk) noexcept {
-    return (unsigned)sk->count();
-}
-
-bool shared_keys_load_state_data(shared_keys_t_c sk, slice_t_c d) noexcept {
-    return sk->load_from(d);
-}
-
-bool shared_keys_load_state(shared_keys_t_c sk, value_t_c s) noexcept {
-    return sk->load_from(s);
-}
-
-slice_result_t_c shared_keys_get_state_data(shared_keys_t_c sk) noexcept {
-    return to_slice_result(sk->state_data());
-}
-
-slice_t_c shared_keys_decode(shared_keys_t_c sk, int key) noexcept {
-    return sk->decode(key);
-}
-
-void shared_keys_revert_to_count(shared_keys_t_c sk, unsigned old_count) noexcept {
-    sk->revert_to_count(old_count);
-}
-
-void shared_keys_write_state(shared_keys_t_c sk, encoder_t_c e) noexcept {
-    assert_always(e->is_internal());
-    sk->write_state(*e->encoder);
-}
-
-int shared_keys_encode(shared_keys_t_c sk, slice_t_c key_str, bool add) noexcept {
-    int int_key;
-    if (!(add ? sk->encode_and_add(key_str, int_key) : sk->encode(key_str, int_key)))
-        int_key = -1;
-    return int_key;
-}
-
-shared_key_scope shared_key_scope_with_range(slice_t_c range, shared_keys_t_c sk) noexcept {
-    return (shared_key_scope) new scope_t(range, sk);
-}
-
-void shared_key_scope_free(shared_key_scope scope) {
-    delete (scope_t*) scope;
-}
-
-shared_keys_t_c shared_keys_create() noexcept {
-    return shared_keys_new();
-}
-
-shared_keys_t_c shared_keys_create_from_state_data(slice_t_c data) noexcept {
-    shared_keys_t_c keys = shared_keys_new();
-    if (keys)
-        shared_keys_load_state_data(keys, data);
-    return keys;
-}
-
-void slot_set_null(slot_t_c slot) noexcept {
-    slot->set(null_value_t());
-}
-
-void slot_set_bool(slot_t_c slot, bool v) noexcept {
-    slot->set(v);
-}
-
-void slot_set_int(slot_t_c slot, int64_t v) noexcept {
-    slot->set(v);
-}
-
-void slot_set_uint(slot_t_c slot, uint64_t v) noexcept {
-    slot->set(v);
-}
-
-void slot_set_float(slot_t_c slot, float v)noexcept {
-    slot->set(v);
-}
-
-void slot_set_double(slot_t_c slot, double v) noexcept {
-    slot->set(v);
-}
-
-void slot_set_string(slot_t_c slot, slice_t_c v) noexcept {
-    slot->set(v);
-}
-
-void slot_set_data(slot_t_c slot, slice_t_c v) noexcept {
-    slot->set_data(v);
-}
-
-void slot_set_value(slot_t_c slot, value_t_c v) noexcept {
-    slot->set(v);
-}
-
-deep_iterator_t_c deep_iterator_new(value_t_c v) noexcept {
-    return new deep_iterator_t(v);
-}
-
-void deep_iterator_free(deep_iterator_t_c i) noexcept {
-    delete i;
-}
-
-value_t_c deep_iterator_get_value(deep_iterator_t_c i) noexcept {
-    return i->value();
-}
-
-value_t_c deep_iterator_get_parent(deep_iterator_t_c i) noexcept {
-    return i->parent();
-}
-
-slice_t_c deep_iterator_get_key(deep_iterator_t_c i) noexcept {
-    return i->key_string();
-}
-
-uint32_t deep_iterator_get_index(deep_iterator_t_c i) noexcept {
-    return i->index();
-}
-
-size_t deep_iterator_get_depth(deep_iterator_t_c i) noexcept {
-    return i->path().size();
-}
-
-void deep_iterator_skip_children(deep_iterator_t_c i) noexcept {
-    i->skip_children();
-}
-
-bool deep_iterator_next(deep_iterator_t_c i) noexcept {
-    i->next();
-    return i->value() != nullptr;
-}
-
-void deep_iterator_get_path(deep_iterator_t_c i, path_component_t_c* *out_path, size_t *out_depth) noexcept {
-    static_assert(sizeof(path_component_t_c) == sizeof(deep_iterator_t::path_component_t),
-                  "path_component_t_c does not match path_component_t");
-    auto &path = i->path();
-    *out_path = (path_component_t_c*) path.data();
-    *out_depth = path.size();
-}
-
-slice_result_t_c deep_iterator_get_path_string(deep_iterator_t_c i) noexcept {
-    return to_slice_result(alloc_slice_t(i->path_string()));
-}
-
-slice_result_t_c deep_iterator_get_json_pointer(deep_iterator_t_c i) noexcept {
-    return to_slice_result(alloc_slice_t(i->json_pointer()));
-}
-
-key_path_t_c key_path_new(slice_t_c specifier, error_code *out_error) noexcept {
-    try {
-        return new path_t((std::string)(slice_t)specifier);
+        return doc_t(retain(impl::doc_t::from_json(json)), false);
     } CATCH_ERROR(out_error);
-    return nullptr;
+    return doc_t(nullptr, false);
 }
 
-void key_path_free(key_path_t_c path) noexcept {
-    delete path;
-}
-
-value_t_c key_path_eval(key_path_t_c path, value_t_c root) noexcept {
-    return path->eval(root);
-}
-
-value_t_c key_path_eval_once(slice_t_c specifier, value_t_c root, error_code *out_error) noexcept {
-    try {
-        return path_t::eval((std::string)(slice_t)specifier, root);
-    } CATCH_ERROR(out_error);
-    return nullptr;
-}
-
-slice_result_t_c key_path_to_string(key_path_t_c path) noexcept {
-    return to_slice_result(alloc_slice_t(std::string(*path)));
-}
-
-bool key_path_equals(key_path_t_c path1, key_path_t_c path2) noexcept {
-    return *path1 == *path2;
-}
-
-bool key_path_get_element(key_path_t_c path, size_t i, slice_t_c *out_key, int32_t *out_index) noexcept {
-    if (i >= path->size())
-        return false;
-    auto &element = (*path)[i];
-    *out_key = element.key_str();
-    *out_index = element.index();
-    return true;
-}
-
-encoder_t_c encoder_new(void) noexcept {
-    return encoder_new_with_options(encode_format::internal, 0, true);
-}
-
-encoder_t_c encoder_new_with_options(encode_format format, size_t reserve_size, bool unique_strings) noexcept {
-    return new encoder_impl_t(format, reserve_size, unique_strings);
-}
-
-encoder_t_c encoder_new_writing_to_file(FILE *output_file, bool unique_strings) noexcept {
-    return new encoder_impl_t(output_file, unique_strings);
-}
-
-void encoder_reset(encoder_t_c e) noexcept {
-    e->reset();
-}
-
-void encoder_free(encoder_t_c encodere) noexcept {
-    delete encodere;
-}
-
-void encoder_set_shared_keys(encoder_t_c e, shared_keys_t_c sk) noexcept {
-    if (e->is_internal())
-        e->encoder->set_shared_keys(sk);
-}
-
-void encoder_suppress_trailer(encoder_t_c e) noexcept {
-    if (e->is_internal())
-        e->encoder->suppress_trailer();
-}
-
-void encoder_amend(encoder_t_c e, slice_t_c base, bool reuse_strings, bool extern_pointers) noexcept {
-    if (e->is_internal() && base.size > 0) {
-        e->encoder->set_base(base, extern_pointers);
-        if(reuse_strings)
-            e->encoder->reuse_base_strings();
+doc_t& doc_t::operator=(const doc_t &other) {
+    if (other._doc != _doc) {
+        release(_doc);
+        _doc = retain(other._doc);
     }
+    return *this;
 }
 
-slice_t_c encoder_get_base(encoder_t_c e) noexcept {
-    if (e->is_internal())
-        return e->encoder->base();
+doc_t& doc_t::operator=(doc_t &&other) noexcept {
+    if (other._doc != _doc) {
+        release(_doc);
+        _doc = other._doc;
+        other._doc = nullptr;
+    }
+    return *this;
+}
+
+
+encoder_t::key_ref_t::key_ref_t(encoder_t &enc, slice_t key)
+    : _enc(enc)
+    , _key(key)
+{}
+
+void encoder_t::key_ref_t::operator= (bool value) {
+    _enc.write_key(_key);
+    _enc.write_bool(value);
+}
+
+
+encoder_t::encoder_t()
+    : _enc(new impl::encoder_impl_t(encode_format::internal, 0, true))
+{}
+
+encoder_t::encoder_t(encode_format format, size_t reserve_size, bool unique_strings)
+    : _enc(new impl::encoder_impl_t(format, reserve_size, unique_strings))
+{}
+
+encoder_t::encoder_t(FILE *file, bool unique_strings)
+    : _enc(new impl::encoder_impl_t(file, unique_strings))
+{}
+
+encoder_t::encoder_t(shared_keys_t sk)
+    : encoder_t() {
+    set_shared_keys(sk);
+}
+
+encoder_t::encoder_t(impl_encoder_t enc)
+    : _enc(enc)
+{}
+
+encoder_t::encoder_t(encoder_t &&enc)
+    : _enc(enc._enc) {
+    enc._enc = nullptr;
+}
+
+encoder_t::~encoder_t() {
+    delete _enc;
+}
+
+void encoder_t::detach() {
+    _enc = nullptr;
+}
+
+void encoder_t::set_shared_keys(shared_keys_t sk) {
+    if (_enc->is_internal())
+        _enc->encoder->set_shared_keys(sk);
+}
+
+slice_t encoder_t::base() const {
+    if (_enc->is_internal())
+        return _enc->encoder->base();
     return {};
 }
 
-size_t encoder_get_next_write_pos(encoder_t_c e) noexcept {
-    if (e->is_internal())
-        return e->encoder->next_write_pos();
+void encoder_t::suppress_trailer() {
+    if (_enc->is_internal())
+        _enc->encoder->suppress_trailer();
+}
+
+storage::encoder_t::operator impl_encoder_t() const {
+    return _enc;
+}
+
+bool encoder_t::write_raw(slice_t data) {
+    ENCODER_TRY(_enc, write_raw(data));
+}
+
+size_t encoder_t::next_write_pos() const {
+    if (_enc->is_internal())
+        return _enc->encoder->next_write_pos();
     return 0;
 }
 
-size_t encoder_bytes_written(encoder_t_c e) noexcept {
-    return ENCODER_DO(e, bytes_written_size());
-}
-
-intptr_t encoder_last_value_written(encoder_t_c e) {
-    if (e->is_internal())
-        return intptr_t(e->encoder->last_value_written());
+size_t encoder_t::finish_item() {
+    if (_enc->is_internal())
+        return _enc->encoder->finish_item();
     return 0;
 }
 
-void encoder_write_value_again(encoder_t_c e, intptr_t pre_written_value) {
-    if (e->is_internal())
-        e->encoder->write_value_again(encoder_t::pre_written_value(pre_written_value));
+encoder_t &encoder_t::operator<<(null_value_t) {
+    write_null();
+    return *this;
 }
 
-bool encoder_write_null(encoder_t_c e) noexcept {
-    ENCODER_TRY(e, write_null());
+encoder_t &encoder_t::operator<<(long long i) {
+    write_int(i);
+    return *this;
 }
 
-bool encoder_write_undefined(encoder_t_c e) noexcept {
-    ENCODER_TRY(e, write_undefined());
+encoder_t &encoder_t::operator<<(unsigned long long i) {
+    write_uint(i);
+    return *this;
 }
 
-bool encoder_write_bool(encoder_t_c e, bool b) noexcept {
-    ENCODER_TRY(e, write_bool(b));
+encoder_t &encoder_t::operator<<(long i) {
+    write_int(i);
+    return *this;
 }
 
-bool encoder_write_int(encoder_t_c e, int64_t i) noexcept {
-    ENCODER_TRY(e, write_int(i));
+encoder_t &encoder_t::operator<<(unsigned long i) {
+    write_uint(i);
+    return *this;
 }
 
-bool encoder_write_uint(encoder_t_c e, uint64_t u) noexcept {
-    ENCODER_TRY(e, write_uint(u));
+encoder_t &encoder_t::operator<<(int i) {
+    write_int(i);
+    return *this;
 }
 
-bool encoder_write_float(encoder_t_c e, float f) noexcept {
-    ENCODER_TRY(e, write_float(f));
+encoder_t &encoder_t::operator<<(unsigned int i) {
+    write_uint(i);
+    return *this;
 }
 
-bool encoder_write_double(encoder_t_c e, double d) noexcept {
-    ENCODER_TRY(e, write_double(d));
+encoder_t &encoder_t::operator<<(double d) {
+    write_double(d);
+    return *this;
 }
 
-bool encoder_write_string(encoder_t_c e, slice_t_c s) noexcept {
-    ENCODER_TRY(e, write_string(s));
+encoder_t &encoder_t::operator<<(float f) {
+    write_float(f);
+    return *this;
 }
 
-bool encoder_write_date_string(encoder_t_c e, time_stamp ts, bool utc) noexcept {
-    ENCODER_TRY(e, write_date_string(ts,utc));
+encoder_t &encoder_t::operator<<(slice_t s) {
+    write_string(s);
+    return *this;
 }
 
-bool encoder_write_data(encoder_t_c e, slice_t_c d) noexcept {
-    ENCODER_TRY(e, write_data(d));
+encoder_t &encoder_t::operator<<(const char *s) {
+    write_string(s);
+    return *this;
 }
 
-bool encoder_write_raw(encoder_t_c e, slice_t_c r) noexcept {
-    ENCODER_TRY(e, write_raw(r));
+encoder_t &encoder_t::operator<<(const std::string &s) {
+    write_string(s);
+    return *this;
 }
 
-bool encoder_write_value(encoder_t_c e, value_t_c v) noexcept {
-    ENCODER_TRY(e, write_value(v));
+encoder_t &encoder_t::operator<<(value_t v) {
+    write_value(v);
+    return *this;
 }
 
-bool encoder_begin_array(encoder_t_c e, size_t reserve_count) noexcept {
-    ENCODER_TRY(e, begin_array(reserve_count));
+encoder_t::key_ref_t encoder_t::operator[](nonnull_slice key) {
+    return key_ref_t(*this, key);
 }
 
-bool encoder_end_array(encoder_t_c e) noexcept {
-    ENCODER_TRY(e, end_array());
+impl::encoder_t *encoder_t::get_encoder() const {
+    return _enc->encoder.get();
 }
 
-bool encoder_begin_dict(encoder_t_c e, size_t reserve_count) noexcept {
-    ENCODER_TRY(e, begin_dict(reserve_count));
+impl::json_encoder_t *encoder_t::get_json_encoder() const {
+    return _enc->json_encoder.get();
 }
 
-bool encoder_write_key(encoder_t_c e, slice_t_c s) noexcept {
-    ENCODER_TRY(e, write_key(s));
+void encoder_t::record_exception(const std::exception &x) {
+    _enc->record_exception(x);
 }
 
-bool encoder_write_key_value(encoder_t_c e, value_t_c key) noexcept {
-    ENCODER_TRY(e, write_key(key));
+void encoder_t::amend(slice_t base, bool reuse_strings, bool extern_pointers) {
+    if (_enc->is_internal() && base.size > 0) {
+        _enc->encoder->set_base(base, extern_pointers);
+        if (reuse_strings)
+            _enc->encoder->reuse_base_strings();
+    }
 }
 
-bool encoder_end_dict(encoder_t_c e) noexcept {
-    ENCODER_TRY(e, end_dict());
+bool encoder_t::write_null() {
+    ENCODER_TRY(_enc, write_null());
 }
 
-bool encoder_convert_json(encoder_t_c e, slice_t_c json) noexcept {
-    if (!e->has_error()) {
+bool encoder_t::write_undefined() {
+    ENCODER_TRY(_enc, write_undefined());
+}
+
+bool encoder_t::write_bool(bool b) {
+    ENCODER_TRY(_enc, write_bool(b));
+}
+
+bool encoder_t::write_int(int64_t i) {
+    ENCODER_TRY(_enc, write_int(i));
+}
+
+bool encoder_t::write_uint(uint64_t i) {
+    ENCODER_TRY(_enc, write_uint(i));
+}
+
+bool encoder_t::write_float(float f) {
+    ENCODER_TRY(_enc, write_float(f));
+}
+
+bool encoder_t::write_double(double d) {
+    ENCODER_TRY(_enc, write_double(d));
+}
+
+bool encoder_t::write_string(slice_t s) {
+    ENCODER_TRY(_enc, write_string(s));
+}
+
+bool encoder_t::write_string(const char *s) {
+    return write_string(slice_t(s));
+}
+
+bool encoder_t::write_string(std::string s) {
+    return write_string(slice_t(s));
+}
+
+bool encoder_t::write_date_string(time_stamp ts, bool utc) {
+    ENCODER_TRY(_enc, write_date_string(ts, utc));
+}
+
+bool encoder_t::write_data(slice_t d) {
+    ENCODER_TRY(_enc, write_data(d));
+}
+
+bool encoder_t::write_value(value_t v) {
+    ENCODER_TRY(_enc, write_value(v));
+}
+
+bool encoder_t::convert_json(nonnull_slice json) {
+    if (!_enc->has_error()) {
         try {
-            if (e->is_internal()) {
-                json_converter_t *jc = e->json_converter.get();
+            if (_enc->is_internal()) {
+                auto jc = _enc->json_converter.get();
                 if (jc) {
                     jc->reset();
                 } else {
-                    jc = new json_converter_t(*e->encoder);
-                    e->json_converter.reset(jc);
+                    jc = new impl::json_converter_t(*_enc->encoder);
+                    _enc->json_converter.reset(jc);
                 }
                 if (jc->encode_json(json)) {
                     return true;
                 } else {
-                    e->error = (error_code)jc->error();
-                    e->error_message = jc->error_message();
+                    _enc->error = jc->error();
+                    _enc->error_message = jc->error_message();
                 }
             } else {
-                e->json_encoder->write_json(json);
+                _enc->json_encoder->write_json(json);
                 return true;
             }
         } catch (const std::exception &x) {
-            e->record_exception(x);
+            _enc->record_exception(x);
         }
     }
     return false;
 }
 
-error_code encoder_get_error(encoder_t_c e) noexcept {
-    return (error_code)e->error;
+bool encoder_t::begin_array(size_t reserve_count) {
+    ENCODER_TRY(_enc, begin_array(reserve_count));
 }
 
-const char* encoder_get_error_message(encoder_t_c e) noexcept {
-    return e->has_error() ? e->error_message.c_str() : nullptr;
+bool encoder_t::end_array() {
+    ENCODER_TRY(_enc, end_array());
 }
 
-void encoder_set_extra_info(encoder_t_c e, void *info) noexcept {
-    e->extra_info = info;
+bool encoder_t::begin_dict(size_t reserve_count) {
+    ENCODER_TRY(_enc, begin_dict(reserve_count));
 }
 
-void* encoder_get_extra_info(encoder_t_c e) noexcept {
-    return e->extra_info;
+bool encoder_t::write_key(nonnull_slice key) {
+    ENCODER_TRY(_enc, write_key(key));
 }
 
-slice_result_t_c encoder_snip(encoder_t_c e) {
-    if (e->is_internal())
-        return slice_result_t_c(e->encoder->snip());
-    else
-        return {};
+bool encoder_t::write_key(value_t key) {
+    ENCODER_TRY(_enc, write_key(key));
 }
 
-size_t encoder_finish_item(encoder_t_c e) noexcept {
-    if (e->is_internal())
-        return e->encoder->finish_item();
-    return 0;
+bool encoder_t::end_dict() {
+    ENCODER_TRY(_enc, end_dict());
 }
 
-doc_t_c encoder_finish_doc(encoder_t_c e, error_code *out_error) noexcept {
-    if (e->encoder) {
-        if (!e->has_error()) {
+size_t encoder_t::bytes_written_size() const {
+    return ENCODER_DO(_enc, bytes_written_size());
+}
+
+doc_t encoder_t::finish_doc(error_code* err) {
+    if (_enc->encoder) {
+        if (!_enc->has_error()) {
             try {
-                return retain(e->encoder->finish_doc());
+                return retain(_enc->encoder->finish_doc());
             } catch (const std::exception &x) {
-                e->record_exception(x);
+                _enc->record_exception(x);
             }
         }
     } else {
-        e->error = error_code::unsupported;
+        _enc->error = error_code::unsupported;
     }
-    if (out_error)
-        *out_error = e->error;
-    e->reset();
+    if (err) *err = _enc->error;
+    _enc->reset();
     return nullptr;
 }
 
-slice_result_t_c encoder_finish(encoder_t_c e, error_code *out_error) noexcept {
-    if (!e->has_error()) {
+alloc_slice_t encoder_t::finish(error_code* err) {
+    if (!_enc->has_error()) {
         try {
-            return to_slice_result(ENCODER_DO(e, finish()));
+            return ENCODER_DO(_enc, finish());
         } catch (const std::exception &x) {
-            e->record_exception(x);
+            _enc->record_exception(x);
         }
     }
-    if (out_error)
-        *out_error = e->error;
-    e->reset();
-    return {nullptr, 0};
+    if (err) *err = _enc->error;
+    _enc->reset();
+    return alloc_slice_t();
 }
 
-doc_t_c doc_from_result_data(slice_result_t_c data, trust_type trust, shared_keys_t_c sk, slice_t_c extern_data) noexcept {
-    return retain(new doc_t(alloc_slice_t(data), (doc_t::trust_type)trust, sk, extern_data));
+void encoder_t::reset() {
+    return _enc->reset();
 }
 
-doc_t_c doc_from_json(slice_t_c json, error_code *out_error) noexcept {
+error_code encoder_t::error() const {
+    return _enc->error;
+}
+
+const char* encoder_t::error_message() const {
+    return _enc->has_error() ? _enc->error_message.c_str() : nullptr;
+}
+
+
+json_encoder_t::json_encoder_t()
+    : encoder_t(encode_format::json)
+{}
+
+bool json_encoder_t::write_raw(slice_t raw) {
+    ENCODER_TRY(_enc, write_raw(raw));
+}
+
+
+shared_encoder_t::shared_encoder_t(impl_encoder_t enc)
+    : encoder_t(enc)
+{}
+
+shared_encoder_t::~shared_encoder_t() {
+    detach();
+}
+
+
+alloc_slice_t json_delta_t::create(value_t old, value_t nuu) {
     try {
-        return retain(doc_t::from_json(json));
-    } CATCH_ERROR(out_error);
-    return nullptr;
-}
-
-void doc_release(doc_t_c doc) noexcept {
-    release(doc);
-}
-
-doc_t_c doc_retain(doc_t_c doc) noexcept {
-    return retain(doc);
-}
-
-shared_keys_t_c doc_get_shared_keys(doc_t_c doc) noexcept {
-    return doc ? doc->shared_keys() : nullptr;
-}
-
-value_t_c doc_get_root(doc_t_c doc) noexcept {
-    return doc ? doc->root() : nullptr;
-}
-
-slice_t_c doc_get_data(doc_t_c doc) noexcept {
-    return doc ? doc->data() : slice_t();
-}
-
-slice_result_t_c doc_get_alloced_data(doc_t_c doc) noexcept {
-    return doc ? to_slice_result(doc->alloced_data()) : slice_result_t_c{};
-}
-
-void* doc_get_associated(doc_t_c doc, const char *type) noexcept {
-    return doc ? doc->get_associated(type) : nullptr;
-}
-
-bool doc_set_associated(doc_t_c doc, void *pointer, const char *type) noexcept {
-    return doc && const_cast<doc_t*>(doc)->set_associated(pointer, type);
-}
-
-slice_result_t_c create_json_delta(value_t_c old, value_t_c nuu) noexcept {
-    try {
-        return to_slice_result(json_delta_t::create(old, nuu));
+        return impl::json_delta_t::create(old, nuu);
     } catch (const std::exception&) {
-        return {};
+        return alloc_slice_t();
     }
 }
 
-bool encode_json_delta(value_t_c old, value_t_c nuu, encoder_t_c json_encoder) noexcept {
+bool json_delta_t::create(value_t old, value_t nuu, encoder_t &encoder) {
     try {
-        json_encoder_t *enc = json_encoder->json_encoder.get();
+        auto enc = encoder.get_json_encoder();
         precondition(enc);
-        json_delta_t::create(old, nuu, *enc);
+        impl::json_delta_t::create(old, nuu, *enc);
         return true;
     } catch (const std::exception &x) {
-        json_encoder->record_exception(x);
+        encoder.record_exception(x);
         return false;
     }
 }
 
-slice_result_t_c apply_json_delta(value_t_c old, slice_t_c json_delta, error_code *out_error) noexcept {
+alloc_slice_t json_delta_t::apply(value_t old, slice_t json_delta, error_code *error) {
     try {
-        return to_slice_result(json_delta_t::apply(old, json_delta));
-    } CATCH_ERROR(out_error);
-    return {};
+        return impl::json_delta_t::apply(old, json_delta);
+    } CATCH_ERROR(error);
+    return alloc_slice_t();
 }
 
-bool encode_applying_json_delta(value_t_c old, slice_t_c json_delta, encoder_t_c encoder) noexcept {
+bool json_delta_t::apply(value_t old, slice_t json_delta, encoder_t &encoder) {
     try {
-        encoder_t *enc = encoder->encoder.get();
+        auto enc = encoder.get_encoder();
         if (!enc)
             exception_t::_throw(error_code::encode_error, "encode_applying_json_delta cannot encode JSON");
-        json_delta_t::apply(old, json_delta, *enc);
+        impl::json_delta_t::apply(old, json_delta, *enc);
         return true;
     } catch (const std::exception &x) {
-        encoder->record_exception(x);
+        encoder.record_exception(x);
         return false;
     }
+}
+
+
+alloced_dict_t::alloced_dict_t(alloc_slice_t s)
+    : dict_t(value_t::from_data(s).as_dict())
+    , alloc_slice_t(std::move(s))
+{}
+
+alloced_dict_t::alloced_dict_t(slice_t s)
+    : alloced_dict_t(alloc_slice_t(s))
+{}
+
+const alloc_slice_t &alloced_dict_t::data() const {
+    return *this;
+}
+
+storage::alloced_dict_t::operator bool() const {
+    return dict_t::operator bool();
+}
+
+value_t alloced_dict_t::operator[](slice_t key) const {
+    return dict_t::get(key);
+}
+
+value_t alloced_dict_t::operator[](const char *key) const {
+    return dict_t::get(key);
 }
 
 }

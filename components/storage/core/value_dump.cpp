@@ -240,7 +240,7 @@ bool value_t::dump(slice_t data, std::ostream &out) {
         return false;
     value_dumper_t d(root, data, out);
 
-    auto actual_root = (const value_t*)offsetby(data.buf, data.size - internal::size_narrow);
+    auto actual_root = static_cast<const value_t*>(offsetby(data.buf, data.size - internal::size_narrow));
     if (actual_root != root)
         d.add_map_address(actual_root);
     d.write();

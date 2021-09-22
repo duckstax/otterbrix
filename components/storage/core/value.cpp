@@ -57,8 +57,9 @@ value_type value_t::type() const noexcept {
         case special_value_false:
         case special_value_true:
             return value_type::boolean;
-        case special_value_null:
         case special_value_undefined:
+            return value_type::undefined;
+        case special_value_null:
         default:
             return value_type::null;
         }

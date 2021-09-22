@@ -12,7 +12,7 @@
 namespace storage {
 
 #define DEREF(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - (OFF)))
-#define DEREF_VALUE(OFF)    value_t((value_t_c)DEREF(OFF, void))
+#define DEREF_VALUE(OFF)    value_t((impl_value_t)DEREF(OFF, void))
 
 namespace hashtree {
 

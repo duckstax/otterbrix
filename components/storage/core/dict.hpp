@@ -87,6 +87,9 @@ public:
     const shared_keys_t* shared_keys() const PURE { return _shared_keys; }
     key_t keyt() const noexcept;
 
+protected:
+    dict_iterator_t() = default;
+
 private:
     dict_iterator_t(const dict_t* d, bool) noexcept;
     void read() noexcept;

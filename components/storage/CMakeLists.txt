@@ -17,7 +17,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/shared_keys.hpp
         core/slice_core.hpp
         core/slice.hpp
-        core/storage.h
         core/storage.hpp
         core/storage_impl.hpp
         core/value.hpp

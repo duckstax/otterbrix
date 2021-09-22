@@ -26,6 +26,11 @@ class array_t : public value_t
         size_t index_of(const value_t *v) const noexcept PURE;
         void offset(uint32_t n);
         bool is_mutable() const noexcept PURE;
+
+    protected:
+        impl() = default;
+
+        friend class dict_iterator_t;
     };
 
 public:
@@ -66,6 +71,9 @@ public:
     explicit operator bool() const noexcept PURE                { return _count > 0; }
     array_iterator_t& operator++();
     array_iterator_t& operator += (uint32_t);
+
+protected:
+    array_iterator_t() = default;
 
 private:
     const value_t* raw_value() noexcept                         { return _first; }

@@ -238,6 +238,7 @@ void json_encoder_t::comma() {
 void json_encoder_t::write_value(const value_t *v) {
     switch (v->type()) {
     case value_type::null:
+    case value_type::undefined:
         if (v->is_undefined()) {
             comma();
             _out << slice_t("undefined");
