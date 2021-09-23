@@ -1,29 +1,55 @@
-#include "json_encoder.hpp"
+#include "json_coder.hpp"
 #include "storage_impl.hpp"
 #include "parse_date.hpp"
-#include <algorithm>
 #include "better_assert.hpp"
+#include "num_conversion.hpp"
+#include <boost/json.hpp>
+#include <algorithm>
+#include <map>
 
 namespace storage { namespace impl {
 
-static inline bool can_be_unquoted_json5_key(slice_t key) {
-    if (key.size == 0 || isdigit(key[0]))
-        return false;
-    for (unsigned i = 0; i < key.size; i++) {
-        if (!isalnum(key[i]) && key[i] != '_' && key[i] != '$')
-            return false;
-    }
-    return true;
+class json_converter_t {
+    enum {
+        no_error = 0,
+        error_truncated_json = 1000,
+        error_exception_thrown
+    };
+
+public:
+    json_converter_t(encoder_t &enc) noexcept;
+
+    bool encode_json(slice_t json);
+    std::string error_message() noexcept;
+
+private:
+    void write_value(const boost::json::value &value);
+
+    encoder_t &_encoder;
+    int _error {no_error};
+    std::string _error_message;
+};
+
+
+
+alloc_slice_t json_coder::from_json(encoder_t &enc, slice_t json) {
+    json_converter_t converter(enc);
+    _throw_if(!converter.encode_json(slice_t(json)), error_code::json_error, converter.error_message().c_str());
+    return enc.finish();
 }
+
+alloc_slice_t json_coder::from_json(slice_t json, shared_keys_t *sk) {
+    encoder_t enc;
+    enc.set_shared_keys(sk);
+    return from_json(enc, json);
+}
+
+
 
 
 json_encoder_t::json_encoder_t(size_t reserve_output_size)
     : _out(reserve_output_size)
 {}
-
-void json_encoder_t::set_json5(bool json5) {
-    _json5 = json5;
-}
 
 void json_encoder_t::set_canonical(bool canonical) {
     _canonical = canonical;
@@ -128,12 +154,7 @@ void json_encoder_t::write_data(slice_t d) {
 
 void json_encoder_t::write_key(slice_t s) {
     assert_precondition(s);
-    if (_json5 && can_be_unquoted_json5_key(s)) {
-        comma();
-        _out.write((char*)s.buf, s.size);
-    } else {
-        write_string(s);
-    }
+    write_string(s);
     _out << ':';
     _first = true;
 }
@@ -248,6 +269,20 @@ void json_encoder_t::write_dict(const dict_t *dict) {
     end_dict();
 }
 
+template <class T>
+void json_encoder_t::_write_int(const char *fmt, T t) {
+    comma();
+    char str[32];
+    _out.write(str, sprintf(str, fmt, t));
+}
+
+template <class T>
+void json_encoder_t::_write_float(T t) {
+    comma();
+    char str[32];
+    _out.write(str, storage::write_float(t, str, sizeof(str)));
+}
+
 void json_encoder_t::comma() {
     if (_first)
         _first = false;
@@ -258,6 +293,7 @@ void json_encoder_t::comma() {
 void json_encoder_t::write_value(const value_t *v) {
     switch (v->type()) {
     case value_type::null:
+    case value_type::undefined:
         if (v->is_undefined()) {
             comma();
             _out << slice_t("undefined");
@@ -330,6 +366,72 @@ void json_encoder_t::begin_dict() {
 void json_encoder_t::end_dict() {
     _out << '}';
     _first = false;
+}
+
+
+json_converter_t::json_converter_t(encoder_t &enc) noexcept
+    : _encoder(enc)
+    , _error(no_error)
+{}
+
+bool json_converter_t::encode_json(slice_t json) {
+    _error_message.clear();
+    _error = no_error;
+
+    using namespace boost;
+    try {
+        json::error_code error;
+        json::value value = json::parse(std::string(json), error);
+        if (error) {
+            _error = error.value();
+            _error_message = error.message();
+        } else {
+            write_value(value);
+        }
+    } catch (std::bad_alloc const& e) {
+        _error = error_exception_thrown;
+        _error_message = e.what();
+    }
+    return _error == no_error;
+}
+
+std::string json_converter_t::error_message() noexcept {
+    if (!_error_message.empty())
+        return _error_message;
+    else if (_error == error_truncated_json)
+        return std::string("Truncated JSON");
+    else if (_error == error_exception_thrown)
+        return std::string("Unexpected C++ exception");
+    return std::string();
+}
+
+void json_converter_t::write_value(const boost::json::value &value) {
+    if (value.is_null()) {
+        _encoder.write_null();
+    } else if (value.is_bool()) {
+        _encoder.write_bool(value.as_bool());
+    } else if (value.is_int64()) {
+        _encoder.write_int(value.as_int64());
+    } else if (value.is_uint64()) {
+        _encoder.write_uint(value.as_uint64());
+    } else if (value.is_double()) {
+        _encoder.write_double(value.as_double());
+    } else if (value.is_string()) {
+        _encoder.write_string(value.as_string().c_str());
+    } else if (value.is_array()) {
+        _encoder.begin_array();
+        for (auto elem : value.as_array()) {
+            write_value(elem);
+        }
+        _encoder.end_array();
+    } else if (value.is_object()) {
+        _encoder.begin_dict();
+        for (auto elem : value.as_object()) {
+            _encoder.write_key(elem.key_c_str());
+            write_value(elem.value());
+        }
+        _encoder.end_dict();
+    }
 }
 
 } }

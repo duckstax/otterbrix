@@ -1,18 +1,29 @@
 #pragma once
 
-#include "writer.hpp"
-#include "value.hpp"
 #include "exception.hpp"
 #include "num_conversion.hpp"
+#include "value.hpp"
+#include "encoder.hpp"
+#include "slice.hpp"
 #include <stdio.h>
 
+namespace boost { namespace json {
+class value;
+} }
+
 namespace storage { namespace impl {
+
+class json_coder {
+public:
+    static alloc_slice_t from_json(encoder_t &enc, slice_t json);
+    static alloc_slice_t from_json(slice_t json, shared_keys_t *sk = nullptr);
+};
+
 
 class json_encoder_t {
 public:
     json_encoder_t(size_t reserve_output_size = 256);
 
-    void set_json5(bool json5);
     void set_canonical(bool canonical);
 
     bool empty() const;
@@ -68,26 +79,14 @@ public:
 
 private:
     void write_dict(const dict_t *dict);
+    template <class T> void _write_int(const char *fmt, T t);
+    template <class T> void _write_float(T t);
     void comma();
 
-    template <class T>
-    void _write_int(const char *fmt, T t) {
-        comma();
-        char str[32];
-        _out.write(str, sprintf(str, fmt, t));
-    }
-
-    template <class T>
-    void _write_float(T t) {
-        comma();
-        char str[32];
-        _out.write(str, storage::write_float(t, str, sizeof(str)));
-    }
-
     writer_t _out;
-    bool _json5 {false};
     bool _canonical {false};
     bool _first {true};
 };
+
 
 } }

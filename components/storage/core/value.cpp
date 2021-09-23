@@ -9,7 +9,7 @@
 #include "exception.hpp"
 #include "varint.hpp"
 #include "platform_compat.hpp"
-#include "json_encoder.hpp"
+#include "json_coder.hpp"
 #include "parse_date.hpp"
 #include <math.h>
 #include "better_assert.hpp"
@@ -57,8 +57,9 @@ value_type value_t::type() const noexcept {
         case special_value_false:
         case special_value_true:
             return value_type::boolean;
-        case special_value_null:
         case special_value_undefined:
+            return value_type::undefined;
+        case special_value_null:
         default:
             return value_type::null;
         }
@@ -227,18 +228,12 @@ shared_keys_t* value_t::shared_keys() const noexcept {
     return doc_t::shared_keys(this);
 }
 
-template <int VER>
 alloc_slice_t value_t::to_json(bool canonical) const {
     json_encoder_t encoder;
-    if (VER >= 5)
-        encoder.set_json5(true);
     encoder.set_canonical(canonical);
     encoder.write_value(this);
     return encoder.finish();
 }
-
-template alloc_slice_t value_t::to_json<1>(bool canonical) const;
-template alloc_slice_t value_t::to_json<5>(bool canonical) const;
 
 std::string value_t::to_json_string() const {
     return to_json().as_string();

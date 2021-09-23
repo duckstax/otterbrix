@@ -84,12 +84,7 @@ namespace storage { namespace impl {
 
         shared_keys_t* shared_keys() const noexcept PURE;
 
-        template <int VER = 1>
-        void to_json(writer_t&) const;
-
-        template <int VER = 1>
         alloc_slice_t to_json(bool canonical = false) const;
-
         std::string to_json_string() const;
 
         static bool dump(slice_t data, std::ostream&);
