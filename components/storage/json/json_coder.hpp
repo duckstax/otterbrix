@@ -79,21 +79,9 @@ public:
 
 private:
     void write_dict(const dict_t *dict);
+    template <class T> void _write_int(const char *fmt, T t);
+    template <class T> void _write_float(T t);
     void comma();
-
-    template <class T>
-    void _write_int(const char *fmt, T t) {
-        comma();
-        char str[32];
-        _out.write(str, sprintf(str, fmt, t));
-    }
-
-    template <class T>
-    void _write_float(T t) {
-        comma();
-        char str[32];
-        _out.write(str, storage::write_float(t, str, sizeof(str)));
-    }
 
     writer_t _out;
     bool _canonical {false};

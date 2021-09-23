@@ -36,7 +36,7 @@ int dict_t::key_t::compare(const key_t &k) const noexcept {
 }
 
 dict_t::key_t::~key_t() {
-    release(_shared_keys); //todo
+    release(_shared_keys);
 }
 
 void dict_t::key_t::set_shared_keys(shared_keys_t *sk) {

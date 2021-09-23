@@ -269,6 +269,20 @@ void json_encoder_t::write_dict(const dict_t *dict) {
     end_dict();
 }
 
+template <class T>
+void json_encoder_t::_write_int(const char *fmt, T t) {
+    comma();
+    char str[32];
+    _out.write(str, sprintf(str, fmt, t));
+}
+
+template <class T>
+void json_encoder_t::_write_float(T t) {
+    comma();
+    char str[32];
+    _out.write(str, storage::write_float(t, str, sizeof(str)));
+}
+
 void json_encoder_t::comma() {
     if (_first)
         _first = false;
