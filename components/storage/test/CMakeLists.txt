@@ -2,6 +2,7 @@ project(test_storage)
 
 set( ${PROJECT_NAME}_SOURCES
     test_api.cpp
+    test_encoder.cpp
     test_support.cpp
     test_value.cpp
 )
@@ -14,5 +15,5 @@ target_link_libraries(
         pthread
 )
 
-file(COPY small-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
-file(COPY big-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
+file(COPY test_files/small-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
+file(COPY test_files/big-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
