@@ -3,6 +3,7 @@ project(test_storage)
 set( ${PROJECT_NAME}_SOURCES
     test_api.cpp
     test_encoder.cpp
+    test_shared_keys.cpp
     test_support.cpp
     test_value.cpp
 )
