@@ -8,6 +8,8 @@ msgpack/3.3.0
 nlohmann_json/3.10.2
 sol2/3.2.3
 date/3.0.1
+catch2/2.13.7
+
 goblin-engineer/1.0.0a4@cyberduckninja/stable
 
 [options]

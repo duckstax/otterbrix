@@ -68,6 +68,8 @@ namespace storage { namespace impl {
         bool is_double() const noexcept PURE      {return tag() == internal::tag_float && (_byte[0] & 0x8);}
         bool is_undefined() const noexcept PURE   {return _byte[0] == ((internal::tag_special << 4) |
                                                                 internal::special_value_undefined);}
+        bool is_pointer() const noexcept PURE             {return (_byte[0] & 0x80) != 0;}
+        const internal::pointer_t* as_pointer() const PURE {return (const internal::pointer_t*)this;}
         slice_t as_string() const noexcept PURE;
         slice_t as_data() const noexcept PURE;
 
@@ -113,9 +115,6 @@ namespace storage { namespace impl {
         uint32_t count_value() const noexcept PURE   {return (((uint32_t)_byte[0] << 8) | _byte[1]) & 0x07FF;}
         bool count_is_zero() const noexcept PURE     {return _byte[1] == 0 && (_byte[0] & 0x7) == 0;}
 
-        bool is_pointer() const noexcept PURE             {return (_byte[0] & 0x80) != 0;}
-        const internal::pointer_t* as_pointer() const PURE {return (const internal::pointer_t*)this;}
-
         const value_t* deref(bool wide) const PURE;
 
         template <bool WIDE>
@@ -137,8 +136,6 @@ namespace storage { namespace impl {
         friend class array_t;
         friend class dict_t;
         friend class encoder_t;
-        friend class value_tests_t;
-        friend class encoder_tests_t;
         friend class value_dumper_t;
         template <bool WIDE> friend struct dict_impl_t;
     };

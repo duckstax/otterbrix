@@ -27,7 +27,7 @@ struct temp_array_t
     operator T* () { return array; }
 
     template <class U>
-    explicit operator U* () { return (U*)array; }
+    explicit operator U* () { return reinterpret_cast<U*>(array); }
 
     bool const on_heap;
     T* array;
@@ -36,6 +36,6 @@ struct temp_array_t
 
 #define _temp_array(NAME, TYPE, SIZE) \
     temp_array_t<TYPE> NAME(SIZE); \
-    if (!NAME.on_heap && (SIZE) > 0) NAME.array = (TYPE*)alloca((SIZE)*sizeof(TYPE));
+    if (!NAME.on_heap && (SIZE) > 0) NAME.array = static_cast<TYPE*>(alloca((SIZE)*sizeof(TYPE)));
 
 #endif
