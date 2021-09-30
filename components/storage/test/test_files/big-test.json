@@ -1,0 +1,92 @@
+[
+    {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "type": "dog",
+        "index": 1,
+        "name": "Rex",
+        "age": 6,
+        "gender": "male",
+        "breed": "Sheepdog"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "type": "dog",
+        "index": 2,
+        "name": "Lucy",
+        "age": 2,
+        "gender": "female",
+        "breed": "Great Dane"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000003",
+        "type": "cat",
+        "index": 3,
+        "name": "Chevi",
+        "age": 3,
+        "gender": "female",
+        "breed": "Korat"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000004",
+        "type": "dog",
+        "index": 4,
+        "name": "Charlie",
+        "age": 2,
+        "gender": "male",
+        "breed": "Schnauzer"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000005",
+        "type": "cat",
+        "index": 5,
+        "name": "Isha",
+        "age": 6,
+        "gender": "female",
+        "breed": "Siamese"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000006",
+        "type": "cat",
+        "index": 6,
+        "name": "Emma",
+        "age": 4,
+        "gender": "female",
+        "breed": "Chartreux"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000007",
+        "type": "dog",
+        "index": 7,
+        "name": "Toby",
+        "age": 9,
+        "gender": "male",
+        "breed": "Dachshund"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000008",
+        "type": "dog",
+        "index": 8,
+        "name": "Cooper",
+        "age": 2,
+        "gender": "male",
+        "breed": "Labrador"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000009",
+        "type": "cat",
+        "index": 9,
+        "name": "Kitty",
+        "age": 8,
+        "gender": "female",
+        "breed": "British Shorthair"
+    },
+    {
+        "id": "00000000-0000-0000-0000-000000000010",
+        "type": "cat",
+        "index": 10,
+        "name": "Albert",
+        "age": 4,
+        "gender": "male",
+        "breed": "Cymric"
+    }
+]
