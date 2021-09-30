@@ -1,0 +1,19 @@
+{
+    "id": "00000000-0000-0000-0000-000000000001",
+    "type": "dog",
+    "index": 1,
+    "name": "Rex",
+    "age": 6,
+    "gender": "male",
+    "breed": "Sheepdog",
+    "tags": [
+        "dog",
+        "Sheepdog"
+    ],
+    "achievements": [
+        {
+        "id": 0,
+        "name": "He alwais get home"
+        }
+    ]
+}

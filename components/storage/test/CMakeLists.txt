@@ -1,8 +1,22 @@
 project(test_storage)
 
-add_executable(${PROJECT_NAME} main.cpp)
+set( ${PROJECT_NAME}_SOURCES
+    test_api.cpp
+    test_encoder.cpp
+    test_hash_tree.cpp
+    test_mutable.cpp
+    test_shared_keys.cpp
+    test_support.cpp
+    test_value.cpp
+)
+
+add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        rocketjoe::log
+        rocketjoe::storage_base
+        pthread
 )
+
+file(COPY test_files/small-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
+file(COPY test_files/big-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
