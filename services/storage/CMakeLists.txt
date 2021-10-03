@@ -3,12 +3,14 @@ project(storage)
 set( ${PROJECT_NAME}_HEADERS
         collection.hpp
         database.hpp
+        query.hpp
         result_insert_one.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
         collection.cpp
         database.cpp
+        query.cpp
         result_insert_one.cpp
 )
 
@@ -32,5 +34,5 @@ target_link_libraries(
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")
 
 if (DEV_MODE)
-#    add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
