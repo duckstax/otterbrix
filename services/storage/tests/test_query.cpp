@@ -3,16 +3,6 @@
 
 using namespace services::storage;
 
-TEST_CASE("condition_t") {
-    auto c1 = condition_t("==", "name", "Rex");
-    auto c2 = condition_t(">", "age", 3);
-    REQUIRE(c1.debug() == "name==\"Rex\"");
-    REQUIRE(c2.debug() == "age>3");
-    printf("%s\n", c1.debug().c_str());
-    printf("%s\n", c2.debug().c_str());
-}
-
-
 TEST_CASE("query_t create") {
     auto c1 = query_t<bool>([](bool v){ return v == true; });
     REQUIRE(c1.check(true));
@@ -62,5 +52,7 @@ TEST_CASE("query_t between/any/all") {
 }
 
 TEST_CASE("query_t regex") {
-    //REQUIRE(query_t<std::string>::matches("find \\d+").check("This find 100 $")); //bug SIGSEGV
+    REQUIRE(query_t<std::string>::matches("find \\d+").check("This find 100 $"));
+    REQUIRE_FALSE(query_t<std::string>::matches("find \\d+").check("This Find 100 $"));
+    REQUIRE_FALSE(query_t<std::string>::matches("find \\d+").check("This find n100 $"));
 }
