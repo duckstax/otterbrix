@@ -179,8 +179,15 @@ namespace services::storage {
     void collection_t::drop_() {
         storage_.clear();
     }
+
     auto collection_t::remove_(const std::string& key) {
         storage_.erase(key);
     }
+
+#ifdef DEV_MODE
+    void collection_t::dummy_insert(document_t &&document) {
+        insert_(document.get_as<std::string>("_id"), std::move(document));
+    }
+#endif
 
 } // namespace services::storage

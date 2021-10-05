@@ -45,6 +45,11 @@ namespace services::storage {
 
         log_t log_;
         storage_t storage_;
+
+#ifdef DEV_MODE
+    public:
+        void dummy_insert(document_t&& document);
+#endif
     };
 
     using collection_ptr = goblin_engineer::intrusive_ptr<collection_t>;

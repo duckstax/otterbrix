@@ -1,10 +1,81 @@
 #pragma once
+#include <vector>
 #include <functional>
 #include <string>
 #include <algorithm>
 #include <regex>
 
 namespace services::storage {
+
+template <class VALUE>
+class condition_t {
+    std::string _cond;
+    std::string _key;
+    VALUE _value;
+    std::vector<condition_t> _subcond;
+
+public:
+    condition_t(std::string &&cond, const std::string &key, VALUE value)
+        : _cond(std::move(cond))
+        , _key(key)
+        , _value(value)
+    {}
+
+    condition_t operator &(condition_t &&other) noexcept {
+        if (this->_cond == "and") {
+            this->_subcond << std::move(other);
+            return *this;
+        } else if (other._cond == "and") {
+            other._subcond << std::move(*this);
+            return other;
+        }
+        return condition_t{"and", {std::move(*this), std::move(other)}};
+    }
+
+    condition_t operator |(condition_t &&other) noexcept {
+        if (this->_cond == "or") {
+            this->_subcond << std::move(other);
+            return *this;
+        } else if (other._cond == "or") {
+            other._subcond << std::move(*this);
+            return other;
+        }
+        return condition_t{"or", {std::move(*this), std::move(other)}};
+    }
+
+    condition_t operator !() noexcept {
+        if (this->_cond == "not" && !this->_subcond.empty()) {
+            return this->_subcond[0];
+        }
+        return condition_t{"not", {std::move(*this)}};
+    }
+
+#ifdef DEV_MODE
+    template <class T> static std::string to_str(T value) {
+        return std::to_string(value);
+    }
+
+    static std::string to_str(std::string value) {
+        return "\"" + value + "\"";
+    }
+
+    static std::string to_str(const char *value) {
+        return std::string(value);
+    }
+
+    std::string debug() const {
+        return _key + _cond + to_str(_value);
+    }
+#endif
+
+private:
+    condition_t(std::string &&cond, std::vector<condition_t> &&subcond)
+        : _cond(std::move(cond))
+        , _value(VALUE())
+        , _subcond(std::move(subcond))
+    {}
+};
+
 
 template <class VALUE>
 class query_t {
