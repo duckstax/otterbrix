@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
-#include "collection.hpp"
 #include "database.hpp"
+#include "collection.hpp"
+#include "query.hpp"
 
 using namespace services::storage;
 
@@ -52,8 +53,27 @@ collection_ptr gen_collection() {
     return collection;
 }
 
-TEST_CASE("collection_t insert") {
+void print_doc(document_t *doc) {
+    std::cout << "Doc " << doc->get_as<std::string>("_id") << " {\n"
+              << "    name: " << doc->get_as<std::string>("name") << ",\n"
+              << "    type: " << doc->get_as<std::string>("type") << ",\n"
+              << "    age: " << doc->get_as<long>("age") << ",\n"
+              << "    male: " << doc->get_as<bool>("male") << ",\n"
+              << "}" << std::endl;
+}
 
+void print_search(const std::string &search, const std::list<document_t*> docs) {
+    std::cout << search << std::endl;
+    for (auto doc : docs) {
+        print_doc(doc);
+    }
+}
+
+TEST_CASE("collection_t search") {
     auto collection = gen_collection();
-
+    print_search("===> Search (name == Rex)", collection->search(query_t<std::string>("name") == "Rex"));
+    print_search("===> Search (age > 3)", collection->search(query_t<long>("age") > 3));
+    print_search("===> Search (type == dog)", collection->search(query_t<std::string>("type") == "dog"));
+    print_search("===> Search (male)", collection->search(query_t<bool>("male") == true));
+    print_search("===> Search (type any (dog, cat))", collection->search(query_t<std::string>("type").any(std::vector<std::string>{"dog", "cat"})));
 }

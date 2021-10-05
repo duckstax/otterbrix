@@ -34,24 +34,14 @@ namespace services::storage {
         }
     }
 
-    auto collection_t::search(components::storage::conditional_expression& cond) -> void {
-        /*
-        py::list tmp;
-        wrapper_document_ptr doc;
-        for (auto &i:*ptr_) {
-            auto result = cache_.find(i.first);
-            if (result == cache_.end()) {
-                auto it = cache_.emplace(i.first, wrapper_document_ptr(new wrapper_document(i.second.get())));
-                doc = it.first->second;
-            } else {
-                doc = result->second;
-            }
-            if (cond(doc).cast<bool>()) {
-                tmp.append(doc);
+    std::list<document_t *> collection_t::search(const components::storage::conditional_expression& cond) {
+        std::list<document_t *> res;
+        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
+            if (cond.check(it->second)) {
+                res.push_back(&it->second);
             }
         }
-        return tmp;
-         */
+        return res;
     }
 
     auto collection_t::all() -> void {
