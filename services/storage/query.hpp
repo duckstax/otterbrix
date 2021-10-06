@@ -46,7 +46,6 @@ public:
     {}
 
     bool check(const document_t &doc) const override {
-        //todo
         return _check(doc.get_as<T>(_key));
     }
 

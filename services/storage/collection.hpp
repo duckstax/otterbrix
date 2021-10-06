@@ -15,6 +15,7 @@
 
 #include "forward.hpp"
 #include "route.hpp"
+#include "query.hpp"
 
 namespace services::storage {
     using document_t  = components::storage::document_t;
@@ -26,7 +27,7 @@ namespace services::storage {
         collection_t(database_ptr database, log_t& log);
         void insert(session_t& session_t,std::string& collection,document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
-        std::list<document_t *> search(const components::storage::conditional_expression& cond);
+        std::list<document_t *> search(query_ptr cond);
         auto all() -> void;
        /// void insert_many(py::iterable iterable);
         std::size_t size() const;
