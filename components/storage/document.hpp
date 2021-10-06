@@ -77,8 +77,8 @@ namespace components::storage {
             json_= json_t(tmp.extract());
         }*/
         template<class T>
-        T get_as(std::string key){
-            std::cerr << json_[std::move(key)].type_name() << std::endl;
+        T get_as(std::string key) const{
+            //std::cerr << json_[std::move(key)].type_name() << std::endl;
             return json_[std::move(key)].get<T>();
         }
 

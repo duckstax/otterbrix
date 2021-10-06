@@ -35,4 +35,5 @@ target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")
 
 if (DEV_MODE)
     add_subdirectory(tests)
+    add_definitions(-DDEV_MODE)
 endif()
