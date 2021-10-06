@@ -16,22 +16,22 @@ document_t gen_doc() {
 TEST_CASE("query_t create") {
     auto doc = gen_doc();
 
-    REQUIRE((query_t<bool>("male") == true).check(doc));
-    REQUIRE((query_t<bool>("male") != false).check(doc));
+    REQUIRE((query("male") == true)->check(doc));
+    REQUIRE((query("male") != false)->check(doc));
 
-    REQUIRE((query_t<long>("age") == 6).check(doc));
-    REQUIRE((query_t<long>("age") > 4).check(doc));
-    REQUIRE((query_t<long>("age") < 7).check(doc));
-    REQUIRE((query_t<long>("age") >= 4).check(doc));
-    REQUIRE((query_t<long>("age") <= 6).check(doc));
-    REQUIRE_FALSE((query_t<long>("age") != 6).check(doc));
-    REQUIRE_FALSE((query_t<long>("age") > 7).check(doc));
-    REQUIRE_FALSE((query_t<long>("age") < 6).check(doc));
-    REQUIRE_FALSE((query_t<long>("age") >= 7).check(doc));
-    REQUIRE_FALSE((query_t<long>("age") <= 5).check(doc));
+    REQUIRE((query("age") == 6)->check(doc));
+    REQUIRE((query("age") > 4)->check(doc));
+    REQUIRE((query("age") < 7)->check(doc));
+    REQUIRE((query("age") >= 4)->check(doc));
+    REQUIRE((query("age") <= 6)->check(doc));
+    REQUIRE_FALSE((query("age") != 6)->check(doc));
+    REQUIRE_FALSE((query("age") > 7)->check(doc));
+    REQUIRE_FALSE((query("age") < 6)->check(doc));
+    REQUIRE_FALSE((query("age") >= 7)->check(doc));
+    REQUIRE_FALSE((query("age") <= 5)->check(doc));
 
-    REQUIRE((query_t<std::string>("name") == "Rex").check(doc));
-    REQUIRE((query_t<std::string>("type") != "cat").check(doc));
+    REQUIRE((query("name") == std::string("Rex"))->check(doc));
+    REQUIRE((query("type") != std::string("cat"))->check(doc));
 }
 
 
@@ -62,18 +62,19 @@ TEST_CASE("query_t regex") {
 }
 
 
-//TEST_CASE("query_t and/or/not") {
-//    auto c1 = query_t<int>([](int v) { return v > 3; });
-//    auto c2 = query_t<int>([](int v) { return v < 10; });
+TEST_CASE("query_t and/or/not") {
+    auto doc = gen_doc();
 
-//    REQUIRE((c1 & c2).check(5));
-//    REQUIRE_FALSE((c1 & c2).check(11));
-//    REQUIRE_FALSE((c1 & c2).check(2));
+    REQUIRE((query("name") == std::string("Rex") & query("age") == 6)->check(doc));
+    REQUIRE_FALSE((query("name") == std::string("Rex") & query("age") == 5)->check(doc));
+    REQUIRE_FALSE((query("name") == std::string("Re") & query("age") == 6)->check(doc));
+    REQUIRE_FALSE((query("name") == std::string("Re") & query("age") == 5)->check(doc));
 
-//    REQUIRE((c1 | c2).check(5));
-//    REQUIRE((c1 | c2).check(11));
-//    REQUIRE((c1 | c2).check(2));
+    REQUIRE((query("name") == std::string("Rex") | query("age") == 6)->check(doc));
+    REQUIRE((query("name") == std::string("Rex") | query("age") == 5)->check(doc));
+    REQUIRE((query("name") == std::string("Re") | query("age") == 6)->check(doc));
+    REQUIRE_FALSE((query("name") == std::string("Re") | query("age") == 5)->check(doc));
 
-//    REQUIRE((!c1).check(2));
-//    REQUIRE_FALSE((!c1).check(5));
-//}
+    REQUIRE_FALSE((!(query("name") == std::string("Rex")))->check(doc));
+    REQUIRE((!(query("name") == std::string("Re")))->check(doc));
+}
