@@ -20,8 +20,8 @@ public:
     ~empty_query_t() override;
     bool check(const document_t &doc) const override;
 
-    std::string _key;
-    std::vector<empty_query_t *> _sub_query;
+    std::string key_;
+    std::vector<empty_query_t *> sub_query_;
 };
 
 using query_ptr = std::unique_ptr<empty_query_t>;
@@ -32,78 +32,157 @@ query_ptr operator |(query_ptr &&q1, query_ptr &&q2) noexcept;
 query_ptr operator !(query_ptr &&q) noexcept;
 
 
+template<class T> struct query_helper               { typedef T type; };
+template<> struct query_helper<char *>              { typedef std::string type; };
+template<int size> struct query_helper<char [size]> { typedef std::string type; };
+
 template <class T>
 class query_t : public empty_query_t {
 public:
-    explicit query_t(std::string &&key) //delete
-        : empty_query_t(std::move(key))
-        , _check([](T){ return true; })
-    {}
-
     query_t(std::string &&key, std::function<bool(T)> check)
         : empty_query_t(std::move(key))
-        , _check(check)
+        , check_(check)
     {}
 
     bool check(const document_t &doc) const override {
-        return _check(doc.get_as<T>(_key));
-    }
-
-    query_t between(const T &v1, const T &v2) { //move
-        _check = [v1, v2](T v){ return v1 <= v && v <= v2; };
-        return *this;
-    }
-
-    template <class CONT>
-    query_t any(const CONT &array) { //move
-        _check = [array](T v){ return std::find(array.begin(), array.end(), v) != array.end(); };
-        return *this;
-    }
-
-    template <class CONT>
-    query_t all(const CONT &array) { //move
-        _check = [array](T v){ return std::find_if(array.begin(), array.end(), [&](T v2){ return v2 != v; }) == array.end(); };
-        return *this;
-    }
-
-    query_t matches(const std::string &regex) { //move
-        _check = [&](T v){ return std::regex_search(v, std::regex(regex)); };
-        return *this;
+        return check_(doc.get_as<T>(key_));
     }
 
 private:
-    std::function<bool(T)> _check;
+    std::function<bool(T)> check_;
 };
 
 
 template <class T>
 query_ptr operator ==(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v == value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v == value; }));
 }
 
 template <class T>
 query_ptr operator !=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v != value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v != value; }));
 }
 
 template <class T>
 query_ptr operator >(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v > value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v > value; }));
 }
 
 template <class T>
 query_ptr operator >=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v >= value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v >= value; }));
 }
 
 template <class T>
 query_ptr operator <(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v < value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v < value; }));
 }
 
 template <class T>
 query_ptr operator <=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->_key), [value](T v){ return v <= value; }));
+    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v <= value; }));
 }
+
+
+template <class T>
+query_ptr eq(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) == value;
+}
+
+template <class T>
+query_ptr ne(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) != value;
+}
+
+template <class T>
+query_ptr gt(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) > value;
+}
+
+template <class T>
+query_ptr ge(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) >= value;
+}
+
+template <class T>
+query_ptr lt(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) < value;
+}
+
+template <class T>
+query_ptr le(query_ptr &&q, const T &value) noexcept {
+    return query(std::move(q->key_)) <= value;
+}
+
+
+template <class T>
+query_ptr eq(std::string &&key, const T &value) noexcept {
+    return eq(query(std::move(key)), value);
+}
+
+template <class T>
+query_ptr ne(std::string &&key, const T &value) noexcept {
+    return ne(query(std::move(key)), value);
+}
+
+template <class T>
+query_ptr gt(std::string &&key, const T &value) noexcept {
+    return gt(query(std::move(key)), value);
+}
+
+template <class T>
+query_ptr ge(std::string &&key, const T &value) noexcept {
+    return ge(query(std::move(key)), value);
+}
+
+template <class T>
+query_ptr lt(std::string &&key, const T &value) noexcept {
+    return lt(query(std::move(key)), value);
+}
+
+template <class T>
+query_ptr le(std::string &&key, const T &value) noexcept {
+    return le(query(std::move(key)), value);
+}
+
+
+template <class T>
+query_ptr between(query_ptr &&q, const T &v1, const T &v2) {
+    return query_ptr(new query_t<T>(std::move(q->key_), [v1, v2](T v){
+        return v1 <= v && v <= v2;
+    }));
+}
+
+template <class T>
+query_ptr between(std::string &&key, const T &v1, const T &v2) {
+    return between(query(std::move(key)), v1, v2);
+}
+
+template <class CONT>
+query_ptr any(query_ptr &&q, const CONT &array) {
+    return query_ptr(new query_t<typename CONT::value_type>(std::move(q->key_), [array](typename CONT::value_type v){
+        return std::find(array.begin(), array.end(), v) != array.end();
+    }));
+}
+
+template <class CONT>
+query_ptr any(std::string &&key, const CONT &array) {
+    return any(query(std::move(key)), array);
+}
+
+template <class CONT>
+query_ptr all(query_ptr &&q, const CONT &array) {
+    return query_ptr(new query_t<typename CONT::value_type>(std::move(q->key_), [array](typename CONT::value_type v){
+        return std::find_if(array.begin(), array.end(), [&](typename CONT::value_type v2){ return v2 != v; }) == array.end();
+    }));
+}
+
+template <class CONT>
+query_ptr all(std::string &&key, const CONT &array) {
+    return all(query(std::move(key)), array);
+}
+
+query_ptr matches(std::string &&key, const std::string &regex);
+query_ptr matches(query_ptr &&q, const std::string &regex);
 
 }

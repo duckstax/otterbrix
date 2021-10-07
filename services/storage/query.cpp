@@ -3,39 +3,39 @@
 namespace services::storage {
 
 empty_query_t::empty_query_t(std::string &&key)
-    : _key(std::move(key))
+    : key_(std::move(key))
 {}
 
 empty_query_t::empty_query_t(std::string &&key, query_ptr &&q1, query_ptr &&q2)
-    : _key(std::move(key))
+    : key_(std::move(key))
 {
-    _sub_query.push_back(std::move(q1.release()));
-    if (q2) _sub_query.push_back(std::move(q2.release()));
+    sub_query_.push_back(std::move(q1.release()));
+    if (q2) sub_query_.push_back(std::move(q2.release()));
 }
 
 empty_query_t::~empty_query_t() {
-    for (auto q : _sub_query) {
+    for (auto q : sub_query_) {
         delete q;
     }
-    _sub_query.clear();
+    sub_query_.clear();
 }
 
 bool empty_query_t::check(const document_t &doc) const {
-    if (!_sub_query.empty()) {
-        if (_key == "and") {
+    if (!sub_query_.empty()) {
+        if (key_ == "and") {
             bool res = true;
-            for (auto q : _sub_query) {
+            for (auto q : sub_query_) {
                 res &= q->check(doc);
             }
             return res;
-        } else if (_key == "or") {
+        } else if (key_ == "or") {
             bool res = false;
-            for (auto q : _sub_query) {
+            for (auto q : sub_query_) {
                 res |= q->check(doc);
             }
             return res;
-        } else if (_key == "not") {
-            return !_sub_query.at(0)->check(doc);
+        } else if (key_ == "not") {
+            return !sub_query_.at(0)->check(doc);
         }
     }
     return true;
@@ -56,6 +56,16 @@ query_ptr operator |(query_ptr &&q1, query_ptr &&q2) noexcept {
 
 query_ptr operator !(query_ptr &&q) noexcept {
     return std::make_unique<empty_query_t>("not", std::move(q));
+}
+
+query_ptr matches(query_ptr &&q, const std::string &regex) {
+    return query_ptr(new query_t<std::string>(std::move(q->key_), [&](std::string v){
+                         return std::regex_search(v, std::regex(regex));
+                     }));
+}
+
+query_ptr matches(std::string &&key, const std::string &regex) {
+    return matches(query(std::move(key)), regex);
 }
 
 }
