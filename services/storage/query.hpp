@@ -35,52 +35,53 @@ query_ptr operator !(query_ptr &&q) noexcept;
 template<class T> struct query_helper               { typedef T type; };
 template<> struct query_helper<char *>              { typedef std::string type; };
 template<int size> struct query_helper<char [size]> { typedef std::string type; };
+#define QH(T) typename query_helper<T>::type
 
 template <class T>
 class query_t : public empty_query_t {
 public:
-    query_t(std::string &&key, std::function<bool(T)> check)
+    query_t(std::string &&key, std::function<bool(QH(T))> check)
         : empty_query_t(std::move(key))
         , check_(check)
     {}
 
     bool check(const document_t &doc) const override {
-        return check_(doc.get_as<T>(key_));
+        return check_(doc.get_as<QH(T)>(key_));
     }
 
 private:
-    std::function<bool(T)> check_;
+    std::function<bool(QH(T))> check_;
 };
 
 
 template <class T>
 query_ptr operator ==(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v == value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v == value; }));
 }
 
 template <class T>
 query_ptr operator !=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v != value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v != value; }));
 }
 
 template <class T>
 query_ptr operator >(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v > value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v > value; }));
 }
 
 template <class T>
 query_ptr operator >=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v >= value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v >= value; }));
 }
 
 template <class T>
 query_ptr operator <(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v < value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v < value; }));
 }
 
 template <class T>
 query_ptr operator <=(query_ptr &&q, const T &value) noexcept {
-    return query_ptr(new query_t<T>(std::move(q->key_), [value](T v){ return v <= value; }));
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [value](QH(T) v){ return v <= value; }));
 }
 
 
@@ -148,7 +149,7 @@ query_ptr le(std::string &&key, const T &value) noexcept {
 
 template <class T>
 query_ptr between(query_ptr &&q, const T &v1, const T &v2) {
-    return query_ptr(new query_t<T>(std::move(q->key_), [v1, v2](T v){
+    return query_ptr(new query_t<QH(T)>(std::move(q->key_), [v1, v2](QH(T) v){
         return v1 <= v && v <= v2;
     }));
 }
