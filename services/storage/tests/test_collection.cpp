@@ -71,7 +71,12 @@ void print_search(const std::string &search, const std::list<document_t*> docs) 
 
 TEST_CASE("collection_t search") {
     auto collection = gen_collection();
-    print_search("===> Search (name == Rex)", collection->search(query("name") == std::string("Rex")));
-    print_search("===> Search (age > 3)", collection->search(query("age") > 3));
-    print_search("===> Search (type == cat & age > 3)", collection->search(query("type") == std::string("cat") & query("age") > 3));
+    REQUIRE(collection->search(eq("name", "Rex")).size() == 1);
+    REQUIRE(collection->search(gt("age", 2)).size() == 3);
+    REQUIRE(collection->search(eq("type", "cat")).size() == 2);
+    REQUIRE(collection->search(eq("type", "dog") & lt("age", 5)).size() == 2);
+    REQUIRE(collection->search(any("age", std::vector<int>{2,3,4})).size() == 3);
+    REQUIRE(collection->search(all("age", std::vector<int>{2,3})).size() == 0);
+    REQUIRE(collection->search(all("age", std::vector<int>{2})).size() == 2);
+    REQUIRE(collection->search(matches("name", "Ch*")).size() == 2);
 }
