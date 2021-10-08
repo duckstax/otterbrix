@@ -75,8 +75,12 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search(gt("age", 2)).size() == 3);
     REQUIRE(collection->search(eq("type", "cat")).size() == 2);
     REQUIRE(collection->search(eq("type", "dog") & lt("age", 5)).size() == 2);
+    REQUIRE(collection->search(eq("type", "dog") & ge("age", 2) & lt("age", 5)).size() == 2);
     REQUIRE(collection->search(any("age", std::vector<int>{2,3,4})).size() == 3);
     REQUIRE(collection->search(all("age", std::vector<int>{2,3})).size() == 0);
     REQUIRE(collection->search(all("age", std::vector<int>{2})).size() == 2);
     REQUIRE(collection->search(matches("name", "Ch*")).size() == 2);
+    REQUIRE(collection->search(!eq("name", "Rex")).size() == 4);
+    REQUIRE(collection->search(!!eq("name", "Rex")).size() == 1);
+    REQUIRE(collection->search(!!!eq("name", "Rex")).size() == 4);
 }

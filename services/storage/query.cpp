@@ -46,26 +46,39 @@ query_ptr query(std::string &&key) noexcept {
     return std::make_unique<empty_query_t>(std::move(key));
 }
 
+query_ptr union_query(std::string &&key, query_ptr &&q1, query_ptr &&q2) noexcept {
+    if (key == q1->key_) {
+        q1->sub_query_.push_back(q2.release());
+        return std::move(q1);
+    }
+    if (key == q2->key_) {
+        q2->sub_query_.push_back(q1.release());
+        return std::move(q2);
+    }
+    return std::make_unique<empty_query_t>(std::move(key), std::move(q1), std::move(q2));
+}
+
 query_ptr operator &(query_ptr &&q1, query_ptr &&q2) noexcept {
-    return std::make_unique<empty_query_t>("and", std::move(q1), std::move(q2));
+    return union_query("and", std::move(q1), std::move(q2));
 }
 
 query_ptr operator |(query_ptr &&q1, query_ptr &&q2) noexcept {
-    return std::make_unique<empty_query_t>("or", std::move(q1), std::move(q2));
+    return union_query("or", std::move(q1), std::move(q2));
 }
 
 query_ptr operator !(query_ptr &&q) noexcept {
+    if (q->key_ == "not") {
+        auto res = query_ptr(q->sub_query_.at(0));
+        q->sub_query_.clear();
+        return res;
+    }
     return std::make_unique<empty_query_t>("not", std::move(q));
 }
 
-query_ptr matches(query_ptr &&q, const std::string &regex) {
-    return query_ptr(new query_t<std::string>(std::move(q->key_), [&](std::string v){
+query_ptr matches(std::string &&key, const std::string &regex) {
+    return query_ptr(new query_t<std::string>(std::move(key), [&](std::string v){
                          return std::regex_search(v, std::regex(regex));
                      }));
-}
-
-query_ptr matches(std::string &&key, const std::string &regex) {
-    return matches(query(std::move(key)), regex);
 }
 
 }
