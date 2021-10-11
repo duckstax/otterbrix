@@ -75,7 +75,7 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search(gt("age", 2)).size() == 3);
     REQUIRE(collection->search(eq("type", "cat")).size() == 2);
     REQUIRE(collection->search(eq("type", "dog") & lt("age", 5)).size() == 2);
-    REQUIRE(collection->search(eq("type", "dog") & ge("age", 2) & lt("age", 5)).size() == 2);
+    REQUIRE(collection->search(eq("type", "dog") & gte("age", 2) & lt("age", 5)).size() == 2);
     REQUIRE(collection->search(any("age", std::vector<int>{2,3,4})).size() == 3);
     REQUIRE(collection->search(all("age", std::vector<int>{2,3})).size() == 0);
     REQUIRE(collection->search(all("age", std::vector<int>{2})).size() == 2);
@@ -83,4 +83,28 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search(!eq("name", "Rex")).size() == 4);
     REQUIRE(collection->search(!!eq("name", "Rex")).size() == 1);
     REQUIRE(collection->search(!!!eq("name", "Rex")).size() == 4);
+}
+
+TEST_CASE("collection_t find") {
+    auto collection = gen_collection();
+    auto res = collection->find(document_t::json_t::parse("{\"name\": {\"$eq\": \"Rex\"}}"));
+    REQUIRE(res.size() == 1);
+    res = collection->find(document_t::json_t::parse("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
+    REQUIRE(res.size() == 1);
+    res = collection->find(document_t::json_t::parse("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    REQUIRE(res.size() == 2);
+    res = collection->find(document_t::json_t::parse("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    REQUIRE(res.size() == 3);
+    res = collection->find(document_t::json_t::parse("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
+    REQUIRE(res.size() == 3);
+    res = collection->find(document_t::json_t::parse("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
+    REQUIRE(res.size() == 5);
+    res = collection->find(document_t::json_t::parse("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
+    REQUIRE(res.size() == 2);
+    res = collection->find(document_t::json_t::parse("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
+    REQUIRE(res.size() == 0);
+    res = collection->find(document_t::json_t::parse("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
+    REQUIRE(res.size() == 1);
+//    res = collection->find(document_t::json_t::parse("{\"name\": {\"$regex\": \"Ch*\"}}"));
+//    REQUIRE(res.size() == 2);
 }

@@ -44,6 +44,10 @@ namespace services::storage {
         return res;
     }
 
+    std::list<document_t *> collection_t::find(const document_t &cond) {
+        return search(parse_condition(cond));
+    }
+
     auto collection_t::all() -> void {
         /*
         py::list tmp;

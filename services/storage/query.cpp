@@ -6,6 +6,10 @@ empty_query_t::empty_query_t(std::string &&key)
     : key_(std::move(key))
 {}
 
+empty_query_t::empty_query_t(const std::string &key)
+    : key_(key)
+{}
+
 empty_query_t::empty_query_t(std::string &&key, query_ptr &&q1, query_ptr &&q2)
     : key_(std::move(key))
 {
@@ -75,10 +79,76 @@ query_ptr operator !(query_ptr &&q) noexcept {
     return std::make_unique<empty_query_t>("not", std::move(q));
 }
 
-query_ptr matches(std::string &&key, const std::string &regex) {
+query_ptr matches(const std::string &key, const std::string &regex) {
     return query_ptr(new query_t<std::string>(std::move(key), [&](std::string v){
                          return std::regex_search(v, std::regex(regex));
                      }));
+}
+
+
+#define GET_CONDITION(FUNC, KEY, DOC) \
+    DOC.is_boolean() ? FUNC(KEY, DOC.as_bool()) : \
+    DOC.is_integer() ? FUNC(KEY, DOC.as_int32()) : \
+    DOC.is_float()   ? FUNC(KEY, DOC.as_double()) : \
+    DOC.is_string()  ? FUNC(KEY, DOC.as_string()) : \
+    nullptr; //todo
+
+query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const std::string &prev_key) {
+    query_ptr q = nullptr;
+    for (auto it = cond.cbegin(); it != cond.cend(); ++it) {
+        if (it.key() == "$eq") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(eq, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$ne") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(ne, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$gt") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(gt, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$gte") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(gte, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$lt") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(lt, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$lte") {
+            document_t doc(it.value());
+            query_ptr q2 = GET_CONDITION(lte, prev_key, doc);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (it.key() == "$and") {
+            q = query("and");
+            for (auto &val : it.value()) {
+                q->sub_query_.push_back(parse_condition(val).release());
+            }
+        } else if (it.key() == "$or") {
+            q = query("or");
+            for (auto &val : it.value()) {
+                q->sub_query_.push_back(parse_condition(val).release());
+            }
+        } else if (it.key() == "$not") {
+            q = query("not");
+            q->sub_query_.push_back(parse_condition(it.value()).release());
+        } else if (it.key() == "$in") {
+            q = any(prev_key, it.value());
+        } else if (it.key() == "$all") {
+            q = all(prev_key, it.value());
+//        } else if (it.key() == "$regex") { //bug
+//            std::string regex = document_t(it.value()).as_string();
+//            regex = std::regex_replace(regex, std::regex("\\\\\\"), "|||");
+//            regex = std::regex_replace(regex, std::regex("\\\\"), "|||");
+//            regex = std::regex_replace(regex, std::regex("\\"), "");
+//            regex = std::regex_replace(regex, std::regex("|||"), "\\");
+//            q = matches(prev_key, it.value());
+        } else if (it.value().is_object()) {
+            return parse_condition(it.value(), std::move(q), it.key());
+        }
+    }
+    return prev_cond ? std::move(prev_cond) & std::move(q) : std::move(q);
 }
 
 }

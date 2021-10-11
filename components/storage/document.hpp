@@ -11,6 +11,7 @@ namespace components::storage {
     public:
         using json_t = nlohmann::json;
         using json_ptr_t = std::unique_ptr<json_t>;
+        using const_iterator = json_t::const_iterator;
 
         static auto  to_array() {
             return document_t(json_t::array());
@@ -132,6 +133,14 @@ namespace components::storage {
         template<class Char>
         void update(const std::basic_string<Char>& key, const std::string &value){
             json_[std::move(key)]=value;
+        }
+
+        const_iterator cbegin() const {
+            return json_.cbegin();
+        }
+
+        const_iterator cend() const {
+            return json_.cend();
         }
 
         template<class Char>

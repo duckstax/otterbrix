@@ -41,13 +41,13 @@ TEST_CASE("query_t create") {
     REQUIRE(eq("age", 6)->check(doc));
     REQUIRE(gt("age", 4)->check(doc));
     REQUIRE(lt("age", 7)->check(doc));
-    REQUIRE(ge("age", 4)->check(doc));
-    REQUIRE(le("age", 6)->check(doc));
+    REQUIRE(gte("age", 4)->check(doc));
+    REQUIRE(lte("age", 6)->check(doc));
     REQUIRE_FALSE(ne("age", 6)->check(doc));
     REQUIRE_FALSE(gt("age", 7)->check(doc));
     REQUIRE_FALSE(lt("age", 6)->check(doc));
-    REQUIRE_FALSE(ge("age", 7)->check(doc));
-    REQUIRE_FALSE(le("age", 5)->check(doc));
+    REQUIRE_FALSE(gte("age", 7)->check(doc));
+    REQUIRE_FALSE(lte("age", 5)->check(doc));
 
     REQUIRE(eq("name", "Rex")->check(doc));
     REQUIRE(ne("type", "cat")->check(doc));

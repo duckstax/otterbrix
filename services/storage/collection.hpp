@@ -28,6 +28,7 @@ namespace services::storage {
         void insert(session_t& session_t,std::string& collection,document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
         std::list<document_t *> search(query_ptr cond);
+        std::list<document_t *> find(const document_t &cond);
         auto all() -> void;
        /// void insert_many(py::iterable iterable);
         std::size_t size() const;
