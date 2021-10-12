@@ -37,7 +37,7 @@ namespace services::storage {
     std::list<document_t *> collection_t::search(query_ptr cond) {
         std::list<document_t *> res;
         for (auto it = storage_.begin(); it != storage_.end(); ++it) {
-            if (cond->check(it->second)) {
+            if (!cond || cond->check(it->second)) {
                 res.push_back(&it->second);
             }
         }

@@ -79,7 +79,7 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search(any("age", std::vector<int>{2,3,4})).size() == 3);
     REQUIRE(collection->search(all("age", std::vector<int>{2,3})).size() == 0);
     REQUIRE(collection->search(all("age", std::vector<int>{2})).size() == 2);
-    REQUIRE(collection->search(matches("name", "Ch*")).size() == 2);
+    REQUIRE(collection->search(matches("name", "Ch.*")).size() == 2);
     REQUIRE(collection->search(!eq("name", "Rex")).size() == 4);
     REQUIRE(collection->search(!!eq("name", "Rex")).size() == 1);
     REQUIRE(collection->search(!!!eq("name", "Rex")).size() == 4);
@@ -105,6 +105,6 @@ TEST_CASE("collection_t find") {
     REQUIRE(res.size() == 0);
     res = collection->find(document_t::json_t::parse("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
     REQUIRE(res.size() == 1);
-//    res = collection->find(document_t::json_t::parse("{\"name\": {\"$regex\": \"Ch*\"}}"));
-//    REQUIRE(res.size() == 2);
+    res = collection->find(document_t::json_t::parse("{\"name\": {\"$regex\": \"Ch.*\"}}"));
+    REQUIRE(res.size() == 2);
 }

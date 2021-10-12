@@ -74,8 +74,11 @@ TEST_CASE("query_t between/any/all") {
 TEST_CASE("query_t regex") {
     auto doc = gen_doc();
 
-    REQUIRE(matches("name", "Re")->check(doc));
-    REQUIRE(matches("type", "og")->check(doc));
+    REQUIRE_FALSE(matches("name", "Re")->check(doc));
+    REQUIRE(matches("name", "Re.*")->check(doc));
+    REQUIRE_FALSE(matches("type", "og")->check(doc));
+    REQUIRE(matches("type", ".*og")->check(doc));
+    REQUIRE(matches("type", "dog")->check(doc));
     REQUIRE_FALSE(matches("type", "Dog")->check(doc));
 }
 

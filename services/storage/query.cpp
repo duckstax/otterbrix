@@ -80,8 +80,8 @@ query_ptr operator !(query_ptr &&q) noexcept {
 }
 
 query_ptr matches(const std::string &key, const std::string &regex) {
-    return query_ptr(new query_t<std::string>(std::move(key), [&](std::string v){
-                         return std::regex_search(v, std::regex(regex));
+    return query_ptr(new query_t<std::string>(std::move(key), [regex](std::string v){
+                         return std::regex_match(v, std::regex(regex));
                      }));
 }
 
@@ -95,6 +95,7 @@ query_ptr matches(const std::string &key, const std::string &regex) {
 
 query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const std::string &prev_key) {
     query_ptr q = nullptr;
+//    std::cerr << cond.to_string() << std::endl;
     for (auto it = cond.cbegin(); it != cond.cend(); ++it) {
         if (it.key() == "$eq") {
             document_t doc(it.value());
@@ -137,13 +138,13 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
             q = any(prev_key, it.value());
         } else if (it.key() == "$all") {
             q = all(prev_key, it.value());
-//        } else if (it.key() == "$regex") { //bug
-//            std::string regex = document_t(it.value()).as_string();
-//            regex = std::regex_replace(regex, std::regex("\\\\\\"), "|||");
-//            regex = std::regex_replace(regex, std::regex("\\\\"), "|||");
-//            regex = std::regex_replace(regex, std::regex("\\"), "");
-//            regex = std::regex_replace(regex, std::regex("|||"), "\\");
-//            q = matches(prev_key, it.value());
+        } else if (it.key() == "$regex") {
+            std::string regex = document_t(it.value()).as_string();
+            //regex = std::regex_replace(regex, std::regex("\\\\\\"), "|||");
+            //regex = std::regex_replace(regex, std::regex("\\\\"), "|||");
+            //regex = std::regex_replace(regex, std::regex("\\"), "");
+            //regex = std::regex_replace(regex, std::regex("|||"), "\\");
+            q = matches(prev_key, regex);
         } else if (it.value().is_object()) {
             return parse_condition(it.value(), std::move(q), it.key());
         }
