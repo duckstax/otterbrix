@@ -40,6 +40,8 @@ dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
     add_handler("insert", &dispatcher_t::insert);
     add_handler("insert_finish", &dispatcher_t::insert_finish);
+    add_handler("find", &dispatcher_t::find);
+    add_handler("find_finish", &dispatcher_t::find_finish);
 }
 void dispatcher_t::create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_database_init: {}", name);
@@ -67,4 +69,13 @@ void dispatcher_t::insert(session_t& session, std::string& collection,components
 void dispatcher_t::insert_finish(session_t& session, result_insert_one& result) {
     log_.debug("dispatcher_t::insert_finish");
     insert_callback_(result);
+}
+void dispatcher_t::find(services::storage::session_t &session, std::string &collection, components::storage::document_t &condition, std::function<void (result_find &)> &callback) {
+    log_.debug("dispatcher_t::find: {}", collection);
+    find_callback_ = std::move(callback);
+    goblin_engineer::send(addresses("collection"), self(), "find", session, collection, std::move(condition));
+}
+void dispatcher_t::find_finish(services::storage::session_t &, result_find &result) {
+    log_.debug("dispatcher_t::find_finish");
+    find_callback_(result);
 }

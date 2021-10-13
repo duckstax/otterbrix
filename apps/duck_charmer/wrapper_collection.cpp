@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <storage/result_insert_one.hpp>
+#include <storage/result_find.hpp>
 #include <storage/document.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -93,6 +94,33 @@ auto wrapper_collection::search(py::object cond) -> py::list {
     }
     return tmp;
      */
+}
+
+auto wrapper_collection::find(py::object cond) -> py::list {
+    log_.trace("wrapper_collection::find");
+    py::list res;
+    if (py::isinstance<py::dict>(cond)) {
+        components::storage::document_t condition;
+        to_document(cond, condition);
+        goblin_engineer::send(
+            dispatcher_,
+            goblin_engineer::actor_address(),
+            "find",
+            session_,
+            std::string(collection_->type().data(),collection_->type().size()),
+            condition,
+            std::function<void(result_find&)>([this,res](result_find& result) {
+                for (auto it : result.finded_docs_) {
+                    res.append(it->to_string());
+                }
+                d_();
+            }));
+        log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_->type());
+        std::unique_lock<std::mutex> lk(mtx_);
+        cv_.wait(lk, [this]() { return i == 1; });
+        log_.debug("wrapper_client::dispatcher return result of find");
+    }
+    return res;
 }
 
 auto wrapper_collection::all() -> py::list {

@@ -4,6 +4,7 @@
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
 #include "result_insert_one.hpp"
+#include "result_find.hpp"
 
 namespace services::storage {
     collection_t::collection_t(database_ptr database, log_t& log)
@@ -12,6 +13,8 @@ namespace services::storage {
         /// add_handler(collection::select, &collection_t::select);
         add_handler(collection::insert, &collection_t::insert);
         //add_handler(collection::erase, &collection_t::erase);
+        add_handler(collection::search, &collection_t::search);
+        add_handler(collection::find, &collection_t::find);
     }
 
     void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
@@ -34,18 +37,22 @@ namespace services::storage {
         }
     }
 
-    std::list<document_t *> collection_t::search(query_ptr cond) {
-        std::list<document_t *> res;
-        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
-            if (!cond || cond->check(it->second)) {
-                res.push_back(&it->second);
-            }
-        }
-        return res;
+    auto collection_t::search(session_t& session, std::string &collection, query_ptr cond) -> void {
+        log_.debug("collection {}::search", collection);
+        auto dispatcher = addresses("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher->type());
+        auto database = addresses("database");
+        log_.debug("database : {}", database->type());
+        goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
     }
 
-    std::list<document_t *> collection_t::find(const document_t &cond) {
-        return search(parse_condition(cond));
+    auto collection_t::find(session_t& session, std::string &collection, document_t &cond) -> void {
+        log_.debug("collection {}::find", collection);
+        auto dispatcher = addresses("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher->type());
+        auto database = addresses("database");
+        log_.debug("database : {}", database->type());
+        goblin_engineer::send(dispatcher, self(), "find_finish", session, result_find(search_(parse_condition(cond))));
     }
 
     auto collection_t::all() -> void {
@@ -172,6 +179,16 @@ namespace services::storage {
 
     void collection_t::drop_() {
         storage_.clear();
+    }
+
+    std::list<document_t *> collection_t::search_(query_ptr cond) {
+        std::list<document_t *> res;
+        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
+            if (!cond || cond->check(it->second)) {
+                res.push_back(&it->second);
+            }
+        }
+        return res;
     }
 
     auto collection_t::remove_(const std::string& key) {

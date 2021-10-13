@@ -10,6 +10,7 @@ friedrich_collection = friedrich_database["FriedrichCollection"]
 
 for num in range(100):
     new_obj = {}
+    new_obj['_id'] = str(num)
     new_obj['count'] = num
     new_obj['countStr'] = str(num)
     new_obj['countFloat'] = float(num) + 0.1
