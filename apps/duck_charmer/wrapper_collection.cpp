@@ -111,7 +111,7 @@ auto wrapper_collection::find(py::object cond) -> py::list {
             condition,
             std::function<void(result_find&)>([this,res](result_find& result) {
                 for (auto it : result.finded_docs_) {
-                    res.append(it->to_string());
+                    res.append(from_document(*it));
                 }
                 d_();
             }));
