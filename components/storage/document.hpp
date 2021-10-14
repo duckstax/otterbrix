@@ -165,6 +165,8 @@ namespace components::storage {
 
         [[nodiscard]] int32_t as_int32() const;
 
+        [[nodiscard]] json_t::array_t as_array() const;
+
         [[nodiscard]] bool is_null() const noexcept;
 
         [[nodiscard]] bool is_boolean() const noexcept;
