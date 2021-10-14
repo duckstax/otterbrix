@@ -191,34 +191,37 @@ void update_document_inner(std::string&& key, const py::handle& obj, document_t&
     throw std::runtime_error("update_document_inner not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
+auto from_document(const components::storage::document_t &document) -> py::object {
+    //todo
+    if (document.is_null()) {
+        return py::none();
+    } else if (document.is_boolean()) {
+        return py::bool_(document.as_bool());
+    } else if (document.is_integer()) {
+        return py::int_(document.as_int32());
+    } else if (document.is_float()) {
+        return py::float_(document.as_double());
+    } else if (document.is_string()) {
+        return py::str(document.as_string());
+    } else if (document.is_array()) {
+        py::list list;
+        for (auto it : document.as_array()) {
+            list.append(from_document(it));
+        }
+        return std::move(list);
+    } else if (document.is_object()) {
+        py::dict dict;
+        for (auto it = document.cbegin(); it != document.cend(); ++it) {
+            dict[py::str(it.key())] = from_document(it.value());
+        }
+        return std::move(dict);
+    }
+    return py::none();
+}
+
 auto from_object(const std::string& key, document_t& target) -> py::object {
     auto value = target.get(key);
-    if (value.is_null()) {
-        return py::none();
-    } else if (value.is_boolean()) {
-        return py::bool_(value.as_bool());
-    } else if (value.is_integer()) {
-        return py::int_(value.as_int32());
-    } else if (value.is_float()) {
-        return py::float_(value.as_double());
-    } else if (value.is_string()) {
-        return py::str(value.as_string());
-    } /*else if (target.get(key).is_array()) {
-        py::list obj;
-        auto&j = target.get(key);
-        for (const auto &el : j) {
-            obj.append(from_json(el));
-        }
-        return std::move(obj);
-    } else // Object
-    {
-        py::dict obj;
-        for (nl::json::const_iterator it = j.cbegin(); it != j.cend(); ++it) {
-            obj[py::str(it.key())] = from_json(it.value());
-        }
-        return std::move(obj);
-    }
-    */
+    return from_document(value);
 }
 
 void update_document(const py::handle& source, document_t& target) {
