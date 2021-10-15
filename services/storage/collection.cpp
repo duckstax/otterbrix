@@ -4,7 +4,7 @@
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
 #include "result_insert_one.hpp"
-#include "result_find.hpp"
+#include "result.hpp"
 
 namespace services::storage {
     collection_t::collection_t(database_ptr database, log_t& log)
@@ -15,6 +15,7 @@ namespace services::storage {
         //add_handler(collection::erase, &collection_t::erase);
         add_handler(collection::search, &collection_t::search);
         add_handler(collection::find, &collection_t::find);
+        add_handler(collection::size, &collection_t::size);
     }
 
     void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
@@ -87,8 +88,13 @@ namespace services::storage {
         }
     }
 */
-    std::size_t collection_t::size() const {
-        return size_();
+    auto collection_t::size(session_t& session, std::string& collection) -> void {
+        log_.debug("collection {}::size", collection);
+        auto dispatcher = addresses("dispatcher");
+        log_.debug("dispatcer : {}", dispatcher->type());
+        auto database = addresses("database");
+        log_.debug("database : {}", database->type());
+        goblin_engineer::send(dispatcher, self(), "size_finish", session, result_size(size_()));
     }
 
     void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {

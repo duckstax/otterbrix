@@ -31,7 +31,7 @@ namespace services::storage {
         auto find(session_t& session, std::string& collection, document_t &cond) -> void;
         auto all() -> void;
        /// void insert_many(py::iterable iterable);
-        std::size_t size() const;
+        auto size(session_t& session, std::string& collection) -> void;
         void update(document_t& fields, components::storage::conditional_expression& cond);
         void remove(components::storage::conditional_expression& cond);
         void drop();

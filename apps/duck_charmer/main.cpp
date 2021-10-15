@@ -43,7 +43,6 @@ PYBIND11_MODULE(duck_charmer, m) {
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
         .def("insert", &wrapper_collection::insert)
         .def("insert_many", &wrapper_collection::insert_many)
-        .def("insert_one", &wrapper_collection::insert)
         .def("get", &wrapper_collection::get, py::arg("cond"))
         .def("search", &wrapper_collection::search, py::arg("cond"))
         .def("find", &wrapper_collection::find, py::arg("cond"))

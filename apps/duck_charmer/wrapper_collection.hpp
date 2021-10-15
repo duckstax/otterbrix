@@ -31,7 +31,7 @@ public:
     auto search(py::object cond) -> py::list;
     auto find(py::object cond) -> py::list;
     auto all() -> py::list;
-    std::size_t size() const;
+    auto size() -> py::int_;
     void update(py::dict fields, py::object cond);
     void remove(py::object cond);
     void drop();
