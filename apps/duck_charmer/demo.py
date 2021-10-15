@@ -28,16 +28,23 @@ for num in range(100):
     #todo: add object to the db
     friedrich_collection.insert(new_obj)
 
-
-c = friedrich_collection.find({})
-count = 0
-for doc in c:
-    count += 1
-
-assert count == 100
-assert len(c) == 100
 assert len(friedrich_collection) == 100
 assert len(friedrich_database['FriedrichCollection']) == 100
+
+c = friedrich_collection.find({})
+assert len(c) == 100
+
+c = friedrich_collection.find({'count': {'$gt': 90}})
+assert len(c) == 9
+
+c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
+assert len(c) == 10
+
+c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+assert len(c) == 18
+
+c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
+assert len(c) == 3
 
 
 #c = friedrich_database['FriedrichCollection']
