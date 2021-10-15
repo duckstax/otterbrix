@@ -25,8 +25,8 @@ for num in range(100):
     new_obj['nestedArray'] = [[num + i] for i in range(5)]
     new_obj['dictArray'] = [{'number': num + i} for i in range(5)]
     new_obj['mixedDict'] = copy.deepcopy(new_obj)
-    # todo: add object to the db
-    friedrich_collection.insert_one(new_obj)
+    #todo: add object to the db
+    friedrich_collection.insert(new_obj)
 
 
 c = friedrich_collection.find({})
@@ -35,19 +35,18 @@ for doc in c:
     count += 1
 
 assert count == 100
-assert c.count() == 100
-assert friedrich_database['FriedrichCollection'].count() == 100
+assert len(c) == 100
+assert len(friedrich_collection) == 100
+assert len(friedrich_database['FriedrichCollection']) == 100
 
 
-c = friedrich_database['FriedrichCollection']
+#c = friedrich_database['FriedrichCollection']
 
-# assert True for successful drop
-assert c.drop() is True
+#assert True for successful drop
+#assert c.drop() is True
 
-# assert False because collection does not exist anymore
-assert c.drop() is False
+#assert False because collection does not exist anymore
+#assert c.drop() is False
 
-c = friedrich_database['FriedrichCollection'].find(filter={})
-assert c.count() == 100
-
-
+#c = friedrich_database['FriedrichCollection'].find(filter={})
+#assert c.count() == 0
