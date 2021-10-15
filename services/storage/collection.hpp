@@ -27,8 +27,8 @@ namespace services::storage {
         collection_t(database_ptr database, log_t& log);
         void insert(session_t& session_t,std::string& collection,document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
-        auto search(session_t& session, std::string& collection, query_ptr cond) -> void;
-        auto find(session_t& session, std::string& collection, document_t &cond) -> void;
+        auto search(const session_t &session, const std::string &collection, query_ptr cond) -> void;
+        auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
         auto all() -> void;
        /// void insert_many(py::iterable iterable);
         auto size(session_t& session, std::string& collection) -> void;
@@ -52,6 +52,8 @@ namespace services::storage {
 #ifdef DEV_MODE
     public:
         void dummy_insert(document_t&& document);
+        std::list<components::storage::document_t *> search_test(query_ptr cond);
+        std::list<components::storage::document_t *> find_test(const document_t &cond);
 #endif
     };
 

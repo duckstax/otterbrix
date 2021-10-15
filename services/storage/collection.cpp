@@ -38,7 +38,7 @@ namespace services::storage {
         }
     }
 
-    auto collection_t::search(session_t& session, std::string &collection, query_ptr cond) -> void {
+    auto collection_t::search(const session_t &session, const std::string &collection, query_ptr cond) -> void {
         log_.debug("collection {}::search", collection);
         auto dispatcher = addresses("dispatcher");
         log_.debug("dispatcher : {}", dispatcher->type());
@@ -47,7 +47,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
     }
 
-    auto collection_t::find(session_t& session, std::string &collection, document_t &cond) -> void {
+    auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
         log_.debug("collection {}::find", collection);
         auto dispatcher = addresses("dispatcher");
         log_.debug("dispatcher : {}", dispatcher->type());
@@ -204,6 +204,14 @@ namespace services::storage {
 #ifdef DEV_MODE
     void collection_t::dummy_insert(document_t &&document) {
         insert_(document.get_as<std::string>("_id"), std::move(document));
+    }
+
+    std::list<document_t *> collection_t::search_test(query_ptr cond) {
+        return search_(std::move(cond));
+    }
+
+    std::list<document_t *> collection_t::find_test(const document_t &cond) {
+        return search_(parse_condition(std::move(cond)));
     }
 #endif
 
