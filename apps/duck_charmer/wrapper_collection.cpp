@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <storage/result_insert_one.hpp>
+#include <storage/result.hpp>
 #include <storage/document.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -15,6 +16,7 @@ bool wrapper_collection::insert(const py::handle& document) {
     auto is_document = py::isinstance<py::dict>(document);
     auto is_id = document.contains("_id") && !document["_id"].is_none();
     if (is_document && is_id) {
+        i = 0;
         components::storage::document_t doc;
         to_document(document,doc);
         goblin_engineer::send(
@@ -95,6 +97,34 @@ auto wrapper_collection::search(py::object cond) -> py::list {
      */
 }
 
+auto wrapper_collection::find(py::object cond) -> py::list {
+    log_.trace("wrapper_collection::find");
+    py::list res;
+    if (py::isinstance<py::dict>(cond)) {
+        i = 0;
+        components::storage::document_t condition;
+        to_document(cond, condition);
+        goblin_engineer::send(
+            dispatcher_,
+            goblin_engineer::actor_address(),
+            "find",
+            session_,
+            std::string(collection_->type().data(), collection_->type().size()),
+            condition,
+            std::function<void(result_find&)>([&](result_find& result) {
+                for (auto it : *result) {
+                    res.append(from_document(*it));
+                }
+                d_();
+            }));
+        log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_->type());
+        std::unique_lock<std::mutex> lk(mtx_);
+        cv_.wait(lk, [this]() { return i == 1; });
+        log_.debug("wrapper_client::dispatcher return result of find");
+    }
+    return res;
+}
+
 auto wrapper_collection::all() -> py::list {
     log_.trace("wrapper_collection::all");
     /*
@@ -131,9 +161,25 @@ void wrapper_collection::insert_many(py::iterable iterable) {
      */
 }
 
-std::size_t wrapper_collection::size() const {
+auto wrapper_collection::size() -> py::int_ {
     log_.trace("wrapper_collection::size");
-    // return ptr_->size();
+    py::int_ res = 0;
+    i = 0;
+    goblin_engineer::send(
+                dispatcher_,
+                goblin_engineer::actor_address(),
+                "size",
+                session_,
+                std::string(collection_->type().data(), collection_->type().size()),
+                std::function<void(result_size&)>([&](result_size &size) {
+                    res = *size;
+                    d_();
+                }));
+    log_.debug("wrapper_collection::size send -> dispatcher: {}", dispatcher_->type());
+    std::unique_lock<std::mutex> lk(mtx_);
+    cv_.wait(lk, [this]() { return i == 1; });
+    log_.debug("wrapper_client::dispatcher return result of size");
+    return res;
 }
 
 void wrapper_collection::update(py::dict fields, py::object cond) {
