@@ -1,15 +1,15 @@
 #pragma once
-#include <list>
+#include <vector>
 #include "components/storage/document.hpp"
 
 class result_find {
 public:
     result_find() = delete;
-    result_find(std::list<components::storage::document_t *> &&finded_docs);
-    const std::list<components::storage::document_t *> &operator *() const;
+    result_find(std::vector<components::storage::document_t *> &&finded_docs);
+    const std::vector<components::storage::document_t *> &operator *() const;
 
 private:
-    std::list<components::storage::document_t *> finded_docs_;
+    std::vector<components::storage::document_t *> finded_docs_;
 };
 
 

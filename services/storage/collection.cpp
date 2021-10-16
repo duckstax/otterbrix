@@ -187,8 +187,8 @@ namespace services::storage {
         storage_.clear();
     }
 
-    std::list<document_t *> collection_t::search_(query_ptr cond) {
-        std::list<document_t *> res;
+    std::vector<document_t *> collection_t::search_(query_ptr cond) {
+        std::vector<document_t *> res;
         for (auto it = storage_.begin(); it != storage_.end(); ++it) {
             if (!cond || cond->check(it->second)) {
                 res.push_back(&it->second);
@@ -206,11 +206,11 @@ namespace services::storage {
         insert_(document.get_as<std::string>("_id"), std::move(document));
     }
 
-    std::list<document_t *> collection_t::search_test(query_ptr cond) {
+    std::vector<document_t *> collection_t::search_test(query_ptr cond) {
         return search_(std::move(cond));
     }
 
-    std::list<document_t *> collection_t::find_test(const document_t &cond) {
+    std::vector<document_t *> collection_t::find_test(const document_t &cond) {
         return search_(parse_condition(std::move(cond)));
     }
 #endif

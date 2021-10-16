@@ -44,7 +44,7 @@ namespace services::storage {
         auto end() -> iterator;
         auto remove_(const std::string& key);
         void drop_();
-        std::list<document_t *> search_(query_ptr cond);
+        std::vector<document_t *> search_(query_ptr cond);
 
         log_t log_;
         storage_t storage_;
@@ -52,8 +52,8 @@ namespace services::storage {
 #ifdef DEV_MODE
     public:
         void dummy_insert(document_t&& document);
-        std::list<components::storage::document_t *> search_test(query_ptr cond);
-        std::list<components::storage::document_t *> find_test(const document_t &cond);
+        std::vector<components::storage::document_t *> search_test(query_ptr cond);
+        std::vector<components::storage::document_t *> find_test(const document_t &cond);
 #endif
     };
 
