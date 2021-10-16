@@ -11,6 +11,7 @@ namespace components::storage {
     public:
         using json_t = nlohmann::json;
         using json_ptr_t = std::unique_ptr<json_t>;
+        using const_iterator = json_t::const_iterator;
 
         static auto  to_array() {
             return document_t(json_t::array());
@@ -77,8 +78,8 @@ namespace components::storage {
             json_= json_t(tmp.extract());
         }*/
         template<class T>
-        T get_as(std::string key){
-            std::cerr << json_[std::move(key)].type_name() << std::endl;
+        T get_as(std::string key) const{
+            //std::cerr << json_[std::move(key)].type_name() << std::endl;
             return json_[std::move(key)].get<T>();
         }
 
@@ -134,6 +135,14 @@ namespace components::storage {
             json_[std::move(key)]=value;
         }
 
+        const_iterator cbegin() const {
+            return json_.cbegin();
+        }
+
+        const_iterator cend() const {
+            return json_.cend();
+        }
+
         template<class Char>
         bool contains_key(const std::basic_string<Char>& key) const {
             return json_.contains(key);
@@ -155,6 +164,8 @@ namespace components::storage {
         [[nodiscard]] double as_double() const;
 
         [[nodiscard]] int32_t as_int32() const;
+
+        [[nodiscard]] json_t::array_t as_array() const;
 
         [[nodiscard]] bool is_null() const noexcept;
 

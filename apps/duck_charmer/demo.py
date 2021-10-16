@@ -10,6 +10,7 @@ friedrich_collection = friedrich_database["FriedrichCollection"]
 
 for num in range(100):
     new_obj = {}
+    new_obj['_id'] = str(num)
     new_obj['count'] = num
     new_obj['countStr'] = str(num)
     new_obj['countFloat'] = float(num) + 0.1
@@ -24,29 +25,35 @@ for num in range(100):
     new_obj['nestedArray'] = [[num + i] for i in range(5)]
     new_obj['dictArray'] = [{'number': num + i} for i in range(5)]
     new_obj['mixedDict'] = copy.deepcopy(new_obj)
-    # todo: add object to the db
-    friedrich_collection.insert_one(new_obj)
+    #todo: add object to the db
+    friedrich_collection.insert(new_obj)
 
+assert len(friedrich_collection) == 100
+assert len(friedrich_database['FriedrichCollection']) == 100
 
 c = friedrich_collection.find({})
-count = 0
-for doc in c:
-    count += 1
+assert len(c) == 100
 
-assert count == 100
-assert c.count() == 100
-assert friedrich_database['FriedrichCollection'].count() == 100
+c = friedrich_collection.find({'count': {'$gt': 90}})
+assert len(c) == 9
 
+c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
+assert len(c) == 10
 
-c = friedrich_database['FriedrichCollection']
+c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+assert len(c) == 18
 
-# assert True for successful drop
-assert c.drop() is True
-
-# assert False because collection does not exist anymore
-assert c.drop() is False
-
-c = friedrich_database['FriedrichCollection'].find(filter={})
-assert c.count() == 100
+c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
+assert len(c) == 3
 
 
+#c = friedrich_database['FriedrichCollection']
+
+#assert True for successful drop
+#assert c.drop() is True
+
+#assert False because collection does not exist anymore
+#assert c.drop() is False
+
+#c = friedrich_database['FriedrichCollection'].find(filter={})
+#assert c.count() == 0

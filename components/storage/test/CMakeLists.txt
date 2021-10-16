@@ -1,4 +1,4 @@
-project(test_storage)
+project(test_storage_base)
 
 set( ${PROJECT_NAME}_SOURCES
     test_api.cpp
