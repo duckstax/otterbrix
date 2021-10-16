@@ -25,7 +25,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.40.0
+          pip install conan==1.40.3
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -41,5 +41,11 @@ jobs:
         env:
           CC: gcc
         run: |
-          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
-          cmake --build . --parallel 2
+          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
+          cmake --build . --parallel
+
+      - name: Test
+        run: |
+          pwd
+          ls -alh
+          ctest -C
