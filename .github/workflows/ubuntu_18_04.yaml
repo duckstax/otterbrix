@@ -46,6 +46,4 @@ jobs:
 
       - name: Test
         run: |
-          pwd
-          ls -alh
           ctest -C
