@@ -13,4 +13,9 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::storage
+        ${CONAN_LIBS}
 )
+
+include(CTest)
+include(Catch)
+catch_discover_tests(${PROJECT_NAME})
