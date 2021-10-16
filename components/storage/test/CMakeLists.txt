@@ -20,3 +20,7 @@ target_link_libraries(
 
 file(COPY test_files/small-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
 file(COPY test_files/big-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(${PROJECT_NAME})

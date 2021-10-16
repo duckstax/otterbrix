@@ -45,4 +45,7 @@ jobs:
           cmake --build . --parallel
 
       - name: Test
-        run: ctest -C
+        run: |
+          pwd
+          ls -alh
+          ctest -C
