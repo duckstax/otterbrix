@@ -42,4 +42,8 @@ jobs:
           CC: gcc
         run: |
           cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON
-          cmake --build . --parallel 2
+          cmake --build . --parallel
+
+      - name: Test
+        working-directory: ${{github.workspace}}/build
+        run: ctest -C
