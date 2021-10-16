@@ -45,6 +45,7 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("insert_many", &wrapper_collection::insert_many)
         .def("get", &wrapper_collection::get, py::arg("cond"))
         .def("search", &wrapper_collection::search, py::arg("cond"))
+        .def("find", &wrapper_collection::find, py::arg("cond"))
         .def("all", &wrapper_collection::all)
         .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
         .def("remove", &wrapper_collection::remove, py::arg("cond"))

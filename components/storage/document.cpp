@@ -51,6 +51,10 @@ namespace components::storage {
         return json_.get<int32_t>();
     }
 
+    document_t::json_t::array_t document_t::as_array() const {
+        return json_.get<json_t::array_t>();
+    }
+
     bool document_t::is_boolean() const noexcept {
         return json_.is_boolean();
     }
