@@ -10,12 +10,13 @@ set( ${PROJECT_NAME}_SOURCES
     test_value.cpp
 )
 
-add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
+add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::storage_base
         pthread
+        ${CONAN_LIBS}
 )
 
 file(COPY test_files/small-test.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)
