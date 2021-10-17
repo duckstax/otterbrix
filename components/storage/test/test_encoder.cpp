@@ -104,9 +104,9 @@ const dict_t* require_dict(const alloc_slice_t &value, uint32_t count) {
 }
 
 
-TEST_CASE("impl::encoder_t") {
+//TEST_CASE("impl::encoder_t") {
 
-    SECTION("empty") {
+    TEST_CASE("impl::encoder_t::empty") {
         encoder_t enc;
         REQUIRE(enc.empty());
         enc.begin_array();
@@ -120,13 +120,13 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(enc.empty());
     }
 
-    SECTION("pointer_t") {
+    TEST_CASE("impl::encoder_t::pointer_t") {
         const uint8_t data[] = {0x80, 0x02};
         auto v = reinterpret_cast<const value_t *>(data);
         REQUIRE(v->as_pointer()->offset<false>() == 4u);
     }
 
-    SECTION("special") {
+    TEST_CASE("impl::encoder_t::special") {
         encoder_t enc;
         auto req = [&](bool b, const std::string &hex) {
             enc.write_bool(b);
@@ -143,7 +143,7 @@ TEST_CASE("impl::encoder_t") {
         req(true, "3800");
     }
 
-    SECTION("int") {
+    TEST_CASE("impl::encoder_t::int") {
         encoder_t enc;
         auto req_int = [&](int64_t i, const std::string &hex = std::string()) {
             enc.write_int(i);
@@ -196,7 +196,7 @@ TEST_CASE("impl::encoder_t") {
         }
     }
 
-    SECTION("float") {
+    TEST_CASE("impl::encoder_t::float") {
         encoder_t enc;
         auto req_float = [&](float f, const std::string &hex = std::string()) {
             enc.write_float(f);
@@ -221,7 +221,7 @@ TEST_CASE("impl::encoder_t") {
         req_double(static_cast<float>(M_PI), "2000 DB0F 4940 8003");
     }
 
-    SECTION("string") {
+    TEST_CASE("impl::encoder_t::string") {
         encoder_t enc;
         auto req_str = [&](const std::string &str, const std::string &hex = std::string()) {
             enc.write_string(str);
@@ -239,7 +239,7 @@ TEST_CASE("impl::encoder_t") {
         req_str("müßchop", "496D C3BC C39F 6368 6F70 8005");
     }
 
-    SECTION("array") {
+    TEST_CASE("impl::encoder_t::array") {
         encoder_t enc;
         alloc_slice_t value;
         auto req_array = [&](uint32_t count, const std::string &hex = std::string()) {
@@ -289,7 +289,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(a->to_json() == alloc_slice_t("[\"Hello\",\"world\"]"));
     }
 
-    SECTION("lenght array") {
+    TEST_CASE("impl::encoder_t::lenght array") {
         encoder_t enc;
         auto req_len = [&](uint32_t len) {
             enc.begin_array();
@@ -312,7 +312,7 @@ TEST_CASE("impl::encoder_t") {
         req_len(0xFFFF);
     }
 
-    SECTION("dict") {
+    TEST_CASE("impl::encoder_t::dict") {
         encoder_t enc;
         alloc_slice_t value;
         auto req_dict = [&](uint32_t count, const std::string &hex = std::string()) {
@@ -337,7 +337,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(d->to_json() == alloc_slice_t("{\"string\":100}"));
     }
 
-    SECTION("deep") {
+    TEST_CASE("impl::encoder_t::deep") {
         encoder_t enc;
         for (int64_t depth = 0; depth < 100; ++depth) {
             enc.begin_array();
@@ -351,7 +351,7 @@ TEST_CASE("impl::encoder_t") {
         require_array(value, 3);
     }
 
-    SECTION("json string") {
+    TEST_CASE("impl::encoder_t::json string") {
         encoder_t enc;
         auto req_json = [&](std::string json, slice_t compare_value, std::string compare_error = std::string()) {
             json = std::string("[\"") + json + std::string("\"]");
@@ -399,7 +399,7 @@ TEST_CASE("impl::encoder_t") {
         req_json("lmao\\uDE1C\\uD83D!", nullptr, "JSON error: illegal leading surrogate");
     }
 
-    SECTION("json") {
+    TEST_CASE("impl::encoder_t::json") {
         encoder_t enc;
         slice_t json("{\"\":\"hello\\nt\\\\here\","
                      "\"\\\"ironic\\\"\":[null,false,true,-100,0,100,123.456,6.02e+23,5e-06],"
@@ -411,7 +411,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(d->to_json() == json);
     }
 
-    SECTION("json number") {
+    TEST_CASE("impl::encoder_t::json number") {
         slice_t json = "[9223372036854775807, -9223372036854775808, 18446744073709551615, "
                        "18446744073709551616, 602214076000000000000000, -9999999999999999999]";
         auto data = json_coder::from_json(json);
@@ -430,7 +430,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(root->get(5)->as_double() == Approx(-9999999999999999999.0));
     }
 
-    SECTION("json binary") {
+    TEST_CASE("impl::encoder_t::json binary") {
         const alloc_slice_t message("not-really-binary");
         const alloc_slice_t code("bm90LXJlYWxseS1iaW5hcnk=");
 
@@ -447,7 +447,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(w.finish() == message);
     }
 
-    SECTION("json from file") {
+    TEST_CASE("impl::encoder_t::json from file") {
         encoder_t enc;
         auto data = storage::read_file("test/big-test.json");
         enc.unique_strings(true);
@@ -456,7 +456,7 @@ TEST_CASE("impl::encoder_t") {
         storage::write_to_file(value, "test/big-test.rj");
     }
 
-    SECTION("internal from file") {
+    TEST_CASE("impl::encoder_t::internal from file") {
         auto doc = storage::read_file("test/big-test.rj");
         auto value = value_t::from_trusted_data(doc);
         REQUIRE(value);
@@ -464,7 +464,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(value->as_array());
     }
 
-    SECTION("get in array and dict") {
+    TEST_CASE("impl::encoder_t::get in array and dict") {
         auto doc = storage::read_file("test/big-test.rj");
         auto root = value_t::from_trusted_data(doc)->as_array();
         auto dog = root->get(6)->as_dict();
@@ -474,7 +474,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(name->as_string() == slice_t("Toby"));
     }
 
-    SECTION("path_t") {
+    TEST_CASE("impl::encoder_t::path_t") {
         auto data = storage::read_file("test/big-test.rj");
         const value_t *root = value_t::from_data(data);
         REQUIRE(root->as_array()->count() == 10);
@@ -492,7 +492,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(name->as_string() == slice_t("Albert"));
     }
 
-    SECTION("multy item") {
+    TEST_CASE("impl::encoder_t::multy item") {
         encoder_t enc;
         enc.suppress_trailer();
         size_t pos[10];
@@ -559,7 +559,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(num->as_int() == 20);
     }
 
-    SECTION("rewriting value") {
+    TEST_CASE("impl::encoder_t::rewriting value") {
         encoder_t enc;
         REQUIRE(enc.last_value_written() == encoder_t::pre_written_value::none);
         enc.begin_array();
@@ -587,7 +587,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(dict1 == dict2);
     }
 
-    SECTION("snip") {
+    TEST_CASE("impl::encoder_t::snip") {
         encoder_t enc;
         enc.begin_array();
         enc.begin_dict();
@@ -619,7 +619,7 @@ TEST_CASE("impl::encoder_t") {
         value_t::dump(data);
     }
 
-    SECTION("key_tree_t") {
+    TEST_CASE("impl::encoder_t::key_tree_t") {
         const char* raw_str[] = {"cow",	"bull", "horse", "goat", "sheep", "donkey", "mule", "pig", "cat", "dog",
                                  "mouse", "rat", "hamster", "wolf", "fox", "bear", "tiger", "lion", "elephant", "monkey",
                                  "camel", "rabbit", "hare", "squirrel", "zebra", "rhino", "deer", "hedgehog"};
@@ -656,7 +656,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE_FALSE(keys[n+1].buf);
     }
 
-    SECTION("double encoding") {
+    TEST_CASE("impl::encoder_t::double encoding") {
         double d = M_PI;
         float f = 2.71828f;
         char buf_d[32];
@@ -675,7 +675,7 @@ TEST_CASE("impl::encoder_t") {
         REQUIRE(static_cast<float>(storage::parse_double(buf_f)) == Approx(2.71828f));
     }
 
-    SECTION("uint encoding") {
+    TEST_CASE("impl::encoder_t::uint encoding") {
         constexpr const char* test_values[] = {"0", "1", "9", "  99 ", "+12345", "  +12345", "18446744073709551615"};
         for (const char *str : test_values) {
             uint64_t value;
@@ -690,7 +690,7 @@ TEST_CASE("impl::encoder_t") {
         }
     }
 
-    SECTION("int encoding") {
+    TEST_CASE("impl::encoder_t::int encoding") {
         constexpr const char* test_values[] = {"0", "1", "9", "  99 ", "+17", "+0", "-0", "-1", "+12", " -12345",
                                                "9223372036854775807", "-9223372036854775808"};
         for (const char *str : test_values) {
@@ -707,7 +707,7 @@ TEST_CASE("impl::encoder_t") {
         }
     }
 
-}
+//}
 
 
 TEST_CASE("JSON") {
