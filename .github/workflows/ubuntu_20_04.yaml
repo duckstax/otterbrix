@@ -45,4 +45,4 @@ jobs:
           cmake --build . --parallel
 
       - name: Test
-        run: ctest -C
+        run: ctest -C --rerun-failed --output-on-failure
