@@ -1,24 +1,17 @@
-project(storage)
+project(cursor)
 
 set( ${PROJECT_NAME}_HEADERS
-        collection.hpp
-        database.hpp
-        query.hpp
-        result.hpp
-        result_insert_one.hpp
+        cursor.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
-        collection.cpp
-        database.cpp
-        query.cpp
-        result.cpp
-        result_insert_one.cpp
+        cursor.cpp
+
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-            ${${PROJECT_NAME}_HEADERS}
-            ${${PROJECT_NAME}_SOURCES}
+        ${${PROJECT_NAME}_HEADERS}
+        ${${PROJECT_NAME}_SOURCES}
 )
 
 
@@ -30,7 +23,6 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::document
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")

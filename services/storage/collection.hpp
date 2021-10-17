@@ -52,11 +52,11 @@ namespace services::storage {
 #ifdef DEV_MODE
     public:
         void dummy_insert(document_t&& document);
-        std::vector<components::storage::document_t *> search_test(query_ptr cond);
-        std::vector<components::storage::document_t *> find_test(const document_t &cond);
+        std::vector<components::document::document_t *> search_test(query_ptr cond);
+        std::vector<components::document::document_t *> find_test(const document_t &cond);
 #endif
     };
 
     using collection_ptr = goblin_engineer::intrusive_ptr<collection_t>;
 
-} // namespace services::storage
+} // namespace services::document
