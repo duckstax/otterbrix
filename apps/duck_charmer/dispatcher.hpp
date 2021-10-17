@@ -4,9 +4,9 @@
 #include <log/log.hpp>
 
 #include "storage/forward.hpp"
-#include <storage/document.hpp>
+#include <components/document/document.hpp>
 #include <storage/result_insert_one.hpp>
-#include <storage/result.hpp>
+#include <services/storage/result.hpp>
 
 using services::storage::session_t;
 

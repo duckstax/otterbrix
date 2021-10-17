@@ -5,7 +5,7 @@
 #include <pybind11/stl_bind.h>
 #include <storage/result_insert_one.hpp>
 #include <storage/result.hpp>
-#include <storage/document.hpp>
+#include <components/document/document.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.

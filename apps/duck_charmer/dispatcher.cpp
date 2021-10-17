@@ -1,7 +1,7 @@
 #include "dispatcher.hpp"
 #include "tracy/tracy.hpp"
 #include <services/storage/route.hpp>
-#include <components/storage/document.hpp>
+#include <components/document/document.hpp>
 namespace dispatcher = services::storage::dispatcher;
 manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput)
     : goblin_engineer::abstract_manager_service("manager_dispatcher")
