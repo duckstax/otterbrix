@@ -438,7 +438,6 @@ TEST_CASE("impl::encoder_t::json binary") {
     enc.end_array();
     auto value = encoding_end(enc);
     auto json = value_t::from_data(value)->to_json();
-    WARN(std::string(json) + " == " + "[\"" + std::string(code) + "\"]");
     REQUIRE(json == alloc_slice_t("[\"" + std::string(code) + "\"]"));
 
     storage::writer_t w;
