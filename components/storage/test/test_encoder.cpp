@@ -10,7 +10,6 @@
 #include "path.hpp"
 #include "key_tree.hpp"
 #include "storage.hpp"
-#include <iostream>
 
 using namespace storage::impl;
 using storage::slice_t;
@@ -439,7 +438,7 @@ TEST_CASE("impl::encoder_t::json binary") {
     enc.end_array();
     auto value = encoding_end(enc);
     auto json = value_t::from_data(value)->to_json();
-    std::cout << std::string(json) << std::string(code) << std::endl;
+    WARN(std::string(json) + " == " + "[\"" + std::string(code) + "\"]");
     REQUIRE(json == alloc_slice_t("[\"" + std::string(code) + "\"]"));
 
     storage::writer_t w;
