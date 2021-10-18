@@ -83,6 +83,7 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search_test(!eq("name", "Rex")).size() == 4);
     REQUIRE(collection->search_test(!!eq("name", "Rex")).size() == 1);
     REQUIRE(collection->search_test(!!!eq("name", "Rex")).size() == 4);
+    delete collection.detach();
 }
 
 TEST_CASE("collection_t find") {
@@ -107,4 +108,5 @@ TEST_CASE("collection_t find") {
     REQUIRE(res.size() == 1);
     res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$regex\": \"Ch.*\"}}"));
     REQUIRE(res.size() == 2);
+    delete collection.detach();
 }
