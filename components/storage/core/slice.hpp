@@ -156,6 +156,7 @@ struct slice_t : public pure_slice_t
     slice_t& operator= (heap_slice_t_c s) noexcept        { set(s.buf, s.size); return *this; }
 
     constexpr slice_t(std::string_view str) noexcept STEPOVER    : pure_slice_t(str) {}
+    void release();
 };
 
 
@@ -205,7 +206,7 @@ struct alloc_slice_t : public pure_slice_t
     alloc_slice_t(const alloc_slice_t &s) noexcept STEPOVER           : pure_slice_t(s) { retain(); }
     alloc_slice_t(alloc_slice_t&& s) noexcept STEPOVER                : pure_slice_t(s) { s.set(nullptr, 0); }
 
-    ~alloc_slice_t() STEPOVER  { delete[] static_cast<char*>(const_cast<void*>(buf)); }
+    ~alloc_slice_t() STEPOVER  { release_buf_c(buf); }
 
     inline alloc_slice_t& operator=(const alloc_slice_t&) noexcept STEPOVER;
     inline alloc_slice_t& operator=(alloc_slice_t&& s) noexcept;
@@ -509,6 +510,11 @@ inline void slice_t::shorten(size_t s) {
 inline void slice_t::set_start(const void *s) noexcept {
     check(s);
     set(s, diff_pointer(end(), s));
+}
+
+inline void slice_t::release() {
+    char *c = const_cast<char *>(static_cast<const char *>(buf));
+    delete[] c;
 }
 
 
