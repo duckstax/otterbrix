@@ -251,7 +251,5 @@ TEST_CASE("Base64 encode and decode") {
         REQUIRE(encode_str == static_cast<slice_t>(encode_strings[i++]));
         auto decode_str = writer_t::decode_base64(static_cast<slice_t>(encode_str));
         REQUIRE(decode_str == str);
-        encode_str.release();
-        decode_str.release();
     }
 }

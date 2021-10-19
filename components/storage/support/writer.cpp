@@ -249,24 +249,24 @@ bool writer_t::write_output_to_file(FILE *f) {
     return result;
 }
 
-slice_t writer_t::encode_base64(slice_t data) {
+alloc_slice_t writer_t::encode_base64(slice_t data) {
     using namespace boost::beast::detail;
     auto dst = new char[base64::encoded_size(data.size)];
     auto size = boost::beast::detail::base64::encode(dst, data.buf, data.size);
     auto res = new char[size];
     strncpy(res, dst, size);
     delete[] dst;
-    return slice_t(res, size);
+    return alloc_slice_t(res, size);
 }
 
-slice_t writer_t::decode_base64(slice_t data) {
+alloc_slice_t writer_t::decode_base64(slice_t data) {
     using namespace boost::beast::detail;
     auto dst = new char[base64::decoded_size(data.size)];
     auto size = base64::decode(dst, static_cast<const char *>(data.buf), data.size).first;
     auto res = new char[size];
     strncpy(res, dst, size);
     delete[] dst;
-    return slice_t(res, size);
+    return alloc_slice_t(res, size);
 }
 
 void writer_t::write_base64(slice_t data) {
