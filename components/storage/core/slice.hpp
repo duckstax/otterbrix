@@ -205,7 +205,7 @@ struct alloc_slice_t : public pure_slice_t
     alloc_slice_t(const alloc_slice_t &s) noexcept STEPOVER           : pure_slice_t(s) { retain(); }
     alloc_slice_t(alloc_slice_t&& s) noexcept STEPOVER                : pure_slice_t(s) { s.set(nullptr, 0); }
 
-    ~alloc_slice_t() STEPOVER  { release_buf_c(buf); }
+    ~alloc_slice_t() STEPOVER  { delete[] static_cast<char*>(const_cast<void*>(buf)); }
 
     inline alloc_slice_t& operator=(const alloc_slice_t&) noexcept STEPOVER;
     inline alloc_slice_t& operator=(alloc_slice_t&& s) noexcept;
