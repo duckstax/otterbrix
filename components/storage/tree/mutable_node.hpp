@@ -99,12 +99,12 @@ public:
             auto child = _children[i].as_mutable();
             if (child) {
                 if (child->is_leaf())
-                    delete (mutable_leaf_t*)child;
+                    free(static_cast<mutable_leaf_t*>(child));
                 else
-                    ((mutable_interior_t*)child)->delete_tree();
+                    static_cast<mutable_interior_t*>(child)->delete_tree();
             }
         }
-        delete this;
+        free(this);
     }
 
     unsigned leaf_count() const {
