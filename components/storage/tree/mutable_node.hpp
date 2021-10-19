@@ -288,7 +288,7 @@ private:
     }
 
     static void* operator new(size_t size, unsigned capacity) {
-        return ::operator new(size + capacity*sizeof(node_ref_t));
+        return malloc(size + capacity*sizeof(node_ref_t));
     }
 
     static void operator delete(void* ptr, unsigned) {
