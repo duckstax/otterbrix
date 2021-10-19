@@ -156,6 +156,7 @@ struct slice_t : public pure_slice_t
     slice_t& operator= (heap_slice_t_c s) noexcept        { set(s.buf, s.size); return *this; }
 
     constexpr slice_t(std::string_view str) noexcept STEPOVER    : pure_slice_t(str) {}
+    void release() STEPOVER  { release_buf_c(buf); }
 };
 
 
