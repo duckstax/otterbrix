@@ -99,12 +99,12 @@ public:
             auto child = _children[i].as_mutable();
             if (child) {
                 if (child->is_leaf())
-                    free(static_cast<mutable_leaf_t*>(child));
+                    delete (mutable_leaf_t*)child;
                 else
-                    static_cast<mutable_interior_t*>(child)->delete_tree();
+                    ((mutable_interior_t*)child)->delete_tree();
             }
         }
-        free(this);
+        delete this;
     }
 
     unsigned leaf_count() const {
@@ -288,7 +288,7 @@ private:
     }
 
     static void* operator new(size_t size, unsigned capacity) {
-        return malloc(size + capacity*sizeof(node_ref_t));
+        return ::operator new(size + capacity*sizeof(node_ref_t));
     }
 
     static void operator delete(void* ptr, unsigned) {
@@ -324,9 +324,11 @@ private:
 
     mutable_interior_t* grow() {
         assert_precondition(capacity() < max_children);
-        auto replacement = (mutable_interior_t*)realloc(this, sizeof(mutable_interior_t) + (capacity()+1)*sizeof(node_ref_t));
+        auto replacement = static_cast<mutable_interior_t*>(::operator new(sizeof(mutable_interior_t) + (capacity()+1)*sizeof(node_ref_t)));
         if (!replacement)
             throw std::bad_alloc();
+        memcpy(replacement, this, sizeof(mutable_interior_t) + this->capacity()*sizeof(node_ref_t));
+        delete this;
         replacement->_capacity++;
         return replacement;
     }
