@@ -324,9 +324,11 @@ private:
 
     mutable_interior_t* grow() {
         assert_precondition(capacity() < max_children);
-        auto replacement = (mutable_interior_t*)realloc(this, sizeof(mutable_interior_t) + (capacity()+1)*sizeof(node_ref_t));
+        auto replacement = static_cast<mutable_interior_t*>(::operator new(sizeof(mutable_interior_t) + (capacity()+1)*sizeof(node_ref_t)));
         if (!replacement)
             throw std::bad_alloc();
+        memcpy(replacement, this, sizeof(mutable_interior_t) + this->capacity()*sizeof(node_ref_t));
+        delete this;
         replacement->_capacity++;
         return replacement;
     }
