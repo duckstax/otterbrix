@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include "query.hpp"
+#include "services/storage/query.hpp"
 
 using namespace services::storage;
 
