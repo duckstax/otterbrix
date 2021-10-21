@@ -8,6 +8,7 @@ set( ${PROJECT_NAME}_SOURCES
     test_shared_keys.cpp
     test_support.cpp
     test_value.cpp
+    test_document.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})

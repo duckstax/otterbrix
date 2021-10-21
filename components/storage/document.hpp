@@ -2,11 +2,109 @@
 
 #include <memory>
 #include <iostream>
-
+#include <sstream>
 #include <nlohmann/json.hpp>
+#include "storage/support/ref_counted.hpp"
+
+namespace storage::impl {
+class mutable_dict_t;
+}
 
 namespace components::storage {
 
+enum class value_type {
+    undefined = -1,
+    null = 0,
+    boolean,
+    long_number,
+    double_number,
+    string,
+    array,
+    dict
+};
+
+using offset_t = std::size_t;
+using version_t = uint16_t; //todo
+
+constexpr version_t default_version = 0;
+constexpr offset_t not_offset = 0;
+
+struct field_t {
+    version_t version;
+    value_type type;
+    offset_t offset;
+    offset_t size;
+
+    field_t(version_t version, value_type type, offset_t offset = not_offset, offset_t size = not_offset);
+
+    bool is_null() const;
+    static field_t null();
+
+private:
+    bool null_;
+};
+constexpr const char *key_version = "v";
+constexpr const char *key_type    = "t";
+constexpr const char *key_offset  = "o";
+constexpr const char *key_size    = "s";
+
+
+class st_document_t final {
+public:
+    st_document_t(std::stringstream *data = nullptr);
+    st_document_t(st_document_t *parent);
+    ~st_document_t();
+
+    void add_null(std::string &&key);
+    void add_bool(std::string &&key, bool value);
+    void add_long(std::string &&key, long value);
+    void add_double(std::string &&key, double value);
+    void add_string(std::string &&key, std::string &&value);
+    void add_dict(std::string &&key, st_document_t &&dict);
+//    void add_array(std::string &&key);
+
+    bool is_exists(std::string &&key) const;
+    bool is_null(std::string &&key) const;
+    bool is_bool(std::string &&key) const;
+    bool is_long(std::string &&key) const;
+    bool is_double(std::string &&key) const;
+    bool is_string(std::string &&key) const;
+    bool is_dict(std::string &&key) const;
+    bool is_array(std::string &&key) const;
+
+    bool as_bool(std::string &&key) const;
+    long as_long(std::string &&key) const;
+    double as_double(std::string &&key) const;
+    std::string as_string(std::string &&key) const;
+    st_document_t as_dict(std::string &&key) const;
+//    void as_array(std::string &&key) const; //todo
+
+    //todo call as-functions
+    //todo parse complex key
+//    template<class T>
+//    T get_as(const std::string &key) const {
+//    }
+
+    std::string to_json_index() const;
+
+private:
+    ::storage::retained_t<::storage::impl::mutable_dict_t> index_;
+    std::stringstream *data_;
+    bool is_owner_data_;
+
+    void add_index_(std::string &&key, const field_t &field);
+    template <class T> void add_value_(std::string &&key, T value, value_type type);
+
+    bool is_type_(std::string &&key, value_type type) const;
+    field_t get_index_(std::string &&key) const;
+    template <class T> T get_value_(offset_t offset, offset_t size) const;
+};
+
+
+
+
+
+//////////////////////////// OLD ////////////////////////////
     class document_t final {
     public:
         using json_t = nlohmann::json;
