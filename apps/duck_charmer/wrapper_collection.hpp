@@ -12,11 +12,12 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+#include "wrapper_cursor.hpp"
 #include "wrapper_document.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
-#include <storage/result_insert_one.hpp>
-#include <storage/forward.hpp>
+#include <services/storage/result_insert_one.hpp>
+#include "forward.hpp"
 
 namespace py = pybind11;
 
@@ -27,9 +28,7 @@ public:
     //not  using  base api  for example or test
     void insert_many(py::iterable);
     bool insert(const py::handle& document);
-    auto get(py::object cond) -> py::object;
-    auto search(py::object cond) -> py::list;
-    auto find(py::object cond) -> py::list;
+    auto find(py::object cond) -> wrapper_cursor_ptr;
     auto all() -> py::list;
     auto size() -> py::int_;
     void update(py::dict fields, py::object cond);
@@ -38,7 +37,7 @@ public:
 
 private:
     void d_();
-    services::storage::session_t session_;
+    duck_charmer::session_t session_;
     result_insert_one insert_result_ ;
     goblin_engineer::actor_address dispatcher_;
     goblin_engineer::actor_address database_;

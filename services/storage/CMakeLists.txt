@@ -31,9 +31,20 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::document
+        rocketjoe::cursor
 )
 
-target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")
+target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
+        collection.hpp
+        database.hpp
+        delete_result.hpp
+        insert_many_result.hpp
+        query.hpp
+        result.hpp
+        result_insert_one.hpp
+        route.hpp
+        update_result.hpp
+)
 
 if (DEV_MODE)
     add_definitions(-DDEV_MODE)

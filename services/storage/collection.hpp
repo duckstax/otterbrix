@@ -10,15 +10,19 @@
 #include "protocol/base.hpp"
 #include "protocol/forward.hpp"
 
-#include "document/conditional_expression.hpp"
-#include "document/document.hpp"
+#include "components/cursor/cursor.hpp"
+#include "components/document/conditional_expression.hpp"
+#include "components/document/document.hpp"
+#include "components/session/session.hpp"
 
 #include "forward.hpp"
 #include "route.hpp"
 #include "query.hpp"
 
 namespace services::storage {
+
     using document_t  = components::storage::document_t;
+
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         using storage_t = std::unordered_map<std::string, document_t>;
@@ -35,6 +39,7 @@ namespace services::storage {
         void update(document_t& fields, components::storage::conditional_expression& cond);
         void remove(components::storage::conditional_expression& cond);
         void drop();
+        void close_cursor(session_t& session);
 
     private:
         void insert_(const std::string& uid, document_t&& document);
@@ -48,6 +53,7 @@ namespace services::storage {
 
         log_t log_;
         storage_t storage_;
+        std::unordered_map<session_t,std::unique_ptr<components::cursor::data_cursor_t>> cursor_storage_;
 
 #ifdef DEV_MODE
     public:

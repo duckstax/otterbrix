@@ -1,14 +1,16 @@
 #pragma once
 
+#include <unordered_map>
+
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
 
-#include "storage/forward.hpp"
+#include "forward.hpp"
+#include <RocketJoe/components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
-#include <storage/result_insert_one.hpp>
+#include <components/excutor.hpp>
 #include <services/storage/result.hpp>
-
-using services::storage::session_t;
+#include <services/storage/result_insert_one.hpp>
 
 class  manager_dispatcher_t final : public goblin_engineer::abstract_manager_service {
 public:
@@ -29,21 +31,24 @@ using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher
 class  dispatcher_t final : public goblin_engineer::abstract_service {
 public:
     dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log);
-    void create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
-    void create_database_finish(session_t& session, goblin_engineer::actor_address address);
-    void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
-    void create_collection_finish(session_t& session, goblin_engineer::actor_address address);
-    void insert(session_t& session,std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback);
-    void insert_finish(session_t& session,result_insert_one&result);
-    void find(session_t& session, std::string& collection, components::storage::document_t &condition, std::function<void(result_find&)>& callback);
-    void find_finish(session_t&, result_find &result);
-    void size(session_t& session, std::string& collection, std::function<void (result_size &)> &callback);
-    void size_finish(session_t&, result_size &result);
+    void create_database(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
+    void create_database_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address);
+    void create_collection(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
+    void create_collection_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address);
+    void insert(duck_charmer::session_t& session,std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback);
+    void insert_finish(duck_charmer::session_t& session,result_insert_one&result);
+    void find(duck_charmer::session_t& session, std::string& collection, components::storage::document_t &condition, std::function<void(duck_charmer::session_t& session,components::cursor::cursor_t*)>& callback);
+    void find_finish(duck_charmer::session_t&, components::cursor::sub_cursor_t*result);
+    void size(duck_charmer::session_t& session, std::string& collection, std::function<void (result_size &)> &callback);
+    void size_finish(duck_charmer::session_t&, result_size &result);
+    void close_cursor(duck_charmer::session_t& session);
 
 private:
     std::function<void(goblin_engineer::actor_address)> create_database_and_collection_callback_;
     std::function<void(result_insert_one&)> insert_callback_;
-    std::function<void(result_find&)> find_callback_;
+    std::function<void(duck_charmer::session_t&,components::cursor::cursor_t*)> find_callback_;
     std::function<void(result_size&)> size_callback_;
     log_t log_;
+    std::unordered_map<duck_charmer::session_t,std::unique_ptr<components::cursor::cursor_t>> cursor_;
+    std::unordered_map<std::string,goblin_engineer::actor_address> collection_address_book_;
 };

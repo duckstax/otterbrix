@@ -2,7 +2,10 @@
 #include "tracy/tracy.hpp"
 #include <services/storage/route.hpp>
 #include <components/document/document.hpp>
+#include "route.hpp"
+
 namespace dispatcher = services::storage::dispatcher;
+
 manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput)
     : goblin_engineer::abstract_manager_service("manager_dispatcher")
     , log_(log.clone())
@@ -34,59 +37,67 @@ auto manager_dispatcher_t::enqueue_base(goblin_engineer::message_ptr msg, actor_
 dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     : goblin_engineer::abstract_service(manager_database, "dispatcher")
     , log_(log.clone()) {
-    add_handler("create_database", &dispatcher_t::create_database);
+    add_handler(duck_charmer::manager_database::create_database, &dispatcher_t::create_database);
     add_handler("create_database_finish", &dispatcher_t::create_database_finish);
-    add_handler("create_collection", &dispatcher_t::create_collection);
+    add_handler(duck_charmer::database::create_collection, &dispatcher_t::create_collection);
     add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
-    add_handler("insert", &dispatcher_t::insert);
+    add_handler(duck_charmer::collection::insert, &dispatcher_t::insert);
     add_handler("insert_finish", &dispatcher_t::insert_finish);
-    add_handler("find", &dispatcher_t::find);
+    add_handler(duck_charmer::collection::find, &dispatcher_t::find);
     add_handler("find_finish", &dispatcher_t::find_finish);
-    add_handler("size", &dispatcher_t::size);
+    add_handler(duck_charmer::collection::size, &dispatcher_t::size);
     add_handler("size_finish", &dispatcher_t::size_finish);
+    add_handler(duck_charmer::collection::close_cursor, &dispatcher_t::close_cursor);
 }
-void dispatcher_t::create_database(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+void dispatcher_t::create_database(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_database_init: {}", name);
     create_database_and_collection_callback_ = std::move(callback);
     goblin_engineer::send(addresses("manager_database"), self(), "create_database", session, name);
 }
-void dispatcher_t::create_database_finish(session_t& session, goblin_engineer::actor_address address) {
+void dispatcher_t::create_database_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address) {
     log_.debug("create_database_finish: {}", address->type());
     create_database_and_collection_callback_(address);
 }
-void dispatcher_t::create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
+void dispatcher_t::create_collection(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_collection: {}", name);
     create_database_and_collection_callback_ = std::move(callback);
     goblin_engineer::send(addresses("manager_database"), self(), "create_database", session, name);
 }
-void dispatcher_t::create_collection_finish(session_t& session, goblin_engineer::actor_address address) {
+void dispatcher_t::create_collection_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address) {
     log_.debug("create_collection_finish: {}", address->type());
     create_database_and_collection_callback_(address);
 }
-void dispatcher_t::insert(session_t& session, std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback) {
+void dispatcher_t::insert(duck_charmer::session_t& session, std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback) {
     log_.debug("dispatcher_t::insert: {}", collection);
     insert_callback_ = std::move(callback);
     goblin_engineer::send(addresses("collection"), self(), "insert", session,collection,std::move(document) );
 }
-void dispatcher_t::insert_finish(session_t& session, result_insert_one& result) {
+void dispatcher_t::insert_finish(duck_charmer::session_t& session, result_insert_one& result) {
     log_.debug("dispatcher_t::insert_finish");
     insert_callback_(result);
 }
-void dispatcher_t::find(services::storage::session_t &session, std::string &collection, components::storage::document_t &condition, std::function<void (result_find &)> &callback) {
+void dispatcher_t::find(duck_charmer::session_t &session, std::string &collection, components::storage::document_t &condition, std::function<void (duck_charmer::session_t& session,components::cursor::cursor_t*)> &callback) {
     log_.debug("dispatcher_t::find: {}", collection);
     find_callback_ = std::move(callback);
     goblin_engineer::send(addresses("collection"), self(), "find", session, collection, std::move(condition));
 }
-void dispatcher_t::find_finish(services::storage::session_t &, result_find &result) {
+void dispatcher_t::find_finish(duck_charmer::session_t & session, components::cursor::sub_cursor_t *cursor) {
     log_.debug("dispatcher_t::find_finish");
-    find_callback_(result);
+    auto cursor_ptr = std::make_unique<components::cursor::cursor_t>();
+    cursor_ptr->push(cursor);
+    auto result = cursor_.emplace(session,std::move(cursor_ptr));
+    find_callback_(session , result.first->second.get());
 }
-void dispatcher_t::size(services::storage::session_t &session, std::string &collection, std::function<void (result_size &)> &callback) {
+void dispatcher_t::size(duck_charmer::session_t &session, std::string &collection, std::function<void (result_size &)> &callback) {
     log_.debug("dispatcher_t::size: {}", collection);
     size_callback_ = std::move(callback);
     goblin_engineer::send(addresses("collection"), self(), "size", session, collection);
 }
-void dispatcher_t::size_finish(services::storage::session_t &, result_size &result) {
+void dispatcher_t::size_finish(duck_charmer::session_t &, result_size &result) {
     log_.debug("dispatcher_t::size_finish");
     size_callback_(result);
+}
+void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
+   /// auto result =  cursor_.at(session);
+   /// result->
 }
