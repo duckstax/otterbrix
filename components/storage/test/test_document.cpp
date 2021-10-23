@@ -34,21 +34,28 @@ TEST_CASE("document") {
         REQUIRE_FALSE(doc.as_string("double") == "0.123456789");
         REQUIRE_FALSE(doc.as_bool("string") == true);
 
-        st_document_t sub_doc(&data);
-        sub_doc.add_bool("bool", false);
-        sub_doc.add_long("long", 1);
-        sub_doc.add_double("double", 0.1);
-        sub_doc.add_string("string", "sub_doc_1");
-        doc.add_dict("sub_doc1", std::move(sub_doc));
+        st_document_t sub_doc1(&data);
+        sub_doc1.add_bool("bool", false);
+        sub_doc1.add_long("long", 1);
+        sub_doc1.add_double("double", 0.1);
+        sub_doc1.add_string("string", "sub_doc_1");
+        doc.add_dict("sub_doc1", sub_doc1);
 
         st_document_t sub_doc2(&data);
         sub_doc2.add_bool("bool", true);
         sub_doc2.add_long("long", 2);
         sub_doc2.add_double("double", 0.2);
         sub_doc2.add_string("string", "sub_doc_2");
-        doc.add_dict("sub_doc2", std::move(sub_doc));
+        doc.add_dict("sub_doc2", sub_doc2);
+
+        REQUIRE(doc.is_dict("sub_doc1"));
+        REQUIRE(doc.is_dict("sub_doc2"));
+
+        REQUIRE(doc.as_dict("sub_doc1").as_bool("bool") == false);
+        REQUIRE(doc.as_dict("sub_doc1").as_long("long") == 1);
+        REQUIRE(doc.as_dict("sub_doc1").as_double("double") == Approx(0.1));
+        REQUIRE(doc.as_dict("sub_doc1").as_string("string") == "sub_doc_1");
 
         std::cout << doc.to_json_index() << std::endl;
     }
-
 }

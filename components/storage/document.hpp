@@ -43,10 +43,10 @@ struct field_t {
 private:
     bool null_;
 };
-constexpr const char *key_version = "v";
-constexpr const char *key_type    = "t";
-constexpr const char *key_offset  = "o";
-constexpr const char *key_size    = "s";
+constexpr const char *key_version = "$v";
+constexpr const char *key_type    = "$t";
+constexpr const char *key_offset  = "$o";
+constexpr const char *key_size    = "$s";
 
 
 class st_document_t final {
@@ -60,7 +60,7 @@ public:
     void add_long(std::string &&key, long value);
     void add_double(std::string &&key, double value);
     void add_string(std::string &&key, std::string &&value);
-    void add_dict(std::string &&key, st_document_t &&dict);
+    void add_dict(std::string &&key, st_document_t &dict);
 //    void add_array(std::string &&key);
 
     bool is_exists(std::string &&key) const;
@@ -83,6 +83,8 @@ public:
     //todo parse complex key
 //    template<class T>
 //    T get_as(const std::string &key) const {
+//        if constexpr (std::is_same_v<T, bool>) return as_bool(key);
+//        assert(true);
 //    }
 
     std::string to_json_index() const;
@@ -98,6 +100,9 @@ private:
     bool is_type_(std::string &&key, value_type type) const;
     field_t get_index_(std::string &&key) const;
     template <class T> T get_value_(offset_t offset, offset_t size) const;
+
+    void relocate(st_document_t &dict);
+    void relocate(::storage::impl::mutable_dict_t *dict, offset_t delta_offset);
 };
 
 

@@ -29,13 +29,17 @@ st_document_t::st_document_t(std::stringstream *data)
     : index_(mutable_dict_t::new_dict())
     , data_(data ? data : new std::stringstream)
     , is_owner_data_(data == nullptr)
-{}
+{
+    index_->set(key_type, static_cast<int>(value_type::dict));
+}
 
 st_document_t::st_document_t(st_document_t *parent)
     : index_(mutable_dict_t::new_dict())
     , data_(parent ? parent->data_ : new std::stringstream)
     , is_owner_data_(parent == nullptr)
-{}
+{
+    index_->set(key_type, static_cast<int>(value_type::dict));
+}
 
 st_document_t::~st_document_t() {
     if (is_owner_data_) delete data_;
@@ -61,12 +65,10 @@ void st_document_t::add_string(std::string &&key, std::string &&value) {
     add_value_(std::move(key), std::move(value), value_type::string);
 }
 
-void st_document_t::add_dict(std::string &&key, st_document_t &&dict) {
-    auto offset = data_->str().size();
-    msgpack::pack(*data_, reinterpret_cast<uint64_t>(dict.data_));
-    dict.is_owner_data_ = false;
-    auto size = data_->str().size() - offset;
-    add_index_(std::move(key), field_t(default_version, value_type::dict, offset, size));
+void st_document_t::add_dict(std::string &&key, st_document_t &dict) {
+    if (dict.data_ != data_) relocate(dict);
+    //dict.index_->set(key_type, static_cast<int>(value_type::dict));
+    index_->set(std::move(key), dict.index_);
 }
 
 bool st_document_t::is_exists(std::string &&key) const {
@@ -134,11 +136,10 @@ std::string st_document_t::as_string(std::string &&key) const {
 }
 
 st_document_t st_document_t::as_dict(std::string &&key) const {
-    auto index = get_index_(std::move(key));
-    if (!index.is_null() && index.type == value_type::dict) {
-        auto data = reinterpret_cast<std::stringstream*>(get_value_<uint64_t>(index.offset, index.size));
-        st_document_t doc(data);
-        //doc.index_ = ::storage::retained_t(index.);
+    auto value = index_->get(std::move(key));
+    if (value && static_cast<value_type>(value->as_dict()->get(key_type)->as_int()) == value_type::dict) {
+        st_document_t doc(data_);
+        doc.index_ = value->as_dict()->as_mutable();
         return doc;
     }
     return st_document_t();
@@ -187,6 +188,27 @@ field_t st_document_t::get_index_(std::string &&key) const {
                        size ? static_cast<offset_t>(size->as_int()) : 0);
     }
     return field_t::null();
+}
+
+void st_document_t::relocate(st_document_t &dict) {
+    auto delta = data_->str().size();
+    *data_ << dict.data_->rdbuf();
+    relocate(dict.index_, delta);
+}
+
+void st_document_t::relocate(::storage::impl::mutable_dict_t *dict, offset_t delta_offset) {
+    //bug
+    for (auto it = dict->begin(); it; ++it) {
+        auto value = it.value()->as_dict()->as_mutable();
+        if (value) {
+            if (static_cast<value_type>(value->get(key_type)->as_int()) == value_type::dict) {
+                relocate(value, delta_offset);
+            } else {
+                auto offset = value->get(key_offset)->as_unsigned();
+                value->set(key_offset, offset + delta_offset);
+            }
+        }
+    }
 }
 
 template <class T>
