@@ -36,6 +36,10 @@ public:
 
     }
 
+    std::size_t size() const {
+        return ptr_->size();
+    }
+
 private:
     std::atomic_bool close_;
     duck_charmer::session_t session_;

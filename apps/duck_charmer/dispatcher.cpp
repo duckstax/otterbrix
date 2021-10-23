@@ -78,6 +78,7 @@ void dispatcher_t::insert_finish(duck_charmer::session_t& session, result_insert
 }
 void dispatcher_t::find(duck_charmer::session_t &session, std::string &collection, components::storage::document_t &condition, std::function<void (duck_charmer::session_t& session,components::cursor::cursor_t*)> &callback) {
     log_.debug("dispatcher_t::find: {}", collection);
+    log_.debug("{}",collection);
     find_callback_ = std::move(callback);
     goblin_engineer::send(addresses("collection"), self(), "find", session, collection, std::move(condition));
 }

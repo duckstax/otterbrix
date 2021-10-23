@@ -56,9 +56,9 @@ namespace services::storage {
         log_.debug("dispatcher : {}", dispatcher->type());
         auto database = addresses("database");
         log_.debug("database : {}", database->type());
-
+        log_.debug(address()->type());
         auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(search_(parse_condition(cond))));
-        goblin_engineer::send(dispatcher, self(), "find_finish", session,components::cursor::sub_cursor_t(address(),result.first->second.get()) );
+        goblin_engineer::send(dispatcher, self(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()) );
     }
 
     auto collection_t::all() -> void {
