@@ -10,7 +10,7 @@ RUN apt update && \
         python3-dev && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* && \
-    pip3 install --no-cache-dir conan==1.38.0 cmake==3.21.0
+    pip3 install --no-cache-dir conan==1.40.3 cmake==3.21.0
 
 WORKDIR /app
 

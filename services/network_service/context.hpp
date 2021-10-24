@@ -72,7 +72,7 @@ public:
     auto http_session(std::shared_ptr<Session> session) -> Session& {
         ZoneScoped;
         std::unique_lock lock(http_ss_mutex_);
-        log_.trace("{} :: HTTP session storage's size: {}", GET_TRACE(), http_session_storage_.size());
+        log_.trace("{} :: HTTP session document's size: {}", GET_TRACE(), http_session_storage_.size());
         auto tmp = std::move(session);
         auto* ptr = tmp.get();
         auto id = reinterpret_cast<std::uintptr_t>(ptr);
@@ -84,7 +84,7 @@ public:
     auto ws_session(std::shared_ptr<Session> session) -> Session& {
         ZoneScoped;
         std::unique_lock lock(ws_ss_mutex_);
-        log_.trace("{} :: WS session storage's size: {}", GET_TRACE(), ws_session_storage_.size());
+        log_.trace("{} :: WS session document's size: {}", GET_TRACE(), ws_session_storage_.size());
         auto tmp = std::move(session);
         auto* ptr = tmp.get();
         auto id = reinterpret_cast<std::uintptr_t>(ptr);

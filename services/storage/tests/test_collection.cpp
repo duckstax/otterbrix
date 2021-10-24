@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
-#include "database.hpp"
-#include "collection.hpp"
-#include "query.hpp"
+#include "services/storage/database.hpp"
+#include "services/storage/collection.hpp"
+#include "services/storage/query.hpp"
 
 using namespace services::storage;
 

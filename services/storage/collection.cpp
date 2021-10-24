@@ -16,6 +16,7 @@ namespace services::storage {
         add_handler(collection::search, &collection_t::search);
         add_handler(collection::find, &collection_t::find);
         add_handler(collection::size, &collection_t::size);
+        add_handler(collection::close_cursor,&collection_t::close_cursor);
     }
 
     void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
@@ -44,7 +45,9 @@ namespace services::storage {
         log_.debug("dispatcher : {}", dispatcher->type());
         auto database = addresses("database");
         log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
+
+        auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(search_(std::move(cond))));
+        goblin_engineer::send(dispatcher, self(), "search_finish", session,components::cursor::sub_cursor_t(address(),result.first->second.get()) );
     }
 
     auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
@@ -53,7 +56,10 @@ namespace services::storage {
         log_.debug("dispatcher : {}", dispatcher->type());
         auto database = addresses("database");
         log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "find_finish", session, result_find(search_(parse_condition(cond))));
+        log_.debug(address()->type());
+        log_.debug("Session : {}" , session.data());
+        auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(search_(parse_condition(cond))));
+        goblin_engineer::send(dispatcher, self(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()) );
     }
 
     auto collection_t::all() -> void {
@@ -201,6 +207,10 @@ namespace services::storage {
         storage_.erase(key);
     }
 
+    void collection_t::close_cursor(session_t& session) {
+        cursor_storage_.erase(session);
+    }
+
 #ifdef DEV_MODE
     void collection_t::dummy_insert(document_t &&document) {
         insert_(document.get_as<std::string>("_id"), std::move(document));
@@ -215,4 +225,4 @@ namespace services::storage {
     }
 #endif
 
-} // namespace services::storage
+} // namespace services::document
