@@ -19,29 +19,10 @@ public:
     using pointer = type*;
 
     wrapper_cursor() = default; // todo refactoring;
-    wrapper_cursor(components::session::session_t session,pointer cursor)
-        : session_(session)
-        , ptr_(cursor){
-        std::cerr << "session :" << session.data() << std::endl;
-    }
-
-    void close() {
-        close_=true;
-        goblin_engineer::send(
-            dispatcher_,
-            goblin_engineer::actor_address(),
-            "close_cursor",
-            session_
-        );
-    }
-
-    void next() {
-
-    }
-
-    std::size_t size() const {
-        return ptr_->size();
-    }
+    wrapper_cursor(components::session::session_t session,pointer cursor);
+    void close();
+    void next();
+    std::size_t size() const;
 
 private:
     std::atomic_bool close_;
