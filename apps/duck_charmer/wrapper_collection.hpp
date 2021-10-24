@@ -37,7 +37,6 @@ public:
 
 private:
     void d_();
-    duck_charmer::session_t session_;
     result_insert_one insert_result_ ;
     goblin_engineer::actor_address dispatcher_;
     goblin_engineer::actor_address database_;

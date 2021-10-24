@@ -8,19 +8,14 @@ namespace components::session {
 
     class session_t final {
     public:
-        session_t() {
-            data_ = static_cast<uint64_t>(std::time(nullptr)); //todo recanting
-        }
-        std::size_t hash() const  {
-            return std::hash<uint64_t>{}(data_);
-        }
-
-        bool operator==(const session_t &other) const {
-            return data_ == other.data_;
-        }
+        session_t();
+        std::size_t hash() const;
+        bool operator==(const session_t &other) const;
+        auto data() const -> std::uint64_t ;
 
     private:
         std::uint64_t data_;
+        std::uint64_t counter_;
     };
 
 }

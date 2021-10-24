@@ -20,7 +20,10 @@ public:
 
     wrapper_cursor() = default; // todo refactoring;
     wrapper_cursor(components::session::session_t session,pointer cursor)
-        :session_(session),ptr_(cursor){}
+        : session_(session)
+        , ptr_(cursor){
+        std::cerr << "session :" << session.data() << std::endl;
+    }
 
     void close() {
         close_=true;

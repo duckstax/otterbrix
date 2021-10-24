@@ -24,7 +24,7 @@ bool wrapper_collection::insert(const py::handle& document) {
             dispatcher_,
             goblin_engineer::actor_address(),
             "insert",
-            session_,
+            duck_charmer::session_t(),
             std::string(collection_->type().data(),collection_->type().size()),
             std::move(doc),
             std::function<void(result_insert_one&)>([this](result_insert_one& result) {
@@ -62,7 +62,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
             dispatcher_,
             goblin_engineer::actor_address(),
             "find",
-            session_,
+            duck_charmer::session_t(),
             std::string(collection_->type().data(), collection_->type().size()),
             std::move(condition),
             std::function<void(duck_charmer::session_t&,components::cursor::cursor_t*)>([&](duck_charmer::session_t& session, components::cursor::cursor_t* result) {
@@ -121,7 +121,7 @@ auto wrapper_collection::size() -> py::int_ {
                 dispatcher_,
                 goblin_engineer::actor_address(),
                 "size",
-                session_,
+                duck_charmer::session_t(),
                 std::string(collection_->type().data(), collection_->type().size()),
                 std::function<void(result_size&)>([&](result_size &size) {
                     res = *size;
