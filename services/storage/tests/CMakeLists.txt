@@ -13,6 +13,8 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::storage
+        rocketjoe::cursor
+        rocketjoe::session
         ${CONAN_LIBS}
 )
 
