@@ -9,14 +9,14 @@
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
-using services::storage::session_t;
+
 wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
     log_.debug("wrapper_client::get_or_create name database: {}",name);
     goblin_engineer::send(
         dispatcher_,
         goblin_engineer::actor_address(),
         "create_database",
-        session_t(),
+        duck_charmer::session_t(),
         name,
         std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
             tmp_ = boost::intrusive_ptr<wrapper_database>(new wrapper_database(log_,dispatcher_,address));

@@ -26,6 +26,7 @@ namespace services::storage {
         static constexpr auto search = "search";
         static constexpr auto find = "find";
         static constexpr auto size = "size";
+        static constexpr auto close_cursor = "close_cursor";
     } // namespace collection
 
 } // namespace kv

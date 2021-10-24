@@ -27,7 +27,7 @@ wrapper_collection_ptr wrapper_database::create(const std::string& name) {
         dispatcher_,
         goblin_engineer::actor_address(),
         "create_collection",
-        session_t(),
+        duck_charmer::session_t(),
         name,
         std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
             tmp_ = boost::intrusive_ptr<wrapper_collection>(new wrapper_collection(log_,dispatcher_,database_,address));

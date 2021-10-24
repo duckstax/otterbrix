@@ -1,4 +1,4 @@
-project(storage_base CXX)
+project(document)
 
 set( ${PROJECT_NAME}_HEADERS
         document.hpp
@@ -115,12 +115,13 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        "${PROJECT_SOURCE_DIR}/components/storage/"
         core
         json
         mutable
         support
         tree
+        conditional_expression.hpp
+        document.hpp
 )
 
 if (DEV_MODE)
