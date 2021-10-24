@@ -11,6 +11,14 @@ namespace components::cursor {
         return size_;
     }
 
+    auto cursor_t::begin() -> boost::intrusive::list<sub_cursor_t>::iterator {
+        return sub_cursor_.begin();
+    }
+
+    auto cursor_t::end() -> boost::intrusive::list<sub_cursor_t>::iterator {
+        return sub_cursor_.end();
+    }
+
     goblin_engineer::actor_address& sub_cursor_t::address() {
         return collection_;
     }

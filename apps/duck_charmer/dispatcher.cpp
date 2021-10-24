@@ -103,6 +103,12 @@ void dispatcher_t::size_finish(duck_charmer::session_t &, result_size &result) {
 void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
     log_.debug(" dispatcher_t::close_cursor ");
     log_.debug("Session : {}" , session.data());
-   /// auto result =  cursor_.at(session);
-   /// result->
+    auto it = cursor_.find(session);
+    if(it!=cursor_.end()){
+        for(auto &i: *it->second){
+            goblin_engineer::send(i.address(), self(), "close_cursor", session);
+        }
+    } else {
+        log_.error("Not find session : {}", session.data() );
+    }
 }
