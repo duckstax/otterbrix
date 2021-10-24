@@ -106,8 +106,9 @@ void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
     auto it = cursor_.find(session);
     if(it!=cursor_.end()){
         for(auto &i: *it->second){
-            goblin_engineer::send(i.address(), self(), "close_cursor", session);
+            goblin_engineer::send(i->address(), self(), "close_cursor", session);
         }
+        cursor_.erase(it);
     } else {
         log_.error("Not find session : {}", session.data() );
     }

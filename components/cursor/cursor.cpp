@@ -4,18 +4,18 @@ namespace components::cursor {
 
     void cursor_t::push(sub_cursor_t* sub_cursor) {
         size_+= sub_cursor->size();
-        sub_cursor_.push_back(*sub_cursor);
+        sub_cursor_.emplace_back(sub_cursor);
     }
 
     std::size_t cursor_t::size() const {
         return size_;
     }
 
-    auto cursor_t::begin() -> boost::intrusive::list<sub_cursor_t>::iterator {
+    auto cursor_t::begin() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator {
         return sub_cursor_.begin();
     }
 
-    auto cursor_t::end() -> boost::intrusive::list<sub_cursor_t>::iterator {
+    auto cursor_t::end() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator {
         return sub_cursor_.end();
     }
 

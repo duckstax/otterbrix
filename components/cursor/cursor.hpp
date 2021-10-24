@@ -35,12 +35,12 @@ namespace components::cursor {
         cursor_t() = default;
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
-        auto begin() ->  boost::intrusive::list<sub_cursor_t>::iterator ;
-        auto end() ->  boost::intrusive::list<sub_cursor_t>::iterator ;
+        auto begin() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator ;
+        auto end() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator ;
     private:
         uint64_t  size_{};
-        boost::intrusive::list<sub_cursor_t>::const_iterator it;
-        boost::intrusive::list<sub_cursor_t> sub_cursor_;
+        std::list<sub_cursor_t>::const_iterator it;
+        std::list<std::unique_ptr<sub_cursor_t>> sub_cursor_;
     };
 
 } // namespace components::cursor
