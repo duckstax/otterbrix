@@ -30,8 +30,10 @@ option(DEV_MODE "developer mode" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-enable_testing()
+if (DEV_MODE)
+    add_definitions(-DDEV_MODE)
+    enable_testing()
+endif()
 
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     add_compile_options(
