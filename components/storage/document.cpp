@@ -46,6 +46,10 @@ document_t::document_t(const object &value) {
     add("", value);
 }
 
+document_t::document_t(const document_t::storage_t *storage) :
+    storage_(storage)
+{}
+
 void document_t::add(std::string &&key, const object &value) {
     fields_.emplace(std::move(key), field_t(value));
 }
@@ -126,7 +130,7 @@ bool document_t::is_dict(std::string &&key) const {
     return get_type(std::move(key)) == object_type::MAP;
 }
 
-const object &document_t::get(std::string &&key) const {
+object document_t::get(std::string &&key) const {
     //todo parse complex key
     auto field = fields_.find(std::move(key));
     if (field != fields_.cend()) {
@@ -138,7 +142,7 @@ const object &document_t::get(std::string &&key) const {
     return nil;
 }
 
-const object &document_t::get(const std::string &key) const {
+object document_t::get(const std::string &key) const {
     //todo parse complex key
     auto field = fields_.find(key);
     if (field != fields_.cend()) {
@@ -205,10 +209,14 @@ object_type document_t::get_type(const std::string &key) const {
     return object_type::NIL;
 }
 
-const object &document_t::get_value(const field_t &field) const {
+object document_t::get_value(const field_t &field) const {
     if (field.is_value()) return field.value;
-    static object non_object;
-    return non_object; //todo get object by offset
+    if (field.size > 0 && storage_) { //todo can make cache
+        auto data = storage_->str().substr(field.offset, field.size);
+        msgpack::object_handle oh = msgpack::unpack(data.data(), data.size());
+        return oh.get();
+    }
+    return object();
 }
 
 

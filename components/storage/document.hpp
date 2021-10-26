@@ -37,10 +37,12 @@ struct field_t {
 class document_t final {
     using fields_t = std::map<std::string, field_t>;
     using const_iterator = fields_t::const_iterator;
+    using storage_t = std::stringstream;
 
 public:
     document_t();
     explicit document_t(const object &value);
+    explicit document_t(const storage_t *storage);
 
     void add(std::string &&key, const object &value);
     void add(std::string &&key, object &&value);
@@ -65,8 +67,8 @@ public:
     bool is_array(std::string &&key) const;
     bool is_dict(std::string &&key) const;
 
-    const object &get(std::string &&key) const;
-    const object &get(const std::string &key) const;
+    object get(std::string &&key) const;
+    object get(const std::string &key) const;
     bool get_bool(std::string &&key) const;
     ulong get_ulong(std::string &&key) const;
     long get_long(std::string &&key) const;
@@ -93,9 +95,10 @@ public:
 
 private:
     fields_t fields_;
+    const storage_t *storage_ {nullptr};
 
     object_type get_type(const std::string &key) const;
-    const object &get_value(const field_t &field) const;
+    object get_value(const field_t &field) const;
 };
 
 using document_ptr = std::unique_ptr<document_t>;
