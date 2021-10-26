@@ -5,11 +5,11 @@ using namespace services::storage;
 
 document_t gen_doc() {
     document_t doc;
-    doc.add("_id", std::string("1"));
-    doc.add("name", std::string("Rex"));
-    doc.add("type", std::string("dog"));
-    doc.add("age", 6l);
-    doc.add("male", true);
+    doc.add("id", msgpack::object(static_cast<const char *>("1")));
+    doc.add("name", msgpack::object(static_cast<const char *>("Rex")));
+    doc.add("type", msgpack::object(static_cast<const char *>("dog")));
+    doc.add("age", msgpack::object(6));
+    doc.add("male", msgpack::object(true));
     return doc;
 }
 
@@ -71,6 +71,7 @@ TEST_CASE("query_t between/any/all") {
 }
 
 
+#include <iostream>
 TEST_CASE("query_t regex") {
     auto doc = gen_doc();
 

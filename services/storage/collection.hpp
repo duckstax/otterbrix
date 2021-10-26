@@ -10,6 +10,8 @@
 #include "protocol/base.hpp"
 #include "protocol/forward.hpp"
 
+#include "storage/support/ref_counted.hpp"
+
 #include "storage/conditional_expression.hpp"
 #include "storage/document.hpp"
 
@@ -17,14 +19,21 @@
 #include "route.hpp"
 #include "query.hpp"
 
+namespace storage::impl {
+class mutable_dict_t;
+}
+
 namespace services::storage {
     using document_t  = components::storage::document_t;
     class collection_t final : public goblin_engineer::abstract_service {
     public:
-        using storage_t = std::unordered_map<std::string, document_t>;
-        using iterator = typename storage_t::iterator;
+        using storage_t = std::stringstream;
+        using structure_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
+        using index_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
 
         collection_t(database_ptr database, log_t& log);
+        ~collection_t();
+
         void insert(session_t& session_t,std::string& collection,document_t& document);
         auto get(components::storage::conditional_expression& cond) -> void;
         auto search(const session_t &session, const std::string &collection, query_ptr cond) -> void;
@@ -37,23 +46,27 @@ namespace services::storage {
         void drop();
 
     private:
-        void insert_(const std::string& uid, document_t&& document);
+        std::string gen_id() const;
+        void insert_(document_t&& document);
         document_t* get_(const std::string& uid);
         std::size_t size_() const;
-        auto begin() -> iterator;
-        auto end() -> iterator;
         auto remove_(const std::string& key);
         void drop_();
         std::vector<document_t *> search_(query_ptr cond);
 
         log_t log_;
+        structure_t structure_;
+        index_t index_;
         storage_t storage_;
 
 #ifdef DEV_MODE
     public:
-        void dummy_insert(document_t&& document);
+        void insert_test(document_t &&doc);
         std::vector<components::storage::document_t *> search_test(query_ptr cond);
         std::vector<components::storage::document_t *> find_test(const document_t &cond);
+        std::string get_structure_test() const;
+        std::string get_index_test() const;
+        std::string get_data_test() const;
 #endif
     };
 

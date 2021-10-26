@@ -5,59 +5,71 @@
 #include "protocol/request_select.hpp"
 #include "result_insert_one.hpp"
 #include "result.hpp"
+#include "components/storage/mutable/mutable_dict.h"
+
+using ::storage::impl::mutable_dict_t;
+using components::storage::key_offset;
+using components::storage::key_size;
+using components::storage::key_version;
 
 namespace services::storage {
-    collection_t::collection_t(database_ptr database, log_t& log)
-        : goblin_engineer::abstract_service(database, "collection")
-        , log_(log.clone()) {
-        /// add_handler(collection::select, &collection_t::select);
-        add_handler(collection::insert, &collection_t::insert);
-        //add_handler(collection::erase, &collection_t::erase);
-        add_handler(collection::search, &collection_t::search);
-        add_handler(collection::find, &collection_t::find);
-        add_handler(collection::size, &collection_t::size);
-    }
 
-    void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
-        log_.debug("collection_t::insert");
-        auto id = document.get_as<std::string>("_id");
-        insert_(id, std::move(document));
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        //all_view_address();
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "insert_finish", session, result_insert_one(true));
-    }
+collection_t::collection_t(database_ptr database, log_t& log)
+    : goblin_engineer::abstract_service(database, "collection")
+    , log_(log.clone())
+    , structure_(mutable_dict_t::new_dict())
+    , index_(mutable_dict_t::new_dict())
+{
+    /// add_handler(collection::select, &collection_t::select);
+    add_handler(collection::insert, &collection_t::insert);
+    //add_handler(collection::erase, &collection_t::erase);
+    add_handler(collection::search, &collection_t::search);
+    add_handler(collection::find, &collection_t::find);
+    add_handler(collection::size, &collection_t::size);
+}
 
-    auto collection_t::get(components::storage::conditional_expression& cond) -> void {
-        for (auto& i : *this) {
-            if (cond.check(i.second)) {
-                /// return py::cast(tmp);
-            }
-        }
-    }
+collection_t::~collection_t() {
+    storage_.clear();
+}
 
-    auto collection_t::search(const session_t &session, const std::string &collection, query_ptr cond) -> void {
-        log_.debug("collection {}::search", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
-    }
+void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
+    log_.debug("collection_t::insert : {}", collection);
+    insert_(std::move(document));
+    auto dispatcher = addresses("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher->type());
+    auto database = addresses("database");
+    log_.debug("database : {}", database->type());
+    goblin_engineer::send(dispatcher, self(), "insert_finish", session, result_insert_one(true));
+}
 
-    auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
-        log_.debug("collection {}::find", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "find_finish", session, result_find(search_(parse_condition(cond))));
-    }
+auto collection_t::get(components::storage::conditional_expression& cond) -> void {
+//    for (auto& i : *this) {
+//        if (cond.check(i.second)) {
+//            /// return py::cast(tmp);
+//        }
+//    }
+}
 
-    auto collection_t::all() -> void {
-        /*
+auto collection_t::search(const session_t &session, const std::string &collection, query_ptr cond) -> void {
+    log_.debug("collection {}::search", collection);
+    auto dispatcher = addresses("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher->type());
+    auto database = addresses("database");
+    log_.debug("database : {}", database->type());
+    goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
+}
+
+auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
+    log_.debug("collection {}::find", collection);
+    auto dispatcher = addresses("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher->type());
+    auto database = addresses("database");
+    log_.debug("database : {}", database->type());
+    goblin_engineer::send(dispatcher, self(), "find_finish", session, result_find(search_(parse_condition(cond))));
+}
+
+auto collection_t::all() -> void {
+    /*
         py::list tmp;
         wrapper_document_ptr doc;
         for (auto &i:*ptr_) {
@@ -73,8 +85,8 @@ namespace services::storage {
         }
         return tmp;
          */
-    }
-    /*
+}
+/*
     void collection_t::insert_many(py::iterable iterable) {
         auto iter = py::iter(iterable);
         for(;iter!= py::iterator::sentinel();++iter) {
@@ -88,17 +100,17 @@ namespace services::storage {
         }
     }
 */
-    auto collection_t::size(session_t& session, std::string& collection) -> void {
-        log_.debug("collection {}::size", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcer : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "size_finish", session, result_size(size_()));
-    }
+auto collection_t::size(session_t& session, std::string& collection) -> void {
+    log_.debug("collection {}::size", collection);
+    auto dispatcher = addresses("dispatcher");
+    log_.debug("dispatcer : {}", dispatcher->type());
+    auto database = addresses("database");
+    log_.debug("database : {}", database->type());
+    goblin_engineer::send(dispatcher, self(), "size_finish", session, result_size(size_()));
+}
 
-    void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {
-        /*
+void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {
+    /*
         auto is_document = py::isinstance<py::dict>(fields);
         auto is_none = fields.is(py::none());
         if (is_none and is_document) {
@@ -125,10 +137,10 @@ namespace services::storage {
 
         throw pybind11::type_error(" note cond ");
 */
-    }
+}
 
-    void collection_t::remove(components::storage::conditional_expression& cond) {
-        /*
+void collection_t::remove(components::storage::conditional_expression& cond) {
+    /*
         auto is_not_empty = !cond.is(py::none());
         if (is_not_empty) {
             wrapper_document_ptr tmp;
@@ -150,18 +162,36 @@ namespace services::storage {
             }
         }
          */
-    }
+}
 
-    void collection_t::drop() {
-        drop_();
-    }
+void collection_t::drop() {
+    drop_();
+}
 
-    void collection_t::insert_(const std::string& uid, document_t&& document) {
-        storage_.emplace(uid, std::move(document));
-    }
+std::string collection_t::gen_id() const {
+    return std::string("0"); //todo
+}
 
-    document_t* collection_t::get_(const std::string& uid) {
-        /*
+void collection_t::insert_(document_t&& document) {
+    auto id = document.is_exists("id") ? document.get_string("id") : gen_id();
+    auto index = mutable_dict_t::new_dict();
+    for (const auto &[key, value] : document.fields()) {
+        if (!structure_->get(key)) {
+            structure_->set(key, value.type);
+        }
+        auto field = mutable_dict_t::new_dict();
+        auto offset = storage_.str().size();
+        msgpack::pack(storage_, value.value);
+        field->set(key_offset, offset);
+        field->set(key_size, storage_.str().size() - offset);
+        if (value.version) field->set(key_version, value.version);
+        index->set(key, field);
+    }
+    index_->set(std::move(id), index);
+}
+
+document_t* collection_t::get_(const std::string& uid) {
+    /*
         auto it = storage_.find(uid);
         if (it == storage_.end()) {
             return nullptr;
@@ -169,50 +199,54 @@ namespace services::storage {
             it->second.get();
         }
          */
-    }
+}
 
-    std::size_t collection_t::size_() const {
-        return storage_.size();
-    }
+std::size_t collection_t::size_() const {
+    //        return storage_.size();
+}
 
-    auto collection_t::begin() -> storage_t::iterator {
-        return storage_.begin();
-    }
+void collection_t::drop_() {
+    //        storage_.clear();
+}
 
-    auto collection_t::end() -> storage_t::iterator {
-        return storage_.end();
-    }
+std::vector<document_t *> collection_t::search_(query_ptr cond) {
+    std::vector<document_t *> res;
+    //        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
+    //            if (!cond || cond->check(it->second)) {
+    //                res.push_back(&it->second);
+    //            }
+    //        }
+    return res;
+}
 
-    void collection_t::drop_() {
-        storage_.clear();
-    }
-
-    std::vector<document_t *> collection_t::search_(query_ptr cond) {
-        std::vector<document_t *> res;
-        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
-            if (!cond || cond->check(it->second)) {
-                res.push_back(&it->second);
-            }
-        }
-        return res;
-    }
-
-    auto collection_t::remove_(const std::string& key) {
-        storage_.erase(key);
-    }
+auto collection_t::remove_(const std::string& key) {
+    //        storage_.erase(key);
+}
 
 #ifdef DEV_MODE
-    void collection_t::dummy_insert(document_t &&document) {
-        insert_(document.get_as<std::string>("_id"), std::move(document));
-    }
+void collection_t::insert_test(document_t &&doc) {
+    insert_(std::move(doc));
+}
 
-    std::vector<document_t *> collection_t::search_test(query_ptr cond) {
-        return search_(std::move(cond));
-    }
+std::vector<document_t *> collection_t::search_test(query_ptr cond) {
+    return search_(std::move(cond));
+}
 
-    std::vector<document_t *> collection_t::find_test(const document_t &cond) {
-        return search_(parse_condition(std::move(cond)));
-    }
+std::vector<document_t *> collection_t::find_test(const document_t &cond) {
+    return search_(parse_condition(std::move(cond)));
+}
+
+std::string collection_t::get_structure_test() const {
+    return structure_->to_json_string();
+}
+
+std::string collection_t::get_index_test() const {
+    return index_->to_json_string();
+}
+
+std::string collection_t::get_data_test() const {
+    return storage_.str();
+}
 #endif
 
 } // namespace services::storage
