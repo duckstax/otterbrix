@@ -8,9 +8,6 @@
 #include "components/storage/mutable/mutable_dict.h"
 
 using ::storage::impl::mutable_dict_t;
-using components::storage::key_offset;
-using components::storage::key_size;
-using components::storage::key_version;
 
 namespace services::storage {
 
@@ -173,21 +170,21 @@ std::string collection_t::gen_id() const {
 }
 
 void collection_t::insert_(document_t&& document) {
-    auto id = document.is_exists("id") ? document.get_string("id") : gen_id();
-    auto index = mutable_dict_t::new_dict();
-    for (const auto &[key, value] : document.fields()) {
-        if (!structure_->get(key)) {
-            structure_->set(key, value.type);
-        }
-        auto field = mutable_dict_t::new_dict();
-        auto offset = storage_.str().size();
-        msgpack::pack(storage_, value.value);
-        field->set(key_offset, offset);
-        field->set(key_size, storage_.str().size() - offset);
-        if (value.version) field->set(key_version, value.version);
-        index->set(key, field);
-    }
-    index_->set(std::move(id), index);
+//    auto id = document.is_exists("id") ? document.get_string("id") : gen_id();
+//    auto index = mutable_dict_t::new_dict();
+//    for (const auto &[key, value] : document.fields()) {
+//        if (!structure_->get(key)) {
+//            structure_->set(key, value.type);
+//        }
+//        auto field = mutable_dict_t::new_dict();
+//        auto offset = storage_.str().size();
+//        msgpack::pack(storage_, value.value);
+//        field->set(key_offset, offset);
+//        field->set(key_size, storage_.str().size() - offset);
+//        if (value.version) field->set(key_version, value.version);
+//        index->set(key, field);
+//    }
+//    index_->set(std::move(id), index);
 }
 
 document_t* collection_t::get_(const std::string& uid) {

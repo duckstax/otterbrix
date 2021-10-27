@@ -36,6 +36,8 @@ query_ptr operator !(query_ptr &&q) noexcept;
 template<class T> struct query_helper               { typedef T type; };
 template<> struct query_helper<char *>              { typedef std::string type; };
 template<int size> struct query_helper<char [size]> { typedef std::string type; };
+template<> struct query_helper<int>                 { typedef long type; };
+template<> struct query_helper<uint>                { typedef ulong type; };
 #define QH(T) typename query_helper<T>::type
 
 template <class T>

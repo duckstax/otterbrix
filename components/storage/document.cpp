@@ -1,224 +1,138 @@
 #include "document.hpp"
+#include "mutable/mutable_dict.h"
+
+using ::storage::impl::mutable_dict_t;
+using ::storage::impl::value_t;
+using ::storage::impl::value_type;
 
 namespace components::storage {
 
-field_t::field_t(object_type type, version_t version, offset_t offset, offset_t size)
-    : type(type)
-    , version(version)
-    , offset(offset)
-    , size(size)
-{}
-
-field_t::field_t(object &&value, version_t version)
-    : type(value.type)
-    , value(std::move(value))
-    , version(version)
-    , offset(not_offset)
-    , size(not_size)
-{}
-
-field_t::field_t(const object &value, version_t version)
-    : type(value.type)
-    , value(value)
-    , version(version)
-    , offset(not_offset)
-    , size(not_size)
-{}
-
-bool field_t::is_value() const {
-    return value.type == type;
+document_t::document_t()
+    : storage_(mutable_dict_t::new_dict().detach())
+    , is_owner_(true) {
 }
 
-bool field_t::is_nil() const {
-    return type == object_type::NIL;
+document_t::document_t(const ::storage::impl::dict_t *dict)
+    : storage_(dict->as_mutable())
+    , is_owner_(false)  {
 }
 
-field_t field_t::nil() {
-    static field_t nil_field(object_type::NIL);
-    return nil_field;
+document_t::~document_t() {
+    if (is_owner_ && storage_) storage_->_release();
 }
 
-
-document_t::document_t() {
+void document_t::add_null(const std::string &key) {
+    storage_->set(key, ::storage::impl::null_value);
 }
 
-document_t::document_t(const object &value) {
-    add("", value);
+void document_t::add_bool(const std::string &key, bool value) {
+    storage_->set(key, value);
 }
 
-document_t::document_t(const document_t::storage_t *storage) :
-    storage_(storage)
-{}
-
-void document_t::add(std::string &&key, const object &value) {
-    fields_.emplace(std::move(key), field_t(value));
+void document_t::add_ulong(const std::string &key, ulong value) {
+    storage_->set(key, value);
 }
 
-void document_t::add(std::string &&key, object &&value) {
-    fields_.emplace(std::move(key), field_t(std::move(value)));
+void document_t::add_long(const std::string &key, long value) {
+    storage_->set(key, value);
 }
 
-void document_t::add_null(std::string &&key) {
-    fields_.emplace(std::move(key), field_t::nil());
+void document_t::add_double(const std::string &key, double value) {
+    storage_->set(key, value);
 }
 
-void document_t::add_bool(std::string &&key, bool value) {
-    add(std::move(key), object(value));
+void document_t::add_string(const std::string &key, std::string value) {
+    storage_->set(key, value);
 }
 
-void document_t::add_ulong(std::string &&key, ulong value) {
-    add(std::move(key), object(value));
+void document_t::add_array(const std::string &key, ::storage::impl::array_t *array) {
+    storage_->set(key, array);
 }
 
-void document_t::add_long(std::string &&key, long value) {
-    add(std::move(key), object(value));
+void document_t::add_dict(const std::string &key, ::storage::impl::dict_t *dict) {
+    storage_->set(key, dict);
 }
 
-void document_t::add_float(std::string &&key, float value) {
-    add(std::move(key), object(value));
+void document_t::add_dict(const std::string &key, const document_t &dict) {
+    storage_->set(key, dict.storage_);
 }
 
-void document_t::add_double(std::string &&key, double value) {
-    add(std::move(key), object(value));
+void document_t::add_dict(const std::string &key, document_t &&dict) {
+    storage_->set(key, dict.storage_);
+    dict.storage_ = nullptr;
 }
 
-void document_t::add_string(std::string &&key, std::string value) {
-    add(std::move(key), object(value.data()));
+bool document_t::is_exists(const std::string &key) const {
+    return storage_->get(key) != nullptr;
 }
 
-//void document_t::add_dict(std::string &&key, document_t &&dict) {
-//    add(std::move(key), object(std::move(dict)));
-//}
-
-bool document_t::is_exists(std::string &&key) const {
-    return fields_.find(std::move(key)) != fields_.cend();
+bool document_t::is_null(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::null;
 }
 
-bool document_t::is_null(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::NIL;
+bool document_t::is_bool(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::boolean;
 }
 
-bool document_t::is_bool(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::BOOLEAN;
+bool document_t::is_ulong(const std::string &key) const {
+    return storage_->get(key)->is_unsigned();
 }
 
-bool document_t::is_ulong(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::POSITIVE_INTEGER;
+bool document_t::is_long(const std::string &key) const {
+    return storage_->get(key)->is_int();
 }
 
-bool document_t::is_long(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::NEGATIVE_INTEGER;
+bool document_t::is_double(const std::string &key) const {
+    return storage_->get(key)->is_double();
 }
 
-bool document_t::is_float(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::FLOAT;
+bool document_t::is_string(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::string;
 }
 
-bool document_t::is_double(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::FLOAT64;
+bool document_t::is_array(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::array;
 }
 
-bool document_t::is_string(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::STR;
+bool document_t::is_dict(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::dict;
 }
 
-bool document_t::is_array(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::ARRAY;
+const value_t *document_t::get(const std::string &key) const {
+    return storage_->get(key);
 }
 
-bool document_t::is_dict(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::MAP;
+bool document_t::get_bool(const std::string &key) const {
+    return get(key)->as_bool();
 }
 
-object document_t::get(std::string &&key) const {
-    //todo parse complex key
-    auto field = fields_.find(std::move(key));
-    if (field != fields_.cend()) {
-        return get_value(field->second);
-    } else {
-        //todo error
-    }
-    static object nil;
-    return nil;
+ulong document_t::get_ulong(const std::string &key) const {
+    return get(key)->as_unsigned();
 }
 
-object document_t::get(const std::string &key) const {
-    //todo parse complex key
-    auto field = fields_.find(key);
-    if (field != fields_.cend()) {
-        return get_value(field->second);
-    } else {
-        //todo error
-    }
-    static object nil;
-    return nil;
+long document_t::get_long(const std::string &key) const {
+    return get(key)->as_int();
 }
 
-bool document_t::get_bool(std::string &&key) const {
-    return get_as<bool>(std::move(key));
+double document_t::get_double(const std::string &key) const {
+    return get(key)->as_double();
 }
 
-ulong document_t::get_ulong(std::string &&key) const {
-    return get_as<ulong>(std::move(key));
+std::string document_t::get_string(const std::string &key) const {
+    return static_cast<std::string>(get(key)->as_string());
 }
 
-long document_t::get_long(std::string &&key) const {
-    return get_as<long>(std::move(key));
+const ::storage::impl::array_t *document_t::get_array(const std::string &key) const {
+    return get(key)->as_array();
 }
 
-float document_t::get_float(std::string &&key) const {
-    return get_as<float>(std::move(key));
-}
-
-double document_t::get_double(std::string &&key) const {
-    return get_as<double>(std::move(key));
-}
-
-std::string document_t::get_string(std::string &&key) const {
-    return get_as<std::string>(std::move(key));
-}
-
-const document_t::fields_t &document_t::fields() const {
-    return fields_;
-}
-
-document_t::const_iterator document_t::cbegin() const {
-    return fields_.cbegin();
-}
-
-document_t::const_iterator document_t::cend() const {
-    return fields_.cend();
+document_t document_t::get_dict(const std::string &key) const {
+    return document_t(get(key)->as_dict());
 }
 
 std::string document_t::to_json() const {
-    std::stringstream res;
-    for (const auto& [key, value] : fields_) {
-        if (!res.str().empty()) res << ",";
-        res << key << ":" << get_value(value);
-    }
-    return "{" + res.str() + "}";
+    return storage_->to_json_string();
 }
-
-object_type document_t::get_type(const std::string &key) const {
-    auto field = fields_.find(std::move(key));
-    if (field != fields_.cend()) {
-        return field->second.type;
-    } else {
-        //todo error
-    }
-    return object_type::NIL;
-}
-
-object document_t::get_value(const field_t &field) const {
-    if (field.is_value()) return field.value;
-    if (field.size > 0 && storage_) { //todo can make cache
-        auto data = storage_->str().substr(field.offset, field.size);
-        msgpack::object_handle oh = msgpack::unpack(data.data(), data.size());
-        return oh.get();
-    }
-    return object();
-}
-
 
 auto make_document() -> document_ptr {
     return std::make_unique<document_t>();

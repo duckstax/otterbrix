@@ -1,104 +1,74 @@
 #pragma once
 
 #include <memory>
-#include <msgpack.hpp>
+#include <string>
+#include "support/ref_counted.hpp"
+
+namespace storage::impl {
+class mutable_dict_t;
+class array_t;
+class dict_t;
+class value_t;
+}
 
 namespace components::storage {
 
-using msgpack::type::object_type;
-using msgpack::object;
-using offset_t = std::size_t;
-using version_t = uint16_t; //todo
-
-constexpr version_t default_version  = 0;
-constexpr offset_t not_offset        = 0;
-constexpr offset_t not_size          = 0;
-constexpr const char *key_version = "$v";
-constexpr const char *key_offset  = "$o";
-constexpr const char *key_size    = "$s";
-
-struct field_t {
-    object_type type;
-    object value;
-    version_t version;
-    offset_t offset;
-    offset_t size;
-
-    field_t(object_type type, version_t version = default_version, offset_t offset = not_offset, offset_t size = not_offset);
-    field_t(object &&value, version_t version = default_version);
-    field_t(const object &value, version_t version = default_version);
-
-    bool is_value() const;
-    bool is_nil() const;
-    static field_t nil();
-};
-
-
 class document_t final {
-    using fields_t = std::map<std::string, field_t>;
-    using const_iterator = fields_t::const_iterator;
-    using storage_t = std::stringstream;
+    using storage_t = ::storage::impl::mutable_dict_t*;
 
 public:
     document_t();
-    explicit document_t(const object &value);
-    explicit document_t(const storage_t *storage);
+    document_t(const ::storage::impl::dict_t *dict);
+    ~document_t();
 
-    void add(std::string &&key, const object &value);
-    void add(std::string &&key, object &&value);
-    void add_null(std::string &&key);
-    void add_bool(std::string &&key, bool value);
-    void add_ulong(std::string &&key, ulong value);
-    void add_long(std::string &&key, long value);
-    void add_float(std::string &&key, float value);
-    void add_double(std::string &&key, double value);
-    void add_string(std::string &&key, std::string value);
-//    void add_array(std::string &&key);
-//    void add_dict(std::string &&key, document_t &&dict);
+    void add_null(const std::string &key);
+    void add_bool(const std::string &key, bool value);
+    void add_ulong(const std::string &key, ulong value);
+    void add_long(const std::string &key, long value);
+    void add_double(const std::string &key, double value);
+    void add_string(const std::string &key, std::string value);
+    void add_array(const std::string &key, ::storage::impl::array_t *array);
+    void add_dict(const std::string &key, ::storage::impl::dict_t *dict);
+    void add_dict(const std::string &key, const document_t &dict);
+    void add_dict(const std::string &key, document_t &&dict);
 
-    bool is_exists(std::string &&key) const;
-    bool is_null(std::string &&key) const;
-    bool is_bool(std::string &&key) const;
-    bool is_ulong(std::string &&key) const;
-    bool is_long(std::string &&key) const;
-    bool is_float(std::string &&key) const;
-    bool is_double(std::string &&key) const;
-    bool is_string(std::string &&key) const;
-    bool is_array(std::string &&key) const;
-    bool is_dict(std::string &&key) const;
+    bool is_exists(const std::string &key) const;
+    bool is_null(const std::string &key) const;
+    bool is_bool(const std::string &key) const;
+    bool is_ulong(const std::string &key) const;
+    bool is_long(const std::string &key) const;
+    bool is_double(const std::string &key) const;
+    bool is_string(const std::string &key) const;
+    bool is_array(const std::string &key) const;
+    bool is_dict(const std::string &key) const;
 
-    object get(std::string &&key) const;
-    object get(const std::string &key) const;
-    bool get_bool(std::string &&key) const;
-    ulong get_ulong(std::string &&key) const;
-    long get_long(std::string &&key) const;
-    float get_float(std::string &&key) const;
-    double get_double(std::string &&key) const;
-    std::string get_string(std::string &&key) const;
-//    void as_array(std::string &&key) const; //todo
-//    document_t get_dict(std::string &&key) const;
+    const ::storage::impl::value_t *get(const std::string &key) const;
+    bool get_bool(const std::string &key) const;
+    ulong get_ulong(const std::string &key) const;
+    long get_long(const std::string &key) const;
+    double get_double(const std::string &key) const;
+    std::string get_string(const std::string &key) const;
+    const ::storage::impl::array_t *get_array(const std::string &key) const;
+    document_t get_dict(const std::string &key) const;
 
     template <class T>
-    T get_as(const std::string &key) const {
-        try {
-            return get(key).as<T>();
-        } catch (...) {
-            return T();
-        }
+    T get_as(const std::string &) const {
+        static_assert(true, "not supported");
+        return T();
     }
-
-    const fields_t& fields() const;
-    const_iterator cbegin() const;
-    const_iterator cend() const;
+    template<> bool get_as<bool>(const std::string &key) const { return get_bool(key); }
+    template<> ulong get_as<ulong>(const std::string &key) const { return get_ulong(key); }
+    template<> long get_as<long>(const std::string &key) const { return get_long(key); }
+    template<> double get_as<double>(const std::string &key) const { return get_double(key); }
+    template<> std::string get_as<std::string>(const std::string &key) const { return get_string(key); }
+    template<> const ::storage::impl::array_t *get_as<const ::storage::impl::array_t *>(const std::string &key) const { return get_array(key); }
+    template<> document_t get_as<document_t>(const std::string &key) const { return get_dict(key); }
 
     std::string to_json() const;
 
 private:
-    fields_t fields_;
-    const storage_t *storage_ {nullptr};
-
-    object_type get_type(const std::string &key) const;
-    object get_value(const field_t &field) const;
+    storage_t storage_;
+    bool is_owner_;
 };
 
 using document_ptr = std::unique_ptr<document_t>;

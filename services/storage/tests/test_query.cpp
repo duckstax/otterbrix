@@ -5,11 +5,11 @@ using namespace services::storage;
 
 document_t gen_doc() {
     document_t doc;
-    doc.add("id", msgpack::object(static_cast<const char *>("1")));
-    doc.add("name", msgpack::object(static_cast<const char *>("Rex")));
-    doc.add("type", msgpack::object(static_cast<const char *>("dog")));
-    doc.add("age", msgpack::object(6));
-    doc.add("male", msgpack::object(true));
+    doc.add_string("_id", "1");
+    doc.add_string("name", "Rex");
+    doc.add_string("type", "dog");
+    doc.add_long("age", 6);
+    doc.add_bool("male", true);
     return doc;
 }
 

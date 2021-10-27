@@ -7,11 +7,11 @@ using namespace services::storage;
 
 document_t gen_doc(const std::string &id, const std::string &name, const std::string &type, ulong age, bool male) {
     document_t doc;
-    doc.add("id", msgpack::object(id.data()));
-    doc.add("name", msgpack::object(name.data()));
-    doc.add("type", msgpack::object(type.data()));
-    doc.add("age", msgpack::object(age));
-    doc.add("male", msgpack::object(male));
+    doc.add_string("_id", id);
+    doc.add_string("name", name);
+    doc.add_string("type", type);
+    doc.add_ulong("age", age);
+    doc.add_bool("male", male);
     return doc;
 }
 
@@ -33,7 +33,7 @@ void print_doc(document_t *doc) {
     std::cout << "Doc " << doc->get_as<std::string>("id") << " {\n"
               << "    name: " << doc->get_as<std::string>("name") << ",\n"
               << "    type: " << doc->get_as<std::string>("type") << ",\n"
-              << "    age: "  << doc->get_as<long>("age") << ",\n"
+              << "    age: "  << doc->get_as<ulong>("age") << ",\n"
               << "    male: " << doc->get_as<bool>("male") << ",\n"
               << "}" << std::endl;
 }
