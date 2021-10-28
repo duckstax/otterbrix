@@ -19,7 +19,7 @@ namespace components::cursor {
         return sub_cursor_.end();
     }
 
-    goblin_engineer::actor_address& sub_cursor_t::address() {
+    goblin_engineer::address_t& sub_cursor_t::address() {
         return collection_;
     }
 
@@ -27,7 +27,7 @@ namespace components::cursor {
         return data_->size();
     }
 
-    sub_cursor_t::sub_cursor_t(goblin_engineer::actor_address collection, data_cursor_t* data)
+    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, data_cursor_t* data)
         : collection_(collection)
         , data_(data) {
     }

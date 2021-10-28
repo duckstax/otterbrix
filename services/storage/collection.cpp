@@ -7,8 +7,8 @@
 #include "result.hpp"
 
 namespace services::storage {
-    collection_t::collection_t(database_ptr database, log_t& log)
-        : goblin_engineer::abstract_service(database, "collection")
+    collection_t::collection_t(goblin_engineer::supervisor_t* database,std::string name, log_t& log)
+        : goblin_engineer::abstract_service(database, std::move(name))
         , log_(log.clone()) {
         /// add_handler(collection::select, &collection_t::select);
         add_handler(collection::insert, &collection_t::insert);
@@ -23,12 +23,12 @@ namespace services::storage {
         log_.debug("collection_t::insert");
         auto id = document.get_as<std::string>("_id");
         insert_(id, std::move(document));
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
+        auto dispatcher = address_book("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher.type());
         //all_view_address();
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "insert_finish", session, result_insert_one(true));
+        auto database = address_book("database");
+        log_.debug("database : {}", database.type());
+        goblin_engineer::send(dispatcher, address(), "insert_finish", session, result_insert_one(true));
     }
 
     auto collection_t::get(components::storage::conditional_expression& cond) -> void {
@@ -39,27 +39,27 @@ namespace services::storage {
         }
     }
 
-    auto collection_t::search(const session_t &session, const std::string &collection, query_ptr cond) -> void {
+    auto collection_t::search(const session_t &session, const std::string &collection, query_ptr& cond) -> void {
         log_.debug("collection {}::search", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
+        auto dispatcher = address_book("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher.type());
+        auto database = address_book("database");
+        log_.debug("database : {}", database.type());
 
         auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(search_(std::move(cond))));
-        goblin_engineer::send(dispatcher, self(), "search_finish", session,components::cursor::sub_cursor_t(address(),result.first->second.get()) );
+        goblin_engineer::send(dispatcher, address(), "search_finish", session,components::cursor::sub_cursor_t(address(),result.first->second.get()) );
     }
 
     auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
         log_.debug("collection {}::find", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        log_.debug(address()->type());
+        auto dispatcher = address_book("dispatcher");
+        log_.debug("dispatcher : {}", dispatcher.type());
+        auto database = address_book("database");
+        log_.debug("database : {}", database.type());
+        log_.debug(address().type());
         log_.debug("Session : {}" , session.data());
         auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(search_(parse_condition(cond))));
-        goblin_engineer::send(dispatcher, self(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()) );
+        goblin_engineer::send(dispatcher, address(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()) );
     }
 
     auto collection_t::all() -> void {
@@ -96,11 +96,11 @@ namespace services::storage {
 */
     auto collection_t::size(session_t& session, std::string& collection) -> void {
         log_.debug("collection {}::size", collection);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcer : {}", dispatcher->type());
-        auto database = addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher, self(), "size_finish", session, result_size(size_()));
+        auto dispatcher = address_book("dispatcher");
+        log_.debug("dispatcer : {}", dispatcher.type());
+        auto database = address_book("database");
+        log_.debug("database : {}", database.type());
+        goblin_engineer::send(dispatcher, address(), "size_finish", session, result_size(size_()));
     }
 
     void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {

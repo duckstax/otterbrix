@@ -3,7 +3,7 @@
 namespace services::storage {
 
     namespace manager_database {
-        static constexpr auto create_database = "create_database";
+        static constexpr auto create_database = "create";
     }
 
     namespace dispatcher {
@@ -16,7 +16,7 @@ namespace services::storage {
     } // namespace dispatcher
 
     namespace database {
-        static constexpr auto create_collection = "create_collection";
+        static constexpr auto create_collection = "create";
     }
 
     namespace collection {

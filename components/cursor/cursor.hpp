@@ -20,12 +20,12 @@ namespace components::cursor {
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
     public:
         sub_cursor_t() = default;
-        sub_cursor_t(goblin_engineer::actor_address collection, data_cursor_t* data);
-        goblin_engineer::actor_address& address();
+        sub_cursor_t(goblin_engineer::address_t collection, data_cursor_t* data);
+        goblin_engineer::address_t& address();
         std::size_t size() const;
 
     private:
-        goblin_engineer::actor_address collection_;
+        goblin_engineer::address_t collection_;
         std::vector<components::storage::document_t*>::const_iterator it;
         data_cursor_t* data_;
     };

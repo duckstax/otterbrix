@@ -6,14 +6,15 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 wrapper_cursor::wrapper_cursor(components::session::session_t session, wrapper_cursor::pointer cursor)
         : session_(session)
-        , ptr_(cursor){
+        , ptr_(cursor)
+        , dispatcher_(goblin_engineer::address_t::empty_address()){
     std::cerr << "session :" << session.data() << std::endl;
 }
 void wrapper_cursor::close() {
     close_=true;
     goblin_engineer::send(
         dispatcher_,
-        goblin_engineer::actor_address(),
+        goblin_engineer::address_t::empty_address(),
         "close_cursor",
         session_
     );

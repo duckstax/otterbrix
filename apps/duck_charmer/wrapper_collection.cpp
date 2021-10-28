@@ -22,16 +22,16 @@ bool wrapper_collection::insert(const py::handle& document) {
         to_document(document,doc);
         goblin_engineer::send(
             dispatcher_,
-            goblin_engineer::actor_address(),
+            goblin_engineer::address_t::empty_address(),
             "insert",
             duck_charmer::session_t(),
-            std::string(collection_->type().data(),collection_->type().size()),
+            std::string(collection_.type().data(),collection_.type().size()),
             std::move(doc),
             std::function<void(result_insert_one&)>([this](result_insert_one& result) {
                 insert_result_  = std::move(result);
                 d_();
             }));
-        log_.debug("wrapper_collection::insert send -> dispatcher: {}",dispatcher_->type());
+        log_.debug("wrapper_collection::insert send -> dispatcher: {}",dispatcher_.type());
         std::unique_lock<std::mutex> lk(mtx_);
         cv_.wait(lk, [this]() { return i == 1; });
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
@@ -43,7 +43,7 @@ wrapper_collection::~wrapper_collection() {
     /// ptr_.release();
 }
 
-wrapper_collection::wrapper_collection(log_t& log, goblin_engineer::actor_address dispatcher, goblin_engineer::actor_address database, goblin_engineer::actor_address collection)
+wrapper_collection::wrapper_collection(log_t& log, goblin_engineer::address_t dispatcher, goblin_engineer::address_t database, goblin_engineer::address_t collection)
     : log_(log.clone())
     , dispatcher_(dispatcher)
     , database_(database)
@@ -60,16 +60,16 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         to_document(cond, condition);
         goblin_engineer::send(
             dispatcher_,
-            goblin_engineer::actor_address(),
+            goblin_engineer::address_t::empty_address(),
             "find",
             duck_charmer::session_t(),
-            std::string(collection_->type().data(), collection_->type().size()),
+            std::string(collection_.type().data(), collection_.type().size()),
             std::move(condition),
             std::function<void(duck_charmer::session_t&,components::cursor::cursor_t*)>([&](duck_charmer::session_t& session, components::cursor::cursor_t* result) {
                 ptr.reset(new  wrapper_cursor(session,result));
                 d_();
             }));
-        log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_->type());
+        log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_.type());
         std::unique_lock<std::mutex> lk(mtx_);
         cv_.wait(lk, [this]() { return i == 1; });
         log_.debug("wrapper_client::dispatcher return result of find");
@@ -119,15 +119,15 @@ auto wrapper_collection::size() -> py::int_ {
     i = 0;
     goblin_engineer::send(
                 dispatcher_,
-                goblin_engineer::actor_address(),
+                goblin_engineer::address_t::empty_address(),
                 "size",
                 duck_charmer::session_t(),
-                std::string(collection_->type().data(), collection_->type().size()),
+                std::string(collection_.type().data(), collection_.type().size()),
                 std::function<void(result_size&)>([&](result_size &size) {
                     res = *size;
                     d_();
                 }));
-    log_.debug("wrapper_collection::size send -> dispatcher: {}", dispatcher_->type());
+    log_.debug("wrapper_collection::size send -> dispatcher: {}", dispatcher_.type());
     std::unique_lock<std::mutex> lk(mtx_);
     cv_.wait(lk, [this]() { return i == 1; });
     log_.debug("wrapper_client::dispatcher return result of size");

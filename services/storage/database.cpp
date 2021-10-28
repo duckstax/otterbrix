@@ -1,5 +1,7 @@
 #include "database.hpp"
 
+#include "collection.hpp"
+
 #include "tracy/tracy.hpp"
 
 namespace services::storage {
@@ -19,10 +21,7 @@ namespace services::storage {
         e_->stop();
     }
 
-    auto manager_database_t::executor() noexcept -> goblin_engineer::abstract_executor* {
-        return e_.get();
-    }
-    auto manager_database_t::get_executor() noexcept -> goblin_engineer::abstract_executor* {
+    auto manager_database_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
         return e_.get();
     }
 
@@ -30,25 +29,21 @@ namespace services::storage {
     auto manager_database_t::enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void {
         ZoneScoped;
         set_current_message(std::move(msg));
-        execute(*this);
+        execute();
     }
 
     void manager_database_t::create(session_t& session, std::string& name) {
         log_.debug("manager_database_t:create {}", name);
-        auto dispatcher = addresses("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher->type());
-        //all_view_address();
-        auto database =  addresses("database");
-        log_.debug("database : {}", database->type());
-        goblin_engineer::send(dispatcher,self(),"create_database_finish",session,database);
+        auto address = spawn_supervisor<database_t>(std::move(name),log_,1,1000);
+        databases_.emplace(address.type(),address);
     }
 
-    database_t::database_t(manager_database_ptr supervisor, log_t& log, size_t num_workers, size_t max_throughput)
-        : goblin_engineer::abstract_manager_service("database")
+    database_t::database_t(goblin_engineer::supervisor_t* supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)
+        : goblin_engineer::abstract_manager_service(supervisor,std::move(name))
         , log_(log.clone())
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         ZoneScoped;
-        add_handler(database::create_collection, &database_t::collection);
+        add_handler(database::create_collection, &database_t::create);
         e_->start();
     }
 
@@ -57,10 +52,7 @@ namespace services::storage {
         e_->stop();
     }
 
-    auto database_t::executor() noexcept -> goblin_engineer::abstract_executor* {
-        return e_.get();
-    }
-    auto database_t::get_executor() noexcept -> goblin_engineer::abstract_executor* {
+    auto database_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
         return e_.get();
     }
 
@@ -68,7 +60,13 @@ namespace services::storage {
     auto database_t::enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void {
         ZoneScoped;
         set_current_message(std::move(msg));
-        execute(*this);
+        execute();
+    }
+
+    void database_t::create(session_t& session, std::string& name) {
+        log_.debug("database_t::create {}", name);
+        auto address = spawn_actor<collection_t>(std::move(name),log_);
+        collections_.emplace(address.type(),address);
     }
 
 } // namespace kv

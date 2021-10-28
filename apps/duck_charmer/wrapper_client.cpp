@@ -14,22 +14,22 @@ wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
     log_.debug("wrapper_client::get_or_create name database: {}",name);
     goblin_engineer::send(
         dispatcher_,
-        goblin_engineer::actor_address(),
+        goblin_engineer::address_t::empty_address(),
         "create_database",
         duck_charmer::session_t(),
         name,
-        std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
+        std::function<void(goblin_engineer::address_t)>([this](goblin_engineer::address_t address) {
             tmp_ = boost::intrusive_ptr<wrapper_database>(new wrapper_database(log_,dispatcher_,address));
             d_();
         }));
-    log_.debug("wrapper_client::get_or_create send -> dispatcher: {}",dispatcher_->type());
+    log_.debug("wrapper_client::get_or_create send -> dispatcher: {}",dispatcher_.type());
     std::unique_lock<std::mutex> lk(mtx_);
     cv_.wait(lk, [this]() { return i == 1; });
     log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
     return tmp_;
 }
 
-wrapper_client::wrapper_client(log_t&log,goblin_engineer::actor_address dispatcher)
+wrapper_client::wrapper_client(log_t&log,goblin_engineer::address_t dispatcher)
     :log_(log.clone())
     ,dispatcher_(dispatcher) {
     log_.debug("wrapper_client::wrapper_client()");

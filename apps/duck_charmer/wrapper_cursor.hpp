@@ -28,7 +28,7 @@ private:
     std::atomic_bool close_;
     duck_charmer::session_t session_;
     std::unique_ptr<type> ptr_;
-    goblin_engineer::actor_address dispatcher_;
+    goblin_engineer::address_t dispatcher_;
 };
 
 

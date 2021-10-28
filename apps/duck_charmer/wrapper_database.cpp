@@ -25,11 +25,11 @@ wrapper_collection_ptr wrapper_database::create(const std::string& name) {
     log_.debug("wrapper_database::create name collection: {}",name);
     goblin_engineer::send(
         dispatcher_,
-        goblin_engineer::actor_address(),
+        goblin_engineer::address_t::empty_address(),
         "create_collection",
         duck_charmer::session_t(),
         name,
-        std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
+        std::function<void(goblin_engineer::address_t)>([this](goblin_engineer::address_t address) {
             tmp_ = boost::intrusive_ptr<wrapper_collection>(new wrapper_collection(log_,dispatcher_,database_,address));
             d_();
         }));
@@ -39,7 +39,7 @@ wrapper_collection_ptr wrapper_database::create(const std::string& name) {
     log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
     return tmp_;
 }
-wrapper_database::wrapper_database(log_t&log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database)
+wrapper_database::wrapper_database(log_t&log,goblin_engineer::address_t dispatcher,goblin_engineer::address_t database)
         : log_(log.clone())
         , database_(std::move(database))
         , dispatcher_(dispatcher) {
