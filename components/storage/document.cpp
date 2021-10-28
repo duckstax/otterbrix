@@ -130,8 +130,49 @@ document_t document_t::get_dict(const std::string &key) const {
     return document_t(get(key)->as_dict());
 }
 
+document_t::iterator document_t::begin() const {
+    return storage_->begin();
+}
+
 std::string document_t::to_json() const {
     return storage_->to_json_string();
+}
+
+msgpack::type::object_type document_t::get_msgpack_type(const ::storage::impl::value_t *value) {
+    if (value->type() == value_type::null) return msgpack::type::NIL;
+    if (value->type() == value_type::boolean) return msgpack::type::BOOLEAN;
+    if (value->is_unsigned()) return msgpack::type::POSITIVE_INTEGER;
+    if (value->is_int()) return msgpack::type::NEGATIVE_INTEGER;
+    if (value->is_double()) return msgpack::type::FLOAT64;
+    if (value->type() == value_type::string) return msgpack::type::STR;
+    if (value->type() == value_type::array) return msgpack::type::ARRAY;
+    if (value->type() == value_type::dict) return msgpack::type::MAP;
+    return msgpack::type::NIL;
+}
+
+msgpack::object document_t::get_msgpack_object(const ::storage::impl::value_t *value) {
+    if (value->type() == value_type::boolean) return msgpack::object(value->as_bool());
+    if (value->is_unsigned()) return msgpack::object(value->as_unsigned());
+    if (value->is_int()) return msgpack::object(value->as_int());
+    if (value->is_double()) return msgpack::object(value->as_double());
+    if (value->type() == value_type::string) return msgpack::object(static_cast<std::string>(value->as_string()).data());
+    return msgpack::object();
+}
+
+msgpack::object_array document_t::get_msgpack_array(const ::storage::impl::array_t *array) {
+    msgpack::object_array res;
+    res.size = array->count();
+    res.ptr = new msgpack::object[res.size];
+    for (uint32_t i = 0; i < res.size; ++i) {
+        auto value = array->get(i);
+        if (value->type() == value_type::array) {
+            //res.ptr[i] = msgpack::object(get_msgpack_array(value->as_array()));
+        } else if (value->type() == value_type::dict) {
+            //todo
+        }
+        res.ptr[i] = get_msgpack_object(value);
+    }
+    return res;
 }
 
 auto make_document() -> document_ptr {

@@ -6,8 +6,11 @@
 #include "result_insert_one.hpp"
 #include "result.hpp"
 #include "components/storage/mutable/mutable_dict.h"
+#include "components/storage/mutable/mutable_array.h"
 
+using ::storage::impl::value_type;
 using ::storage::impl::mutable_dict_t;
+using ::storage::impl::mutable_array_t;
 
 namespace services::storage {
 
@@ -169,22 +172,36 @@ std::string collection_t::gen_id() const {
     return std::string("0"); //todo
 }
 
-void collection_t::insert_(document_t&& document) {
-//    auto id = document.is_exists("id") ? document.get_string("id") : gen_id();
-//    auto index = mutable_dict_t::new_dict();
-//    for (const auto &[key, value] : document.fields()) {
-//        if (!structure_->get(key)) {
-//            structure_->set(key, value.type);
-//        }
-//        auto field = mutable_dict_t::new_dict();
-//        auto offset = storage_.str().size();
-//        msgpack::pack(storage_, value.value);
-//        field->set(key_offset, offset);
-//        field->set(key_size, storage_.str().size() - offset);
-//        if (value.version) field->set(key_version, value.version);
-//        index->set(key, field);
-//    }
-//    index_->set(std::move(id), index);
+void collection_t::insert_(document_t&& document, int version) {
+    auto id = document.is_exists("_id") ? document.get_string("_id") : gen_id();
+    auto index = mutable_dict_t::new_dict();
+    for (auto it = document.begin(); it; ++it) {
+        auto key = it.key()->as_string();
+        auto value = it.value();
+        if (!structure_->get(key)) {
+            structure_->set(key, document_t::get_msgpack_type(value));
+        }
+        auto offset = storage_.str().size();
+        pack_(value);
+        auto field = mutable_array_t::new_array();
+        field->append(offset);
+        field->append(storage_.str().size() - offset);
+        if (version) field->append(version);
+        index->set(key, field);
+    }
+    index_->set(std::move(id), index);
+}
+
+void collection_t::pack_(const ::storage::impl::value_t *value) {
+    if (value->type() == value_type::boolean) msgpack::pack(storage_, value->as_bool());
+    if (value->is_unsigned()) msgpack::pack(storage_, value->as_unsigned());
+    if (value->is_int()) msgpack::pack(storage_, value->as_int());
+    if (value->is_double()) msgpack::pack(storage_, value->as_double());
+    if (value->type() == value_type::string) msgpack::pack(storage_, static_cast<std::string>(value->as_string()).data());
+//    if (value->type() == value_type::array) msgpack::pack(storage_, msgpack::object(document_t::get_msgpack_array(value->as_array())));
+    if (value->type() == value_type::dict) {
+        //todo
+    }
 }
 
 document_t* collection_t::get_(const std::string& uid) {

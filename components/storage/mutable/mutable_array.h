@@ -1,6 +1,6 @@
 #pragma once
 
-#include "array.hpp"
+#include "../core/array.hpp"
 #include "mutable_array.hpp"
 
 namespace storage { namespace impl {

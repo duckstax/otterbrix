@@ -2,17 +2,33 @@
 #include "database.hpp"
 #include "collection.hpp"
 #include "query.hpp"
+#include "storage/core/array.hpp"
+#include "storage/mutable/mutable_array.h"
 
 using namespace services::storage;
 
-document_t gen_doc(const std::string &id, const std::string &name, const std::string &type, ulong age, bool male) {
+document_t gen_doc(const std::string &id, const std::string &name, const std::string &type, ulong age, bool male,
+                   std::initializer_list<std::string> friends, document_t sub_doc) {
     document_t doc;
     doc.add_string("_id", id);
     doc.add_string("name", name);
     doc.add_string("type", type);
     doc.add_ulong("age", age);
     doc.add_bool("male", male);
+    auto array = ::storage::impl::mutable_array_t::new_array();
+    for (auto value : friends) {
+        array->append(value);
+    }
+    doc.add_array("friends", array);
+    doc.add_dict("sub_doc", sub_doc);
     return doc;
+}
+
+document_t gen_sub_doc(const std::string &name, bool male) {
+    document_t sub_doc;
+    sub_doc.add_string("name", name);
+    sub_doc.add_bool("male", male);
+    return sub_doc;
 }
 
 collection_ptr gen_collection() {
@@ -20,17 +36,17 @@ collection_ptr gen_collection() {
     log.set_level(log_t::level::trace);
     auto collection = goblin_engineer::make_manager_service<collection_t>(nullptr, log);
 
-    collection->insert_test(gen_doc("1", "Rex", "dog", 6, true));
-    collection->insert_test(gen_doc("2", "Lucy", "dog", 2, false));
-    collection->insert_test(gen_doc("3", "Chevi", "cat", 3, false));
-    collection->insert_test(gen_doc("4", "Charlie", "dog", 2, true));
-    collection->insert_test(gen_doc("5", "Isha", "cat", 6, false));
+    collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
+    collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
+    collection->insert_test(gen_doc("id_3", "Chevi", "cat", 3, false, {"Isha"}, gen_sub_doc("Isha", true)));
+    collection->insert_test(gen_doc("id_4", "Charlie", "dog", 2, true, {"Rex", "Lucy"}, gen_sub_doc("Lucy", false)));
+    collection->insert_test(gen_doc("id_5", "Isha", "cat", 6, false, {"Chevi"}, gen_sub_doc("Chevi", true)));
 
     return collection;
 }
 
 void print_doc(document_t *doc) {
-    std::cout << "Doc " << doc->get_as<std::string>("id") << " {\n"
+    std::cout << "Doc " << doc->get_as<std::string>("_id") << " {\n"
               << "    name: " << doc->get_as<std::string>("name") << ",\n"
               << "    type: " << doc->get_as<std::string>("type") << ",\n"
               << "    age: "  << doc->get_as<ulong>("age") << ",\n"

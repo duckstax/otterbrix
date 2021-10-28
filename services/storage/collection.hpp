@@ -47,7 +47,8 @@ namespace services::storage {
 
     private:
         std::string gen_id() const;
-        void insert_(document_t&& document);
+        void insert_(document_t&& document, int version = 0);
+        void pack_(const ::storage::impl::value_t *value);
         document_t* get_(const std::string& uid);
         std::size_t size_() const;
         auto remove_(const std::string& key);

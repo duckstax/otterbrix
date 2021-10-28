@@ -1,8 +1,8 @@
 #pragma once
 
-#include "array.hpp"
+#include "../core/array.hpp"
 #include "value_slot.hpp"
-#include "better_assert.hpp"
+#include "../support/better_assert.hpp"
 #include <vector>
 
 namespace storage { namespace impl {

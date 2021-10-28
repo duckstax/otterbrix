@@ -1,7 +1,7 @@
 #pragma once
 
-#include "value.hpp"
-#include "ref_counted.hpp"
+#include "../core/value.hpp"
+#include "../support/ref_counted.hpp"
 
 namespace storage { namespace impl {
 
