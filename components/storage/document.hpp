@@ -73,7 +73,6 @@ public:
 
     static msgpack::type::object_type get_msgpack_type(const ::storage::impl::value_t *value);
     static msgpack::object get_msgpack_object(const ::storage::impl::value_t *value);
-    static msgpack::object_array get_msgpack_array(const ::storage::impl::array_t *array);
 
 private:
     storage_t storage_;

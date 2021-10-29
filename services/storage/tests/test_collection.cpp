@@ -7,6 +7,13 @@
 
 using namespace services::storage;
 
+document_t gen_sub_doc(const std::string &name, bool male) {
+    document_t sub_doc;
+    sub_doc.add_string("name", name);
+    sub_doc.add_bool("male", male);
+    return sub_doc;
+}
+
 document_t gen_doc(const std::string &id, const std::string &name, const std::string &type, ulong age, bool male,
                    std::initializer_list<std::string> friends, document_t sub_doc) {
     document_t doc;
@@ -19,16 +26,11 @@ document_t gen_doc(const std::string &id, const std::string &name, const std::st
     for (auto value : friends) {
         array->append(value);
     }
+    array->append(array->copy());
     doc.add_array("friends", array);
+    sub_doc.add_dict("sub", gen_sub_doc(name, male));
     doc.add_dict("sub_doc", sub_doc);
     return doc;
-}
-
-document_t gen_sub_doc(const std::string &name, bool male) {
-    document_t sub_doc;
-    sub_doc.add_string("name", name);
-    sub_doc.add_bool("male", male);
-    return sub_doc;
 }
 
 collection_ptr gen_collection() {
@@ -61,12 +63,14 @@ void print_search(const std::string &search, const std::list<document_t*> docs) 
     }
 }
 
-TEST_CASE("collection_t search") {
+TEST_CASE("collection_t get") {
     auto collection = gen_collection();
-    std::cout << "STRUCTURE:\n" << collection->get_structure_test() << std::endl;
     std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
     std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
+}
 
+TEST_CASE("collection_t search") {
+//    auto collection = gen_collection();
 //    REQUIRE(collection->search_test(eq("name", "Rex")).size() == 1);
 //    REQUIRE(collection->search_test(gt("age", 2)).size() == 3);
 //    REQUIRE(collection->search_test(eq("type", "cat")).size() == 2);

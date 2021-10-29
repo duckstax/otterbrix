@@ -21,6 +21,8 @@
 
 namespace storage::impl {
 class mutable_dict_t;
+class mutable_array_t;
+class value_t;
 }
 
 namespace services::storage {
@@ -28,8 +30,9 @@ namespace services::storage {
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         using storage_t = std::stringstream;
-        using structure_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
         using index_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
+        using field_index_t = ::storage::retained_t<::storage::impl::value_t>;
+        using field_value_t = const ::storage::impl::value_t *;
 
         collection_t(database_ptr database, log_t& log);
         ~collection_t();
@@ -48,7 +51,7 @@ namespace services::storage {
     private:
         std::string gen_id() const;
         void insert_(document_t&& document, int version = 0);
-        void pack_(const ::storage::impl::value_t *value);
+        field_index_t insert_field_(field_value_t value, int version);
         document_t* get_(const std::string& uid);
         std::size_t size_() const;
         auto remove_(const std::string& key);
@@ -56,7 +59,6 @@ namespace services::storage {
         std::vector<document_t *> search_(query_ptr cond);
 
         log_t log_;
-        structure_t structure_;
         index_t index_;
         storage_t storage_;
 
@@ -65,7 +67,6 @@ namespace services::storage {
         void insert_test(document_t &&doc);
         std::vector<components::storage::document_t *> search_test(query_ptr cond);
         std::vector<components::storage::document_t *> find_test(const document_t &cond);
-        std::string get_structure_test() const;
         std::string get_index_test() const;
         std::string get_data_test() const;
 #endif

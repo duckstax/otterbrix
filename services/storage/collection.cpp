@@ -14,10 +14,16 @@ using ::storage::impl::mutable_array_t;
 
 namespace services::storage {
 
+enum {
+    index_type,
+    index_offset,
+    index_size,
+    index_version
+};
+
 collection_t::collection_t(database_ptr database, log_t& log)
     : goblin_engineer::abstract_service(database, "collection")
     , log_(log.clone())
-    , structure_(mutable_dict_t::new_dict())
     , index_(mutable_dict_t::new_dict())
 {
     /// add_handler(collection::select, &collection_t::select);
@@ -177,31 +183,36 @@ void collection_t::insert_(document_t&& document, int version) {
     auto index = mutable_dict_t::new_dict();
     for (auto it = document.begin(); it; ++it) {
         auto key = it.key()->as_string();
-        auto value = it.value();
-        if (!structure_->get(key)) {
-            structure_->set(key, document_t::get_msgpack_type(value));
-        }
-        auto offset = storage_.str().size();
-        pack_(value);
-        auto field = mutable_array_t::new_array();
-        field->append(offset);
-        field->append(storage_.str().size() - offset);
-        if (version) field->append(version);
-        index->set(key, field);
+        if (key != "_id") index->set(key, insert_field_(it.value(), version));
     }
     index_->set(std::move(id), index);
 }
 
-void collection_t::pack_(const ::storage::impl::value_t *value) {
-    if (value->type() == value_type::boolean) msgpack::pack(storage_, value->as_bool());
-    if (value->is_unsigned()) msgpack::pack(storage_, value->as_unsigned());
-    if (value->is_int()) msgpack::pack(storage_, value->as_int());
-    if (value->is_double()) msgpack::pack(storage_, value->as_double());
-    if (value->type() == value_type::string) msgpack::pack(storage_, static_cast<std::string>(value->as_string()).data());
-//    if (value->type() == value_type::array) msgpack::pack(storage_, msgpack::object(document_t::get_msgpack_array(value->as_array())));
-    if (value->type() == value_type::dict) {
-        //todo
+collection_t::field_index_t collection_t::insert_field_(collection_t::field_value_t value, int version) {
+    if (value->type() == value_type::array) {
+        auto index_array = mutable_array_t::new_array();
+        auto array = value->as_array();
+        for (uint32_t i = 0; i < array->count(); ++i) {
+            index_array->append(insert_field_(array->get(i), version));
+        }
+        return index_array;
     }
+    if (value->type() == value_type::dict) {
+        auto dict = value->as_dict();
+        auto index_dict = mutable_dict_t::new_dict();
+        for (auto it = dict->begin(); it; ++it) {
+            index_dict->set(it.key()->to_string(), insert_field_(it.value(), version));
+        }
+        return index_dict;
+    }
+    auto index = mutable_array_t::new_array();
+    auto offset = storage_.str().size();
+    msgpack::pack(storage_, document_t::get_msgpack_object(value));
+    index->append(document_t::get_msgpack_type(value));
+    index->append(offset);
+    index->append(storage_.str().size() - offset);
+    if (version) index->append(version);
+    return index;
 }
 
 document_t* collection_t::get_(const std::string& uid) {
@@ -248,10 +259,6 @@ std::vector<document_t *> collection_t::search_test(query_ptr cond) {
 
 std::vector<document_t *> collection_t::find_test(const document_t &cond) {
     return search_(parse_condition(std::move(cond)));
-}
-
-std::string collection_t::get_structure_test() const {
-    return structure_->to_json_string();
 }
 
 std::string collection_t::get_index_test() const {

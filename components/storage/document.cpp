@@ -159,22 +159,6 @@ msgpack::object document_t::get_msgpack_object(const ::storage::impl::value_t *v
     return msgpack::object();
 }
 
-msgpack::object_array document_t::get_msgpack_array(const ::storage::impl::array_t *array) {
-    msgpack::object_array res;
-    res.size = array->count();
-    res.ptr = new msgpack::object[res.size];
-    for (uint32_t i = 0; i < res.size; ++i) {
-        auto value = array->get(i);
-        if (value->type() == value_type::array) {
-            //res.ptr[i] = msgpack::object(get_msgpack_array(value->as_array()));
-        } else if (value->type() == value_type::dict) {
-            //todo
-        }
-        res.ptr[i] = get_msgpack_object(value);
-    }
-    return res;
-}
-
 auto make_document() -> document_ptr {
     return std::make_unique<document_t>();
 }
