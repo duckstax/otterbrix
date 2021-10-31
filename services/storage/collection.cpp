@@ -14,13 +14,6 @@ using ::storage::impl::mutable_array_t;
 
 namespace services::storage {
 
-enum {
-    index_type,
-    index_offset,
-    index_size,
-    index_version
-};
-
 collection_t::collection_t(database_ptr database, log_t& log)
     : goblin_engineer::abstract_service(database, "collection")
     , log_(log.clone())
@@ -215,19 +208,14 @@ collection_t::field_index_t collection_t::insert_field_(collection_t::field_valu
     return index;
 }
 
-document_t* collection_t::get_(const std::string& uid) {
-    /*
-        auto it = storage_.find(uid);
-        if (it == storage_.end()) {
-            return nullptr;
-        } else {
-            it->second.get();
-        }
-         */
+document_view_t collection_t::get_(const std::string& id) const {
+    auto value = index_->get(id);
+    if (value != nullptr) return document_view_t(value->as_dict(), &storage_);
+    return document_view_t();
 }
 
 std::size_t collection_t::size_() const {
-    //        return storage_.size();
+    return index_->count();
 }
 
 void collection_t::drop_() {
@@ -267,6 +255,14 @@ std::string collection_t::get_index_test() const {
 
 std::string collection_t::get_data_test() const {
     return storage_.str();
+}
+
+std::size_t collection_t::size_test() const {
+    return size_();
+}
+
+document_view_t collection_t::get_test(const std::string &id) const {
+    return get_(id);
 }
 #endif
 

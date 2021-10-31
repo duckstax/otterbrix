@@ -47,26 +47,43 @@ collection_ptr gen_collection() {
     return collection;
 }
 
-void print_doc(document_t *doc) {
-    std::cout << "Doc " << doc->get_as<std::string>("_id") << " {\n"
-              << "    name: " << doc->get_as<std::string>("name") << ",\n"
-              << "    type: " << doc->get_as<std::string>("type") << ",\n"
-              << "    age: "  << doc->get_as<ulong>("age") << ",\n"
-              << "    male: " << doc->get_as<bool>("male") << ",\n"
-              << "}" << std::endl;
-}
-
-void print_search(const std::string &search, const std::list<document_t*> docs) {
-    std::cout << search << std::endl;
-    for (auto doc : docs) {
-        print_doc(doc);
-    }
-}
-
 TEST_CASE("collection_t get") {
     auto collection = gen_collection();
-    std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
-    std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
+    //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
+    //std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
+
+    REQUIRE(collection->size_test() == 5);
+
+    auto doc1 = collection->get_test("id_1");
+    //std::cout << "DOC1:\n" << doc1.to_json() << std::endl;
+    REQUIRE(doc1.is_valid());
+    REQUIRE(doc1.is_exists("name"));
+    REQUIRE(doc1.is_exists("age"));
+    REQUIRE(doc1.is_exists("male"));
+    REQUIRE_FALSE(doc1.is_exists("other"));
+    REQUIRE(doc1.is_string("name"));
+    REQUIRE(doc1.is_long("age"));
+    REQUIRE(doc1.is_bool("male"));
+    REQUIRE(doc1.is_array("friends"));
+    REQUIRE(doc1.is_dict("sub_doc"));
+    REQUIRE(doc1.get_string("name") == "Rex");
+    REQUIRE(doc1.get_long("age") == 6);
+    REQUIRE(doc1.get_bool("male") == true);
+
+    auto doc1_friends = doc1.get_array("friends");
+    //std::cout << "DOC1_FRIENDS:\n" << doc1_friends.to_json() << std::endl;
+    REQUIRE(doc1_friends.is_array());
+    REQUIRE(doc1_friends.count() == 3);
+    REQUIRE(doc1_friends.get_as<std::string>(1) == "Charlie");
+
+    auto doc1_sub = doc1.get_dict("sub_doc");
+    //std::cout << "DOC1_SUB:\n" << doc1_sub.to_json() << std::endl;
+    REQUIRE(doc1_sub.is_dict());
+    REQUIRE(doc1_sub.count() == 3);
+    REQUIRE(doc1_sub.get_as<std::string>("name") == "Lucy");
+
+    auto doc6 = collection->get_test("id_6");
+    REQUIRE_FALSE(doc6.is_valid());
 }
 
 TEST_CASE("collection_t search") {

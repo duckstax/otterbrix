@@ -14,6 +14,7 @@
 
 #include "storage/conditional_expression.hpp"
 #include "storage/document.hpp"
+#include "storage/document_view.hpp"
 
 #include "forward.hpp"
 #include "route.hpp"
@@ -25,8 +26,12 @@ class mutable_array_t;
 class value_t;
 }
 
+class test_collection_t;
+
 namespace services::storage {
     using document_t  = components::storage::document_t;
+    using document_view_t = components::storage::document_view_t;
+
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         using storage_t = std::stringstream;
@@ -52,7 +57,7 @@ namespace services::storage {
         std::string gen_id() const;
         void insert_(document_t&& document, int version = 0);
         field_index_t insert_field_(field_value_t value, int version);
-        document_t* get_(const std::string& uid);
+        document_view_t get_(const std::string& id) const;
         std::size_t size_() const;
         auto remove_(const std::string& key);
         void drop_();
@@ -69,7 +74,11 @@ namespace services::storage {
         std::vector<components::storage::document_t *> find_test(const document_t &cond);
         std::string get_index_test() const;
         std::string get_data_test() const;
+        std::size_t size_test() const;
+        document_view_t get_test(const std::string &id) const;
 #endif
+
+        friend class ::test_collection_t;
     };
 
     using collection_ptr = goblin_engineer::intrusive_ptr<collection_t>;

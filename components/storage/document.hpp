@@ -4,12 +4,11 @@
 #include <string>
 #include <msgpack.hpp>
 #include "support/ref_counted.hpp"
+#include "storage/mutable/mutable_array.h"
 
 namespace storage::impl {
 class mutable_dict_t;
-class array_t;
 class dict_t;
-class value_t;
 class dict_iterator_t;
 }
 
@@ -20,6 +19,8 @@ class document_t final {
     using iterator = ::storage::impl::dict_iterator_t;
 
 public:
+    using value_t = const ::storage::impl::value_t*;
+
     document_t();
     document_t(const ::storage::impl::dict_t *dict);
     ~document_t();
@@ -67,9 +68,13 @@ public:
     template<> const ::storage::impl::array_t *get_as<const ::storage::impl::array_t *>(const std::string &key) const { return get_array(key); }
     template<> document_t get_as<document_t>(const std::string &key) const { return get_dict(key); }
 
+    ::storage::retained_const_t<::storage::impl::value_t> value() const;
+
     iterator begin() const;
 
     std::string to_json() const;
+
+    static ::storage::retained_t<::storage::impl::mutable_array_t> create_array();
 
     static msgpack::type::object_type get_msgpack_type(const ::storage::impl::value_t *value);
     static msgpack::object get_msgpack_object(const ::storage::impl::value_t *value);

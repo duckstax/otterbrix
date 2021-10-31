@@ -1,6 +1,7 @@
 #include "document.hpp"
 #include "mutable/mutable_dict.h"
 
+using ::storage::impl::mutable_array_t;
 using ::storage::impl::mutable_dict_t;
 using ::storage::impl::value_t;
 using ::storage::impl::value_type;
@@ -130,12 +131,20 @@ document_t document_t::get_dict(const std::string &key) const {
     return document_t(get(key)->as_dict());
 }
 
+::storage::retained_const_t<::storage::impl::value_t> document_t::value() const {
+    return storage_->as_dict();
+}
+
 document_t::iterator document_t::begin() const {
     return storage_->begin();
 }
 
 std::string document_t::to_json() const {
     return storage_->to_json_string();
+}
+
+::storage::retained_t<::storage::impl::mutable_array_t> document_t::create_array() {
+    return mutable_array_t::new_array();
 }
 
 msgpack::type::object_type document_t::get_msgpack_type(const ::storage::impl::value_t *value) {

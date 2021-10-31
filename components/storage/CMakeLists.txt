@@ -2,7 +2,7 @@ project(storage_base CXX)
 
 set( ${PROJECT_NAME}_HEADERS
         document.hpp
-#        document_view.hpp
+        document_view.hpp
         core/array.hpp
         core/base.hpp
         core/deep_iterator.hpp
@@ -59,7 +59,7 @@ set( ${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
-#        document_view.cpp
+        document_view.cpp
         core/array.cpp
         core/deep_iterator.cpp
         core/dict.cpp
