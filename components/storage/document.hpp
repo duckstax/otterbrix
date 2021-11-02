@@ -73,6 +73,7 @@ public:
     iterator begin() const;
 
     std::string to_json() const;
+    static document_t from_json(const std::string &json);
 
     static ::storage::retained_t<::storage::impl::mutable_array_t> create_array();
 

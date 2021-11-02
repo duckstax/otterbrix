@@ -48,6 +48,7 @@ collection_ptr gen_collection() {
 }
 
 TEST_CASE("collection_t get") {
+    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
     auto collection = gen_collection();
     //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
     //std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
@@ -84,46 +85,52 @@ TEST_CASE("collection_t get") {
 
     auto doc6 = collection->get_test("id_6");
     REQUIRE_FALSE(doc6.is_valid());
+    delete collection.detach(); //todo delete after repair ref count
+    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
 }
 
 TEST_CASE("collection_t search") {
-//    auto collection = gen_collection();
-//    REQUIRE(collection->search_test(eq("name", "Rex")).size() == 1);
-//    REQUIRE(collection->search_test(gt("age", 2)).size() == 3);
-//    REQUIRE(collection->search_test(eq("type", "cat")).size() == 2);
-//    REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5)).size() == 2);
-//    REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5)).size() == 2);
-//    REQUIRE(collection->search_test(any("age", std::vector<int>{2,3,4})).size() == 3);
-//    REQUIRE(collection->search_test(all("age", std::vector<int>{2,3})).size() == 0);
-//    REQUIRE(collection->search_test(all("age", std::vector<int>{2})).size() == 2);
-//    REQUIRE(collection->search_test(matches("name", "Ch.*")).size() == 2);
-//    REQUIRE(collection->search_test(!eq("name", "Rex")).size() == 4);
-//    REQUIRE(collection->search_test(!!eq("name", "Rex")).size() == 1);
-//    REQUIRE(collection->search_test(!!!eq("name", "Rex")).size() == 4);
-//    delete collection.detach(); //todo delete after repair ref count
+    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+    auto collection = gen_collection();
+    REQUIRE(collection->search_test(eq("name", "Rex"))->size() == 1);
+    REQUIRE(collection->search_test(gt("age", 2))->size() == 3);
+    REQUIRE(collection->search_test(eq("type", "cat"))->size() == 2);
+    REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5))->size() == 2);
+    REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5))->size() == 2);
+    REQUIRE(collection->search_test(any("age", std::vector<int>{2,3,4}))->size() == 3);
+    REQUIRE(collection->search_test(all("age", std::vector<int>{2,3}))->size() == 0);
+    REQUIRE(collection->search_test(all("age", std::vector<int>{2}))->size() == 2);
+    REQUIRE(collection->search_test(matches("name", "Ch.*"))->size() == 2);
+    REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
+    REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
+    REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
+    delete collection.detach(); //todo delete after repair ref count
+    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
 }
 
-//TEST_CASE("collection_t find") {
-//    auto collection = gen_collection();
-//    auto res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$eq\": \"Rex\"}}"));
-//    REQUIRE(res.size() == 1);
-//    res = collection->find_test(document_t::json_t::parse("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
-//    REQUIRE(res.size() == 1);
-//    res = collection->find_test(document_t::json_t::parse("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
-//    REQUIRE(res.size() == 2);
-//    res = collection->find_test(document_t::json_t::parse("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
-//    REQUIRE(res.size() == 3);
-//    res = collection->find_test(document_t::json_t::parse("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
-//    REQUIRE(res.size() == 3);
-//    res = collection->find_test(document_t::json_t::parse("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
-//    REQUIRE(res.size() == 5);
-//    res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
-//    REQUIRE(res.size() == 2);
-//    res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
-//    REQUIRE(res.size() == 0);
-//    res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
-//    REQUIRE(res.size() == 1);
-//    res = collection->find_test(document_t::json_t::parse("{\"name\": {\"$regex\": \"Ch.*\"}}"));
-//    REQUIRE(res.size() == 2);
-//    delete collection.detach(); //todo delete after repair ref count
-//}
+TEST_CASE("collection_t find") {
+    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+    auto collection = gen_collection();
+    auto res = collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"));
+    REQUIRE(res->size() == 1);
+    res = collection->find_test(document_t::from_json("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
+    REQUIRE(res->size() == 1);
+    res = collection->find_test(document_t::from_json("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    REQUIRE(res->size() == 2);
+    res = collection->find_test(document_t::from_json("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    REQUIRE(res->size() == 3);
+    res = collection->find_test(document_t::from_json("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
+    REQUIRE(res->size() == 3);
+    res = collection->find_test(document_t::from_json("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
+    REQUIRE(res->size() == 5);
+    res = collection->find_test(document_t::from_json("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
+    REQUIRE(res->size() == 2);
+    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
+    REQUIRE(res->size() == 0);
+    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
+    REQUIRE(res->size() == 1);
+    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"Ch.*\"}}"));
+    REQUIRE(res->size() == 2);
+    delete collection.detach(); //todo delete after repair ref count
+    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
+}

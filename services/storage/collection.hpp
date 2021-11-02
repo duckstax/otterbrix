@@ -19,6 +19,7 @@
 #include "forward.hpp"
 #include "route.hpp"
 #include "query.hpp"
+#include "result.hpp"
 
 namespace storage::impl {
 class mutable_dict_t;
@@ -61,7 +62,7 @@ namespace services::storage {
         std::size_t size_() const;
         auto remove_(const std::string& key);
         void drop_();
-        std::vector<document_t *> search_(query_ptr cond);
+        result_find search_(query_ptr cond);
 
         log_t log_;
         index_t index_;
@@ -70,15 +71,13 @@ namespace services::storage {
 #ifdef DEV_MODE
     public:
         void insert_test(document_t &&doc);
-        std::vector<components::storage::document_t *> search_test(query_ptr cond);
-        std::vector<components::storage::document_t *> find_test(const document_t &cond);
+        result_find search_test(query_ptr cond);
+        result_find find_test(const document_t &cond);
         std::string get_index_test() const;
         std::string get_data_test() const;
         std::size_t size_test() const;
         document_view_t get_test(const std::string &id) const;
 #endif
-
-        friend class ::test_collection_t;
     };
 
     using collection_ptr = goblin_engineer::intrusive_ptr<collection_t>;

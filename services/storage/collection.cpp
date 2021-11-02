@@ -4,7 +4,6 @@
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
 #include "result_insert_one.hpp"
-#include "result.hpp"
 #include "components/storage/mutable/mutable_dict.h"
 #include "components/storage/mutable/mutable_array.h"
 
@@ -222,14 +221,15 @@ void collection_t::drop_() {
     //        storage_.clear();
 }
 
-std::vector<document_t *> collection_t::search_(query_ptr cond) {
-    std::vector<document_t *> res;
-    //        for (auto it = storage_.begin(); it != storage_.end(); ++it) {
-    //            if (!cond || cond->check(it->second)) {
-    //                res.push_back(&it->second);
-    //            }
-    //        }
-    return res;
+result_find collection_t::search_(query_ptr cond) {
+    result_find::result_t res;
+    for (auto it = index_->begin(); it; ++it) {
+        auto doc = get_(static_cast<std::string>(it.key()->as_string()));
+        if (!cond || cond->check(doc)) {
+            res.push_back(doc);
+        }
+    }
+    return result_find(std::move(res));
 }
 
 auto collection_t::remove_(const std::string& key) {
@@ -241,11 +241,11 @@ void collection_t::insert_test(document_t &&doc) {
     insert_(std::move(doc));
 }
 
-std::vector<document_t *> collection_t::search_test(query_ptr cond) {
+result_find collection_t::search_test(query_ptr cond) {
     return search_(std::move(cond));
 }
 
-std::vector<document_t *> collection_t::find_test(const document_t &cond) {
+result_find collection_t::find_test(const document_t &cond) {
     return search_(parse_condition(std::move(cond)));
 }
 

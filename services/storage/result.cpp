@@ -1,11 +1,15 @@
 #include "result.hpp"
 
-result_find::result_find(std::vector<components::storage::document_t *> &&finded_docs)
+result_find::result_find(result_t &&finded_docs)
     : finded_docs_(std::move(finded_docs))
 {}
 
-const std::vector<components::storage::document_t *> &result_find::operator *() const {
+const result_find::result_t &result_find::operator *() const {
     return finded_docs_;
+}
+
+result_find::result_t *result_find::operator ->() {
+    return &finded_docs_;
 }
 
 

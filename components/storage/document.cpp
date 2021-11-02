@@ -1,5 +1,7 @@
 #include "document.hpp"
 #include "mutable/mutable_dict.h"
+#include "storage/json/json_coder.hpp"
+#include <iostream>
 
 using ::storage::impl::mutable_array_t;
 using ::storage::impl::mutable_dict_t;
@@ -141,6 +143,14 @@ document_t::iterator document_t::begin() const {
 
 std::string document_t::to_json() const {
     return storage_->to_json_string();
+}
+
+document_t document_t::from_json(const std::string &json) {
+    auto doc = ::storage::impl::doc_t::from_json(json);
+    auto dict = mutable_dict_t::new_dict(doc->root()->as_dict()).detach();
+    document_t document(dict);
+    document.is_owner_ = true;
+    return document;
 }
 
 ::storage::retained_t<::storage::impl::mutable_array_t> document_t::create_array() {

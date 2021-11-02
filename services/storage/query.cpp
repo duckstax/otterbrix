@@ -1,4 +1,8 @@
 #include "query.hpp"
+#include "storage/core/dict.hpp"
+#include "storage/mutable/mutable_dict.h"
+
+using ::storage::impl::value_type;
 
 namespace services::storage {
 
@@ -24,7 +28,28 @@ empty_query_t::~empty_query_t() {
     sub_query_.clear();
 }
 
-bool empty_query_t::check(const document_t &doc) const {
+bool empty_query_t::check(const components::storage::document_view_t &doc) const {
+    if (!sub_query_.empty()) {
+        if (key_ == "and") {
+            bool res = true;
+            for (auto q : sub_query_) {
+                res &= q->check(doc);
+            }
+            return res;
+        } else if (key_ == "or") {
+            bool res = false;
+            for (auto q : sub_query_) {
+                res |= q->check(doc);
+            }
+            return res;
+        } else if (key_ == "not") {
+            return !sub_query_.at(0)->check(doc);
+        }
+    }
+    return true;
+}
+
+bool empty_query_t::check(const components::storage::document_t &doc) const {
     if (!sub_query_.empty()) {
         if (key_ == "and") {
             bool res = true;
@@ -79,6 +104,58 @@ query_ptr operator !(query_ptr &&q) noexcept {
     return std::make_unique<empty_query_t>("not", std::move(q));
 }
 
+#define ANY_RES(TYPE, CONVERT) \
+    query_ptr(new query_t<TYPE>(key, [array](TYPE v){ \
+        for (auto it = array->begin(); it; ++it) { \
+            if (it.value()->CONVERT == v) return true; \
+        } \
+        return false; \
+    }))
+
+query_ptr any(const std::string &key, const ::storage::impl::array_t *array) {
+    if (array->count() > 0) {
+        auto value0 = array->get(0);
+        if (value0->type() == value_type::boolean) {
+            return ANY_RES(bool, as_bool());
+        } else if (value0->is_unsigned()) {
+            return ANY_RES(ulong, as_unsigned());
+        } else if (value0->is_int()) {
+            return ANY_RES(long, as_int());
+        } else if (value0->is_double()) {
+            return ANY_RES(double, as_double());
+        } else if (value0->type() == value_type::string) {
+            return ANY_RES(std::string, as_string());
+        }
+    }
+    return nullptr;
+}
+
+#define ALL_RES(TYPE, CONVERT) \
+    query_ptr(new query_t<TYPE>(key, [array](TYPE v){ \
+        for (auto it = array->begin(); it; ++it) { \
+            if (it.value()->CONVERT != v) return false; \
+        } \
+        return true; \
+    }))
+
+query_ptr all(const std::string &key, const ::storage::impl::array_t *array) {
+    if (array->count() > 0) {
+        auto value0 = array->get(0);
+        if (value0->type() == value_type::boolean) {
+            return ALL_RES(bool, as_bool());
+        } else if (value0->is_unsigned()) {
+            return ALL_RES(ulong, as_unsigned());
+        } else if (value0->is_int()) {
+            return ALL_RES(long, as_int());
+        } else if (value0->is_double()) {
+            return ALL_RES(double, as_double());
+        } else if (value0->type() == value_type::string) {
+            return ALL_RES(std::string, as_string());
+        }
+    }
+    return nullptr;
+}
+
 query_ptr matches(const std::string &key, const std::string &regex) {
     return query_ptr(new query_t<std::string>(std::move(key), [regex](std::string v){
                          return std::regex_match(v, std::regex(regex));
@@ -86,70 +163,70 @@ query_ptr matches(const std::string &key, const std::string &regex) {
 }
 
 
-#define GET_CONDITION(FUNC, KEY, DOC) \
-    DOC.is_boolean() ? FUNC(KEY, DOC.as_bool()) : \
-    DOC.is_integer() ? FUNC(KEY, DOC.as_int32()) : \
-    DOC.is_float()   ? FUNC(KEY, DOC.as_double()) : \
-    DOC.is_string()  ? FUNC(KEY, DOC.as_string()) : \
-    nullptr; //todo
+#define GET_CONDITION(FUNC, KEY, VALUE) \
+    (value->type() == value_type::boolean) ? FUNC(KEY, VALUE->as_bool()) : \
+    (value->is_unsigned()) ? FUNC(KEY, VALUE->as_unsigned()) : \
+    (value->is_int()) ? FUNC(KEY, VALUE->as_int()) : \
+    (value->is_double()) ? FUNC(KEY, VALUE->as_double()) : \
+    (value->type() == value_type::string) ? FUNC(KEY, static_cast<std::string>(VALUE->as_string())) : \
+    nullptr;
 
 query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const std::string &prev_key) {
-//    query_ptr q = nullptr;
-////    std::cerr << cond.to_string() << std::endl;
-//    for (auto it = cond.cbegin(); it != cond.cend(); ++it) {
-//        if (it->first == "$eq") {
-//            document_t doc(it->second);
-//            query_ptr q2 = GET_CONDITION(eq, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$ne") {
-//            document_t doc(it.value());
-//            query_ptr q2 = GET_CONDITION(ne, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$gt") {
-//            document_t doc(it.value());
-//            query_ptr q2 = GET_CONDITION(gt, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$gte") {
-//            document_t doc(it.value());
-//            query_ptr q2 = GET_CONDITION(gte, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$lt") {
-//            document_t doc(it.value());
-//            query_ptr q2 = GET_CONDITION(lt, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$lte") {
-//            document_t doc(it.value());
-//            query_ptr q2 = GET_CONDITION(lte, prev_key, doc);
-//            q = q ? std::move(q) & std::move(q2) : std::move(q2);
-//        } else if (it.key() == "$and") {
-//            q = query("and");
-//            for (auto &val : it.value()) {
-//                q->sub_query_.push_back(parse_condition(val).release());
-//            }
-//        } else if (it.key() == "$or") {
-//            q = query("or");
-//            for (auto &val : it.value()) {
-//                q->sub_query_.push_back(parse_condition(val).release());
-//            }
-//        } else if (it.key() == "$not") {
-//            q = query("not");
-//            q->sub_query_.push_back(parse_condition(it.value()).release());
-//        } else if (it.key() == "$in") {
-//            q = any(prev_key, it.value());
-//        } else if (it.key() == "$all") {
-//            q = all(prev_key, it.value());
-//        } else if (it.key() == "$regex") {
-//            std::string regex = document_t(it.value()).as_string();
-//            //regex = std::regex_replace(regex, std::regex("\\\\\\"), "|||");
-//            //regex = std::regex_replace(regex, std::regex("\\\\"), "|||");
-//            //regex = std::regex_replace(regex, std::regex("\\"), "");
-//            //regex = std::regex_replace(regex, std::regex("|||"), "\\");
-//            q = matches(prev_key, regex);
-//        } else if (it.value().is_object()) {
-//            return parse_condition(it.value(), std::move(q), it.key());
-//        }
-//    }
-//    return prev_cond ? std::move(prev_cond) & std::move(q) : std::move(q);
+    query_ptr q = nullptr;
+    for (auto it = cond.begin(); it; ++it) {
+        auto key = static_cast<std::string>(it.key()->as_string());
+        auto value = it.value();
+        if (key == "$eq") {
+            query_ptr q2 = GET_CONDITION(eq, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$ne") {
+            query_ptr q2 = GET_CONDITION(ne, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$gt") {
+            query_ptr q2 = GET_CONDITION(gt, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$gte") {
+            query_ptr q2 = GET_CONDITION(gte, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$lt") {
+            query_ptr q2 = GET_CONDITION(lt, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$lte") {
+            query_ptr q2 = GET_CONDITION(lte, prev_key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        } else if (key == "$and") {
+            q = query("and");
+            for (auto it = value->as_array()->begin(); it; ++it) {
+                auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+                q->sub_query_.push_back(parse_condition(dict).release());
+            }
+        } else if (key == "$or") {
+            q = query("or");
+            for (auto it = value->as_array()->begin(); it; ++it) {
+                auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+                q->sub_query_.push_back(parse_condition(dict).release());
+            }
+        } else if (key == "$not") {
+            q = query("not");
+            auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+            q->sub_query_.push_back(parse_condition(dict).release());
+        } else if (key == "$in") {
+            q = any(prev_key, value->as_array());
+        } else if (key == "$all") {
+            q = all(prev_key, value->as_array());
+        } else if (key == "$regex") {
+            auto regex = static_cast<std::string>(value->as_string());
+            //regex = std::regex_replace(regex, std::regex("\\\\\\"), "|||");
+            //regex = std::regex_replace(regex, std::regex("\\\\"), "|||");
+            //regex = std::regex_replace(regex, std::regex("\\"), "");
+            //regex = std::regex_replace(regex, std::regex("|||"), "\\");
+            q = matches(prev_key, regex);
+        } else if (value->type() == value_type::dict) {
+            auto dict = ::storage::impl::mutable_dict_t::new_dict(value->as_dict()).detach();
+            return parse_condition(document_t(dict), std::move(q), key);
+        }
+    }
+    return prev_cond ? std::move(prev_cond) & std::move(q) : std::move(q);
 }
 
 }

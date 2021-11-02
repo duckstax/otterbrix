@@ -75,6 +75,14 @@ public:
     }
 
     template <class T>
+    T get_as(const std::string &key) const {
+        try {
+            return get(std::string(key))->as<T>();
+        } catch (...) {}
+        return T();
+    }
+
+    template <class T>
     T get_as(uint32_t index) const {
         try {
             return get(index)->as<T>();

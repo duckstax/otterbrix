@@ -113,7 +113,7 @@ auto wrapper_collection::find(py::object cond) -> py::list {
             condition,
             std::function<void(result_find&)>([&](result_find& result) {
                 for (auto it : *result) {
-                    res.append(from_document(*it));
+                    //todo res.append(from_document(*it));
                 }
                 d_();
             }));
