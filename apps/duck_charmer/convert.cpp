@@ -243,7 +243,7 @@ auto from_document(const document_view_t &document) -> py::object {
 }
 
 auto from_object(const std::string& key, document_t& target) -> py::object {
-    auto value = target.get(key);
+//    auto value = target.get(key);
 //    return from_document(value);
 }
 
