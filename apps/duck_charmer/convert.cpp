@@ -8,11 +8,14 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
+#include "storage/core/dict.hpp"
+
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 using components::storage::document_t;
+using components::storage::document_view_t;
 using json = nlohmann::json;
 
 inline json to_json(const py::handle& obj) {
@@ -181,31 +184,61 @@ void update_document_inner(std::string&& key, const py::handle& obj, document_t&
     throw std::runtime_error("update_document_inner not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-auto from_document(const document_t &document) -> py::object {
-    //todo
-//    if (document.is_null()) {
-//        return py::none();
-//    } else if (document.is_boolean()) {
-//        return py::bool_(document.as_bool());
-//    } else if (document.is_integer()) {
-//        return py::int_(document.as_int32());
-//    } else if (document.is_float()) {
-//        return py::float_(document.as_double());
-//    } else if (document.is_string()) {
-//        return py::str(document.as_string());
-//    } else if (document.is_array()) {
-//        py::list list;
-//        for (auto it : document.as_array()) {
-//            list.append(from_document(it));
-//        }
-//        return std::move(list);
-//    } else if (document.is_object()) {
-//        py::dict dict;
-//        for (auto it = document.cbegin(); it != document.cend(); ++it) {
-//            dict[py::str(it.key())] = from_document(it.document());
-//        }
-//        return std::move(dict);
-//    }
+auto from_document(const document_view_t &document) -> py::object {
+    if (document.is_dict()) {
+        py::dict dict;
+        for (auto it = document.begin(); it; ++it) {
+            auto key = static_cast<std::string>(it.key()->as_string());
+            if (document.is_null(std::string(key))) {
+                dict[py::str(key)] = py::none();
+            } else if (document.is_bool(std::string(key))) {
+                dict[py::str(key)] = py::bool_(document.get_as<bool>(key));
+            } else if (document.is_ulong(std::string(key))) {
+                dict[py::str(key)] = py::int_(document.get_as<ulong>(key));
+            } else if (document.is_long(std::string(key))) {
+                dict[py::str(key)] = py::int_(document.get_as<long>(key));
+            } else if (document.is_float(std::string(key))) {
+                dict[py::str(key)] = py::float_(document.get_as<float>(key));
+            } else if (document.is_double(std::string(key))) {
+                dict[py::str(key)] = py::float_(document.get_as<double>(key));
+            } else if (document.is_string(std::string(key))) {
+                dict[py::str(key)] = py::str(document.get_as<std::string>(key));
+            } else if (document.is_array(std::string(key))) {
+                dict[py::str(key)] = from_document(document.get_array(std::string(key)));
+            } else if (document.is_dict(std::string(key))) {
+                dict[py::str(key)] = from_document(document.get_dict(std::string(key)));
+            } else {
+                dict[py::str(key)] = py::none();
+            }
+        }
+        return std::move(dict);
+    } else {
+        py::list list;
+        for (uint32_t i = 0; i < document.count(); ++i) {
+            if (document.is_null(i)) {
+                list.append(py::none());
+            } else if (document.is_bool(i)) {
+                list.append(py::bool_(document.get_as<bool>(i)));
+            } else if (document.is_ulong(i)) {
+                list.append(py::int_(document.get_as<ulong>(i)));
+            } else if (document.is_long(i)) {
+                list.append(py::int_(document.get_as<long>(i)));
+            } else if (document.is_float(i)) {
+                list.append(py::float_(document.get_as<float>(i)));
+            } else if (document.is_double(i)) {
+                list.append(py::float_(document.get_as<double>(i)));
+            } else if (document.is_string(i)) {
+                list.append(py::str(document.get_as<std::string>(i)));
+            } else if (document.is_array(i)) {
+                list.append(from_document(document.get_array(i)));
+            } else if (document.is_dict(i)) {
+                list.append(from_document(document.get_dict(i)));
+            } else {
+                list.append(py::none());
+            }
+        }
+        return std::move(list);
+    }
     return py::none();
 }
 

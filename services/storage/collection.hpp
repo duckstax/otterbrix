@@ -43,7 +43,7 @@ namespace services::storage {
         collection_t(database_ptr database, log_t& log);
         ~collection_t();
 
-        void insert(session_t& session_t,std::string& collection,document_t& document);
+        void insert(session_t& session_t, std::string& collection, document_t &&document);
         auto get(components::storage::conditional_expression& cond) -> void;
         auto search(const session_t &session, const std::string &collection, query_ptr cond) -> void;
         auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;

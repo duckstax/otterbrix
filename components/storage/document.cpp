@@ -15,9 +15,14 @@ document_t::document_t()
     , is_owner_(true) {
 }
 
-document_t::document_t(const ::storage::impl::dict_t *dict)
+document_t::document_t(const ::storage::impl::dict_t *dict, bool is_owner)
     : storage_(dict->as_mutable())
-    , is_owner_(false)  {
+    , is_owner_(is_owner) {
+}
+
+document_t::document_t(const document_t &src)
+    : storage_(src.storage_)
+    , is_owner_(false) {
 }
 
 document_t::~document_t() {
@@ -148,8 +153,7 @@ std::string document_t::to_json() const {
 document_t document_t::from_json(const std::string &json) {
     auto doc = ::storage::impl::doc_t::from_json(json);
     auto dict = mutable_dict_t::new_dict(doc->root()->as_dict()).detach();
-    document_t document(dict);
-    document.is_owner_ = true;
+    document_t document(dict, true);
     return document;
 }
 

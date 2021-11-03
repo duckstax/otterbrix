@@ -30,7 +30,7 @@ collection_t::~collection_t() {
     storage_.clear();
 }
 
-void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
+void collection_t::insert(session_t& session, std::string& collection, document_t&& document) {
     log_.debug("collection_t::insert : {}", collection);
     insert_(std::move(document));
     auto dispatcher = addresses("dispatcher");

@@ -33,7 +33,7 @@ public:
     void create_database_finish(session_t& session, goblin_engineer::actor_address address);
     void create_collection(session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
     void create_collection_finish(session_t& session, goblin_engineer::actor_address address);
-    void insert(session_t& session,std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback);
+    void insert(session_t& session,std::string& collection,components::storage::document_t&& document, std::function<void(result_insert_one&)>& callback);
     void insert_finish(session_t& session,result_insert_one&result);
     void find(session_t& session, std::string& collection, components::storage::document_t &condition, std::function<void(result_find&)>& callback);
     void find_finish(session_t&, result_find &result);

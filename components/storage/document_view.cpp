@@ -181,6 +181,10 @@ document_view_t document_view_t::get_dict(uint32_t index) const {
     return document_view_t(array_->get(index)->as_dict(), storage_);
 }
 
+document_view_t::iterator_t document_view_t::begin() const {
+    return index_->begin();
+}
+
 std::string document_view_t::to_json() const {
     if (index_) return to_json_dict();
     return to_json_array();

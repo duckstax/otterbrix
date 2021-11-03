@@ -131,6 +131,8 @@ TEST_CASE("collection_t find") {
     REQUIRE(res->size() == 1);
     res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"Ch.*\"}}"));
     REQUIRE(res->size() == 2);
+    res = collection->find_test(document_t::from_json("{}"));
+    REQUIRE(res->size() == 5);
     delete collection.detach(); //todo delete after repair ref count
     //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
 }

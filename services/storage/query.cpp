@@ -198,18 +198,18 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
             q = query("and");
             for (auto it = value->as_array()->begin(); it; ++it) {
                 auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-                q->sub_query_.push_back(parse_condition(dict).release());
+                q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
             }
         } else if (key == "$or") {
             q = query("or");
             for (auto it = value->as_array()->begin(); it; ++it) {
                 auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-                q->sub_query_.push_back(parse_condition(dict).release());
+                q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
             }
         } else if (key == "$not") {
             q = query("not");
             auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-            q->sub_query_.push_back(parse_condition(dict).release());
+            q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
         } else if (key == "$in") {
             q = any(prev_key, value->as_array());
         } else if (key == "$all") {

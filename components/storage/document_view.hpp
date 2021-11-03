@@ -8,6 +8,7 @@ namespace storage::impl {
 class dict_t;
 class array_t;
 class value_t;
+class dict_iterator_t;
 }
 
 namespace components::storage {
@@ -23,6 +24,7 @@ public:
     using index_t = const ::storage::impl::dict_t*;
     using array_t = const ::storage::impl::array_t*;
     using storage_t = const std::stringstream*;
+    using iterator_t = ::storage::impl::dict_iterator_t;
 
     document_view_t();
     document_view_t(index_t index, storage_t storage);
@@ -89,6 +91,8 @@ public:
         } catch (...) {}
         return T();
     }
+
+    iterator_t begin() const;
 
     std::string to_json() const;
 

@@ -18,7 +18,7 @@ bool wrapper_collection::insert(const py::handle& document) {
     if (is_document && is_id) {
         i = 0;
         components::storage::document_t doc;
-        to_document(document,doc);
+        to_document(document, doc);
         goblin_engineer::send(
             dispatcher_,
             goblin_engineer::actor_address(),
@@ -113,7 +113,7 @@ auto wrapper_collection::find(py::object cond) -> py::list {
             condition,
             std::function<void(result_find&)>([&](result_find& result) {
                 for (auto it : *result) {
-                    //todo res.append(from_document(*it));
+                    res.append(from_document(it));
                 }
                 d_();
             }));

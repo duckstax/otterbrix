@@ -63,10 +63,10 @@ void dispatcher_t::create_collection_finish(session_t& session, goblin_engineer:
     log_.debug("create_collection_finish: {}", address->type());
     create_database_and_collection_callback_(address);
 }
-void dispatcher_t::insert(session_t& session, std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback) {
+void dispatcher_t::insert(session_t& session, std::string& collection, components::storage::document_t&& document, std::function<void(result_insert_one&)>& callback) {
     log_.debug("dispatcher_t::insert: {}", collection);
     insert_callback_ = std::move(callback);
-    goblin_engineer::send(addresses("collection"), self(), "insert", session,collection,std::move(document) );
+    goblin_engineer::send(addresses("collection"), self(), "insert", session,collection, std::move(document));
 }
 void dispatcher_t::insert_finish(session_t& session, result_insert_one& result) {
     log_.debug("dispatcher_t::insert_finish");
