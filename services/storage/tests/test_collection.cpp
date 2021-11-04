@@ -49,13 +49,7 @@ collection_ptr gen_collection() {
 
 TEST_CASE("collection_t get") {
 //    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
-    auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-//    }
-    drop_all_loggers();
-//    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
-
-//    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
-//    auto collection = gen_collection();
+    auto collection = gen_collection();
     //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
     //std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
 
@@ -91,7 +85,7 @@ TEST_CASE("collection_t get") {
 
 //    auto doc6 = collection->get_test("id_6");
 //    REQUIRE_FALSE(doc6.is_valid());
-//    delete collection.detach(); //todo delete after repair ref count
+    delete collection.detach(); //todo delete after repair ref count
 //    } system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
 }
 
