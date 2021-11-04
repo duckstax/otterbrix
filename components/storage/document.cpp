@@ -67,7 +67,7 @@ void document_t::add_dict(const std::string &key, const document_t &dict) {
 
 void document_t::add_dict(const std::string &key, document_t &&dict) {
     storage_->set(key, dict.storage_);
-    dict.storage_ = nullptr;
+//    dict.storage_ = nullptr;
 }
 
 bool document_t::is_exists(const std::string &key) const {
@@ -136,6 +136,10 @@ const ::storage::impl::array_t *document_t::get_array(const std::string &key) co
 
 document_t document_t::get_dict(const std::string &key) const {
     return document_t(get(key)->as_dict());
+}
+
+document_t::const_storage_t document_t::get_storage() const {
+    return storage_->as_dict();
 }
 
 ::storage::retained_const_t<::storage::impl::value_t> document_t::value() const {

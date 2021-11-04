@@ -16,6 +16,7 @@ namespace components::storage {
 
 class document_t final {
     using storage_t = ::storage::impl::mutable_dict_t*;
+    using const_storage_t = const ::storage::impl::dict_t*;
     using iterator = ::storage::impl::dict_iterator_t;
 
 public:
@@ -55,6 +56,7 @@ public:
     std::string get_string(const std::string &key) const;
     const ::storage::impl::array_t *get_array(const std::string &key) const;
     document_t get_dict(const std::string &key) const;
+    const_storage_t get_storage() const;
 
     template <class T> T get_as(const std::string &) const;
 

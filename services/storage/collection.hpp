@@ -35,7 +35,7 @@ namespace services::storage {
 
     class collection_t final : public goblin_engineer::abstract_service {
     public:
-        using storage_t = std::stringstream;
+        using storage_t = msgpack::sbuffer;
         using index_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
         using field_index_t = ::storage::retained_t<::storage::impl::value_t>;
         using field_value_t = const ::storage::impl::value_t *;

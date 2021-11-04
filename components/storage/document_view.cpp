@@ -221,8 +221,8 @@ object_type document_view_t::get_type(uint32_t index) const {
 }
 
 object_handle document_view_t::get_value(offset_t offset, std::size_t size) const {
-    auto data = storage_->str().substr(offset, size);
-    return msgpack::unpack(data.data(), data.size());
+    auto data = storage_->data() + offset;
+    return msgpack::unpack(data, size);
 }
 
 std::string document_view_t::to_json_dict() const {

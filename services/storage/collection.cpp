@@ -198,11 +198,11 @@ collection_t::field_index_t collection_t::insert_field_(collection_t::field_valu
         return index_dict;
     }
     auto index = mutable_array_t::new_array();
-    auto offset = storage_.str().size();
+    auto offset = storage_.size();
     msgpack::pack(storage_, document_t::get_msgpack_object(value));
     index->append(document_t::get_msgpack_type(value));
     index->append(offset);
-    index->append(storage_.str().size() - offset);
+    index->append(storage_.size() - offset);
     if (version) index->append(version);
     return index;
 }
@@ -254,7 +254,7 @@ std::string collection_t::get_index_test() const {
 }
 
 std::string collection_t::get_data_test() const {
-    return storage_.str();
+    return std::string(storage_.data(), storage_.size());
 }
 
 std::size_t collection_t::size_test() const {

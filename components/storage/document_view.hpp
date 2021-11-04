@@ -23,7 +23,7 @@ class document_view_t final {
 public:
     using index_t = const ::storage::impl::dict_t*;
     using array_t = const ::storage::impl::array_t*;
-    using storage_t = const std::stringstream*;
+    using storage_t = const msgpack::sbuffer*;
     using iterator_t = ::storage::impl::dict_iterator_t;
 
     document_view_t();
