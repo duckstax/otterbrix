@@ -2,8 +2,8 @@
 #include "database.hpp"
 #include "collection.hpp"
 #include "query.hpp"
-#include "storage/core/array.hpp"
-#include "storage/mutable/mutable_array.h"
+#include "document/core/array.hpp"
+#include "document/mutable/mutable_array.h"
 
 using namespace services::storage;
 
