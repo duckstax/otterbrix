@@ -4,7 +4,7 @@
 #include <algorithm>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 size_t size_of_var_int(uint64_t n) {
     size_t size = 1;

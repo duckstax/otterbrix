@@ -8,7 +8,7 @@
 #include <utility>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 class alignas(void*) small_vector_base_t
 {

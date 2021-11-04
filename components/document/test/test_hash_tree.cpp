@@ -2,7 +2,7 @@
 #include "mutable_hash_tree.hpp"
 #include <set>
 
-using namespace storage;
+using namespace document;
 
 struct items_t {
     mutable_hash_tree_t tree;

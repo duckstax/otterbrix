@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 path_t::element_t::element_t(slice_t property)
     : _key_buf(property)

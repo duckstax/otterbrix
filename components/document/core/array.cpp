@@ -6,7 +6,7 @@
 #include "varint.hpp"
 
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace internal;
 

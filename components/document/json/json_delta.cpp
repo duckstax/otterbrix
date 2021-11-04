@@ -8,7 +8,7 @@
 #include <unordered_set>
 #include "better_assert.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 bool compatible_deltas = false;
 size_t json_delta_t::min_string_diff_length = 60;

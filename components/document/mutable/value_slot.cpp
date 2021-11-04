@@ -5,7 +5,7 @@
 #include "varint.hpp"
 #include <algorithm>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace internal;
 

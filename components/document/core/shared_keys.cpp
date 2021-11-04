@@ -2,7 +2,7 @@
 #include "storage_impl.hpp"
 #include "exception.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 key_t::key_t(slice_t key)
     : _string(key)

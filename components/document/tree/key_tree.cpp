@@ -7,7 +7,7 @@
 #include "platform_compat.hpp"
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 class key_tree_writer_t {
 public:

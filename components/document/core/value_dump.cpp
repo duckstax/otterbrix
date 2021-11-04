@@ -9,7 +9,7 @@
 #include <sstream>
 #include <stdio.h>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace std;
 using namespace internal;

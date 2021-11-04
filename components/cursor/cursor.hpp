@@ -1,5 +1,5 @@
 #pragma once
-#include <components/document/document.hpp>
+#include <components/document/document_view.hpp>
 #include <goblin-engineer/core.hpp>
 #include <vector>
 
@@ -11,10 +11,10 @@ namespace components::cursor {
     class data_cursor_t {
     public:
         data_cursor_t() = default;
-        data_cursor_t(std::vector<components::storage::document_t*> data);
+        data_cursor_t(std::vector<components::document::document_view_t> data);
         std::size_t size() const;
     private:
-        std::vector<storage::document_t*> data_;
+        std::vector<document::document_view_t> data_;
     };
 
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
@@ -26,7 +26,7 @@ namespace components::cursor {
 
     private:
         goblin_engineer::actor_address collection_;
-        std::vector<components::storage::document_t*>::const_iterator it;
+        std::vector<components::document::document_view_t>::const_iterator it;
         data_cursor_t* data_;
     };
 

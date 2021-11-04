@@ -6,7 +6,7 @@
 #include "asprintf.h"
 #endif
 
-namespace storage {
+namespace document {
 
 static const char* filename(const char *file) {
 #ifndef __FILE_NAME__

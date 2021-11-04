@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace storage {
+namespace document {
 
 static constexpr size_t min_initial_size     = 16;
 static constexpr float max_load              = 0.6f;

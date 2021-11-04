@@ -9,7 +9,7 @@
 #include <string>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 #define DEREF(OFF, TYPE)    ((const TYPE*)((uint8_t*)this - (OFF)))
 #define DEREF_VALUE(OFF)    value_t((impl_value_t)DEREF(OFF, void))

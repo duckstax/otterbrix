@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <map>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class json_converter_t {
     enum {
@@ -280,7 +280,7 @@ template <class T>
 void json_encoder_t::_write_float(T t) {
     comma();
     char str[32];
-    _out.write(str, storage::write_float(t, str, sizeof(str)));
+    _out.write(str, document::write_float(t, str, sizeof(str)));
 }
 
 void json_encoder_t::comma() {

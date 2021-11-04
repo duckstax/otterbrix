@@ -9,7 +9,7 @@
 
 using boost::container::small_vector;
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class shared_keys_t;
 

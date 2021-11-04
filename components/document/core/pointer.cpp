@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include "better_assert.hpp"
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
 pointer_t::pointer_t(size_t offset, int width, bool external)
     : value_t(tag_pointer, 0)

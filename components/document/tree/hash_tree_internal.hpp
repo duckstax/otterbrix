@@ -6,7 +6,7 @@
 #include "endian.hpp"
 #include <memory>
 
-namespace storage { namespace hashtree {
+namespace document { namespace hashtree {
 
 union node_t;
 class mutable_interior_t;
