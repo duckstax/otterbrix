@@ -56,18 +56,7 @@ public:
     const ::storage::impl::array_t *get_array(const std::string &key) const;
     document_t get_dict(const std::string &key) const;
 
-    template <class T>
-    T get_as(const std::string &) const {
-        static_assert(true, "not supported");
-        return T();
-    }
-    template<> bool get_as<bool>(const std::string &key) const { return get_bool(key); }
-    template<> ulong get_as<ulong>(const std::string &key) const { return get_ulong(key); }
-    template<> long get_as<long>(const std::string &key) const { return get_long(key); }
-    template<> double get_as<double>(const std::string &key) const { return get_double(key); }
-    template<> std::string get_as<std::string>(const std::string &key) const { return get_string(key); }
-    template<> const ::storage::impl::array_t *get_as<const ::storage::impl::array_t *>(const std::string &key) const { return get_array(key); }
-    template<> document_t get_as<document_t>(const std::string &key) const { return get_dict(key); }
+    template <class T> T get_as(const std::string &) const;
 
     ::storage::retained_const_t<::storage::impl::value_t> value() const;
 
@@ -85,6 +74,42 @@ private:
     storage_t storage_;
     bool is_owner_;
 };
+
+
+template <class T>
+T document_t::get_as(const std::string &) const {
+    static_assert(true, "not supported");
+    return T();
+}
+
+template<> inline bool document_t::get_as<bool>(const std::string &key) const {
+    return get_bool(key);
+}
+
+template<> inline ulong document_t::get_as<ulong>(const std::string &key) const {
+    return get_ulong(key);
+}
+
+template<> inline long document_t::get_as<long>(const std::string &key) const {
+    return get_long(key);
+}
+
+template<> inline double document_t::get_as<double>(const std::string &key) const {
+    return get_double(key);
+}
+
+template<> inline std::string document_t::get_as<std::string>(const std::string &key) const {
+    return get_string(key);
+}
+
+template<> inline const ::storage::impl::array_t *document_t::get_as<const ::storage::impl::array_t *>(const std::string &key) const {
+    return get_array(key);
+}
+
+template<> inline document_t document_t::get_as<document_t>(const std::string &key) const {
+    return get_dict(key);
+}
+
 
 using document_ptr = std::unique_ptr<document_t>;
 auto make_document() -> document_ptr;
