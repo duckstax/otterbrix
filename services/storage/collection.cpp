@@ -7,9 +7,9 @@
 #include "components/document/mutable/mutable_dict.h"
 #include "components/document/mutable/mutable_array.h"
 
-using ::storage::impl::value_type;
-using ::storage::impl::mutable_dict_t;
-using ::storage::impl::mutable_array_t;
+using ::document::impl::value_type;
+using ::document::impl::mutable_dict_t;
+using ::document::impl::mutable_array_t;
 
 namespace services::storage {
 
@@ -41,7 +41,7 @@ void collection_t::insert(session_t& session, std::string& collection, document_
     goblin_engineer::send(dispatcher, self(), "insert_finish", session, result_insert_one(true));
 }
 
-auto collection_t::get(components::storage::conditional_expression& cond) -> void {
+auto collection_t::get(components::document::conditional_expression& cond) -> void {
 //    for (auto& i : *this) {
 //        if (cond.check(i.second)) {
 //            /// return py::cast(tmp);
@@ -112,7 +112,7 @@ auto collection_t::size(session_t& session, std::string& collection) -> void {
     goblin_engineer::send(dispatcher, self(), "size_finish", session, result_size(size_()));
 }
 
-void collection_t::update(components::storage::document_t& fields, components::storage::conditional_expression& cond) {
+void collection_t::update(components::document::document_t& fields, components::document::conditional_expression& cond) {
     /*
         auto is_document = py::isinstance<py::dict>(fields);
         auto is_none = fields.is(py::none());
@@ -142,7 +142,7 @@ void collection_t::update(components::storage::document_t& fields, components::s
 */
 }
 
-void collection_t::remove(components::storage::conditional_expression& cond) {
+void collection_t::remove(components::document::conditional_expression& cond) {
     /*
         auto is_not_empty = !cond.is(py::none());
         if (is_not_empty) {

@@ -4,7 +4,7 @@
 #include "../support/endian.hpp"
 #include <limits.h>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 namespace internal {
 class heap_array_t;

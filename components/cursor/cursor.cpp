@@ -31,7 +31,7 @@ namespace components::cursor {
         : collection_(collection)
         , data_(data) {
     }
-    data_cursor_t::data_cursor_t(std::vector<components::storage::document_view_t> data)
+    data_cursor_t::data_cursor_t(std::vector<components::document::document_view_t> data)
         : data_(std::move(data)) {}
 
     size_t data_cursor_t::size() const {

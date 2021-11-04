@@ -7,7 +7,7 @@
 #include <deque>
 #include <utility>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class shared_keys_t;
 

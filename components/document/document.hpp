@@ -6,24 +6,24 @@
 #include "support/ref_counted.hpp"
 #include "document/mutable/mutable_array.h"
 
-namespace storage::impl {
+namespace document::impl {
 class mutable_dict_t;
 class dict_t;
 class dict_iterator_t;
 }
 
-namespace components::storage {
+namespace components::document {
 
 class document_t final {
-    using storage_t = ::storage::impl::mutable_dict_t*;
-    using const_storage_t = const ::storage::impl::dict_t*;
-    using iterator = ::storage::impl::dict_iterator_t;
+    using storage_t = ::document::impl::mutable_dict_t*;
+    using const_storage_t = const ::document::impl::dict_t*;
+    using iterator = ::document::impl::dict_iterator_t;
 
 public:
-    using value_t = const ::storage::impl::value_t*;
+    using value_t = const ::document::impl::value_t*;
 
     document_t();
-    explicit document_t(const ::storage::impl::dict_t *dict, bool is_owner = false);
+    explicit document_t(const ::document::impl::dict_t *dict, bool is_owner = false);
     document_t(const document_t &src);
     ~document_t();
 
@@ -33,8 +33,8 @@ public:
     void add_long(const std::string &key, long value);
     void add_double(const std::string &key, double value);
     void add_string(const std::string &key, std::string value);
-    void add_array(const std::string &key, ::storage::impl::array_t *array);
-    void add_dict(const std::string &key, ::storage::impl::dict_t *dict);
+    void add_array(const std::string &key, ::document::impl::array_t *array);
+    void add_dict(const std::string &key, ::document::impl::dict_t *dict);
     void add_dict(const std::string &key, const document_t &dict);
     void add_dict(const std::string &key, document_t &&dict);
 
@@ -48,29 +48,29 @@ public:
     bool is_array(const std::string &key) const;
     bool is_dict(const std::string &key) const;
 
-    const ::storage::impl::value_t *get(const std::string &key) const;
+    const ::document::impl::value_t *get(const std::string &key) const;
     bool get_bool(const std::string &key) const;
     ulong get_ulong(const std::string &key) const;
     long get_long(const std::string &key) const;
     double get_double(const std::string &key) const;
     std::string get_string(const std::string &key) const;
-    const ::storage::impl::array_t *get_array(const std::string &key) const;
+    const ::document::impl::array_t *get_array(const std::string &key) const;
     document_t get_dict(const std::string &key) const;
     const_storage_t get_storage() const;
 
     template <class T> T get_as(const std::string &) const;
 
-    ::storage::retained_const_t<::storage::impl::value_t> value() const;
+    ::document::retained_const_t<::document::impl::value_t> value() const;
 
     iterator begin() const;
 
     std::string to_json() const;
     static document_t from_json(const std::string &json);
 
-    static ::storage::retained_t<::storage::impl::mutable_array_t> create_array();
+    static ::document::retained_t<::document::impl::mutable_array_t> create_array();
 
-    static msgpack::type::object_type get_msgpack_type(const ::storage::impl::value_t *value);
-    static msgpack::object get_msgpack_object(const ::storage::impl::value_t *value);
+    static msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
+    static msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
 
 private:
     storage_t storage_;
@@ -104,7 +104,7 @@ template<> inline std::string document_t::get_as<std::string>(const std::string 
     return get_string(key);
 }
 
-template<> inline const ::storage::impl::array_t *document_t::get_as<const ::storage::impl::array_t *>(const std::string &key) const {
+template<> inline const ::document::impl::array_t *document_t::get_as<const ::document::impl::array_t *>(const std::string &key) const {
     return get_array(key);
 }
 

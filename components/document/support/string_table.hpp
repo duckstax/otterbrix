@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <utility>
 
-namespace storage {
+namespace document {
 
 class string_table_t
 {

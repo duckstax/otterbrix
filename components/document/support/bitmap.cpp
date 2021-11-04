@@ -7,7 +7,7 @@
 #include <array>
 #include <intrin.h>
 
-namespace storage {
+namespace document {
 
 template<typename T>
 static inline int popcount_c(T v) {

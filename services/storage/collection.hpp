@@ -22,7 +22,7 @@
 #include "query.hpp"
 #include "result.hpp"
 
-namespace storage::impl {
+namespace document::impl {
 class mutable_dict_t;
 class mutable_array_t;
 class value_t;
@@ -30,28 +30,28 @@ class value_t;
 
 namespace services::storage {
 
-    using document_t  = components::storage::document_t;
-    using document_view_t = components::storage::document_view_t;
+    using document_t  = components::document::document_t;
+    using document_view_t = components::document::document_view_t;
 
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         using storage_t = msgpack::sbuffer;
-        using index_t = ::storage::retained_t<::storage::impl::mutable_dict_t>;
-        using field_index_t = ::storage::retained_t<::storage::impl::value_t>;
-        using field_value_t = const ::storage::impl::value_t *;
+        using index_t = ::document::retained_t<::document::impl::mutable_dict_t>;
+        using field_index_t = ::document::retained_t<::document::impl::value_t>;
+        using field_value_t = const ::document::impl::value_t *;
 
         collection_t(database_ptr database, log_t& log);
         ~collection_t();
 
         void insert(session_t& session_t, std::string& collection, document_t &&document);
-        auto get(components::storage::conditional_expression& cond) -> void;
+        auto get(components::document::conditional_expression& cond) -> void;
         auto search(const session_t &session, const std::string &collection, query_ptr cond) -> void;
         auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
         auto all() -> void;
        /// void insert_many(py::iterable iterable);
         auto size(session_t& session, std::string& collection) -> void;
-        void update(document_t& fields, components::storage::conditional_expression& cond);
-        void remove(components::storage::conditional_expression& cond);
+        void update(document_t& fields, components::document::conditional_expression& cond);
+        void remove(components::document::conditional_expression& cond);
         void drop();
         void close_cursor(session_t& session);
 

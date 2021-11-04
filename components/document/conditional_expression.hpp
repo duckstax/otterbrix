@@ -2,7 +2,7 @@
 #include "document.hpp"
 #include "document_view.hpp"
 
-namespace components::storage {
+namespace components::document {
     class conditional_expression {
     public:
         virtual ~conditional_expression() = default;

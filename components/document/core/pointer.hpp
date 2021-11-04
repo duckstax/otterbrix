@@ -3,9 +3,9 @@
 #include "value.hpp"
 #include "better_assert.hpp"
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
-using namespace storage::impl;
+using namespace document::impl;
 
 
 class pointer_t : public value_t

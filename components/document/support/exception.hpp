@@ -4,7 +4,7 @@
 #include <memory>
 #include "../core/base.hpp"
 
-namespace storage {
+namespace document {
 class backtrace_t;
 
 enum class error_code {
@@ -37,6 +37,6 @@ public:
 };
 
 #define _throw_if(BAD, ERROR, MESSAGE) \
-    if (_usually_true(!(BAD))) ; else storage::exception_t::_throw(ERROR, MESSAGE)
+    if (_usually_true(!(BAD))) ; else document::exception_t::_throw(ERROR, MESSAGE)
 
 }

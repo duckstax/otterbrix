@@ -3,9 +3,9 @@
 #include "core/array.hpp"
 #include <iostream>
 
-using ::storage::impl::value_type;
+using ::document::impl::value_type;
 
-namespace components::storage {
+namespace components::document {
 
 enum {
     index_type,
@@ -197,7 +197,7 @@ document_view_t::document_view_t(document_view_t::array_t array, document_view_t
     , storage_(storage) {
 }
 
-object_type document_view_t::get_type(const ::storage::impl::value_t *field) const {
+object_type document_view_t::get_type(const ::document::impl::value_t *field) const {
     if (field != nullptr) {
         if (field->type() == value_type::dict) {
             return object_type::MAP;

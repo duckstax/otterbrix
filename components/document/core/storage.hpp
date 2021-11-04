@@ -10,26 +10,26 @@
 #include "doc.hpp"
 #include "slice.hpp"
 
-namespace storage {
+namespace document {
 
-using encode_format = storage::impl::encode_format;
-using trust_type = storage::impl::doc_t::trust_type;
-using value_type = storage::impl::value_type;
-using copy_flags = storage::impl::copy_flags;
-using null_value_t = storage::impl::null_value_t;
+using encode_format = document::impl::encode_format;
+using trust_type = document::impl::doc_t::trust_type;
+using value_type = document::impl::value_type;
+using copy_flags = document::impl::copy_flags;
+using null_value_t = document::impl::null_value_t;
 
-using impl_value_t = const storage::impl::value_t*;
-using impl_array_t = const storage::impl::array_t*;
-using impl_dict_t = const storage::impl::dict_t*;
-using impl_slot_t = storage::impl::value_slot_t*;
-using impl_mutable_array_t = storage::impl::mutable_array_t*;
-using impl_mutable_dict_t = storage::impl::mutable_dict_t*;
-using impl_encoder_t = storage::impl::encoder_impl_t*;
-using impl_shared_keys_t = storage::impl::shared_keys_t*;
-using impl_key_path_t = storage::impl::path_t*;
-using impl_deep_iterator_t = storage::impl::deep_iterator_t*;
-using impl_doc_t = const storage::impl::doc_t*;
-using json_coder = storage::impl::json_coder;
+using impl_value_t = const document::impl::value_t*;
+using impl_array_t = const document::impl::array_t*;
+using impl_dict_t = const document::impl::dict_t*;
+using impl_slot_t = document::impl::value_slot_t*;
+using impl_mutable_array_t = document::impl::mutable_array_t*;
+using impl_mutable_dict_t = document::impl::mutable_dict_t*;
+using impl_encoder_t = document::impl::encoder_impl_t*;
+using impl_shared_keys_t = document::impl::shared_keys_t*;
+using impl_key_path_t = document::impl::path_t*;
+using impl_deep_iterator_t = document::impl::deep_iterator_t*;
+using impl_doc_t = const document::impl::doc_t*;
+using json_coder = document::impl::json_coder;
 
 using time_stamp = int64_t;
 constexpr time_stamp time_stamp_none = INT64_MIN;

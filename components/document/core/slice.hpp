@@ -17,7 +17,7 @@
 
 #define SLICE(S)    (int)(S).size, (const char*)(S).buf
 
-namespace storage {
+namespace document {
 
 struct slice_t;
 struct alloc_slice_t;
@@ -601,12 +601,12 @@ inline void alloc_slice_t::shorten(size_t sz) {
 
 namespace std {
 
-template<> struct hash<storage::slice_t> {
-    size_t operator() (storage::pure_slice_t const& s) const { return s.hash(); }
+template<> struct hash<document::slice_t> {
+    size_t operator() (document::pure_slice_t const& s) const { return s.hash(); }
 };
 
-template<> struct hash<storage::alloc_slice_t> {
-    size_t operator() (storage::pure_slice_t const& s) const { return s.hash(); }
+template<> struct hash<document::alloc_slice_t> {
+    size_t operator() (document::pure_slice_t const& s) const { return s.hash(); }
 };
 
 }

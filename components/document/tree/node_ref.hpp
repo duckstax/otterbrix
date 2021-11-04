@@ -6,7 +6,7 @@
 #include <ostream>
 #include "better_assert.hpp"
 
-namespace storage { namespace hashtree {
+namespace document { namespace hashtree {
 
 class mutable_node_t;
 

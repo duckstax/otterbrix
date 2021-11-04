@@ -4,7 +4,7 @@
 
 class result_find {
 public:
-    using result_t = std::vector<components::storage::document_view_t>;
+    using result_t = std::vector<components::document::document_view_t>;
 
     result_find() = delete;
     result_find(result_t &&finded_docs);

@@ -22,7 +22,7 @@ document_t gen_doc(const std::string &id, const std::string &name, const std::st
     doc.add_string("type", type);
     doc.add_ulong("age", age);
     doc.add_bool("male", male);
-    auto array = ::storage::impl::mutable_array_t::new_array();
+    auto array = ::document::impl::mutable_array_t::new_array();
     for (auto value : friends) {
         array->append(value);
     }

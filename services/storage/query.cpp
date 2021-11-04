@@ -2,7 +2,7 @@
 #include "components/document/core/dict.hpp"
 #include "components/document/mutable/mutable_dict.h"
 
-using ::storage::impl::value_type;
+using ::document::impl::value_type;
 
 namespace services::storage {
 
@@ -28,7 +28,7 @@ empty_query_t::~empty_query_t() {
     sub_query_.clear();
 }
 
-bool empty_query_t::check(const components::storage::document_view_t &doc) const {
+bool empty_query_t::check(const components::document::document_view_t &doc) const {
     if (!sub_query_.empty()) {
         if (key_ == "and") {
             bool res = true;
@@ -49,7 +49,7 @@ bool empty_query_t::check(const components::storage::document_view_t &doc) const
     return true;
 }
 
-bool empty_query_t::check(const components::storage::document_t &doc) const {
+bool empty_query_t::check(const components::document::document_t &doc) const {
     if (!sub_query_.empty()) {
         if (key_ == "and") {
             bool res = true;
@@ -112,7 +112,7 @@ query_ptr operator !(query_ptr &&q) noexcept {
         return false; \
     }))
 
-query_ptr any(const std::string &key, const ::storage::impl::array_t *array) {
+query_ptr any(const std::string &key, const ::document::impl::array_t *array) {
     if (array->count() > 0) {
         auto value0 = array->get(0);
         if (value0->type() == value_type::boolean) {
@@ -138,7 +138,7 @@ query_ptr any(const std::string &key, const ::storage::impl::array_t *array) {
         return true; \
     }))
 
-query_ptr all(const std::string &key, const ::storage::impl::array_t *array) {
+query_ptr all(const std::string &key, const ::document::impl::array_t *array) {
     if (array->count() > 0) {
         auto value0 = array->get(0);
         if (value0->type() == value_type::boolean) {
@@ -197,18 +197,18 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
         } else if (key == "$and") {
             q = query("and");
             for (auto it = value->as_array()->begin(); it; ++it) {
-                auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+                auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
                 q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
             }
         } else if (key == "$or") {
             q = query("or");
             for (auto it = value->as_array()->begin(); it; ++it) {
-                auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+                auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
                 q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
             }
         } else if (key == "$not") {
             q = query("not");
-            auto dict = ::storage::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
+            auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
             q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
         } else if (key == "$in") {
             q = any(prev_key, value->as_array());
@@ -222,7 +222,7 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
             //regex = std::regex_replace(regex, std::regex("|||"), "\\");
             q = matches(prev_key, regex);
         } else if (value->type() == value_type::dict) {
-            auto dict = ::storage::impl::mutable_dict_t::new_dict(value->as_dict()).detach();
+            auto dict = ::document::impl::mutable_dict_t::new_dict(value->as_dict()).detach();
             return parse_condition(document_t(dict, true), std::move(q), key);
         }
     }

@@ -3,19 +3,19 @@
 #include "document/json/json_coder.hpp"
 #include <iostream>
 
-using ::storage::impl::mutable_array_t;
-using ::storage::impl::mutable_dict_t;
-using ::storage::impl::value_t;
-using ::storage::impl::value_type;
+using ::document::impl::mutable_array_t;
+using ::document::impl::mutable_dict_t;
+using ::document::impl::value_t;
+using ::document::impl::value_type;
 
-namespace components::storage {
+namespace components::document {
 
 document_t::document_t()
     : storage_(mutable_dict_t::new_dict().detach())
     , is_owner_(true) {
 }
 
-document_t::document_t(const ::storage::impl::dict_t *dict, bool is_owner)
+document_t::document_t(const ::document::impl::dict_t *dict, bool is_owner)
     : storage_(dict->as_mutable())
     , is_owner_(is_owner) {
 }
@@ -30,7 +30,7 @@ document_t::~document_t() {
 }
 
 void document_t::add_null(const std::string &key) {
-    storage_->set(key, ::storage::impl::null_value);
+    storage_->set(key, ::document::impl::null_value);
 }
 
 void document_t::add_bool(const std::string &key, bool value) {
@@ -53,11 +53,11 @@ void document_t::add_string(const std::string &key, std::string value) {
     storage_->set(key, value);
 }
 
-void document_t::add_array(const std::string &key, ::storage::impl::array_t *array) {
+void document_t::add_array(const std::string &key, ::document::impl::array_t *array) {
     storage_->set(key, array);
 }
 
-void document_t::add_dict(const std::string &key, ::storage::impl::dict_t *dict) {
+void document_t::add_dict(const std::string &key, ::document::impl::dict_t *dict) {
     storage_->set(key, dict);
 }
 
@@ -130,7 +130,7 @@ std::string document_t::get_string(const std::string &key) const {
     return static_cast<std::string>(get(key)->as_string());
 }
 
-const ::storage::impl::array_t *document_t::get_array(const std::string &key) const {
+const ::document::impl::array_t *document_t::get_array(const std::string &key) const {
     return get(key)->as_array();
 }
 
@@ -142,7 +142,7 @@ document_t::const_storage_t document_t::get_storage() const {
     return storage_->as_dict();
 }
 
-::storage::retained_const_t<::storage::impl::value_t> document_t::value() const {
+::document::retained_const_t<::document::impl::value_t> document_t::value() const {
     return storage_->as_dict();
 }
 
@@ -155,17 +155,17 @@ std::string document_t::to_json() const {
 }
 
 document_t document_t::from_json(const std::string &json) {
-    auto doc = ::storage::impl::doc_t::from_json(json);
+    auto doc = ::document::impl::doc_t::from_json(json);
     auto dict = mutable_dict_t::new_dict(doc->root()->as_dict()).detach();
     document_t document(dict, true);
     return document;
 }
 
-::storage::retained_t<::storage::impl::mutable_array_t> document_t::create_array() {
+::document::retained_t<::document::impl::mutable_array_t> document_t::create_array() {
     return mutable_array_t::new_array();
 }
 
-msgpack::type::object_type document_t::get_msgpack_type(const ::storage::impl::value_t *value) {
+msgpack::type::object_type document_t::get_msgpack_type(const ::document::impl::value_t *value) {
     if (value->type() == value_type::null) return msgpack::type::NIL;
     if (value->type() == value_type::boolean) return msgpack::type::BOOLEAN;
     if (value->is_unsigned()) return msgpack::type::POSITIVE_INTEGER;
@@ -177,7 +177,7 @@ msgpack::type::object_type document_t::get_msgpack_type(const ::storage::impl::v
     return msgpack::type::NIL;
 }
 
-msgpack::object document_t::get_msgpack_object(const ::storage::impl::value_t *value) {
+msgpack::object document_t::get_msgpack_object(const ::document::impl::value_t *value) {
     if (value->type() == value_type::boolean) return msgpack::object(value->as_bool());
     if (value->is_unsigned()) return msgpack::object(value->as_unsigned());
     if (value->is_int()) return msgpack::object(value->as_int());

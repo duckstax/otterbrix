@@ -77,7 +77,7 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
 }
 
 
-namespace storage {
+namespace document {
 
 static bool _parse_uint(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
     uint64_t n = 0;

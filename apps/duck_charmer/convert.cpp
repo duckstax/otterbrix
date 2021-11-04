@@ -14,8 +14,8 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-using components::storage::document_t;
-using components::storage::document_view_t;
+using components::document::document_t;
+using components::document::document_view_t;
 using json = nlohmann::json;
 
 inline json to_json(const py::handle& obj) {
@@ -55,22 +55,22 @@ inline json to_json(const py::handle& obj) {
     throw std::runtime_error("to_json not implemented for this type of object: " + py::repr(obj).cast<std::string>());
 }
 
-inline ::storage::retained_const_t<::storage::impl::value_t> to__(const py::handle& obj) {
+inline ::document::retained_const_t<::document::impl::value_t> to__(const py::handle& obj) {
     if (py::isinstance<py::bool_>(obj)) {
-        return ::storage::impl::new_value(obj.cast<bool>());
+        return ::document::impl::new_value(obj.cast<bool>());
     }
     if (py::isinstance<py::int_>(obj)) {
-        return ::storage::impl::new_value(obj.cast<long>());
+        return ::document::impl::new_value(obj.cast<long>());
     }
     if (py::isinstance<py::float_>(obj)) {
-        return ::storage::impl::new_value(obj.cast<double>());
+        return ::document::impl::new_value(obj.cast<double>());
     }
     if (py::isinstance<py::bytes>(obj)) {
         py::module base64 = py::module::import("base64");
-        return ::storage::impl::new_value(base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>());
+        return ::document::impl::new_value(base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>());
     }
     if (py::isinstance<py::str>(obj)) {
-        return ::storage::impl::new_value(obj.cast<std::string>());
+        return ::document::impl::new_value(obj.cast<std::string>());
     }
 
     if (py::isinstance<py::tuple>(obj) || py::isinstance<py::list>(obj)) {

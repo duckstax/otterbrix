@@ -200,7 +200,7 @@ static inline struct tm from_date(date_time_t* p) {
 static void inject_local_tz(date_time_t* p)
 {
     struct tm local_time = from_date(p);
-    auto offset = floor<minutes>(storage::get_local_timezone_offset(&local_time, false));
+    auto offset = floor<minutes>(document::get_local_timezone_offset(&local_time, false));
     p->valid_tz = true;
     p->tz = (int)offset.count();
 }
@@ -253,7 +253,7 @@ static int parse_ymd(const char *date, date_time_t *p){
 }
 
 
-namespace storage {
+namespace document {
 
 int64_t parse_iso8601_date(const char* date_str) {
     date_time_t x;
@@ -263,7 +263,7 @@ int64_t parse_iso8601_date(const char* date_str) {
     return x.jd - 210866760000000;
 }
 
-int64_t parse_iso8601_date(storage::slice_t date_str) {
+int64_t parse_iso8601_date(document::slice_t date_str) {
     return parse_iso8601_date(string(date_str).c_str());
 }
 
@@ -324,7 +324,7 @@ seconds get_local_timezone_offset(struct tm* time, bool utc) {
 
 #ifdef WIN32
     long s;
-    _throw_if(_get_timezone(&s) != 0, storage::error_code::internal_error, "Unable to query local system time zone");
+    _throw_if(_get_timezone(&s) != 0, document::error_code::internal_error, "Unable to query local system time zone");
     auto offset = seconds(-s);
 #elif defined(__DARWIN_UNIX03) || defined(__ANDROID__) || defined(_XOPEN_SOURCE) || defined(_SVID_SOURCE)
     auto offset = seconds(-timezone);

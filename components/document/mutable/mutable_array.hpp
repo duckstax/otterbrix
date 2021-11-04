@@ -5,12 +5,12 @@
 #include "../support/better_assert.hpp"
 #include <vector>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 class mutable_array_t;
 class mutable_dict_t;
 } }
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
 class heap_array_t : public heap_collection_t {
 public:

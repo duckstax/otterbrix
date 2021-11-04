@@ -18,7 +18,7 @@ bool wrapper_collection::insert(const py::handle& document) {
     auto is_id = document.contains("_id") && !document["_id"].is_none();
     if (is_document && is_id) {
         i = 0;
-        components::storage::document_t doc;
+        components::document::document_t doc;
         to_document(document, doc);
         goblin_engineer::send(
             dispatcher_,
@@ -56,7 +56,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
     wrapper_cursor_ptr ptr;
     if (py::isinstance<py::dict>(cond)) {
         i = 0;
-        components::storage::document_t condition;
+        components::document::document_t condition;
         to_document(cond, condition);
         goblin_engineer::send(
             dispatcher_,

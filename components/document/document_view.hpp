@@ -4,14 +4,14 @@
 #include "document/support/ref_counted.hpp"
 #include "iostream"
 
-namespace storage::impl {
+namespace document::impl {
 class dict_t;
 class array_t;
 class value_t;
 class dict_iterator_t;
 }
 
-namespace components::storage {
+namespace components::document {
 
 using msgpack::type::object_type;
 using msgpack::object;
@@ -21,10 +21,10 @@ using version_t = uint16_t; //todo
 
 class document_view_t final {
 public:
-    using index_t = const ::storage::impl::dict_t*;
-    using array_t = const ::storage::impl::array_t*;
+    using index_t = const ::document::impl::dict_t*;
+    using array_t = const ::document::impl::array_t*;
     using storage_t = const msgpack::sbuffer*;
-    using iterator_t = ::storage::impl::dict_iterator_t;
+    using iterator_t = ::document::impl::dict_iterator_t;
 
     document_view_t();
     document_view_t(index_t index, storage_t storage);
@@ -103,7 +103,7 @@ private:
 
     document_view_t(array_t array, storage_t storage);
 
-    object_type get_type(const ::storage::impl::value_t *field) const;
+    object_type get_type(const ::document::impl::value_t *field) const;
     object_type get_type(std::string &&key) const;
     object_type get_type(uint32_t index) const;
     object_handle get_value(offset_t offset, std::size_t size) const;

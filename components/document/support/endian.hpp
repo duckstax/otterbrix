@@ -3,7 +3,7 @@
 #include "platform_compat.hpp"
 #include "endianness.hpp"
 
-namespace storage { namespace endian {
+namespace document { namespace endian {
 
 #ifdef __BIG_ENDIAN__
 CONST static inline uint64_t enc64(uint64_t v) noexcept { return v; }

@@ -11,12 +11,12 @@
 #include "key_tree.hpp"
 #include "storage.hpp"
 
-using namespace storage::impl;
-using storage::slice_t;
-using storage::alloc_slice_t;
-using storage::key_tree_t;
+using namespace document::impl;
+using document::slice_t;
+using document::alloc_slice_t;
+using document::key_tree_t;
 
-storage::alloc_slice_t encoding_end(encoder_t &enc) {
+document::alloc_slice_t encoding_end(encoder_t &enc) {
     enc.end();
     auto res = enc.finish();
     REQUIRE(res);
@@ -361,8 +361,8 @@ TEST_CASE("impl::encoder_t::json string") {
                 auto str = a->get(0)->as_string();
                 REQUIRE(str == compare_value);
             }
-        }  catch (const storage::exception_t &exception) {
-            REQUIRE(exception.code == storage::error_code::json_error);
+        }  catch (const document::exception_t &exception) {
+            REQUIRE(exception.code == document::error_code::json_error);
             REQUIRE(std::string(exception.what()) == compare_error);
         }
         enc.reset();
@@ -440,22 +440,22 @@ TEST_CASE("impl::encoder_t::json binary") {
     auto json = value_t::from_data(value)->to_json();
     REQUIRE(json == alloc_slice_t("[\"" + std::string(code) + "\"]"));
 
-    storage::writer_t w;
+    document::writer_t w;
     w.write_decoded_base64(slice_t(code));
     REQUIRE(w.finish() == message);
 }
 
 TEST_CASE("impl::encoder_t::json from file") {
     encoder_t enc;
-    auto data = storage::read_file("test/big-test.json");
+    auto data = document::read_file("test/big-test.json");
     enc.unique_strings(true);
     auto value = json_coder::from_json(enc, data);
     REQUIRE(value.buf);
-    storage::write_to_file(value, "test/big-test.rj");
+    document::write_to_file(value, "test/big-test.rj");
 }
 
 TEST_CASE("impl::encoder_t::internal from file") {
-    auto doc = storage::read_file("test/big-test.rj");
+    auto doc = document::read_file("test/big-test.rj");
     auto value = value_t::from_trusted_data(doc);
     REQUIRE(value);
     REQUIRE(value->type() == value_type::array);
@@ -463,7 +463,7 @@ TEST_CASE("impl::encoder_t::internal from file") {
 }
 
 TEST_CASE("impl::encoder_t::get in array and dict") {
-    auto doc = storage::read_file("test/big-test.rj");
+    auto doc = document::read_file("test/big-test.rj");
     auto root = value_t::from_trusted_data(doc)->as_array();
     auto dog = root->get(6)->as_dict();
     REQUIRE(dog);
@@ -473,7 +473,7 @@ TEST_CASE("impl::encoder_t::get in array and dict") {
 }
 
 TEST_CASE("impl::encoder_t::path_t") {
-    auto data = storage::read_file("test/big-test.rj");
+    auto data = document::read_file("test/big-test.rj");
     const value_t *root = value_t::from_data(data);
     REQUIRE(root->as_array()->count() == 10);
 
@@ -612,7 +612,7 @@ TEST_CASE("impl::encoder_t::snip") {
     auto data = encoding_end(enc);
     REQUIRE(data);
 
-    storage::retained_t<doc_t> doc(new doc_t(data, doc_t::trust_type::untrusted, nullptr, part1));
+    document::retained_t<doc_t> doc(new doc_t(data, doc_t::trust_type::untrusted, nullptr, part1));
     REQUIRE(doc->root()->to_json_string() == R"([{"name":"part 1","part":1},{"name":"part 2","part":2}])");
     value_t::dump(data);
 }
@@ -664,27 +664,27 @@ TEST_CASE("impl::encoder_t::double encoding") {
     REQUIRE(std::string(buf_d) == "3.141592653589793");
     REQUIRE(std::string(buf_f) == "2.71828");
 
-    storage::write_float(d, buf_d, 32);
-    storage::write_float(f, buf_f, 32);
+    document::write_float(d, buf_d, 32);
+    document::write_float(f, buf_f, 32);
     REQUIRE(std::string(buf_d) == "3.141592653589793");
     REQUIRE(std::string(buf_f) == "2.71828");
 
-    REQUIRE(storage::parse_double(buf_d) == Approx(M_PI));
-    REQUIRE(static_cast<float>(storage::parse_double(buf_f)) == Approx(2.71828f));
+    REQUIRE(document::parse_double(buf_d) == Approx(M_PI));
+    REQUIRE(static_cast<float>(document::parse_double(buf_f)) == Approx(2.71828f));
 }
 
 TEST_CASE("impl::encoder_t::uint encoding") {
     constexpr const char* test_values[] = {"0", "1", "9", "  99 ", "+12345", "  +12345", "18446744073709551615"};
     for (const char *str : test_values) {
         uint64_t value;
-        REQUIRE(storage::parse_integer(str, value));
+        REQUIRE(document::parse_integer(str, value));
         REQUIRE(value == strtoull(str, nullptr, 10));
     }
 
     constexpr const char* fail_test_values[] = {"", " ", "+", "x", "1234x", "1234 x", "123.456", "-17", " + 1234", "18446744073709551616"};
     for (const char *str : fail_test_values) {
         uint64_t value;
-        REQUIRE_FALSE(storage::parse_integer(str, value));
+        REQUIRE_FALSE(document::parse_integer(str, value));
     }
 }
 
@@ -693,7 +693,7 @@ TEST_CASE("impl::encoder_t::int encoding") {
                                            "9223372036854775807", "-9223372036854775808"};
     for (const char *str : test_values) {
         int64_t value;
-        REQUIRE(storage::parse_integer(str, value));
+        REQUIRE(document::parse_integer(str, value));
         REQUIRE(value == strtoll(str, nullptr, 10));
     }
 
@@ -701,7 +701,7 @@ TEST_CASE("impl::encoder_t::int encoding") {
                                                 "-", " - ", "-+", "- 1", "9223372036854775808", "-9223372036854775809"};
     for (const char *str : fail_test_values) {
         int64_t value;
-        REQUIRE_FALSE(storage::parse_integer(str, value));
+        REQUIRE_FALSE(document::parse_integer(str, value));
     }
 }
 
@@ -709,26 +709,26 @@ TEST_CASE("impl::encoder_t::int encoding") {
 TEST_CASE("JSON") {
 
     SECTION("incomplete") {
-        storage::encoder_t enc;
+        document::encoder_t enc;
         REQUIRE(!enc.convert_json("{"));
-        REQUIRE(enc.error() == storage::error_code::json_error);
+        REQUIRE(enc.error() == document::error_code::json_error);
         REQUIRE(std::string(enc.error_message()) == "JSON error: incomplete JSON");
     }
 
     SECTION("no error with internal encoder") {
-        storage::encoder_t enc;
+        document::encoder_t enc;
         REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == storage::error_code::no_error);
+        REQUIRE(enc.error() == document::error_code::no_error);
     }
 
     SECTION("no error with json encoder") {
-        storage::encoder_t enc(encode_format::json);
+        document::encoder_t enc(encode_format::json);
         REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == storage::error_code::no_error);
+        REQUIRE(enc.error() == document::error_code::no_error);
     }
 
     SECTION("decode to json") {
-        storage::encoder_t enc(encode_format::json);
+        document::encoder_t enc(encode_format::json);
         enc.begin_dict();
         enc.write_key("int");
         enc.write_int(100);

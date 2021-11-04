@@ -3,7 +3,7 @@
 #include "../core/array.hpp"
 #include "mutable_array.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class mutable_dict_t;
 

@@ -3,7 +3,7 @@
 
 using namespace std;
 
-namespace storage {
+namespace document {
 
 concurrent_arena_t::concurrent_arena_t()
     : _heap_end(nullptr)

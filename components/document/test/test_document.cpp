@@ -3,7 +3,7 @@
 #include "document/mutable/mutable_array.h"
 #include <iostream>
 
-using namespace components::storage;
+using namespace components::document;
 
 TEST_CASE("document") {
     document_t doc;
@@ -36,7 +36,7 @@ TEST_CASE("document") {
     REQUIRE_FALSE(doc.get_string("bool") == "text");
     REQUIRE_FALSE(doc.get_string("double") == "0.123456789");
 
-    auto array = ::storage::impl::mutable_array_t::new_array();
+    auto array = ::document::impl::mutable_array_t::new_array();
     array->append(false);
     array->append(100);
     array->append(std::string("text"));

@@ -7,7 +7,7 @@
 #include <algorithm>
 #include "better_assert.hpp"
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
 void* heap_value_t::operator new(size_t size, size_t extra_size) {
 #ifdef __GNUC__
@@ -156,11 +156,11 @@ static bool is_hardwired_value(const value_t *v) {
 
 const value_t* heap_value_t::retain(const value_t *v) {
     if (internal::heap_value_t::is_heap_value(v)) {
-        storage::retain(heap_value_t::as_heap_value(v));
+        document::retain(heap_value_t::as_heap_value(v));
     } else if (v) {
         retained_const_t<doc_t> doc = doc_t::containing(v);
         if (_usually_true(doc != nullptr))
-            storage::retain(std::move(doc));
+            document::retain(std::move(doc));
         else if (!is_hardwired_value(v))
             exception_t::_throw(error_code::invalid_data,
                                 "Can't retain immutable value_t %p that's not part of a doc_t",
@@ -171,11 +171,11 @@ const value_t* heap_value_t::retain(const value_t *v) {
 
 void heap_value_t::release(const value_t *v) {
     if (internal::heap_value_t::is_heap_value(v)) {
-        storage::release(heap_value_t::as_heap_value(v));
+        document::release(heap_value_t::as_heap_value(v));
     } else if (v) {
         retained_const_t<doc_t> doc = doc_t::containing(v);
         if (_usually_true(doc != nullptr))
-            storage::release(doc.get());
+            document::release(doc.get());
         else if (!is_hardwired_value(v))
             exception_t::_throw(error_code::invalid_data,
                                 "Can't release immutable value_t %p that's not part of a doc_t",

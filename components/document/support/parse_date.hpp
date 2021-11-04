@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ctime>
 
-namespace storage {
+namespace document {
 
 static constexpr int64_t invalid_date = INT64_MIN;
 
