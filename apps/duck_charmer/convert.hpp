@@ -3,8 +3,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "components/storage/document.hpp"
-#include "components/storage/document_view.hpp"
+#include "components/document/document.hpp"
+#include "components/document/document_view.hpp"
 
 namespace py = pybind11;
 

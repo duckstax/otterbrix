@@ -1,6 +1,6 @@
 #include "document.hpp"
 #include "mutable/mutable_dict.h"
-#include "storage/json/json_coder.hpp"
+#include "document/json/json_coder.hpp"
 #include <iostream>
 
 using ::storage::impl::mutable_array_t;

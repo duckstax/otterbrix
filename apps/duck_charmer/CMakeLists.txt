@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_headers
         wrapper_collection.hpp
         wrapper_database.hpp
         wrapper_document.hpp
+        wrapper_cursor.hpp
 )
 
 set(${PROJECT_NAME}_sources
@@ -22,6 +23,7 @@ set(${PROJECT_NAME}_sources
         wrapper_collection.cpp
         wrapper_database.cpp
         wrapper_document.cpp
+        wrapper_cursor.cpp
 )
 
 include_directories(${PROJECT_SOURCE_DIR}
@@ -35,6 +37,8 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::log
         rocketjoe::storage
+        rocketjoe::cursor
+        rocketjoe::session
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")

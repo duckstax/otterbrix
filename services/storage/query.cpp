@@ -1,6 +1,6 @@
 #include "query.hpp"
-#include "storage/core/dict.hpp"
-#include "storage/mutable/mutable_dict.h"
+#include "components/document/core/dict.hpp"
+#include "components/document/mutable/mutable_dict.h"
 
 using ::storage::impl::value_type;
 

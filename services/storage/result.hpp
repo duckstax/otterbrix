@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-#include "components/storage/document_view.hpp"
+#include "components/document/document_view.hpp"
 
 class result_find {
 public:

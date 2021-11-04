@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <regex>
 #include <vector>
-#include "components/storage/conditional_expression.hpp"
+#include "components/document/conditional_expression.hpp"
 
 namespace services::storage {
 

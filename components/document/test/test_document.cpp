@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include "storage/document.hpp"
-#include "storage/mutable/mutable_array.h"
+#include "document/document.hpp"
+#include "document/mutable/mutable_array.h"
 #include <iostream>
 
 using namespace components::storage;

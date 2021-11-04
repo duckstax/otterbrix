@@ -1,11 +1,12 @@
 #include "wrapper_collection.hpp"
 
 #include "convert.hpp"
+#include <components/cursor/cursor.hpp>
+#include <components/document/document.hpp>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <storage/result_insert_one.hpp>
 #include <storage/result.hpp>
-#include <storage/document.hpp>
+#include <storage/result_insert_one.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -23,7 +24,7 @@ bool wrapper_collection::insert(const py::handle& document) {
             dispatcher_,
             goblin_engineer::actor_address(),
             "insert",
-            session_,
+            duck_charmer::session_t(),
             std::string(collection_->type().data(),collection_->type().size()),
             std::move(doc),
             std::function<void(result_insert_one&)>([this](result_insert_one& result) {
@@ -50,56 +51,9 @@ wrapper_collection::wrapper_collection(log_t& log, goblin_engineer::actor_addres
     log_.debug("wrapper_collection");
 }
 
-auto wrapper_collection::get(py::object cond) -> py::object {
-    log_.trace("wrapper_collection::get");
-    /*
-    auto is_not_empty = !cond.is(py::none());
-    if (is_not_empty) {
-        wrapper_document_ptr tmp;
-        //std::cerr << ptr_->size() << std::endl;
-        for (auto &i:*ptr_) {
-            auto result = cache_.find(i.first);
-            if (result == cache_.end()) {
-                auto it = cache_.emplace(i.first, wrapper_document_ptr(new wrapper_document(i.second.get())));
-                tmp = it.first->second;
-            } else {
-                tmp = result->second;
-            }
-            if (cond(tmp).cast<bool>()) {
-                return py::cast(tmp);
-            }
-        }
-
-        return py::none();
-
-    }
-*/
-}
-
-auto wrapper_collection::search(py::object cond) -> py::list {
-    log_.trace("wrapper_collection::search");
-    /*
-    py::list tmp;
-    wrapper_document_ptr doc;
-    for (auto &i:*ptr_) {
-        auto result = cache_.find(i.first);
-        if (result == cache_.end()) {
-            auto it = cache_.emplace(i.first, wrapper_document_ptr(new wrapper_document(i.second.get())));
-            doc = it.first->second;
-        } else {
-            doc = result->second;
-        }
-        if (cond(doc).cast<bool>()) {
-            tmp.append(doc);
-        }
-    }
-    return tmp;
-     */
-}
-
-auto wrapper_collection::find(py::object cond) -> py::list {
+auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
     log_.trace("wrapper_collection::find");
-    py::list res;
+    wrapper_cursor_ptr ptr;
     if (py::isinstance<py::dict>(cond)) {
         i = 0;
         components::storage::document_t condition;
@@ -108,13 +62,11 @@ auto wrapper_collection::find(py::object cond) -> py::list {
             dispatcher_,
             goblin_engineer::actor_address(),
             "find",
-            session_,
+            duck_charmer::session_t(),
             std::string(collection_->type().data(), collection_->type().size()),
-            condition,
-            std::function<void(result_find&)>([&](result_find& result) {
-                for (auto it : *result) {
-                    res.append(from_document(it));
-                }
+            std::move(condition),
+            std::function<void(duck_charmer::session_t&,components::cursor::cursor_t*)>([&](duck_charmer::session_t& session, components::cursor::cursor_t* result) {
+                ptr.reset(new  wrapper_cursor(session,result));
                 d_();
             }));
         log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_->type());
@@ -122,7 +74,7 @@ auto wrapper_collection::find(py::object cond) -> py::list {
         cv_.wait(lk, [this]() { return i == 1; });
         log_.debug("wrapper_client::dispatcher return result of find");
     }
-    return res;
+    return ptr;
 }
 
 auto wrapper_collection::all() -> py::list {
@@ -169,7 +121,7 @@ auto wrapper_collection::size() -> py::int_ {
                 dispatcher_,
                 goblin_engineer::actor_address(),
                 "size",
-                session_,
+                duck_charmer::session_t(),
                 std::string(collection_->type().data(), collection_->type().size()),
                 std::function<void(result_size&)>([&](result_size &size) {
                     res = *size;

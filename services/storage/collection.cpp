@@ -4,8 +4,8 @@
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
 #include "result_insert_one.hpp"
-#include "components/storage/mutable/mutable_dict.h"
-#include "components/storage/mutable/mutable_array.h"
+#include "components/document/mutable/mutable_dict.h"
+#include "components/document/mutable/mutable_array.h"
 
 using ::storage::impl::value_type;
 using ::storage::impl::mutable_dict_t;
@@ -24,7 +24,8 @@ collection_t::collection_t(database_ptr database, log_t& log)
     add_handler(collection::search, &collection_t::search);
     add_handler(collection::find, &collection_t::find);
     add_handler(collection::size, &collection_t::size);
-}
+	add_handler(collection::close_cursor,&collection_t::close_cursor);
+    }
 
 collection_t::~collection_t() {
     storage_.clear();
@@ -54,7 +55,8 @@ auto collection_t::search(const session_t &session, const std::string &collectio
     log_.debug("dispatcher : {}", dispatcher->type());
     auto database = addresses("database");
     log_.debug("database : {}", database->type());
-    goblin_engineer::send(dispatcher, self(), "search_finish", session, result_find(search_(std::move(cond))));
+    auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(*search_(std::move(cond))));
+    goblin_engineer::send(dispatcher, self(), "search_finish", session,components::cursor::sub_cursor_t(address(),result.first->second.get()));
 }
 
 auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
@@ -63,7 +65,10 @@ auto collection_t::find(const session_t& session, const std::string &collection,
     log_.debug("dispatcher : {}", dispatcher->type());
     auto database = addresses("database");
     log_.debug("database : {}", database->type());
-    goblin_engineer::send(dispatcher, self(), "find_finish", session, result_find(search_(parse_condition(cond))));
+    log_.debug(address()->type());
+    log_.debug("Session : {}" , session.data());
+    auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
+    goblin_engineer::send(dispatcher, self(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()));
 }
 
 auto collection_t::all() -> void {
@@ -236,6 +241,10 @@ auto collection_t::remove_(const std::string& key) {
     //        storage_.erase(key);
 }
 
+void collection_t::close_cursor(session_t& session) {
+    cursor_storage_.erase(session);
+}
+
 #ifdef DEV_MODE
 void collection_t::insert_test(document_t &&doc) {
     insert_(std::move(doc));
@@ -266,4 +275,4 @@ document_view_t collection_t::get_test(const std::string &id) const {
 }
 #endif
 
-} // namespace services::storage
+} // namespace services::document

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <msgpack.hpp>
-#include "storage/support/ref_counted.hpp"
+#include "document/support/ref_counted.hpp"
 #include "iostream"
 
 namespace storage::impl {

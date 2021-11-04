@@ -4,7 +4,7 @@
 #include <string>
 #include <msgpack.hpp>
 #include "support/ref_counted.hpp"
-#include "storage/mutable/mutable_array.h"
+#include "document/mutable/mutable_array.h"
 
 namespace storage::impl {
 class mutable_dict_t;

@@ -1,6 +1,6 @@
 #include "document_view.hpp"
-#include "storage/core/dict.hpp"
-#include "storage/core/array.hpp"
+#include "core/dict.hpp"
+#include "core/array.hpp"
 #include <iostream>
 
 using ::storage::impl::value_type;
