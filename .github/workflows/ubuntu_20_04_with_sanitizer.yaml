@@ -1,4 +1,4 @@
-name: ubuntu 20.04
+name: ubuntu 20.04 with sanitizer
 on: [push, pull_request]
 jobs:
   run:
