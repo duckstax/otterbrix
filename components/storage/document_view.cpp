@@ -187,7 +187,8 @@ document_view_t::iterator_t document_view_t::begin() const {
 
 std::string document_view_t::to_json() const {
     if (index_) return to_json_dict();
-    return to_json_array();
+    if (array_) return to_json_array();
+    return std::string();
 }
 
 document_view_t::document_view_t(document_view_t::array_t array, document_view_t::storage_t storage)
@@ -221,6 +222,7 @@ object_type document_view_t::get_type(uint32_t index) const {
 }
 
 object_handle document_view_t::get_value(offset_t offset, std::size_t size) const {
+    assert(offset + size > storage_->size());
     auto data = storage_->data() + offset;
     return msgpack::unpack(data, size);
 }
