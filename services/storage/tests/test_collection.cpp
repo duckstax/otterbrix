@@ -38,101 +38,107 @@ collection_ptr gen_collection() {
     log.set_level(log_t::level::trace);
     auto collection = goblin_engineer::make_manager_service<collection_t>(nullptr, log);
 
-    collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
-    collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
-    collection->insert_test(gen_doc("id_3", "Chevi", "cat", 3, false, {"Isha"}, gen_sub_doc("Isha", true)));
-    collection->insert_test(gen_doc("id_4", "Charlie", "dog", 2, true, {"Rex", "Lucy"}, gen_sub_doc("Lucy", false)));
-    collection->insert_test(gen_doc("id_5", "Isha", "cat", 6, false, {"Chevi"}, gen_sub_doc("Chevi", true)));
+//    collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
+//    collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
+//    collection->insert_test(gen_doc("id_3", "Chevi", "cat", 3, false, {"Isha"}, gen_sub_doc("Isha", true)));
+//    collection->insert_test(gen_doc("id_4", "Charlie", "dog", 2, true, {"Rex", "Lucy"}, gen_sub_doc("Lucy", false)));
+//    collection->insert_test(gen_doc("id_5", "Isha", "cat", 6, false, {"Chevi"}, gen_sub_doc("Chevi", true)));
 
     return collection;
 }
 
 TEST_CASE("collection_t get") {
-    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
-    auto collection = gen_collection();
+//    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+    auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+//    }
+    drop_all_loggers();
+//    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
+
+//    system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+//    auto collection = gen_collection();
     //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
     //std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
 
-    REQUIRE(collection->size_test() == 5);
+//    REQUIRE(collection->size_test() == 5);
 
-    auto doc1 = collection->get_test("id_1");
-    //std::cout << "DOC1:\n" << doc1.to_json() << std::endl;
-    REQUIRE(doc1.is_valid());
-    REQUIRE(doc1.is_exists("name"));
-    REQUIRE(doc1.is_exists("age"));
-    REQUIRE(doc1.is_exists("male"));
-    REQUIRE_FALSE(doc1.is_exists("other"));
-    REQUIRE(doc1.is_string("name"));
-    REQUIRE(doc1.is_long("age"));
-    REQUIRE(doc1.is_bool("male"));
-    REQUIRE(doc1.is_array("friends"));
-    REQUIRE(doc1.is_dict("sub_doc"));
-    REQUIRE(doc1.get_string("name") == "Rex");
-    REQUIRE(doc1.get_long("age") == 6);
-    REQUIRE(doc1.get_bool("male") == true);
+//    auto doc1 = collection->get_test("id_1");
+//    //std::cout << "DOC1:\n" << doc1.to_json() << std::endl;
+//    REQUIRE(doc1.is_valid());
+//    REQUIRE(doc1.is_exists("name"));
+//    REQUIRE(doc1.is_exists("age"));
+//    REQUIRE(doc1.is_exists("male"));
+//    REQUIRE_FALSE(doc1.is_exists("other"));
+//    REQUIRE(doc1.is_string("name"));
+//    REQUIRE(doc1.is_long("age"));
+//    REQUIRE(doc1.is_bool("male"));
+//    REQUIRE(doc1.is_array("friends"));
+//    REQUIRE(doc1.is_dict("sub_doc"));
+//    REQUIRE(doc1.get_string("name") == "Rex");
+//    REQUIRE(doc1.get_long("age") == 6);
+//    REQUIRE(doc1.get_bool("male") == true);
 
-    auto doc1_friends = doc1.get_array("friends");
-    //std::cout << "DOC1_FRIENDS:\n" << doc1_friends.to_json() << std::endl;
-    REQUIRE(doc1_friends.is_array());
-    REQUIRE(doc1_friends.count() == 3);
-    REQUIRE(doc1_friends.get_as<std::string>(1) == "Charlie");
+//    auto doc1_friends = doc1.get_array("friends");
+//    //std::cout << "DOC1_FRIENDS:\n" << doc1_friends.to_json() << std::endl;
+//    REQUIRE(doc1_friends.is_array());
+//    REQUIRE(doc1_friends.count() == 3);
+//    REQUIRE(doc1_friends.get_as<std::string>(1) == "Charlie");
 
-    auto doc1_sub = doc1.get_dict("sub_doc");
-    //std::cout << "DOC1_SUB:\n" << doc1_sub.to_json() << std::endl;
-    REQUIRE(doc1_sub.is_dict());
-    REQUIRE(doc1_sub.count() == 3);
-    REQUIRE(doc1_sub.get_as<std::string>("name") == "Lucy");
+//    auto doc1_sub = doc1.get_dict("sub_doc");
+//    //std::cout << "DOC1_SUB:\n" << doc1_sub.to_json() << std::endl;
+//    REQUIRE(doc1_sub.is_dict());
+//    REQUIRE(doc1_sub.count() == 3);
+//    REQUIRE(doc1_sub.get_as<std::string>("name") == "Lucy");
 
-    auto doc6 = collection->get_test("id_6");
-    REQUIRE_FALSE(doc6.is_valid());
-    delete collection.detach(); //todo delete after repair ref count
-    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
+//    auto doc6 = collection->get_test("id_6");
+//    REQUIRE_FALSE(doc6.is_valid());
+//    delete collection.detach(); //todo delete after repair ref count
+//    } system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
 }
 
-TEST_CASE("collection_t search") {
-    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
-    auto collection = gen_collection();
-    REQUIRE(collection->search_test(eq("name", "Rex"))->size() == 1);
-    REQUIRE(collection->search_test(gt("age", 2))->size() == 3);
-    REQUIRE(collection->search_test(eq("type", "cat"))->size() == 2);
-    REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5))->size() == 2);
-    REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5))->size() == 2);
-    REQUIRE(collection->search_test(any("age", std::vector<int>{2,3,4}))->size() == 3);
-    REQUIRE(collection->search_test(all("age", std::vector<int>{2,3}))->size() == 0);
-    REQUIRE(collection->search_test(all("age", std::vector<int>{2}))->size() == 2);
-    REQUIRE(collection->search_test(matches("name", "Ch.*"))->size() == 2);
-    REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
-    REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
-    REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
-    delete collection.detach(); //todo delete after repair ref count
-    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
-}
+//TEST_CASE("collection_t search") {
+//    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+//    auto collection = gen_collection();
+//    REQUIRE(collection->search_test(eq("name", "Rex"))->size() == 1);
+//    REQUIRE(collection->search_test(gt("age", 2))->size() == 3);
+//    REQUIRE(collection->search_test(eq("type", "cat"))->size() == 2);
+//    REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5))->size() == 2);
+//    REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5))->size() == 2);
+//    REQUIRE(collection->search_test(any("age", std::vector<int>{2,3,4}))->size() == 3);
+//    REQUIRE(collection->search_test(all("age", std::vector<int>{2,3}))->size() == 0);
+//    REQUIRE(collection->search_test(all("age", std::vector<int>{2}))->size() == 2);
+//    REQUIRE(collection->search_test(matches("name", "Ch.*"))->size() == 2);
+//    REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
+//    REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
+//    REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
+//    delete collection.detach(); //todo delete after repair ref count
+//    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
+//}
 
-TEST_CASE("collection_t find") {
-    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
-    auto collection = gen_collection();
-    auto res = collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"));
-    REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
-    REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
-    REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
-    REQUIRE(res->size() == 3);
-    res = collection->find_test(document_t::from_json("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
-    REQUIRE(res->size() == 3);
-    res = collection->find_test(document_t::from_json("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
-    REQUIRE(res->size() == 5);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
-    REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
-    REQUIRE(res->size() == 0);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
-    REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"Ch.*\"}}"));
-    REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{}"));
-    REQUIRE(res->size() == 5);
-    delete collection.detach(); //todo delete after repair ref count
-    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
-}
+//TEST_CASE("collection_t find") {
+//    //system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log"); for (int i = 0; i < 1000; ++i) {
+//    auto collection = gen_collection();
+//    auto res = collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"));
+//    REQUIRE(res->size() == 1);
+//    res = collection->find_test(document_t::from_json("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
+//    REQUIRE(res->size() == 1);
+//    res = collection->find_test(document_t::from_json("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+//    REQUIRE(res->size() == 2);
+//    res = collection->find_test(document_t::from_json("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+//    REQUIRE(res->size() == 3);
+//    res = collection->find_test(document_t::from_json("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
+//    REQUIRE(res->size() == 3);
+//    res = collection->find_test(document_t::from_json("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
+//    REQUIRE(res->size() == 5);
+//    res = collection->find_test(document_t::from_json("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
+//    REQUIRE(res->size() == 2);
+//    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
+//    REQUIRE(res->size() == 0);
+//    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
+//    REQUIRE(res->size() == 1);
+//    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"Ch.*\"}}"));
+//    REQUIRE(res->size() == 2);
+//    res = collection->find_test(document_t::from_json("{}"));
+//    REQUIRE(res->size() == 5);
+//    delete collection.detach(); //todo delete after repair ref count
+//    //} system("top -b -n 1 -p $(pgrep test_storage) > /tmp/1.log && tail -n 2 /tmp/1.log");
+//}
