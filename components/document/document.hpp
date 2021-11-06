@@ -1,192 +1,119 @@
 #pragma once
 
 #include <memory>
-#include <iostream>
+#include <string>
+#include <msgpack.hpp>
+#include "support/ref_counted.hpp"
+#include "document/mutable/mutable_array.h"
 
-#include <nlohmann/json.hpp>
+namespace document::impl {
+class mutable_dict_t;
+class dict_t;
+class dict_iterator_t;
+}
 
-namespace components::storage {
+namespace components::document {
 
-    class document_t final {
-    public:
-        using json_t = nlohmann::json;
-        using json_ptr_t = std::unique_ptr<json_t>;
-        using const_iterator = json_t::const_iterator;
+class document_t final {
+    using storage_t = ::document::impl::mutable_dict_t*;
+    using const_storage_t = const ::document::impl::dict_t*;
+    using iterator = ::document::impl::dict_iterator_t;
 
-        static auto  to_array() {
-            return document_t(json_t::array());
-        }
+public:
+    using value_t = const ::document::impl::value_t*;
 
-        document_t();
+    document_t();
+    explicit document_t(const ::document::impl::dict_t *dict, bool is_owner = false);
+    document_t(const document_t &src);
+    ~document_t();
 
-        document_t(json_t value);
+    void add_null(const std::string &key);
+    void add_bool(const std::string &key, bool value);
+    void add_ulong(const std::string &key, ulong value);
+    void add_long(const std::string &key, long value);
+    void add_double(const std::string &key, double value);
+    void add_string(const std::string &key, std::string value);
+    void add_array(const std::string &key, ::document::impl::array_t *array);
+    void add_dict(const std::string &key, ::document::impl::dict_t *dict);
+    void add_dict(const std::string &key, const document_t &dict);
+    void add_dict(const std::string &key, document_t &&dict);
 
-        void add(std::string &&key);
+    bool is_exists(const std::string &key) const;
+    bool is_null(const std::string &key) const;
+    bool is_bool(const std::string &key) const;
+    bool is_ulong(const std::string &key) const;
+    bool is_long(const std::string &key) const;
+    bool is_double(const std::string &key) const;
+    bool is_string(const std::string &key) const;
+    bool is_array(const std::string &key) const;
+    bool is_dict(const std::string &key) const;
 
-        void add(std::string &&key, bool value);
+    const ::document::impl::value_t *get(const std::string &key) const;
+    bool get_bool(const std::string &key) const;
+    ulong get_ulong(const std::string &key) const;
+    long get_long(const std::string &key) const;
+    double get_double(const std::string &key) const;
+    std::string get_string(const std::string &key) const;
+    const ::document::impl::array_t *get_array(const std::string &key) const;
+    document_t get_dict(const std::string &key) const;
+    const_storage_t get_storage() const;
 
-        void add(std::string &&key, long value);
+    template <class T> T get_as(const std::string &) const;
 
-        void add(std::string &&key, double value);
+    ::document::retained_const_t<::document::impl::value_t> value() const;
 
-        void add(std::string &&key, const std::string &value);
+    iterator begin() const;
 
-        void add(std::string &&key, document_t value) {
-            auto tmp = std::move(value);
-            json_.emplace(std::move(key), tmp.extract());
-        }
+    std::string to_json() const;
+    static document_t from_json(const std::string &json);
 
-        void append(bool value){
-            json_.emplace_back(value);
-        }
-        void append(long value){
-            json_.emplace_back(value);
-        }
-        void append(double value){
-            json_.emplace_back(value);
-        }
+    static ::document::retained_t<::document::impl::mutable_array_t> create_array();
 
-        void append(document_t value){
-            auto tmp = std::move(value);
-            json_.emplace_back(tmp.extract());
-        }
+    static msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
+    static msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
 
-        template<class Char>
-        void append(const std::basic_string<Char>& value){
-            json_.emplace_back(value);
-        }
-
-
-        document_t(bool value){
-            json_= json_t(value);
-        }
-        document_t(long value){
-            json_= json_t(value);
-        }
-        document_t(double value){
-            json_= json_t(value);
-        }
-
-        template<class Char>
-        document_t(const std::basic_string<Char>& value){
-            json_= json_t(value);
-        }
-
-        /*
-        document_t(document_t value){
-            auto tmp = std::move(value);
-            json_= json_t(tmp.extract());
-        }*/
-        template<class T>
-        T get_as(std::string key) const{
-            //std::cerr << json_[std::move(key)].type_name() << std::endl;
-            return json_[std::move(key)].get<T>();
-        }
-
-        void append(const std::string& key,bool value){
-            if(json_.contains(key)){
-                json_[key]=json_t::array();
-            }
-            json_[key].emplace_back(value);
-        }
-        void append(const std::string& key,long value){
-            if(json_.contains(key)){
-                json_[key]=json_t::array();
-            }
-            json_[key].emplace_back(value);
-        }
-        void append(const std::string& key,double value){
-            if(json_.contains(key)){
-                json_[key]=json_t::array();
-            }
-            json_[key].emplace_back(value);
-        }
-
-        template<class Char>
-        void append(const std::string& key,const std::basic_string<Char>& value){
-            if(json_.contains(key)){
-                json_[key]=json_t::array();
-            }
-            json_[key].emplace_back(value);
-        }
-
-        template<class Char>
-        void update (const std::basic_string<Char>& key){
-            json_[std::move(key)]= nullptr;
-        }
-
-        template<class Char>
-        void update(const std::basic_string<Char>& key, bool value) {
-            json_[key]=value;
-        }
-
-        template<class Char>
-        void update(const std::basic_string<Char>& key, long value){
-            json_[key]=value;
-        }
-
-        template<class Char>
-        void update(const std::basic_string<Char>& key, double value){
-            json_[std::move(key)]=value;
-        }
-
-        template<class Char>
-        void update(const std::basic_string<Char>& key, const std::string &value){
-            json_[std::move(key)]=value;
-        }
-
-        const_iterator cbegin() const {
-            return json_.cbegin();
-        }
-
-        const_iterator cend() const {
-            return json_.cend();
-        }
-
-        template<class Char>
-        bool contains_key(const std::basic_string<Char>& key) const {
-            return json_.contains(key);
-        }
-
-        auto extract() -> json_t {
-            return json_;
-        }
+private:
+    storage_t storage_;
+    bool is_owner_;
+};
 
 
-        [[nodiscard]] auto to_string() const -> std::string;
+template <class T>
+T document_t::get_as(const std::string &) const {
+    static_assert(true, "not supported");
+    return T();
+}
 
-        auto get(const std::string &name) -> document_t;
+template<> inline bool document_t::get_as<bool>(const std::string &key) const {
+    return get_bool(key);
+}
 
-        [[nodiscard]] bool as_bool() const;
+template<> inline ulong document_t::get_as<ulong>(const std::string &key) const {
+    return get_ulong(key);
+}
 
-        [[nodiscard]] std::string as_string() const;
+template<> inline long document_t::get_as<long>(const std::string &key) const {
+    return get_long(key);
+}
 
-        [[nodiscard]] double as_double() const;
+template<> inline double document_t::get_as<double>(const std::string &key) const {
+    return get_double(key);
+}
 
-        [[nodiscard]] int32_t as_int32() const;
+template<> inline std::string document_t::get_as<std::string>(const std::string &key) const {
+    return get_string(key);
+}
 
-        [[nodiscard]] json_t::array_t as_array() const;
+template<> inline const ::document::impl::array_t *document_t::get_as<const ::document::impl::array_t *>(const std::string &key) const {
+    return get_array(key);
+}
 
-        [[nodiscard]] bool is_null() const noexcept;
-
-        [[nodiscard]] bool is_boolean() const noexcept;
-
-        [[nodiscard]] bool is_integer() const noexcept;
-
-        [[nodiscard]] bool is_float() const noexcept;
-
-        [[nodiscard]] bool is_string() const noexcept;
-
-        [[nodiscard]] bool is_array() const noexcept;
-
-        [[nodiscard]] bool is_object() const noexcept;
-    private:
-        json_t json_;
-    };
+template<> inline document_t document_t::get_as<document_t>(const std::string &key) const {
+    return get_dict(key);
+}
 
 
-    using document_ptr = std::unique_ptr<document_t>;
-
-    auto make_document() -> document_ptr;
+using document_ptr = std::unique_ptr<document_t>;
+auto make_document() -> document_ptr;
 
 }

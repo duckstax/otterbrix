@@ -6,7 +6,7 @@
 #include "shared_keys.hpp"
 #include "better_assert.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 namespace internal {
 

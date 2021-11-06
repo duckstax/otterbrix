@@ -35,9 +35,9 @@ public:
     void create_database_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address);
     void create_collection(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback);
     void create_collection_finish(duck_charmer::session_t& session, goblin_engineer::actor_address address);
-    void insert(duck_charmer::session_t& session,std::string& collection,components::storage::document_t& document, std::function<void(result_insert_one&)>& callback);
+    void insert(duck_charmer::session_t& session,std::string& collection,components::document::document_t& document, std::function<void(result_insert_one&)>& callback);
     void insert_finish(duck_charmer::session_t& session,result_insert_one&result);
-    void find(duck_charmer::session_t& session, std::string& collection, components::storage::document_t &condition, std::function<void(duck_charmer::session_t& session,components::cursor::cursor_t*)>& callback);
+    void find(duck_charmer::session_t& session, std::string& collection, components::document::document_t &condition, std::function<void(duck_charmer::session_t& session,components::cursor::cursor_t*)>& callback);
     void find_finish(duck_charmer::session_t&, components::cursor::sub_cursor_t*result);
     void size(duck_charmer::session_t& session, std::string& collection, std::function<void (result_size &)> &callback);
     void size_finish(duck_charmer::session_t&, result_size &result);

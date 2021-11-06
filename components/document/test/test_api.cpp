@@ -3,7 +3,7 @@
 #include "mutable.hpp"
 #include "slice_io.hpp"
 
-using namespace storage;
+using namespace document;
 
 TEST_CASE("constants", "[API]") {
     REQUIRE(value_t::null());
@@ -122,7 +122,7 @@ TEST_CASE("key_path_t", "[API]") {
         auto root = doc.root();
         REQUIRE(root.as_array().count() == 10);
 
-        storage::error_code error = storage::error_code::no_error;
+        document::error_code error = document::error_code::no_error;
         key_path_t p1{"$[3].name", &error};
         auto name = root[p1];
         REQUIRE(name);
@@ -142,7 +142,7 @@ TEST_CASE("key_path_t", "[API]") {
         auto root = doc.root();
         REQUIRE(root.as_array().count() == 10);
 
-        storage::error_code error = storage::error_code::no_error;
+        document::error_code error = document::error_code::no_error;
         key_path_t p1{"$[3].name", &error};
         auto name = root[p1];
         REQUIRE(name);

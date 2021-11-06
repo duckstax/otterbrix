@@ -5,7 +5,7 @@
 #include <functional>
 #include <memory>
 
-namespace storage {
+namespace document {
 
 class mutable_array_t;
 class mutable_dict_t;

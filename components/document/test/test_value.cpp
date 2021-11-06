@@ -3,7 +3,7 @@
 #include "varint.hpp"
 #include "pointer.hpp"
 
-using namespace storage;
+using namespace document;
 
 TEST_CASE("value_t") {
 

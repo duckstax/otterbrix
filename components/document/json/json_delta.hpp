@@ -3,7 +3,7 @@
 #include "storage_impl.hpp"
 #include <string>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class json_encoder_t;
 

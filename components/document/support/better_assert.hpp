@@ -9,20 +9,20 @@
     #endif
 
     #ifdef _MSC_VER
-        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : storage::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
-        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::storage::_precondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
-        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::storage::_postcondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : document::_assert_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::document::_precondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
+        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::document::_postcondition_failed (#e, __FUNCSIG__, __FILE__, __LINE__)))
     #elif defined(__FILE_NAME__)
-        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::storage::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
-        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::storage::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
-        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::storage::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::document::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::document::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
+        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::document::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE_NAME__, __LINE__)))
     #else
-        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::storage::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
-        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::storage::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
-        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::storage::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define assert_always(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::document::_assert_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define precondition(e) ((void)  (_usually_true(!!(e)) ? ((void)0) : ::document::_precondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
+        #define postcondition(e) ((void) (_usually_true(!!(e)) ? ((void)0) : ::document::_postcondition_failed (#e, __PRETTY_FUNCTION__, __FILE__, __LINE__)))
     #endif
 
-    namespace storage {
+    namespace document {
 
     [[noreturn]] NOINLINE void _assert_failed(const char *condition, const char *fn, const char *file, int line);
     [[noreturn]] NOINLINE void _precondition_failed(const char *condition, const char *fn, const char *file, int line);

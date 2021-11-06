@@ -17,7 +17,7 @@ wrapper_document::~wrapper_document() {
 }
 
 auto wrapper_document::print() -> std::string {
-    return ptr_->to_string();
+//    return ptr_->to_string();
 }
 
 auto wrapper_document::get(const std::string& key) -> py::object {

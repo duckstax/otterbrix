@@ -8,7 +8,7 @@
 #include <string>
 #include <string.h>
 
-namespace storage {
+namespace document {
 
 static const char* const kErrorNames[] = {
     "",

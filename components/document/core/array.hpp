@@ -2,7 +2,7 @@
 
 #include "value.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class dict_t;
 class mutable_array_t;

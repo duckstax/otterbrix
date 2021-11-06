@@ -3,7 +3,7 @@
 #include "array.hpp"
 #include <memory>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class dict_iterator_t;
 class mutable_dict_t;
@@ -51,7 +51,7 @@ public:
     inline iterator begin() const noexcept;
 
     const value_t* get(key_t &key) const noexcept;
-    const value_t* get(const storage::impl::key_t &key) const noexcept;
+    const value_t* get(const document::impl::key_t &key) const noexcept;
 
 protected:
     internal::heap_dict_t* heap_dict() const noexcept PURE;

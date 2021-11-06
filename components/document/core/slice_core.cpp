@@ -47,7 +47,7 @@ uint32_t hash_slice_c(slice_t_c s) noexcept {
 }
 
 
-namespace storage {
+namespace document {
 
 static constexpr size_t heap_alignment_mask =
 #if FL_EMBEDDED
@@ -100,7 +100,7 @@ static constexpr size_t heap_alignment_mask =
 }
 
 
-using namespace storage;
+using namespace document;
 
 
 slice_result_t_c create_slice_result_c(size_t size) noexcept {
