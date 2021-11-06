@@ -16,7 +16,7 @@ namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
 public:
-    using type_t = components::storage::document_t;
+    using type_t = components::document::document_t;
     using pointer = type_t*;
     using unique = std::unique_ptr<type_t>;
 

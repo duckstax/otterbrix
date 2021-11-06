@@ -1,17 +1,17 @@
 #pragma once
 
-#include "internal.hpp"
-#include "exception.hpp"
-#include "slice.hpp"
-#include "endian.hpp"
 #include <iosfwd>
 #include <stdint.h>
+#include "../support/exception.hpp"
+#include "../support/endian.hpp"
+#include "internal.hpp"
+#include "slice.hpp"
 
-namespace storage {
+namespace document {
     class writer_t;
 }
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
     class array_t;
     class dict_t;
     class shared_keys_t;

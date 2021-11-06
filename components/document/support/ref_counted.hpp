@@ -5,7 +5,7 @@
 #include <atomic>
 #include <utility>
 
-namespace storage {
+namespace document {
 
 class ref_counted_t
 {

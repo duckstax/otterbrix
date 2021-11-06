@@ -10,7 +10,7 @@
 
 #if FL_HAVE_FILESYSTEM
 
-namespace storage {
+namespace document {
 
 alloc_slice_t read_file(const char *path);
 

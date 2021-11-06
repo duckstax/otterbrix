@@ -2,7 +2,7 @@
 #include "mutable_node.hpp"
 #include "better_assert.hpp"
 
-namespace storage { namespace hashtree {
+namespace document { namespace hashtree {
 
 target_t::target_t(slice_t k, mutable_hash_tree_t::insert_callback *callback)
     : key(k), hash(compute_hash(k)), insert_callback(callback)

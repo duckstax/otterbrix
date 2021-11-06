@@ -7,7 +7,7 @@
 #include "small_vector.hpp"
 #include "function_ref.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class shared_keys_t;
 class key_t;

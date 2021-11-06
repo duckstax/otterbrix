@@ -8,7 +8,7 @@
 #include <string>
 #include "better_assert.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace internal;
 
@@ -298,7 +298,7 @@ const value_t* dict_t::get(key_t &key) const noexcept {
         return dict_impl_t<false>(this).get(key);
 }
 
-const value_t* dict_t::get(const storage::impl::key_t &key) const noexcept {
+const value_t* dict_t::get(const document::impl::key_t &key) const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->get(key);
     else if (key.shared())

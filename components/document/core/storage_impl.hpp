@@ -9,7 +9,7 @@
 #include "exception.hpp"
 #include <memory>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 enum class encode_format {
     internal,
@@ -18,7 +18,7 @@ enum class encode_format {
 
 
 struct encoder_impl_t {
-    storage::error_code error {storage::error_code::no_error};
+    document::error_code error {document::error_code::no_error};
     const bool owns_encoder {true};
     std::string error_message;
     std::unique_ptr<encoder_t> encoder;
@@ -37,7 +37,7 @@ struct encoder_impl_t {
 };
 
 
-static void record_error(const std::exception &x, storage::error_code *out_error) noexcept {
+static void record_error(const std::exception &x, document::error_code *out_error) noexcept {
     if (out_error)
         *out_error = exception_t::get_code(x);
 }
@@ -74,12 +74,12 @@ inline bool encoder_impl_t::is_internal() const {
 }
 
 inline bool encoder_impl_t::has_error() const {
-    return error != storage::error_code::no_error;
+    return error != document::error_code::no_error;
 }
 
 inline void encoder_impl_t::record_exception(const std::exception &x) noexcept {
     if (!has_error()) {
-        storage::impl::record_error(x, &error);
+        document::impl::record_error(x, &error);
         error_message = x.what();
     }
 }
@@ -90,7 +90,7 @@ inline void encoder_impl_t::reset() {
     if (json_encoder) {
         json_encoder->reset();
     }
-    error = storage::error_code::no_error;
+    error = document::error_code::no_error;
     extra_info = nullptr;
 }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base.hpp"
+#include "../core/base.hpp"
 
 #ifdef _MSC_VER
     #define NOINLINE                        __declspec(noinline)

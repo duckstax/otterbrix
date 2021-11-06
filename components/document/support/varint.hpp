@@ -2,7 +2,7 @@
 
 #include "slice.hpp"
 
-namespace storage {
+namespace document {
 
 enum {
     max_varint_len16 = 3,

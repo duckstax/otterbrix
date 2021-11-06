@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-namespace storage {
+namespace document {
 
 class delimiter {
 public:

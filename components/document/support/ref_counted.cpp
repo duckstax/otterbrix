@@ -7,7 +7,7 @@
 #include "asprintf.h"
 #endif
 
-namespace storage {
+namespace document {
 
 void release(const ref_counted_t *r) noexcept {
     if (r) r->_release();
