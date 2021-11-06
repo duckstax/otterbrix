@@ -47,12 +47,20 @@ bool document_view_t::is_exists(std::string &&key) const {
     return index_->get(std::move(key)) != nullptr;
 }
 
+bool document_view_t::is_exists(const std::string &key) const {
+    return index_->get(key) != nullptr;
+}
+
 bool document_view_t::is_exists(uint32_t index) const {
     return array_->get(index) != nullptr;
 }
 
 bool document_view_t::is_null(std::string &&key) const {
     return get_type(std::move(key)) == object_type::NIL;
+}
+
+bool document_view_t::is_null(const std::string &key) const {
+    return get_type(key) == object_type::NIL;
 }
 
 bool document_view_t::is_null(uint32_t index) const {
@@ -63,12 +71,20 @@ bool document_view_t::is_bool(std::string &&key) const {
     return get_type(std::move(key)) == object_type::BOOLEAN;
 }
 
+bool document_view_t::is_bool(const std::string &key) const {
+    return get_type(key) == object_type::BOOLEAN;
+}
+
 bool document_view_t::is_bool(uint32_t index) const {
     return get_type(index) == object_type::BOOLEAN;
 }
 
 bool document_view_t::is_ulong(std::string &&key) const {
     return get_type(std::move(key)) == object_type::POSITIVE_INTEGER;
+}
+
+bool document_view_t::is_ulong(const std::string &key) const {
+    return get_type(key) == object_type::POSITIVE_INTEGER;
 }
 
 bool document_view_t::is_ulong(uint32_t index) const {
@@ -79,12 +95,20 @@ bool document_view_t::is_long(std::string &&key) const {
     return get_type(std::move(key)) == object_type::NEGATIVE_INTEGER;
 }
 
+bool document_view_t::is_long(const std::string &key) const {
+    return get_type(key) == object_type::NEGATIVE_INTEGER;
+}
+
 bool document_view_t::is_long(uint32_t index) const {
     return get_type(index) == object_type::NEGATIVE_INTEGER;
 }
 
 bool document_view_t::is_float(std::string &&key) const {
     return get_type(std::move(key)) == object_type::FLOAT;
+}
+
+bool document_view_t::is_float(const std::string &key) const {
+    return get_type(key) == object_type::FLOAT;
 }
 
 bool document_view_t::is_float(uint32_t index) const {
@@ -95,12 +119,20 @@ bool document_view_t::is_double(std::string &&key) const {
     return get_type(std::move(key)) == object_type::FLOAT64;
 }
 
+bool document_view_t::is_double(const std::string &key) const {
+    return get_type(key) == object_type::FLOAT64;
+}
+
 bool document_view_t::is_double(uint32_t index) const {
     return get_type(index) == object_type::FLOAT64;
 }
 
 bool document_view_t::is_string(std::string &&key) const {
     return get_type(std::move(key)) == object_type::STR;
+}
+
+bool document_view_t::is_string(const std::string &key) const {
+    return get_type(key) == object_type::STR;
 }
 
 bool document_view_t::is_string(uint32_t index) const {
@@ -111,6 +143,10 @@ bool document_view_t::is_array(std::string &&key) const {
     return get_type(std::move(key)) == object_type::ARRAY;
 }
 
+bool document_view_t::is_array(const std::string &key) const {
+    return get_type(key) == object_type::ARRAY;
+}
+
 bool document_view_t::is_array(uint32_t index) const {
     return get_type(index) == object_type::ARRAY;
 }
@@ -119,12 +155,25 @@ bool document_view_t::is_dict(std::string &&key) const {
     return get_type(std::move(key)) == object_type::MAP;
 }
 
+bool document_view_t::is_dict(const std::string &key) const {
+    return get_type(key) == object_type::MAP;
+}
+
 bool document_view_t::is_dict(uint32_t index) const {
     return get_type(index) == object_type::MAP;
 }
 
 object_handle document_view_t::get(std::string &&key) const {
     auto field = index_->get(std::move(key));
+    if (field && field->type() == value_type::array) {
+        auto field_array = field->as_array();
+        return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
+    }
+    return object_handle();
+}
+
+object_handle document_view_t::get(const std::string &key) const {
+    auto field = index_->get(key);
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
         return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
@@ -166,6 +215,10 @@ std::string document_view_t::get_string(std::string &&key) const {
 }
 
 document_view_t document_view_t::get_array(std::string &&key) const {
+    return document_view_t(index_->get(std::move(key))->as_array(), storage_);
+}
+
+document_view_t document_view_t::get_array(const std::string &key) const {
     return document_view_t(index_->get(key)->as_array(), storage_);
 }
 
@@ -174,6 +227,10 @@ document_view_t document_view_t::get_array(uint32_t index) const {
 }
 
 document_view_t document_view_t::get_dict(std::string &&key) const {
+    return document_view_t(index_->get(std::move(key))->as_dict(), storage_);
+}
+
+document_view_t document_view_t::get_dict(const std::string &key) const {
     return document_view_t(index_->get(key)->as_dict(), storage_);
 }
 
@@ -215,6 +272,10 @@ object_type document_view_t::get_type(const ::document::impl::value_t *field) co
 
 object_type document_view_t::get_type(std::string &&key) const {
     return get_type(index_->get(std::move(key)));
+}
+
+object_type document_view_t::get_type(const std::string &key) const {
+    return get_type(index_->get(key));
 }
 
 object_type document_view_t::get_type(uint32_t index) const {
