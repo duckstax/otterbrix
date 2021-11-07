@@ -260,7 +260,7 @@ object_type document_view_t::get_type(const ::document::impl::value_t *field) co
             return object_type::MAP;
         } else if (field->type() == value_type::array) {
             auto array = field->as_array();
-            if (array->count() > 0 && array->get(0)->type() == value_type::array) {
+            if (array->count() > 0 && (array->get(0)->type() == value_type::array || array->get(0)->type() == value_type::dict)) {
                 return object_type::ARRAY;
             } else {
                 return static_cast<object_type>(field->as_array()->get(index_type)->as_int());
@@ -293,9 +293,9 @@ std::string document_view_t::to_json_dict() const {
     for (auto it = index_->begin(); it; ++it) {
         if (!res.str().empty()) res << ",";
         auto key = static_cast<std::string>(it.key()->as_string());
-        if (is_dict(std::string(key))) {
+        if (is_dict(key)) {
             res << key << ":" << get_dict(std::move(key)).to_json();
-        } else if (is_array(std::string(key))) {
+        } else if (is_array(key)) {
             res << key << ":" << get_array(std::move(key)).to_json();
         } else {
             res << key << ":" << *get(std::move(key));
