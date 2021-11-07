@@ -48,6 +48,11 @@ dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     add_handler(duck_charmer::collection::size, &dispatcher_t::size);
     add_handler("size_finish", &dispatcher_t::size_finish);
     add_handler(duck_charmer::collection::close_cursor, &dispatcher_t::close_cursor);
+//    add_handler(duck_charmer::cursor::has_next_cursor, &dispatcher_t::has_next_cursor);
+//    add_handler(duck_charmer::cursor::next_cursor, &dispatcher_t::next_cursor);
+    add_handler(duck_charmer::cursor::size_cursor, &dispatcher_t::size_cursor);
+//    add_handler(duck_charmer::cursor::get_cursor, &dispatcher_t::get_cursor);
+//    add_handler(duck_charmer::cursor::print_cursor, &dispatcher_t::print_cursor);
 }
 void dispatcher_t::create_database(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_database_init: {}", name);
@@ -101,7 +106,7 @@ void dispatcher_t::size_finish(duck_charmer::session_t &, result_size &result) {
     size_callback_(result);
 }
 void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
-    log_.debug(" dispatcher_t::close_cursor ");
+    log_.debug("dispatcher_t::close_cursor ");
     log_.debug("Session : {}" , session.data());
     auto it = cursor_.find(session);
     if(it!=cursor_.end()){
@@ -112,4 +117,10 @@ void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
     } else {
         log_.error("Not find session : {}", session.data() );
     }
+}
+
+void dispatcher_t::size_cursor(duck_charmer::session_t &session, std::function<void (std::size_t)> &callback) {
+    log_.debug("dispatcher_t::size_cursor  session: {}", session.data());
+    auto it = cursor_.find(session);
+    callback(it == cursor_.end() ? 0 : it->second->size());
 }

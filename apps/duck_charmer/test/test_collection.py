@@ -25,27 +25,33 @@ for num in range(100):
     new_obj['nestedArray'] = [[num + i] for i in range(5)]
     new_obj['dictArray'] = [{'number': num + i} for i in range(5)]
     new_obj['mixedDict'] = copy.deepcopy(new_obj)
-    #todo: add object to the db
     friedrich_collection.insert(new_obj)
 
-assert len(friedrich_collection) == 100
-assert len(friedrich_database['FriedrichCollection']) == 100
 
-c = friedrich_collection.find({})
-assert len(c) == 100
+def test_collection_len():
+    assert len(friedrich_collection) == 100
+    assert len(friedrich_database['FriedrichCollection']) == 100
 
-c = friedrich_collection.find({'count': {'$gt': 90}})
-assert len(c) == 9
 
-c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
-assert len(c) == 10
+def test_collection_find():
+    c = friedrich_collection.find({})
+    assert len(c) == 100
 
-c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
-assert len(c) == 18
+    # print(c.hasNext())
 
-c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
-assert len(c) == 3
+    c = friedrich_collection.find({'count': {'$gt': 90}})
+    assert len(c) == 9
 
+    c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
+    assert len(c) == 10
+
+    c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+    assert len(c) == 18
+
+    c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
+    assert len(c) == 3
+
+test_collection_find()
 
 #c = friedrich_database['FriedrichCollection']
 

@@ -29,4 +29,12 @@ namespace services::storage {
         static constexpr auto close_cursor = "close_cursor";
     } // namespace collection
 
+    namespace cursor {
+        static constexpr auto has_next_cursor = "has_next_cursor";
+        static constexpr auto next_cursor = "next_cursor";
+        static constexpr auto size_cursor = "size_cursor";
+        static constexpr auto get_cursor = "get_cursor";
+        static constexpr auto print_cursor = "print_cursor";
+    } // namespace cursor
+
 } // namespace kv
