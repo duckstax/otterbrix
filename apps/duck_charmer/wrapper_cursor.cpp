@@ -52,7 +52,20 @@ py::object wrapper_cursor::get(const std::string &key) {
 }
 
 std::string wrapper_cursor::print() {
-    return ptr_->get().to_json();
+    std::string res;
+    i = 0;
+    goblin_engineer::send(
+                dispatcher_,
+                goblin_engineer::actor_address(),
+                duck_charmer::cursor::print_cursor,
+                session_,
+                std::function<void(const std::string &)>([&](const std::string &data) {
+                    res = data;
+                    d_();
+                }));
+    std::unique_lock<std::mutex> lk(mtx_);
+    cv_.wait(lk, [this]() { return i == 1; });
+    return res;
 }
 
 void wrapper_cursor::d_() {

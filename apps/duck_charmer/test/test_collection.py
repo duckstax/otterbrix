@@ -37,7 +37,7 @@ def test_collection_find():
     c = friedrich_collection.find({})
     assert len(c) == 100
 
-    # print(c.hasNext())
+    print(c)
 
     c = friedrich_collection.find({'count': {'$gt': 90}})
     assert len(c) == 9
