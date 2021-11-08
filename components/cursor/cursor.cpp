@@ -27,7 +27,7 @@ namespace components::cursor {
     }
 
     bool cursor_t::has_next() const {
-        return !sub_cursor_.empty() && (index_sub < sub_cursor_.size() - 1 || it + 1 != sub_cursor_.end()->get()->end());
+        return !sub_cursor_.empty() && (index_sub < sub_cursor_.size() - 1 || it + 1 != (sub_cursor_.end() - 1)->get()->end());
     }
 
     const_iterator_t cursor_t::next() {

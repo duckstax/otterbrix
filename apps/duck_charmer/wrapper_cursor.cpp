@@ -23,28 +23,41 @@ void wrapper_cursor::close() {
 }
 
 bool wrapper_cursor::has_next() {
-    return ptr_->has_next();
-}
-
-void wrapper_cursor::next() {
-    ptr_->next();
-}
-
-std::size_t wrapper_cursor::size() {
-    std::size_t res = 0;
+    bool res = false;
     i = 0;
     goblin_engineer::send(
                 dispatcher_,
                 goblin_engineer::actor_address(),
-                duck_charmer::cursor::size_cursor,
+                duck_charmer::cursor::has_next_cursor,
                 session_,
-                std::function<void(std::size_t)>([&](std::size_t size) {
-                    res = size;
+                std::function<void(bool)>([&](bool has_next) {
+                    res = has_next;
                     d_();
                 }));
     std::unique_lock<std::mutex> lk(mtx_);
     cv_.wait(lk, [this]() { return i == 1; });
     return res;
+}
+
+bool wrapper_cursor::next() {
+    bool res = false;
+    i = 0;
+    goblin_engineer::send(
+                dispatcher_,
+                goblin_engineer::actor_address(),
+                duck_charmer::cursor::next_cursor,
+                session_,
+                std::function<void(bool)>([&](bool result) {
+                    res = result;
+                    d_();
+                }));
+    std::unique_lock<std::mutex> lk(mtx_);
+    cv_.wait(lk, [this]() { return i == 1; });
+    return res;
+}
+
+std::size_t wrapper_cursor::size() {
+    return ptr_->size();
 }
 
 py::object wrapper_cursor::get(const std::string &key) {
@@ -52,20 +65,7 @@ py::object wrapper_cursor::get(const std::string &key) {
 }
 
 std::string wrapper_cursor::print() {
-    std::string res;
-    i = 0;
-    goblin_engineer::send(
-                dispatcher_,
-                goblin_engineer::actor_address(),
-                duck_charmer::cursor::print_cursor,
-                session_,
-                std::function<void(const std::string &)>([&](const std::string &data) {
-                    res = data;
-                    d_();
-                }));
-    std::unique_lock<std::mutex> lk(mtx_);
-    cv_.wait(lk, [this]() { return i == 1; });
-    return res;
+    return ptr_->get().to_json();
 }
 
 void wrapper_cursor::d_() {

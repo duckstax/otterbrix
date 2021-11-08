@@ -25,7 +25,7 @@ public:
 
     void close();
     bool has_next();
-    void next();
+    bool next();
     std::size_t size();
     py::object get(const std::string& key);
     std::string print();
