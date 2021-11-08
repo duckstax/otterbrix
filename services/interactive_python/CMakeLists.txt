@@ -33,9 +33,11 @@ add_library(rocketjoe_${CURRENT_TARGET}
             ${${CURRENT_TARGET}_SOURCES}
 )
 
+SET(PYTHON_EXECUTABLE python3)
+find_package(Python COMPONENTS Interpreter Development REQUIRED)
+#find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
-find_package(pybind11 REQUIRED)
 
 add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
 

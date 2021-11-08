@@ -13,23 +13,24 @@
 #include <components/document/document.hpp>
 
 namespace py = pybind11;
+namespace duck_charmer {
+    class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
+    public:
+        using type_t = components::storage::document_t;
+        using pointer = type_t*;
+        using unique = std::unique_ptr<type_t>;
 
-class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
-public:
-    using type_t = components::storage::document_t;
-    using pointer = type_t*;
-    using unique = std::unique_ptr<type_t>;
+        explicit wrapper_document(pointer ptr);
+        ~wrapper_document();
+        auto print() -> std::string;
+        auto get(const std::string& name) -> py::object;
+        auto raw() -> pointer {
+            return ptr_.get();
+        }
 
-    explicit wrapper_document(pointer ptr);
-    ~wrapper_document();
-    auto print() -> std::string;
-    auto get(const std::string& name) -> py::object;
-    auto raw() -> pointer {
-        return ptr_.get();
-    }
+    private:
+        unique ptr_;
+    };
 
-private:
-    unique ptr_;
-};
-
-using wrapper_document_ptr = boost::intrusive_ptr<wrapper_document>;
+    using wrapper_document_ptr = boost::intrusive_ptr<wrapper_document>;
+} // namespace duck_charmer

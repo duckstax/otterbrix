@@ -11,6 +11,7 @@ namespace components::session {
         session_t();
         std::size_t hash() const;
         bool operator==(const session_t &other) const;
+        bool operator==(const session_t &other);
         auto data() const -> std::uint64_t ;
 
     private:
@@ -18,6 +19,10 @@ namespace components::session {
         std::uint64_t counter_;
     };
 
+}
+
+bool operator==(components::session::session_t &left, components::session::session_t &right ){
+        return (left == right);
 }
 
 namespace std {

@@ -12,12 +12,6 @@ wrapper_cursor::wrapper_cursor(components::session::session_t session, wrapper_c
 }
 void wrapper_cursor::close() {
     close_=true;
-    goblin_engineer::send(
-        dispatcher_,
-        goblin_engineer::address_t::empty_address(),
-        "close_cursor",
-        session_
-    );
 }
 std::size_t wrapper_cursor::size() const {
     return ptr_->size();

@@ -3,8 +3,8 @@
 #include "wrapper_client.hpp"
 #include "wrapper_collection.hpp"
 #include "wrapper_database.hpp"
-#include "wrapper_document.hpp"
 #include "wrapper_cursor.hpp"
+#include "wrapper_document.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -15,6 +15,8 @@
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+
+using namespace duck_charmer;
 
 spaces* spaces::instance_ = nullptr;
 
@@ -45,12 +47,12 @@ PYBIND11_MODULE(duck_charmer, m) {
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
         .def("insert", &wrapper_collection::insert)
-        .def("insert_many", &wrapper_collection::insert_many)
+        ///.def("insert_many", &wrapper_collection::insert_many)
         .def("find", &wrapper_collection::find, py::arg("cond"))
-        .def("all", &wrapper_collection::all)
-        .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
-        .def("remove", &wrapper_collection::remove, py::arg("cond"))
-        .def("drop", &wrapper_collection::drop)
+        ///.def("all", &wrapper_collection::all)
+        ///.def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
+        ///.def("remove", &wrapper_collection::remove, py::arg("cond"))
+        ///.def("drop", &wrapper_collection::drop)
         .def("__len__", &wrapper_collection::size)
         ;
 

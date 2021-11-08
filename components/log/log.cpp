@@ -35,7 +35,7 @@ auto log_t::context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> vo
     logger_ = std::move(logger);
 }
 
-auto initialization_logger(const std::string& name, std::string prefix) -> log_t {
+auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     if (prefix.back() != '/') {
         prefix += '/';
     }

@@ -3,6 +3,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <unordered_set>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -16,19 +17,17 @@
 #include "wrapper_database.hpp"
 
 namespace py = pybind11;
+namespace duck_charmer {
+    class PYBIND11_EXPORT wrapper_client final : public boost::intrusive_ref_counter<wrapper_client> {
+    public:
+        wrapper_client(log_t& log, goblin_engineer::address_t dispatcher);
+        wrapper_database_ptr get_or_create(const std::string& name);
+        auto database_names() -> py::list;
 
-class PYBIND11_EXPORT wrapper_client final : public boost::intrusive_ref_counter<wrapper_client> {
-public:
-    wrapper_client(log_t&log,goblin_engineer::address_t dispatcher);
-    wrapper_database_ptr get_or_create(const std::string& name);
-    auto database_names() -> py::list;
-
-private:
-    wrapper_database_ptr tmp_;
-    void d_();
-    log_t log_;
-    std::atomic_int i = 0;
-    goblin_engineer::address_t dispatcher_;
-    std::mutex mtx_;
-    std::condition_variable cv_;
-};
+    private:
+        std::unordered_set<std::string> names_;
+        const std::string name_;
+        wrapper_dispatcher_t* ptr_;
+        mutable log_t log_;
+    };
+}

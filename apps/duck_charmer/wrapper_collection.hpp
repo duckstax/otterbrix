@@ -13,38 +13,27 @@
 #include <pybind11/stl_bind.h>
 
 #include "wrapper_cursor.hpp"
-#include "wrapper_document.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
 #include <services/storage/result_insert_one.hpp>
 #include "forward.hpp"
+#include "wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
+namespace duck_charmer {
+    class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
+    public:
+        wrapper_collection(const std::string& name, wrapper_dispatcher_t*, log_t& log);
+        ~wrapper_collection();
+        //not  using  base api  for example or test
+        bool insert(const py::handle& document);
+        auto find(py::object cond) -> wrapper_cursor_ptr;
+        auto size() -> py::int_;
 
-class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
-public:
-    wrapper_collection(log_t& log,goblin_engineer::address_t dispatcher,goblin_engineer::address_t database,goblin_engineer::address_t collection);
-    ~wrapper_collection();
-    //not  using  base api  for example or test
-    void insert_many(py::iterable);
-    bool insert(const py::handle& document);
-    auto find(py::object cond) -> wrapper_cursor_ptr;
-    auto all() -> py::list;
-    auto size() -> py::int_;
-    void update(py::dict fields, py::object cond);
-    void remove(py::object cond);
-    void drop();
+    private:
+        const std::string name_;
+        wrapper_dispatcher_t* ptr_;
+        mutable log_t log_;
+    };
 
-private:
-    void d_();
-    result_insert_one insert_result_ ;
-    goblin_engineer::address_t dispatcher_;
-    goblin_engineer::address_t database_;
-    goblin_engineer::address_t collection_;
-    mutable log_t log_;
-    std::atomic_int i = 0;
-    std::mutex mtx_;
-    std::condition_variable cv_;
-};
-
-using wrapper_collection_ptr = boost::intrusive_ptr<wrapper_collection>;
+}
