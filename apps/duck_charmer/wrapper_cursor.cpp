@@ -13,7 +13,7 @@ wrapper_cursor::wrapper_cursor(goblin_engineer::actor_address dispatcher, compon
         , dispatcher_(dispatcher) {
 }
 void wrapper_cursor::close() {
-    close_=true;
+    close_ = true;
     goblin_engineer::send(
         dispatcher_,
         goblin_engineer::actor_address(),

@@ -36,28 +36,34 @@ def test_collection_len():
 def test_collection_find():
     c = friedrich_collection.find({})
     assert len(c) == 100
-
-    while (c.next()):
-        assert str(c['count']) == c['countStr']
     c.close()
 
-    #c = friedrich_collection.find({'count': {'$gt': 90}})
-    #assert len(c) == 9
-    #c.close()
+    c = friedrich_collection.find({'count': {'$gt': 90}})
+    assert len(c) == 9
+    c.close()
 
-    #c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
-    #assert len(c) == 10
-    #c.close()
+    c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
+    assert len(c) == 10
+    c.close()
 
-    #c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
-    #assert len(c) == 18
-    #c.close()
+    c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+    assert len(c) == 18
+    c.close()
 
-    #c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
-    #assert len(c) == 3
-    #c.close()
+    c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
+    assert len(c) == 3
+    c.close()
 
-test_collection_find()
+
+def test_collection_cursor():
+    c = friedrich_collection.find({})
+    count = 1
+    while c.next():
+        assert str(c['count']) == c['countStr']
+        count += 1
+        assert c.hasNext() == (count < 100)
+    c.close()
+
 
 #c = friedrich_database['FriedrichCollection']
 
