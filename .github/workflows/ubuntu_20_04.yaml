@@ -49,5 +49,4 @@ jobs:
 
       - name: PyTest
         run: |
-          cd apps/duck_charmer/
-          pytest
+          cd apps/duck_charmer/ && ls && pytest
