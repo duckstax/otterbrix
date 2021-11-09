@@ -35,19 +35,20 @@ jobs:
 
       - name: download dependencies
         run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
 
       - name: build
         env:
           CC: gcc
         run: |
-          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
           cmake --build . --parallel
 
       - name: Test
-        run: ctest -C
+        run: cd build && ctest -C
 
       - name: PyTest
-        run: |
-          cd apps/duck_charmer/
-          pytest
+        run: cd build/apps/duck_charmer/ && pytest
