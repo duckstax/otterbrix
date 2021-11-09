@@ -21,7 +21,7 @@ namespace components::session {
 
 }
 
-bool operator==(components::session::session_t &left, components::session::session_t &right ){
+inline bool operator==(components::session::session_t &left, components::session::session_t &right ){
         return (left == right);
 }
 

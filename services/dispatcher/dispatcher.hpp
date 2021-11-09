@@ -12,6 +12,7 @@
 
 #include <services/storage/result.hpp>
 #include <services/storage/result_insert_one.hpp>
+#include "storage/result_database.hpp"
 
 namespace services::dispatcher {
 
@@ -41,9 +42,9 @@ namespace services::dispatcher {
     public:
         dispatcher_t(goblin_engineer::supervisor_t* manager_database, log_t& log,std::string name);
         void create_database(components::session::session_t& session, std::string& name);
-        void create_database_finish(components::session::session_t& session, goblin_engineer::address_t address);
+        void create_database_finish(components::session::session_t& session,storage::database_create_result,goblin_engineer::address_t);
         void create_collection(components::session::session_t& session, std::string& name);
-        void create_collection_finish(components::session::session_t& session, goblin_engineer::address_t address);
+        void create_collection_finish(components::session::session_t& session,storage::collection_create_result,goblin_engineer::address_t);
         void insert(components::session::session_t& session, std::string& collection, components::storage::document_t& document);
         void insert_finish(components::session::session_t& session, result_insert_one& result);
         void find(components::session::session_t& session, std::string& collection, components::storage::document_t& condition);

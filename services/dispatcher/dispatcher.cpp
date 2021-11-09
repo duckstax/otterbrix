@@ -3,10 +3,10 @@
 #include <RocketJoe/services/storage/route.hpp>
 #include <RocketJoe/components/document/document.hpp>
 #include "route.hpp"
+#include "storage/database.hpp"
+#include "storage/route.hpp"
 
 namespace services::dispatcher {
-
-    namespace dispatcher = services::storage::dispatcher;
 
     manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput)
         : manager("manager_dispatcher")
@@ -42,35 +42,42 @@ namespace services::dispatcher {
     dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, log_t& log,std::string name)
         : goblin_engineer::abstract_service(manager_database, std::move(name))
         , log_(log.clone()) {
-        add_handler(duck_charmer::manager_database::create_database, &dispatcher_t::create_database);
+        add_handler(manager_database::create_database, &dispatcher_t::create_database);
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
-        add_handler(duck_charmer::database::create_collection, &dispatcher_t::create_collection);
+        add_handler(database::create_collection, &dispatcher_t::create_collection);
         add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
-        add_handler(duck_charmer::collection::insert, &dispatcher_t::insert);
+        add_handler(collection::insert, &dispatcher_t::insert);
         add_handler("insert_finish", &dispatcher_t::insert_finish);
-        add_handler(duck_charmer::collection::find, &dispatcher_t::find);
+        add_handler(collection::find, &dispatcher_t::find);
         add_handler("find_finish", &dispatcher_t::find_finish);
-        add_handler(duck_charmer::collection::size, &dispatcher_t::size);
+        add_handler(collection::size, &dispatcher_t::size);
         add_handler("size_finish", &dispatcher_t::size_finish);
-        add_handler(duck_charmer::collection::close_cursor, &dispatcher_t::close_cursor);
+        add_handler(collection::close_cursor, &dispatcher_t::close_cursor);
     }
     void dispatcher_t::create_database(components::session::session_t& session, std::string& name) {
         log_.debug("create_database_init: {}", name);
         ///create_database_and_collection_callback_ = std::move(callback);
-        goblin_engineer::send(address_book("manager_database"), address(), duck_charmer::database::create_collection, session, std::move(name));
+        goblin_engineer::send(address_book("manager_database"), address(), database::create_collection, session, std::move(name));
     }
-    void dispatcher_t::create_database_finish(components::session::session_t& session, goblin_engineer::address_t address) {
-        log_.debug("create_database_finish: {}", address.type());
-        ///create_database_and_collection_callback_(address);
+    void dispatcher_t::create_database_finish(components::session::session_t& session,storage::database_create_result result,goblin_engineer::address_t address) {
+        auto type = address.type();
+        log_.debug("create_database_finish: {}", type);
+        if(result.created_){
+            database_address_book_.emplace(type,address);
+        }
+
     }
     void dispatcher_t::create_collection(components::session::session_t& session, std::string& name) {
         log_.debug("create_collection: {}", name);
         ///create_database_and_collection_callback_ = std::move(callback);
         goblin_engineer::send(address_book("manager_database"), address(), "create_database", session, name);
     }
-    void dispatcher_t::create_collection_finish(components::session::session_t& session, goblin_engineer::address_t address) {
-        log_.debug("create_collection_finish: {}", address.type());
-        ///create_database_and_collection_callback_(address);
+    void dispatcher_t::create_collection_finish(components::session::session_t& session, storage::collection_create_result result ,goblin_engineer::address_t address) {
+        auto type = address.type();
+        log_.debug("create_collection_finish: {}", type);
+        if(result.created_){
+            collection_address_book_.emplace(type,address);
+        }
     }
     void dispatcher_t::insert(components::session::session_t& session, std::string& collection, components::storage::document_t& document) {
         log_.debug("dispatcher_t::insert: {}", collection);
@@ -84,7 +91,6 @@ namespace services::dispatcher {
     void dispatcher_t::find(components::session::session_t& session, std::string& collection, components::storage::document_t& condition) {
         log_.debug("dispatcher_t::find: {}", collection);
         log_.debug("Session : {}", session.data());
-        log_.debug("{}", collection);
         ///find_callback_ = std::move(callback);
         goblin_engineer::send(address_book("collection"), address(), "find", session, collection, std::move(condition));
     }
@@ -98,12 +104,10 @@ namespace services::dispatcher {
     }
     void dispatcher_t::size(components::session::session_t& session, std::string& collection) {
         log_.debug("dispatcher_t::size: {}", collection);
-        ///size_callback_ = std::move(callback);
         goblin_engineer::send(address_book("collection"), address(), "size", session, collection);
     }
     void dispatcher_t::size_finish(components::session::session_t&, result_size& result) {
         log_.debug("dispatcher_t::size_finish");
-        ///size_callback_(result);
     }
     void dispatcher_t::close_cursor(components::session::session_t& session) {
         log_.debug(" dispatcher_t::close_cursor ");

@@ -20,7 +20,7 @@ namespace py = pybind11;
 namespace duck_charmer {
     class PYBIND11_EXPORT wrapper_client final : public boost::intrusive_ref_counter<wrapper_client> {
     public:
-        wrapper_client(log_t& log, goblin_engineer::address_t dispatcher);
+        wrapper_client(log_t& log, wrapper_dispatcher_t* dispatcher);
         wrapper_database_ptr get_or_create(const std::string& name);
         auto database_names() -> py::list;
 

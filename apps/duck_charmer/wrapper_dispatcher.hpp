@@ -12,8 +12,9 @@
 #include "cursor/cursor.hpp"
 #include "forward.hpp"
 #include "services/storage/result.hpp"
-#include "storage/result_insert_one.hpp"
+#include "services/storage/result_insert_one.hpp"
 #include "wrapper_cursor.hpp"
+#include "services/storage/result_database.hpp"
 
 class spin_lock final {
 public:
@@ -41,7 +42,7 @@ namespace duck_charmer {
     public:
         /// blocking method
         wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
-        auto create_database(duck_charmer::session_t& session, const std::string& name) -> void;
+        auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
         auto create_collection(duck_charmer::session_t& session, const std::string& name) -> wrapper_collection_ptr;
         result_insert_one& insert(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t document);
         auto find(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t condition) -> wrapper_cursor_ptr;
@@ -67,11 +68,11 @@ namespace duck_charmer {
 
     private:
         /// async method
-        auto create_database_finish(duck_charmer::session_t& session) -> void;
-        auto create_collection_finish(duck_charmer::session_t& session) -> void;
-        auto insert_finish(duck_charmer::session_t& session,result_insert_one&) -> void;
-        auto find_finish(duck_charmer::session_t& session, components::cursor::cursor_t* ) -> void;
-        auto size_finish(duck_charmer::session_t& session,result_size&) -> void;
+        auto create_database_finish(duck_charmer::session_t&,services::storage::database_create_result) -> void;
+        auto create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result) -> void;
+        auto insert_finish(duck_charmer::session_t& session,result_insert_one result) -> void ;
+        auto find_finish(duck_charmer::session_t& session,components::cursor::cursor_t*) -> void;
+        auto size_finish(duck_charmer::session_t& session,result_size result) -> void ;
 
         void init() {
             i = 0;
@@ -95,6 +96,12 @@ namespace duck_charmer {
         std::condition_variable cv_;
         duck_charmer::session_t input_session_;
         duck_charmer::session_t output_session_;
-        std::variant<wrapper_collection*, result_insert_one, wrapper_cursor*, result_size> intermediate_store_;
+        std::variant<
+            result_insert_one,
+            components::cursor::cursor_t*,
+            result_size,
+            services::storage::database_create_result,
+            services::storage::collection_create_result>
+            intermediate_store_;
     };
 }

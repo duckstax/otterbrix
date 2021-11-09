@@ -2,6 +2,10 @@
 #include "wrapper_cursor.hpp"
 #include "forward.hpp"
 #include "route.hpp"
+#include "services/storage/result_database.hpp"
+#include "wrapper_collection.hpp"
+#include "wrapper_database.hpp"
+
 
 namespace duck_charmer {
 
@@ -16,7 +20,7 @@ namespace duck_charmer {
         add_handler(duck_charmer::collection::size, &wrapper_dispatcher_t::size_finish);
     }
 
-    auto wrapper_dispatcher_t::create_database(duck_charmer::session_t& session, const std::string& name) {
+    auto wrapper_dispatcher_t::create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr {
         init();
         goblin_engineer::send(
             address_book(name_),
@@ -26,7 +30,7 @@ namespace duck_charmer {
             name);
         wait();
         auto result =  std::get<result_size>(intermediate_store_);
-        return result;
+        return wrapper_database_ptr(new wrapper_database(name,this,log_));
 
     }
 
@@ -39,8 +43,8 @@ namespace duck_charmer {
             session,
             name);
         wait();
-        auto result =  std::get<result_size>(intermediate_store_);
-        return result;
+        auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
+        return wrapper_collection_ptr(new wrapper_collection(name,this,log_));
     }
 
     result_insert_one& wrapper_dispatcher_t::insert(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t doc) {
@@ -53,8 +57,7 @@ namespace duck_charmer {
             collection,
             std::move(doc));
         wait();
-        auto result =  std::get<result_size>(intermediate_store_);
-        return result;
+        return  std::get<result_insert_one>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::find(duck_charmer::session_t& session,const std::string& collection, components::storage::document_t condition) -> wrapper_cursor_ptr {
@@ -68,8 +71,8 @@ namespace duck_charmer {
             std::move(condition)
             );
         wait();
-        auto result =  std::get<result_size>(intermediate_store_);
-        return result;
+        auto* result =  std::get<components::cursor::cursor_t*>(intermediate_store_);
+        return wrapper_cursor_ptr(new wrapper_cursor(session,result));
     }
 
     result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session,const  std::string& collection) {
@@ -86,24 +89,34 @@ namespace duck_charmer {
         return result;
     }
 
-    auto wrapper_dispatcher_t::create_database_finish(duck_charmer::session_t& session) -> void {
-
+    auto wrapper_dispatcher_t::create_database_finish(duck_charmer::session_t& session,services::storage::database_create_result result) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
     }
 
-    auto wrapper_dispatcher_t::create_collection_finish(duck_charmer::session_t& session) -> void {
-
+    auto wrapper_dispatcher_t::create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result result ) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
     }
 
-    auto wrapper_dispatcher_t::insert_finish(duck_charmer::session_t& session) -> void {
-
+    auto wrapper_dispatcher_t::insert_finish(duck_charmer::session_t& session,result_insert_one result) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
     }
 
-    auto wrapper_dispatcher_t::find_finish(duck_charmer::session_t& session) -> void {
-
+    auto wrapper_dispatcher_t::find_finish(duck_charmer::session_t& session,components::cursor::cursor_t* cursor) -> void {
+        intermediate_store_ = cursor;
+        input_session_ = session;
+        notify();
     }
 
-    auto wrapper_dispatcher_t::size_finish(duck_charmer::session_t& session,) -> void {
-
+    auto wrapper_dispatcher_t::size_finish(duck_charmer::session_t& session,result_size result) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
     }
 
 }

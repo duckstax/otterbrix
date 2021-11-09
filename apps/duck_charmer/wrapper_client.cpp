@@ -13,14 +13,15 @@ namespace duck_charmer {
     wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
         log_.debug("wrapper_client::get_or_create name database: {}", name);
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->(session_tmp, name_);
+        auto result = ptr_->create_database(session_tmp, name_);
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
-        return tmp_;
+        names_.emplace(name);
+        return result;
     }
 
-    wrapper_client::wrapper_client(log_t& log, goblin_engineer::address_t dispatcher)
-        : log_(log.clone())
-        , dispatcher_(dispatcher) {
+    wrapper_client::wrapper_client(log_t& log, wrapper_dispatcher_t* dispatcher)
+        : ptr_(dispatcher)
+        , log_(log.clone()){
         log_.debug("wrapper_client::wrapper_client()");
     }
 

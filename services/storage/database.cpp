@@ -3,6 +3,7 @@
 #include "collection.hpp"
 
 #include "tracy/tracy.hpp"
+#include "result_database.hpp"
 
 namespace services::storage {
 
@@ -34,8 +35,10 @@ namespace services::storage {
 
     void manager_database_t::create(session_t& session, std::string& name) {
         log_.debug("manager_database_t:create {}", name);
-        auto address = spawn_supervisor<database_t>(std::move(name),log_,1,1000);
+        auto address = spawn_supervisor<database_t>(std::string(name),log_,1,1000);
         databases_.emplace(address.type(),address);
+        auto self  = manager_database_t::address();
+        return goblin_engineer::send(current_message()->sender(),self,"create_database_finish",session,name,database_create_result(true));
     }
 
     database_t::database_t(goblin_engineer::supervisor_t* supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)
@@ -67,6 +70,8 @@ namespace services::storage {
         log_.debug("database_t::create {}", name);
         auto address = spawn_actor<collection_t>(std::move(name),log_);
         collections_.emplace(address.type(),address);
+        auto self  = database_t::address();
+        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,name,collection_create_result(true));
     }
 
 } // namespace kv

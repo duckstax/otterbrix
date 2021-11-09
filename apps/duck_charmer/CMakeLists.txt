@@ -25,8 +25,8 @@ set(${PROJECT_NAME}_sources
         wrapper_document.cpp
 )
 
-include_directories(${PROJECT_SOURCE_DIR}
-
+include_directories(
+        ${PROJECT_SOURCE_DIR}
 )
 
 pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
@@ -38,7 +38,8 @@ target_link_libraries(
         rocketjoe::storage
         rocketjoe::cursor
         rocketjoe::session
-        rockerjoe_dispatcher
+        rocketjoe::document
+        rockerjoe::dispatcher
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
