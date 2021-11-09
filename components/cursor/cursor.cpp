@@ -5,7 +5,6 @@ namespace components::cursor {
     void cursor_t::push(sub_cursor_t* sub_cursor) {
         size_+= sub_cursor->size();
         sub_cursor_.emplace_back(sub_cursor);
-        if (sub_cursor_.size() == 1) first();
     }
 
     std::size_t cursor_t::size() const {
@@ -20,29 +19,22 @@ namespace components::cursor {
         return sub_cursor_.end();
     }
 
-    const_iterator_t cursor_t::first() {
-        index_sub = 0;
-        it = begin()->get()->begin();
-        return it;
-    }
-
     bool cursor_t::has_next() const {
-        return !sub_cursor_.empty() && (index_sub < sub_cursor_.size() - 1 || it + 1 != (sub_cursor_.end() - 1)->get()->end());
+        return size_ > 0 && (current_index_ < static_cast<index_t>(sub_cursor_.size()) - 1 || sub_cursor_.at(current_index_)->has_next());
     }
 
-    const_iterator_t cursor_t::next() {
-        ++it;
-        if (it == sub_cursor_[index_sub]->end()) {
-            ++index_sub;
-            if (index_sub < sub_cursor_.size()) {
-                it = sub_cursor_[index_sub]->begin();
-            }
+    bool cursor_t::next() {
+        if (current_index_ < 0) current_index_ = 0;
+        current_ = nullptr;
+        while (!current_ && current_index_ < static_cast<index_t>(sub_cursor_.size())) {
+            current_ = sub_cursor_.at(current_index_)->next();
+            if (!current_) current_index_++;
         }
-        return it;
+        return current_ != nullptr;
     }
 
-    data_t cursor_t::get() const {
-        return *it;
+    const data_t *cursor_t::get() const {
+        return current_;
     }
 
     goblin_engineer::actor_address& sub_cursor_t::address() {
@@ -53,12 +45,16 @@ namespace components::cursor {
         return data_->size();
     }
 
-    const_iterator_t sub_cursor_t::begin() const {
-        return data_->begin();
+    bool sub_cursor_t::has_next() const {
+        return current_index_ < static_cast<index_t>(size()) - 1;
     }
 
-    const_iterator_t sub_cursor_t::end() const {
-        return data_->end();
+    const data_t *sub_cursor_t::next() {
+        current_index_++;
+        if (current_index_ < static_cast<index_t>(size())) {
+            return data_->get(current_index_);
+        }
+        return nullptr;
     }
 
     sub_cursor_t::sub_cursor_t(goblin_engineer::actor_address collection, data_cursor_t* data)
@@ -72,11 +68,8 @@ namespace components::cursor {
         return data_.size();
     }
 
-    const_iterator_t data_cursor_t::begin() const {
-        return data_.begin();
+    const data_t *data_cursor_t::get(std::size_t index) const {
+        return &data_.at(index);
     }
 
-    const_iterator_t data_cursor_t::end() const {
-        return data_.end();
-    }
 }

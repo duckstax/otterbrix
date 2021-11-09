@@ -57,7 +57,7 @@ def test_collection_find():
 
 def test_collection_cursor():
     c = friedrich_collection.find({})
-    count = 1
+    count = 0
     while c.next():
         assert str(c['count']) == c['countStr']
         count += 1

@@ -9,16 +9,14 @@
 namespace components::cursor {
 
     using data_t = components::document::document_view_t;
-    using iterator_t = std::vector<data_t>::iterator;
-    using const_iterator_t = std::vector<data_t>::const_iterator;
+    using index_t = int32_t;
 
     class data_cursor_t {
     public:
         data_cursor_t() = default;
         data_cursor_t(std::vector<data_t> data);
         std::size_t size() const;
-        const_iterator_t begin() const;
-        const_iterator_t end() const;
+        const data_t *get(std::size_t index) const;
     private:
         std::vector<data_t> data_;
     };
@@ -29,11 +27,12 @@ namespace components::cursor {
         sub_cursor_t(goblin_engineer::actor_address collection, data_cursor_t* data);
         goblin_engineer::actor_address& address();
         std::size_t size() const;
-        const_iterator_t begin() const;
-        const_iterator_t end() const;
+        bool has_next() const;
+        const data_t *next();
     private:
         goblin_engineer::actor_address collection_;
         data_cursor_t* data_;
+        index_t current_index_{-1};
     };
 
     class cursor_t {
@@ -43,14 +42,13 @@ namespace components::cursor {
         std::size_t size() const;
         std::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
         std::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
-        const_iterator_t first();
         bool has_next() const;
-        const_iterator_t next();
-        data_t get() const;
+        bool next();
+        const data_t *get() const;
     private:
         std::size_t size_{};
-        std::size_t index_sub{};
-        const_iterator_t it;
+        index_t current_index_{-1};
+        const data_t *current_{nullptr};
         std::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
     };
 

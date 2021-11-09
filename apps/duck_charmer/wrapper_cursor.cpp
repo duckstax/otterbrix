@@ -27,11 +27,7 @@ bool wrapper_cursor::has_next() {
 }
 
 bool wrapper_cursor::next() {
-    if (has_next()) {
-        ptr_->next();
-        return true;
-    }
-    return false;
+    return ptr_->next();
 }
 
 std::size_t wrapper_cursor::size() {
@@ -39,11 +35,11 @@ std::size_t wrapper_cursor::size() {
 }
 
 py::object wrapper_cursor::get(const std::string &key) {
-    return from_object(ptr_->get(), key);
+    return from_object(*ptr_->get(), key);
 }
 
 std::string wrapper_cursor::print() {
-    return ptr_->get().to_json();
+    return ptr_->get()->to_json();
 }
 
 void wrapper_cursor::d_() {
