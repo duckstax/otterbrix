@@ -29,9 +29,4 @@ namespace services::storage {
         static constexpr auto close_cursor = "close_cursor";
     } // namespace collection
 
-    namespace cursor {
-        static constexpr auto has_next_cursor = "has_next_cursor";
-        static constexpr auto next_cursor = "next_cursor";
-    } // namespace cursor
-
 } // namespace kv

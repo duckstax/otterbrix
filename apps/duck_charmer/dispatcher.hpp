@@ -41,10 +41,7 @@ public:
     void find_finish(duck_charmer::session_t&, components::cursor::sub_cursor_t*result);
     void size(duck_charmer::session_t& session, std::string& collection, std::function<void (result_size &)> &callback);
     void size_finish(duck_charmer::session_t&, result_size &result);
-
     void close_cursor(duck_charmer::session_t& session);
-    void has_next_cursor(duck_charmer::session_t& session, std::function<void (bool)> &callback);
-    void next_cursor(duck_charmer::session_t& session, std::function<void (bool)> &callback);
 
 private:
     std::function<void(goblin_engineer::actor_address)> create_database_and_collection_callback_;

@@ -23,37 +23,15 @@ void wrapper_cursor::close() {
 }
 
 bool wrapper_cursor::has_next() {
-    bool res = false;
-    i = 0;
-    goblin_engineer::send(
-                dispatcher_,
-                goblin_engineer::actor_address(),
-                duck_charmer::cursor::has_next_cursor,
-                session_,
-                std::function<void(bool)>([&](bool has_next) {
-                    res = has_next;
-                    d_();
-                }));
-    std::unique_lock<std::mutex> lk(mtx_);
-    cv_.wait(lk, [this]() { return i == 1; });
-    return res;
+    return ptr_->has_next();
 }
 
 bool wrapper_cursor::next() {
-    bool res = false;
-    i = 0;
-    goblin_engineer::send(
-                dispatcher_,
-                goblin_engineer::actor_address(),
-                duck_charmer::cursor::next_cursor,
-                session_,
-                std::function<void(bool)>([&](bool result) {
-                    res = result;
-                    d_();
-                }));
-    std::unique_lock<std::mutex> lk(mtx_);
-    cv_.wait(lk, [this]() { return i == 1; });
-    return res;
+    if (has_next()) {
+        ptr_->next();
+        return true;
+    }
+    return false;
 }
 
 std::size_t wrapper_cursor::size() {

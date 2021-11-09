@@ -16,8 +16,4 @@ namespace duck_charmer {
         using namespace services::storage::collection;
     }
 
-    namespace cursor {
-        using namespace services::storage::cursor;
-    }
-
 } // namespace kv
