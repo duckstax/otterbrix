@@ -66,7 +66,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
             std::string(collection_->type().data(), collection_->type().size()),
             std::move(condition),
             std::function<void(duck_charmer::session_t&,components::cursor::cursor_t*)>([&](duck_charmer::session_t& session, components::cursor::cursor_t* result) {
-                ptr.reset(new  wrapper_cursor(session,result));
+                ptr.reset(new  wrapper_cursor(dispatcher_,session,result));
                 d_();
             }));
         log_.debug("wrapper_collection::find send -> dispatcher: {}", dispatcher_->type());

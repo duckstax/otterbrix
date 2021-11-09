@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <memory>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
@@ -10,23 +9,20 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <components/document/document.hpp>
+#include <components/document/document_view.hpp>
 
 namespace py = pybind11;
 
 class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
 public:
-    using type_t = components::document::document_t;
+    using type_t = components::document::document_view_t;
     using pointer = type_t*;
     using unique = std::unique_ptr<type_t>;
 
     explicit wrapper_document(pointer ptr);
     ~wrapper_document();
-    auto print() -> std::string;
-    auto get(const std::string& name) -> py::object;
-    auto raw() -> pointer {
-        return ptr_.get();
-    }
+    std::string print();
+    py::object get(const std::string& key);
 
 private:
     unique ptr_;

@@ -48,6 +48,8 @@ dispatcher_t::dispatcher_t(manager_dispatcher_ptr manager_database, log_t& log)
     add_handler(duck_charmer::collection::size, &dispatcher_t::size);
     add_handler("size_finish", &dispatcher_t::size_finish);
     add_handler(duck_charmer::collection::close_cursor, &dispatcher_t::close_cursor);
+    add_handler(duck_charmer::cursor::has_next_cursor, &dispatcher_t::has_next_cursor);
+    add_handler(duck_charmer::cursor::next_cursor, &dispatcher_t::next_cursor);
 }
 void dispatcher_t::create_database(duck_charmer::session_t& session, std::string& name, std::function<void(goblin_engineer::actor_address)>& callback) {
     log_.debug("create_database_init: {}", name);
@@ -89,7 +91,7 @@ void dispatcher_t::find_finish(duck_charmer::session_t & session, components::cu
     auto cursor_ptr = std::make_unique<components::cursor::cursor_t>();
     cursor_ptr->push(cursor);
     auto result = cursor_.emplace(session,std::move(cursor_ptr));
-    find_callback_(session , result.first->second.get());
+    find_callback_(session, result.first->second.get());
 }
 void dispatcher_t::size(duck_charmer::session_t &session, std::string &collection, std::function<void (result_size &)> &callback) {
     log_.debug("dispatcher_t::size: {}", collection);
@@ -101,7 +103,7 @@ void dispatcher_t::size_finish(duck_charmer::session_t &, result_size &result) {
     size_callback_(result);
 }
 void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
-    log_.debug(" dispatcher_t::close_cursor ");
+    log_.debug("dispatcher_t::close_cursor ");
     log_.debug("Session : {}" , session.data());
     auto it = cursor_.find(session);
     if(it!=cursor_.end()){
@@ -111,5 +113,22 @@ void dispatcher_t::close_cursor(duck_charmer::session_t& session) {
         cursor_.erase(it);
     } else {
         log_.error("Not find session : {}", session.data() );
+    }
+}
+
+void dispatcher_t::has_next_cursor(duck_charmer::session_t &session, std::function<void (bool)> &callback) {
+    log_.debug("dispatcher_t::has_next_cursor  session: {}", session.data());
+    auto it = cursor_.find(session);
+    callback(it == cursor_.end() ? false : it->second->has_next());
+}
+
+void dispatcher_t::next_cursor(duck_charmer::session_t &session, std::function<void (bool)> &callback) {
+    log_.debug("dispatcher_t::next_cursor  session: {}", session.data());
+    auto it = cursor_.find(session);
+    if (it != cursor_.end() && it->second->has_next()) {
+        it->second->next();
+        callback(true);
+    } else {
+        callback(false);
     }
 }
