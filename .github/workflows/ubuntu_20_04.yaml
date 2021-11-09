@@ -43,12 +43,12 @@ jobs:
         env:
           CC: gcc
         run: |
+          ls && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel
 
       - name: Test
-        run: ctest -C
+        run: cd build && ctest -C
 
       - name: PyTest
-        run: |
-          cd apps/duck_charmer/ && ls && pytest
+        run: cd build/apps/duck_charmer/ && ls && pytest
