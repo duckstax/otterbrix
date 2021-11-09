@@ -35,13 +35,14 @@ jobs:
 
       - name: download dependencies
         run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
 
       - name: build
         env:
           CC: gcc
         run: |
-          mkdir build && cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel
 
