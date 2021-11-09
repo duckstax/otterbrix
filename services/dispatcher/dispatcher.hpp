@@ -23,6 +23,7 @@ namespace services::dispatcher {
         manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput);
         ~manager_dispatcher_t() override;
         void create( components::session::session_t& session,std::string& name );
+        void connect_me(components::session::session_t& session, std::string& name);
     protected:
         auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
@@ -55,6 +56,7 @@ namespace services::dispatcher {
 
     private:
         log_t log_;
+        std::unordered_map<components::session::session_t,goblin_engineer::address_t > session_to_address_;
         std::unordered_map<components::session::session_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
         std::unordered_map<std::string, goblin_engineer::address_t> collection_address_book_;
         std::unordered_map<std::string, goblin_engineer::address_t> database_address_book_;

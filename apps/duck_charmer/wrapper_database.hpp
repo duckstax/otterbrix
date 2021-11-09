@@ -17,7 +17,9 @@
 #include "wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
+
 namespace duck_charmer {
+
     class PYBIND11_EXPORT wrapper_database final : public boost::intrusive_ref_counter<wrapper_database> {
     public:
         wrapper_database(const std::string& name, wrapper_dispatcher_t*, log_t& log);
@@ -32,4 +34,6 @@ namespace duck_charmer {
         log_t log_;
         std::unordered_set<std::string> names_;
     };
+
+    using wrapper_database_ptr = boost::intrusive_ptr<wrapper_database>;
 }

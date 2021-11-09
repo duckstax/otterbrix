@@ -21,6 +21,8 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr {
+        log_.trace("wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), name);
+        log_.trace("type address : {}",  address_book(name_).type());
         init();
         goblin_engineer::send(
             address_book(name_),
@@ -29,9 +31,8 @@ namespace duck_charmer {
             session,
             name);
         wait();
-        auto result =  std::get<result_size>(intermediate_store_);
-        return wrapper_database_ptr(new wrapper_database(name,this,log_));
-
+        auto result = std::get<services::storage::database_create_result>(intermediate_store_);
+        return wrapper_database_ptr(new wrapper_database(name, this, log_));
     }
 
     auto wrapper_dispatcher_t::create_collection(duck_charmer::session_t& session, const std::string& name) -> wrapper_collection_ptr {

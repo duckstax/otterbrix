@@ -62,7 +62,9 @@ namespace duck_charmer {
 
         auto enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void {
             std::unique_lock<spin_lock> _(input_mtx_);
-            set_current_message(std::move(msg));
+            auto tmp = std::move(msg);
+            log_.trace("wrapper_dispatcher_t::enqueue_base msg type: {}",tmp->command());
+            set_current_message(std::move(tmp));
             execute();
         }
 

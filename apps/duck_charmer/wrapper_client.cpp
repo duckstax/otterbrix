@@ -6,16 +6,20 @@
 #include "spaces.hpp"
 #include "storage/forward.hpp"
 
+#include "wrapper_database.hpp"
+
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
+
 namespace duck_charmer {
+
     wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
         log_.debug("wrapper_client::get_or_create name database: {}", name);
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->create_database(session_tmp, name_);
+        auto result = ptr_->create_database(session_tmp, name);
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
-        names_.emplace(name);
+        names_.emplace(name,result);
         return result;
     }
 
@@ -27,9 +31,9 @@ namespace duck_charmer {
 
     auto wrapper_client::database_names() -> py::list {
         py::list tmp;
-        //for(auto&i:storage_){
-        ///    tmp.append(i.first);
-        /// }
+        for(auto&i:names_){
+            tmp.append(i.first);
+        }
         return tmp;
     }
 }

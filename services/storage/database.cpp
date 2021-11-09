@@ -38,7 +38,7 @@ namespace services::storage {
         auto address = spawn_supervisor<database_t>(std::string(name),log_,1,1000);
         databases_.emplace(address.type(),address);
         auto self  = manager_database_t::address();
-        return goblin_engineer::send(current_message()->sender(),self,"create_database_finish",session,name,database_create_result(true));
+        return goblin_engineer::send(current_message()->sender(),self,"create_database_finish",session,database_create_result(true),address);
     }
 
     database_t::database_t(goblin_engineer::supervisor_t* supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)

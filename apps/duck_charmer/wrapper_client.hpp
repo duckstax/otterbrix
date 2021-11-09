@@ -14,7 +14,8 @@
 #include <pybind11/stl_bind.h>
 
 #include "goblin-engineer/core.hpp"
-#include "wrapper_database.hpp"
+#include "forward.hpp"
+#include "wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
 namespace duck_charmer {
@@ -25,7 +26,7 @@ namespace duck_charmer {
         auto database_names() -> py::list;
 
     private:
-        std::unordered_set<std::string> names_;
+        std::unordered_map<std::string,wrapper_database_ptr> names_;
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
         mutable log_t log_;

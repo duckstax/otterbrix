@@ -1,14 +1,16 @@
+#include "forward.hpp"
 #include "wrapper_database.hpp"
 #include "spaces.hpp"
+
 namespace duck_charmer {
     wrapper_database::~wrapper_database() {
     }
 
     auto wrapper_database::collection_names() -> py::list {
         py::list tmp;
-        ///for (auto &i:*ptr_) {
-        ///    tmp.append(i.first);
-        ///}
+        for (auto &i:names_) {
+            tmp.append(i);
+        }
         return tmp;
     }
 
