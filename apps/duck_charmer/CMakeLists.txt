@@ -39,7 +39,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::document
-        rockerjoe::dispatcher
+        rocketjoe::dispatcher
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
