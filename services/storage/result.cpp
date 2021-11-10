@@ -20,3 +20,15 @@ result_size::result_size(std::size_t size) :
 std::size_t result_size::operator *() const {
     return size_;
 }
+
+result_get_document::result_get_document(result_get_document::result_t &&doc)
+    : doc_(std::move(doc)) {
+}
+
+const result_get_document::result_t &result_get_document::operator *() const {
+    return doc_;
+}
+
+result_get_document::result_t *result_get_document::operator ->() {
+    return &doc_;
+}
