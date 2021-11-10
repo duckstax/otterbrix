@@ -61,9 +61,16 @@ PYBIND11_MODULE(duck_charmer, m) {
         ;
 
     py::class_<wrapper_cursor, boost::intrusive_ptr<wrapper_cursor>>(m, "Cursor")
-        .def("close", &wrapper_cursor::close)
+        .def("__repr__", &wrapper_cursor::print)
         .def("__del__", &wrapper_cursor::close)
         .def("__len__", &wrapper_cursor::size)
+        .def("__getitem__", &wrapper_cursor::get)
+        .def("close", &wrapper_cursor::close)
+        .def("hasNext", &wrapper_cursor::has_next)
+        .def("next", &wrapper_cursor::next)
+        //.def("paginate", &wrapper_cursor::paginate)
+        //.def("_order", &wrapper_cursor::_order)
+        //.def("sort", &wrapper_cursor::sort)
         ;
 
     m.def(

@@ -16,10 +16,10 @@ wrapper_document::~wrapper_document() {
     ptr_.release();
 }
 
-auto wrapper_document::print() -> std::string {
-//    return ptr_->to_string();
+std::string wrapper_document::print() {
+    return ptr_->to_json();
 }
 
-auto wrapper_document::get(const std::string& key) -> py::object {
-    return from_object(key, *ptr_);
+py::object wrapper_document::get(const std::string& key) {
+    return from_object(*ptr_, key);
 }

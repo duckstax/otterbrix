@@ -189,62 +189,60 @@ auto from_document(const document_view_t &document) -> py::object {
         py::dict dict;
         for (auto it = document.begin(); it; ++it) {
             auto key = static_cast<std::string>(it.key()->as_string());
-            if (document.is_null(std::string(key))) {
-                dict[py::str(key)] = py::none();
-            } else if (document.is_bool(std::string(key))) {
-                dict[py::str(key)] = py::bool_(document.get_as<bool>(key));
-            } else if (document.is_ulong(std::string(key))) {
-                dict[py::str(key)] = py::int_(document.get_as<ulong>(key));
-            } else if (document.is_long(std::string(key))) {
-                dict[py::str(key)] = py::int_(document.get_as<long>(key));
-            } else if (document.is_float(std::string(key))) {
-                dict[py::str(key)] = py::float_(document.get_as<float>(key));
-            } else if (document.is_double(std::string(key))) {
-                dict[py::str(key)] = py::float_(document.get_as<double>(key));
-            } else if (document.is_string(std::string(key))) {
-                dict[py::str(key)] = py::str(document.get_as<std::string>(key));
-            } else if (document.is_array(std::string(key))) {
-                dict[py::str(key)] = from_document(document.get_array(std::string(key)));
-            } else if (document.is_dict(std::string(key))) {
-                dict[py::str(key)] = from_document(document.get_dict(std::string(key)));
-            } else {
-                dict[py::str(key)] = py::none();
-            }
+            dict[py::str(key)] = from_object(document, key);
         }
         return std::move(dict);
     } else {
         py::list list;
         for (uint32_t i = 0; i < document.count(); ++i) {
-            if (document.is_null(i)) {
-                list.append(py::none());
-            } else if (document.is_bool(i)) {
-                list.append(py::bool_(document.get_as<bool>(i)));
-            } else if (document.is_ulong(i)) {
-                list.append(py::int_(document.get_as<ulong>(i)));
-            } else if (document.is_long(i)) {
-                list.append(py::int_(document.get_as<long>(i)));
-            } else if (document.is_float(i)) {
-                list.append(py::float_(document.get_as<float>(i)));
-            } else if (document.is_double(i)) {
-                list.append(py::float_(document.get_as<double>(i)));
-            } else if (document.is_string(i)) {
-                list.append(py::str(document.get_as<std::string>(i)));
-            } else if (document.is_array(i)) {
-                list.append(from_document(document.get_array(i)));
-            } else if (document.is_dict(i)) {
-                list.append(from_document(document.get_dict(i)));
-            } else {
-                list.append(py::none());
-            }
+            list.append(from_object(document, i));
         }
         return std::move(list);
     }
     return py::none();
 }
 
-auto from_object(const std::string& key, document_t& target) -> py::object {
-//    auto value = target.get(key);
-//    return from_document(value);
+template <class TKey>
+auto from_object_(const document_view_t &document, const TKey &key) -> py::object {
+    if (document.is_null(key)) {
+        return py::none();
+    } else if (document.is_bool(key)) {
+        return py::bool_(document.get_as<bool>(key));
+    } else if (document.is_ulong(key)) {
+        return py::int_(document.get_as<ulong>(key));
+    } else if (document.is_long(key)) {
+        return py::int_(document.get_as<long>(key));
+    } else if (document.is_float(key)) {
+        return py::float_(document.get_as<float>(key));
+    } else if (document.is_double(key)) {
+        return py::float_(document.get_as<double>(key));
+    } else if (document.is_string(key)) {
+        return py::str(document.get_as<std::string>(key));
+    } else if (document.is_array(key)) {
+        py::list list;
+        auto array = document.get_array(key);
+        for (uint32_t i = 0; i < array.count(); ++i) {
+            list.append(from_object_<uint32_t>(array, i));
+        }
+        return std::move(list);
+    } else if (document.is_dict(key)) {
+        py::dict dict;
+        auto sub_doc = document.get_dict(key);
+        for (auto it = sub_doc.begin(); it; ++it) {
+            auto key = static_cast<std::string>(it.key()->as_string());
+            dict[py::str(key)] = from_object_<std::string>(sub_doc, key);
+        }
+        return std::move(dict);
+    }
+    return py::none();
+}
+
+auto from_object(const document_view_t &document, const std::string &key) -> py::object {
+    return from_object_<std::string>(document, std::string(key));
+}
+
+auto from_object(const document_view_t &document, uint32_t index) -> py::object {
+    return from_object_<uint32_t>(document, index);
 }
 
 void update_document(const py::handle& source, document_t& target) {

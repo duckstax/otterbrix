@@ -8,13 +8,17 @@
 
 namespace components::cursor {
 
+    using data_t = components::document::document_view_t;
+    using index_t = int32_t;
+
     class data_cursor_t {
     public:
         data_cursor_t() = default;
-        data_cursor_t(std::vector<components::document::document_view_t> data);
+        data_cursor_t(std::vector<data_t> data);
         std::size_t size() const;
+        const data_t *get(std::size_t index) const;
     private:
-        std::vector<document::document_view_t> data_;
+        std::vector<data_t> data_;
     };
 
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
@@ -23,11 +27,12 @@ namespace components::cursor {
         sub_cursor_t(goblin_engineer::actor_address collection, data_cursor_t* data);
         goblin_engineer::actor_address& address();
         std::size_t size() const;
-
+        bool has_next() const;
+        const data_t *next();
     private:
         goblin_engineer::actor_address collection_;
-        std::vector<components::document::document_view_t>::const_iterator it;
         data_cursor_t* data_;
+        index_t current_index_{-1};
     };
 
     class cursor_t {
@@ -35,12 +40,16 @@ namespace components::cursor {
         cursor_t() = default;
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
-        auto begin() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator ;
-        auto end() -> std::list<std::unique_ptr<sub_cursor_t>>::iterator ;
+        std::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
+        std::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
+        bool has_next() const;
+        bool next();
+        const data_t *get() const;
     private:
-        uint64_t  size_{};
-        std::list<sub_cursor_t>::const_iterator it;
-        std::list<std::unique_ptr<sub_cursor_t>> sub_cursor_;
+        std::size_t size_{};
+        index_t current_index_{-1};
+        const data_t *current_{nullptr};
+        std::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
     };
 
 } // namespace components::cursor

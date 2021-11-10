@@ -25,7 +25,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.40.3
+          pip install conan==1.40.3 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -35,15 +35,20 @@ jobs:
 
       - name: download dependencies
         run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
 
       - name: build
         env:
           CC: gcc
         run: |
-          cmake . -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
           cmake --build . --parallel
 
       - name: Test
-        run: |
-          ctest -C
+        run: cd build && ctest -C
+
+      - name: PyTest
+        run: cd build/apps/duck_charmer/ && pytest
