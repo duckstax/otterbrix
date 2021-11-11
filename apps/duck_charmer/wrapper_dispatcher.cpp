@@ -14,8 +14,8 @@ namespace duck_charmer {
         , log_(log.clone())
         , name_(name_dispather) {
         add_handler("create_database_finish", &wrapper_dispatcher_t::create_database_finish);
-        add_handler(duck_charmer::database::create_collection, &wrapper_dispatcher_t::create_collection_finish);
-        add_handler(duck_charmer::collection::insert, &wrapper_dispatcher_t::insert_finish);
+        add_handler("create_collection_finish", &wrapper_dispatcher_t::create_collection_finish);
+        add_handler("insert_finish", &wrapper_dispatcher_t::insert_finish);
         add_handler(duck_charmer::collection::find, &wrapper_dispatcher_t::find_finish);
         add_handler(duck_charmer::collection::size, &wrapper_dispatcher_t::size_finish);
     }
@@ -35,23 +35,27 @@ namespace duck_charmer {
         return wrapper_database_ptr(new wrapper_database(name, this, log_));
     }
 
-    auto wrapper_dispatcher_t::create_collection(duck_charmer::session_t& session, const std::string& name) -> wrapper_collection_ptr {
+    auto wrapper_dispatcher_t::create_collection(duck_charmer::session_t& session, const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr {
+        log_.trace("wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database_name,collection_name);
+        log_.trace("type address : {}",  address_book("manager_dispatcher").type());
         init();
         goblin_engineer::send(
-            address_book(name_),
+            address_book("manager_dispatcher"),
             address(),
             "create_collection",
             session,
-            name);
+            database_name,
+            collection_name);
         wait();
         auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
-        return wrapper_collection_ptr(new wrapper_collection(name,this,log_));
+        return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
     }
 
     result_insert_one& wrapper_dispatcher_t::insert(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t doc) {
+        log_.trace("wrapper_dispatcher_t::insert session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
-            address_book(name_),
+            address_book("manager_dispatcher"),
             address(),
             "insert",
             session,
@@ -104,6 +108,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::insert_finish(duck_charmer::session_t& session,result_insert_one result) -> void {
+        log_.trace("wrapper_dispatcher_t::insert_finish session: {} , result: {} ",session.data(),result.status);
         intermediate_store_ = result;
         input_session_ = session;
         notify();

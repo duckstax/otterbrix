@@ -26,8 +26,6 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         //all_view_address();
-        auto database = address_book("database");
-        log_.debug("database : {}", database.type());
         goblin_engineer::send(dispatcher, address(), "insert_finish", session, result_insert_one(true));
     }
 

@@ -68,10 +68,10 @@ namespace services::storage {
 
     void database_t::create(session_t& session, std::string& name) {
         log_.debug("database_t::create {}", name);
-        auto address = spawn_actor<collection_t>(std::move(name),log_);
+        auto address = spawn_actor<collection_t>(std::string(name),log_);
         collections_.emplace(address.type(),address);
         auto self  = database_t::address();
-        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,name,collection_create_result(true));
+        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,collection_create_result(true),address);
     }
 
 } // namespace kv

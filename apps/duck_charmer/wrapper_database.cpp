@@ -21,15 +21,16 @@ namespace duck_charmer {
         return true;
     }
 
-    wrapper_collection_ptr wrapper_database::create(const std::string& name) {
-        log_.debug("wrapper_database::create name collection: {}", name);
+    wrapper_collection_ptr wrapper_database::create(const std::string& collection_name) {
+        log_.debug("wrapper_database::create name collection: {}", collection_name);
         auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->create_collection(session_tmp,name_);
+        auto result =  ptr_->create_collection(session_tmp,name_,collection_name);
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
         return result;
     }
     wrapper_database::wrapper_database(const std::string& name, wrapper_dispatcher_t* ptr, log_t& log)
-        : ptr_(ptr)
+        : name_(name)
+        ,ptr_(ptr)
         , log_(log.clone()) {
         log_.debug("wrapper_database");
     }
