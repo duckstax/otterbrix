@@ -13,7 +13,7 @@ namespace duck_charmer {
         : manager_t("wrapper_dispatcher")
         , log_(log.clone())
         , name_(name_dispather) {
-        add_handler(duck_charmer::manager_database::create_database, &wrapper_dispatcher_t::create_database_finish);
+        add_handler("create_database_finish", &wrapper_dispatcher_t::create_database_finish);
         add_handler(duck_charmer::database::create_collection, &wrapper_dispatcher_t::create_collection_finish);
         add_handler(duck_charmer::collection::insert, &wrapper_dispatcher_t::insert_finish);
         add_handler(duck_charmer::collection::find, &wrapper_dispatcher_t::find_finish);
@@ -22,10 +22,10 @@ namespace duck_charmer {
 
     auto wrapper_dispatcher_t::create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr {
         log_.trace("wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), name);
-        log_.trace("type address : {}",  address_book(name_).type());
+        log_.trace("type address : {}",  address_book("manager_dispatcher").type());
         init();
         goblin_engineer::send(
-            address_book(name_),
+            address_book("manager_dispatcher"),
             address(),
             "create_database",
             session,
@@ -91,6 +91,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_database_finish(duck_charmer::session_t& session,services::storage::database_create_result result) -> void {
+        log_.trace("wrapper_dispatcher_t::create_database_finish session: {} , result: {} ",session.data(),result.created_);
         intermediate_store_ = result;
         input_session_ = session;
         notify();

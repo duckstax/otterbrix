@@ -24,6 +24,12 @@ namespace services::dispatcher {
         ~manager_dispatcher_t() override;
         void create( components::session::session_t& session,std::string& name );
         void connect_me(components::session::session_t& session, std::string& name);
+        void create_database(components::session::session_t& session, std::string& name);
+        void create_collection(components::session::session_t& session, std::string& name);
+        void insert(components::session::session_t& session, std::string& collection, components::storage::document_t& document);
+        void find(components::session::session_t& session, std::string& collection, components::storage::document_t& condition);
+        void size(components::session::session_t& session, std::string& collection);
+        void close_cursor(components::session::session_t& session);
     protected:
         auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
@@ -35,16 +41,17 @@ namespace services::dispatcher {
         goblin_engineer::executor_ptr e_;
         std::vector<goblin_engineer::actor> actor_storage_;
         std::unordered_map<std::string, goblin_engineer::address_t> dispatcher_to_address_book_;
+        std::vector<goblin_engineer::address_t> dispathers_;
     };
 
     using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
 
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:
-        dispatcher_t(goblin_engineer::supervisor_t* manager_database, log_t& log,std::string name);
-        void create_database(components::session::session_t& session, std::string& name);
+        dispatcher_t(goblin_engineer::supervisor_t* manager_database,goblin_engineer::address_t, log_t& log,std::string name);
+        void create_database(components::session::session_t& session, std::string& name,goblin_engineer::address_t address);
         void create_database_finish(components::session::session_t& session,storage::database_create_result,goblin_engineer::address_t);
-        void create_collection(components::session::session_t& session, std::string& name);
+        void create_collection(components::session::session_t& session, std::string& name,goblin_engineer::address_t address);
         void create_collection_finish(components::session::session_t& session,storage::collection_create_result,goblin_engineer::address_t);
         void insert(components::session::session_t& session, std::string& collection, components::storage::document_t& document);
         void insert_finish(components::session::session_t& session, result_insert_one& result);
@@ -56,6 +63,7 @@ namespace services::dispatcher {
 
     private:
         log_t log_;
+        goblin_engineer::address_t mdb_;
         std::unordered_map<components::session::session_t,goblin_engineer::address_t > session_to_address_;
         std::unordered_map<components::session::session_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
         std::unordered_map<std::string, goblin_engineer::address_t> collection_address_book_;

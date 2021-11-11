@@ -18,11 +18,10 @@ namespace duck_charmer {
         log_.debug("manager_database");
         manager_dispatcher_ = goblin_engineer::make_manager_service<manager_dispatcher_t>(log_, 1, 1000);
         log_.debug("manager_dispatcher");
+        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_, name_dispatcher);
+        goblin_engineer::link(manager_database_, manager_dispatcher_);
         goblin_engineer::send(manager_dispatcher_,goblin_engineer::address_t::empty_address(), "create", components::session::session_t(), std::string(name_dispatcher));
         log_.debug("manager_dispatcher create dispatcher");
-        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_, name_dispatcher);
-        goblin_engineer::send(manager_dispatcher_,wrapper_dispatcher_->address(), "connect_me",components::session::session_t(),  std::string(name_dispatcher));
-        goblin_engineer::link(manager_database_, manager_dispatcher_);
         auto tmp = wrapper_dispatcher_->address();
         auto tmp_1 = manager_dispatcher_->address();
         goblin_engineer::link(tmp_1, tmp);
