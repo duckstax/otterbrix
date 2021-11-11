@@ -76,6 +76,8 @@ namespace services::dispatcher {
         log_.debug("dispatcher_t::create_database: session {} , name create_database {}",session.data(), type);
 
         if (result.created_) {
+            auto md = address_book("manager_dispatcher");
+            goblin_engineer::link(md,database);
             database_address_book_.emplace(type, database);
             log_.trace("add database_create_result");
         }
