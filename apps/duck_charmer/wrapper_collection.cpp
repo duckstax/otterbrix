@@ -23,6 +23,7 @@ namespace duck_charmer {
             auto session_tmp = duck_charmer::session_t();
             auto result =  ptr_->insert(session_tmp,name_, std::move(doc));
             log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
+            return result.status;
         }
         throw std::runtime_error("wrapper_collection::insert");
     }
