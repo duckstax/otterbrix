@@ -6,7 +6,7 @@
 #include "array.hpp"
 #include "dict.hpp"
 
-namespace storage {
+namespace document {
 
 inline impl_mutable_array_t mutable_array_new() noexcept;
 inline impl_mutable_dict_t mutable_dict_new() noexcept;
@@ -240,7 +240,7 @@ inline impl_mutable_array_t _new_mutable_array(impl_array_t a, copy_flags flags)
     try {
         return retain(impl::mutable_array_t::new_array(a, flags));
     } catch (const std::exception &x) {
-        storage::impl::record_error(x, nullptr);
+        document::impl::record_error(x, nullptr);
     }
     return nullptr;
 }
@@ -249,7 +249,7 @@ inline impl_mutable_dict_t _new_mutable_dict(impl_dict_t d, copy_flags flags) no
     try {
         return retain(impl::mutable_dict_t::new_dict(d, copy_flags(flags)));
     } catch (const std::exception &x) {
-        storage::impl::record_error(x, nullptr);
+        document::impl::record_error(x, nullptr);
     }
     return nullptr;
 }

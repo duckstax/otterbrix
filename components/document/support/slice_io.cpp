@@ -21,7 +21,7 @@
 #include <windows.h>
 #endif
 
-namespace storage {
+namespace document {
 
 alloc_slice_t read_file(const char *path) {
     int fd = ::_open(path, O_RDONLY | O_BINARY);

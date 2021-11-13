@@ -2,7 +2,7 @@
 
 #include "small_vector_base.hpp"
 
-namespace storage {
+namespace document {
 
 template <class T, size_t N>
 class small_vector_t : public small_vector_base_t

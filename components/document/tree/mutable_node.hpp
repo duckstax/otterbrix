@@ -8,7 +8,7 @@
 #include "temp_array.hpp"
 #include "better_assert.hpp"
 
-namespace storage { namespace hashtree {
+namespace document { namespace hashtree {
 
 using offset_t = int32_t;
 

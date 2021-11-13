@@ -11,6 +11,7 @@
 
 #include "cursor/cursor.hpp"
 #include "forward.hpp"
+#include <components/document/document.hpp>
 #include "services/storage/result.hpp"
 #include "services/storage/result_insert_one.hpp"
 #include "wrapper_cursor.hpp"
@@ -44,8 +45,8 @@ namespace duck_charmer {
         wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
         auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
         auto create_collection(duck_charmer::session_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
-        result_insert_one& insert(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t document);
-        auto find(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t condition) -> wrapper_cursor_ptr;
+        result_insert_one& insert(duck_charmer::session_t& session, const std::string& collection, components::document::document_t document);
+        auto find(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
         result_size size(duck_charmer::session_t& session, const std::string& collection);
 
     protected:

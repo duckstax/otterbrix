@@ -14,6 +14,6 @@ namespace duck_charmer {
 
     namespace collection {
         using namespace services::storage::collection;
-    } // namespace collection
+    }
 
 } // namespace kv

@@ -4,8 +4,8 @@
 #include "storage_impl.hpp"
 #include "slice_io.hpp"
 
-using namespace storage;
-using namespace storage::impl;
+using namespace document;
+using namespace document::impl;
 
 TEST_CASE("mutable::mutable_array_t") {
 

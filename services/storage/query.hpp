@@ -8,8 +8,9 @@
 
 namespace services::storage {
 
-using components::storage::document_t;
-using components::storage::conditional_expression;
+using components::document::document_t;
+using components::document::document_view_t;
+using components::document::conditional_expression;
 
 
 class empty_query_t : public conditional_expression {
@@ -19,6 +20,7 @@ public:
     explicit empty_query_t(const std::string &key);
     empty_query_t(std::string &&key, query_ptr &&q1, query_ptr &&q2 = nullptr);
     ~empty_query_t() override;
+    bool check(const document_view_t &doc) const override;
     bool check(const document_t &doc) const override;
 
     std::string key_;
@@ -36,6 +38,8 @@ query_ptr operator !(query_ptr &&q) noexcept;
 template<class T> struct query_helper               { typedef T type; };
 template<> struct query_helper<char *>              { typedef std::string type; };
 template<int size> struct query_helper<char [size]> { typedef std::string type; };
+template<> struct query_helper<int>                 { typedef long type; };
+template<> struct query_helper<uint>                { typedef ulong type; };
 #define QH(T) typename query_helper<T>::type
 
 template <class T>
@@ -45,6 +49,10 @@ public:
         : empty_query_t(key)
         , check_(check)
     {}
+
+    bool check(const document_view_t &doc) const override {
+        return check_(doc.get_as<QH(T)>(key_));
+    }
 
     bool check(const document_t &doc) const override {
         return check_(doc.get_as<QH(T)>(key_));
@@ -138,6 +146,8 @@ query_ptr all(const std::string &key, const CONT &array) {
     }));
 }
 
+query_ptr any(const std::string &key, const ::document::impl::array_t *array);
+query_ptr all(const std::string &key, const ::document::impl::array_t *array);
 query_ptr matches(const std::string &key, const std::string &regex);
 
 query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond = nullptr, const std::string &prev_key = "");

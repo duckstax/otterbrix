@@ -5,7 +5,7 @@
 #include "bitmap.hpp"
 #include <future>
 
-using namespace storage;
+using namespace document;
 
 template <class T>
 static void test_temp_array(size_t n, bool on_heap) {

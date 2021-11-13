@@ -14,7 +14,7 @@
 #include <typeinfo>
 #include <limits>
 
-namespace storage {
+namespace document {
 
 bool parse_integer(const char *str NONNULL, int64_t &result, bool allow_trailing = false);
 bool parse_integer(const char *str NONNULL, uint64_t &result, bool allow_trailing = false);

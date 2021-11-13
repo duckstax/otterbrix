@@ -15,7 +15,7 @@
 #include "better_assert.hpp"
 
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace internal;
 

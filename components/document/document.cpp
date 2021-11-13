@@ -1,91 +1,193 @@
-#include <components/document//document.hpp>
+#include "document.hpp"
+#include "mutable/mutable_dict.h"
+#include "document/json/json_coder.hpp"
+#include <iostream>
 
-namespace components::storage {
+using ::document::impl::mutable_array_t;
+using ::document::impl::mutable_dict_t;
+using ::document::impl::value_t;
+using ::document::impl::value_type;
 
-    auto make_document() -> document_ptr {
-        return std::make_unique<document_t>();
+namespace components::document {
 
-    }
+document_t::document_t()
+    : storage_(mutable_dict_t::new_dict().detach())
+    , is_owner_(true) {
+}
 
-    void document_t::add(std::string &&key) {
-        json_.emplace(std::move(key), nullptr);
-    }
+document_t::document_t(const ::document::impl::dict_t *dict, bool is_owner)
+    : storage_(dict->as_mutable())
+    , is_owner_(is_owner) {
+}
 
-    void document_t::add(std::string &&key, bool value) {
-        json_.emplace(std::move(key), value);
-    }
+document_t::document_t(const document_t &src)
+    : storage_(src.storage_)
+    , is_owner_(false) {
+}
 
-    void document_t::add(std::string &&key, long value) {
-        json_.emplace(std::move(key), value);
-    }
+document_t::~document_t() {
+    if (is_owner_ && storage_) storage_->_release();
+}
 
-    void document_t::add(std::string &&key, double value) {
-        json_.emplace(std::move(key), value);
-    }
+void document_t::add_null(const std::string &key) {
+    storage_->set(key, ::document::impl::null_value);
+}
 
-    void document_t::add(std::string &&key, const std::string &value) {
-        json_.emplace(std::move(key), value);
-    }
+void document_t::add_bool(const std::string &key, bool value) {
+    storage_->set(key, value);
+}
 
-    auto document_t::to_string() const -> std::string {
-        return json_.dump();
-    }
+void document_t::add_ulong(const std::string &key, ulong value) {
+    storage_->set(key, value);
+}
 
-    auto document_t::get(const std::string &name) -> document_t {
-        return document_t( json_.at(name));
-    }
+void document_t::add_long(const std::string &key, long value) {
+    storage_->set(key, value);
+}
 
-    bool document_t::as_bool() const {
-        return json_.get<bool>();
-    }
+void document_t::add_double(const std::string &key, double value) {
+    storage_->set(key, value);
+}
 
-    std::string document_t::as_string() const {
-        return json_.get<std::string>();
-    }
+void document_t::add_string(const std::string &key, std::string value) {
+    storage_->set(key, value);
+}
 
-    double document_t::as_double() const {
-        return json_.get<double>();
-    }
+void document_t::add_array(const std::string &key, ::document::impl::array_t *array) {
+    storage_->set(key, array);
+}
 
-    int32_t document_t::as_int32() const {
-        return json_.get<int32_t>();
-    }
+void document_t::add_dict(const std::string &key, ::document::impl::dict_t *dict) {
+    storage_->set(key, dict);
+}
 
-    document_t::json_t::array_t document_t::as_array() const {
-        return json_.get<json_t::array_t>();
-    }
+void document_t::add_dict(const std::string &key, const document_t &dict) {
+    storage_->set(key, dict.storage_);
+}
 
-    bool document_t::is_boolean() const noexcept {
-        return json_.is_boolean();
-    }
+void document_t::add_dict(const std::string &key, document_t &&dict) {
+    storage_->set(key, dict.storage_);
+//    dict.storage_ = nullptr;
+}
 
-    bool document_t::is_integer() const noexcept {
-        return json_.is_number_integer();
-    }
+bool document_t::is_exists(const std::string &key) const {
+    return storage_->get(key) != nullptr;
+}
 
-    bool document_t::is_float() const noexcept {
-        return json_.is_number_float();
-    }
+bool document_t::is_null(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::null;
+}
 
-    bool document_t::is_string() const noexcept {
-        return json_.is_string();
-    }
+bool document_t::is_bool(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::boolean;
+}
 
-    bool document_t::is_null() const noexcept {
-        return json_.is_null();
-    }
+bool document_t::is_ulong(const std::string &key) const {
+    return storage_->get(key)->is_unsigned();
+}
 
-    bool document_t::is_object() const noexcept {
-        return json_.is_object();
-    }
+bool document_t::is_long(const std::string &key) const {
+    return storage_->get(key)->is_int();
+}
 
-    bool document_t::is_array() const noexcept {
-        return json_.is_array();
-    }
+bool document_t::is_double(const std::string &key) const {
+    return storage_->get(key)->is_double();
+}
 
-    document_t::document_t() {
-        json_ = json_t::object();
-    }
+bool document_t::is_string(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::string;
+}
 
-    document_t::document_t(document_t::json_t value) : json_(std::move(value)) {}
+bool document_t::is_array(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::array;
+}
+
+bool document_t::is_dict(const std::string &key) const {
+    return storage_->get(key)->type() == value_type::dict;
+}
+
+const value_t *document_t::get(const std::string &key) const {
+    return storage_->get(key);
+}
+
+bool document_t::get_bool(const std::string &key) const {
+    return get(key)->as_bool();
+}
+
+ulong document_t::get_ulong(const std::string &key) const {
+    return get(key)->as_unsigned();
+}
+
+long document_t::get_long(const std::string &key) const {
+    return get(key)->as_int();
+}
+
+double document_t::get_double(const std::string &key) const {
+    return get(key)->as_double();
+}
+
+std::string document_t::get_string(const std::string &key) const {
+    return static_cast<std::string>(get(key)->as_string());
+}
+
+const ::document::impl::array_t *document_t::get_array(const std::string &key) const {
+    return get(key)->as_array();
+}
+
+document_t document_t::get_dict(const std::string &key) const {
+    return document_t(get(key)->as_dict());
+}
+
+document_t::const_storage_t document_t::get_storage() const {
+    return storage_->as_dict();
+}
+
+::document::retained_const_t<::document::impl::value_t> document_t::value() const {
+    return storage_->as_dict();
+}
+
+document_t::iterator document_t::begin() const {
+    return storage_->begin();
+}
+
+std::string document_t::to_json() const {
+    return storage_->to_json_string();
+}
+
+document_t document_t::from_json(const std::string &json) {
+    auto doc = ::document::impl::doc_t::from_json(json);
+    auto dict = mutable_dict_t::new_dict(doc->root()->as_dict()).detach();
+    document_t document(dict, true);
+    return document;
+}
+
+::document::retained_t<::document::impl::mutable_array_t> document_t::create_array() {
+    return mutable_array_t::new_array();
+}
+
+msgpack::type::object_type document_t::get_msgpack_type(const ::document::impl::value_t *value) {
+    if (value->type() == value_type::null) return msgpack::type::NIL;
+    if (value->type() == value_type::boolean) return msgpack::type::BOOLEAN;
+    if (value->is_unsigned()) return msgpack::type::POSITIVE_INTEGER;
+    if (value->is_int()) return msgpack::type::NEGATIVE_INTEGER;
+    if (value->is_double()) return msgpack::type::FLOAT64;
+    if (value->type() == value_type::string) return msgpack::type::STR;
+    if (value->type() == value_type::array) return msgpack::type::ARRAY;
+    if (value->type() == value_type::dict) return msgpack::type::MAP;
+    return msgpack::type::NIL;
+}
+
+msgpack::object document_t::get_msgpack_object(const ::document::impl::value_t *value) {
+    if (value->type() == value_type::boolean) return msgpack::object(value->as_bool());
+    if (value->is_unsigned()) return msgpack::object(value->as_unsigned());
+    if (value->is_int()) return msgpack::object(value->as_int());
+    if (value->is_double()) return msgpack::object(value->as_double());
+    if (value->type() == value_type::string) return msgpack::object(static_cast<std::string>(value->as_string()).data());
+    return msgpack::object();
+}
+
+auto make_document() -> document_ptr {
+    return std::make_unique<document_t>();
+}
+
 }

@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace storage {
+namespace document {
 
 template<typename Fn> class function_ref;
 

@@ -103,7 +103,7 @@ namespace services::dispatcher {
         goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"create_collection_finish",session,result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::insert(components::session::session_t& session, std::string& collection, components::storage::document_t& document,goblin_engineer::address_t address) {
+    void dispatcher_t::insert(components::session::session_t& session, std::string& collection, components::document::document_t& document,goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::insert: session:{} , collection: {}",session.data(), collection);
         session_to_address_.emplace(session, address);
         goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), "insert", session, collection, std::move(document));
@@ -113,7 +113,7 @@ namespace services::dispatcher {
         goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_finish",session,result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::find(components::session::session_t& session, std::string& collection, components::storage::document_t& condition) {
+    void dispatcher_t::find(components::session::session_t& session, std::string& collection, components::document::document_t& condition) {
         log_.debug("dispatcher_t::find: {}", collection);
         log_.debug("Session : {}", session.data());
         session_to_address_.emplace(session, current_message()->sender());
@@ -180,12 +180,12 @@ namespace services::dispatcher {
         return goblin_engineer::send(dispathers_[0],address(),database::create_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert(session_t& session, std::string& collection_name, components::storage::document_t& document) {
+    void manager_dispatcher_t::insert(session_t& session, std::string& collection_name, components::document::document_t& document) {
         log_.trace("manager_dispatcher_t::insert session: {} , collection name : {} ",session.data(),collection_name);
         return goblin_engineer::send(dispathers_[0],address(),collection::insert,session,std::move(collection_name),std::move(document),current_message()->sender());
     }
 
-    void manager_dispatcher_t::find(session_t& session, std::string& collection, components::storage::document_t& condition) {
+    void manager_dispatcher_t::find(session_t& session, std::string& collection, components::document::document_t& condition) {
         ///
     }
 

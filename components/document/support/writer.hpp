@@ -8,7 +8,7 @@
 
 using boost::container::small_vector;
 
-namespace storage {
+namespace document {
 
 class writer_t {
 public:

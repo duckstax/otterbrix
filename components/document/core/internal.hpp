@@ -7,7 +7,7 @@
 #include <atomic>
 #endif
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
     enum {
         size_narrow = 2,

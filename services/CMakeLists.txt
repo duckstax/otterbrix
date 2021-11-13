@@ -1,5 +1,4 @@
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(../components)
 #add_subdirectory(network_service)
 add_subdirectory(dispatcher)
 add_subdirectory(storage)

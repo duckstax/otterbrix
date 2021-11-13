@@ -5,7 +5,7 @@
 #include <algorithm>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 writer_t::writer_t(size_t initial_capacity)
     : _chunk_size(initial_capacity)

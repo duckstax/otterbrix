@@ -3,7 +3,7 @@
 #include "slice.hpp"
 #include <vector>
 
-namespace storage {
+namespace document {
 
 class key_tree_t {
 public:

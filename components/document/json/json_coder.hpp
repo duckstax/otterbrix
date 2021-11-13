@@ -11,7 +11,7 @@ namespace boost { namespace json {
 class value;
 } }
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class json_coder {
 public:
