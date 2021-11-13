@@ -37,24 +37,18 @@ document_t gen_doc(const std::string &id, const std::string &name, const std::st
 collection_ptr gen_collection() {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-<<<<<<< HEAD
 
     auto manager = goblin_engineer::make_manager_service<manager_database_t>(log, 1, 1000);
     auto allocate_byte = sizeof(collection_t);
     auto allocate_byte_alignof = alignof(collection_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
     auto collection = new (buffer) collection_t(nullptr, "TestCollection", log);
-=======
-    auto collection = goblin_engineer::make_manager_service<collection_t>(nullptr, log);
->>>>>>> develop
 
     collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
     collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
     collection->insert_test(gen_doc("id_3", "Chevi", "cat", 3, false, {"Isha"}, gen_sub_doc("Isha", true)));
     collection->insert_test(gen_doc("id_4", "Charlie", "dog", 2, true, {"Rex", "Lucy"}, gen_sub_doc("Lucy", false)));
     collection->insert_test(gen_doc("id_5", "Isha", "cat", 6, false, {"Chevi"}, gen_sub_doc("Chevi", true)));
-<<<<<<< HEAD
-=======
 
     return collection;
 }
@@ -81,37 +75,6 @@ TEST_CASE("collection_t get") {
     REQUIRE(doc1.get_string("name") == "Rex");
     REQUIRE(doc1.get_long("age") == 6);
     REQUIRE(doc1.get_bool("male") == true);
->>>>>>> develop
-
-    auto doc1_friends = doc1.get_array("friends");
-    //std::cout << "DOC1_FRIENDS:\n" << doc1_friends.to_json() << std::endl;
-    REQUIRE(doc1_friends.is_array());
-    REQUIRE(doc1_friends.count() == 3);
-    REQUIRE(doc1_friends.get_as<std::string>(1) == "Charlie");
-
-<<<<<<< HEAD
-TEST_CASE("collection_t get") {
-    auto collection = gen_collection();
-    //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
-    //std::cout << "DATA:\n" << collection->get_data_test() << std::endl;
-
-    REQUIRE(collection->size_test() == 5);
-
-    auto doc1 = collection->get_test("id_1");
-    //std::cout << "DOC1:\n" << doc1.to_json() << std::endl;
-    REQUIRE(doc1.is_valid());
-    REQUIRE(doc1.is_exists("name"));
-    REQUIRE(doc1.is_exists("age"));
-    REQUIRE(doc1.is_exists("male"));
-    REQUIRE_FALSE(doc1.is_exists("other"));
-    REQUIRE(doc1.is_string("name"));
-    REQUIRE(doc1.is_long("age"));
-    REQUIRE(doc1.is_bool("male"));
-    REQUIRE(doc1.is_array("friends"));
-    REQUIRE(doc1.is_dict("sub_doc"));
-    REQUIRE(doc1.get_string("name") == "Rex");
-    REQUIRE(doc1.get_long("age") == 6);
-    REQUIRE(doc1.get_bool("male") == true);
 
     auto doc1_friends = doc1.get_array("friends");
     //std::cout << "DOC1_FRIENDS:\n" << doc1_friends.to_json() << std::endl;
@@ -127,17 +90,6 @@ TEST_CASE("collection_t get") {
 
     auto doc6 = collection->get_test("id_6");
     REQUIRE_FALSE(doc6.is_valid());
-=======
-    auto doc1_sub = doc1.get_dict("sub_doc");
-    //std::cout << "DOC1_SUB:\n" << doc1_sub.to_json() << std::endl;
-    REQUIRE(doc1_sub.is_dict());
-    REQUIRE(doc1_sub.count() == 3);
-    REQUIRE(doc1_sub.get_as<std::string>("name") == "Lucy");
-
-    auto doc6 = collection->get_test("id_6");
-    REQUIRE_FALSE(doc6.is_valid());
-    delete collection.detach(); //todo delete after repair ref count
->>>>>>> develop
 }
 
 TEST_CASE("collection_t search") {
@@ -154,10 +106,6 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
     REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
     REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
-<<<<<<< HEAD
-=======
-    delete collection.detach(); //todo delete after repair ref count
->>>>>>> develop
 }
 
 TEST_CASE("collection_t find") {
@@ -184,8 +132,4 @@ TEST_CASE("collection_t find") {
     REQUIRE(res->size() == 2);
     res = collection->find_test(document_t::from_json("{}"));
     REQUIRE(res->size() == 5);
-<<<<<<< HEAD
-=======
-    delete collection.detach(); //todo delete after repair ref count
->>>>>>> develop
 }
