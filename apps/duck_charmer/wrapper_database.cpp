@@ -1,52 +1,46 @@
+#include "forward.hpp"
 #include "wrapper_database.hpp"
 #include "spaces.hpp"
 
-wrapper_database::~wrapper_database() {
-}
+namespace duck_charmer {
+    wrapper_database::~wrapper_database() {
+    }
 
-auto wrapper_database::collection_names() -> py::list {
-    py::list tmp;
-    ///for (auto &i:*ptr_) {
-    ///    tmp.append(i.first);
-    ///}
-    return tmp;
-}
+    auto wrapper_database::collection_names() -> py::list {
+        py::list tmp;
+        for (auto &i : collections_) {
+            tmp.append(i.first);
+        }
+        return tmp;
+    }
 
-bool wrapper_database::drop_collection(const std::string& name) {
-    log_.debug("start wrapper_database::drop_collection: {}",name);
+    bool wrapper_database::drop_collection(const std::string& name) {
+        log_.debug("start wrapper_database::drop_collection: {}", name);
+        auto it_collection = collections_.find(name);
+        if (it_collection != collections_.end()) {
+            //todo drop in database_t
+            collections_.erase(it_collection);
+            log_.debug("finish wrapper_database::drop_collection: {}", name);
+        } else {
+            log_.warn("wrapper_database::drop_collection: not exists collection {}", name);
+        }
+        return true;
+    }
 
-    std::unique_lock<std::mutex> lk(mtx_);
-    cv_.wait(lk, [this]() { return i == 1; });
-    log_.debug("finish wrapper_database::drop_collection: {}",name);
-    return drop_collection_;
-}
+    wrapper_collection_ptr wrapper_database::create(const std::string& collection_name) {
+        log_.debug("wrapper_database::create name collection: {}", collection_name);
+        auto session_tmp = duck_charmer::session_t();
+        auto result =  ptr_->create_collection(session_tmp,name_,collection_name);
+        log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
+        collections_.emplace(collection_name,result);
+        return result;
+    }
 
-wrapper_collection_ptr wrapper_database::create(const std::string& name) {
-    log_.debug("wrapper_database::create name collection: {}",name);
-    goblin_engineer::send(
-        dispatcher_,
-        goblin_engineer::actor_address(),
-        "create_collection",
-        duck_charmer::session_t(),
-        name,
-        std::function<void(goblin_engineer::actor_address)>([this](goblin_engineer::actor_address address) {
-            tmp_ = boost::intrusive_ptr<wrapper_collection>(new wrapper_collection(log_,dispatcher_,database_,address));
-            d_();
-        }));
-    log_.debug("wrapper_client::get_or_create send -> dispatcher: {}",dispatcher_->type());
-    std::unique_lock<std::mutex> lk(mtx_);
-    cv_.wait(lk, [this]() { return i == 1; });
-    log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
-    return tmp_;
-}
-wrapper_database::wrapper_database(log_t&log,goblin_engineer::actor_address dispatcher,goblin_engineer::actor_address database)
-        : log_(log.clone())
-        , database_(std::move(database))
-        , dispatcher_(dispatcher) {
-    log_.debug("wrapper_database");
-}
+    wrapper_database::wrapper_database(const std::string& name, wrapper_dispatcher_t* ptr, log_t& log)
+        : name_(name)
+        ,ptr_(ptr)
+        , log_(log.clone()) {
+        log_.debug("wrapper_database");
+    }
 
-void wrapper_database::d_() {
-    cv_.notify_all();
-    i = 1;
 }

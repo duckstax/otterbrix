@@ -21,7 +21,7 @@ public:
     using pointer = type*;
 
     wrapper_cursor() = default; // todo refactoring;
-    wrapper_cursor(goblin_engineer::actor_address dispatcher, components::session::session_t session, pointer cursor);
+    wrapper_cursor(components::session::session_t session, pointer cursor);
 
     void close();
     bool has_next();
@@ -38,12 +38,7 @@ private:
     std::atomic_bool close_;
     duck_charmer::session_t session_;
     pointer ptr_;
-    goblin_engineer::actor_address dispatcher_;
-
-    void d_();
-    std::atomic_int i = 0;
-    std::mutex mtx_;
-    std::condition_variable cv_;
+    goblin_engineer::address_t dispatcher_;
 };
 
 
