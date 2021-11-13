@@ -5,7 +5,7 @@
 #include <atomic>
 #include <memory>
 
-namespace storage {
+namespace document {
 
 class concurrent_map_t {
 public:

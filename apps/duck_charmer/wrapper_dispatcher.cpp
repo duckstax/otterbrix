@@ -51,7 +51,7 @@ namespace duck_charmer {
         return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
     }
 
-    result_insert_one& wrapper_dispatcher_t::insert(duck_charmer::session_t& session, const std::string& collection, components::storage::document_t doc) {
+    result_insert_one& wrapper_dispatcher_t::insert(duck_charmer::session_t& session, const std::string& collection, components::document::document_t doc) {
         log_.trace("wrapper_dispatcher_t::insert session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -65,7 +65,7 @@ namespace duck_charmer {
         return  std::get<result_insert_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session,const std::string& collection, components::storage::document_t condition) -> wrapper_cursor_ptr {
+    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session,const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr {
         init();
         goblin_engineer::send(
             address_book(name_),

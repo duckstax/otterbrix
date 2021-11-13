@@ -18,6 +18,10 @@ target_link_libraries(
         ${CONAN_LIBS}
 )
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+    ..
+)
+
 include(CTest)
 include(Catch)
 catch_discover_tests(${PROJECT_NAME})

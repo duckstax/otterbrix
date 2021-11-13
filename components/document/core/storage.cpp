@@ -5,7 +5,7 @@
 #include "better_assert.hpp"
 
 #define CATCH_ERROR(out_error) \
-    catch (const std::exception &x) { storage::impl::record_error(x, out_error); }
+    catch (const std::exception &x) { document::impl::record_error(x, out_error); }
 
 #define ENCODER_DO(E, METHOD) \
     E->is_internal() ? E->encoder->METHOD : E->json_encoder->METHOD
@@ -21,11 +21,11 @@
     } \
     return false;
 
-namespace storage {
+namespace document {
 
-const impl_value_t null_value  = storage::impl::value_t::null_value;
-const impl_array_t empty_array = storage::impl::array_t::empty_array;
-const impl_dict_t empty_dict   = storage::impl::dict_t::empty_dict;
+const impl_value_t null_value  = document::impl::value_t::null_value;
+const impl_array_t empty_array = document::impl::array_t::empty_array;
+const impl_dict_t empty_dict   = document::impl::dict_t::empty_dict;
 
 
 value_t::value_t(impl_value_t v)
@@ -87,7 +87,7 @@ value_t value_t::from_data(slice_t data, trust_type trust) {
     return trust == trust_type::trusted ? impl::value_t::from_trusted_data(data) : impl::value_t::from_data(data);
 }
 
-storage::value_t::operator impl_value_t() const {
+document::value_t::operator impl_value_t() const {
     return _val;
 }
 
@@ -201,7 +201,7 @@ value_t array_t::iterator_t::operator *() const {
     return value();
 }
 
-storage::array_t::iterator_t::operator bool() const {
+document::array_t::iterator_t::operator bool() const {
     return (bool)value();
 }
 
@@ -232,7 +232,7 @@ array_t::operator impl_array_t() const {
 }
 
 array_t array_t::empty_array() {
-    return array_t(storage::empty_array);
+    return array_t(document::empty_array);
 }
 
 value_t array_t::operator[](int index) const {
@@ -288,11 +288,11 @@ const alloc_slice_t &dict_t::key_t::string() const {
     return _str;
 }
 
-storage::dict_t::key_t::operator const alloc_slice_t &() const {
+document::dict_t::key_t::operator const alloc_slice_t &() const {
     return _str;
 }
 
-storage::dict_t::key_t::operator nonnull_slice() const {
+document::dict_t::key_t::operator nonnull_slice() const {
     return _str;
 }
 
@@ -331,7 +331,7 @@ value_t dict_t::iterator_t::operator *() const {
     return value();
 }
 
-storage::dict_t::iterator_t::operator bool() const {
+document::dict_t::iterator_t::operator bool() const {
     return (bool)value();
 }
 
@@ -352,12 +352,12 @@ dict_t::dict_t(impl_dict_t d)
     : value_t(d)
 {}
 
-storage::dict_t::operator impl_dict_t() const {
+document::dict_t::operator impl_dict_t() const {
     return static_cast<impl_dict_t>(_val);
 }
 
 dict_t dict_t::empty_dict() {
-    return dict_t(storage::empty_dict);
+    return dict_t(document::empty_dict);
 }
 
 value_t dict_t::get(const char *key) const {
@@ -439,11 +439,11 @@ key_path_t::~key_path_t() {
     delete _path;
 }
 
-storage::key_path_t::operator bool() const {
+document::key_path_t::operator bool() const {
     return _path != nullptr;
 }
 
-storage::key_path_t::operator impl_key_path_t() const {
+document::key_path_t::operator impl_key_path_t() const {
     return _path;
 }
 
@@ -514,7 +514,7 @@ bool deep_iterator_t::next() {
     return _i->value() != nullptr;
 }
 
-storage::deep_iterator_t::operator bool() const {
+document::deep_iterator_t::operator bool() const {
     return value() != nullptr;
 }
 
@@ -560,7 +560,7 @@ void shared_keys_t::revert_to_count(unsigned count) {
     _sk->revert_to_count(count);
 }
 
-storage::shared_keys_t::operator impl_shared_keys_t() const {
+document::shared_keys_t::operator impl_shared_keys_t() const {
     return _sk;
 }
 
@@ -655,7 +655,7 @@ value_t doc_t::root() const {
     return _doc ? _doc->root() : nullptr;
 }
 
-storage::doc_t::operator bool() const {
+document::doc_t::operator bool() const {
     return root() != nullptr;
 }
 
@@ -667,15 +667,15 @@ dict_t doc_t::as_dict() const {
     return root().as_dict();
 }
 
-storage::doc_t::operator value_t() const {
+document::doc_t::operator value_t() const {
     return root();
 }
 
-storage::doc_t::operator dict_t() const {
+document::doc_t::operator dict_t() const {
     return as_dict();
 }
 
-storage::doc_t::operator impl_dict_t() const {
+document::doc_t::operator impl_dict_t() const {
     return as_dict();
 }
 
@@ -699,7 +699,7 @@ bool doc_t::operator==(const doc_t &d) const {
     return _doc == d._doc;
 }
 
-storage::doc_t::operator impl_doc_t() const {
+document::doc_t::operator impl_doc_t() const {
     return _doc;
 }
 
@@ -811,7 +811,7 @@ void encoder_t::suppress_trailer() {
         _enc->encoder->suppress_trailer();
 }
 
-storage::encoder_t::operator impl_encoder_t() const {
+document::encoder_t::operator impl_encoder_t() const {
     return _enc;
 }
 
@@ -1133,7 +1133,7 @@ const alloc_slice_t &alloced_dict_t::data() const {
     return *this;
 }
 
-storage::alloced_dict_t::operator bool() const {
+document::alloced_dict_t::operator bool() const {
     return dict_t::operator bool();
 }
 

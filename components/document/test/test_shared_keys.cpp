@@ -5,10 +5,10 @@
 #include "slice_io.hpp"
 #include <limits.h>
 
-using namespace storage::impl;
-using storage::retained_t;
-using storage::slice_t;
-using storage::alloc_slice_t;
+using namespace document::impl;
+using document::retained_t;
+using document::slice_t;
+using document::alloc_slice_t;
 
 TEST_CASE("shared_keys_t") {
 
@@ -220,7 +220,7 @@ TEST_CASE("big json encoding") {
     retained_t<shared_keys_t> sk = new shared_keys_t();
     encoder_t enc;
     enc.set_shared_keys(sk);
-    auto data = storage::read_file("test/big-test.json");
+    auto data = document::read_file("test/big-test.json");
     auto value = json_coder::from_json(enc, data);
     REQUIRE(sk->count() == 7);
     int key_name;

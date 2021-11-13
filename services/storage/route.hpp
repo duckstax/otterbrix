@@ -14,7 +14,6 @@ namespace services::storage {
         static constexpr auto select = "select";
         static constexpr auto insert = "insert";
         static constexpr auto erase = "erase";
-        static constexpr auto search = "search";
         static constexpr auto find = "find";
         static constexpr auto size = "size";
         static constexpr auto close_cursor = "close_cursor";

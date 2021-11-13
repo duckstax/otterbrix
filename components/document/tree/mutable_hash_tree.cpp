@@ -12,7 +12,7 @@
 #include <string>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 using namespace hashtree;
 

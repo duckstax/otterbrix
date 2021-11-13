@@ -7,7 +7,7 @@
 #include <vector>
 #include "better_assert.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class encoder_t;
 class value_t;

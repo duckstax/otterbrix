@@ -8,7 +8,7 @@
 #include "base.hpp"
 
 
-namespace storage {
+namespace document {
 
 struct alloc_slice_t;
 
@@ -40,7 +40,7 @@ struct heap_slice_t_c : public slice_t_c
     constexpr heap_slice_t_c() noexcept                              : slice_t_c{nullptr, 0} { }
 private:
     constexpr heap_slice_t_c(const void *b, size_t s) noexcept  : slice_t_c{b, s} { }
-    friend struct storage::alloc_slice_t;
+    friend struct document::alloc_slice_t;
 };
 
 

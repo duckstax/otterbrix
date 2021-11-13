@@ -3,7 +3,7 @@
 #include "slice.hpp"
 #include <optional>
 
-namespace storage {
+namespace document {
 
 class slice_ostream
 {

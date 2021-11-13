@@ -2,7 +2,7 @@
 #include "shared_keys.hpp"
 #include <sstream>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 deep_iterator_t::deep_iterator_t(const value_t *root)
     : _value(root)

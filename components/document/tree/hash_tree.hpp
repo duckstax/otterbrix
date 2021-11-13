@@ -4,7 +4,7 @@
 #include "storage.hpp"
 #include <memory>
 
-namespace storage {
+namespace document {
 
 class mutable_hash_tree_t;
 

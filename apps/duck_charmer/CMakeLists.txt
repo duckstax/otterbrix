@@ -43,3 +43,10 @@ target_link_libraries(
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
+
+if (DEV_MODE)
+    file(GLOB PY_TESTS
+        "test/*.py"
+    )
+    file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()

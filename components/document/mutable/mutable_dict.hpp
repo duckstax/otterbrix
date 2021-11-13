@@ -6,12 +6,12 @@
 #include <deque>
 #include <map>
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 class encoder_t;
 class shared_keys_t;
 } }
 
-namespace storage { namespace impl { namespace internal {
+namespace document { namespace impl { namespace internal {
 
 class heap_array_t;
 
@@ -79,8 +79,8 @@ public:
     void write_to(encoder_t &enc);
 
 protected:
-    friend class storage::impl::array_t;
-    friend class storage::impl::mutable_dict_t;
+    friend class document::impl::array_t;
+    friend class document::impl::mutable_dict_t;
 
     ~heap_dict_t() = default;
     heap_array_t* array_key_value();

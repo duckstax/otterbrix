@@ -5,7 +5,7 @@
 #include <vector>
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 static constexpr size_t min_initial_size = 16;
 static const float max_load = 0.9f;

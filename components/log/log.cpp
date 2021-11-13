@@ -73,3 +73,11 @@ auto get_logger() -> log_t {
 auto initialization_logger(std::shared_ptr<spdlog::logger> logger) -> void {
     spdlog::register_logger(std::move(logger));
 }
+
+void drop_logger(const std::string &name) {
+    spdlog::drop(name);
+}
+
+void drop_all_loggers() {
+    spdlog::drop_all();
+}

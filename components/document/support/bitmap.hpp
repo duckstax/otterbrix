@@ -8,7 +8,7 @@ extern int __builtin_popcountl(unsigned long);
 extern int __builtin_popcountll(unsigned long long);
 #endif
 
-namespace storage {
+namespace document {
 
 template<class INT, typename std::enable_if<std::is_integral<INT>::value, INT>::type = 0>
 INT popcount(INT bits) {

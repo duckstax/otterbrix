@@ -2,7 +2,7 @@
 #include "varint.hpp"
 #include "better_assert.hpp"
 
-namespace storage {
+namespace document {
 
 static inline uint8_t _hex_digit(int n) {
     static constexpr const uint8_t digits[] = "0123456789abcdef";

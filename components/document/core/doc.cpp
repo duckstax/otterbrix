@@ -14,7 +14,7 @@
 #define Log(FMT,...)
 #define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 using namespace internal;
 

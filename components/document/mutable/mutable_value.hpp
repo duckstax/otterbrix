@@ -1,9 +1,9 @@
 #pragma once
 
-#include "value.hpp"
-#include "ref_counted.hpp"
+#include "../core/value.hpp"
+#include "../support/ref_counted.hpp"
 
-namespace storage { namespace impl {
+namespace document { namespace impl {
 
 class value_slot_t;
 
@@ -56,7 +56,7 @@ protected:
     tags tag() const;
 
 private:
-    friend class storage::impl::value_slot_t;
+    friend class document::impl::value_slot_t;
 
     static void* operator new(size_t size, size_t extra_size);
     heap_value_t() = default;
