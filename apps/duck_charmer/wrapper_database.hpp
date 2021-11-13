@@ -32,7 +32,7 @@ namespace duck_charmer {
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
         log_t log_;
-        std::unordered_set<std::string> names_;
+        std::unordered_map<std::string,wrapper_collection_ptr> collections_;
     };
 
     using wrapper_database_ptr = boost::intrusive_ptr<wrapper_database>;
