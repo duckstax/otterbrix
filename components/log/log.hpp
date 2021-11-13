@@ -104,6 +104,6 @@ private:
 auto get_logger(const std::string&) -> log_t;
 auto get_logger() -> log_t;
 auto initialization_logger(std::shared_ptr<spdlog::logger>) -> void;
-auto initialization_logger(const std::string& name, std::string prefix) -> log_t;
+auto initialization_logger(std::string_view name, std::string prefix) -> log_t;
 auto drop_logger(const std::string&) -> void;
 auto drop_all_loggers() -> void;

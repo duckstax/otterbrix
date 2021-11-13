@@ -12,7 +12,7 @@
 #include <components/document/document_view.hpp>
 
 namespace py = pybind11;
-
+namespace duck_charmer {
 class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
 public:
     using type_t = components::document::document_view_t;
@@ -29,3 +29,4 @@ private:
 };
 
 using wrapper_document_ptr = boost::intrusive_ptr<wrapper_document>;
+} // namespace duck_charmer

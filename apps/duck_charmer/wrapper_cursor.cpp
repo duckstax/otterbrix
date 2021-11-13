@@ -7,19 +7,13 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-wrapper_cursor::wrapper_cursor(goblin_engineer::actor_address dispatcher, components::session::session_t session, wrapper_cursor::pointer cursor)
+wrapper_cursor::wrapper_cursor(components::session::session_t session, wrapper_cursor::pointer cursor)
         : session_(session)
         , ptr_(cursor)
-        , dispatcher_(dispatcher) {
+        , dispatcher_(goblin_engineer::address_t::empty_address()) {
 }
 void wrapper_cursor::close() {
     close_ = true;
-    goblin_engineer::send(
-        dispatcher_,
-        goblin_engineer::actor_address(),
-        duck_charmer::collection::close_cursor,
-        session_
-                );
 }
 
 bool wrapper_cursor::has_next() {
@@ -40,9 +34,4 @@ py::object wrapper_cursor::get(const std::string &key) {
 
 std::string wrapper_cursor::print() {
     return ptr_->get()->to_json();
-}
-
-void wrapper_cursor::d_() {
-    cv_.notify_all();
-    i = 1;
 }
