@@ -9,18 +9,18 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
-wrapper_document::wrapper_document(wrapper_document::pointer ptr)
-    : ptr_(ptr) {}
+    wrapper_document::wrapper_document(wrapper_document::pointer ptr)
+        : ptr_(ptr) {}
 
-wrapper_document::~wrapper_document() {
-    ptr_.release();
-}
+    wrapper_document::~wrapper_document() {
+        ptr_.release();
+    }
 
-std::string wrapper_document::print() {
-    return ptr_->to_json();
-}
+    std::string wrapper_document::print() {
+        return ptr_->to_json();
+    }
 
-py::object wrapper_document::get(const std::string& key) {
-    return from_object(*ptr_, key);
-}
+    py::object wrapper_document::get(const std::string& key) {
+        return from_object(*ptr_, key);
+    }
 }
