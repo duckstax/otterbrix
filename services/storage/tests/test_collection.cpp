@@ -37,7 +37,12 @@ document_t gen_doc(const std::string &id, const std::string &name, const std::st
 collection_ptr gen_collection() {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto collection = goblin_engineer::make_manager_service<collection_t>(nullptr, log);
+
+    auto manager = goblin_engineer::make_manager_service<manager_database_t>(log, 1, 1000);
+    auto allocate_byte = sizeof(collection_t);
+    auto allocate_byte_alignof = alignof(collection_t);
+    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
+    auto collection = new (buffer) collection_t(nullptr, "TestCollection", log);
 
     collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
     collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
@@ -85,7 +90,6 @@ TEST_CASE("collection_t get") {
 
     auto doc6 = collection->get_test("id_6");
     REQUIRE_FALSE(doc6.is_valid());
-    delete collection.detach(); //todo delete after repair ref count
 }
 
 TEST_CASE("collection_t search") {
@@ -102,7 +106,6 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
     REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
     REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
-    delete collection.detach(); //todo delete after repair ref count
 }
 
 TEST_CASE("collection_t find") {
@@ -129,5 +132,4 @@ TEST_CASE("collection_t find") {
     REQUIRE(res->size() == 2);
     res = collection->find_test(document_t::from_json("{}"));
     REQUIRE(res->size() == 5);
-    delete collection.detach(); //todo delete after repair ref count
 }
