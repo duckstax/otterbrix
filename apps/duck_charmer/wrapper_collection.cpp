@@ -13,27 +13,6 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
-
-bool wrapper_collection::insert(const py::handle& document) {
-    log_.trace("wrapper_collection::insert");
-    auto is_document = py::isinstance<py::dict>(document);
-    auto is_id = document.contains("_id") && !document["_id"].is_none();
-    if (is_document && is_id) {
-        components::document::document_t doc;
-        to_document(document, doc);
-        auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->insert(session_tmp,name_, std::move(doc));
-        log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
-        return result.status;
-    }
-    throw std::runtime_error("wrapper_collection::insert");
-    return false;
-}
-
-wrapper_collection::~wrapper_collection() {
-    log_.trace("wrapper_collection::~wrapper_collection");
-}
-
 wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatcher_t*ptr, log_t& log)
     : name_(name)
     , ptr_(ptr)
@@ -41,25 +20,65 @@ wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatch
     log_.debug("wrapper_collection");
 }
 
-auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
-    log_.trace("wrapper_collection::find");
-    wrapper_cursor_ptr ptr;
-    if (py::isinstance<py::dict>(cond)) {
-        components::document::document_t condition;
-        to_document(cond, condition);
-        auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->find(session_tmp,name_,condition);
-    }
-    return ptr;
+wrapper_collection::~wrapper_collection() {
+    log_.trace("wrapper_collection::~wrapper_collection");
 }
 
-auto wrapper_collection::size() -> py::int_ {
+std::string wrapper_collection::print() {
+    return name_;
+}
+
+std::size_t wrapper_collection::size() {
     log_.trace("wrapper_collection::size");
     py::int_ res = 0;
     auto session_tmp = duck_charmer::session_t();
     auto result =  ptr_->size(session_tmp,name_);
     res = *result;
     return res;
+}
+
+bool wrapper_collection::insert(const py::handle& document) {
+    log_.trace("wrapper_collection::insert");
+    if (py::isinstance<py::dict>(document)) {
+        components::document::document_t doc;
+        to_document(document, doc);
+        auto session_tmp = duck_charmer::session_t();
+        auto result =  ptr_->insert(session_tmp, name_, std::move(doc));
+        log_.debug("wrapper_collection::insert {}", result.status);
+        return result.status;
+    }
+    throw std::runtime_error("wrapper_collection::insert");
+    return false;
+}
+
+bool wrapper_collection::insert_one(const py::handle &document) {
+}
+
+bool wrapper_collection::insert_many(const py::handle &documents) {
+}
+
+void wrapper_collection::update(py::dict fields, py::object cond) {
+}
+
+void wrapper_collection::update_one(py::dict fields, py::object cond) {
+}
+
+auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
+}
+
+auto wrapper_collection::find_one(py::object cond) -> py::dict {
+}
+
+void wrapper_collection::remove(py::object cond) {
+}
+
+void wrapper_collection::delete_one(pybind11::object cond) {
+}
+
+void wrapper_collection::delete_many(pybind11::object cond) {
+}
+
+void wrapper_collection::drop() {
 }
 
 }
