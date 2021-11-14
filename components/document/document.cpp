@@ -25,6 +25,13 @@ document_t::document_t(const document_t &src)
     , is_owner_(false) {
 }
 
+document_t::document_t(document_t &&src)
+    : storage_(src.storage_)
+    , is_owner_(src.is_owner_) {
+    src.is_owner_ = false;
+    src.storage_ = nullptr;
+}
+
 document_t::~document_t() {
     if (is_owner_ && storage_) storage_->_release();
 }

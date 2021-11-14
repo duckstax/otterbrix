@@ -2,12 +2,40 @@
 #include <vector>
 #include "components/document/document_view.hpp"
 
+class result_insert_one {
+public:
+    using result_t = std::string;
+
+    result_insert_one() = default;
+    explicit result_insert_one(result_t id);
+    const result_t &inserted_id() const;
+
+private:
+    result_t inserted_id_;
+    //TODO: except or error_code
+};
+
+
+class result_insert_many {
+public:
+    using result_t = std::vector<std::string>;
+
+    result_insert_many() = default;
+    explicit result_insert_many(result_t &&inserted_ids);
+    const result_t &inserted_ids() const;
+
+private:
+    result_t inserted_ids_;
+    //TODO: except or error_code
+};
+
+
 class result_find {
 public:
     using result_t = std::vector<components::document::document_view_t>;
 
-    result_find() = delete;
-    result_find(result_t &&finded_docs);
+    result_find() = default;
+    explicit result_find(result_t &&finded_docs);
     const result_t &operator *() const;
     result_t *operator ->();
 
@@ -16,14 +44,32 @@ private:
 };
 
 
-class result_size {
+class result_find_one {
 public:
-    result_size() = delete;
-    result_size(std::size_t size);
-    std::size_t operator *() const;
+    using result_t = components::document::document_view_t;
+
+    result_find_one() = default;
+    explicit result_find_one(const result_t &finded_doc);
+    bool is_find() const;
+    const result_t &operator *() const;
+    result_t *operator ->();
 
 private:
-    std::size_t size_;
+    result_t finded_doc_;
+    bool is_find_ {false};
+};
+
+
+class result_size {
+public:
+    using result_t = std::size_t;
+
+    result_size() = default;
+    explicit result_size(result_t size);
+    result_t operator *() const;
+
+private:
+    result_t size_ {0};
 };
 
 
@@ -31,8 +77,8 @@ class result_get_document {
 public:
     using result_t = components::document::document_view_t;
 
-    result_get_document() = delete;
-    result_get_document(result_t &&doc);
+    result_get_document() = default;
+    explicit result_get_document(result_t &&doc);
     const result_t &operator *() const;
     result_t *operator ->();
 

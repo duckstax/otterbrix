@@ -25,6 +25,7 @@ public:
     document_t();
     explicit document_t(const ::document::impl::dict_t *dict, bool is_owner = false);
     document_t(const document_t &src);
+    document_t(document_t &&src);
     ~document_t();
 
     void add_null(const std::string &key);

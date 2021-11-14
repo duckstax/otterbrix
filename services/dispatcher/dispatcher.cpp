@@ -17,8 +17,10 @@ namespace services::dispatcher {
         add_handler("connect_me",&manager_dispatcher_t::connect_me);
         add_handler(manager_database::create_database, &manager_dispatcher_t::create_database);
         add_handler(database::create_collection, &manager_dispatcher_t::create_collection);
-        add_handler(collection::insert, &manager_dispatcher_t::insert);
+        add_handler(collection::insert_one, &manager_dispatcher_t::insert_one);
+        add_handler(collection::insert_many, &manager_dispatcher_t::insert_many);
         add_handler(collection::find, &manager_dispatcher_t::find);
+        add_handler(collection::find_one, &manager_dispatcher_t::find_one);
         add_handler(collection::size, &manager_dispatcher_t::size);
         add_handler(collection::close_cursor, &manager_dispatcher_t::close_cursor);
         log_.trace("manager_dispatcher_t start thread pool");
@@ -56,10 +58,14 @@ namespace services::dispatcher {
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
         add_handler(database::create_collection, &dispatcher_t::create_collection);
         add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
-        add_handler(collection::insert, &dispatcher_t::insert);
-        add_handler("insert_finish", &dispatcher_t::insert_finish);
+        add_handler(collection::insert_one, &dispatcher_t::insert_one);
+        add_handler(collection::insert_many, &dispatcher_t::insert_many);
+        add_handler("insert_one_finish", &dispatcher_t::insert_one_finish);
+        add_handler("insert_many_finish", &dispatcher_t::insert_many_finish);
         add_handler(collection::find, &dispatcher_t::find);
         add_handler("find_finish", &dispatcher_t::find_finish);
+        add_handler(collection::find_one, &dispatcher_t::find_one);
+        add_handler("find_one_finish", &dispatcher_t::find_one_finish);
         add_handler(collection::size, &dispatcher_t::size);
         add_handler("size_finish", &dispatcher_t::size_finish);
         add_handler(collection::close_cursor, &dispatcher_t::close_cursor);
@@ -103,42 +109,56 @@ namespace services::dispatcher {
         goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"create_collection_finish",session,result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::insert(components::session::session_t& session, std::string& collection, components::document::document_t& document,goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::insert: session:{} , collection: {}",session.data(), collection);
+    void dispatcher_t::insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::insert_one: session:{}, collection: {}", session.data(), collection);
         session_to_address_.emplace(session, address);
-        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), "insert", session, collection, std::move(document));
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::insert_one, session, collection, std::move(document));
     }
-    void dispatcher_t::insert_finish(components::session::session_t& session, result_insert_one& result) {
-        log_.debug("dispatcher_t::insert_finish session: {}",session.data());
-        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_finish",session,result);
+    void dispatcher_t::insert_many(components::session::session_t &session, std::string &collection, std::list<components::document::document_t> &documents, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::insert_many: session:{}, collection: {}", session.data(), collection);
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::insert_many, session, collection, std::move(documents));
+    }
+    void dispatcher_t::insert_one_finish(components::session::session_t& session, result_insert_one& result) {
+        log_.debug("dispatcher_t::insert_one_finish session: {}",session.data());
+        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_one_finish",session,result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::find(components::session::session_t& session, std::string& collection, components::document::document_t& condition) {
-        log_.debug("dispatcher_t::find: {}", collection);
-        log_.debug("Session : {}", session.data());
-        session_to_address_.emplace(session, current_message()->sender());
-        goblin_engineer::send(address_book("collection"), address(), "find", session, collection, std::move(condition));
+    void dispatcher_t::insert_many_finish(components::session::session_t &session, result_insert_many &result) {
+        log_.debug("dispatcher_t::insert_many_finish session: {}",session.data());
+        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_many_finish",session,result);
         session_to_address_.erase(session);
-        return ;
+    }
+    void dispatcher_t::find(components::session::session_t& session, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::find: session:{}, collection: {}", session.data(), collection);
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::find, session, collection, std::move(condition));
     }
     void dispatcher_t::find_finish(components::session::session_t& session, components::cursor::sub_cursor_t* cursor) {
-        log_.debug("dispatcher_t::find_finish");
-        log_.debug("Session : {}", session.data());
-        auto cursor_ptr = std::make_unique<components::cursor::cursor_t>();
-        cursor_ptr->push(cursor);
-        auto result = cursor_.emplace(session, std::move(cursor_ptr));
-        ///find_callback_(session , result.first->second.get());
-
+        log_.debug("dispatcher_t::find_finish session: {}", session.data());
+        auto result = new components::cursor::cursor_t();
+        result->push(cursor);
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::size(components::session::session_t& session, std::string& collection) {
-        log_.debug("dispatcher_t::size: {}", collection);
-        session_to_address_.emplace(session, current_message()->sender());
-        goblin_engineer::send(address_book("collection"), address(), "size", session, collection);
+    void dispatcher_t::find_one(components::session::session_t &session, std::string &collection, components::document::document_t &condition, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::find_one: session:{}, collection: {}", session.data(), collection);
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::find_one, session, collection, std::move(condition));
+    }
+    void dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one &result) {
+        log_.debug("dispatcher_t::find_one_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_one_finish", session, result);
         session_to_address_.erase(session);
+    }
+    void dispatcher_t::size(components::session::session_t& session, std::string& collection, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::size: session:{} , collection: {}", session.data(), collection);
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::size, session, collection);
     }
     void dispatcher_t::size_finish(components::session::session_t& session, result_size& result) {
-        log_.debug("dispatcher_t::size_finish");
+        log_.debug("dispatcher_t::size_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "size_finish", session, result);
         session_to_address_.erase(session);
     }
     void dispatcher_t::close_cursor(components::session::session_t& session) {
@@ -176,21 +196,33 @@ namespace services::dispatcher {
     }
 
     void manager_dispatcher_t::create_collection(session_t& session, std::string& database_name,std::string& collection_name) {
-        log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name : {} ",session.data(),database_name,collection_name);
+        log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ",session.data(),database_name,collection_name);
         return goblin_engineer::send(dispathers_[0],address(),database::create_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert(session_t& session, std::string& collection_name, components::document::document_t& document) {
-        log_.trace("manager_dispatcher_t::insert session: {} , collection name : {} ",session.data(),collection_name);
-        return goblin_engineer::send(dispathers_[0],address(),collection::insert,session,std::move(collection_name),std::move(document),current_message()->sender());
+    void manager_dispatcher_t::insert_one(session_t& session, std::string& collection_name, components::document::document_t& document) {
+        log_.trace("manager_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection_name);
+        return goblin_engineer::send(dispathers_[0], address(), collection::insert_one, session, std::move(collection_name), std::move(document), current_message()->sender());
+    }
+
+    void manager_dispatcher_t::insert_many(session_t& session, std::string& collection_name, std::list<components::document::document_t>& documents) {
+        log_.trace("manager_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection_name);
+        return goblin_engineer::send(dispathers_[0],address(), collection::insert_many, session,std::move(collection_name), std::move(documents), current_message()->sender());
     }
 
     void manager_dispatcher_t::find(session_t& session, std::string& collection, components::document::document_t& condition) {
-        ///
+        log_.trace("manager_dispatcher_t::find session: {}, collection name: {} ", session.data(), collection);
+        return goblin_engineer::send(dispathers_[0], address(), collection::find, session, std::move(collection), std::move(condition), current_message()->sender());
+    }
+
+    void manager_dispatcher_t::find_one(components::session::session_t &session, std::string &collection, components::document::document_t &condition) {
+        log_.trace("manager_dispatcher_t::find_one session: {}, collection name: {} ", session.data(), collection);
+        return goblin_engineer::send(dispathers_[0], address(), collection::find_one, session, std::move(collection), std::move(condition), current_message()->sender());
     }
 
     void manager_dispatcher_t::size(session_t& session, std::string& collection) {
-        ///
+        log_.trace("manager_dispatcher_t::size session: {} , collection name : {} ", session.data(), collection);
+        goblin_engineer::send(dispathers_[0], address(), collection::size, session, std::move(collection), current_message()->sender());
     }
     void manager_dispatcher_t::close_cursor(session_t& session) {
     }

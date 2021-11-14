@@ -6,33 +6,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <storage/result.hpp>
-#include <storage/result_insert_one.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
-
-
-bool wrapper_collection::insert(const py::handle& document) {
-    log_.trace("wrapper_collection::insert");
-    auto is_document = py::isinstance<py::dict>(document);
-    auto is_id = document.contains("_id") && !document["_id"].is_none();
-    if (is_document && is_id) {
-        components::document::document_t doc;
-        to_document(document, doc);
-        auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->insert(session_tmp,name_, std::move(doc));
-        log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
-        return result.status;
-    }
-    throw std::runtime_error("wrapper_collection::insert");
-    return false;
-}
-
-wrapper_collection::~wrapper_collection() {
-    log_.trace("wrapper_collection::~wrapper_collection");
-}
 
 wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatcher_t*ptr, log_t& log)
     : name_(name)
@@ -41,25 +19,137 @@ wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatch
     log_.debug("wrapper_collection");
 }
 
+wrapper_collection::~wrapper_collection() {
+    log_.trace("wrapper_collection::~wrapper_collection");
+}
+
+std::string wrapper_collection::print() {
+    return name_;
+}
+
+std::size_t wrapper_collection::size() {
+    log_.trace("wrapper_collection::size");
+    auto session_tmp = duck_charmer::session_t();
+    return *(ptr_->size(session_tmp, name_));
+}
+
+pybind11::list wrapper_collection::insert(const py::handle& documents) {
+    if (py::isinstance<py::dict>(documents)) {
+        py::list result;
+        auto id = insert_one(documents);
+        if (!id.empty()) result.append(id);
+        return result;
+    }
+    if (py::isinstance<py::list>(documents)) return insert_many(documents);
+    return py::list();
+}
+
+std::string wrapper_collection::insert_one(const py::handle &document) {
+    log_.trace("wrapper_collection::insert_one");
+    if (py::isinstance<py::dict>(document)) {
+        components::document::document_t doc;
+        to_document(document, doc);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->insert_one(session_tmp, name_, doc);
+        log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().size());
+        return result.inserted_id();
+    }
+    throw std::runtime_error("wrapper_collection::insert_one");
+    return std::string();
+}
+
+pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
+    log_.trace("wrapper_collection::insert_many");
+    if (py::isinstance<py::list>(documents)) {
+        std::list<components::document::document_t> docs;
+        for (const auto document : documents) {
+            components::document::document_t doc;
+            to_document(document, doc);
+            docs.push_back(std::move(doc));
+        }
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->insert_many(session_tmp, name_, docs);
+        log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
+        py::list list;
+        for (const auto &id : result.inserted_ids()) list.append(id);
+        return list;
+    }
+    throw std::runtime_error("wrapper_collection::insert_many");
+    return py::list();
+
+
+//    log_.trace("wrapper_collection::insert_many");
+//    if (py::isinstance<py::list>(documents)) {
+//        i = 0;
+//        std::list<components::document::document_t> docs;
+//        for (const auto document : documents) {
+//            components::document::document_t doc;
+//            to_document(document, doc);
+//            docs.push_back(std::move(doc));
+//        }
+//        goblin_engineer::send(
+//            dispatcher_,
+//            goblin_engineer::actor_address(),
+//            duck_charmer::collection::insert_many,
+//            duck_charmer::session_t(),
+//            std::string(collection_->type().data(), collection_->type().size()),
+//            std::move(docs),
+//            std::function<void(result_insert_one&)>([this](result_insert_one& result) {
+//                insert_result_ = std::move(result);
+//                d_();
+//            }));
+//        log_.debug("wrapper_collection::insert_many send -> dispatcher: {}", dispatcher_->type());
+//        std::unique_lock<std::mutex> lk(mtx_);
+//        cv_.wait(lk, [this]() { return i == 1; });
+//        log_.debug("wrapper_collection::insert_many {}", insert_result_.status);
+//    }
+//    return insert_result_.status;
+}
+
+void wrapper_collection::update(py::dict fields, py::object cond) {
+}
+
+void wrapper_collection::update_one(py::dict fields, py::object cond) {
+}
+
 auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
     log_.trace("wrapper_collection::find");
-    wrapper_cursor_ptr ptr;
     if (py::isinstance<py::dict>(cond)) {
         components::document::document_t condition;
         to_document(cond, condition);
         auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->find(session_tmp,name_,condition);
+        auto result = ptr_->find(session_tmp, name_, std::move(condition));
+        log_.debug("wrapper_collection::find {} records", result->size());
+        return result;
     }
-    return ptr;
+    throw std::runtime_error("wrapper_collection::find");
+    return wrapper_cursor_ptr();
 }
 
-auto wrapper_collection::size() -> py::int_ {
-    log_.trace("wrapper_collection::size");
-    py::int_ res = 0;
-    auto session_tmp = duck_charmer::session_t();
-    auto result =  ptr_->size(session_tmp,name_);
-    res = *result;
-    return res;
+auto wrapper_collection::find_one(py::object cond) -> py::dict {
+    log_.trace("wrapper_collection::find_one");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->find_one(session_tmp, name_, std::move(condition));
+        log_.debug("wrapper_collection::find_one {}", result.is_find());
+        return from_document(*result);
+    }
+    throw std::runtime_error("wrapper_collection::find_one");
+    return py::dict();
+}
+
+void wrapper_collection::remove(py::object cond) {
+}
+
+void wrapper_collection::delete_one(pybind11::object cond) {
+}
+
+void wrapper_collection::delete_many(pybind11::object cond) {
+}
+
+void wrapper_collection::drop() {
 }
 
 }

@@ -46,14 +46,20 @@ PYBIND11_MODULE(duck_charmer, m) {
         ;
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
-        .def("insert", &wrapper_collection::insert)
-        ///.def("insert_many", &wrapper_collection::insert_many)
-        .def("find", &wrapper_collection::find, py::arg("cond"))
-        ///.def("all", &wrapper_collection::all)
-        ///.def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
-        ///.def("remove", &wrapper_collection::remove, py::arg("cond"))
-        ///.def("drop", &wrapper_collection::drop)
+        .def("__repr__", &wrapper_collection::print)
         .def("__len__", &wrapper_collection::size)
+        .def("count", &wrapper_collection::size)
+        .def("insert", &wrapper_collection::insert, py::arg("documents"))
+        .def("insert_one", &wrapper_collection::insert_one, py::arg("document"))
+        .def("insert_many", &wrapper_collection::insert_many, py::arg("documents"))
+        .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
+        .def("update_one", &wrapper_collection::update_one, py::arg("fields"), py::arg("cond"))
+        .def("find", &wrapper_collection::find, py::arg("cond"))
+        .def("find_one", &wrapper_collection::find_one, py::arg("cond"))
+        .def("remove", &wrapper_collection::remove, py::arg("cond"))
+        .def("delete_one", &wrapper_collection::delete_one, py::arg("cond"))
+        .def("delete_many", &wrapper_collection::delete_many, py::arg("cond"))
+        .def("drop", &wrapper_collection::drop)
         ;
 
     py::class_<wrapper_document, boost::intrusive_ptr<wrapper_document>>(m, "Document")

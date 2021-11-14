@@ -13,7 +13,6 @@
 #include "forward.hpp"
 #include <components/document/document.hpp>
 #include "services/storage/result.hpp"
-#include "services/storage/result_insert_one.hpp"
 #include "wrapper_cursor.hpp"
 #include "services/storage/result_database.hpp"
 
@@ -45,8 +44,10 @@ namespace duck_charmer {
         wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
         auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
         auto create_collection(duck_charmer::session_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
-        result_insert_one& insert(duck_charmer::session_t& session, const std::string& collection, components::document::document_t document);
+        auto insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
+        auto insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
         auto find(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
+        auto find_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> result_find_one&;
         result_size size(duck_charmer::session_t& session, const std::string& collection);
 
     protected:
@@ -73,9 +74,11 @@ namespace duck_charmer {
         /// async method
         auto create_database_finish(duck_charmer::session_t&,services::storage::database_create_result) -> void;
         auto create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result) -> void;
-        auto insert_finish(duck_charmer::session_t& session,result_insert_one result) -> void ;
+        auto insert_one_finish(duck_charmer::session_t& session,result_insert_one result) -> void;
+        auto insert_many_finish(duck_charmer::session_t& session,result_insert_many result) -> void;
         auto find_finish(duck_charmer::session_t& session,components::cursor::cursor_t*) -> void;
-        auto size_finish(duck_charmer::session_t& session,result_size result) -> void ;
+        auto find_one_finish(duck_charmer::session_t& session,result_find_one result) -> void;
+        auto size_finish(duck_charmer::session_t& session,result_size result) -> void;
 
         void init() {
             i = 0;
@@ -101,7 +104,9 @@ namespace duck_charmer {
         duck_charmer::session_t output_session_;
         std::variant<
             result_insert_one,
+            result_insert_many,
             components::cursor::cursor_t*,
+            result_find_one,
             result_size,
             services::storage::database_create_result,
             services::storage::collection_create_result>
