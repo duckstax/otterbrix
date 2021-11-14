@@ -39,11 +39,11 @@ void collection_t::insert(session_t& session, std::string& collection, document_
 
 
 auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
-    log_.debug("collection {}::find", collection);
+    log_.debug("collection::find : {}", collection);
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result =  cursor_storage_.emplace(session,std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
-    goblin_engineer::send(dispatcher, address(), "find_finish", session,new components::cursor::sub_cursor_t(address(),result.first->second.get()));
+    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
+    goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
 }
 
 auto collection_t::size(session_t& session, std::string& collection) -> void {

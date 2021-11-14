@@ -62,22 +62,22 @@ namespace duck_charmer {
             collection,
             std::move(doc));
         wait();
-        return  std::get<result_insert_one>(intermediate_store_);
+        return std::get<result_insert_one>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::find(duck_charmer::session_t& session,const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr {
+        log_.trace("wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
-            address_book(name_),
+            address_book("manager_dispatcher"),
             address(),
-            "find",
+            collection::find,
             session,
             collection,
             std::move(condition)
             );
         wait();
-        auto* result =  std::get<components::cursor::cursor_t*>(intermediate_store_);
-        return wrapper_cursor_ptr(new wrapper_cursor(session,result));
+        return wrapper_cursor_ptr(new wrapper_cursor(session, std::get<components::cursor::cursor_t*>(intermediate_store_)));
     }
 
     result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session,const  std::string& collection) {

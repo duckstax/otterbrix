@@ -40,7 +40,7 @@ bool wrapper_collection::insert(const py::handle& document) {
         components::document::document_t doc;
         to_document(document, doc);
         auto session_tmp = duck_charmer::session_t();
-        auto result =  ptr_->insert(session_tmp, name_, std::move(doc));
+        auto result = ptr_->insert(session_tmp, name_, std::move(doc));
         log_.debug("wrapper_collection::insert {}", result.status);
         return result.status;
     }
@@ -61,6 +61,17 @@ void wrapper_collection::update_one(py::dict fields, py::object cond) {
 }
 
 auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
+    log_.trace("wrapper_collection::find");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->find(session_tmp, name_, std::move(condition));
+        log_.debug("wrapper_collection::find {} records", result->size());
+        return result;
+    }
+    throw std::runtime_error("wrapper_collection::insert");
+    return wrapper_cursor_ptr();
 }
 
 auto wrapper_collection::find_one(py::object cond) -> py::dict {
