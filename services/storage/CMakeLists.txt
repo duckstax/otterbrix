@@ -5,7 +5,6 @@ set( ${PROJECT_NAME}_HEADERS
         database.hpp
         query.hpp
         result.hpp
-        result_insert_one.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -13,7 +12,6 @@ set(${PROJECT_NAME}_SOURCES
         database.cpp
         query.cpp
         result.cpp
-        result_insert_one.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

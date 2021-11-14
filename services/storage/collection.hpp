@@ -43,24 +43,24 @@ namespace services::storage {
         collection_t(goblin_engineer::supervisor_t*,std::string name, log_t& log);
         ~collection_t();
 
-        auto get(components::document::conditional_expression& cond) -> void;
-
-        void insert(session_t& session_t, std::string& collection, document_t &document);
-        auto search(const session_t &session, const std::string &collection, query_ptr cond) -> void;
-        auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
         auto size(session_t& session, std::string& collection) -> void;
+        void insert_one(session_t& session_t, std::string& collection, document_t &document);
+        void insert_many(session_t& session, std::string& collection, std::list<document_t> &documents);
+        auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
+        auto find_one(const session_t& session, const std::string &collection, const document_t &cond) -> void;
         void drop();
         void close_cursor(session_t& session);
 
     private:
         std::string gen_id() const;
-        void insert_(document_t&& document, int version = 0);
+        bool insert_(const document_t &document, int version = 0);
         field_index_t insert_field_(field_value_t value, int version);
         document_view_t get_(const std::string& id) const;
         std::size_t size_() const;
         auto remove_(const std::string& key);
         void drop_();
         result_find search_(query_ptr cond);
+        result_find_one search_one_(query_ptr cond);
 
         log_t log_;
         index_t index_;

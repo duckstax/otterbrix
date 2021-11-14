@@ -15,7 +15,6 @@
 #include "wrapper_cursor.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
-#include <services/storage/result_insert_one.hpp>
 #include "forward.hpp"
 #include "wrapper_dispatcher.hpp"
 
@@ -25,10 +24,19 @@ namespace duck_charmer {
     public:
         wrapper_collection(const std::string& name, wrapper_dispatcher_t*, log_t& log);
         ~wrapper_collection();
-        //not  using  base api  for example or test
-        bool insert(const py::handle& document);
+        std::string print();
+        std::size_t size();
+        std::size_t insert(const py::handle& documents);
+        std::size_t insert_one(const py::handle& document);
+        std::size_t insert_many(const py::handle& documents);
+        void update(py::dict fields, py::object cond);
+        void update_one(py::dict fields, py::object cond);
         auto find(py::object cond) -> wrapper_cursor_ptr;
-        auto size() -> py::int_;
+        auto find_one(py::object cond) -> py::dict;
+        void remove(py::object cond);
+        void delete_one(py::object cond);
+        void delete_many(py::object cond);
+        void drop();
 
     private:
         const std::string name_;
