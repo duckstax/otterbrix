@@ -1,33 +1,20 @@
 #include "result.hpp"
 
-result_insert_one::result_insert_one(result_insert_one::result_t count_inserted)
-    : count_inserted_(count_inserted)
+result_insert_one::result_insert_one(result_insert_one::result_t id)
+    : inserted_id_(id)
 {}
 
-result_insert_one::result_t result_insert_one::operator *() const {
-    return count_inserted_;
-}
-
-result_insert_one::result_t result_insert_one::inserted() const {
-    return count_inserted_;
+const result_insert_one::result_t &result_insert_one::inserted_id() const {
+    return inserted_id_;
 }
 
 
-result_insert_many::result_insert_many(result_insert_many::result_t count_inserted, result_insert_many::result_t count_not_inserted)
-    : count_inserted_(count_inserted)
-    , count_not_inserted_(count_not_inserted) {
+result_insert_many::result_insert_many(result_t &&inserted_ids)
+    : inserted_ids_(std::move(inserted_ids)) {
 }
 
-std::pair<result_insert_many::result_t, result_insert_many::result_t> result_insert_many::operator *() const {
-    return { count_inserted_, count_not_inserted_ };
-}
-
-result_insert_many::result_t result_insert_many::inserted() const {
-    return count_inserted_;
-}
-
-result_insert_many::result_t result_insert_many::not_inserted() const {
-    return count_not_inserted_;
+const result_insert_many::result_t &result_insert_many::inserted_ids() const {
+    return inserted_ids_;
 }
 
 

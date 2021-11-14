@@ -53,7 +53,7 @@ namespace services::storage {
 
     private:
         std::string gen_id() const;
-        bool insert_(const document_t &document, int version = 0);
+        std::string insert_(const document_t &document, int version = 0);
         field_index_t insert_field_(field_value_t value, int version);
         document_view_t get_(const std::string& id) const;
         std::size_t size_() const;

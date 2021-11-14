@@ -37,24 +37,22 @@ auto collection_t::size(session_t& session, std::string& collection) -> void {
 
 void collection_t::insert_one(session_t& session, std::string& collection, document_t& document) {
     log_.debug("collection_t::insert_one : {}", collection);
-    std::size_t count_inserted = 0;
-    if (insert_(document)) count_inserted++;
+    auto result = insert_(document);
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result_insert_one(count_inserted));
+    goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result_insert_one(result));
 }
 
 void collection_t::insert_many(components::session::session_t &session, std::string &collection, std::list<document_t> &documents) {
     log_.debug("collection_t::insert_many : {}", collection);
-    std::size_t count_inserted = 0;
-    std::size_t count_not_inserted = 0;
+    std::vector<std::string> result;
     for (const auto &document : documents) {
-        if (insert_(document)) count_inserted++;
-        else count_not_inserted++;
+        auto id = insert_(document);
+        if (!id.empty()) result.emplace_back(std::move(id));
     }
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(count_inserted, count_not_inserted));
+    goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
 }
 
 auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
@@ -81,7 +79,7 @@ std::string collection_t::gen_id() const {
     return std::string("0"); //todo
 }
 
-bool collection_t::insert_(const document_t& document, int version) {
+std::string collection_t::insert_(const document_t& document, int version) {
     auto id = document.is_exists("_id") ? document.get_string("_id") : gen_id();
     if (index_->get(id) == nullptr) {
         auto index = mutable_dict_t::new_dict();
@@ -90,9 +88,9 @@ bool collection_t::insert_(const document_t& document, int version) {
             /*if (key != "_id") */index->set(key, insert_field_(it.value(), version));
         }
         index_->set(std::move(id), index);
-        return true;
+        return id;
     }
-    return false;
+    return std::string();
 }
 
 collection_t::field_index_t collection_t::insert_field_(collection_t::field_value_t value, int version) {

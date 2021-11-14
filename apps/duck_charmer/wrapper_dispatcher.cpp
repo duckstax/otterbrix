@@ -139,14 +139,14 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::insert_one_finish(duck_charmer::session_t& session,result_insert_one result) -> void {
-        log_.trace("wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted());
+        log_.trace("wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();
     }
 
     void wrapper_dispatcher_t::insert_many_finish(components::session::session_t &session, result_insert_many result) {
-        log_.trace("wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted {} not inserted", session.data(), result.inserted(), result.not_inserted());
+        log_.trace("wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

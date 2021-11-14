@@ -33,27 +33,32 @@ std::size_t wrapper_collection::size() {
     return *(ptr_->size(session_tmp, name_));
 }
 
-std::size_t wrapper_collection::insert(const py::handle& documents) {
-    if (py::isinstance<py::dict>(documents)) return insert_one(documents);
+pybind11::list wrapper_collection::insert(const py::handle& documents) {
+    if (py::isinstance<py::dict>(documents)) {
+        py::list result;
+        auto id = insert_one(documents);
+        if (!id.empty()) result.append(id);
+        return result;
+    }
     if (py::isinstance<py::list>(documents)) return insert_many(documents);
-    return 0;
+    return py::list();
 }
 
-std::size_t wrapper_collection::insert_one(const py::handle &document) {
+std::string wrapper_collection::insert_one(const py::handle &document) {
     log_.trace("wrapper_collection::insert_one");
     if (py::isinstance<py::dict>(document)) {
         components::document::document_t doc;
         to_document(document, doc);
         auto session_tmp = duck_charmer::session_t();
         auto result = ptr_->insert_one(session_tmp, name_, doc);
-        log_.debug("wrapper_collection::insert_one {} inserted", result.inserted());
-        return result.inserted();
+        log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().size());
+        return result.inserted_id();
     }
     throw std::runtime_error("wrapper_collection::insert_one");
-    return 0;
+    return std::string();
 }
 
-std::size_t wrapper_collection::insert_many(const py::handle &documents) {
+pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     log_.trace("wrapper_collection::insert_many");
     if (py::isinstance<py::list>(documents)) {
         std::list<components::document::document_t> docs;
@@ -64,11 +69,13 @@ std::size_t wrapper_collection::insert_many(const py::handle &documents) {
         }
         auto session_tmp = duck_charmer::session_t();
         auto result = ptr_->insert_many(session_tmp, name_, docs);
-        log_.debug("wrapper_collection::insert_many {} inserted {} not inserted", result.inserted(), result.not_inserted());
-        return result.inserted();
+        log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
+        py::list list;
+        for (const auto &id : result.inserted_ids()) list.append(id);
+        return list;
     }
     throw std::runtime_error("wrapper_collection::insert_many");
-    return 0;
+    return py::list();
 
 
 //    log_.trace("wrapper_collection::insert_many");

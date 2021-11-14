@@ -4,32 +4,28 @@
 
 class result_insert_one {
 public:
-    using result_t = std::size_t;
+    using result_t = std::string;
 
     result_insert_one() = default;
-    explicit result_insert_one(result_t count_inserted);
-    result_t operator *() const;
-    result_t inserted() const;
+    explicit result_insert_one(result_t id);
+    const result_t &inserted_id() const;
 
 private:
-    result_t count_inserted_ {0};
+    result_t inserted_id_;
     //TODO: except or error_code
 };
 
 
 class result_insert_many {
 public:
-    using result_t = std::size_t;
+    using result_t = std::vector<std::string>;
 
     result_insert_many() = default;
-    explicit result_insert_many(result_t count_inserted, result_t count_not_inserted);
-    std::pair<result_t, result_t> operator *() const;
-    result_t inserted() const;
-    result_t not_inserted() const;
+    explicit result_insert_many(result_t &&inserted_ids);
+    const result_t &inserted_ids() const;
 
 private:
-    result_t count_inserted_ {0};
-    result_t count_not_inserted_ {0};
+    result_t inserted_ids_;
     //TODO: except or error_code
 };
 
