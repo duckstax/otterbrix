@@ -91,13 +91,10 @@ def test_collection_cursor():
     c.close()
 
 
-#c = friedrich_database['FriedrichCollection']
-
-#assert True for successful drop
-#assert c.drop() is True
-
-#assert False because collection does not exist anymore
-#assert c.drop() is False
-
-#c = friedrich_database['FriedrichCollection'].find(filter={})
-#assert c.count() == 0
+def test_collection_find_one():
+    c = friedrich_collection.find_one({'_id': {'$eq': '1'}})
+    assert c['count'] == 1
+    c = friedrich_collection.find_one({'count': {'$eq': 10}})
+    assert c['count'] == 10
+    c = friedrich_collection.find_one({'$and': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+    assert c['count'] == 99

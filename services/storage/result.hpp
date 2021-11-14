@@ -48,6 +48,22 @@ private:
 };
 
 
+class result_find_one {
+public:
+    using result_t = components::document::document_view_t;
+
+    result_find_one() = default;
+    explicit result_find_one(const result_t &finded_doc);
+    bool is_find() const;
+    const result_t &operator *() const;
+    result_t *operator ->();
+
+private:
+    result_t finded_doc_;
+    bool is_find_ {false};
+};
+
+
 class result_size {
 public:
     using result_t = std::size_t;

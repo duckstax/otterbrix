@@ -115,11 +115,22 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         log_.debug("wrapper_collection::find {} records", result->size());
         return result;
     }
-    throw std::runtime_error("wrapper_collection::insert");
+    throw std::runtime_error("wrapper_collection::find");
     return wrapper_cursor_ptr();
 }
 
 auto wrapper_collection::find_one(py::object cond) -> py::dict {
+    log_.trace("wrapper_collection::find_one");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->find_one(session_tmp, name_, std::move(condition));
+        log_.debug("wrapper_collection::find_one {}", result.is_find());
+        return from_document(*result);
+    }
+    throw std::runtime_error("wrapper_collection::find_one");
+    return py::dict();
 }
 
 void wrapper_collection::remove(py::object cond) {

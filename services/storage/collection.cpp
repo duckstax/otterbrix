@@ -19,6 +19,7 @@ collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string 
     add_handler(collection::insert_one, &collection_t::insert_one);
     add_handler(collection::insert_many, &collection_t::insert_many);
     add_handler(collection::find, &collection_t::find);
+    add_handler(collection::find_one, &collection_t::find_one);
     add_handler(collection::size, &collection_t::size);
     add_handler(collection::close_cursor, &collection_t::close_cursor);
 }
@@ -64,6 +65,13 @@ auto collection_t::find(const session_t& session, const std::string &collection,
     goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
 }
 
+void collection_t::find_one(const components::session::session_t &session, const std::string &collection, const document_t &cond) {
+    log_.debug("collection::find_one : {}", collection);
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    goblin_engineer::send(dispatcher, address(), "find_one_finish", session, search_one_(parse_condition(cond)));
+}
+
 
 void collection_t::drop() {
     drop_();
@@ -78,7 +86,7 @@ bool collection_t::insert_(const document_t& document, int version) {
     auto index = mutable_dict_t::new_dict();
     for (auto it = document.begin(); it; ++it) {
         auto key = it.key()->as_string();
-        if (key != "_id") index->set(key, insert_field_(it.value(), version));
+        /*if (key != "_id") */index->set(key, insert_field_(it.value(), version));
     }
     index_->set(std::move(id), index);
     return true;
@@ -134,6 +142,16 @@ result_find collection_t::search_(query_ptr cond) {
         }
     }
     return result_find(std::move(res));
+}
+
+result_find_one collection_t::search_one_(query_ptr cond) {
+    for (auto it = index_->begin(); it; ++it) {
+        auto doc = get_(static_cast<std::string>(it.key()->as_string()));
+        if (!cond || cond->check(doc)) {
+            return result_find_one(doc);
+        }
+    }
+    return result_find_one();
 }
 
 auto collection_t::remove_(const std::string& key) {

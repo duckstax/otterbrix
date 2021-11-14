@@ -44,6 +44,24 @@ result_find::result_t *result_find::operator ->() {
 }
 
 
+result_find_one::result_find_one(const result_find_one::result_t &finded_doc)
+    : finded_doc_(finded_doc)
+    , is_find_(true) {
+}
+
+bool result_find_one::is_find() const {
+    return is_find_;
+}
+
+const result_find_one::result_t &result_find_one::operator *() const {
+    return finded_doc_;
+}
+
+result_find_one::result_t *result_find_one::operator ->() {
+    return &finded_doc_;
+}
+
+
 result_size::result_size(result_t size) :
     size_(size)
 {}

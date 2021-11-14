@@ -18,6 +18,7 @@ namespace duck_charmer {
         add_handler("insert_one_finish", &wrapper_dispatcher_t::insert_one_finish);
         add_handler("insert_many_finish", &wrapper_dispatcher_t::insert_many_finish);
         add_handler("find_finish", &wrapper_dispatcher_t::find_finish);
+        add_handler("find_one_finish", &wrapper_dispatcher_t::find_one_finish);
         add_handler("size_finish", &wrapper_dispatcher_t::size_finish);
     }
 
@@ -52,7 +53,7 @@ namespace duck_charmer {
         return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
     }
 
-    result_insert_one& wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) {
+    auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one& {
         log_.trace("wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -66,7 +67,7 @@ namespace duck_charmer {
         return std::get<result_insert_one>(intermediate_store_);
     }
 
-    result_insert_many& wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) {
+    auto wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many& {
         log_.trace("wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -93,6 +94,21 @@ namespace duck_charmer {
             );
         wait();
         return wrapper_cursor_ptr(new wrapper_cursor(session, std::get<components::cursor::cursor_t*>(intermediate_store_)));
+    }
+
+    auto wrapper_dispatcher_t::find_one(components::session::session_t &session, const std::string &collection, components::document::document_t condition) -> result_find_one& {
+        log_.trace("wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            collection::find_one,
+            session,
+            collection,
+            std::move(condition)
+            );
+        wait();
+        return std::get<result_find_one>(intermediate_store_);
     }
 
     result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session,const  std::string& collection) {
@@ -138,6 +154,12 @@ namespace duck_charmer {
 
     auto wrapper_dispatcher_t::find_finish(duck_charmer::session_t& session,components::cursor::cursor_t* cursor) -> void {
         intermediate_store_ = cursor;
+        input_session_ = session;
+        notify();
+    }
+
+    void wrapper_dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one result) {
+        intermediate_store_ = result;
         input_session_ = session;
         notify();
     }

@@ -28,6 +28,7 @@ namespace services::dispatcher {
         void insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document);
         void insert_many(components::session::session_t& session, std::string& collection, std::list<components::document::document_t>& documents);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition);
+        void find_one(components::session::session_t& session, std::string& collection, components::document::document_t& condition);
         void size(components::session::session_t& session, std::string& collection);
         void close_cursor(components::session::session_t& session);
     protected:
@@ -58,7 +59,9 @@ namespace services::dispatcher {
         void insert_one_finish(components::session::session_t& session, result_insert_one& result);
         void insert_many_finish(components::session::session_t& session, result_insert_many& result);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address);
-        void find_finish(components::session::session_t&, components::cursor::sub_cursor_t* result);
+        void find_finish(components::session::session_t&session, components::cursor::sub_cursor_t* result);
+        void find_one(components::session::session_t& session, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address);
+        void find_one_finish(components::session::session_t&session, result_find_one& result);
         void size(components::session::session_t& session, std::string& collection, goblin_engineer::address_t address);
         void size_finish(components::session::session_t&, result_size& result);
         void close_cursor(components::session::session_t& session);

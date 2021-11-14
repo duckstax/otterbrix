@@ -20,6 +20,7 @@ namespace services::dispatcher {
         add_handler(collection::insert_one, &manager_dispatcher_t::insert_one);
         add_handler(collection::insert_many, &manager_dispatcher_t::insert_many);
         add_handler(collection::find, &manager_dispatcher_t::find);
+        add_handler(collection::find_one, &manager_dispatcher_t::find_one);
         add_handler(collection::size, &manager_dispatcher_t::size);
         add_handler(collection::close_cursor, &manager_dispatcher_t::close_cursor);
         log_.trace("manager_dispatcher_t start thread pool");
@@ -63,6 +64,8 @@ namespace services::dispatcher {
         add_handler("insert_many_finish", &dispatcher_t::insert_many_finish);
         add_handler(collection::find, &dispatcher_t::find);
         add_handler("find_finish", &dispatcher_t::find_finish);
+        add_handler(collection::find_one, &dispatcher_t::find_one);
+        add_handler("find_one_finish", &dispatcher_t::find_one_finish);
         add_handler(collection::size, &dispatcher_t::size);
         add_handler("size_finish", &dispatcher_t::size_finish);
         add_handler(collection::close_cursor, &dispatcher_t::close_cursor);
@@ -138,6 +141,16 @@ namespace services::dispatcher {
         goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_finish", session, result);
         session_to_address_.erase(session);
     }
+    void dispatcher_t::find_one(components::session::session_t &session, std::string &collection, components::document::document_t &condition, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::find_one: session:{}, collection: {}", session.data(), collection);
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(collection_address_book_.at(collection), dispatcher_t::address(), collection::find_one, session, collection, std::move(condition));
+    }
+    void dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one &result) {
+        log_.debug("dispatcher_t::find_one_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_one_finish", session, result);
+        session_to_address_.erase(session);
+    }
     void dispatcher_t::size(components::session::session_t& session, std::string& collection, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::size: session:{} , collection: {}", session.data(), collection);
         session_to_address_.emplace(session, address);
@@ -200,6 +213,11 @@ namespace services::dispatcher {
     void manager_dispatcher_t::find(session_t& session, std::string& collection, components::document::document_t& condition) {
         log_.trace("manager_dispatcher_t::find session: {}, collection name: {} ", session.data(), collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::find, session, std::move(collection), std::move(condition), current_message()->sender());
+    }
+
+    void manager_dispatcher_t::find_one(components::session::session_t &session, std::string &collection, components::document::document_t &condition) {
+        log_.trace("manager_dispatcher_t::find_one session: {}, collection name: {} ", session.data(), collection);
+        return goblin_engineer::send(dispathers_[0], address(), collection::find_one, session, std::move(collection), std::move(condition), current_message()->sender());
     }
 
     void manager_dispatcher_t::size(session_t& session, std::string& collection) {

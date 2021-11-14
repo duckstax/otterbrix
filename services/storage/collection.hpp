@@ -47,6 +47,7 @@ namespace services::storage {
         void insert_one(session_t& session_t, std::string& collection, document_t &document);
         void insert_many(session_t& session, std::string& collection, std::list<document_t> &documents);
         auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
+        auto find_one(const session_t& session, const std::string &collection, const document_t &cond) -> void;
         void drop();
         void close_cursor(session_t& session);
 
@@ -59,6 +60,7 @@ namespace services::storage {
         auto remove_(const std::string& key);
         void drop_();
         result_find search_(query_ptr cond);
+        result_find_one search_one_(query_ptr cond);
 
         log_t log_;
         index_t index_;
