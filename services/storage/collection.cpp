@@ -83,13 +83,16 @@ std::string collection_t::gen_id() const {
 
 bool collection_t::insert_(const document_t& document, int version) {
     auto id = document.is_exists("_id") ? document.get_string("_id") : gen_id();
-    auto index = mutable_dict_t::new_dict();
-    for (auto it = document.begin(); it; ++it) {
-        auto key = it.key()->as_string();
-        /*if (key != "_id") */index->set(key, insert_field_(it.value(), version));
+    if (index_->get(id) == nullptr) {
+        auto index = mutable_dict_t::new_dict();
+        for (auto it = document.begin(); it; ++it) {
+            auto key = it.key()->as_string();
+            /*if (key != "_id") */index->set(key, insert_field_(it.value(), version));
+        }
+        index_->set(std::move(id), index);
+        return true;
     }
-    index_->set(std::move(id), index);
-    return true;
+    return false;
 }
 
 collection_t::field_index_t collection_t::insert_field_(collection_t::field_value_t value, int version) {

@@ -48,15 +48,17 @@ for num in range(50,100):
     list_doc.append(new_obj)
 friedrich_collection.insert(list_doc)
 
+list_doc = []
+for num in range(100):
+    new_obj = {}
+    new_obj['_id'] = str(num)
+    list_doc.append(new_obj)
+friedrich_collection.insert(list_doc) # not inserted (not unique id)
+
 
 def test_collection_len():
     assert len(friedrich_collection) == 100
     assert len(friedrich_database['FriedrichCollection']) == 100
-
-
-def test_collection_get():
-    assert friedrich_collection['10']['count'] == 10
-    assert friedrich_collection.get('20')['count'] == 20
 
 
 def test_collection_find():
