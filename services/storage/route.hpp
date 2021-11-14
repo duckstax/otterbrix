@@ -11,8 +11,8 @@ namespace services::storage {
     }
 
     namespace collection {
-        static constexpr auto select = "select";
-        static constexpr auto insert = "insert";
+        static constexpr auto insert_one = "insert_one";
+        static constexpr auto insert_many = "insert_many";
         static constexpr auto erase = "erase";
         static constexpr auto find = "find";
         static constexpr auto size = "size";

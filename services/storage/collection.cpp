@@ -3,7 +3,6 @@
 
 #include "protocol/insert.hpp"
 #include "protocol/request_select.hpp"
-#include "result_insert_one.hpp"
 #include "components/document/mutable/mutable_dict.h"
 #include "components/document/mutable/mutable_array.h"
 
@@ -13,37 +12,19 @@ using ::document::impl::mutable_array_t;
 
 namespace services::storage {
 
-    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
-        : goblin_engineer::abstract_service(database, std::move(name))
-        , log_(log.clone())
-        , index_(mutable_dict_t::new_dict()) {
-        /// add_handler(collection::select, &collection_t::select);
-        add_handler(collection::insert, &collection_t::insert);
-        //add_handler(collection::erase, &collection_t::erase);
-        add_handler(collection::find, &collection_t::find);
-        add_handler(collection::size, &collection_t::size);
-        add_handler(collection::close_cursor, &collection_t::close_cursor);
-    }
+collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
+    : goblin_engineer::abstract_service(database, std::move(name))
+    , log_(log.clone())
+    , index_(mutable_dict_t::new_dict()) {
+    add_handler(collection::insert_one, &collection_t::insert_one);
+    add_handler(collection::insert_many, &collection_t::insert_many);
+    add_handler(collection::find, &collection_t::find);
+    add_handler(collection::size, &collection_t::size);
+    add_handler(collection::close_cursor, &collection_t::close_cursor);
+}
 
-    collection_t::~collection_t() {
+collection_t::~collection_t() {
     storage_.clear();
-}
-
-void collection_t::insert(session_t& session, std::string& collection, document_t& document) {
-    log_.debug("collection_t::insert : {}", collection);
-    insert_(std::move(document));
-    auto dispatcher = address_book("dispatcher");
-    log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "insert_finish", session, result_insert_one(true));
-}
-
-
-auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
-    log_.debug("collection::find : {}", collection);
-    auto dispatcher = address_book("dispatcher");
-    log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
-    goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
 }
 
 auto collection_t::size(session_t& session, std::string& collection) -> void {
@@ -51,6 +32,36 @@ auto collection_t::size(session_t& session, std::string& collection) -> void {
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcer : {}", dispatcher.type());
     goblin_engineer::send(dispatcher, address(), "size_finish", session, result_size(size_()));
+}
+
+void collection_t::insert_one(session_t& session, std::string& collection, document_t& document) {
+    log_.debug("collection_t::insert_one : {}", collection);
+    std::size_t count_inserted = 0;
+    if (insert_(document)) count_inserted++;
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result_insert_one(count_inserted));
+}
+
+void collection_t::insert_many(components::session::session_t &session, std::string &collection, std::list<document_t> &documents) {
+    log_.debug("collection_t::insert_many : {}", collection);
+    std::size_t count_inserted = 0;
+    std::size_t count_not_inserted = 0;
+    for (const auto &document : documents) {
+        if (insert_(document)) count_inserted++;
+        else count_not_inserted++;
+    }
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(count_inserted, count_not_inserted));
+}
+
+auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
+    log_.debug("collection::find : {}", collection);
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
+    goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
 }
 
 
@@ -62,7 +73,7 @@ std::string collection_t::gen_id() const {
     return std::string("0"); //todo
 }
 
-void collection_t::insert_(document_t&& document, int version) {
+bool collection_t::insert_(const document_t& document, int version) {
     auto id = document.is_exists("_id") ? document.get_string("_id") : gen_id();
     auto index = mutable_dict_t::new_dict();
     for (auto it = document.begin(); it; ++it) {
@@ -70,6 +81,7 @@ void collection_t::insert_(document_t&& document, int version) {
         if (key != "_id") index->set(key, insert_field_(it.value(), version));
     }
     index_->set(std::move(id), index);
+    return true;
 }
 
 collection_t::field_index_t collection_t::insert_field_(collection_t::field_value_t value, int version) {

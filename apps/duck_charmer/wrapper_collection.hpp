@@ -15,7 +15,6 @@
 #include "wrapper_cursor.hpp"
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
-#include <services/storage/result_insert_one.hpp>
 #include "forward.hpp"
 #include "wrapper_dispatcher.hpp"
 
@@ -27,9 +26,9 @@ namespace duck_charmer {
         ~wrapper_collection();
         std::string print();
         std::size_t size();
-        bool insert(const py::handle& documents);
-        bool insert_one(const py::handle& document);
-        bool insert_many(const py::handle& documents);
+        std::size_t insert(const py::handle& documents);
+        std::size_t insert_one(const py::handle& document);
+        std::size_t insert_many(const py::handle& documents);
         void update(py::dict fields, py::object cond);
         void update_one(py::dict fields, py::object cond);
         auto find(py::object cond) -> wrapper_cursor_ptr;

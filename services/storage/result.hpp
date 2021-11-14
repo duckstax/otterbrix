@@ -2,12 +2,44 @@
 #include <vector>
 #include "components/document/document_view.hpp"
 
+class result_insert_one {
+public:
+    using result_t = std::size_t;
+
+    result_insert_one() = default;
+    explicit result_insert_one(result_t count_inserted);
+    result_t operator *() const;
+    result_t inserted() const;
+
+private:
+    result_t count_inserted_ {0};
+    //TODO: except or error_code
+};
+
+
+class result_insert_many {
+public:
+    using result_t = std::size_t;
+
+    result_insert_many() = default;
+    explicit result_insert_many(result_t count_inserted, result_t count_not_inserted);
+    std::pair<result_t, result_t> operator *() const;
+    result_t inserted() const;
+    result_t not_inserted() const;
+
+private:
+    result_t count_inserted_ {0};
+    result_t count_not_inserted_ {0};
+    //TODO: except or error_code
+};
+
+
 class result_find {
 public:
     using result_t = std::vector<components::document::document_view_t>;
 
-    result_find() = delete;
-    result_find(result_t &&finded_docs);
+    result_find() = default;
+    explicit result_find(result_t &&finded_docs);
     const result_t &operator *() const;
     result_t *operator ->();
 
@@ -18,12 +50,14 @@ private:
 
 class result_size {
 public:
-    result_size() = delete;
-    result_size(std::size_t size);
-    std::size_t operator *() const;
+    using result_t = std::size_t;
+
+    result_size() = default;
+    explicit result_size(result_t size);
+    result_t operator *() const;
 
 private:
-    std::size_t size_;
+    result_t size_ {0};
 };
 
 
@@ -31,8 +65,8 @@ class result_get_document {
 public:
     using result_t = components::document::document_view_t;
 
-    result_get_document() = delete;
-    result_get_document(result_t &&doc);
+    result_get_document() = default;
+    explicit result_get_document(result_t &&doc);
     const result_t &operator *() const;
     result_t *operator ->();
 

@@ -8,7 +8,7 @@ client = Client()
 friedrich_database = client["FriedrichDatabase"]
 friedrich_collection = friedrich_database["FriedrichCollection"]
 
-for num in range(100):
+for num in range(50):
     new_obj = {}
     new_obj['_id'] = str(num)
     new_obj['count'] = num
@@ -27,10 +27,36 @@ for num in range(100):
     new_obj['mixedDict'] = copy.deepcopy(new_obj)
     friedrich_collection.insert(new_obj)
 
+list_doc = []
+for num in range(50,100):
+    new_obj = {}
+    new_obj['_id'] = str(num)
+    new_obj['count'] = num
+    new_obj['countStr'] = str(num)
+    new_obj['countFloat'] = float(num) + 0.1
+    new_obj['countBool'] = True if num & 1 else False
+    new_obj['countArray'] = [num + i for i in range(5)]
+    new_obj['countDict'] = {
+        'odd': bool(num & 1),
+        'even': not (num & 1),
+        'three': not (num % 3),
+        'five': not (num % 5),
+    }
+    new_obj['nestedArray'] = [[num + i] for i in range(5)]
+    new_obj['dictArray'] = [{'number': num + i} for i in range(5)]
+    new_obj['mixedDict'] = copy.deepcopy(new_obj)
+    list_doc.append(new_obj)
+friedrich_collection.insert(list_doc)
+
 
 def test_collection_len():
     assert len(friedrich_collection) == 100
     assert len(friedrich_database['FriedrichCollection']) == 100
+
+
+def test_collection_get():
+    assert friedrich_collection['10']['count'] == 10
+    assert friedrich_collection.get('20')['count'] == 20
 
 
 def test_collection_find():

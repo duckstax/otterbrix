@@ -11,7 +11,6 @@
 #include <components/session/session.hpp>
 
 #include <services/storage/result.hpp>
-#include <services/storage/result_insert_one.hpp>
 #include "storage/result_database.hpp"
 
 namespace services::dispatcher {
@@ -26,7 +25,8 @@ namespace services::dispatcher {
         void connect_me(components::session::session_t& session, std::string& name);
         void create_database(components::session::session_t& session, std::string& name);
         void create_collection(components::session::session_t& session, std::string& database_name, std::string& collection_name);
-        void insert(components::session::session_t& session, std::string& collection, components::document::document_t& document);
+        void insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document);
+        void insert_many(components::session::session_t& session, std::string& collection, std::list<components::document::document_t>& documents);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition);
         void size(components::session::session_t& session, std::string& collection);
         void close_cursor(components::session::session_t& session);
@@ -53,8 +53,10 @@ namespace services::dispatcher {
         void create_database_finish(components::session::session_t& session,storage::database_create_result,goblin_engineer::address_t);
         void create_collection(components::session::session_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address);
         void create_collection_finish(components::session::session_t& session,storage::collection_create_result,goblin_engineer::address_t);
-        void insert(components::session::session_t& session, std::string& collection, components::document::document_t& document,goblin_engineer::address_t address);
-        void insert_finish(components::session::session_t& session, result_insert_one& result);
+        void insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document, goblin_engineer::address_t address);
+        void insert_many(components::session::session_t& session, std::string& collection, std::list<components::document::document_t>& documents, goblin_engineer::address_t address);
+        void insert_one_finish(components::session::session_t& session, result_insert_one& result);
+        void insert_many_finish(components::session::session_t& session, result_insert_many& result);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address);
         void find_finish(components::session::session_t&, components::cursor::sub_cursor_t* result);
         void size(components::session::session_t& session, std::string& collection, goblin_engineer::address_t address);
