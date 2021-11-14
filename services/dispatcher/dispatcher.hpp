@@ -57,7 +57,7 @@ namespace services::dispatcher {
         void insert_finish(components::session::session_t& session, result_insert_one& result);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition);
         void find_finish(components::session::session_t&, components::cursor::sub_cursor_t* result);
-        void size(components::session::session_t& session, std::string& collection);
+        void size(components::session::session_t& session, std::string& collection, goblin_engineer::address_t address);
         void size_finish(components::session::session_t&, result_size& result);
         void close_cursor(components::session::session_t& session);
 

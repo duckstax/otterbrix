@@ -30,11 +30,8 @@ std::string wrapper_collection::print() {
 
 std::size_t wrapper_collection::size() {
     log_.trace("wrapper_collection::size");
-    py::int_ res = 0;
     auto session_tmp = duck_charmer::session_t();
-    auto result =  ptr_->size(session_tmp,name_);
-    res = *result;
-    return res;
+    return *(ptr_->size(session_tmp, name_));
 }
 
 bool wrapper_collection::insert(const py::handle& document) {
