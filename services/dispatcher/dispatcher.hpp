@@ -25,6 +25,7 @@ namespace services::dispatcher {
         void connect_me(components::session::session_t& session, std::string& name);
         void create_database(components::session::session_t& session, std::string& name);
         void create_collection(components::session::session_t& session, std::string& database_name, std::string& collection_name);
+        void drop_collection(components::session::session_t& session, std::string& database_name, std::string& collection_name);
         void insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document);
         void insert_many(components::session::session_t& session, std::string& collection, std::list<components::document::document_t>& documents);
         void find(components::session::session_t& session, std::string& collection, components::document::document_t& condition);
@@ -54,6 +55,8 @@ namespace services::dispatcher {
         void create_database_finish(components::session::session_t& session,storage::database_create_result,goblin_engineer::address_t);
         void create_collection(components::session::session_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address);
         void create_collection_finish(components::session::session_t& session,storage::collection_create_result,goblin_engineer::address_t);
+        void drop_collection(components::session::session_t& session, std::string& database_name,std::string& collection_name,goblin_engineer::address_t address);
+        void drop_collection_finish(components::session::session_t& session, result_drop_collection& result, goblin_engineer::address_t collection);
         void insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document, goblin_engineer::address_t address);
         void insert_many(components::session::session_t& session, std::string& collection, std::list<components::document::document_t>& documents, goblin_engineer::address_t address);
         void insert_one_finish(components::session::session_t& session, result_insert_one& result);

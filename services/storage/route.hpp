@@ -8,6 +8,7 @@ namespace services::storage {
 
     namespace database {
         static constexpr auto create_collection = "create_collection";
+        static constexpr auto drop_collection = "drop_collection";
     }
 
     namespace collection {

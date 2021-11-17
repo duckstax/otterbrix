@@ -15,6 +15,7 @@ namespace duck_charmer {
         , name_(name_dispather) {
         add_handler("create_database_finish", &wrapper_dispatcher_t::create_database_finish);
         add_handler("create_collection_finish", &wrapper_dispatcher_t::create_collection_finish);
+        add_handler("drop_collection_finish", &wrapper_dispatcher_t::drop_collection_finish);
         add_handler("insert_one_finish", &wrapper_dispatcher_t::insert_one_finish);
         add_handler("insert_many_finish", &wrapper_dispatcher_t::insert_many_finish);
         add_handler("find_finish", &wrapper_dispatcher_t::find_finish);
@@ -51,6 +52,21 @@ namespace duck_charmer {
         wait();
         auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
         return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
+    }
+
+    result_drop_collection wrapper_dispatcher_t::drop_collection(components::session::session_t &session, const std::string &database, const std::string &collection) {
+        log_.trace("wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            database::drop_collection,
+            session,
+            database,
+            collection
+            );
+        wait();
+        return std::get<result_drop_collection>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one& {
@@ -133,6 +149,12 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result result ) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
+    }
+
+    void wrapper_dispatcher_t::drop_collection_finish(components::session::session_t &session, result_drop_collection result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();

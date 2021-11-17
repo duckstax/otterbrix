@@ -36,7 +36,7 @@ namespace duck_charmer {
         void remove(py::object cond);
         void delete_one(py::object cond);
         void delete_many(py::object cond);
-        void drop();
+        bool drop();
 
     private:
         const std::string name_;

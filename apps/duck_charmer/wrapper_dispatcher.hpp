@@ -44,6 +44,7 @@ namespace duck_charmer {
         wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
         auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
         auto create_collection(duck_charmer::session_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
+        result_drop_collection drop_collection(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
         auto insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
         auto insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
         auto find(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
@@ -74,6 +75,7 @@ namespace duck_charmer {
         /// async method
         auto create_database_finish(duck_charmer::session_t&,services::storage::database_create_result) -> void;
         auto create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result) -> void;
+        auto drop_collection_finish(duck_charmer::session_t& session,result_drop_collection result) -> void;
         auto insert_one_finish(duck_charmer::session_t& session,result_insert_one result) -> void;
         auto insert_many_finish(duck_charmer::session_t& session,result_insert_many result) -> void;
         auto find_finish(duck_charmer::session_t& session,components::cursor::cursor_t*) -> void;
@@ -108,6 +110,7 @@ namespace duck_charmer {
             components::cursor::cursor_t*,
             result_find_one,
             result_size,
+            result_drop_collection,
             services::storage::database_create_result,
             services::storage::collection_create_result>
             intermediate_store_;
