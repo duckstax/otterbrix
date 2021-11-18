@@ -6,6 +6,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <storage/result.hpp>
+#include <wrapper_database.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -122,11 +123,10 @@ void wrapper_collection::delete_many(pybind11::object cond) {
 }
 
 bool wrapper_collection::drop() {
-    //log_.trace("wrapper_collection::drop");
-    //auto result = database_->drop_collection(name_);
-    //log_.debug("wrapper_collection::drop {}", result.is_success());
-    //return result.is_success();
-    return true; //todo
+    log_.trace("wrapper_collection::drop");
+    auto result = database_->drop_collection(name_);
+    log_.debug("wrapper_collection::drop {}", result);
+    return result;
 }
 
 }

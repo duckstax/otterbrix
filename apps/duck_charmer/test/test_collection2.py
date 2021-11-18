@@ -76,6 +76,6 @@ def test_drop_collection(gen_collection):
     c = gen_collection['collection']
     assert database.drop_collection(collection_name) is True
     assert database.drop_collection(collection_name) is False
-    #c = database[collection_name]
-    #assert c.drop() is True
-    #assert c.drop() is False
+    c = database[collection_name]
+    assert c.drop() is True
+    assert c.drop() is False
