@@ -69,3 +69,12 @@ const result_get_document::result_t &result_get_document::operator *() const {
 result_get_document::result_t *result_get_document::operator ->() {
     return &doc_;
 }
+
+result_drop_collection::result_drop_collection(result_drop_collection::result_t success)
+    : success_(success)
+{}
+
+result_drop_collection::result_t result_drop_collection::is_success() const
+{
+    return success_;
+}

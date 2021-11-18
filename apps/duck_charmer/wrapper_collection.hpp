@@ -36,12 +36,15 @@ namespace duck_charmer {
         void remove(py::object cond);
         void delete_one(py::object cond);
         void delete_many(py::object cond);
-        void drop();
+        bool drop();
 
     private:
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
+        wrapper_database* database_;
         mutable log_t log_;
+
+        friend class wrapper_database;
     };
 
 }

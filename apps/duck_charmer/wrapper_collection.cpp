@@ -6,6 +6,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <storage/result.hpp>
+#include <wrapper_database.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -76,34 +77,6 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     }
     throw std::runtime_error("wrapper_collection::insert_many");
     return py::list();
-
-
-//    log_.trace("wrapper_collection::insert_many");
-//    if (py::isinstance<py::list>(documents)) {
-//        i = 0;
-//        std::list<components::document::document_t> docs;
-//        for (const auto document : documents) {
-//            components::document::document_t doc;
-//            to_document(document, doc);
-//            docs.push_back(std::move(doc));
-//        }
-//        goblin_engineer::send(
-//            dispatcher_,
-//            goblin_engineer::actor_address(),
-//            duck_charmer::collection::insert_many,
-//            duck_charmer::session_t(),
-//            std::string(collection_->type().data(), collection_->type().size()),
-//            std::move(docs),
-//            std::function<void(result_insert_one&)>([this](result_insert_one& result) {
-//                insert_result_ = std::move(result);
-//                d_();
-//            }));
-//        log_.debug("wrapper_collection::insert_many send -> dispatcher: {}", dispatcher_->type());
-//        std::unique_lock<std::mutex> lk(mtx_);
-//        cv_.wait(lk, [this]() { return i == 1; });
-//        log_.debug("wrapper_collection::insert_many {}", insert_result_.status);
-//    }
-//    return insert_result_.status;
 }
 
 void wrapper_collection::update(py::dict fields, py::object cond) {
@@ -149,7 +122,11 @@ void wrapper_collection::delete_one(pybind11::object cond) {
 void wrapper_collection::delete_many(pybind11::object cond) {
 }
 
-void wrapper_collection::drop() {
+bool wrapper_collection::drop() {
+    log_.trace("wrapper_collection::drop");
+    auto result = database_->drop_collection(name_);
+    log_.debug("wrapper_collection::drop {}", result);
+    return result;
 }
 
 }

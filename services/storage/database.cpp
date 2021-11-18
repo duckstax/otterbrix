@@ -47,6 +47,7 @@ namespace services::storage {
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         ZoneScoped;
         add_handler(database::create_collection, &database_t::create);
+        add_handler(database::drop_collection, &database_t::drop);
         e_->start();
     }
 
@@ -72,6 +73,18 @@ namespace services::storage {
         collections_.emplace(address.type(),address);
         auto self  = database_t::address();
         return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,collection_create_result(true),address);
+    }
+
+    void database_t::drop(components::session::session_t &session, std::string &name) {
+        log_.debug("database_t::drop {}", name);
+        auto self = database_t::address();
+        auto collection = collections_.find(name);
+        if (collection != collections_.end()) {
+            auto address = collection->second;
+            collections_.erase(name);
+            return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(true),address);
+        }
+        return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(false),nullptr);
     }
 
 } // namespace kv

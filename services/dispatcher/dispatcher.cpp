@@ -17,6 +17,7 @@ namespace services::dispatcher {
         add_handler("connect_me",&manager_dispatcher_t::connect_me);
         add_handler(manager_database::create_database, &manager_dispatcher_t::create_database);
         add_handler(database::create_collection, &manager_dispatcher_t::create_collection);
+        add_handler(database::drop_collection, &manager_dispatcher_t::drop_collection);
         add_handler(collection::insert_one, &manager_dispatcher_t::insert_one);
         add_handler(collection::insert_many, &manager_dispatcher_t::insert_many);
         add_handler(collection::find, &manager_dispatcher_t::find);
@@ -58,6 +59,8 @@ namespace services::dispatcher {
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
         add_handler(database::create_collection, &dispatcher_t::create_collection);
         add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
+        add_handler(database::drop_collection, &dispatcher_t::drop_collection);
+        add_handler("drop_collection_finish", &dispatcher_t::drop_collection_finish);
         add_handler(collection::insert_one, &dispatcher_t::insert_one);
         add_handler(collection::insert_many, &dispatcher_t::insert_many);
         add_handler("insert_one_finish", &dispatcher_t::insert_one_finish);
@@ -107,6 +110,23 @@ namespace services::dispatcher {
             log_.trace("add database_create_result");
         }
         goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"create_collection_finish",session,result);
+        session_to_address_.erase(session);
+    }
+    void dispatcher_t::drop_collection(components::session::session_t &session, std::string &database_name, std::string &collection_name, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
+        session_to_address_.emplace(session,address);
+        goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::drop_collection, session, collection_name);
+    }
+    void dispatcher_t::drop_collection_finish(components::session::session_t &session, result_drop_collection &result, goblin_engineer::address_t collection) {
+        auto type = collection.type();
+        log_.debug("drop_collection_finish: {}", type);
+        if (result.is_success()){
+            //auto md = address_book("manager_dispatcher");
+            //goblin_engineer::link(md,collection);
+            collection_address_book_.erase(std::string(type));
+            log_.trace("collection {} dropped", type);
+        }
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "drop_collection_finish", session, result);
         session_to_address_.erase(session);
     }
     void dispatcher_t::insert_one(components::session::session_t& session, std::string& collection, components::document::document_t& document, goblin_engineer::address_t address) {
@@ -198,6 +218,11 @@ namespace services::dispatcher {
     void manager_dispatcher_t::create_collection(session_t& session, std::string& database_name,std::string& collection_name) {
         log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ",session.data(),database_name,collection_name);
         return goblin_engineer::send(dispathers_[0],address(),database::create_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
+    }
+
+    void manager_dispatcher_t::drop_collection(components::session::session_t &session, std::string &database_name, std::string &collection_name) {
+        log_.trace("manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ",session.data(),database_name,collection_name);
+        return goblin_engineer::send(dispathers_[0],address(),database::drop_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
     }
 
     void manager_dispatcher_t::insert_one(session_t& session, std::string& collection_name, components::document::document_t& document) {
