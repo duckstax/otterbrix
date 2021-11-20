@@ -12,7 +12,7 @@ collection = database[collection_name]
 
 @pytest.fixture()
 def gen_collection(request):
-    #collection.delete_many({})
+    collection = database[collection_name]
     for num in range(100):
         obj = {}
         obj['_id'] = str(num) #delete
@@ -66,6 +66,7 @@ def test_initialize_collection(gen_collection):
     #for doc in cursor:
         #count += 1
     #assert count == 100
+    assert cursor.count() == 100
     assert len(cursor) == 100
     assert c.count() == 100
     assert len(c) == 100
@@ -79,3 +80,39 @@ def test_drop_collection(gen_collection):
     c = database[collection_name]
     assert c.drop() is True
     assert c.drop() is False
+
+
+def test_find_with_filter_named_parameter(gen_collection):
+    c = gen_collection['collection'].find(filter={})
+    assert c.count() == 100
+    assert gen_collection['collection'].find(filter={}).count() == 100
+
+
+def test_greater_than(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$gte': 50}})
+    assert c.count() == 50
+    assert gen_collection['collection'].find({'count': {'$gte': 50}}).count() == 50
+
+
+def test_find_in_subdocument(gen_collection):
+    c = gen_collection['collection'].find({'mixedDict.count': 0})
+    assert c.count() == 1
+    assert gen_collection['collection'].find({'mixedDict.count': 0}).count() == 1
+
+
+def test_find_in_subdocument_with_operator(gen_collection):
+    c = gen_collection['collection'].find({'mixedDict.count': {'$gte': 50}})
+    assert c.count() == 50
+    assert gen_collection['collection'].find({'mixedDict.count': {'$gte': 50}}).count() == 50
+
+
+def test_find_in_subdocument_3_levels(gen_collection):
+    c = gen_collection['collection'].find({'mixedDict.countDict.even': True})
+    assert c.count() == 50
+    assert gen_collection['collection'].find({'mixedDict.countDict.even': True}).count() == 50
+
+
+def test_find_in_subdocument_with_array(gen_collection):
+    c = gen_collection['collection'].find({'mixedDict.countArray.3': {'$gt': 50}})
+    assert c.count() == 52
+    assert gen_collection['collection'].find({'mixedDict.countArray.3': {"$gt": 50}}).count() == 52

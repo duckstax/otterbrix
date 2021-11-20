@@ -224,6 +224,9 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
         } else if (value->type() == value_type::dict) {
             auto dict = ::document::impl::mutable_dict_t::new_dict(value->as_dict()).detach();
             return parse_condition(document_t(dict, true), std::move(q), key);
+        } else {
+            query_ptr q2 = GET_CONDITION(eq, key, value);
+            q = q ? std::move(q) & std::move(q2) : std::move(q2);
         }
     }
     return prev_cond ? std::move(prev_cond) & std::move(q) : std::move(q);
