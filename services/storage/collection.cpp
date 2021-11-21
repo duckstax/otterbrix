@@ -15,6 +15,7 @@ namespace services::storage {
 collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
     : goblin_engineer::abstract_service(database, std::move(name))
     , log_(log.clone())
+    , database_(database->address())
     , index_(mutable_dict_t::new_dict()) {
     add_handler(collection::insert_one, &collection_t::insert_one);
     add_handler(collection::insert_many, &collection_t::insert_many);

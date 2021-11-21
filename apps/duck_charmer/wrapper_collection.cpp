@@ -13,8 +13,9 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
-wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatcher_t*ptr, log_t& log)
+wrapper_collection::wrapper_collection(const std::string& name, const std::string &database, wrapper_dispatcher_t*ptr, log_t& log)
     : name_(name)
+    , database_(database)
     , ptr_(ptr)
     , log_(log.clone()){
     log_.debug("wrapper_collection");

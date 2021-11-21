@@ -22,7 +22,7 @@ namespace py = pybind11;
 namespace duck_charmer {
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
     public:
-        wrapper_collection(const std::string& name, wrapper_dispatcher_t*, log_t& log);
+        wrapper_collection(const std::string& name, const std::string &database, wrapper_dispatcher_t*, log_t& log);
         ~wrapper_collection();
         std::string print();
         std::size_t size();
@@ -40,6 +40,7 @@ namespace duck_charmer {
 
     private:
         const std::string name_;
+        const std::string database_;
         wrapper_dispatcher_t* ptr_;
         mutable log_t log_;
     };

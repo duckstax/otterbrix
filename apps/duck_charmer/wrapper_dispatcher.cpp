@@ -51,7 +51,7 @@ namespace duck_charmer {
             collection_name);
         wait();
         auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
-        return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
+        return wrapper_collection_ptr(new wrapper_collection(collection_name,database_name,this,log_));
     }
 
     result_drop_collection wrapper_dispatcher_t::drop_collection(components::session::session_t &session, const std::string &database, const std::string &collection) {

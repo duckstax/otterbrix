@@ -63,6 +63,7 @@ namespace services::storage {
         result_find_one search_one_(query_ptr cond);
 
         log_t log_;
+        goblin_engineer::address_t database_;
         index_t index_;
         storage_t storage_;
         std::unordered_map<session_t,std::unique_ptr<components::cursor::data_cursor_t>> cursor_storage_;
