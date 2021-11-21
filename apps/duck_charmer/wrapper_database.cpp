@@ -35,7 +35,6 @@ namespace duck_charmer {
         auto result =  ptr_->create_collection(session_tmp,name_,collection_name);
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
         collections_.emplace(collection_name,result);
-        result->database_ = this;
         return result;
     }
 

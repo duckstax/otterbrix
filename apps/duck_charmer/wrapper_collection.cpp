@@ -123,10 +123,13 @@ void wrapper_collection::delete_many(pybind11::object cond) {
 }
 
 bool wrapper_collection::drop() {
-    log_.trace("wrapper_collection::drop");
-    auto result = database_->drop_collection(name_);
-    log_.debug("wrapper_collection::drop {}", result);
-    return result;
+    //todo
+//    log_.debug("wrapper_collection::drop: {}", name_);
+//    result_drop_collection result;
+//    auto session_tmp = duck_charmer::session_t();
+//    result = ptr_->drop_collection(session_tmp, name_);
+//    log_.debug("wrapper_collection::drop {}", result.is_success());
+//    return result.is_success();
 }
 
 }

@@ -41,10 +41,7 @@ namespace duck_charmer {
     private:
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
-        wrapper_database* database_;
         mutable log_t log_;
-
-        friend class wrapper_database;
     };
 
 }
