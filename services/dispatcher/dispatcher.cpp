@@ -60,6 +60,7 @@ namespace services::dispatcher {
         add_handler(database::create_collection, &dispatcher_t::create_collection);
         add_handler("create_collection_finish", &dispatcher_t::create_collection_finish);
         add_handler(database::drop_collection, &dispatcher_t::drop_collection);
+        add_handler("drop_collection_finish_collection", &dispatcher_t::drop_collection_finish_collection);
         add_handler("drop_collection_finish", &dispatcher_t::drop_collection_finish);
         add_handler(collection::insert_one, &dispatcher_t::insert_one);
         add_handler(collection::insert_many, &dispatcher_t::insert_many);
@@ -114,8 +115,22 @@ namespace services::dispatcher {
     }
     void dispatcher_t::drop_collection(components::session::session_t &session, std::string &database_name, std::string &collection_name, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
-        session_to_address_.emplace(session,address);
-        goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::drop_collection, session, collection_name);
+        auto it_collection = collection_address_book_.find({database_name, collection_name});
+        if (it_collection != collection_address_book_.end()) {
+            session_to_address_.emplace(session,address);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), database::drop_collection, session);
+        } else {
+            goblin_engineer::send(address, dispatcher_t::address(), "drop_collection_finish", session, result_drop_collection(false));
+        }
+    }
+    void dispatcher_t::drop_collection_finish_collection(components::session::session_t &session, result_drop_collection &result, std::string &database_name, std::string &collection_name) {
+        log_.debug("dispatcher_t::drop_collection_finish_collection: database_name {} , collection_name {}, result: {}", session.data(), database_name, collection_name, result.is_success());
+        if (result.is_success()) {
+            goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::drop_collection, session, collection_name);
+        } else {
+            goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "drop_collection_finish", session, result);
+            session_to_address_.erase(session);
+        }
     }
     void dispatcher_t::drop_collection_finish(components::session::session_t &session, result_drop_collection &result, std::string& database_name, goblin_engineer::address_t collection) {
         auto type = collection.type();
@@ -135,7 +150,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_one, session, collection, std::move(document));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_one, session, std::move(document));
         } else {
             goblin_engineer::send(address,dispatcher_t::address(),"insert_one_finish",session,result_insert_one());
         }
@@ -146,7 +161,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_many, session, collection, std::move(documents));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_many, session, std::move(documents));
         } else {
             goblin_engineer::send(address,dispatcher_t::address(),"insert_many_finish",session,result_insert_many());
         }
@@ -167,7 +182,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find, session, collection, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find, session, std::move(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "find_finish", session, result_find());
         }
@@ -185,7 +200,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find_one, session, collection, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find_one, session, std::move(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "find_one_finish", session, result_find_one());
         }
@@ -201,7 +216,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::size, session, collection);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::size, session);
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "size_finish", session, result_size());
         }

@@ -73,6 +73,7 @@ namespace services::dispatcher {
         void create_collection(components::session::session_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address);
         void create_collection_finish(components::session::session_t& session,storage::collection_create_result,std::string& database_name,goblin_engineer::address_t);
         void drop_collection(components::session::session_t& session, std::string& database_name,std::string& collection_name,goblin_engineer::address_t address);
+        void drop_collection_finish_collection(components::session::session_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
         void drop_collection_finish(components::session::session_t& session, result_drop_collection& result, std::string& database_name, goblin_engineer::address_t collection);
         void insert_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& document, goblin_engineer::address_t address);
         void insert_many(components::session::session_t& session, std::string& database_name, std::string& collection, std::list<components::document::document_t>& documents, goblin_engineer::address_t address);
