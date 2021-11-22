@@ -72,7 +72,7 @@ namespace services::storage {
         auto address = spawn_actor<collection_t>(std::string(name),log_);
         collections_.emplace(address.type(),address);
         auto self  = database_t::address();
-        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,collection_create_result(true),address);
+        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,collection_create_result(true),std::string(self.type()),address);
     }
 
     void database_t::drop(components::session::session_t &session, std::string &name) {
@@ -81,10 +81,10 @@ namespace services::storage {
         auto collection = collections_.find(name);
         if (collection != collections_.end()) {
             auto address = collection->second;
-            collections_.erase(name);
-            return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(true),address);
+            collections_.erase(collection);
+            return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(true),std::string(self.type()),address);
         }
-        return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(false),nullptr);
+        return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(false),std::string(self.type()),self);
     }
 
 } // namespace kv

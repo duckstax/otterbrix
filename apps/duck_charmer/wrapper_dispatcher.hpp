@@ -45,11 +45,11 @@ namespace duck_charmer {
         auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
         auto create_collection(duck_charmer::session_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
         result_drop_collection drop_collection(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
-        auto insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
-        auto insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
-        auto find(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
-        auto find_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t condition) -> result_find_one&;
-        result_size size(duck_charmer::session_t& session, const std::string& collection);
+        auto insert_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
+        auto insert_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
+        auto find(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
+        auto find_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_find_one&;
+        result_size size(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
 
     protected:
         auto add_actor_impl(goblin_engineer::actor) -> void override{
