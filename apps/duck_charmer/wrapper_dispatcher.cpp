@@ -51,7 +51,7 @@ namespace duck_charmer {
             collection_name);
         wait();
         auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
-        return wrapper_collection_ptr(new wrapper_collection(collection_name,this,log_));
+        return wrapper_collection_ptr(new wrapper_collection(collection_name,database_name,this,log_));
     }
 
     result_drop_collection wrapper_dispatcher_t::drop_collection(components::session::session_t &session, const std::string &database, const std::string &collection) {
@@ -69,7 +69,7 @@ namespace duck_charmer {
         return std::get<result_drop_collection>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& collection, components::document::document_t &document) -> result_insert_one& {
+    auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t &document) -> result_insert_one& {
         log_.trace("wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -77,13 +77,14 @@ namespace duck_charmer {
             address(),
             collection::insert_one,
             session,
+            database,
             collection,
             std::move(document));
         wait();
         return std::get<result_insert_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many& {
+    auto wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many& {
         log_.trace("wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -91,13 +92,14 @@ namespace duck_charmer {
             address(),
             collection::insert_many,
             session,
+            database,
             collection,
             std::move(documents));
         wait();
         return std::get<result_insert_many>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session,const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr {
+    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr {
         log_.trace("wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -105,6 +107,7 @@ namespace duck_charmer {
             address(),
             collection::find,
             session,
+            database,
             collection,
             std::move(condition)
             );
@@ -112,7 +115,7 @@ namespace duck_charmer {
         return wrapper_cursor_ptr(new wrapper_cursor(session, std::get<components::cursor::cursor_t*>(intermediate_store_)));
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_t &session, const std::string &collection, components::document::document_t condition) -> result_find_one& {
+    auto wrapper_dispatcher_t::find_one(components::session::session_t &session, const std::string& database, const std::string &collection, components::document::document_t condition) -> result_find_one& {
         log_.trace("wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -120,6 +123,7 @@ namespace duck_charmer {
             address(),
             collection::find_one,
             session,
+            database,
             collection,
             std::move(condition)
             );
@@ -127,7 +131,7 @@ namespace duck_charmer {
         return std::get<result_find_one>(intermediate_store_);
     }
 
-    result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session,const  std::string& collection) {
+    result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session, const std::string& database, const std::string& collection) {
         log_.trace("wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -135,6 +139,7 @@ namespace duck_charmer {
             address(),
             collection::size,
             session,
+            database,
             collection
             );
         wait();

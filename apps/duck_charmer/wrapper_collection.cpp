@@ -13,8 +13,9 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
-wrapper_collection::wrapper_collection(const std::string& name, wrapper_dispatcher_t*ptr, log_t& log)
+wrapper_collection::wrapper_collection(const std::string& name, const std::string &database, wrapper_dispatcher_t*ptr, log_t& log)
     : name_(name)
+    , database_(database)
     , ptr_(ptr)
     , log_(log.clone()){
     log_.debug("wrapper_collection");
@@ -31,7 +32,7 @@ std::string wrapper_collection::print() {
 std::size_t wrapper_collection::size() {
     log_.trace("wrapper_collection::size");
     auto session_tmp = duck_charmer::session_t();
-    return *(ptr_->size(session_tmp, name_));
+    return *(ptr_->size(session_tmp, database_, name_));
 }
 
 pybind11::list wrapper_collection::insert(const py::handle& documents) {
@@ -51,7 +52,7 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
         components::document::document_t doc;
         to_document(document, doc);
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->insert_one(session_tmp, name_, doc);
+        auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
         log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().size());
         return result.inserted_id();
     }
@@ -69,7 +70,7 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
             docs.push_back(std::move(doc));
         }
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->insert_many(session_tmp, name_, docs);
+        auto result = ptr_->insert_many(session_tmp, database_, name_, docs);
         log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
         py::list list;
         for (const auto &id : result.inserted_ids()) list.append(id);
@@ -91,7 +92,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         components::document::document_t condition;
         to_document(cond, condition);
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->find(session_tmp, name_, std::move(condition));
+        auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::find {} records", result->size());
         return result;
     }
@@ -105,7 +106,7 @@ auto wrapper_collection::find_one(py::object cond) -> py::dict {
         components::document::document_t condition;
         to_document(cond, condition);
         auto session_tmp = duck_charmer::session_t();
-        auto result = ptr_->find_one(session_tmp, name_, std::move(condition));
+        auto result = ptr_->find_one(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::find_one {}", result.is_find());
         return from_document(*result);
     }
@@ -123,10 +124,12 @@ void wrapper_collection::delete_many(pybind11::object cond) {
 }
 
 bool wrapper_collection::drop() {
-    log_.trace("wrapper_collection::drop");
-    auto result = database_->drop_collection(name_);
-    log_.debug("wrapper_collection::drop {}", result);
-    return result;
+    log_.debug("wrapper_collection::drop: {}", name_);
+    result_drop_collection result;
+    auto session_tmp = duck_charmer::session_t();
+    result = ptr_->drop_collection(session_tmp, database_, name_);
+    log_.debug("wrapper_collection::drop {}", result.is_success());
+    return result.is_success();
 }
 
 }
