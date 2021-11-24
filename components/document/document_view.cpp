@@ -27,6 +27,19 @@ document_view_t::document_view_t(document_view_t::index_t index, document_view_t
     , storage_(storage) {
 }
 
+document_view_t::document_view_t(const document_view_t &src)
+    : index_(src.index_)
+    , array_(src.array_)
+    , storage_(src.storage_) {
+}
+
+document_view_t &document_view_t::operator=(const document_view_t &src) {
+    index_ = src.index_;
+    array_ = src.array_;
+    storage_ = src.storage_;
+    return *this;
+}
+
 bool document_view_t::is_valid() const {
     return index_ != nullptr;
 }
@@ -164,7 +177,7 @@ bool document_view_t::is_dict(uint32_t index) const {
 }
 
 object_handle document_view_t::get(std::string &&key) const {
-    auto field = index_->get(std::move(key));
+    auto field = index_ ? index_->get(std::move(key)) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
         return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
@@ -173,7 +186,7 @@ object_handle document_view_t::get(std::string &&key) const {
 }
 
 object_handle document_view_t::get(const std::string &key) const {
-    auto field = index_->get(key);
+    auto field = index_ ? index_->get(key) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
         return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
@@ -215,11 +228,13 @@ std::string document_view_t::get_string(std::string &&key) const {
 }
 
 document_view_t document_view_t::get_array(std::string &&key) const {
-    return document_view_t(index_->get(std::move(key))->as_array(), storage_);
+    if (index_) return document_view_t(index_->get(std::move(key))->as_array(), storage_);
+    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())))->as_array(), storage_);
 }
 
 document_view_t document_view_t::get_array(const std::string &key) const {
-    return document_view_t(index_->get(key)->as_array(), storage_);
+    if (index_) return document_view_t(index_->get(key)->as_array(), storage_);
+    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())))->as_array(), storage_);
 }
 
 document_view_t document_view_t::get_array(uint32_t index) const {
@@ -227,11 +242,13 @@ document_view_t document_view_t::get_array(uint32_t index) const {
 }
 
 document_view_t document_view_t::get_dict(std::string &&key) const {
-    return document_view_t(index_->get(std::move(key))->as_dict(), storage_);
+    if (index_) return document_view_t(index_->get(std::move(key))->as_dict(), storage_);
+    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())))->as_dict(), storage_);
 }
 
 document_view_t document_view_t::get_dict(const std::string &key) const {
-    return document_view_t(index_->get(key)->as_dict(), storage_);
+    if (index_) return document_view_t(index_->get(key)->as_dict(), storage_);
+    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())))->as_dict(), storage_);
 }
 
 document_view_t document_view_t::get_dict(uint32_t index) const {
