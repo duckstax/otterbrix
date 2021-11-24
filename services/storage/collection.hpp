@@ -43,12 +43,12 @@ namespace services::storage {
         collection_t(goblin_engineer::supervisor_t*,std::string name, log_t& log);
         ~collection_t();
 
-        auto size(session_t& session, std::string& collection) -> void;
-        void insert_one(session_t& session_t, std::string& collection, document_t &document);
-        void insert_many(session_t& session, std::string& collection, std::list<document_t> &documents);
-        auto find(const session_t& session, const std::string &collection, const document_t &cond) -> void;
-        auto find_one(const session_t& session, const std::string &collection, const document_t &cond) -> void;
-        void drop();
+        auto size(session_t& session) -> void;
+        void insert_one(session_t& session_t, document_t &document);
+        void insert_many(session_t& session, std::list<document_t> &documents);
+        auto find(const session_t& session, const document_t &cond) -> void;
+        auto find_one(const session_t& session, const document_t &cond) -> void;
+        void drop(const session_t& session);
         void close_cursor(session_t& session);
 
     private:
@@ -58,14 +58,16 @@ namespace services::storage {
         document_view_t get_(const std::string& id) const;
         std::size_t size_() const;
         auto remove_(const std::string& key);
-        void drop_();
+        bool drop_();
         result_find search_(query_ptr cond);
         result_find_one search_one_(query_ptr cond);
 
         log_t log_;
+        goblin_engineer::address_t database_;
         index_t index_;
         storage_t storage_;
         std::unordered_map<session_t,std::unique_ptr<components::cursor::data_cursor_t>> cursor_storage_;
+        bool dropped_ {false};
 
 #ifdef DEV_MODE
     public:

@@ -25,8 +25,8 @@ namespace duck_charmer {
         wrapper_database(const std::string& name, wrapper_dispatcher_t*, log_t& log);
         ~wrapper_database();
         auto collection_names() -> py::list;
-        wrapper_collection_ptr create(const std::string& name);
-        bool drop_collection(const std::string& name);
+        wrapper_collection_ptr create(const std::string& collection_name);
+        bool drop_collection(const std::string& collection_name);
 
     private:
         const std::string name_;
