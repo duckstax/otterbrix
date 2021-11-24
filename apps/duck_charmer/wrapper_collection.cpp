@@ -114,13 +114,10 @@ auto wrapper_collection::find_one(py::object cond) -> py::dict {
     return py::dict();
 }
 
-void wrapper_collection::remove(py::object cond) {
+void wrapper_collection::delete_one(py::object cond) {
 }
 
-void wrapper_collection::delete_one(pybind11::object cond) {
-}
-
-void wrapper_collection::delete_many(pybind11::object cond) {
+void wrapper_collection::delete_many(py::object cond) {
 }
 
 bool wrapper_collection::drop() {

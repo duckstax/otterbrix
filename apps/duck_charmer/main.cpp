@@ -5,6 +5,7 @@
 #include "wrapper_database.hpp"
 #include "wrapper_cursor.hpp"
 #include "wrapper_document.hpp"
+#include "wrapper_result.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -56,7 +57,6 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("update_one", &wrapper_collection::update_one, py::arg("fields"), py::arg("cond"))
         .def("find", &wrapper_collection::find, py::arg("filter"))
         .def("find_one", &wrapper_collection::find_one, py::arg("filter"))
-        .def("remove", &wrapper_collection::remove, py::arg("cond"))
         .def("delete_one", &wrapper_collection::delete_one, py::arg("cond"))
         .def("delete_many", &wrapper_collection::delete_many, py::arg("cond"))
         .def("drop", &wrapper_collection::drop)
@@ -80,6 +80,11 @@ PYBIND11_MODULE(duck_charmer, m) {
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
         //.def("sort", &wrapper_cursor::sort)
+        ;
+
+    py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")
+        .def_property_readonly("raw_result", &wrapper_result_delete::raw_result)
+        .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count)
         ;
 
     m.def(
