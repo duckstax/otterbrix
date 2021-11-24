@@ -53,12 +53,12 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("insert", &wrapper_collection::insert, py::arg("documents"))
         .def("insert_one", &wrapper_collection::insert_one, py::arg("document"))
         .def("insert_many", &wrapper_collection::insert_many, py::arg("documents"))
-        .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("cond"))
-        .def("update_one", &wrapper_collection::update_one, py::arg("fields"), py::arg("cond"))
+        .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("filter"))
+        .def("update_one", &wrapper_collection::update_one, py::arg("fields"), py::arg("filter"))
         .def("find", &wrapper_collection::find, py::arg("filter"))
         .def("find_one", &wrapper_collection::find_one, py::arg("filter"))
-        .def("delete_one", &wrapper_collection::delete_one, py::arg("cond"))
-        .def("delete_many", &wrapper_collection::delete_many, py::arg("cond"))
+        .def("delete_one", &wrapper_collection::delete_one, py::arg("filter"))
+        .def("delete_many", &wrapper_collection::delete_many, py::arg("filter"))
         .def("drop", &wrapper_collection::drop)
         ;
 

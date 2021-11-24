@@ -114,10 +114,30 @@ auto wrapper_collection::find_one(py::object cond) -> py::dict {
     return py::dict();
 }
 
-void wrapper_collection::delete_one(py::object cond) {
+wrapper_result_delete wrapper_collection::delete_one(py::object cond) {
+    log_.trace("wrapper_collection::delete_one");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->delete_one(session_tmp, database_, name_, std::move(condition));
+        log_.debug("wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
+        return wrapper_result_delete(result);
+    }
+    return wrapper_result_delete();
 }
 
-void wrapper_collection::delete_many(py::object cond) {
+wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
+    log_.trace("wrapper_collection::delete_many");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->delete_many(session_tmp, database_, name_, std::move(condition));
+        log_.debug("wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
+        return wrapper_result_delete(result);
+    }
+    return wrapper_result_delete();
 }
 
 bool wrapper_collection::drop() {

@@ -21,6 +21,8 @@ collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string 
     add_handler(collection::insert_many, &collection_t::insert_many);
     add_handler(collection::find, &collection_t::find);
     add_handler(collection::find_one, &collection_t::find_one);
+    add_handler(collection::delete_one, &collection_t::delete_one);
+    add_handler(collection::delete_many, &collection_t::delete_many);
     add_handler(collection::size, &collection_t::size);
     add_handler(database::drop_collection, &collection_t::drop);
     add_handler(collection::close_cursor, &collection_t::close_cursor);
@@ -80,6 +82,22 @@ void collection_t::find_one(const session_t &session, const document_t &cond) {
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_ ? result_find_one() : search_one_(parse_condition(cond));
     goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
+}
+
+auto collection_t::delete_one(const session_t &session, const document_t &cond) -> void {
+    log_.debug("collection::delete_one : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = dropped_ ? result_delete() : delete_one_(parse_condition(cond));
+    goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
+}
+
+auto collection_t::delete_many(const session_t &session, const document_t &cond) -> void {
+    log_.debug("collection::delete_many : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = dropped_ ? result_delete() : delete_many_(parse_condition(cond));
+    goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
 
@@ -172,8 +190,36 @@ result_find_one collection_t::search_one_(query_ptr cond) {
     return result_find_one();
 }
 
-auto collection_t::remove_(const std::string& key) {
-    //        storage_.erase(key);
+result_delete collection_t::delete_one_(query_ptr cond) {
+    for (auto it = index_->begin(); it; ++it) {
+        auto id = static_cast<std::string>(it.key()->as_string());
+        auto doc = get_(id);
+        if (!cond || cond->check(doc)) {
+            remove_(id);
+            return result_delete({id});
+        }
+    }
+    return result_delete();
+}
+
+result_delete collection_t::delete_many_(query_ptr cond) {
+    result_delete::result_t deleted;
+    for (auto it = index_->begin(); it; ++it) {
+        auto id = static_cast<std::string>(it.key()->as_string());
+        auto doc = get_(id);
+        if (!cond || cond->check(doc)) {
+            deleted.push_back(id);
+        }
+    }
+    for (const auto &id : deleted) {
+        remove_(id);
+    }
+    return result_delete(std::move(deleted));
+}
+
+void collection_t::remove_(const std::string &id) {
+    //todo clear storage
+    index_->remove(id);
 }
 
 void collection_t::close_cursor(session_t& session) {

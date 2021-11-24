@@ -34,8 +34,8 @@ namespace duck_charmer {
         void update_one(py::dict fields, py::object cond);
         auto find(py::object cond) -> wrapper_cursor_ptr;
         auto find_one(py::object cond) -> py::dict;
-        void delete_one(py::object cond);
-        void delete_many(py::object cond);
+        wrapper_result_delete delete_one(py::object cond);
+        wrapper_result_delete delete_many(py::object cond);
         bool drop();
 
     private:

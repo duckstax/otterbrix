@@ -48,6 +48,8 @@ namespace services::storage {
         void insert_many(session_t& session, std::list<document_t> &documents);
         auto find(const session_t& session, const document_t &cond) -> void;
         auto find_one(const session_t& session, const document_t &cond) -> void;
+        auto delete_one(const session_t& session, const document_t &cond) -> void;
+        auto delete_many(const session_t& session, const document_t &cond) -> void;
         void drop(const session_t& session);
         void close_cursor(session_t& session);
 
@@ -57,10 +59,12 @@ namespace services::storage {
         field_index_t insert_field_(field_value_t value, int version);
         document_view_t get_(const std::string& id) const;
         std::size_t size_() const;
-        auto remove_(const std::string& key);
         bool drop_();
         result_find search_(query_ptr cond);
         result_find_one search_one_(query_ptr cond);
+        result_delete delete_one_(query_ptr cond);
+        result_delete delete_many_(query_ptr cond);
+        void remove_(const std::string& id);
 
         log_t log_;
         goblin_engineer::address_t database_;

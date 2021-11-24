@@ -129,15 +129,15 @@ def test_delete_one(gen_collection):
     assert c.count() == 98
 
 
-#def test_delete_all(gen_collection):
-    #result = gen_collection['collection'].delete_many({})
-    #assert result.deleted_count == 100
-    #c = gen_collection['collection'].find({})
-    #assert c.count() == 0
+def test_delete_all(gen_collection):
+    result = gen_collection['collection'].delete_many({})
+    assert result.deleted_count == 100
+    c = gen_collection['collection'].find({})
+    assert c.count() == 0
 
 
-#def test_delete_many(gen_collection):
-    #result = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
-    #assert result.deleted_count == 50
-    #c = gen_collection['collection'].find({})
-    #assert c.count() == 50
+def test_delete_many(gen_collection):
+    result = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+    assert result.deleted_count == 50
+    c = gen_collection['collection'].find({})
+    assert c.count() == 50
