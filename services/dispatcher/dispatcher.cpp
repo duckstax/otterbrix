@@ -195,7 +195,9 @@ namespace services::dispatcher {
     void dispatcher_t::find_finish(components::session::session_t& session, components::cursor::sub_cursor_t* cursor) {
         log_.debug("dispatcher_t::find_finish session: {}", session.data());
         auto result = new components::cursor::cursor_t();
-        if (cursor) result->push(cursor);
+        if (cursor) {
+            result->push(cursor);
+        }
         goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_finish", session, result);
         session_to_address_.erase(session);
     }

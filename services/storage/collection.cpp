@@ -36,7 +36,9 @@ auto collection_t::size(session_t& session) -> void {
     log_.debug("collection {}::size", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = dropped_ ? result_size() : result_size(size_());
+    auto result = dropped_
+            ? result_size()
+            : result_size(size_());
     goblin_engineer::send(dispatcher, address(), "size_finish", session, result);
 }
 
@@ -44,7 +46,9 @@ void collection_t::insert_one(session_t& session, document_t& document) {
     log_.debug("collection_t::insert_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = dropped_ ? result_insert_one() : result_insert_one(insert_(document));
+    auto result = dropped_
+            ? result_insert_one()
+            : result_insert_one(insert_(document));
     goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
 }
 
@@ -58,7 +62,9 @@ void collection_t::insert_many(session_t &session, std::list<document_t> &docume
         std::vector<std::string> result;
         for (const auto &document : documents) {
             auto id = insert_(document);
-            if (!id.empty()) result.emplace_back(std::move(id));
+            if (!id.empty()) {
+                result.emplace_back(std::move(id));
+            }
         }
         goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
     }
@@ -80,7 +86,9 @@ void collection_t::find_one(const session_t &session, const document_t &cond) {
     log_.debug("collection::find_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = dropped_ ? result_find_one() : search_one_(parse_condition(cond));
+    auto result = dropped_
+            ? result_find_one()
+            : search_one_(parse_condition(cond));
     goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
 }
 
@@ -88,7 +96,9 @@ auto collection_t::delete_one(const session_t &session, const document_t &cond) 
     log_.debug("collection::delete_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = dropped_ ? result_delete() : delete_one_(parse_condition(cond));
+    auto result = dropped_
+            ? result_delete()
+            : delete_one_(parse_condition(cond));
     goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
@@ -96,7 +106,9 @@ auto collection_t::delete_many(const session_t &session, const document_t &cond)
     log_.debug("collection::delete_many : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = dropped_ ? result_delete() : delete_many_(parse_condition(cond));
+    auto result = dropped_
+            ? result_delete()
+            : delete_many_(parse_condition(cond));
     goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
@@ -113,12 +125,14 @@ std::string collection_t::gen_id() const {
 }
 
 std::string collection_t::insert_(const document_t& document, int version) {
-    auto id = document.is_exists("_id") ? document.get_string("_id") : gen_id();
+    auto id = document.is_exists("_id")
+            ? document.get_string("_id")
+            : gen_id();
     if (index_->get(id) == nullptr) {
         auto index = mutable_dict_t::new_dict();
         for (auto it = document.begin(); it; ++it) {
             auto key = it.key()->as_string();
-            /*if (key != "_id") */index->set(key, insert_field_(it.value(), version));
+            index->set(key, insert_field_(it.value(), version));
         }
         index_->set(std::move(id), index);
         return id;
@@ -149,13 +163,17 @@ collection_t::field_index_t collection_t::insert_field_(collection_t::field_valu
     index->append(document_t::get_msgpack_type(value));
     index->append(offset);
     index->append(storage_.size() - offset);
-    if (version) index->append(version);
+    if (version) {
+        index->append(version);
+    }
     return index;
 }
 
 document_view_t collection_t::get_(const std::string& id) const {
     auto value = index_->get(id);
-    if (value != nullptr) return document_view_t(value->as_dict(), &storage_);
+    if (value != nullptr) {
+        return document_view_t(value->as_dict(), &storage_);
+    }
     return document_view_t();
 }
 
@@ -164,7 +182,9 @@ std::size_t collection_t::size_() const {
 }
 
 bool collection_t::drop_() {
-    if (dropped_) return false;
+    if (dropped_) {
+        return false;
+    }
     dropped_ = true;
     return true;
 }

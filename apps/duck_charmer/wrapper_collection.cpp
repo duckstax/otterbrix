@@ -39,10 +39,14 @@ pybind11::list wrapper_collection::insert(const py::handle& documents) {
     if (py::isinstance<py::dict>(documents)) {
         py::list result;
         auto id = insert_one(documents);
-        if (!id.empty()) result.append(id);
+        if (!id.empty()) {
+            result.append(id);
+        }
         return result;
     }
-    if (py::isinstance<py::list>(documents)) return insert_many(documents);
+    if (py::isinstance<py::list>(documents)) {
+        return insert_many(documents);
+    }
     return py::list();
 }
 
