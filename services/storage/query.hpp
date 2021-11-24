@@ -35,11 +35,11 @@ query_ptr operator |(query_ptr &&q1, query_ptr &&q2) noexcept;
 query_ptr operator !(query_ptr &&q) noexcept;
 
 
-template<class T> struct query_helper               { typedef T type; };
-template<> struct query_helper<char *>              { typedef std::string type; };
-template<int size> struct query_helper<char [size]> { typedef std::string type; };
-template<> struct query_helper<int>                 { typedef long type; };
-template<> struct query_helper<uint>                { typedef ulong type; };
+template<class T> struct query_helper                { typedef T type; };
+template<> struct query_helper<char *>               { typedef std::string type; };
+template<uint size> struct query_helper<char [size]> { typedef std::string type; };
+template<> struct query_helper<int>                  { typedef long type; };
+template<> struct query_helper<uint>                 { typedef ulong type; };
 #define QH(T) typename query_helper<T>::type
 
 template <class T>
@@ -51,7 +51,18 @@ public:
     {}
 
     bool check(const document_view_t &doc) const override {
-        return check_(doc.get_as<QH(T)>(key_));
+        document_view_t sub_doc(doc);
+        std::size_t start = 0;
+        std::size_t dot_pos = key_.find(".");
+        while (dot_pos != std::string::npos) {
+            auto key = key_.substr(start, dot_pos - start);
+            if (sub_doc.is_dict(key)) sub_doc = sub_doc.get_dict(key);
+            else if (sub_doc.is_array(key)) sub_doc = sub_doc.get_array(key);
+            else return false;
+            start = dot_pos + 1;
+            dot_pos = key_.find(".", start);
+        }
+        return check_(sub_doc.get_as<QH(T)>(key_.substr(start, key_.size() - start)));
     }
 
     bool check(const document_t &doc) const override {

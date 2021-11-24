@@ -15,12 +15,14 @@ namespace services::storage {
 collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
     : goblin_engineer::abstract_service(database, std::move(name))
     , log_(log.clone())
+    , database_(database->address())
     , index_(mutable_dict_t::new_dict()) {
     add_handler(collection::insert_one, &collection_t::insert_one);
     add_handler(collection::insert_many, &collection_t::insert_many);
     add_handler(collection::find, &collection_t::find);
     add_handler(collection::find_one, &collection_t::find_one);
     add_handler(collection::size, &collection_t::size);
+    add_handler(database::drop_collection, &collection_t::drop);
     add_handler(collection::close_cursor, &collection_t::close_cursor);
 }
 
@@ -28,51 +30,64 @@ collection_t::~collection_t() {
     storage_.clear();
 }
 
-auto collection_t::size(session_t& session, std::string& collection) -> void {
-    log_.debug("collection {}::size", collection);
-    auto dispatcher = address_book("dispatcher");
-    log_.debug("dispatcer : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "size_finish", session, result_size(size_()));
-}
-
-void collection_t::insert_one(session_t& session, std::string& collection, document_t& document) {
-    log_.debug("collection_t::insert_one : {}", collection);
-    auto result = insert_(document);
+auto collection_t::size(session_t& session) -> void {
+    log_.debug("collection {}::size", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result_insert_one(result));
+    auto result = dropped_ ? result_size() : result_size(size_());
+    goblin_engineer::send(dispatcher, address(), "size_finish", session, result);
 }
 
-void collection_t::insert_many(components::session::session_t &session, std::string &collection, std::list<document_t> &documents) {
-    log_.debug("collection_t::insert_many : {}", collection);
-    std::vector<std::string> result;
-    for (const auto &document : documents) {
-        auto id = insert_(document);
-        if (!id.empty()) result.emplace_back(std::move(id));
+void collection_t::insert_one(session_t& session, document_t& document) {
+    log_.debug("collection_t::insert_one : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = dropped_ ? result_insert_one() : result_insert_one(insert_(document));
+    goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
+}
+
+void collection_t::insert_many(session_t &session, std::list<document_t> &documents) {
+    log_.debug("collection_t::insert_many : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    if (dropped_) {
+        goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many());
+    } else {
+        std::vector<std::string> result;
+        for (const auto &document : documents) {
+            auto id = insert_(document);
+            if (!id.empty()) result.emplace_back(std::move(id));
+        }
+        goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
     }
-    auto dispatcher = address_book("dispatcher");
-    log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
 }
 
-auto collection_t::find(const session_t& session, const std::string &collection, const document_t &cond) -> void {
-    log_.debug("collection::find : {}", collection);
+auto collection_t::find(const session_t& session, const document_t &cond) -> void {
+    log_.debug("collection::find : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
-    goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
+    if (dropped_) {
+        goblin_engineer::send(dispatcher, address(), "find_finish", session, nullptr);
+    } else {
+        auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
+        goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
+    }
 }
 
-void collection_t::find_one(const components::session::session_t &session, const std::string &collection, const document_t &cond) {
-    log_.debug("collection::find_one : {}", collection);
+void collection_t::find_one(const session_t &session, const document_t &cond) {
+    log_.debug("collection::find_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
-    goblin_engineer::send(dispatcher, address(), "find_one_finish", session, search_one_(parse_condition(cond)));
+    auto result = dropped_ ? result_find_one() : search_one_(parse_condition(cond));
+    goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
 }
 
 
-void collection_t::drop() {
-    drop_();
+void collection_t::drop(const session_t& session) {
+    log_.debug("collection::drop : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    goblin_engineer::send(dispatcher, address(), "drop_collection_finish_collection", session, result_drop_collection(drop_()), std::string(database_.type()), std::string(type()));
 }
 
 std::string collection_t::gen_id() const {
@@ -130,8 +145,10 @@ std::size_t collection_t::size_() const {
     return index_->count();
 }
 
-void collection_t::drop_() {
-    //        storage_.clear();
+bool collection_t::drop_() {
+    if (dropped_) return false;
+    dropped_ = true;
+    return true;
 }
 
 result_find collection_t::search_(query_ptr cond) {

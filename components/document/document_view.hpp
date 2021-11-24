@@ -28,6 +28,8 @@ public:
 
     document_view_t();
     document_view_t(index_t index, storage_t storage);
+    document_view_t(const document_view_t &src);
+    document_view_t &operator=(const document_view_t &src);
 
     bool is_valid() const;
     bool is_dict() const;

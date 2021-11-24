@@ -86,3 +86,15 @@ private:
     result_t doc_;
 };
 
+
+class result_drop_collection {
+public:
+    using result_t = bool;
+
+    result_drop_collection() = default;
+    explicit result_drop_collection(result_t success);
+    result_t is_success() const;
+
+private:
+    result_t success_ {false};
+};
