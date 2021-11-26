@@ -33,6 +33,28 @@ namespace services::storage {
     using document_t  = components::document::document_t;
     using document_view_t = components::document::document_view_t;
 
+
+    class removed_data_t {
+    public:
+        using range_t = std::pair<std::size_t, std::size_t>;
+        using ranges_t = std::list<range_t>;
+
+        removed_data_t() = default;
+        void add_range(const range_t &range);
+        void clear();
+        void sort();
+        void reverse_sort();
+        const ranges_t &ranges() const;
+        template <class T> void add_document(T document);
+
+    private:
+        ranges_t ranges_;
+
+        static bool is_cross_(const range_t &r1, const range_t r2);
+        static range_t cross_(const range_t &r1, const range_t r2);
+    };
+
+
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         using storage_t = msgpack::sbuffer;
@@ -65,6 +87,8 @@ namespace services::storage {
         result_delete delete_one_(query_ptr cond);
         result_delete delete_many_(query_ptr cond);
         void remove_(const std::string& id);
+        void reindex_();
+        template <class T> void reindex_(T document, std::size_t min_value, std::size_t delta);
 
         log_t log_;
         goblin_engineer::address_t database_;
@@ -72,6 +96,7 @@ namespace services::storage {
         storage_t storage_;
         std::unordered_map<session_t,std::unique_ptr<components::cursor::data_cursor_t>> cursor_storage_;
         bool dropped_ {false};
+        removed_data_t removed_data_;
 
 #ifdef DEV_MODE
     public:
@@ -82,6 +107,8 @@ namespace services::storage {
         std::string get_data_test() const;
         std::size_t size_test() const;
         document_view_t get_test(const std::string &id) const;
+        result_delete delete_one_test(query_ptr cond);
+        result_delete delete_many_test(query_ptr cond);
 #endif
     };
 

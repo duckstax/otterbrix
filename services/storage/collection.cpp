@@ -12,6 +12,77 @@ using ::document::impl::mutable_array_t;
 
 namespace services::storage {
 
+enum {
+    index_type,
+    index_offset,
+    index_size,
+    index_version
+};
+
+void removed_data_t::add_range(const range_t &range) {
+    range_t new_range = range;
+    for (auto it = ranges_.begin(); it != ranges_.end();) {
+        if (is_cross_(new_range, *it)) {
+            auto it_cross = it;
+            ++it;
+            new_range = cross_(new_range, *it_cross);
+            ranges_.erase(it_cross);
+        } else {
+            ++it;
+        }
+    }
+    ranges_.push_back(new_range);
+}
+
+void removed_data_t::clear() {
+    ranges_.clear();
+}
+
+void removed_data_t::sort() {
+    ranges_.sort([](const range_t &r1, const range_t &r2) {
+        return r1.first < r2.first;
+    });
+}
+
+void removed_data_t::reverse_sort() {
+    ranges_.sort([](const range_t &r1, const range_t &r2) {
+        return r1.first > r2.first;
+    });
+}
+
+const removed_data_t::ranges_t &removed_data_t::ranges() const {
+    return ranges_;
+}
+
+template <class T>
+void removed_data_t::add_document(T document) {
+    for (auto it = document->begin(); it; ++it) {
+        if (it.value()->as_dict()) {
+            add_document(it.value()->as_dict());
+        } else if (it.value()->as_array()) {
+            auto a = it.value()->as_array();
+            if (a->get(0)->as_array()) {
+                add_document(a);
+            } else {
+                if (a->count() >= 3) {
+                    auto offset = a->get(index_offset)->as_unsigned();
+                    auto size = a->get(index_size)->as_unsigned();
+                    add_range({offset, offset + size - 1});
+                }
+            }
+        }
+    }
+}
+
+bool removed_data_t::is_cross_(const range_t &r1, const range_t r2) {
+    return r1.first == r2.second + 1 || r2.first == r1.second + 1;
+}
+
+removed_data_t::range_t removed_data_t::cross_(const range_t &r1, const range_t r2) {
+    return {std::min(r1.first, r2.first), std::max(r1.second, r2.second)};
+}
+
+
 collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
     : goblin_engineer::abstract_service(database, std::move(name))
     , log_(log.clone())
@@ -216,6 +287,7 @@ result_delete collection_t::delete_one_(query_ptr cond) {
         auto doc = get_(id);
         if (!cond || cond->check(doc)) {
             remove_(id);
+            reindex_(); //todo
             return result_delete({id});
         }
     }
@@ -234,12 +306,62 @@ result_delete collection_t::delete_many_(query_ptr cond) {
     for (const auto &id : deleted) {
         remove_(id);
     }
+    reindex_(); //todo
     return result_delete(std::move(deleted));
 }
 
 void collection_t::remove_(const std::string &id) {
-    //todo clear storage
+    removed_data_.add_document(index_->get(id)->as_dict());
     index_->remove(id);
+}
+
+void collection_t::reindex_() {
+    //index
+    removed_data_.reverse_sort();
+    for (const auto &range : removed_data_.ranges()) {
+        auto delta = range.second - range.first + 1;
+        for (auto it = index_->begin(); it; ++it) {
+            reindex_(it.value()->as_dict()->as_mutable(), range.second, delta);
+        }
+    }
+
+    //buffer
+    removed_data_.sort();
+    std::size_t start_buffer = 0;
+    storage_t buffer;
+    for (const auto &range : removed_data_.ranges()) {
+        if (start_buffer < range.first) {
+            auto size = range.first - start_buffer;
+            buffer.write(storage_.data() + start_buffer, size);
+        }
+        start_buffer = range.second + 1;
+    }
+    if (start_buffer < storage_.size()) {
+        auto size = storage_.size() - start_buffer;
+        buffer.write(storage_.data() + start_buffer, size);
+    }
+    storage_ = std::move(buffer);
+    removed_data_.clear();
+}
+
+template <class T> void collection_t::reindex_(T document, std::size_t min_value, std::size_t delta) {
+    for (auto it = document->begin(); it; ++it) {
+        if (it.value()->as_dict()) {
+            reindex_(it.value()->as_dict()->as_mutable(), min_value, delta);
+        } else if (it.value()->as_array()->as_mutable()) {
+            auto a = it.value()->as_array()->as_mutable();
+            if (a->get(0)->as_array()) {
+                reindex_(it.value()->as_array()->as_mutable(), min_value, delta);
+            } else {
+                if (a->count() >= 3) {
+                    auto offset = a->get(index_offset)->as_unsigned();
+                    if (offset >= min_value) {
+                        a->set(index_offset, offset - delta);
+                    }
+                }
+            }
+        }
+    }
 }
 
 void collection_t::close_cursor(session_t& session) {
@@ -274,6 +396,15 @@ std::size_t collection_t::size_test() const {
 document_view_t collection_t::get_test(const std::string &id) const {
     return get_(id);
 }
+
+result_delete collection_t::delete_one_test(query_ptr cond) {
+    return delete_one_(std::move(cond));
+}
+
+result_delete collection_t::delete_many_test(query_ptr cond) {
+    return delete_many_(std::move(cond));
+}
+
 #endif
 
 } // namespace services::document
