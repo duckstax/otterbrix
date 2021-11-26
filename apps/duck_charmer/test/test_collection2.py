@@ -116,3 +116,28 @@ def test_find_in_subdocument_with_array(gen_collection):
     c = gen_collection['collection'].find({'mixedDict.countArray.3': {'$gt': 50}})
     assert c.count() == 52
     assert gen_collection['collection'].find({'mixedDict.countArray.3': {"$gt": 50}}).count() == 52
+
+
+def test_delete_one(gen_collection):
+    result = gen_collection['collection'].delete_one({'countBool': True})
+    assert result.deleted_count == 1
+    c = gen_collection['collection'].find({})
+    assert c.count() == 99
+    result = gen_collection['collection'].delete_one({'countBool': True})
+    assert result.deleted_count == 1
+    c = gen_collection['collection'].find({})
+    assert c.count() == 98
+
+
+def test_delete_all(gen_collection):
+    result = gen_collection['collection'].delete_many({})
+    assert result.deleted_count == 100
+    c = gen_collection['collection'].find({})
+    assert c.count() == 0
+
+
+def test_delete_many(gen_collection):
+    result = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+    assert result.deleted_count == 50
+    c = gen_collection['collection'].find({})
+    assert c.count() == 50

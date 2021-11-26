@@ -18,7 +18,9 @@ empty_query_t::empty_query_t(std::string &&key, query_ptr &&q1, query_ptr &&q2)
     : key_(std::move(key))
 {
     sub_query_.push_back(std::move(q1.release()));
-    if (q2) sub_query_.push_back(std::move(q2.release()));
+    if (q2) {
+        sub_query_.push_back(std::move(q2.release()));
+    }
 }
 
 empty_query_t::~empty_query_t() {
@@ -229,7 +231,9 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
             q = q ? std::move(q) & std::move(q2) : std::move(q2);
         }
     }
-    return prev_cond ? std::move(prev_cond) & std::move(q) : std::move(q);
+    return prev_cond
+            ? std::move(prev_cond) & std::move(q)
+            : std::move(q);
 }
 
 }

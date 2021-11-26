@@ -98,3 +98,17 @@ public:
 private:
     result_t success_ {false};
 };
+
+
+class result_delete {
+public:
+    using result_t = std::vector<std::string>;
+
+    result_delete() = default;
+    explicit result_delete(result_t &&deleted_ids);
+    const result_t &deleted_ids() const;
+
+private:
+    result_t deleted_ids_;
+    //TODO: except or error_code
+};

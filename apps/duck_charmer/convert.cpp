@@ -253,3 +253,9 @@ void update_document(const py::handle& source, document_t& target) {
 
     ///throw std::runtime_error("update_document not implemented for this type of object: " + py::repr(source).cast<std::string>());
 }
+
+auto to_pylist(const std::vector<std::string> &src) -> py::list {
+    py::list res;
+    for (const auto &str : src) res.append(str);
+    return res;
+}
