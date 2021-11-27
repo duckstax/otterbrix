@@ -64,7 +64,7 @@ void removed_data_t::add_document(T document) {
             if (a->get(0)->as_array()) {
                 add_document(a);
             } else {
-                if (a->count() >= 3) {
+                if (a->count() >= index_size) {
                     auto offset = a->get(index_offset)->as_unsigned();
                     auto size = a->get(index_size)->as_unsigned();
                     add_range({offset, offset + size - 1});
@@ -353,7 +353,7 @@ template <class T> void collection_t::reindex_(T document, std::size_t min_value
             if (a->get(0)->as_array()) {
                 reindex_(it.value()->as_array()->as_mutable(), min_value, delta);
             } else {
-                if (a->count() >= 3) {
+                if (a->count() >= index_offset) {
                     auto offset = a->get(index_offset)->as_unsigned();
                     if (offset >= min_value) {
                         a->set(index_offset, offset - delta);
