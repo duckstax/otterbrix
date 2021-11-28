@@ -5,6 +5,7 @@
 #include "protocol/request_select.hpp"
 #include "components/document/mutable/mutable_dict.h"
 #include "components/document/mutable/mutable_array.h"
+#include "components/document/index.hpp"
 
 using ::document::impl::value_type;
 using ::document::impl::mutable_dict_t;
@@ -12,12 +13,9 @@ using ::document::impl::mutable_array_t;
 
 namespace services::storage {
 
-enum {
-    index_type,
-    index_offset,
-    index_size,
-    index_version
-};
+namespace index {
+    using namespace components::document::index;
+}
 
 void removed_data_t::add_range(const range_t &range) {
     range_t new_range = range;
@@ -64,9 +62,9 @@ void removed_data_t::add_document(T document) {
             if (a->get(0)->as_array()) {
                 add_document(a);
             } else {
-                if (a->count() >= index_size) {
-                    auto offset = a->get(index_offset)->as_unsigned();
-                    auto size = a->get(index_size)->as_unsigned();
+                if (a->count() >= index::size) {
+                    auto offset = a->get(index::offset)->as_unsigned();
+                    auto size = a->get(index::size)->as_unsigned();
                     add_range({offset, offset + size - 1});
                 }
             }
@@ -353,10 +351,10 @@ template <class T> void collection_t::reindex_(T document, std::size_t min_value
             if (a->get(0)->as_array()) {
                 reindex_(it.value()->as_array()->as_mutable(), min_value, delta);
             } else {
-                if (a->count() >= index_offset) {
-                    auto offset = a->get(index_offset)->as_unsigned();
+                if (a->count() >= index::offset) {
+                    auto offset = a->get(index::offset)->as_unsigned();
                     if (offset >= min_value) {
-                        a->set(index_offset, offset - delta);
+                        a->set(index::offset, offset - delta);
                     }
                 }
             }
