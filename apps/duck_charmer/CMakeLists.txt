@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_headers
         wrapper_cursor.hpp
         wrapper_dispatcher.hpp
         wrapper_document.hpp
+        wrapper_result.hpp
 )
 
 set(${PROJECT_NAME}_sources
@@ -23,6 +24,7 @@ set(${PROJECT_NAME}_sources
         wrapper_cursor.cpp
         wrapper_dispatcher.cpp
         wrapper_document.cpp
+        wrapper_result.cpp
 )
 
 include_directories(

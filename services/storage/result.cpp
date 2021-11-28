@@ -78,3 +78,12 @@ result_drop_collection::result_t result_drop_collection::is_success() const
 {
     return success_;
 }
+
+
+result_delete::result_delete(result_delete::result_t &&deleted_ids)
+    : deleted_ids_(std::move(deleted_ids)) {
+}
+
+const result_delete::result_t &result_delete::deleted_ids() const {
+    return deleted_ids_;
+}
