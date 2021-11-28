@@ -87,3 +87,25 @@ result_delete::result_delete(result_delete::result_t &&deleted_ids)
 const result_delete::result_t &result_delete::deleted_ids() const {
     return deleted_ids_;
 }
+
+
+result_update::result_update(result_update::result_t &&modified_ids, result_update::result_t &&nomodified_ids)
+    : modified_ids_(std::move(modified_ids))
+    , nomodified_ids_(std::move(nomodified_ids)) {
+}
+
+result_update::result_update(std::string &&upserted_id)
+    : upserted_id_(std::move(upserted_id)) {
+}
+
+const result_update::result_t &result_update::modified_ids() const {
+    return modified_ids_;
+}
+
+const result_update::result_t &result_update::nomodified_ids() const {
+    return nomodified_ids_;
+}
+
+const std::string &result_update::upserted_id() const {
+    return upserted_id_;
+}

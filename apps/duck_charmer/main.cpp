@@ -87,6 +87,13 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count)
         ;
 
+    py::class_<wrapper_result_update, boost::intrusive_ptr<wrapper_result_update>>(m, "UpdateResult")
+        .def_property_readonly("raw_result", &wrapper_result_update::raw_result)
+        .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
+        .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
+        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id)
+        ;
+
     m.def(
         "generate_id",
         []() {
