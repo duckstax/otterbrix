@@ -1,19 +1,12 @@
 #include "document_view.hpp"
 #include "core/dict.hpp"
 #include "core/array.hpp"
+#include "index.hpp"
 #include <iostream>
 
 using ::document::impl::value_type;
 
 namespace components::document {
-
-enum {
-    index_type,
-    index_offset,
-    index_size,
-    index_version
-};
-
 
 document_view_t::document_view_t()
     : index_(nullptr)
@@ -180,7 +173,7 @@ object_handle document_view_t::get(std::string &&key) const {
     auto field = index_ ? index_->get(std::move(key)) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
+        return get_value(field_array->get(index::offset)->as_unsigned(), field_array->get(index::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -189,7 +182,7 @@ object_handle document_view_t::get(const std::string &key) const {
     auto field = index_ ? index_->get(key) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
+        return get_value(field_array->get(index::offset)->as_unsigned(), field_array->get(index::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -198,7 +191,7 @@ object_handle document_view_t::get(uint32_t index) const {
     auto field = array_->get(index);
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(index_offset)->as_unsigned(), field_array->get(index_size)->as_unsigned());
+        return get_value(field_array->get(index::offset)->as_unsigned(), field_array->get(index::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -280,7 +273,7 @@ object_type document_view_t::get_type(const ::document::impl::value_t *field) co
             if (array->count() > 0 && (array->get(0)->type() == value_type::array || array->get(0)->type() == value_type::dict)) {
                 return object_type::ARRAY;
             } else {
-                return static_cast<object_type>(field->as_array()->get(index_type)->as_int());
+                return static_cast<object_type>(field->as_array()->get(index::type)->as_int());
             }
         }
     }

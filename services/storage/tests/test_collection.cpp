@@ -133,3 +133,25 @@ TEST_CASE("collection_t find") {
     res = collection->find_test(document_t::from_json("{}"));
     REQUIRE(res->size() == 5);
 }
+
+TEST_CASE("collection_t delete_one") {
+    auto collection = gen_collection();
+    REQUIRE(collection->size_test() == 5);
+    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->size_test() == 4);
+    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->size_test() == 3);
+    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->size_test() == 2);
+    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 0);
+    REQUIRE(collection->size_test() == 2);
+}
+
+TEST_CASE("collection_t delete_many") {
+    auto collection = gen_collection();
+    REQUIRE(collection->size_test() == 5);
+    REQUIRE(collection->delete_many_test(eq("type", "dog")).deleted_ids().size() == 3);
+    REQUIRE(collection->size_test() == 2);
+    REQUIRE(collection->delete_many_test(eq("type", "cat")).deleted_ids().size() == 2);
+    REQUIRE(collection->size_test() == 0);
+}

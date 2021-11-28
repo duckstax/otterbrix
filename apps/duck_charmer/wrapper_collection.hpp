@@ -17,6 +17,7 @@
 #include <log/log.hpp>
 #include "forward.hpp"
 #include "wrapper_dispatcher.hpp"
+#include "wrapper_result.hpp"
 
 namespace py = pybind11;
 namespace duck_charmer {
@@ -33,9 +34,8 @@ namespace duck_charmer {
         void update_one(py::dict fields, py::object cond);
         auto find(py::object cond) -> wrapper_cursor_ptr;
         auto find_one(py::object cond) -> py::dict;
-        void remove(py::object cond);
-        void delete_one(py::object cond);
-        void delete_many(py::object cond);
+        wrapper_result_delete delete_one(py::object cond);
+        wrapper_result_delete delete_many(py::object cond);
         bool drop();
 
     private:

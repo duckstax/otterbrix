@@ -39,10 +39,14 @@ pybind11::list wrapper_collection::insert(const py::handle& documents) {
     if (py::isinstance<py::dict>(documents)) {
         py::list result;
         auto id = insert_one(documents);
-        if (!id.empty()) result.append(id);
+        if (!id.empty()) {
+            result.append(id);
+        }
         return result;
     }
-    if (py::isinstance<py::list>(documents)) return insert_many(documents);
+    if (py::isinstance<py::list>(documents)) {
+        return insert_many(documents);
+    }
     return py::list();
 }
 
@@ -114,13 +118,30 @@ auto wrapper_collection::find_one(py::object cond) -> py::dict {
     return py::dict();
 }
 
-void wrapper_collection::remove(py::object cond) {
+wrapper_result_delete wrapper_collection::delete_one(py::object cond) {
+    log_.trace("wrapper_collection::delete_one");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->delete_one(session_tmp, database_, name_, std::move(condition));
+        log_.debug("wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
+        return wrapper_result_delete(result);
+    }
+    return wrapper_result_delete();
 }
 
-void wrapper_collection::delete_one(pybind11::object cond) {
-}
-
-void wrapper_collection::delete_many(pybind11::object cond) {
+wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
+    log_.trace("wrapper_collection::delete_many");
+    if (py::isinstance<py::dict>(cond)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->delete_many(session_tmp, database_, name_, std::move(condition));
+        log_.debug("wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
+        return wrapper_result_delete(result);
+    }
+    return wrapper_result_delete();
 }
 
 bool wrapper_collection::drop() {
