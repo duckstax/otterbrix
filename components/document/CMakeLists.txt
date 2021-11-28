@@ -3,6 +3,7 @@ project(document)
 set( ${PROJECT_NAME}_HEADERS
         document.hpp
         document_view.hpp
+        index.hpp
         core/array.hpp
         core/base.hpp
         core/deep_iterator.hpp

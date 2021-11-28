@@ -15,3 +15,5 @@ auto from_object(const components::document::document_view_t& document, const st
 auto from_object(const components::document::document_view_t& document, uint32_t index) -> py::object;
 
 void update_document(const py::handle& source, components::document::document_t& target);
+
+auto to_pylist(const std::vector<std::string> &src) -> py::list;

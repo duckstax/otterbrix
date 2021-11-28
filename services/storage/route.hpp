@@ -16,6 +16,8 @@ namespace services::storage {
         static constexpr auto insert_many = "insert_many";
         static constexpr auto find = "find";
         static constexpr auto find_one = "find_one";
+        static constexpr auto delete_one = "delete_one";
+        static constexpr auto delete_many = "delete_many";
         static constexpr auto size = "size";
         static constexpr auto close_cursor = "close_cursor";
     } // namespace collection

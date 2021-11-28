@@ -20,6 +20,7 @@ namespace duck_charmer {
         add_handler("insert_many_finish", &wrapper_dispatcher_t::insert_many_finish);
         add_handler("find_finish", &wrapper_dispatcher_t::find_finish);
         add_handler("find_one_finish", &wrapper_dispatcher_t::find_one_finish);
+        add_handler("delete_finish", &wrapper_dispatcher_t::delete_finish);
         add_handler("size_finish", &wrapper_dispatcher_t::size_finish);
     }
 
@@ -131,6 +132,38 @@ namespace duck_charmer {
         return std::get<result_find_one>(intermediate_store_);
     }
 
+    auto wrapper_dispatcher_t::delete_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
+        log_.trace("wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            collection::delete_one,
+            session,
+            database,
+            collection,
+            std::move(condition)
+            );
+        wait();
+        return std::get<result_delete>(intermediate_store_);
+    }
+
+    auto wrapper_dispatcher_t::delete_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
+        log_.trace("wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            collection::delete_many,
+            session,
+            database,
+            collection,
+            std::move(condition)
+            );
+        wait();
+        return std::get<result_delete>(intermediate_store_);
+    }
+
     result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session, const std::string& database, const std::string& collection) {
         log_.trace("wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
@@ -186,6 +219,12 @@ namespace duck_charmer {
     }
 
     void wrapper_dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one result) {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
+    }
+
+    void wrapper_dispatcher_t::delete_finish(components::session::session_t &session, result_delete result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();
