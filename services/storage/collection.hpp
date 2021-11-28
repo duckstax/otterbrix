@@ -86,6 +86,8 @@ namespace services::storage {
         result_find_one search_one_(query_ptr cond);
         result_delete delete_one_(query_ptr cond);
         result_delete delete_many_(query_ptr cond);
+        result_update update_one_(query_ptr cond, query_ptr update, bool upsert);
+        result_update update_many_(query_ptr cond, query_ptr update, bool upsert);
         void remove_(const std::string& id);
         void reindex_();
         template <class T> void reindex_(T document, std::size_t min_value, std::size_t delta);
@@ -109,6 +111,8 @@ namespace services::storage {
         document_view_t get_test(const std::string &id) const;
         result_delete delete_one_test(query_ptr cond);
         result_delete delete_many_test(query_ptr cond);
+        result_update update_one_test(query_ptr cond, query_ptr update, bool upsert);
+        result_update update_many_test(query_ptr cond, query_ptr update, bool upsert);
 #endif
     };
 

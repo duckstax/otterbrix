@@ -155,3 +155,14 @@ TEST_CASE("collection_t delete_many") {
     REQUIRE(collection->delete_many_test(eq("type", "cat")).deleted_ids().size() == 2);
     REQUIRE(collection->size_test() == 0);
 }
+
+TEST_CASE("collection_t update_one") {
+    auto collection = gen_collection();
+    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
+//    auto result = collection->update_one_test(eq("id_", "id_1"), set("name", "Adolf"), false);
+//    REQUIRE(result.modified_ids().size() == 1);
+//    REQUIRE(result.nomodified_ids().size() == 0);
+//    REQUIRE(result.upserted_id().empty());
+//    REQUIRE_FALSE(collection->get_test("id_1").get_string("name") == "Rex");
+//    REQUIRE(collection->get_test("id_1").get_string("name") == "Adolf");
+}

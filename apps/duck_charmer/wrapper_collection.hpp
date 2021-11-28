@@ -30,8 +30,8 @@ namespace duck_charmer {
         py::list insert(const py::handle& documents);
         std::string insert_one(const py::handle& document);
         py::list insert_many(const py::handle& documents);
-        void update(py::dict fields, py::object cond);
-        void update_one(py::dict fields, py::object cond);
+        void update_one(py::object cond, py::dict fields, bool upsert = false);
+        void update_many(py::object cond, py::dict fields, bool upsert = false);
         auto find(py::object cond) -> wrapper_cursor_ptr;
         auto find_one(py::object cond) -> py::dict;
         wrapper_result_delete delete_one(py::object cond);

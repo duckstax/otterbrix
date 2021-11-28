@@ -84,10 +84,10 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     return py::list();
 }
 
-void wrapper_collection::update(py::dict fields, py::object cond) {
+void wrapper_collection::update_one(py::object cond, py::dict fields, bool upsert) {
 }
 
-void wrapper_collection::update_one(py::dict fields, py::object cond) {
+void wrapper_collection::update_many(py::object cond, py::dict fields, bool upsert) {
 }
 
 auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {

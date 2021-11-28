@@ -310,6 +310,12 @@ result_delete collection_t::delete_many_(query_ptr cond) {
     return result_delete(std::move(deleted));
 }
 
+result_update collection_t::update_one_(query_ptr cond, query_ptr update, bool upsert) {
+}
+
+result_update collection_t::update_many_(query_ptr cond, query_ptr update, bool upsert) {
+}
+
 void collection_t::remove_(const std::string &id) {
     removed_data_.add_document(index_->get(id)->as_dict());
     index_->remove(id);
@@ -403,6 +409,14 @@ result_delete collection_t::delete_one_test(query_ptr cond) {
 
 result_delete collection_t::delete_many_test(query_ptr cond) {
     return delete_many_(std::move(cond));
+}
+
+result_update collection_t::update_one_test(query_ptr cond, query_ptr update, bool upsert) {
+    return update_one_(std::move(cond), std::move(update), upsert);
+}
+
+result_update collection_t::update_many_test(query_ptr cond, query_ptr update, bool upsert) {
+    return update_many_(std::move(cond), std::move(update), upsert);
 }
 
 #endif
