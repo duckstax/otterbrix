@@ -159,10 +159,29 @@ TEST_CASE("collection_t delete_many") {
 TEST_CASE("collection_t update_one") {
     auto collection = gen_collection();
     REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
-//    auto result = collection->update_one_test(eq("id_", "id_1"), set("name", "Adolf"), false);
-//    REQUIRE(result.modified_ids().size() == 1);
-//    REQUIRE(result.nomodified_ids().size() == 0);
-//    REQUIRE(result.upserted_id().empty());
-//    REQUIRE_FALSE(collection->get_test("id_1").get_string("name") == "Rex");
-//    REQUIRE(collection->get_test("id_1").get_string("name") == "Adolf");
+
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 1);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
+
+    result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Adolf\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE_FALSE(collection->get_test("id_1").get_string("name") == "Rex");
+    REQUIRE(collection->get_test("id_1").get_string("name") == "Adolf");
+
+    result = collection->update_one_test(eq("_id", "id_6"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 0);
+
+    result = collection->update_one_test(eq("_id", "id_6"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), true);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(!result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
 }

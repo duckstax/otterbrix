@@ -189,7 +189,7 @@ msgpack::object document_t::get_msgpack_object(const ::document::impl::value_t *
     if (value->is_unsigned()) return msgpack::object(value->as_unsigned());
     if (value->is_int()) return msgpack::object(value->as_int());
     if (value->is_double()) return msgpack::object(value->as_double());
-    if (value->type() == value_type::string) return msgpack::object(static_cast<std::string>(value->as_string()).data());
+    if (value->type() == value_type::string) return msgpack::object(std::string_view(value->as_string()));
     return msgpack::object();
 }
 

@@ -42,6 +42,7 @@ namespace services::storage {
         removed_data_t() = default;
         void add_range(const range_t &range);
         void clear();
+        bool empty() const;
         void sort();
         void reverse_sort();
         const ranges_t &ranges() const;
@@ -86,9 +87,12 @@ namespace services::storage {
         result_find_one search_one_(query_ptr cond);
         result_delete delete_one_(query_ptr cond);
         result_delete delete_many_(query_ptr cond);
-        result_update update_one_(query_ptr cond, query_ptr update, bool upsert);
-        result_update update_many_(query_ptr cond, query_ptr update, bool upsert);
+        result_update update_one_(query_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_(query_ptr cond, const document_t &update, bool upsert);
         void remove_(const std::string& id);
+        bool update_(const std::string& id, const document_t &update);
+        field_value_t get_index_field(field_value_t index_doc, const std::string& field_name) const;
+        msgpack::object_handle get_value(field_value_t index) const;
         void reindex_();
         template <class T> void reindex_(T document, std::size_t min_value, std::size_t delta);
 
@@ -111,8 +115,8 @@ namespace services::storage {
         document_view_t get_test(const std::string &id) const;
         result_delete delete_one_test(query_ptr cond);
         result_delete delete_many_test(query_ptr cond);
-        result_update update_one_test(query_ptr cond, query_ptr update, bool upsert);
-        result_update update_many_test(query_ptr cond, query_ptr update, bool upsert);
+        result_update update_one_test(query_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_test(query_ptr cond, const document_t &update, bool upsert);
 #endif
     };
 

@@ -36,6 +36,10 @@ void removed_data_t::clear() {
     ranges_.clear();
 }
 
+bool removed_data_t::empty() const {
+    return ranges_.empty();
+}
+
 void removed_data_t::sort() {
     ranges_.sort([](const range_t &r1, const range_t &r2) {
         return r1.first < r2.first;
@@ -308,10 +312,43 @@ result_delete collection_t::delete_many_(query_ptr cond) {
     return result_delete(std::move(deleted));
 }
 
-result_update collection_t::update_one_(query_ptr cond, query_ptr update, bool upsert) {
+result_update collection_t::update_one_(query_ptr cond, const document_t &update, bool upsert) {
+    for (auto it = index_->begin(); it; ++it) {
+        auto id = static_cast<std::string>(it.key()->as_string());
+        auto doc = get_(id);
+        if (!cond || cond->check(doc)) {
+            auto res = update_(id, update)
+                    ? result_update({id}, {})
+                    : result_update({}, {id});
+            reindex_(); //todo
+            return res;
+        }
+    }
+    if (upsert) {
+        return result_update(insert_(update)); //todo convert into document by insert
+    }
+    return result_update();
 }
 
-result_update collection_t::update_many_(query_ptr cond, query_ptr update, bool upsert) {
+result_update collection_t::update_many_(query_ptr cond, const document_t &update, bool upsert) {
+    result_update::result_t modified;
+    result_update::result_t nomodified;
+    for (auto it = index_->begin(); it; ++it) {
+        auto id = static_cast<std::string>(it.key()->as_string());
+        auto doc = get_(id);
+        if (!cond || cond->check(doc)) {
+            if (update_(id, update)) {
+                modified.push_back(id);
+            } else {
+                nomodified.push_back(id);
+            }
+        }
+    }
+    if (upsert && modified.empty() && nomodified.empty()) {
+        return result_update(insert_(update)); //todo convert into document by insert
+    }
+    reindex_(); //todo
+    return result_update(std::move(modified), std::move(nomodified));
 }
 
 void collection_t::remove_(const std::string &id) {
@@ -319,7 +356,73 @@ void collection_t::remove_(const std::string &id) {
     index_->remove(id);
 }
 
+bool collection_t::update_(const std::string &id, const document_t &update) {
+    auto index = index_->get(id);
+    if (index) {
+        for (auto it_update = update.begin(); it_update; ++it_update) {
+            auto key_update = static_cast<std::string>(it_update.key()->as_string());
+            auto fields = it_update.value()->as_dict();
+            for (auto it_field = fields->begin(); it_field; ++it_field) {
+                auto key_field = static_cast<std::string>(it_field.key()->as_string());
+                auto index_field = get_index_field(index, key_field);
+                auto old_value = get_value(index_field);
+                auto new_value = old_value.get();
+                if (key_update == "$set") {
+                    new_value = document_t::get_msgpack_object(it_field.value());
+                }
+                //todo others methods
+                if (new_value == old_value.get()) {
+                    return false;
+                } else {
+                    auto offset = index_field->as_array()->get(index::offset)->as_unsigned();
+                    auto size = index_field->as_array()->get(index::size)->as_unsigned();
+                    removed_data_.add_range({offset, offset + size - 1});
+                    auto mod_index = index_field->as_array()->as_mutable();
+                    auto new_offset = storage_.size();
+                    msgpack::pack(storage_, new_value);
+                    mod_index->set(index::offset, new_offset);
+                    mod_index->set(index::size, storage_.size() - new_offset);
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+collection_t::field_value_t collection_t::get_index_field(field_value_t index_doc, const std::string &field_name) const {
+    std::size_t dot_pos = field_name.find(".");
+    if (dot_pos != std::string::npos) {
+        //todo complex keys
+//        auto key = field_name.substr(0, dot_pos);
+//        if (sub_doc.is_dict(key)) sub_doc = sub_doc.get_dict(key);
+//        else if (sub_doc.is_array(key)) sub_doc = sub_doc.get_array(key);
+//        else return false;
+//        start = dot_pos + 1;
+//        dot_pos = key_.find(".", start);
+    } else if (index_doc->as_dict()) {
+        return index_doc->as_dict()->get(field_name);
+    } else if (index_doc->as_array()) {
+        return index_doc->as_array()->get(static_cast<uint32_t>(std::atol(field_name.c_str())));
+    }
+    return nullptr;
+}
+
+msgpack::object_handle collection_t::get_value(field_value_t index) const {
+    if (index && index->as_array()) {
+        auto offset = index->as_array()->get(index::offset)->as_unsigned();
+        auto size = index->as_array()->get(index::size)->as_unsigned();
+        auto data = storage_.data() + offset;
+        return msgpack::unpack(data, size);
+    }
+    return msgpack::object_handle();
+}
+
 void collection_t::reindex_() {
+    if (removed_data_.empty()) {
+        return;
+    }
+
     //index
     removed_data_.reverse_sort();
     for (const auto &range : removed_data_.ranges()) {
@@ -409,12 +512,12 @@ result_delete collection_t::delete_many_test(query_ptr cond) {
     return delete_many_(std::move(cond));
 }
 
-result_update collection_t::update_one_test(query_ptr cond, query_ptr update, bool upsert) {
-    return update_one_(std::move(cond), std::move(update), upsert);
+result_update collection_t::update_one_test(query_ptr cond, const document_t &update, bool upsert) {
+    return update_one_(std::move(cond), update, upsert);
 }
 
-result_update collection_t::update_many_test(query_ptr cond, query_ptr update, bool upsert) {
-    return update_many_(std::move(cond), std::move(update), upsert);
+result_update collection_t::update_many_test(query_ptr cond, const document_t &update, bool upsert) {
+    return update_many_(std::move(cond), update, upsert);
 }
 
 #endif
