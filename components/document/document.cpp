@@ -74,7 +74,11 @@ void document_t::add_dict(const std::string &key, const document_t &dict) {
 
 void document_t::add_dict(const std::string &key, document_t &&dict) {
     storage_->set(key, dict.storage_);
-//    dict.storage_ = nullptr;
+    //    dict.storage_ = nullptr;
+}
+
+void document_t::add(const std::string &key, const ::document::impl::value_t *value) {
+    storage_->set(key, value);
 }
 
 bool document_t::is_exists(const std::string &key) const {

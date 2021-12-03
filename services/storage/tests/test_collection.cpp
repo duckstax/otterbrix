@@ -156,7 +156,7 @@ TEST_CASE("collection_t delete_many") {
     REQUIRE(collection->size_test() == 0);
 }
 
-TEST_CASE("collection_t update_one") {
+TEST_CASE("collection_t update_one set") {
     auto collection = gen_collection();
     REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
 
@@ -184,4 +184,38 @@ TEST_CASE("collection_t update_one") {
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(!result.upserted_id().empty());
     REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
+}
+
+TEST_CASE("collection_t update_many set") {
+    auto collection = gen_collection();
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
+
+    auto result = collection->update_many_test(eq("type", "dog"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 2);
+    REQUIRE(result.nomodified_ids().size() == 1);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 3);
+
+    result = collection->update_many_test(eq("type", "mouse"), document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), false);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 0);
+
+    result = collection->update_many_test(eq("type", "mouse"), document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), true);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE_FALSE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 1);
+}
+
+TEST_CASE("collection_t update_one inc") {
+    auto collection = gen_collection();
+    REQUIRE(collection->get_test("id_1").get_ulong("age") == 6);
+
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$inc\": {\"age\": 2}}"), false);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_ulong("age") == 8);
 }

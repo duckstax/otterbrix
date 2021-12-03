@@ -325,7 +325,7 @@ result_update collection_t::update_one_(query_ptr cond, const document_t &update
         }
     }
     if (upsert) {
-        return result_update(insert_(update)); //todo convert into document by insert
+        return result_update(insert_(update2insert(update)));
     }
     return result_update();
 }
@@ -345,7 +345,7 @@ result_update collection_t::update_many_(query_ptr cond, const document_t &updat
         }
     }
     if (upsert && modified.empty() && nomodified.empty()) {
-        return result_update(insert_(update)); //todo convert into document by insert
+        return result_update(insert_(update2insert(update)));
     }
     reindex_(); //todo
     return result_update(std::move(modified), std::move(nomodified));
@@ -358,6 +358,7 @@ void collection_t::remove_(const std::string &id) {
 
 bool collection_t::update_(const std::string &id, const document_t &update) {
     auto index = index_->get(id);
+    bool is_modified = false;
     if (index) {
         for (auto it_update = update.begin(); it_update; ++it_update) {
             auto key_update = static_cast<std::string>(it_update.key()->as_string());
@@ -369,11 +370,11 @@ bool collection_t::update_(const std::string &id, const document_t &update) {
                 auto new_value = old_value.get();
                 if (key_update == "$set") {
                     new_value = document_t::get_msgpack_object(it_field.value());
+                } else if (key_update == "$inc") {
+                    new_value = inc(new_value, it_field.value());
                 }
                 //todo others methods
-                if (new_value == old_value.get()) {
-                    return false;
-                } else {
+                if (new_value != old_value.get()) {
                     auto offset = index_field->as_array()->get(index::offset)->as_unsigned();
                     auto size = index_field->as_array()->get(index::size)->as_unsigned();
                     removed_data_.add_range({offset, offset + size - 1});
@@ -382,24 +383,18 @@ bool collection_t::update_(const std::string &id, const document_t &update) {
                     msgpack::pack(storage_, new_value);
                     mod_index->set(index::offset, new_offset);
                     mod_index->set(index::size, storage_.size() - new_offset);
-                    return true;
+                    is_modified = true;
                 }
             }
         }
     }
-    return false;
+    return is_modified;
 }
 
 collection_t::field_value_t collection_t::get_index_field(field_value_t index_doc, const std::string &field_name) const {
     std::size_t dot_pos = field_name.find(".");
     if (dot_pos != std::string::npos) {
         //todo complex keys
-//        auto key = field_name.substr(0, dot_pos);
-//        if (sub_doc.is_dict(key)) sub_doc = sub_doc.get_dict(key);
-//        else if (sub_doc.is_array(key)) sub_doc = sub_doc.get_array(key);
-//        else return false;
-//        start = dot_pos + 1;
-//        dot_pos = key_.find(".", start);
     } else if (index_doc->as_dict()) {
         return index_doc->as_dict()->get(field_name);
     } else if (index_doc->as_array()) {
@@ -416,6 +411,21 @@ msgpack::object_handle collection_t::get_value(field_value_t index) const {
         return msgpack::unpack(data, size);
     }
     return msgpack::object_handle();
+}
+
+document_t collection_t::update2insert(const document_t &update) const {
+    document_t doc;
+    for (auto it = update.begin(); it; ++it) {
+        auto key = static_cast<std::string_view>(it.key()->as_string());
+        if (key == "$set" || key == "$inc") {
+            auto values = it.value()->as_dict();
+            for (auto it_field = values->begin(); it_field; ++it_field) {
+                doc.add(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
+            }
+        }
+    }
+    //todo complex keys
+    return doc;
 }
 
 void collection_t::reindex_() {
@@ -449,6 +459,21 @@ void collection_t::reindex_() {
     }
     storage_ = std::move(buffer);
     removed_data_.clear();
+}
+
+msgpack::object collection_t::inc(const msgpack::object &src, const ::document::impl::value_t *value) {
+    if (value->type() == ::document::impl::value_type::number) {
+        if (src.type == msgpack::type::POSITIVE_INTEGER) {
+            return msgpack::object(src.as<uint64_t>() + value->as_unsigned());
+        }
+        if (src.type == msgpack::type::NEGATIVE_INTEGER) {
+            return msgpack::object(src.as<int64_t>() + value->as_int());
+        }
+        if (src.type == msgpack::type::FLOAT64) {
+            return msgpack::object(src.as<double>() + value->as_double());
+        }
+    }
+    return src; //todo error
 }
 
 template <class T> void collection_t::reindex_(T document, std::size_t min_value, std::size_t delta) {

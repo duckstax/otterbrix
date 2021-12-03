@@ -38,6 +38,7 @@ public:
     void add_dict(const std::string &key, ::document::impl::dict_t *dict);
     void add_dict(const std::string &key, const document_t &dict);
     void add_dict(const std::string &key, document_t &&dict);
+    void add(const std::string &key, const ::document::impl::value_t *value);
 
     bool is_exists(const std::string &key) const;
     bool is_null(const std::string &key) const;
