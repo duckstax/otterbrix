@@ -24,6 +24,8 @@ namespace services::dispatcher {
         add_handler(collection::find_one, &manager_dispatcher_t::find_one);
         add_handler(collection::delete_one, &manager_dispatcher_t::delete_one);
         add_handler(collection::delete_many, &manager_dispatcher_t::delete_many);
+        add_handler(collection::update_one, &manager_dispatcher_t::update_one);
+        add_handler(collection::update_many, &manager_dispatcher_t::update_many);
         add_handler(collection::size, &manager_dispatcher_t::size);
         add_handler(collection::close_cursor, &manager_dispatcher_t::close_cursor);
         log_.trace("manager_dispatcher_t start thread pool");
@@ -75,6 +77,9 @@ namespace services::dispatcher {
         add_handler(collection::delete_one, &dispatcher_t::delete_one);
         add_handler(collection::delete_many, &dispatcher_t::delete_many);
         add_handler("delete_finish", &dispatcher_t::delete_finish);
+        add_handler(collection::update_one, &dispatcher_t::update_one);
+        add_handler(collection::update_many, &dispatcher_t::update_many);
+        add_handler("update_finish", &dispatcher_t::update_finish);
         add_handler(collection::size, &dispatcher_t::size);
         add_handler("size_finish", &dispatcher_t::size_finish);
         add_handler(collection::close_cursor, &dispatcher_t::close_cursor);
@@ -244,6 +249,33 @@ namespace services::dispatcher {
         goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "delete_finish", session, result);
         session_to_address_.erase(session);
     }
+    void dispatcher_t::update_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_t &condition, components::document::document_t update, bool upsert, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+        key_collection_t key(database_name, collection);
+        auto it_collection = collection_address_book_.find(key);
+        if (it_collection != collection_address_book_.end()) {
+            session_to_address_.emplace(session, address);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_one, session, std::move(condition), std::move(update), upsert);
+        } else {
+            goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
+        }
+    }
+    void dispatcher_t::update_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_t &condition, components::document::document_t update, bool upsert, goblin_engineer::address_t address) {
+        log_.debug("dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+        key_collection_t key(database_name, collection);
+        auto it_collection = collection_address_book_.find(key);
+        if (it_collection != collection_address_book_.end()) {
+            session_to_address_.emplace(session, address);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_many, session, std::move(condition), std::move(update), upsert);
+        } else {
+            goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
+        }
+    }
+    void dispatcher_t::update_finish(session_t &session, result_update &result) {
+        log_.debug("dispatcher_t::update_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "update_finish", session, result);
+        session_to_address_.erase(session);
+    }
     void dispatcher_t::size(components::session::session_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::size: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
@@ -332,6 +364,16 @@ namespace services::dispatcher {
     void manager_dispatcher_t::delete_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_t &condition) {
         log_.trace("manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::delete_many, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
+    }
+
+    void manager_dispatcher_t::update_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_t &condition, components::document::document_t update, bool upsert) {
+        log_.trace("manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return goblin_engineer::send(dispathers_[0], address(), collection::update_one, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
+    }
+
+    void manager_dispatcher_t::update_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_t &condition, components::document::document_t update, bool upsert) {
+        log_.trace("manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return goblin_engineer::send(dispathers_[0], address(), collection::update_many, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
     }
 
     void manager_dispatcher_t::size(session_t& session, std::string& database_name, std::string& collection) {

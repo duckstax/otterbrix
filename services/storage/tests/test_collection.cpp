@@ -234,8 +234,6 @@ TEST_CASE("collection_t update_one set new field") {
 
 TEST_CASE("collection_t update_one set complex dict") {
     auto collection = gen_collection();
-//    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
-
 //    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
 //    REQUIRE(result.modified_ids().size() == 0);
 //    REQUIRE(result.nomodified_ids().size() == 1);

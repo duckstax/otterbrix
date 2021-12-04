@@ -32,6 +32,8 @@ namespace services::dispatcher {
         void find_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition);
         void delete_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition);
         void delete_many(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition);
+        void update_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert);
+        void update_many(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert);
         void size(components::session::session_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_t& session);
     protected:
@@ -88,6 +90,9 @@ namespace services::dispatcher {
         void delete_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address);
         void delete_many(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address);
         void delete_finish(components::session::session_t&session, result_delete& result);
+        void update_one(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert, goblin_engineer::address_t address);
+        void update_many(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert, goblin_engineer::address_t address);
+        void update_finish(components::session::session_t&session, result_update& result);
         void size(components::session::session_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address);
         void size_finish(components::session::session_t&, result_size& result);
         void close_cursor(components::session::session_t& session);

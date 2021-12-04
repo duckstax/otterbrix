@@ -84,10 +84,34 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     return py::list();
 }
 
-void wrapper_collection::update_one(py::object cond, py::dict fields, bool upsert) {
+wrapper_result_update wrapper_collection::update_one(py::object cond, py::object fields, bool upsert) {
+    log_.trace("wrapper_collection::update_one");
+    if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        components::document::document_t update;
+        to_document(fields, update);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
+        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id());
+        return wrapper_result_update(result);
+    }
+    return wrapper_result_update();
 }
 
-void wrapper_collection::update_many(py::object cond, py::dict fields, bool upsert) {
+wrapper_result_update wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
+    log_.trace("wrapper_collection::update_many");
+    if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
+        components::document::document_t condition;
+        to_document(cond, condition);
+        components::document::document_t update;
+        to_document(fields, update);
+        auto session_tmp = duck_charmer::session_t();
+        auto result = ptr_->update_many(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
+        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id());
+        return wrapper_result_update(result);
+    }
+    return wrapper_result_update();
 }
 
 auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {

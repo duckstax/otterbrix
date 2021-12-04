@@ -96,6 +96,8 @@ collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string 
     add_handler(collection::find_one, &collection_t::find_one);
     add_handler(collection::delete_one, &collection_t::delete_one);
     add_handler(collection::delete_many, &collection_t::delete_many);
+    add_handler(collection::update_one, &collection_t::update_one);
+    add_handler(collection::update_many, &collection_t::update_many);
     add_handler(collection::size, &collection_t::size);
     add_handler(database::drop_collection, &collection_t::drop);
     add_handler(collection::close_cursor, &collection_t::close_cursor);
@@ -185,6 +187,25 @@ auto collection_t::delete_many(const session_t &session, const document_t &cond)
     goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
+auto collection_t::update_one(const session_t &session, const document_t &cond, const document_t &update, bool upsert) -> void {
+    log_.debug("collection::update_one : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = dropped_
+            ? result_update()
+            : update_one_(parse_condition(cond), update, upsert);
+    goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
+}
+
+auto collection_t::update_many(const session_t &session, const document_t &cond, const document_t &update, bool upsert) -> void {
+    log_.debug("collection::update_many : {}", type());
+    auto dispatcher = address_book("dispatcher");
+    log_.debug("dispatcher : {}", dispatcher.type());
+    auto result = dropped_
+            ? result_update()
+            : update_many_(parse_condition(cond), update, upsert);
+    goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
+}
 
 void collection_t::drop(const session_t& session) {
     log_.debug("collection::drop : {}", type());
@@ -194,7 +215,9 @@ void collection_t::drop(const session_t& session) {
 }
 
 std::string collection_t::gen_id() const {
-    return std::string("0"); //todo
+    //todo
+    boost::uuids::random_generator generator;
+    return boost::uuids::to_string(generator());
 }
 
 std::string collection_t::insert_(const document_t& document, int version) {

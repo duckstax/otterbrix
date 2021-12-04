@@ -73,6 +73,8 @@ namespace services::storage {
         auto find_one(const session_t& session, const document_t &cond) -> void;
         auto delete_one(const session_t& session, const document_t &cond) -> void;
         auto delete_many(const session_t& session, const document_t &cond) -> void;
+        auto update_one(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
+        auto update_many(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
         void drop(const session_t& session);
         void close_cursor(session_t& session);
 
