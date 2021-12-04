@@ -375,14 +375,19 @@ bool collection_t::update_(const std::string &id, const document_t &update) {
                 }
                 //todo others methods
                 if (new_value != old_value.get()) {
-                    auto offset = index_field->as_array()->get(index::offset)->as_unsigned();
-                    auto size = index_field->as_array()->get(index::size)->as_unsigned();
-                    removed_data_.add_range({offset, offset + size - 1});
-                    auto mod_index = index_field->as_array()->as_mutable();
-                    auto new_offset = storage_.size();
-                    msgpack::pack(storage_, new_value);
-                    mod_index->set(index::offset, new_offset);
-                    mod_index->set(index::size, storage_.size() - new_offset);
+                    ::document::impl::mutable_array_t *mod_index = nullptr;
+                    if (index_field) {
+                        auto offset = index_field->as_array()->get(index::offset)->as_unsigned();
+                        auto size = index_field->as_array()->get(index::size)->as_unsigned();
+                        removed_data_.add_range({offset, offset + size - 1});
+                        mod_index = index_field->as_array()->as_mutable();
+                        auto new_offset = storage_.size();
+                        msgpack::pack(storage_, new_value);
+                        mod_index->set(index::offset, new_offset);
+                        mod_index->set(index::size, storage_.size() - new_offset);
+                    } else {
+                        index->as_dict()->as_mutable()->set(key_field, insert_field_(it_field.value(), 0));
+                    }
                     is_modified = true;
                 }
             }

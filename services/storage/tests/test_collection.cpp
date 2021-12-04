@@ -219,3 +219,26 @@ TEST_CASE("collection_t update_one inc") {
     REQUIRE(result.upserted_id().empty());
     REQUIRE(collection->get_test("id_1").get_ulong("age") == 8);
 }
+
+TEST_CASE("collection_t update_one set new field") {
+    auto collection = gen_collection();
+    REQUIRE_FALSE(collection->get_test("id_1").is_exists("weight"));
+
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"weight\": 8}}"), false);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").is_exists("weight"));
+    REQUIRE(collection->get_test("id_1").get_ulong("weight") == 8);
+}
+
+TEST_CASE("collection_t update_one set complex dict") {
+    auto collection = gen_collection();
+//    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
+
+//    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+//    REQUIRE(result.modified_ids().size() == 0);
+//    REQUIRE(result.nomodified_ids().size() == 1);
+//    REQUIRE(result.upserted_id().empty());
+//    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
+}
