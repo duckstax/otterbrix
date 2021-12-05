@@ -281,11 +281,13 @@ object_type document_view_t::get_type(const ::document::impl::value_t *field) co
 }
 
 object_type document_view_t::get_type(std::string &&key) const {
-    return get_type(index_->get(std::move(key)));
+    if (index_) return get_type(index_->get(std::move(key)));
+    return get_type(array_->get(static_cast<uint32_t>(std::atol(key.c_str()))));
 }
 
 object_type document_view_t::get_type(const std::string &key) const {
-    return get_type(index_->get(key));
+    if (index_) return get_type(index_->get(key));
+    return get_type(array_->get(static_cast<uint32_t>(std::atol(key.c_str()))));
 }
 
 object_type document_view_t::get_type(uint32_t index) const {

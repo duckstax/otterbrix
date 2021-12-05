@@ -27,6 +27,7 @@ public:
     document_t(const document_t &src);
     document_t(document_t &&src);
     ~document_t();
+    document_t &operator =(document_t &&src);
 
     void add_null(const std::string &key);
     void add_bool(const std::string &key, bool value);

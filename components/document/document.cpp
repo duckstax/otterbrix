@@ -36,6 +36,14 @@ document_t::~document_t() {
     if (is_owner_ && storage_) storage_->_release();
 }
 
+document_t &document_t::operator =(document_t &&src) {
+    storage_ = src.storage_;
+    is_owner_ = src.is_owner_;
+    src.is_owner_ = false;
+    src.storage_ = nullptr;
+    return *this;
+}
+
 void document_t::add_null(const std::string &key) {
     storage_->set(key, ::document::impl::null_value);
 }

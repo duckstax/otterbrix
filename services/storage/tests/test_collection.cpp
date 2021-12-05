@@ -255,7 +255,7 @@ TEST_CASE("collection_t update_one set complex array") {
 TEST_CASE("collection_t update_one set complex dict with append new field") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_dict"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), true);
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -265,7 +265,7 @@ TEST_CASE("collection_t update_one set complex dict with append new field") {
 TEST_CASE("collection_t update_one set complex array with append new field") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_array"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_array.1.5\": \"NoValue\"}}"), true);
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_array.1.5\": \"NoValue\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -275,9 +275,29 @@ TEST_CASE("collection_t update_one set complex array with append new field") {
 TEST_CASE("collection_t update_one set complex dict with append new subfield") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_dict"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"sub_doc.sub2.name\": \"NoName\"}}"), true);
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"sub_doc.sub2.name\": \"NoName\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
     REQUIRE(collection->get_test("id_1").get_dict("sub_doc").get_dict("sub2").get_string("name") == "NoName");
+}
+
+TEST_CASE("collection_t update_one set complex dict with upsert") {
+    auto collection = gen_collection();
+    REQUIRE(collection->find_test(document_t::from_json("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 0);
+    auto result = collection->update_one_test(eq("_id", "id_10"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), true);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE_FALSE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 1);
+}
+
+TEST_CASE("collection_t update_one set complex array with upsert") {
+    auto collection = gen_collection();
+    REQUIRE(collection->find_test(document_t::from_json("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 0);
+    auto result = collection->update_one_test(eq("_id", "id_10"), document_t::from_json("{\"$set\": {\"new_array.0.0\": \"NoName\"}}"), true);
+    REQUIRE(result.modified_ids().size() == 0);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE_FALSE(result.upserted_id().empty());
+    REQUIRE(collection->find_test(document_t::from_json("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 1);
 }
