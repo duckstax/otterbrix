@@ -422,7 +422,11 @@ bool collection_t::update_(const std::string &id, const document_t &update) {
 collection_t::field_value_t collection_t::get_index_field(field_value_t index_doc, const std::string &field_name) const {
     std::size_t dot_pos = field_name.find(".");
     if (dot_pos != std::string::npos) {
-        //todo complex keys
+        auto parent = field_name.substr(0, dot_pos);
+        auto sub_index = index_doc->type() == value_type::dict
+                ? index_doc->as_dict()->get(parent)
+                : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())));
+        return get_index_field(sub_index, field_name.substr(dot_pos + 1, field_name.size() - dot_pos));
     } else if (index_doc->as_dict()) {
         return index_doc->as_dict()->get(field_name);
     } else if (index_doc->as_array()) {

@@ -234,9 +234,21 @@ TEST_CASE("collection_t update_one set new field") {
 
 TEST_CASE("collection_t update_one set complex dict") {
     auto collection = gen_collection();
-//    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
-//    REQUIRE(result.modified_ids().size() == 0);
-//    REQUIRE(result.nomodified_ids().size() == 1);
-//    REQUIRE(result.upserted_id().empty());
-//    REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
+    REQUIRE_FALSE(collection->get_test("id_1").get_dict("sub_doc").get_dict("sub").get_string("name") == "Adolf");
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"sub_doc.sub.name\": \"Adolf\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_dict("sub_doc").get_dict("sub").get_string("name") == "Adolf");
 }
+
+TEST_CASE("collection_t update_one set complex array") {
+    auto collection = gen_collection();
+    REQUIRE_FALSE(collection->get_test("id_1").get_array("friends").get_array(2).get_as<std::string>(0) == "Adolf");
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"friends.2.0\": \"Adolf\"}}"), false);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_array("friends").get_array(2).get_as<std::string>(0) == "Adolf");
+}
+
