@@ -273,12 +273,6 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::delete_finish(components::session::session_t &session, result_delete result) {
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
     auto wrapper_dispatcher_t::size_finish(duck_charmer::session_t& session,result_size result) -> void {
         intermediate_store_ = result;
         input_session_ = session;
