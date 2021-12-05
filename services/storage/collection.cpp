@@ -469,8 +469,8 @@ void collection_t::append_field(field_value_t index_doc, const std::string &fiel
             } else if (index_doc->type() == value_type::array) {
                 index_doc->as_array()->as_mutable()->append(index_parent);
             }
-            append_field(index_parent, field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1), value);
         }
+        append_field(index_parent, field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1), value);
     } else if (index_doc->type() == value_type::dict) {
         index_doc->as_dict()->as_mutable()->set(field_name, insert_field_(value, 0));
     } else if (index_doc->type() == value_type::array) {
