@@ -33,8 +33,7 @@ def gen_collection(request):
         collection.insert_one(obj)
 
     def finalize():
-        pass
-        #client.close() #todo
+        collection.drop()
 
     request.addfinalizer(finalizer=finalize)
 
@@ -141,3 +140,38 @@ def test_delete_many(gen_collection):
     assert result.deleted_count == 50
     c = gen_collection['collection'].find({})
     assert c.count() == 50
+
+
+def test_update_one(gen_collection):
+    result = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr': '500'}})
+    assert result.modified_count == 1
+    c = gen_collection['collection'].find({'count': {'$eq': 50}})
+    c.next()
+    assert c['countStr'] == '500'
+
+
+def test_update_many(gen_collection):
+    result = gen_collection['collection'].update_many({'count': {'$gte': 50}}, {'$inc': {'count': 100}})
+    assert result.modified_count == 50
+    assert gen_collection['collection'].find({'count': {'$gt': 100}}).count() == 50
+
+
+def test_update_with_add_new_field(gen_collection):
+    assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 0
+    result = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr2': '500'}})
+    assert result.modified_count == 1
+    assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 1
+
+
+def test_update_with_upsert(gen_collection):
+    result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
+    assert result.modified_count == 0
+    assert result.matched_count == 0
+    assert len(result.upserted_id) == 0
+    assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
+
+    result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
+    assert result.modified_count == 0
+    assert result.matched_count == 0
+    assert len(result.upserted_id) > 0
+    assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1

@@ -36,6 +36,14 @@ document_t::~document_t() {
     if (is_owner_ && storage_) storage_->_release();
 }
 
+document_t &document_t::operator =(document_t &&src) {
+    storage_ = src.storage_;
+    is_owner_ = src.is_owner_;
+    src.is_owner_ = false;
+    src.storage_ = nullptr;
+    return *this;
+}
+
 void document_t::add_null(const std::string &key) {
     storage_->set(key, ::document::impl::null_value);
 }
@@ -74,7 +82,11 @@ void document_t::add_dict(const std::string &key, const document_t &dict) {
 
 void document_t::add_dict(const std::string &key, document_t &&dict) {
     storage_->set(key, dict.storage_);
-//    dict.storage_ = nullptr;
+    //    dict.storage_ = nullptr;
+}
+
+void document_t::add(const std::string &key, const ::document::impl::value_t *value) {
+    storage_->set(key, value);
 }
 
 bool document_t::is_exists(const std::string &key) const {
@@ -189,7 +201,7 @@ msgpack::object document_t::get_msgpack_object(const ::document::impl::value_t *
     if (value->is_unsigned()) return msgpack::object(value->as_unsigned());
     if (value->is_int()) return msgpack::object(value->as_int());
     if (value->is_double()) return msgpack::object(value->as_double());
-    if (value->type() == value_type::string) return msgpack::object(static_cast<std::string>(value->as_string()).data());
+    if (value->type() == value_type::string) return msgpack::object(std::string_view(value->as_string()));
     return msgpack::object();
 }
 
