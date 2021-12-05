@@ -252,3 +252,22 @@ TEST_CASE("collection_t update_one set complex array") {
     REQUIRE(collection->get_test("id_1").get_array("friends").get_array(2).get_as<std::string>(0) == "Adolf");
 }
 
+TEST_CASE("collection_t update_one set complex dict with append ne field") {
+    auto collection = gen_collection();
+    REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_dict"));
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), true);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_dict("new_dict").get_dict("object").get_string("name") == "NoName");
+}
+
+TEST_CASE("collection_t update_one set complex array with append ne field") {
+    auto collection = gen_collection();
+    REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_array"));
+    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_array.1.5\": \"NoValue\"}}"), true);
+    REQUIRE(result.modified_ids().size() == 1);
+    REQUIRE(result.nomodified_ids().size() == 0);
+    REQUIRE(result.upserted_id().empty());
+    REQUIRE(collection->get_test("id_1").get_array("new_array").get_array(0).get_as<std::string>(0) == "NoValue");
+}

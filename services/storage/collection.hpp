@@ -95,6 +95,7 @@ namespace services::storage {
         bool update_(const std::string& id, const document_t &update);
         field_value_t get_index_field(field_value_t index_doc, const std::string& field_name) const;
         msgpack::object_handle get_value(field_value_t index) const;
+        void append_field(field_value_t index_doc, const std::string& field_name, field_value_t value);
         document_t update2insert(const document_t &update) const;
         void reindex_();
         template <class T> void reindex_(T document, std::size_t min_value, std::size_t delta);

@@ -409,7 +409,7 @@ bool collection_t::update_(const std::string &id, const document_t &update) {
                         mod_index->set(index::offset, new_offset);
                         mod_index->set(index::size, storage_.size() - new_offset);
                     } else {
-                        index->as_dict()->as_mutable()->set(key_field, insert_field_(it_field.value(), 0));
+                        append_field(index, key_field, it_field.value());
                     }
                     is_modified = true;
                 }
@@ -426,7 +426,9 @@ collection_t::field_value_t collection_t::get_index_field(field_value_t index_do
         auto sub_index = index_doc->type() == value_type::dict
                 ? index_doc->as_dict()->get(parent)
                 : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())));
-        return get_index_field(sub_index, field_name.substr(dot_pos + 1, field_name.size() - dot_pos));
+        if (sub_index) {
+            return get_index_field(sub_index, field_name.substr(dot_pos + 1, field_name.size() - dot_pos));
+        }
     } else if (index_doc->as_dict()) {
         return index_doc->as_dict()->get(field_name);
     } else if (index_doc->as_array()) {
@@ -443,6 +445,37 @@ msgpack::object_handle collection_t::get_value(field_value_t index) const {
         return msgpack::unpack(data, size);
     }
     return msgpack::object_handle();
+}
+
+void collection_t::append_field(field_value_t index_doc, const std::string &field_name, field_value_t value) {
+    std::size_t dot_pos = field_name.find(".");
+    if (dot_pos != std::string::npos) {
+        auto parent = field_name.substr(0, dot_pos);
+        auto index_parent = index_doc->type() == value_type::dict
+                ? index_doc->as_dict()->get(parent)
+                : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())));
+        if (!index_parent) {
+            std::size_t dot_pos_next = field_name.find(".", dot_pos + 1);
+            auto next_key = dot_pos_next != std::string::npos
+                    ? field_name.substr(dot_pos + 1, dot_pos_next - dot_pos - 1)
+                    : field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1);
+            if (next_key.find_first_not_of("0123456789") == std::string::npos) {
+                index_parent = mutable_array_t::new_array().detach();
+            } else {
+                index_parent = mutable_dict_t::new_dict().detach();
+            }
+            if (index_doc->type() == value_type::dict) {
+                index_doc->as_dict()->as_mutable()->set(parent, index_parent);
+            } else if (index_doc->type() == value_type::array) {
+                index_doc->as_array()->as_mutable()->append(index_parent);
+            }
+            append_field(index_parent, field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1), value);
+        }
+    } else if (index_doc->type() == value_type::dict) {
+        index_doc->as_dict()->as_mutable()->set(field_name, insert_field_(value, 0));
+    } else if (index_doc->type() == value_type::array) {
+        index_doc->as_array()->as_mutable()->append(insert_field_(value, 0));
+    }
 }
 
 document_t collection_t::update2insert(const document_t &update) const {
