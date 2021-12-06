@@ -51,7 +51,7 @@ namespace duck_charmer {
             session,
             database_name,
             collection_name);
-        wait();
+        stop_with();
         auto result =  std::get<services::storage::collection_create_result>(intermediate_store_);
         return wrapper_collection_ptr(new wrapper_collection(collection_name,database_name,this,log_));
     }
@@ -133,7 +133,7 @@ namespace duck_charmer {
 
     auto wrapper_dispatcher_t::delete_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
         log_.trace("wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
-        init();
+        start_with();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
             address(),
@@ -142,13 +142,13 @@ namespace duck_charmer {
             database,
             collection,
             std::move(condition));
-        wait();
+        stop_with();
         return std::get<result_delete>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::delete_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
         log_.trace("wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
-        init();
+        start_with();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
             address(),
@@ -157,7 +157,7 @@ namespace duck_charmer {
             database,
             collection,
             std::move(condition));
-        wait();
+        stop_with();
         return std::get<result_delete>(intermediate_store_);
     }
 
