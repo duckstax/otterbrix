@@ -28,6 +28,8 @@ public:
     bool next();
     std::size_t size();
     py::object get(const std::string& key);
+    wrapper_cursor &__iter__();
+    wrapper_cursor &__next__();
     std::string print();
 
     //paginate();

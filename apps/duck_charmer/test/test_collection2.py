@@ -61,10 +61,10 @@ def test_list_collections():
 def test_initialize_collection(gen_collection):
     c = gen_collection['collection']
     cursor = c.find({})
-    #count = 0
-    #for doc in cursor:
-        #count += 1
-    #assert count == 100
+    count = 0
+    for doc in cursor:
+        count += 1
+    assert count == 100
     assert cursor.count() == 100
     assert len(cursor) == 100
     assert c.count() == 100

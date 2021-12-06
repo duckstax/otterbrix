@@ -32,6 +32,17 @@ py::object wrapper_cursor::get(const std::string &key) {
     return from_object(*ptr_->get(), key);
 }
 
+wrapper_cursor &wrapper_cursor::__iter__() {
+    return *this;
+}
+
+wrapper_cursor &wrapper_cursor::__next__() {
+    if (!next()) {
+        throw py::stop_iteration();
+    }
+    return *this;
+}
+
 std::string wrapper_cursor::print() {
     return ptr_->get()->to_json();
 }

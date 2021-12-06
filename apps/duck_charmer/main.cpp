@@ -73,6 +73,8 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("__del__", &wrapper_cursor::close)
         .def("__len__", &wrapper_cursor::size)
         .def("__getitem__", &wrapper_cursor::get)
+        .def("__iter__", &wrapper_cursor::__iter__)
+        .def("__next__", &wrapper_cursor::__next__)
         .def("count", &wrapper_cursor::size)
         .def("close", &wrapper_cursor::close)
         .def("hasNext", &wrapper_cursor::has_next)
