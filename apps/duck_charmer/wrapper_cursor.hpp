@@ -27,10 +27,11 @@ public:
     bool has_next();
     bool next();
     std::size_t size();
-    py::object get(const std::string& key);
+    py::object get(py::object key);
     wrapper_cursor &__iter__();
     wrapper_cursor &__next__();
     std::string print();
+    void sort(py::object sorter, py::object order);
 
     //paginate();
     //_order();
@@ -41,6 +42,9 @@ private:
     duck_charmer::session_t session_;
     pointer ptr_;
     goblin_engineer::address_t dispatcher_;
+
+    py::object get_(const std::string &key) const;
+    py::object get_(std::size_t index) const;
 };
 
 

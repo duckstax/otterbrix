@@ -28,8 +28,14 @@ std::size_t wrapper_cursor::size() {
     return ptr_->size();
 }
 
-py::object wrapper_cursor::get(const std::string &key) {
-    return from_object(*ptr_->get(), key);
+py::object wrapper_cursor::get(py::object key) {
+    if (py::isinstance<py::str>(key)) {
+        return get_(key.cast<std::string>());
+    }
+    if (py::isinstance<py::int_>(key)) {
+        return get_(key.cast<std::size_t>());
+    }
+    return py::object();
 }
 
 wrapper_cursor &wrapper_cursor::__iter__() {
@@ -45,4 +51,20 @@ wrapper_cursor &wrapper_cursor::__next__() {
 
 std::string wrapper_cursor::print() {
     return ptr_->get()->to_json();
+}
+
+void wrapper_cursor::sort(py::object sorter, py::object order) {
+    if (py::isinstance<py::dict>(sorter)) {
+        ptr_->sort(to_sorter(sorter));
+    } else {
+        ptr_->sort(services::storage::sort::sorter_t(py::str(sorter).cast<std::string>(), to_order(order)));
+    }
+}
+
+py::object wrapper_cursor::get_(const std::string &key) const {
+    return from_object(*ptr_->get(), key);
+}
+
+py::object wrapper_cursor::get_(std::size_t index) const {
+    return from_document(*ptr_->get(index));
 }

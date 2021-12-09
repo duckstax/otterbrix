@@ -13,13 +13,21 @@ enum class order {
 };
 
 class sorter_t {
-    using function_t = std::function<int(const document_view_t&, const document_view_t&)>;
+    using function_t = std::function<int(const document_view_t*, const document_view_t*)>;
 
 public:
+    explicit sorter_t() = default;
     explicit sorter_t(const std::string &key, order order_ = order::ascending);
 
     void add(const std::string &key, order order_ = order::ascending);
-    bool less(const document_view_t &doc1, const document_view_t &doc2) const;
+    bool operator ()(const document_view_t *doc1, const document_view_t *doc2) const {
+        for (auto f : functions_) {
+            auto res = f(doc1, doc2);
+            if (res < 0) return true;
+            else if (res > 0) return false;
+        }
+        return true;
+    }
 
 private:
     std::vector<function_t> functions_;
