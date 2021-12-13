@@ -20,21 +20,15 @@ namespace components::cursor {
     }
 
     bool cursor_t::has_next() const {
-        return size_ > 0 && (current_index_ < static_cast<index_t>(sub_cursor_.size()) - 1 || sub_cursor_.at(static_cast<std::size_t>(current_index_))->has_next());
+        return static_cast<std::size_t>(current_index_ + 1) < size_;
     }
 
-    bool cursor_t::next() {
-        if (current_index_ < 0) current_index_ = 0;
-        current_ = nullptr;
-        while (!current_ && current_index_ < static_cast<index_t>(sub_cursor_.size())) {
-            current_ = sub_cursor_.at(static_cast<std::size_t>(current_index_))->next();
-            if (!current_) current_index_++;
-        }
-        return current_ != nullptr;
+    const data_t *cursor_t::next() {
+        return get(static_cast<std::size_t>(++current_index_));
     }
 
     const data_t *cursor_t::get() const {
-        return current_;
+        return get(static_cast<std::size_t>(current_index_ < 0 ? 0 : current_index_));
     }
 
     const data_t *cursor_t::get(std::size_t index) const {
@@ -46,6 +40,7 @@ namespace components::cursor {
     void cursor_t::sort(std::function<bool(data_t*, data_t*)> sorter) {
         createListBySort();
         sorted_.sort(sorter);
+        current_index_ = start_index;
     }
 
     void cursor_t::createListBySort() {
@@ -60,7 +55,7 @@ namespace components::cursor {
 
     const data_t *cursor_t::get_sorted(std::size_t index) const {
         if (index < size_) {
-            return *(std::next(sorted_.begin(), static_cast<long>(index)));
+            return *(std::next(sorted_.begin(), static_cast<int32_t>(index)));
         }
         return nullptr;
     }
@@ -86,18 +81,6 @@ namespace components::cursor {
         return data_->size();
     }
 
-    bool sub_cursor_t::has_next() const {
-        return current_index_ < static_cast<index_t>(size()) - 1;
-    }
-
-    const data_t *sub_cursor_t::next() {
-        current_index_++;
-        if (current_index_ < static_cast<index_t>(size())) {
-            return data_->get(static_cast<std::size_t>(current_index_));
-        }
-        return nullptr;
-    }
-
     std::vector<data_t> &sub_cursor_t::data() {
         return data_->data();
     }
@@ -111,10 +94,6 @@ namespace components::cursor {
 
     size_t data_cursor_t::size() const {
         return data_.size();
-    }
-
-    const data_t *data_cursor_t::get(std::size_t index) const {
-        return &data_.at(index);
     }
 
     std::vector<data_t> &data_cursor_t::data() {

@@ -27,7 +27,7 @@ public:
     wrapper_result_update() = default;
     wrapper_result_update(const result_update &src);
 
-    py::dict raw_result() const;
+    py::list raw_result() const;
     std::size_t matched_count() const;
     std::size_t modified_count() const;
     py::object upserted_id() const;

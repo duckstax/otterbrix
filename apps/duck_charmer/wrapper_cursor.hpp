@@ -20,22 +20,19 @@ public:
     using type = components::cursor::cursor_t;
     using pointer = type*;
 
-    wrapper_cursor() = default; // todo refactoring;
     wrapper_cursor(components::session::session_t session, pointer cursor);
 
     void close();
     bool has_next();
-    bool next();
+    wrapper_cursor &next();
+    wrapper_cursor &iter();
     std::size_t size();
     py::object get(py::object key);
-    wrapper_cursor &__iter__();
-    wrapper_cursor &__next__();
     std::string print();
-    void sort(py::object sorter, py::object order);
+    wrapper_cursor &sort(py::object sorter, py::object order);
 
     //paginate();
     //_order();
-    //sort();
 
 private:
     std::atomic_bool close_;

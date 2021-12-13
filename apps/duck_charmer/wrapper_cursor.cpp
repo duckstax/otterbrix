@@ -20,8 +20,15 @@ bool wrapper_cursor::has_next() {
     return ptr_->has_next();
 }
 
-bool wrapper_cursor::next() {
-    return ptr_->next();
+wrapper_cursor &wrapper_cursor::next() {
+    if (!ptr_->next()) {
+        throw py::stop_iteration();
+    }
+    return *this;
+}
+
+wrapper_cursor &wrapper_cursor::iter() {
+    return *this;
 }
 
 std::size_t wrapper_cursor::size() {
@@ -38,27 +45,17 @@ py::object wrapper_cursor::get(py::object key) {
     return py::object();
 }
 
-wrapper_cursor &wrapper_cursor::__iter__() {
-    return *this;
-}
-
-wrapper_cursor &wrapper_cursor::__next__() {
-    if (!next()) {
-        throw py::stop_iteration();
-    }
-    return *this;
-}
-
 std::string wrapper_cursor::print() {
     return ptr_->get()->to_json();
 }
 
-void wrapper_cursor::sort(py::object sorter, py::object order) {
+wrapper_cursor &wrapper_cursor::sort(py::object sorter, py::object order) {
     if (py::isinstance<py::dict>(sorter)) {
         ptr_->sort(to_sorter(sorter));
     } else {
         ptr_->sort(services::storage::sort::sorter_t(py::str(sorter).cast<std::string>(), to_order(order)));
     }
+    return *this;
 }
 
 py::object wrapper_cursor::get_(const std::string &key) const {
