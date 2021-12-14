@@ -21,6 +21,7 @@ namespace duck_charmer {
         add_handler("find_finish", &wrapper_dispatcher_t::find_finish);
         add_handler("find_one_finish", &wrapper_dispatcher_t::find_one_finish);
         add_handler("delete_finish", &wrapper_dispatcher_t::delete_finish);
+        add_handler("update_finish", &wrapper_dispatcher_t::update_finish);
         add_handler("size_finish", &wrapper_dispatcher_t::size_finish);
     }
 
@@ -164,6 +165,42 @@ namespace duck_charmer {
         return std::get<result_delete>(intermediate_store_);
     }
 
+    auto wrapper_dispatcher_t::update_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update& {
+        log_.trace("wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            collection::update_one,
+            session,
+            database,
+            collection,
+            std::move(condition),
+            std::move(update),
+            upsert
+            );
+        wait();
+        return std::get<result_update>(intermediate_store_);
+    }
+
+    auto wrapper_dispatcher_t::update_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update& {
+        log_.trace("wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+        init();
+        goblin_engineer::send(
+            address_book("manager_dispatcher"),
+            address(),
+            collection::update_many,
+            session,
+            database,
+            collection,
+            std::move(condition),
+            std::move(update),
+            upsert
+            );
+        wait();
+        return std::get<result_update>(intermediate_store_);
+    }
+
     result_size wrapper_dispatcher_t::size(duck_charmer::session_t& session, const std::string& database, const std::string& collection) {
         log_.trace("wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
@@ -192,7 +229,7 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::drop_collection_finish(components::session::session_t &session, result_drop_collection result) {
+    void wrapper_dispatcher_t::drop_collection_finish(duck_charmer::session_t &session, result_drop_collection result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();
@@ -205,7 +242,7 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::insert_many_finish(components::session::session_t &session, result_insert_many result) {
+    void wrapper_dispatcher_t::insert_many_finish(duck_charmer::session_t &session, result_insert_many result) {
         log_.trace("wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
         intermediate_store_ = result;
         input_session_ = session;
@@ -218,13 +255,19 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one result) {
+    void wrapper_dispatcher_t::find_one_finish(duck_charmer::session_t &session, result_find_one result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();
     }
 
-    void wrapper_dispatcher_t::delete_finish(components::session::session_t &session, result_delete result) {
+    void wrapper_dispatcher_t::delete_finish(duck_charmer::session_t &session, result_delete result) {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
+    }
+
+    void wrapper_dispatcher_t::update_finish(duck_charmer::session_t &session, result_update result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();

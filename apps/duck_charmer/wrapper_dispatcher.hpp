@@ -51,6 +51,8 @@ namespace duck_charmer {
         auto find_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_find_one&;
         auto delete_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
         auto delete_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
+        auto update_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
+        auto update_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
         result_size size(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
 
     protected:
@@ -83,6 +85,7 @@ namespace duck_charmer {
         auto find_finish(duck_charmer::session_t& session,components::cursor::cursor_t*) -> void;
         auto find_one_finish(duck_charmer::session_t& session,result_find_one result) -> void;
         auto delete_finish(duck_charmer::session_t& session,result_delete result) -> void;
+        auto update_finish(duck_charmer::session_t& session,result_update result) -> void;
         auto size_finish(duck_charmer::session_t& session,result_size result) -> void;
 
         void init() {
@@ -114,6 +117,7 @@ namespace duck_charmer {
             result_find_one,
             result_size,
             result_delete,
+            result_update,
             result_drop_collection,
             services::storage::database_create_result,
             services::storage::collection_create_result>
