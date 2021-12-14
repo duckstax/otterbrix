@@ -183,18 +183,18 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
             q = query("and");
             for (auto it = value->as_array()->begin(); it; ++it) {
                 auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-                q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
+                q->sub_query_.push_back(parse_condition(document_t(dict, true), nullptr, prev_key).release());
             }
         } else if (key == "$or") {
             q = query("or");
             for (auto it = value->as_array()->begin(); it; ++it) {
                 auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-                q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
+                q->sub_query_.push_back(parse_condition(document_t(dict, true), nullptr, prev_key).release());
             }
         } else if (key == "$not") {
             q = query("not");
             auto dict = ::document::impl::mutable_dict_t::new_dict(it.value()->as_dict()).detach();
-            q->sub_query_.push_back(parse_condition(document_t(dict, true)).release());
+            q->sub_query_.push_back(parse_condition(document_t(dict, true), nullptr, prev_key).release());
         } else if (key == "$in") {
             q = any(prev_key, value->as_array());
         } else if (key == "$all") {
@@ -208,6 +208,13 @@ query_ptr parse_condition(const document_t &cond, query_ptr &&prev_cond, const s
         } else {
             query_ptr q2 = GET_CONDITION(eq, key, value);
             q = q ? std::move(q) & std::move(q2) : std::move(q2);
+        }
+    }
+    if (q && q->key_ == "not" && !prev_key.empty() && !q->sub_query_.empty()) {
+        if (q->sub_query_.front()->key_ == "and") {
+            q->sub_query_.front()->key_ = "or";
+        } else if (q->sub_query_.front()->key_ == "or") {
+            q->sub_query_.front()->key_ = "and";
         }
     }
     return prev_cond
