@@ -53,8 +53,8 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("insert", &wrapper_collection::insert, py::arg("documents"))
         .def("insert_one", &wrapper_collection::insert_one, py::arg("document"))
         .def("insert_many", &wrapper_collection::insert_many, py::arg("documents"))
-        .def("update", &wrapper_collection::update, py::arg("fields"), py::arg("filter"))
-        .def("update_one", &wrapper_collection::update_one, py::arg("fields"), py::arg("filter"))
+        .def("update_one", &wrapper_collection::update_one, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
+        .def("update_many", &wrapper_collection::update_many, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
         .def("find", &wrapper_collection::find, py::arg("filter"))
         .def("find_one", &wrapper_collection::find_one, py::arg("filter"))
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter"))
@@ -85,6 +85,13 @@ PYBIND11_MODULE(duck_charmer, m) {
     py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")
         .def_property_readonly("raw_result", &wrapper_result_delete::raw_result)
         .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count)
+        ;
+
+    py::class_<wrapper_result_update, boost::intrusive_ptr<wrapper_result_update>>(m, "UpdateResult")
+        .def_property_readonly("raw_result", &wrapper_result_update::raw_result)
+        .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
+        .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
+        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id)
         ;
 
     m.def(
