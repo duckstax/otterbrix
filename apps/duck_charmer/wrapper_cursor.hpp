@@ -20,25 +20,28 @@ public:
     using type = components::cursor::cursor_t;
     using pointer = type*;
 
-    wrapper_cursor() = default; // todo refactoring;
     wrapper_cursor(components::session::session_t session, pointer cursor);
 
     void close();
     bool has_next();
-    bool next();
+    wrapper_cursor &next();
+    wrapper_cursor &iter();
     std::size_t size();
-    py::object get(const std::string& key);
+    py::object get(py::object key);
     std::string print();
+    wrapper_cursor &sort(py::object sorter, py::object order);
 
     //paginate();
     //_order();
-    //sort();
 
 private:
     std::atomic_bool close_;
     duck_charmer::session_t session_;
     pointer ptr_;
     goblin_engineer::address_t dispatcher_;
+
+    py::object get_(const std::string &key) const;
+    py::object get_(std::size_t index) const;
 };
 
 

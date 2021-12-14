@@ -259,3 +259,17 @@ auto to_pylist(const std::vector<std::string> &src) -> py::list {
     for (const auto &str : src) res.append(str);
     return res;
 }
+
+auto to_sorter(const py::handle &sort_dict) -> services::storage::sort::sorter_t {
+    services::storage::sort::sorter_t sorter;
+    for (const py::handle key : sort_dict) {
+        sorter.add(py::str(key).cast<std::string>(), to_order(sort_dict[key]));
+    }
+    return sorter;
+}
+
+auto to_order(const py::object &order) -> services::storage::sort::order {
+    return py::int_(order).cast<int>() < 0
+            ? services::storage::sort::order::descending
+            : services::storage::sort::order::ascending;
+}

@@ -109,6 +109,8 @@ public:
 
     iterator_t begin() const;
 
+    int equals(const document_view_t &other, const std::string &key) const;
+
     std::string to_json() const;
 
 private:

@@ -61,10 +61,10 @@ def test_list_collections():
 def test_initialize_collection(gen_collection):
     c = gen_collection['collection']
     cursor = c.find({})
-    #count = 0
-    #for doc in cursor:
-        #count += 1
-    #assert count == 100
+    count = 0
+    for doc in cursor:
+        count += 1
+    assert count == 100
     assert cursor.count() == 100
     assert len(cursor) == 100
     assert c.count() == 100
@@ -115,6 +115,170 @@ def test_find_in_subdocument_with_array(gen_collection):
     c = gen_collection['collection'].find({'mixedDict.countArray.3': {'$gt': 50}})
     assert c.count() == 52
     assert gen_collection['collection'].find({'mixedDict.countArray.3': {"$gt": 50}}).count() == 52
+
+
+def test_sort_positive(gen_collection):
+    c = gen_collection['collection'].find()
+    c.sort('count', 1)
+    assert c[0]['count'] == 0
+    assert c[1]['count'] == 1
+
+
+def test_sort_negative(gen_collection):
+    c = gen_collection['collection'].find()
+    c.sort('count', -1)
+    assert c[0]['count'] == 99
+    assert c[1]['count'] == 98
+
+
+def test_has_next(gen_collection):
+    c = gen_collection['collection'].find().sort('count', 1)
+    assert c.hasNext() is True
+    assert c.next()['count'] == 0
+
+
+def test_not_has_next(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$gte': 98}}).sort('count', 1)
+    assert c.hasNext() is True
+    assert c.next()['count'] == 98
+    assert c.hasNext() is True
+    assert c.next()['count'] == 99
+    assert c.hasNext() is False
+
+
+def test_empty_find(gen_collection):
+    c = gen_collection['collection'].find()
+    assert c.count() == 100
+
+
+def test_find_one(gen_collection):
+    c = gen_collection['collection'].find_one({'count': 3})
+    assert c['countStr'] == '3'
+
+
+def test_find_one_with_filter_named_parameter(gen_collection):
+    c = gen_collection['collection'].find_one(filter={'count': 3})
+    assert c['countStr'] == '3'
+
+
+def test_gte_lt(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$gte': 50, '$lt': 51}})
+    assert c.count() == 1
+    assert c[0]['countStr'] == '50'
+
+
+def test_gt_lte(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$gt': 50, '$lte': 51}})
+    assert c.count() == 1
+    assert c[0]['countStr'] == '51'
+
+
+def test_ne(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$ne': 50}})
+    assert c.count() == 99
+    for item in c:
+        assert item['countStr'] != '50'
+
+
+def test_regex(gen_collection):
+    c = gen_collection['collection'].find({'countStr': {'$regex': r'^[5]{1,2}'}}).sort('count', 1)
+    assert c.count() == 11
+    assert c[0]['count'] == 5
+    assert c[1]['count'] == 50
+    assert c[2]['count'] == 51
+    assert c[10]['count'] == 59
+
+    c = gen_collection['collection'].find({'countStr': {'$regex': r'[^5][5]{1}'}}).sort('count', 1)
+    assert c.count() == 8
+    assert c[0]['count'] == 15
+    assert c[1]['count'] == 25
+    assert c[4]['count'] == 65
+    assert c[7]['count'] == 95
+
+
+def test_in(gen_collection):
+    c = gen_collection['collection'].find({'count': {'$in': [22,44,66,88]}}).sort('count', 1)
+    assert c.count() == 4
+    assert c[0]['count'] == 22
+    assert c[1]['count'] == 44
+    assert c[2]['count'] == 66
+    assert c[3]['count'] == 88
+
+    c = gen_collection['collection'].find({'countStr': {'$in': ['11','33','55','77','99']}}).sort('count', 1)
+    assert c.count() == 5
+    assert c[0]['count'] == 11
+    assert c[1]['count'] == 33
+    assert c[2]['count'] == 55
+    assert c[3]['count'] == 77
+    assert c[4]['count'] == 99
+
+    c = gen_collection['collection'].find({'countArray': {'$in': [22, 50]}}).sort('count', 1)
+    assert c.count() == 10
+    for doc in c:
+        if doc['count'] <= 22:
+            assert 22 in doc['countArray']
+        elif doc['count'] <= 50:
+            assert 50 in doc['countArray']
+
+
+def test_update_one_set(gen_collection):
+    cu = gen_collection['collection'].update_one({'count': 3}, {'$set': {'countStr': 'three'}})
+    print(cu.raw_result)
+    assert len(cu.raw_result) == 1
+    c = gen_collection['collection'].find_one({'count': 3})
+    assert c['countStr'] == 'three'
+
+
+def test_delete_one(gen_collection):
+    gen_collection['collection'].delete_one({'count': 3})
+    c = gen_collection['collection'].find({})
+    assert c.count() == 99
+
+
+def test_delete_all(gen_collection):
+    gen_collection['collection'].delete_many({})
+    c = gen_collection['collection'].find({})
+    assert c.count() == 0
+
+
+def test_delete_many(gen_collection):
+    gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+    c = gen_collection['collection'].find({})
+    assert c.count() == 50
+
+
+def test_insert_one(gen_collection):
+    gen_collection['collection'].insert_one({'my_object_name': 'my object value', 'count': 1000})
+    c = gen_collection['collection'].find({})
+    assert c.count() == 101
+    assert gen_collection['collection'].find({'my_object_name': 'my object value'})['count'] == 1000
+
+
+def test_insert_many(gen_collection):
+    items = []
+    for i in range(10):
+        value = 1000 + i
+        items.append({'count': value, 'countStr': str(value)})
+    gen_collection['collection'].insert_many(items)
+    c = gen_collection['collection'].find({})
+    assert c.count() == 110
+
+
+def test_and(gen_collection):
+    c = gen_collection['collection'].find({"$and": [{"count": {"$gt": 10}}, {"count": {"$lte": 50}}]})
+    assert c.count() == 40
+
+
+def test_or(gen_collection):
+    c = gen_collection['collection'].find({"$or": [{"count": {"$lt": 10}}, {"count": {"$gte": 90}}]})
+    assert c.count() == 20
+
+
+def test_not(gen_collection):
+    c = gen_collection['collection'].find({"count": {"$not": {"$gte": 90, "$lt": 10}}})
+    assert c.count() == 80
+    c = gen_collection['collection'].find({"$not": {"count": {"$lte": 90, "$gt": 10}}})
+    assert c.count() == 20
 
 
 def test_delete_one(gen_collection):
