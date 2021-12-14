@@ -112,3 +112,22 @@ private:
     result_t deleted_ids_;
     //TODO: except or error_code
 };
+
+
+class result_update {
+public:
+    using result_t = std::vector<std::string>;
+
+    result_update() = default;
+    result_update(result_t &&modified_ids, result_t &&nomodified_ids);
+    explicit result_update(std::string &&upserted_id);
+    const result_t &modified_ids() const;
+    const result_t &nomodified_ids() const;
+    const std::string &upserted_id() const;
+
+private:
+    result_t modified_ids_;
+    result_t nomodified_ids_;
+    std::string upserted_id_;
+    //TODO: except or error_code
+};

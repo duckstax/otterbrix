@@ -27,6 +27,7 @@ public:
     document_t(const document_t &src);
     document_t(document_t &&src);
     ~document_t();
+    document_t &operator =(document_t &&src);
 
     void add_null(const std::string &key);
     void add_bool(const std::string &key, bool value);
@@ -38,6 +39,7 @@ public:
     void add_dict(const std::string &key, ::document::impl::dict_t *dict);
     void add_dict(const std::string &key, const document_t &dict);
     void add_dict(const std::string &key, document_t &&dict);
+    void add(const std::string &key, const ::document::impl::value_t *value);
 
     bool is_exists(const std::string &key) const;
     bool is_null(const std::string &key) const;

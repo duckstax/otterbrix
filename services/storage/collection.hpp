@@ -42,6 +42,7 @@ namespace services::storage {
         removed_data_t() = default;
         void add_range(const range_t &range);
         void clear();
+        bool empty() const;
         void sort();
         void reverse_sort();
         const ranges_t &ranges() const;
@@ -72,6 +73,8 @@ namespace services::storage {
         auto find_one(const session_t& session, const document_t &cond) -> void;
         auto delete_one(const session_t& session, const document_t &cond) -> void;
         auto delete_many(const session_t& session, const document_t &cond) -> void;
+        auto update_one(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
+        auto update_many(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
         void drop(const session_t& session);
         void close_cursor(session_t& session);
 
@@ -86,9 +89,18 @@ namespace services::storage {
         result_find_one search_one_(query_ptr cond);
         result_delete delete_one_(query_ptr cond);
         result_delete delete_many_(query_ptr cond);
+        result_update update_one_(query_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_(query_ptr cond, const document_t &update, bool upsert);
         void remove_(const std::string& id);
+        bool update_(const std::string& id, const document_t &update);
+        field_value_t get_index_field(field_value_t index_doc, const std::string& field_name) const;
+        msgpack::object_handle get_value(field_value_t index) const;
+        void append_field(field_value_t index_doc, const std::string& field_name, field_value_t value);
+        document_t update2insert(const document_t &update) const;
         void reindex_();
         template <class T> void reindex_(T document, std::size_t min_value, std::size_t delta);
+
+        static msgpack::object inc(const msgpack::object &src, const ::document::impl::value_t *value);
 
         log_t log_;
         goblin_engineer::address_t database_;
@@ -109,6 +121,8 @@ namespace services::storage {
         document_view_t get_test(const std::string &id) const;
         result_delete delete_one_test(query_ptr cond);
         result_delete delete_many_test(query_ptr cond);
+        result_update update_one_test(query_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_test(query_ptr cond, const document_t &update, bool upsert);
 #endif
     };
 
