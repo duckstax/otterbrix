@@ -51,7 +51,7 @@ namespace components::cursor {
         std::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
         std::list<data_t*> sorted_;
 
-        void createListBySort();
+        void create_list_by_sort();
         const data_t *get_sorted(std::size_t index) const;
         const data_t *get_unsorted(std::size_t index) const;
     };

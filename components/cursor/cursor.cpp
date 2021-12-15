@@ -38,12 +38,12 @@ namespace components::cursor {
     }
 
     void cursor_t::sort(std::function<bool(data_t*, data_t*)> sorter) {
-        createListBySort();
+        create_list_by_sort();
         sorted_.sort(sorter);
         current_index_ = start_index;
     }
 
-    void cursor_t::createListBySort() {
+    void cursor_t::create_list_by_sort() {
         if (sorted_.empty()) {
             for (auto &sub : sub_cursor_) {
                 for (auto &document : sub->data()) {

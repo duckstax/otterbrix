@@ -96,7 +96,7 @@ namespace document { namespace impl {
         void _retain() const;
         void _release() const;
 
-        template<class TValue> inline TValue as() const;
+        template<class TValue> TValue as() const;
 
     protected:
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
@@ -153,29 +153,15 @@ namespace document { namespace impl {
     }
 
 
-    template<class TValue> inline TValue value_t::as() const {
+    template<class TValue> TValue value_t::as() const {
         assert("value_t: not valid type for as");
         return TValue();
     }
 
-    template<> inline bool value_t::as<bool>() const {
-        return as_bool();
-    }
-
-    template<> inline uint64_t value_t::as<uint64_t>() const {
-        return as_unsigned();
-    }
-
-    template<> inline int64_t value_t::as<int64_t>() const {
-        return as_int();
-    }
-
-    template<> inline double value_t::as<double>() const {
-        return as_double();
-    }
-
-    template<> inline std::string value_t::as<std::string>() const {
-        return static_cast<std::string>(as_string());
-    }
+    template<> bool value_t::as<bool>() const;
+    template<> uint64_t value_t::as<uint64_t>() const;;
+    template<> int64_t value_t::as<int64_t>() const;;
+    template<> double value_t::as<double>() const;
+    template<> std::string value_t::as<std::string>() const;
 
 } }
