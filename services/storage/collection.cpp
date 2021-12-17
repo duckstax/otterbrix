@@ -152,8 +152,8 @@ auto collection_t::find(const session_t& session, const document_t &cond) -> voi
     if (dropped_) {
         goblin_engineer::send(dispatcher, address(), "find_finish", session, nullptr);
     } else {
-        auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::data_cursor_t>(*search_(parse_condition(cond))));
-        goblin_engineer::send(dispatcher, address(), "find_finish", session, new components::cursor::sub_cursor_t(address(), result.first->second.get()));
+        auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(parse_condition(cond))));
+        goblin_engineer::send(dispatcher, address(), "find_finish", session, result.first->second.get());
     }
 }
 

@@ -106,7 +106,7 @@ namespace services::storage {
         goblin_engineer::address_t database_;
         index_t index_;
         storage_t storage_;
-        std::unordered_map<session_t,std::unique_ptr<components::cursor::data_cursor_t>> cursor_storage_;
+        std::unordered_map<session_t,std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_ {false};
         removed_data_t removed_data_;
 

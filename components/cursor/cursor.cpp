@@ -23,21 +23,21 @@ namespace components::cursor {
         return static_cast<std::size_t>(current_index_ + 1) < size_;
     }
 
-    const data_t *cursor_t::next() {
+    data_ptr cursor_t::next() {
         return get(static_cast<std::size_t>(++current_index_));
     }
 
-    const data_t *cursor_t::get() const {
+    data_ptr cursor_t::get() const {
         return get(static_cast<std::size_t>(current_index_ < 0 ? 0 : current_index_));
     }
 
-    const data_t *cursor_t::get(std::size_t index) const {
+    data_ptr cursor_t::get(std::size_t index) const {
         return sorted_.empty()
                 ? get_unsorted(index)
                 : get_sorted(index);
     }
 
-    void cursor_t::sort(std::function<bool(data_t*, data_t*)> sorter) {
+    void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
         create_list_by_sort();
         sorted_.sort(sorter);
         current_index_ = start_index;
@@ -53,14 +53,14 @@ namespace components::cursor {
         }
     }
 
-    const data_t *cursor_t::get_sorted(std::size_t index) const {
+    data_ptr cursor_t::get_sorted(std::size_t index) const {
         if (index < size_) {
             return *(std::next(sorted_.begin(), static_cast<int32_t>(index)));
         }
         return nullptr;
     }
 
-    const data_t *cursor_t::get_unsorted(std::size_t index) const {
+    data_ptr cursor_t::get_unsorted(std::size_t index) const {
         if (index < size_) {
             auto i = index;
             for (const auto &sub : sub_cursor_) {
@@ -78,26 +78,16 @@ namespace components::cursor {
     }
 
     size_t sub_cursor_t::size() const {
-        return data_->size();
-    }
-
-    std::vector<data_t> &sub_cursor_t::data() {
-        return data_->data();
-    }
-
-    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, data_cursor_t* data)
-        : collection_(collection)
-        , data_(data) {
-    }
-    data_cursor_t::data_cursor_t(std::vector<data_t> data)
-        : data_(std::move(data)) {}
-
-    size_t data_cursor_t::size() const {
         return data_.size();
     }
 
-    std::vector<data_t> &data_cursor_t::data() {
+    std::vector<data_t> &sub_cursor_t::data() {
         return data_;
+    }
+
+    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, const std::vector<data_t> &data)
+        : collection_(collection)
+        , data_(data) {
     }
 
 }
