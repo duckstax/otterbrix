@@ -40,7 +40,7 @@ namespace components::cursor {
         std::size_t size_{};
         index_t current_index_{start_index};
         std::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
-        std::list<data_ptr> sorted_;
+        std::vector<data_ptr> sorted_;
 
         void create_list_by_sort();
         data_ptr get_sorted(std::size_t index) const;

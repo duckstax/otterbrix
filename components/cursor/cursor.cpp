@@ -39,12 +39,13 @@ namespace components::cursor {
 
     void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
         create_list_by_sort();
-        sorted_.sort(sorter);
+        std::sort(sorted_.begin(), sorted_.end(), sorter);
         current_index_ = start_index;
     }
 
     void cursor_t::create_list_by_sort() {
         if (sorted_.empty()) {
+            sorted_.reserve(size_);
             for (auto &sub : sub_cursor_) {
                 for (auto &document : sub->data()) {
                     sorted_.emplace_back(&document);
@@ -55,7 +56,7 @@ namespace components::cursor {
 
     data_ptr cursor_t::get_sorted(std::size_t index) const {
         if (index < size_) {
-            return *(std::next(sorted_.begin(), static_cast<int32_t>(index)));
+            return sorted_.at(index);
         }
         return nullptr;
     }
