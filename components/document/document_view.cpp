@@ -252,6 +252,28 @@ document_view_t::iterator_t document_view_t::begin() const {
     return index_->begin();
 }
 
+template <class T>
+compare_t equals_(const document_view_t &doc1, const document_view_t &doc2, const std::string &key) {
+    T v1 = doc1.get_as<T>(key);
+    T v2 = doc2.get_as<T>(key);
+    if (v1 < v2) return compare_t::less;
+    if (v1 > v2) return compare_t::more;
+    return compare_t::equals;
+}
+
+compare_t document_view_t::compare(const document_view_t &other, const std::string &key) const {
+    if (is_exists(key) && !other.is_exists(key)) return compare_t::less;
+    if (!is_exists(key) && other.is_exists(key))  return compare_t::more;
+    if (!is_exists(key) && !other.is_exists(key)) return compare_t::equals;
+    if (is_bool(key) && other.is_bool(key)) return equals_<bool>(*this, other, key);
+    if (is_ulong(key) && other.is_ulong(key)) return equals_<ulong>(*this, other, key);
+    if (is_long(key) && other.is_long(key)) return equals_<long>(*this, other, key);
+    if (is_float(key) && other.is_float(key)) return equals_<float>(*this, other, key);
+    if (is_double(key) && other.is_double(key)) return equals_<double>(*this, other, key);
+    if (is_string(key) && other.is_string(key)) return equals_<std::string>(*this, other, key);
+    return compare_t::equals;
+}
+
 std::string document_view_t::to_json() const {
     if (index_) return to_json_dict();
     if (array_) return to_json_array();
