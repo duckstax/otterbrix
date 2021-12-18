@@ -375,6 +375,27 @@ template const value_t* value_t::deref<true>() const;
 void value_t::_retain() const     {heap_value_t::retain(this);}
 void value_t::_release() const    {heap_value_t::release(this);}
 
+template<> bool value_t::as<bool>() const {
+    return as_bool();
+}
+
+template<> uint64_t value_t::as<uint64_t>() const {
+    return as_unsigned();
+}
+
+template<> int64_t value_t::as<int64_t>() const {
+    return as_int();
+}
+
+template<> double value_t::as<double>() const {
+    return as_double();
+}
+
+template<> std::string value_t::as<std::string>() const {
+    return static_cast<std::string>(as_string());
+}
+
+
 void release(const value_t *val) noexcept {
     heap_value_t::release(val);
 }
