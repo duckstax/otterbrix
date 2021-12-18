@@ -99,10 +99,10 @@ TEST_CASE("collection_t search") {
     REQUIRE(collection->search_test(eq("type", "cat"))->size() == 2);
     REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5))->size() == 2);
     REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5))->size() == 2);
-    REQUIRE(collection->search_test(any("age", std::vector<int>{2,3,4}))->size() == 3);
-    REQUIRE(collection->search_test(all("age", std::vector<int>{2,3}))->size() == 0);
-    REQUIRE(collection->search_test(all("age", std::vector<int>{2}))->size() == 2);
-    REQUIRE(collection->search_test(matches("name", "Ch.*"))->size() == 2);
+    REQUIRE(collection->search_test(any("friends", std::vector<std::string>{"Lucy", "Charlie"}))->size() == 3);
+    REQUIRE(collection->search_test(all("friends", std::vector<std::string>{"Lucy", "Charlie"}))->size() == 1);
+    REQUIRE(collection->search_test(all("friends", std::vector<std::string>{"Rex", "Lucy", "Charlie"}))->size() == 3);
+    REQUIRE(collection->search_test(matches("name", "^Ch"))->size() == 2);
     REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
     REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
     REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
@@ -125,11 +125,11 @@ TEST_CASE("collection_t find") {
     res = collection->find_test(document_t::from_json("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
     REQUIRE(res->size() == 2);
     res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
-    REQUIRE(res->size() == 0);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Rex\"]}}"));
-    REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"Ch.*\"}}"));
     REQUIRE(res->size() == 2);
+    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"^Ch\"}}"));
+    REQUIRE(res->size() == 2);
+    res = collection->find_test(document_t::from_json("{}"));
+    REQUIRE(res->size() == 5);
     res = collection->find_test(document_t::from_json("{}"));
     REQUIRE(res->size() == 5);
 }

@@ -20,21 +20,58 @@ namespace components::cursor {
     }
 
     bool cursor_t::has_next() const {
-        return size_ > 0 && (current_index_ < static_cast<index_t>(sub_cursor_.size()) - 1 || sub_cursor_.at(current_index_)->has_next());
+        return static_cast<std::size_t>(current_index_ + 1) < size_;
     }
 
-    bool cursor_t::next() {
-        if (current_index_ < 0) current_index_ = 0;
-        current_ = nullptr;
-        while (!current_ && current_index_ < static_cast<index_t>(sub_cursor_.size())) {
-            current_ = sub_cursor_.at(current_index_)->next();
-            if (!current_) current_index_++;
+    data_ptr cursor_t::next() {
+        return get(static_cast<std::size_t>(++current_index_));
+    }
+
+    data_ptr cursor_t::get() const {
+        return get(static_cast<std::size_t>(current_index_ < 0 ? 0 : current_index_));
+    }
+
+    data_ptr cursor_t::get(std::size_t index) const {
+        return sorted_.empty()
+                ? get_unsorted(index)
+                : get_sorted(index);
+    }
+
+    void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
+        create_list_by_sort();
+        std::sort(sorted_.begin(), sorted_.end(), sorter);
+        current_index_ = start_index;
+    }
+
+    void cursor_t::create_list_by_sort() {
+        if (sorted_.empty()) {
+            sorted_.reserve(size_);
+            for (auto &sub : sub_cursor_) {
+                for (auto &document : sub->data()) {
+                    sorted_.emplace_back(&document);
+                }
+            }
         }
-        return current_ != nullptr;
     }
 
-    const data_t *cursor_t::get() const {
-        return current_;
+    data_ptr cursor_t::get_sorted(std::size_t index) const {
+        if (index < size_) {
+            return sorted_.at(index);
+        }
+        return nullptr;
+    }
+
+    data_ptr cursor_t::get_unsorted(std::size_t index) const {
+        if (index < size_) {
+            auto i = index;
+            for (const auto &sub : sub_cursor_) {
+                if (i < sub->size()) {
+                    return &sub->data()[i];
+                }
+                i -= sub->size();
+            }
+        }
+        return nullptr;
     }
 
     goblin_engineer::address_t& sub_cursor_t::address() {
@@ -42,34 +79,16 @@ namespace components::cursor {
     }
 
     size_t sub_cursor_t::size() const {
-        return data_->size();
-    }
-
-    bool sub_cursor_t::has_next() const {
-        return current_index_ < static_cast<index_t>(size()) - 1;
-    }
-
-    const data_t *sub_cursor_t::next() {
-        current_index_++;
-        if (current_index_ < static_cast<index_t>(size())) {
-            return data_->get(current_index_);
-        }
-        return nullptr;
-    }
-
-    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, data_cursor_t* data)
-        : collection_(collection)
-        , data_(data) {
-    }
-    data_cursor_t::data_cursor_t(std::vector<data_t> data)
-        : data_(std::move(data)) {}
-
-    size_t data_cursor_t::size() const {
         return data_.size();
     }
 
-    const data_t *data_cursor_t::get(std::size_t index) const {
-        return &data_.at(index);
+    std::vector<data_t> &sub_cursor_t::data() {
+        return data_;
+    }
+
+    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, const std::vector<data_t> &data)
+        : collection_(collection)
+        , data_(data) {
     }
 
 }

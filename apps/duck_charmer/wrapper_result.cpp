@@ -21,12 +21,8 @@ wrapper_result_update::wrapper_result_update(const result_update &src)
     : result(src) {
 }
 
-py::dict wrapper_result_update::raw_result() const {
-    //todo
-    py::dict res;
-    res["matched"] = to_pylist(result.modified_ids()) + to_pylist(result.nomodified_ids());
-    res["modified"] = to_pylist(result.modified_ids());
-    return res;
+py::list wrapper_result_update::raw_result() const {
+    return to_pylist(result.modified_ids()) + to_pylist(result.nomodified_ids());
 }
 
 std::size_t wrapper_result_update::matched_count() const {

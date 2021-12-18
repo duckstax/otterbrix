@@ -19,6 +19,12 @@ using msgpack::object_handle;
 using offset_t = std::size_t;
 using version_t = uint16_t; //todo
 
+enum class compare_t {
+    less = -1,
+    equals = 0,
+    more = 1
+};
+
 class document_view_t final {
 public:
     using index_t = const ::document::impl::dict_t*;
@@ -108,6 +114,8 @@ public:
     }
 
     iterator_t begin() const;
+
+    compare_t compare(const document_view_t &other, const std::string &key) const;
 
     std::string to_json() const;
 

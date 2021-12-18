@@ -55,10 +55,10 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("insert_many", &wrapper_collection::insert_many, py::arg("documents"))
         .def("update_one", &wrapper_collection::update_one, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
         .def("update_many", &wrapper_collection::update_many, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
-        .def("find", &wrapper_collection::find, py::arg("filter"))
-        .def("find_one", &wrapper_collection::find_one, py::arg("filter"))
-        .def("delete_one", &wrapper_collection::delete_one, py::arg("filter"))
-        .def("delete_many", &wrapper_collection::delete_many, py::arg("filter"))
+        .def("find", &wrapper_collection::find, py::arg("filter") = py::dict())
+        .def("find_one", &wrapper_collection::find_one, py::arg("filter") = py::dict())
+        .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
+        .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
         ;
 
@@ -73,13 +73,15 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("__del__", &wrapper_cursor::close)
         .def("__len__", &wrapper_cursor::size)
         .def("__getitem__", &wrapper_cursor::get)
+        .def("__iter__", &wrapper_cursor::iter)
+        .def("__next__", &wrapper_cursor::next)
         .def("count", &wrapper_cursor::size)
         .def("close", &wrapper_cursor::close)
         .def("hasNext", &wrapper_cursor::has_next)
         .def("next", &wrapper_cursor::next)
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
-        //.def("sort", &wrapper_cursor::sort)
+        .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none())
         ;
 
     py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")

@@ -70,15 +70,15 @@ def test_collection_find():
     assert len(c) == 9
     c.close()
 
-    c = friedrich_collection.find({'countStr': {'$regex': '.*9'}})
+    c = friedrich_collection.find({'countStr': {'$regex': '9$'}})
     assert len(c) == 10
     c.close()
 
-    c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+    c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
     assert len(c) == 18
     c.close()
 
-    c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]}, {'count': {'$lte': 30}}]})
+    c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]}, {'count': {'$lte': 30}}]})
     assert len(c) == 3
     c.close()
 
@@ -86,10 +86,11 @@ def test_collection_find():
 def test_collection_cursor():
     c = friedrich_collection.find({})
     count = 0
-    while c.next():
+    while c.hasNext():
+        c.next()
         assert str(c['count']) == c['countStr']
+        assert c.hasNext() == (count < 99)
         count += 1
-        assert c.hasNext() == (count < 100)
     c.close()
 
 
@@ -98,5 +99,5 @@ def test_collection_find_one():
     assert c['count'] == 1
     c = friedrich_collection.find_one({'count': {'$eq': 10}})
     assert c['count'] == 10
-    c = friedrich_collection.find_one({'$and': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '.*9'}}]})
+    c = friedrich_collection.find_one({'$and': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
     assert c['count'] == 99
