@@ -145,65 +145,65 @@ void collection_t::insert_many(session_t &session, std::list<document_t> &docume
     }
 }
 
-auto collection_t::find(const session_t& session, const document_t &cond) -> void {
+auto collection_t::find(const session_t& session, find_condition_ptr cond) -> void {
     log_.debug("collection::find : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     if (dropped_) {
         goblin_engineer::send(dispatcher, address(), "find_finish", session, nullptr);
     } else {
-        auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(parse_condition(cond))));
+        auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(std::move(cond))));
         goblin_engineer::send(dispatcher, address(), "find_finish", session, result.first->second.get());
     }
 }
 
-void collection_t::find_one(const session_t &session, const document_t &cond) {
+void collection_t::find_one(const session_t &session, find_condition_ptr cond) {
     log_.debug("collection::find_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_
             ? result_find_one()
-            : search_one_(parse_condition(cond));
+            : search_one_(std::move(cond));
     goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
 }
 
-auto collection_t::delete_one(const session_t &session, const document_t &cond) -> void {
+auto collection_t::delete_one(const session_t &session, find_condition_ptr cond) -> void {
     log_.debug("collection::delete_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_
             ? result_delete()
-            : delete_one_(parse_condition(cond));
+            : delete_one_(cond);
     goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
-auto collection_t::delete_many(const session_t &session, const document_t &cond) -> void {
+auto collection_t::delete_many(const session_t &session, find_condition_ptr cond) -> void {
     log_.debug("collection::delete_many : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_
             ? result_delete()
-            : delete_many_(parse_condition(cond));
+            : delete_many_(cond);
     goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
 }
 
-auto collection_t::update_one(const session_t &session, const document_t &cond, const document_t &update, bool upsert) -> void {
+auto collection_t::update_one(const session_t &session, find_condition_ptr cond, const document_t &update, bool upsert) -> void {
     log_.debug("collection::update_one : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_
             ? result_update()
-            : update_one_(parse_condition(cond), update, upsert);
+            : update_one_(cond, update, upsert);
     goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
 }
 
-auto collection_t::update_many(const session_t &session, const document_t &cond, const document_t &update, bool upsert) -> void {
+auto collection_t::update_many(const session_t &session, find_condition_ptr cond, const document_t &update, bool upsert) -> void {
     log_.debug("collection::update_many : {}", type());
     auto dispatcher = address_book("dispatcher");
     log_.debug("dispatcher : {}", dispatcher.type());
     auto result = dropped_
             ? result_update()
-            : update_many_(parse_condition(cond), update, upsert);
+            : update_many_(cond, update, upsert);
     goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
 }
 
@@ -285,67 +285,61 @@ bool collection_t::drop_() {
     return true;
 }
 
-result_find collection_t::search_(query_ptr cond) {
+result_find collection_t::search_(find_condition_ptr cond) {
     result_find::result_t res;
     for (auto it = index_->begin(); it; ++it) {
         auto doc = get_(static_cast<std::string>(it.key()->as_string()));
-        if (!cond || cond->check(doc)) {
+        if (!cond || cond->is_fit(doc)) {
             res.push_back(doc);
         }
     }
     return result_find(std::move(res));
 }
 
-result_find_one collection_t::search_one_(query_ptr cond) {
+result_find_one collection_t::search_one_(find_condition_ptr cond) {
     for (auto it = index_->begin(); it; ++it) {
         auto doc = get_(static_cast<std::string>(it.key()->as_string()));
-        if (!cond || cond->check(doc)) {
+        if (!cond || cond->is_fit(doc)) {
             return result_find_one(doc);
         }
     }
     return result_find_one();
 }
 
-result_delete collection_t::delete_one_(query_ptr cond) {
-    for (auto it = index_->begin(); it; ++it) {
-        auto id = static_cast<std::string>(it.key()->as_string());
-        auto doc = get_(id);
-        if (!cond || cond->check(doc)) {
-            remove_(id);
-            reindex_(); //todo
-            return result_delete({id});
-        }
+result_delete collection_t::delete_one_(find_condition_ptr cond) {
+    auto finded_doc = search_one_(std::move(cond));
+    if (finded_doc.is_find()) {
+        auto id = finded_doc->get_string("_id");
+        remove_(id);
+        reindex_();
+        return result_delete({id});
     }
     return result_delete();
 }
 
-result_delete collection_t::delete_many_(query_ptr cond) {
+result_delete collection_t::delete_many_(find_condition_ptr cond) {
     result_delete::result_t deleted;
-    for (auto it = index_->begin(); it; ++it) {
-        auto id = static_cast<std::string>(it.key()->as_string());
-        auto doc = get_(id);
-        if (!cond || cond->check(doc)) {
-            deleted.push_back(id);
-        }
+    auto finded_docs = search_(std::move(cond));
+    for (auto finded_doc : *finded_docs) {
+        auto id = finded_doc.get_string("_id");
+        deleted.push_back(id);
     }
     for (const auto &id : deleted) {
         remove_(id);
     }
-    reindex_(); //todo
+    reindex_();
     return result_delete(std::move(deleted));
 }
 
-result_update collection_t::update_one_(query_ptr cond, const document_t &update, bool upsert) {
-    for (auto it = index_->begin(); it; ++it) {
-        auto id = static_cast<std::string>(it.key()->as_string());
-        auto doc = get_(id);
-        if (!cond || cond->check(doc)) {
-            auto res = update_(id, update)
-                    ? result_update({id}, {})
-                    : result_update({}, {id});
-            reindex_(); //todo
-            return res;
-        }
+result_update collection_t::update_one_(find_condition_ptr cond, const document_t &update, bool upsert) {
+    auto finded_doc = search_one_(std::move(cond));
+    if (finded_doc.is_find()) {
+        auto id = finded_doc->get_string("_id");
+        auto res = update_(id, update)
+                ? result_update({id}, {})
+                : result_update({}, {id});
+        reindex_();
+        return res;
     }
     if (upsert) {
         return result_update(insert_(update2insert(update)));
@@ -353,24 +347,22 @@ result_update collection_t::update_one_(query_ptr cond, const document_t &update
     return result_update();
 }
 
-result_update collection_t::update_many_(query_ptr cond, const document_t &update, bool upsert) {
+result_update collection_t::update_many_(find_condition_ptr cond, const document_t &update, bool upsert) {
     result_update::result_t modified;
     result_update::result_t nomodified;
-    for (auto it = index_->begin(); it; ++it) {
-        auto id = static_cast<std::string>(it.key()->as_string());
-        auto doc = get_(id);
-        if (!cond || cond->check(doc)) {
-            if (update_(id, update)) {
-                modified.push_back(id);
-            } else {
-                nomodified.push_back(id);
-            }
+    auto finded_docs = search_(std::move(cond));
+    for (auto finded_doc : *finded_docs) {
+        auto id = finded_doc.get_string("_id");
+        if (update_(id, update)) {
+            modified.push_back(id);
+        } else {
+            nomodified.push_back(id);
         }
     }
     if (upsert && modified.empty() && nomodified.empty()) {
         return result_update(insert_(update2insert(update)));
     }
-    reindex_(); //todo
+    reindex_();
     return result_update(std::move(modified), std::move(nomodified));
 }
 
@@ -597,12 +589,8 @@ void collection_t::insert_test(document_t &&doc) {
     insert_(std::move(doc));
 }
 
-result_find collection_t::search_test(query_ptr cond) {
+result_find collection_t::find_test(find_condition_ptr cond) {
     return search_(std::move(cond));
-}
-
-result_find collection_t::find_test(const document_t &cond) {
-    return search_(parse_condition(std::move(cond)));
 }
 
 std::string collection_t::get_index_test() const {
@@ -621,19 +609,19 @@ document_view_t collection_t::get_test(const std::string &id) const {
     return get_(id);
 }
 
-result_delete collection_t::delete_one_test(query_ptr cond) {
+result_delete collection_t::delete_one_test(find_condition_ptr cond) {
     return delete_one_(std::move(cond));
 }
 
-result_delete collection_t::delete_many_test(query_ptr cond) {
+result_delete collection_t::delete_many_test(find_condition_ptr cond) {
     return delete_many_(std::move(cond));
 }
 
-result_update collection_t::update_one_test(query_ptr cond, const document_t &update, bool upsert) {
+result_update collection_t::update_one_test(find_condition_ptr cond, const document_t &update, bool upsert) {
     return update_one_(std::move(cond), update, upsert);
 }
 
-result_update collection_t::update_many_test(query_ptr cond, const document_t &update, bool upsert) {
+result_update collection_t::update_many_test(find_condition_ptr cond, const document_t &update, bool upsert) {
     return update_many_(std::move(cond), update, upsert);
 }
 

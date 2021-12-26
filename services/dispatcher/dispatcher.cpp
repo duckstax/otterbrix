@@ -4,6 +4,7 @@
 #include <components/document/document.hpp>
 #include "route.hpp"
 #include <services/storage/database.hpp>
+#include "parser/parser.hpp"
 
 namespace services::dispatcher {
 
@@ -192,7 +193,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find, session, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find, session, components::parser::parse_find_condition(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "find_finish", session, result_find());
         }
@@ -212,7 +213,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find_one, session, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::find_one, session, components::parser::parse_find_condition(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "find_one_finish", session, result_find_one());
         }
@@ -228,7 +229,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::delete_one, session, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::delete_one, session, components::parser::parse_find_condition(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "delete_finish", session, result_delete());
         }
@@ -239,7 +240,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::delete_many, session, std::move(condition));
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::delete_many, session, components::parser::parse_find_condition(condition));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "delete_finish", session, result_delete());
         }
@@ -255,7 +256,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_one, session, std::move(condition), std::move(update), upsert);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_one, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
         }
@@ -266,7 +267,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_many, session, std::move(condition), std::move(update), upsert);
+            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::update_many, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
         }
