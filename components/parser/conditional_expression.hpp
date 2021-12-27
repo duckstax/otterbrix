@@ -16,7 +16,7 @@ public:
     virtual ~conditional_expression() = default;
 
     template <class T> bool is_fit(const T &doc) {
-        return check(prepare_document_(doc));
+        return check_document(prepare_document_(doc));
     }
 
     virtual bool is_union() const;
@@ -28,8 +28,8 @@ protected:
 private:
     std::string full_key_;
 
-    virtual bool check(const document_view_t &) const = 0;
-    virtual bool check(const document_t &) const = 0;
+    virtual bool check_document(const document_view_t &) const = 0;
+    virtual bool check_document(const document_t &) const = 0;
 
     const document_view_t prepare_document_(const document_view_t &doc);
     const document_t prepare_document_(const document_t &doc);
@@ -43,13 +43,13 @@ public:
     find_condition_t(std::vector<conditional_expression_ptr> &&conditions);
     find_condition_t(const std::vector<conditional_expression_ptr> &conditions);
     void add(conditional_expression_ptr &&condition);
-    bool check(const document_view_t &doc) const override;
-    bool check(const document_t &doc) const override;
+    bool check_document(const document_view_t &doc) const override;
+    bool check_document(const document_t &doc) const override;
     bool is_union() const override;
 protected:
     std::vector<conditional_expression_ptr> conditions_;
 private:
-    template <class T> bool check_(const T &doc) const;
+    template <class T> bool check_document_(const T &doc) const;
 };
 using find_condition_ptr = std::shared_ptr<find_condition_t>;
 

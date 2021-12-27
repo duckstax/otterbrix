@@ -49,19 +49,19 @@ void find_condition_t::add(conditional_expression_ptr &&condition) {
     }
 }
 
-bool find_condition_t::check(const document_view_t &doc) const {
-    return check_(doc);
+bool find_condition_t::check_document(const document_view_t &doc) const {
+    return check_document_(doc);
 }
 
-bool find_condition_t::check(const document_t &doc) const {
-    return check_(doc);
+bool find_condition_t::check_document(const document_t &doc) const {
+    return check_document_(doc);
 }
 
 bool find_condition_t::is_union() const {
     return true;
 }
 
-template<class T> bool find_condition_t::check_(const T &doc) const {
+template<class T> bool find_condition_t::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (!condition->is_fit(doc)) {
             return false;

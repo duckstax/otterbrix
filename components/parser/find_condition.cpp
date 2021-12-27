@@ -2,15 +2,15 @@
 
 namespace components::parser {
 
-bool find_condition_and::check(const document_view_t &doc) const {
-    return check_(doc);
+bool find_condition_and::check_document(const document_view_t &doc) const {
+    return check_document_(doc);
 }
 
-bool find_condition_and::check(const document_t &doc) const {
-    return check_(doc);
+bool find_condition_and::check_document(const document_t &doc) const {
+    return check_document_(doc);
 }
 
-template<class T> bool find_condition_and::check_(const T &doc) const {
+template<class T> bool find_condition_and::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (!condition->is_fit(doc)) {
             return false;
@@ -20,15 +20,15 @@ template<class T> bool find_condition_and::check_(const T &doc) const {
 }
 
 
-bool find_condition_or::check(const document_view_t &doc) const {
-    return check_(doc);
+bool find_condition_or::check_document(const document_view_t &doc) const {
+    return check_document_(doc);
 }
 
-bool find_condition_or::check(const document_t &doc) const {
-    return check_(doc);
+bool find_condition_or::check_document(const document_t &doc) const {
+    return check_document_(doc);
 }
 
-template<class T> bool find_condition_or::check_(const T &doc) const {
+template<class T> bool find_condition_or::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (condition->is_fit(doc)) {
             return true;
@@ -38,15 +38,15 @@ template<class T> bool find_condition_or::check_(const T &doc) const {
 }
 
 
-bool find_condition_not::check(const document_view_t &doc) const {
-    return check_(doc);
+bool find_condition_not::check_document(const document_view_t &doc) const {
+    return check_document_(doc);
 }
 
-bool find_condition_not::check(const document_t &doc) const {
-    return check_(doc);
+bool find_condition_not::check_document(const document_t &doc) const {
+    return check_document_(doc);
 }
 
-template<class T> bool find_condition_not::check_(const T &doc) const {
+template<class T> bool find_condition_not::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (condition->is_fit(doc)) {
             return false;

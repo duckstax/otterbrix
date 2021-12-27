@@ -44,14 +44,14 @@ public:
         value_ = value->as<T>();
     }
 
-    bool check(const document_view_t &doc) const final override {
-        return check_(doc.get_as<T>(this->key_));
+    bool check_document(const document_view_t &doc) const final override {
+        return check_value(doc.get_as<T>(this->key_));
     }
 
-    bool check(const document_t &doc) const final override {
+    bool check_document(const document_t &doc) const final override {
         auto value = doc.get(this->key_);
         if (value) {
-            return check_(value->as<T>());
+            return check_value(value->as<T>());
         }
         return false;
     }
@@ -59,7 +59,7 @@ public:
 protected:
     T value_;
 
-    virtual bool check_(const T& value) const = 0;
+    virtual bool check_value(const T& value) const = 0;
 };
 
 
@@ -77,7 +77,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return condition_eq<T>(value, this->value_);
     }
 };
@@ -89,7 +89,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return !condition_eq<T>(value, this->value_);
     }
 };
@@ -101,7 +101,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return value > this->value_;
     }
 };
@@ -113,7 +113,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return value < this->value_;
     }
 };
@@ -125,7 +125,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return value >= this->value_;
     }
 };
@@ -137,7 +137,7 @@ public:
     using find_condition_simple<T>::find_condition_simple;
 
 private:
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return value <= this->value_;
     }
 };
@@ -153,7 +153,7 @@ public:
 private:
     T value2_;
 
-    bool check_(const T& value) const final override {
+    bool check_value(const T& value) const final override {
         return this->value_ <= value && value <= this->value2_;
     }
 };
@@ -164,7 +164,7 @@ public:
     using find_condition_simple<std::string>::find_condition_simple;
 
 private:
-    bool check_(const std::string& value) const final override {
+    bool check_value(const std::string& value) const final override {
         return std::regex_match(value, std::regex(".*" + this->value_ + ".*"));
     }
 };
@@ -201,20 +201,20 @@ public:
         }
     }
 
-    bool check(const document_view_t &doc) const final override {
+    bool check_document(const document_view_t &doc) const final override {
         if (doc.is_array(this->key_)) {
-            return check_array_(doc.get_array(this->key_));
+            return check_array(doc.get_array(this->key_));
         }
-        return check_value_(doc.get_as<T>(this->key_));
+        return check_value(doc.get_as<T>(this->key_));
     }
 
-    bool check(const document_t &doc) const final override {
+    bool check_document(const document_t &doc) const final override {
         auto value = doc.get(this->key_);
         if (value) {
             if (value->type() == value_type::array) {
-                return check_array_(value->as_array());
+                return check_array(value->as_array());
             }
-            return check_value_(value->as<T>());
+            return check_value(value->as<T>());
         }
         return false;
     }
@@ -223,12 +223,12 @@ protected:
     std::string key_;
     std::vector<T> values_;
 
-    bool check_value_(const T& value) const {
+    bool check_value(const T& value) const {
         return std::find(values_.cbegin(), values_.cend(), value) != values_.cend();
     };
 
-    virtual bool check_array_(const document_view_t& array) const = 0;
-    virtual bool check_array_(const array_t *array) const = 0;
+    virtual bool check_array(const document_view_t& array) const = 0;
+    virtual bool check_array(const array_t *array) const = 0;
 };
 
 
@@ -238,26 +238,26 @@ public:
     using find_condition_array<T>::find_condition_array;
 
 private:
-    bool check_array_(const document_view_t& array) const final override {
+    bool check_array(const document_view_t& array) const final override {
         for (uint32_t i = 0; i < array.count(); ++i) {
             if (array.is_array(i)) {
-                if (check_array_(array.get_array(i))) {
+                if (check_array(array.get_array(i))) {
                     return true;
                 }
-            } else if (this->check_value_(array.get_as<T>(i))) {
+            } else if (this->check_value(array.get_as<T>(i))) {
                 return true;
             }
         }
         return false;
     }
 
-    bool check_array_(const array_t *array) const final override {
+    bool check_array(const array_t *array) const final override {
         for (auto it = array->begin(); it; ++it) {
             if (it.value()->type() == value_type::array) {
-                if (check_array_(it.value()->as_array())) {
+                if (check_array(it.value()->as_array())) {
                     return true;
                 }
-            } else if (this->check_value_(it.value()->as<T>())) {
+            } else if (this->check_value(it.value()->as<T>())) {
                 return true;
             }
         }
@@ -272,26 +272,26 @@ public:
     using find_condition_array<T>::find_condition_array;
 
 private:
-    bool check_array_(const document_view_t& array) const final override {
+    bool check_array(const document_view_t& array) const final override {
         for (uint32_t i = 0; i < array.count(); ++i) {
             if (array.is_array(i)) {
-                if (!check_array_(array.get_array(i))) {
+                if (!check_array(array.get_array(i))) {
                     return false;
                 }
-            } else if (!this->check_value_(array.get_as<T>(i))) {
+            } else if (!this->check_value(array.get_as<T>(i))) {
                 return false;
             }
         }
         return true;
     }
 
-    bool check_array_(const array_t *array) const final override {
+    bool check_array(const array_t *array) const final override {
         for (auto it = array->begin(); it; ++it) {
             if (it.value()->type() == value_type::array) {
-                if (!check_array_(it.value()->as_array())) {
+                if (!check_array(it.value()->as_array())) {
                     return false;
                 }
-            } else if (!this->check_value_(it.value()->as<T>())) {
+            } else if (!this->check_value(it.value()->as<T>())) {
                 return false;
             }
         }
@@ -305,30 +305,30 @@ private:
 class find_condition_and : public find_condition_t {
 public:
     using find_condition_t::find_condition_t;
-    bool check(const document_view_t &doc) const final override;
-    bool check(const document_t &doc) const final override;
+    bool check_document(const document_view_t &doc) const final override;
+    bool check_document(const document_t &doc) const final override;
 private:
-    template <class T> bool check_(const T &doc) const;
+    template <class T> bool check_document_(const T &doc) const;
 };
 
 
 class find_condition_or : public find_condition_t {
 public:
     using find_condition_t::find_condition_t;
-    bool check(const document_view_t &doc) const final override;
-    bool check(const document_t &doc) const final override;
+    bool check_document(const document_view_t &doc) const final override;
+    bool check_document(const document_t &doc) const final override;
 private:
-    template <class T> bool check_(const T &doc) const;
+    template <class T> bool check_document_(const T &doc) const;
 };
 
 
 class find_condition_not : public find_condition_t {
 public:
     using find_condition_t::find_condition_t;
-    bool check(const document_view_t &doc) const final override;
-    bool check(const document_t &doc) const final override;
+    bool check_document(const document_view_t &doc) const final override;
+    bool check_document(const document_t &doc) const final override;
 private:
-    template <class T> bool check_(const T &doc) const;
+    template <class T> bool check_document_(const T &doc) const;
 };
 
 
