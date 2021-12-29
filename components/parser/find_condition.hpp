@@ -11,7 +11,7 @@ using ::document::impl::array_t;
 
 /// SIMPLES VALUES ///
 
-enum class condition_type {
+enum class condition_type : uint8_t {
     novalid,
     eq,
     ne,
