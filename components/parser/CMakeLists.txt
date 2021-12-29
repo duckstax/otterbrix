@@ -1,25 +1,21 @@
-project(storage)
+project(parser)
 
 set( ${PROJECT_NAME}_HEADERS
-        collection.hpp
-        database.hpp
-        result.hpp
-        sort.hpp
+        parser.hpp
+        find_condition.hpp
+        conditional_expression.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
-        collection.cpp
-        database.cpp
-        result.cpp
-        sort.cpp
+        parser.cpp
+        find_condition.cpp
+        conditional_expression.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-            ${${PROJECT_NAME}_HEADERS}
-            ${${PROJECT_NAME}_SOURCES}
+        ${${PROJECT_NAME}_HEADERS}
+        ${${PROJECT_NAME}_SOURCES}
 )
-
-
 
 add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 
@@ -28,16 +24,14 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::log
         rocketjoe::document
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::parser
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
+        parser.hpp
 )
 
 if (DEV_MODE)
-    add_definitions(-DDEV_MODE)
     add_subdirectory(tests)
 endif()
