@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include "database.hpp"
 #include "collection.hpp"
-#include "query.hpp"
+#include "parser/parser.hpp"
 #include "document/core/array.hpp"
 #include "document/mutable/mutable_array.h"
 
@@ -53,6 +53,10 @@ collection_ptr gen_collection() {
     return collection;
 }
 
+find_condition_ptr parse_find_condition(const std::string &cond) {
+    return components::parser::parse_find_condition(document_t::from_json(cond));
+}
+
 TEST_CASE("collection_t get") {
     auto collection = gen_collection();
     //std::cout << "INDEX:\n" << collection->get_index_test() << std::endl;
@@ -92,67 +96,51 @@ TEST_CASE("collection_t get") {
     REQUIRE_FALSE(doc6.is_valid());
 }
 
-TEST_CASE("collection_t search") {
-    auto collection = gen_collection();
-    REQUIRE(collection->search_test(eq("name", "Rex"))->size() == 1);
-    REQUIRE(collection->search_test(gt("age", 2))->size() == 3);
-    REQUIRE(collection->search_test(eq("type", "cat"))->size() == 2);
-    REQUIRE(collection->search_test(eq("type", "dog") & lt("age", 5))->size() == 2);
-    REQUIRE(collection->search_test(eq("type", "dog") & gte("age", 2) & lt("age", 5))->size() == 2);
-    REQUIRE(collection->search_test(any("friends", std::vector<std::string>{"Lucy", "Charlie"}))->size() == 3);
-    REQUIRE(collection->search_test(all("friends", std::vector<std::string>{"Lucy", "Charlie"}))->size() == 1);
-    REQUIRE(collection->search_test(all("friends", std::vector<std::string>{"Rex", "Lucy", "Charlie"}))->size() == 3);
-    REQUIRE(collection->search_test(matches("name", "^Ch"))->size() == 2);
-    REQUIRE(collection->search_test(!eq("name", "Rex"))->size() == 4);
-    REQUIRE(collection->search_test(!!eq("name", "Rex"))->size() == 1);
-    REQUIRE(collection->search_test(!!!eq("name", "Rex"))->size() == 4);
-}
-
 TEST_CASE("collection_t find") {
     auto collection = gen_collection();
-    auto res = collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"));
+    auto res = collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Rex\"}}"));
     REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
+    res = collection->find_test(parse_find_condition("{\"age\": {\"$gt\": 2, \"$lte\": 4}}"));
     REQUIRE(res->size() == 1);
-    res = collection->find_test(document_t::from_json("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    res = collection->find_test(parse_find_condition("{\"$and\": [{\"age\": {\"$gt\": 2}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
     REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
+    res = collection->find_test(parse_find_condition("{\"$or\": [{\"name\": {\"$eq\": \"Rex\"}}, {\"type\": {\"$eq\": \"cat\"}}]}"));
     REQUIRE(res->size() == 3);
-    res = collection->find_test(document_t::from_json("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
+    res = collection->find_test(parse_find_condition("{\"$not\": {\"type\": {\"$eq\": \"cat\"}}}"));
     REQUIRE(res->size() == 3);
-    res = collection->find_test(document_t::from_json("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
+    res = collection->find_test(parse_find_condition("{\"type\": {\"$in\": [\"cat\",\"dog\"]}}"));
     REQUIRE(res->size() == 5);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
+    res = collection->find_test(parse_find_condition("{\"name\": {\"$in\": [\"Rex\",\"Lucy\",\"Tank\"]}}"));
     REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
+    res = collection->find_test(parse_find_condition("{\"name\": {\"$all\": [\"Rex\",\"Lucy\"]}}"));
     REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{\"name\": {\"$regex\": \"^Ch\"}}"));
+    res = collection->find_test(parse_find_condition("{\"name\": {\"$regex\": \"^Ch\"}}"));
     REQUIRE(res->size() == 2);
-    res = collection->find_test(document_t::from_json("{}"));
+    res = collection->find_test(parse_find_condition("{}"));
     REQUIRE(res->size() == 5);
-    res = collection->find_test(document_t::from_json("{}"));
+    res = collection->find_test(parse_find_condition("{}"));
     REQUIRE(res->size() == 5);
 }
 
 TEST_CASE("collection_t delete_one") {
     auto collection = gen_collection();
     REQUIRE(collection->size_test() == 5);
-    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->delete_one_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 1);
     REQUIRE(collection->size_test() == 4);
-    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->delete_one_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 1);
     REQUIRE(collection->size_test() == 3);
-    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 1);
+    REQUIRE(collection->delete_one_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 1);
     REQUIRE(collection->size_test() == 2);
-    REQUIRE(collection->delete_one_test(eq("type", "dog")).deleted_ids().size() == 0);
+    REQUIRE(collection->delete_one_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 0);
     REQUIRE(collection->size_test() == 2);
 }
 
 TEST_CASE("collection_t delete_many") {
     auto collection = gen_collection();
     REQUIRE(collection->size_test() == 5);
-    REQUIRE(collection->delete_many_test(eq("type", "dog")).deleted_ids().size() == 3);
+    REQUIRE(collection->delete_many_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 3);
     REQUIRE(collection->size_test() == 2);
-    REQUIRE(collection->delete_many_test(eq("type", "cat")).deleted_ids().size() == 2);
+    REQUIRE(collection->delete_many_test(parse_find_condition("{\"type\": { \"$eq\": \"cat\"}}")).deleted_ids().size() == 2);
     REQUIRE(collection->size_test() == 0);
 }
 
@@ -160,60 +148,68 @@ TEST_CASE("collection_t update_one set") {
     auto collection = gen_collection();
     REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
 
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 1);
     REQUIRE(result.upserted_id().empty());
     REQUIRE(collection->get_test("id_1").get_string("name") == "Rex");
 
-    result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"name\": \"Adolf\"}}"), false);
+    result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                         document_t::from_json("{\"$set\": {\"name\": \"Adolf\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
     REQUIRE_FALSE(collection->get_test("id_1").get_string("name") == "Rex");
     REQUIRE(collection->get_test("id_1").get_string("name") == "Adolf");
 
-    result = collection->update_one_test(eq("_id", "id_6"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_6\"}}"),
+                                         document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 0);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 0);
 
-    result = collection->update_one_test(eq("_id", "id_6"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), true);
+    result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_6\"}}"),
+                                         document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), true);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(!result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
 }
 
 TEST_CASE("collection_t update_many set") {
     auto collection = gen_collection();
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 1);
 
-    auto result = collection->update_many_test(eq("type", "dog"), document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
+    auto result = collection->update_many_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}"),
+                                               document_t::from_json("{\"$set\": {\"name\": \"Rex\"}}"), false);
     REQUIRE(result.modified_ids().size() == 2);
     REQUIRE(result.nomodified_ids().size() == 1);
     REQUIRE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 3);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Rex\"}}"))->size() == 3);
 
-    result = collection->update_many_test(eq("type", "mouse"), document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), false);
+    result = collection->update_many_test(parse_find_condition("{\"type\": { \"$eq\": \"mouse\"}}"),
+                                          document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), false);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 0);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 0);
 
-    result = collection->update_many_test(eq("type", "mouse"), document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), true);
+    result = collection->update_many_test(parse_find_condition("{\"type\": { \"$eq\": \"mouse\"}}"),
+                                          document_t::from_json("{\"$set\": {\"name\": \"Mikki\", \"age\": 2}}"), true);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE_FALSE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 1);
+    REQUIRE(collection->find_test(parse_find_condition("{\"name\": {\"$eq\": \"Mikki\"}}"))->size() == 1);
 }
 
 TEST_CASE("collection_t update_one inc") {
     auto collection = gen_collection();
     REQUIRE(collection->get_test("id_1").get_ulong("age") == 6);
 
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$inc\": {\"age\": 2}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$inc\": {\"age\": 2}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -224,7 +220,8 @@ TEST_CASE("collection_t update_one set new field") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("weight"));
 
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"weight\": 8}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"weight\": 8}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -235,7 +232,8 @@ TEST_CASE("collection_t update_one set new field") {
 TEST_CASE("collection_t update_one set complex dict") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").get_dict("sub_doc").get_dict("sub").get_string("name") == "Adolf");
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"sub_doc.sub.name\": \"Adolf\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"sub_doc.sub.name\": \"Adolf\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -245,7 +243,8 @@ TEST_CASE("collection_t update_one set complex dict") {
 TEST_CASE("collection_t update_one set complex array") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").get_array("friends").get_array(2).get_as<std::string>(0) == "Adolf");
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"friends.2.0\": \"Adolf\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"friends.2.0\": \"Adolf\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -255,7 +254,8 @@ TEST_CASE("collection_t update_one set complex array") {
 TEST_CASE("collection_t update_one set complex dict with append new field") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_dict"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -265,7 +265,8 @@ TEST_CASE("collection_t update_one set complex dict with append new field") {
 TEST_CASE("collection_t update_one set complex array with append new field") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_array"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"new_array.1.5\": \"NoValue\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"new_array.1.5\": \"NoValue\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -275,7 +276,8 @@ TEST_CASE("collection_t update_one set complex array with append new field") {
 TEST_CASE("collection_t update_one set complex dict with append new subfield") {
     auto collection = gen_collection();
     REQUIRE_FALSE(collection->get_test("id_1").is_exists("new_dict"));
-    auto result = collection->update_one_test(eq("_id", "id_1"), document_t::from_json("{\"$set\": {\"sub_doc.sub2.name\": \"NoName\"}}"), false);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_1\"}}"),
+                                              document_t::from_json("{\"$set\": {\"sub_doc.sub2.name\": \"NoName\"}}"), false);
     REQUIRE(result.modified_ids().size() == 1);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE(result.upserted_id().empty());
@@ -284,20 +286,22 @@ TEST_CASE("collection_t update_one set complex dict with append new subfield") {
 
 TEST_CASE("collection_t update_one set complex dict with upsert") {
     auto collection = gen_collection();
-    REQUIRE(collection->find_test(document_t::from_json("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 0);
-    auto result = collection->update_one_test(eq("_id", "id_10"), document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), true);
+    REQUIRE(collection->find_test(parse_find_condition("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 0);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_10\"}}"),
+                                              document_t::from_json("{\"$set\": {\"new_dict.object.name\": \"NoName\"}}"), true);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE_FALSE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 1);
+    REQUIRE(collection->find_test(parse_find_condition("{\"new_dict.object.name\": {\"$eq\": \"NoName\"}}"))->size() == 1);
 }
 
 TEST_CASE("collection_t update_one set complex array with upsert") {
     auto collection = gen_collection();
-    REQUIRE(collection->find_test(document_t::from_json("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 0);
-    auto result = collection->update_one_test(eq("_id", "id_10"), document_t::from_json("{\"$set\": {\"new_array.0.0\": \"NoName\"}}"), true);
+    REQUIRE(collection->find_test(parse_find_condition("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 0);
+    auto result = collection->update_one_test(parse_find_condition("{\"_id\": { \"$eq\": \"id_10\"}}"),
+                                              document_t::from_json("{\"$set\": {\"new_array.0.0\": \"NoName\"}}"), true);
     REQUIRE(result.modified_ids().size() == 0);
     REQUIRE(result.nomodified_ids().size() == 0);
     REQUIRE_FALSE(result.upserted_id().empty());
-    REQUIRE(collection->find_test(document_t::from_json("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 1);
+    REQUIRE(collection->find_test(parse_find_condition("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 1);
 }
