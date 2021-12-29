@@ -11,15 +11,14 @@
 #include "protocol/forward.hpp"
 
 #include "components/document/support/ref_counted.hpp"
-#include "components/document/conditional_expression.hpp"
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
+#include "components/parser/conditional_expression.hpp"
 #include "components/cursor/cursor.hpp"
 #include "components/session/session.hpp"
 
 #include "forward.hpp"
 #include "route.hpp"
-#include "query.hpp"
 #include "result.hpp"
 
 namespace document::impl {
@@ -32,7 +31,7 @@ namespace services::storage {
 
     using document_t  = components::document::document_t;
     using document_view_t = components::document::document_view_t;
-
+    using components::parser::find_condition_ptr;
 
     class removed_data_t {
     public:
@@ -69,12 +68,12 @@ namespace services::storage {
         auto size(session_t& session) -> void;
         void insert_one(session_t& session_t, document_t &document);
         void insert_many(session_t& session, std::list<document_t> &documents);
-        auto find(const session_t& session, const document_t &cond) -> void;
-        auto find_one(const session_t& session, const document_t &cond) -> void;
-        auto delete_one(const session_t& session, const document_t &cond) -> void;
-        auto delete_many(const session_t& session, const document_t &cond) -> void;
-        auto update_one(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
-        auto update_many(const session_t& session, const document_t &cond, const document_t &update, bool upsert) -> void;
+        auto find(const session_t& session, find_condition_ptr cond) -> void;
+        auto find_one(const session_t& session, find_condition_ptr cond) -> void;
+        auto delete_one(const session_t& session, find_condition_ptr cond) -> void;
+        auto delete_many(const session_t& session, find_condition_ptr cond) -> void;
+        auto update_one(const session_t& session, find_condition_ptr cond, const document_t &update, bool upsert) -> void;
+        auto update_many(const session_t& session, find_condition_ptr cond, const document_t &update, bool upsert) -> void;
         void drop(const session_t& session);
         void close_cursor(session_t& session);
 
@@ -85,12 +84,12 @@ namespace services::storage {
         document_view_t get_(const std::string& id) const;
         std::size_t size_() const;
         bool drop_();
-        result_find search_(query_ptr cond);
-        result_find_one search_one_(query_ptr cond);
-        result_delete delete_one_(query_ptr cond);
-        result_delete delete_many_(query_ptr cond);
-        result_update update_one_(query_ptr cond, const document_t &update, bool upsert);
-        result_update update_many_(query_ptr cond, const document_t &update, bool upsert);
+        result_find search_(find_condition_ptr cond);
+        result_find_one search_one_(find_condition_ptr cond);
+        result_delete delete_one_(find_condition_ptr cond);
+        result_delete delete_many_(find_condition_ptr cond);
+        result_update update_one_(find_condition_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_(find_condition_ptr cond, const document_t &update, bool upsert);
         void remove_(const std::string& id);
         bool update_(const std::string& id, const document_t &update);
         field_value_t get_index_field(field_value_t index_doc, const std::string& field_name) const;
@@ -113,16 +112,15 @@ namespace services::storage {
 #ifdef DEV_MODE
     public:
         void insert_test(document_t &&doc);
-        result_find search_test(query_ptr cond);
-        result_find find_test(const document_t &cond);
+        result_find find_test(find_condition_ptr cond);
         std::string get_index_test() const;
         std::string get_data_test() const;
         std::size_t size_test() const;
         document_view_t get_test(const std::string &id) const;
-        result_delete delete_one_test(query_ptr cond);
-        result_delete delete_many_test(query_ptr cond);
-        result_update update_one_test(query_ptr cond, const document_t &update, bool upsert);
-        result_update update_many_test(query_ptr cond, const document_t &update, bool upsert);
+        result_delete delete_one_test(find_condition_ptr cond);
+        result_delete delete_many_test(find_condition_ptr cond);
+        result_update update_one_test(find_condition_ptr cond, const document_t &update, bool upsert);
+        result_update update_many_test(find_condition_ptr cond, const document_t &update, bool upsert);
 #endif
     };
 

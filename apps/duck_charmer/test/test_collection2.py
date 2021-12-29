@@ -277,8 +277,6 @@ def test_or(gen_collection):
 def test_not(gen_collection):
     c = gen_collection['collection'].find({"count": {"$not": {"$gte": 90, "$lt": 10}}})
     assert c.count() == 80
-    c = gen_collection['collection'].find({"$not": {"count": {"$lte": 90, "$gt": 10}}})
-    assert c.count() == 20
 
 
 def test_delete_one(gen_collection):
