@@ -4,9 +4,7 @@
 #include <log/log.hpp>
 #include <wal/wal.hpp>
 
-#include <iostream>
 #include <msgpack.hpp>
-#include <sstream>
 #include <string>
 
 struct get_t {
@@ -19,7 +17,7 @@ struct get_t {
     MSGPACK_DEFINE(flags, key);
 };
 
-TEST_CASE("event to byte array ") {
+TEST_CASE("2 level serilizate") {
     msgpack::sbuffer input;
     get_t req;
     req.flags = 0;
@@ -27,29 +25,31 @@ TEST_CASE("event to byte array ") {
     msgpack::pack(input, req);
     buffer_t bynary_imput;
     std::copy(input.data(), input.data() + input.size(), std::back_inserter(bynary_imput));
+    entry_t entry(42,Type::create_collection,21,bynary_imput);
+    msgpack::sbuffer input_1;
+    msgpack::pack(input_1,  entry);
+    msgpack::unpacked msg;
+    msgpack::unpack(msg,input_1.data(), input_1.size());
+    const auto& o = msg.get();
+    auto  output = o.as<entry_t>();
+    REQUIRE(output.last_crc32_== 42);
+    REQUIRE(output.type_ == Type::create_collection);
+    REQUIRE(output.log_number_ == 21);
 
-    buffer_t bynary_output;
-    bynary_output.resize(  heer_size + bynary_imput.size());
-    log_number_t log_number = 42;
-    Type type = Type::create_collection;
-    pack(type, bynary_imput, log_number, bynary_output);
-    wal_entry_t entry;
-    unpack(bynary_output, entry);
-    REQUIRE(entry.log_number_ == log_number);
-    REQUIRE(entry.type_ == type);
+    msgpack::unpacked msg_1;
+    msgpack::unpack(msg_1,reinterpret_cast<char*>(output.payload_.data()), output.payload_.size());
 
-    msgpack::object_handle oh = msgpack::unpack(reinterpret_cast<char*>(entry.payload_.data()), entry.payload_.size());
-    msgpack::object o = oh.get();
-    get_t req_;
-    o.convert(req);
-    REQUIRE(req_.flags == 0);
-    REQUIRE(req_.key == "key0");
+    const auto& o_1 = msg_1.get();
+   get_t req_1;
+    o_1.convert(req_1);
+   REQUIRE(req_1.key == "key0");
+    REQUIRE(req_1.flags == 0);
+
 }
 
 TEST_CASE("wal add event") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-
     auto manager = goblin_engineer::make_manager_service<wdr_t>(log, 1, 1000);
     auto allocate_byte = sizeof(wal_t);
     auto allocate_byte_alignof = alignof(wal_t);
@@ -57,5 +57,4 @@ TEST_CASE("wal add event") {
     auto* wal = new (buffer) wal_t(nullptr, log, std::filesystem::current_path());
     buffer_t tmp(10, buffer_element_t (1));
     wal->add_event(Type::create_collection, tmp);
-    ////REQUIRE(collection->find_test(parse_find_condition("{\"new_array.0.0\": {\"$eq\": \"NoName\"}}"))->size() == 1);
 }

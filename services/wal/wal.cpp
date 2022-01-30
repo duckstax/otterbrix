@@ -33,8 +33,8 @@ void set_crc32(buffer_t & storage, crc32_t crc32) {
 }
 
 void append_size(buffer_t & storage, size_tt size) {
-    storage[4]=(buffer_element_t(size & 0xff));
-    storage[5]=(buffer_element_t((size >> 8) & 0xff));
+    storage[4]=(buffer_element_t(size));
+    storage[5]=(buffer_element_t((size >> 8) ));
 }
 
 void append_type(buffer_t & storage, Type type) {
@@ -55,9 +55,9 @@ void append_log_number(buffer_t & storage, log_number_t number) {
 void append_payload(buffer_t & storage, buffer_t payload) {
     storage.insert(end(storage), begin(payload), end(payload));
 }
-
-void pack(Type type, buffer_t & data, log_number_t number, buffer_t & out) {
-    const auto size = heer_size + data.size();
+/*
+void pack(entry_t&entry ,buffer_t & out) {
+    const auto size = sizeof(size_tt)+ entry.payload_.size() + sizeof(crc32_t);
     append_crc32_init(out);
     append_size(out, size);
     append_type(out, type);
@@ -69,7 +69,7 @@ void pack(Type type, buffer_t & data, log_number_t number, buffer_t & out) {
     crc32_t crc32 = crc32c::Crc32c(ptr, size_crc32);
     set_crc32(out, crc32);
 }
-
+*/
 crc32_t read_crc32(buffer_t & input) {
     crc32_t crc32_tmp=0;
     crc32_tmp = (uint32_t) input[0] << 24;
@@ -102,7 +102,7 @@ log_number_t read_log_number(buffer_t & input) {
     tmp |= (uint64_t) input[14] ;
     return tmp;
 }
-
+/*
 void unpack(buffer_t & input, wal_entry_t& e) {
     e.crc32_ = read_crc32(input);
     auto size = read_size(input);
@@ -110,10 +110,11 @@ void unpack(buffer_t & input, wal_entry_t& e) {
     e.log_number_ = read_log_number(input);
     e.payload_ = buffer_t(input.begin() + heer_size, input.begin() + size);
 }
-
+*/
 constexpr static auto wal_name = ".wal";
 
 void wal_t::add_event(Type type, buffer_t & data) {
+    /*
     buffer_.clear();
     const auto size = heer_size + data.size();
     buffer_.resize(size);
@@ -123,6 +124,7 @@ void wal_t::add_event(Type type, buffer_t & data) {
     int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
     writed_ += size_write;
     ++log_number_;
+     */
 }
 wal_t::wal_t(goblin_engineer::supervisor_t* manager, log_t& log, std::filesystem::path path)
     : goblin_engineer::abstract_service(manager, "wal")
@@ -157,6 +159,7 @@ bool wal_t::header_check_(std::filesystem::path path) {
 }
 
 void wal_t::header_write_(std::filesystem::path path) {
+    /*
     buffer_.clear();
     buffer_t empty;
     pack(Type::init, buffer_, log_number_, empty);
@@ -165,6 +168,7 @@ void wal_t::header_write_(std::filesystem::path path) {
     int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
     writed_ += size_write;
     ++log_number_;
+     */
 }
 
 void wal_t::open_file(std::filesystem::path) {
@@ -176,3 +180,4 @@ void wal_t::open_file(std::filesystem::path) {
 
 wal_t::~wal_t() {
 }
+

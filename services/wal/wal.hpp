@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <log/log.hpp>
 #include <msgpack.hpp>
+#include <msgpack/adaptor/vector.hpp>
 
 #include <fcntl.h>
 
@@ -57,21 +58,82 @@ void wal_event_add(goblin_engineer::address_t& address, Type type, ) {
 using buffer_element_t = unsigned char;
 using buffer_t = std::vector<buffer_element_t>;
 
-struct wal_entry_t final {
-    wal_entry_t()
-        : crc32_(0)
-        , type_(Type::init)
-        , log_number_(0){}
+struct entry_t {
+    entry_t() =default;
+    entry_t(crc32_t lastCrc32, Type type, log_number_t logNumber,  buffer_t payload)
+        : last_crc32_(lastCrc32)
+        , type_(type)
+        , log_number_(logNumber)
+        , payload_(std::move(payload)) {}
 
-    crc32_t  crc32_;
+    crc32_t  last_crc32_;
     Type type_;
     log_number_t log_number_;
-    buffer_t payload_;
+    buffer_t payload_;  /// msgpack
 };
 
-void pack(Type type, buffer_t& data,log_number_t number,buffer_t& out);
+// User defined class template specialization
+namespace msgpack {
+    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
+        namespace adaptor {
 
-void unpack(buffer_t& input,wal_entry_t&);
+            template<>
+            struct convert<entry_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, entry_t& v) const {
+                    if (o.type != msgpack::type::ARRAY) {
+                        throw msgpack::type_error();
+                    }
+
+                    if (o.via.array.size != 4) {
+                        throw msgpack::type_error();
+                    }
+
+                    auto last_crc32_ = o.via.array.ptr[0].as<crc32_t>();
+                    auto type  =   o.via.array.ptr[1].as<uint8_t>();
+                    auto log_number_ =  o.via.array.ptr[2].as<log_number_t>();
+                    ///buffer_t buffer(reinterpret_cast<buffer_element_t*>(o.via.array.ptr[3].via.array.ptr),reinterpret_cast<buffer_element_t*>(o.via.array.ptr[3].via.array.ptr+o.via.array.ptr[3].via.array.size));
+                    auto buffer = o.via.array.ptr[3].as<buffer_t>();
+                    v = entry_t(last_crc32_, static_cast<Type>(type),log_number_, std::move(buffer) );
+                    return o;
+                }
+            };
+
+            template<>
+            struct pack<entry_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, entry_t const& v) const {
+                    o.pack_array(4);
+                    o.pack_fix_uint32(v.last_crc32_);
+                    o.pack_char(static_cast<char>(v.type_));
+                    o.pack_fix_uint64(v.log_number_);
+                    o.pack(v.payload_);
+
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<entry_t> final {
+                void operator()(msgpack::object::with_zone& o, entry_t const& v) const {
+                    o.type = type::ARRAY;
+                    o.via.array.size = 4;
+                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr[0] = msgpack::object(v.last_crc32_, o.zone);
+                    o.via.array.ptr[1] = msgpack::object(static_cast<uint8_t>(v.type_), o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.log_number_, o.zone);
+                    o.via.array.ptr[3] = msgpack::object(v.payload_, o.zone);
+                }
+            };
+
+        } // namespace adaptor
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+} // namespace msgpack
+
+
+
+///void pack( buffer_t& data,entry_t& entry,buffer_t& out);
+
+///void unpack(buffer_t& input,wal_entry_t&);
 
 class wal_t final : public goblin_engineer::abstract_service {
 public:
