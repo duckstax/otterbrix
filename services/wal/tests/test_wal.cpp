@@ -17,7 +17,7 @@ struct get_t {
     MSGPACK_DEFINE(flags, key);
 };
 
-TEST_CASE("2 level serilizate") {
+TEST_CASE("2 level serilizate to msgpack") {
     msgpack::sbuffer input;
     get_t req;
     req.flags = 0;
@@ -25,28 +25,58 @@ TEST_CASE("2 level serilizate") {
     msgpack::pack(input, req);
     buffer_t bynary_imput;
     std::copy(input.data(), input.data() + input.size(), std::back_inserter(bynary_imput));
-    entry_t entry(42,Type::create_collection,21,bynary_imput);
+    entry_t entry(42, Type::create_collection, 21, bynary_imput);
     msgpack::sbuffer input_1;
-    msgpack::pack(input_1,  entry);
+    msgpack::pack(input_1, entry);
     msgpack::unpacked msg;
-    msgpack::unpack(msg,input_1.data(), input_1.size());
+    msgpack::unpack(msg, input_1.data(), input_1.size());
     const auto& o = msg.get();
-    auto  output = o.as<entry_t>();
-    REQUIRE(output.last_crc32_== 42);
+    auto output = o.as<entry_t>();
+    REQUIRE(output.last_crc32_ == 42);
     REQUIRE(output.type_ == Type::create_collection);
     REQUIRE(output.log_number_ == 21);
 
     msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1,reinterpret_cast<char*>(output.payload_.data()), output.payload_.size());
+    msgpack::unpack(msg_1, reinterpret_cast<char*>(output.payload_.data()), output.payload_.size());
 
     const auto& o_1 = msg_1.get();
-   get_t req_1;
+    get_t req_1;
     o_1.convert(req_1);
-   REQUIRE(req_1.key == "key0");
+    REQUIRE(req_1.key == "key0");
     REQUIRE(req_1.flags == 0);
-
 }
 
+TEST_CASE("msgpack to bin") {
+    msgpack::sbuffer input;
+    get_t req;
+    req.flags = 0;
+    req.key = "key0";
+    msgpack::pack(input, req);
+    buffer_t bynary_imput;
+    std::copy(input.data(), input.data() + input.size(), std::back_inserter(bynary_imput));
+    entry_t entry(42, Type::create_collection, 21, bynary_imput);
+
+    buffer_t storage_;
+    pack(storage_, entry);
+
+    wal_entry_t wal_entry;
+    unpack(storage_, wal_entry);
+
+    REQUIRE(wal_entry.entry_.last_crc32_ == 42);
+    REQUIRE(wal_entry.entry_.type_ == Type::create_collection);
+    REQUIRE(wal_entry.entry_.log_number_ == 21);
+
+    msgpack::unpacked msg_1;
+    msgpack::unpack(msg_1, reinterpret_cast<char*>(wal_entry.entry_.payload_.data()), wal_entry.entry_.payload_.size());
+
+    const auto& o_1 = msg_1.get();
+    get_t req_1;
+    o_1.convert(req_1);
+    REQUIRE(req_1.key == "key0");
+    REQUIRE(req_1.flags == 0);
+}
+
+/*
 TEST_CASE("wal add event") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
@@ -55,6 +85,7 @@ TEST_CASE("wal add event") {
     auto allocate_byte_alignof = alignof(wal_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
     auto* wal = new (buffer) wal_t(nullptr, log, std::filesystem::current_path());
-    buffer_t tmp(10, buffer_element_t (1));
+    buffer_t tmp(10, buffer_element_t(1));
     wal->add_event(Type::create_collection, tmp);
 }
+*/

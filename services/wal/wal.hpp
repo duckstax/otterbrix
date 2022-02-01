@@ -51,10 +51,6 @@ private:
 using manager_wdr_ptr = goblin_engineer::intrusive_ptr<wdr_t>;
 
 
-/*
-void wal_event_add(goblin_engineer::address_t& address, Type type, ) {
-    ///goblin_engineer::send(address, )
-}*/
 using buffer_element_t = unsigned char;
 using buffer_t = std::vector<buffer_element_t>;
 
@@ -91,7 +87,6 @@ namespace msgpack {
                     auto last_crc32_ = o.via.array.ptr[0].as<crc32_t>();
                     auto type  =   o.via.array.ptr[1].as<uint8_t>();
                     auto log_number_ =  o.via.array.ptr[2].as<log_number_t>();
-                    ///buffer_t buffer(reinterpret_cast<buffer_element_t*>(o.via.array.ptr[3].via.array.ptr),reinterpret_cast<buffer_element_t*>(o.via.array.ptr[3].via.array.ptr+o.via.array.ptr[3].via.array.size));
                     auto buffer = o.via.array.ptr[3].as<buffer_t>();
                     v = entry_t(last_crc32_, static_cast<Type>(type),log_number_, std::move(buffer) );
                     return o;
@@ -107,7 +102,6 @@ namespace msgpack {
                     o.pack_char(static_cast<char>(v.type_));
                     o.pack_fix_uint64(v.log_number_);
                     o.pack(v.payload_);
-
                     return o;
                 }
             };
@@ -129,11 +123,16 @@ namespace msgpack {
     }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack
 
+struct wal_entry_t final {
+    size_tt size_;
+    entry_t entry_;
+    crc32_t crc32_;
+};
 
 
-///void pack( buffer_t& data,entry_t& entry,buffer_t& out);
+crc32_t pack(buffer_t& storage,entry_t&) ;
 
-///void unpack(buffer_t& input,wal_entry_t&);
+void unpack(buffer_t& storage,wal_entry_t&);
 
 class wal_t final : public goblin_engineer::abstract_service {
 public:
@@ -153,6 +152,7 @@ private:
     log_t log_;
     std::filesystem::path path_;
     std::atomic<log_number_t> log_number_{0};
+    crc32_t last_crc32_{0};
     std::size_t writed_{0};
     int fd_ = -1;
     buffer_t buffer_;
