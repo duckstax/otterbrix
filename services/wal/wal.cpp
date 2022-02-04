@@ -26,8 +26,8 @@ void append_crc32(buffer_t& storage, crc32_t crc32) {
 }
 
 void append_size(buffer_t& storage, size_tt size) {
-    storage.push_back(buffer_element_t(size));
     storage.push_back((buffer_element_t((size >> 8))));
+    storage.push_back(buffer_element_t(size));
 }
 
 void append_payload(buffer_t& storage, char* ptr, size_t size) {
@@ -128,8 +128,7 @@ crc32_t pack(buffer_t& storage,entry_t&entry) {
     msgpack::sbuffer input_1;
     msgpack::pack(input_1, entry);
     auto last_crc32_ = crc32c::Crc32c(input_1.data(), input_1.size());
-    size_tt size = sizeof(crc32_t) + sizeof(size_tt) + input_1.size();
-    append_size(storage, size);
+    append_size(storage, input_1.size());
     append_payload(storage, input_1.data(), input_1.size());
     append_crc32(storage, last_crc32_);
     return last_crc32_;
@@ -137,7 +136,9 @@ crc32_t pack(buffer_t& storage,entry_t&entry) {
 
 void unpack(buffer_t& storage, wal_entry_t&entry) {
     entry.size_ = read_size(storage,0);
-    auto buffer = read_payload(storage, sizeof(size_tt)+1,sizeof(size_tt)+1+entry.size_);
+    auto start = sizeof(size_tt);
+    auto finish = sizeof(size_tt)+entry.size_-1;
+    auto buffer = read_payload(storage, start,finish);
     msgpack::unpacked msg;
     msgpack::unpack(msg, reinterpret_cast<char*>(buffer.data()), buffer.size());
     const auto& o = msg.get();
