@@ -1,13 +1,11 @@
+#include "dispatcher/route.hpp"
 #include "goblin-engineer/core.hpp"
 #include <excutor.hpp>
 #include <filesystem>
 #include <log/log.hpp>
+
 #include <msgpack.hpp>
 #include <msgpack/adaptor/vector.hpp>
-
-#include <fcntl.h>
-
-#include "wal_header.hpp"
 
 using manager = goblin_engineer::basic_manager_service_t<goblin_engineer::base_policy_light>;
 
@@ -18,11 +16,12 @@ public:
         : manager("manager_dispatcher")
         , log_(log.clone())
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
-        log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}",num_workers,max_throughput);
+        log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
 
         log_.trace("manager_dispatcher_t start thread pool");
         e_->start();
     }
+
 protected:
     auto executor_impl() noexcept -> goblin_engineer::abstract_executor* {
         return e_.get();
@@ -50,22 +49,25 @@ private:
 
 using manager_wdr_ptr = goblin_engineer::intrusive_ptr<wdr_t>;
 
-
-using buffer_element_t = unsigned char;
+using buffer_element_t = char;
 using buffer_t = std::vector<buffer_element_t>;
 
-struct entry_t {
-    entry_t() =default;
-    entry_t(crc32_t lastCrc32, Type type, log_number_t logNumber,  buffer_t payload)
+using size_tt = std::uint16_t;
+using log_number_t = std::uint64_t;
+using crc32_t = std::uint32_t;
+
+struct entry_t final {
+    entry_t() = default;
+    entry_t(crc32_t lastCrc32, Type type, log_number_t logNumber, buffer_t payload)
         : last_crc32_(lastCrc32)
         , type_(type)
         , log_number_(logNumber)
         , payload_(std::move(payload)) {}
 
-    crc32_t  last_crc32_;
+    crc32_t last_crc32_;
     Type type_;
     log_number_t log_number_;
-    buffer_t payload_;  /// msgpack
+    buffer_t payload_; /// msgpack
 };
 
 // User defined class template specialization
@@ -85,10 +87,10 @@ namespace msgpack {
                     }
 
                     auto last_crc32_ = o.via.array.ptr[0].as<crc32_t>();
-                    auto type  =   o.via.array.ptr[1].as<uint8_t>();
-                    auto log_number_ =  o.via.array.ptr[2].as<log_number_t>();
+                    auto type = o.via.array.ptr[1].as<uint8_t>();
+                    auto log_number_ = o.via.array.ptr[2].as<log_number_t>();
                     auto buffer = o.via.array.ptr[3].as<buffer_t>();
-                    v = entry_t(last_crc32_, static_cast<Type>(type),log_number_, std::move(buffer) );
+                    v = entry_t(last_crc32_, static_cast<Type>(type), log_number_, std::move(buffer));
                     return o;
                 }
             };
@@ -129,31 +131,34 @@ struct wal_entry_t final {
     crc32_t crc32_;
 };
 
+crc32_t pack(buffer_t& storage, entry_t&);
 
-crc32_t pack(buffer_t& storage,entry_t&) ;
+void unpack(buffer_t& storage, wal_entry_t&);
 
-void unpack(buffer_t& storage,wal_entry_t&);
+void unpack_v2(buffer_t& storage, wal_entry_t&);
 
 class wal_t final : public goblin_engineer::abstract_service {
 public:
-
-    wal_t(goblin_engineer::supervisor_t* manager, log_t& log,std::filesystem::path path);
-    void add_event(Type type, buffer_t & data);
-    void get_event() {}
+    wal_t(goblin_engineer::supervisor_t* manager, log_t& log, std::filesystem::path path);
+    void add_event(Type type, buffer_t& data);
     void last_id() {}
     ~wal_t() override;
 
 private:
     void open_file(std::filesystem::path);
     bool file_exist_(std::filesystem::path path);
-    bool header_check_(std::filesystem::path path);
-    void header_write_(std::filesystem::path path);
 
     log_t log_;
     std::filesystem::path path_;
     std::atomic<log_number_t> log_number_{0};
     crc32_t last_crc32_{0};
     std::size_t writed_{0};
+    std::size_t read_{0};
     int fd_ = -1;
     buffer_t buffer_;
+#ifdef DEV_MODE
+public:
+    size_tt read_size(size_t start_index);
+    buffer_t read(size_t start_index, size_t finish_index);
+#endif
 };
