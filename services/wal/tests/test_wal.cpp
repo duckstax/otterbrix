@@ -7,6 +7,8 @@
 #include <msgpack.hpp>
 #include <string>
 
+#include <crc32c/crc32c.h>
+
 struct get_t {
     get_t() {}
     get_t(uint32_t f, const std::string& k)
@@ -99,15 +101,23 @@ TEST_CASE("wal add event") {
     std::copy(input.data(), input.data() + input.size(), std::back_inserter(binary_input));
 
     wal->add_event(Type::create_collection, binary_input);
+
     wal_entry_t entry;
+
     entry.size_ = wal->read_size(0);
+
     auto start = sizeof(size_tt);
     auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
     auto output = wal->read(start, finish);
+
+    auto crc32_index = entry.size_- sizeof(crc32_t);
+    crc32_t crc32 = crc32c::Crc32c(output.data(),crc32_index);
     unpack_v2(output,entry);
 
+    REQUIRE(entry.crc32_ == crc32);
+
     msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1, reinterpret_cast<char*>(entry.entry_.payload_.data()), entry.entry_.payload_.size());
+    msgpack::unpack(msg_1, entry.entry_.payload_.data(), entry.entry_.payload_.size());
     const auto& o_1 = msg_1.get();
     get_t req_1;
     o_1.convert(req_1);

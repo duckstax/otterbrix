@@ -9,7 +9,7 @@
 #include <iostream>
 #include <unistd.h>
 
-std::string getTimeStr() {
+std::string get_time_to_string() {
     auto now = std::chrono::system_clock::now();
     auto in_time_t = std::chrono::system_clock::to_time_t(now);
 
@@ -75,18 +75,26 @@ void wal_t::add_event(Type type, buffer_t& data) {
     writed_ += size_write;
     ++log_number_;
 }
+
+auto open_file(boost::filesystem::path path) {
+    auto file_name = get_time_to_string();
+    file_name.append(wal_name);
+    auto file_path = path / file_name;
+    auto fd_ = ::open(file_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0777);
+    return fd_;
+}
+
 wal_t::wal_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
     : goblin_engineer::abstract_service(manager, "wal")
     , log_(log.clone())
     , path_(std::move(path)) {
-
     auto not_existed = not file_exist_(path_);
     if (not_existed) {
         boost::filesystem::create_directory(path_);
-        open_file(path);
+        fd_ = open_file(path);
     }
 
-    open_file(path);
+    fd_ = open_file(path);
 }
 
 bool wal_t::file_exist_(boost::filesystem::path path) {
@@ -101,28 +109,23 @@ bool wal_t::file_exist_(boost::filesystem::path path) {
     }
 }
 
-void wal_t::open_file(boost::filesystem::path) {
-    auto file_name = getTimeStr();
-    file_name.append(wal_name);
-    auto file_path = path_ / file_name;
-    fd_ = ::open(file_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0777);
+wal_t::~wal_t() {
+    ::close(fd_);
 }
 
-wal_t::~wal_t() {
-}
 size_tt wal_t::read_size(size_t start_index) {
     auto size_read = sizeof(size_tt);
-    auto buffer =  std::make_unique<char[]>(size_read);
-    ::pread(fd_,buffer.get(),size_read,start_index);
-    auto size_blob = read_size_impl(buffer.get(),0);
+    auto buffer = std::make_unique<char[]>(size_read);
+    ::pread(fd_, buffer.get(), size_read, start_index);
+    auto size_blob = read_size_impl(buffer.get(), 0);
     return size_blob;
 }
 
 buffer_t wal_t::read(size_t start_index, size_t finish_index) {
-    auto size_read = finish_index-start_index;
+    auto size_read = finish_index - start_index;
     buffer_t buffer;
     buffer.resize(size_read);
-    ::pread(fd_,buffer.data(),size_read,start_index);
+    ::pread(fd_, buffer.data(), size_read, start_index);
     return buffer;
 }
 
@@ -142,18 +145,19 @@ void unpack(buffer_t& storage, wal_entry_t& entry) {
     auto finish = sizeof(size_tt) + entry.size_;
     auto buffer = read_payload(storage, start, finish);
     msgpack::unpacked msg;
-    msgpack::unpack(msg, reinterpret_cast<char*>(buffer.data()), buffer.size());
+    msgpack::unpack(msg, buffer.data(), buffer.size());
     const auto& o = msg.get();
     entry.entry_ = o.as<entry_t>();
-    entry.crc32_ = read_crc32(storage, sizeof(size_tt) + entry.size_);
+    auto crc32_index = sizeof(size_tt) + entry.size_;
+    entry.crc32_ = read_crc32(storage, crc32_index);
 }
 
-void unpack_v2(buffer_t& storage, wal_entry_t&entry){
+void unpack_v2(buffer_t& storage, wal_entry_t& entry) {
     auto start = 0;
-    auto finish =  entry.size_;
+    auto finish = entry.size_;
     auto buffer = read_payload(storage, start, finish);
     msgpack::unpacked msg;
-    msgpack::unpack(msg, reinterpret_cast<char*>(buffer.data()), buffer.size());
+    msgpack::unpack(msg, buffer.data(), buffer.size());
     const auto& o = msg.get();
     entry.entry_ = o.as<entry_t>();
     entry.crc32_ = read_crc32(storage, sizeof(size_tt) + entry.size_);

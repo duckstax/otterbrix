@@ -145,7 +145,6 @@ public:
     ~wal_t() override;
 
 private:
-    void open_file(boost::filesystem::path);
     bool file_exist_(boost::filesystem::path path);
 
     log_t log_;
