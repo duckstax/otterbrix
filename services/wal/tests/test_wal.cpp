@@ -88,7 +88,7 @@ TEST_CASE("wal add event") {
     auto allocate_byte = sizeof(wal_t);
     auto allocate_byte_alignof = alignof(wal_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_t(nullptr, log, std::filesystem::current_path());
+    auto* wal = new (buffer) wal_t(nullptr, log, boost::filesystem::current_path());
 
     msgpack::sbuffer input;
     get_t req;

@@ -75,24 +75,24 @@ void wal_t::add_event(Type type, buffer_t& data) {
     writed_ += size_write;
     ++log_number_;
 }
-wal_t::wal_t(goblin_engineer::supervisor_t* manager, log_t& log, std::filesystem::path path)
+wal_t::wal_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
     : goblin_engineer::abstract_service(manager, "wal")
     , log_(log.clone())
     , path_(std::move(path)) {
 
     auto not_existed = not file_exist_(path_);
     if (not_existed) {
-        std::filesystem::create_directory(path_);
+        boost::filesystem::create_directory(path_);
         open_file(path);
     }
 
     open_file(path);
 }
 
-bool wal_t::file_exist_(std::filesystem::path path) {
-    std::filesystem::file_status s = std::filesystem::file_status{};
+bool wal_t::file_exist_(boost::filesystem::path path) {
+    boost::filesystem::file_status s = boost::filesystem::file_status{};
     log_.trace(path.c_str());
-    if (std::filesystem::status_known(s) ? std::filesystem::exists(s) : std::filesystem::exists(path)) {
+    if (boost::filesystem::status_known(s) ? boost::filesystem::exists(s) : boost::filesystem::exists(path)) {
         log_.trace("exists");
         return true;
     } else {
@@ -101,7 +101,7 @@ bool wal_t::file_exist_(std::filesystem::path path) {
     }
 }
 
-void wal_t::open_file(std::filesystem::path) {
+void wal_t::open_file(boost::filesystem::path) {
     auto file_name = getTimeStr();
     file_name.append(wal_name);
     auto file_path = path_ / file_name;

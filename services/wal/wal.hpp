@@ -1,7 +1,7 @@
 #include "dispatcher/route.hpp"
 #include "goblin-engineer/core.hpp"
 #include <excutor.hpp>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 #include <log/log.hpp>
 
 #include <msgpack.hpp>
@@ -139,17 +139,17 @@ void unpack_v2(buffer_t& storage, wal_entry_t&);
 
 class wal_t final : public goblin_engineer::abstract_service {
 public:
-    wal_t(goblin_engineer::supervisor_t* manager, log_t& log, std::filesystem::path path);
+    wal_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
     void add_event(Type type, buffer_t& data);
     void last_id() {}
     ~wal_t() override;
 
 private:
-    void open_file(std::filesystem::path);
-    bool file_exist_(std::filesystem::path path);
+    void open_file(boost::filesystem::path);
+    bool file_exist_(boost::filesystem::path path);
 
     log_t log_;
-    std::filesystem::path path_;
+    boost::filesystem::path path_;
     std::atomic<log_number_t> log_number_{0};
     crc32_t last_crc32_{0};
     std::size_t writed_{0};
