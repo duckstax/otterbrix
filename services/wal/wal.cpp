@@ -1,13 +1,13 @@
 #include "wal.hpp"
-#include <crc32c/crc32c.h>
+
 #include <fcntl.h>
+#include <unistd.h>
+#include <ctime>
 
 #include <utility>
-
 #include <chrono>
-#include <ctime>
-#include <iostream>
-#include <unistd.h>
+
+#include <crc32c/crc32c.h>
 
 std::string get_time_to_string() {
     auto now = std::chrono::system_clock::now();
