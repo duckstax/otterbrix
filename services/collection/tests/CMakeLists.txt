@@ -12,6 +12,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::collection
+        rocketjoe::database
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::parser
