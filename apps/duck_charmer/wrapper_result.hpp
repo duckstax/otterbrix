@@ -3,7 +3,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include "services/storage/result.hpp"
+#include "services/collection/result.hpp"
 
 namespace py = pybind11;
 

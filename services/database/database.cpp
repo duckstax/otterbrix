@@ -1,9 +1,9 @@
 #include "database.hpp"
 
-#include "collection.hpp"
 
+#include "services/database/result_database.hpp"
+#include <services/collection/collection.hpp>
 #include "tracy/tracy.hpp"
-#include "result_database.hpp"
 
 namespace services::storage {
 
@@ -35,14 +35,14 @@ namespace services::storage {
 
     void manager_database_t::create(session_t& session, std::string& name) {
         log_.debug("manager_database_t:create {}", name);
-        auto address = spawn_supervisor<database_t>(std::string(name),log_,1,1000);
-        databases_.emplace(address.type(),address);
-        auto self  = manager_database_t::address();
-        return goblin_engineer::send(current_message()->sender(),self,"create_database_finish",session,database_create_result(true),address);
+        auto address = spawn_supervisor<database_t>(std::string(name), log_, 1, 1000);
+        databases_.emplace(address.type(), address);
+        auto self = manager_database_t::address();
+        return goblin_engineer::send(current_message()->sender(), self, "create_database_finish", session, database_create_result(true), address);
     }
 
     database_t::database_t(goblin_engineer::supervisor_t* supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)
-        : goblin_engineer::abstract_manager_service(supervisor,std::move(name))
+        : goblin_engineer::abstract_manager_service(supervisor, std::move(name))
         , log_(log.clone())
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         ZoneScoped;
@@ -69,22 +69,22 @@ namespace services::storage {
 
     void database_t::create(session_t& session, std::string& name) {
         log_.debug("database_t::create {}", name);
-        auto address = spawn_actor<collection_t>(std::string(name),log_);
-        collections_.emplace(address.type(),address);
-        auto self  = database_t::address();
-        return goblin_engineer::send(current_message()->sender(),self,"create_collection_finish",session,collection_create_result(true),std::string(self.type()),address);
+        auto address = spawn_actor<collection_t>(std::string(name), log_);
+        collections_.emplace(address.type(), address);
+        auto self = database_t::address();
+        return goblin_engineer::send(current_message()->sender(), self, "create_collection_finish", session, collection_create_result(true), std::string(self.type()), address);
     }
 
-    void database_t::drop(components::session::session_t &session, std::string &name) {
+    void database_t::drop(components::session::session_t& session, std::string& name) {
         log_.debug("database_t::drop {}", name);
         auto self = database_t::address();
         auto collection = collections_.find(name);
         if (collection != collections_.end()) {
             auto address = collection->second;
             collections_.erase(collection);
-            return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(true),std::string(self.type()),address);
+            return goblin_engineer::send(current_message()->sender(), self, "drop_collection_finish", session, result_drop_collection(true), std::string(self.type()), address);
         }
-        return goblin_engineer::send(current_message()->sender(),self,"drop_collection_finish",session,result_drop_collection(false),std::string(self.type()),self);
+        return goblin_engineer::send(current_message()->sender(), self, "drop_collection_finish", session, result_drop_collection(false), std::string(self.type()), self);
     }
 
-} // namespace kv
+} // namespace services::storage

@@ -2,7 +2,7 @@
 #include "wrapper_cursor.hpp"
 #include "forward.hpp"
 #include "route.hpp"
-#include "services/storage/result_database.hpp"
+#include "services/database/result_database.hpp"
 #include "wrapper_collection.hpp"
 #include "wrapper_database.hpp"
 

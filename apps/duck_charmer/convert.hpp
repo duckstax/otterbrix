@@ -5,7 +5,7 @@
 
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
-#include <services/storage/sort.hpp>
+#include <services/collection/sort.hpp>
 
 namespace py = pybind11;
 

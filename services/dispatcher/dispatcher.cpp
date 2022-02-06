@@ -1,9 +1,9 @@
 #include "dispatcher.hpp"
 #include "components/tracy/tracy.hpp"
-#include <services/storage/route.hpp>
+#include <services/collection/route.hpp>
 #include <components/document/document.hpp>
 #include "route.hpp"
-#include <services/storage/database.hpp>
+#include <services/database/database.hpp>
 #include "parser/parser.hpp"
 
 namespace services::dispatcher {
