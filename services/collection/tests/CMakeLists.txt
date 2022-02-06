@@ -1,4 +1,4 @@
-project(test_storage)
+project(test_collection)
 
 add_definitions(-DDEV_MODE)
 
@@ -11,7 +11,7 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
-        rocketjoe::storage
+        rocketjoe::collection
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::parser
