@@ -110,7 +110,7 @@ TEST_CASE("wal add event") {
     auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
     auto output = wal->read(start, finish);
 
-    auto crc32_index = entry.size_- sizeof(crc32_t);
+    auto crc32_index = entry.size_;
     crc32_t crc32 = crc32c::Crc32c(output.data(),crc32_index);
     unpack_v2(output,entry);
 
