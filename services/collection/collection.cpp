@@ -97,7 +97,7 @@ namespace services::storage {
         add_handler(collection::update_one, &collection_t::update_one);
         add_handler(collection::update_many, &collection_t::update_many);
         add_handler(collection::size, &collection_t::size);
-        add_handler(database::drop_collection, &collection_t::drop);
+        add_handler(collection::drop_collection, &collection_t::drop);
         add_handler(collection::close_cursor, &collection_t::close_cursor);
     }
 
