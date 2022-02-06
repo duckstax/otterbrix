@@ -8,6 +8,9 @@ msgpack/3.3.0
 nlohmann_json/3.10.2
 date/3.0.1
 catch2/2.13.7
+crc32c/1.1.2
+abseil/20211102.0
+rocksdb/6.20.3
 
 goblin-engineer/1.0.0a5@duckstax/stable
 
