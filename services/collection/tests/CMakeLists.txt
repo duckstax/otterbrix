@@ -1,22 +1,27 @@
-project(test_parser)
+project(test_collection)
 
-set( ${PROJECT_NAME}_SOURCES
-    test_query.cpp
-)
+add_definitions(-DDEV_MODE)
+
+set(${PROJECT_NAME}_SOURCES
+        test_collection.cpp
+        )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
-        rocketjoe::document
+        rocketjoe::collection
+        rocketjoe::database
+        rocketjoe::cursor
+        rocketjoe::session
         rocketjoe::parser
         ${CONAN_LIBS}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-    ..
-)
+        ..
+        )
 
 include(CTest)
 include(Catch)

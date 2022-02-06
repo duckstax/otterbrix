@@ -4,7 +4,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "spaces.hpp"
-#include "storage/forward.hpp"
+#include <services/collection/collection.hpp>
 
 #include "wrapper_database.hpp"
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <services/storage/route.hpp>
+#include <services/collection/route.hpp>
+#include <services/database/route.hpp>
 
 namespace duck_charmer {
 

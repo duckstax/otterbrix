@@ -12,9 +12,9 @@
 #include "cursor/cursor.hpp"
 #include "forward.hpp"
 #include <components/document/document.hpp>
-#include "services/storage/result.hpp"
+#include "services/collection/result.hpp"
 #include "wrapper_cursor.hpp"
-#include "services/storage/result_database.hpp"
+#include "services/database/result_database.hpp"
 
 class spin_lock final {
 public:
