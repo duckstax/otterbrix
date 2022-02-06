@@ -1,7 +1,7 @@
 #include "wrapper_cursor.hpp"
 #include "convert.hpp"
 #include "route.hpp"
-#include <storage/result.hpp>
+#include <services/collection/result.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.

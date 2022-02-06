@@ -10,8 +10,8 @@
 #include <components/excutor.hpp>
 #include <components/session/session.hpp>
 
-#include <services/storage/result.hpp>
-#include "storage/result_database.hpp"
+#include <services/collection/result.hpp>
+#include "services/database/result_database.hpp"
 
 namespace services::dispatcher {
 

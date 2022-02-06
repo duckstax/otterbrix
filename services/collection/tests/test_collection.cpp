@@ -1,20 +1,20 @@
-#include <catch2/catch.hpp>
-#include "database.hpp"
 #include "collection.hpp"
-#include "parser/parser.hpp"
+#include <services/database/database.hpp>
 #include "document/core/array.hpp"
 #include "document/mutable/mutable_array.h"
+#include "parser/parser.hpp"
+#include <catch2/catch.hpp>
 
 using namespace services::storage;
 
-document_t gen_sub_doc(const std::string &name, bool male) {
+document_t gen_sub_doc(const std::string& name, bool male) {
     document_t sub_doc;
     sub_doc.add_string("name", name);
     sub_doc.add_bool("male", male);
     return sub_doc;
 }
 
-document_t gen_doc(const std::string &id, const std::string &name, const std::string &type, ulong age, bool male,
+document_t gen_doc(const std::string& id, const std::string& name, const std::string& type, ulong age, bool male,
                    std::initializer_list<std::string> friends, document_t sub_doc) {
     document_t doc;
     doc.add_string("_id", id);
@@ -53,7 +53,7 @@ collection_ptr gen_collection() {
     return collection;
 }
 
-find_condition_ptr parse_find_condition(const std::string &cond) {
+find_condition_ptr parse_find_condition(const std::string& cond) {
     return components::parser::parse_find_condition(document_t::from_json(cond));
 }
 

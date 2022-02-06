@@ -1,8 +1,8 @@
 #pragma once
 #include <goblin-engineer/core.hpp>
 
-#include "services/storage/collection.hpp"
-#include "services/storage/database.hpp"
+#include "services/collection/collection.hpp"
+#include "services/database/database.hpp"
 
 #include "components/log/log.hpp"
 
