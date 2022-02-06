@@ -1,6 +1,6 @@
 #pragma once
 
-#include "services/storage/route.hpp"
+#include "services/collection/route.hpp"
 
 namespace services::dispatcher {
 

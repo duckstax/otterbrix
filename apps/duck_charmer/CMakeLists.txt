@@ -37,7 +37,8 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::log
-        rocketjoe::storage
+        rocketjoe::database
+        rocketjoe::collection
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::document
