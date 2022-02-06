@@ -1,5 +1,5 @@
 #include "collection.hpp"
-#include "database.hpp"
+#include <services/database/database.hpp>
 #include "document/core/array.hpp"
 #include "document/mutable/mutable_array.h"
 #include "parser/parser.hpp"
