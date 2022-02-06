@@ -16,7 +16,7 @@
 
 class log_t final {
 public:
-    enum class level {
+    enum class level : char {
         trace = spdlog::level::trace,
         debug = spdlog::level::debug,
         info = spdlog::level::info,
@@ -100,6 +100,31 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger_;
 };
+
+template<typename S, typename... Args>
+auto info(log_t& log, const S& format_str, Args&&... args) -> void {
+    log.info(fmt::format(format_str, std::forward<Args>(args)...));
+}
+
+template<typename S, typename... Args>
+auto debug(log_t& log, const S& format_str, Args&&... args) -> void {
+    log.debug(fmt::format(format_str, std::forward<Args>(args)...));
+}
+
+template<typename S, typename... Args>
+auto warn(log_t& log, const S& format_str, Args&&... args) -> void {
+    log.warn(fmt::format(format_str, std::forward<Args>(args)...));
+}
+
+template<typename S, typename... Args>
+auto error(log_t& log, const S& format_str, Args&&... args) -> void {
+    log.error(fmt::format(format_str, std::forward<Args>(args)...));
+}
+
+template<typename S, typename... Args>
+auto critical(log_t& log, const S& format_str, Args&&... args) -> void {
+    log.critical(fmt::format(format_str, std::forward<Args>(args)...));
+}
 
 auto get_logger(const std::string&) -> log_t;
 auto get_logger() -> log_t;
