@@ -1,7 +1,9 @@
 #pragma once
 
-#include "storage_impl.hpp"
 #include <string>
+
+#include <components/document/core/slice.hpp>
+#include <components/document/core/encoder.hpp>
 
 namespace document { namespace impl {
 

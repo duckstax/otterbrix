@@ -1,5 +1,4 @@
 #include "shared_keys.hpp"
-#include "storage_impl.hpp"
 #include "exception.hpp"
 
 namespace document { namespace impl {
