@@ -17,8 +17,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/shared_keys.hpp
         core/slice_core.hpp
         core/slice.hpp
-        core/storage.hpp
-        core/storage_impl.hpp
         core/value.hpp
         json/json_delta.hpp
         json/json_coder.hpp
@@ -50,13 +48,7 @@ set( ${PROJECT_NAME}_HEADERS
         support/temp_array.hpp
         support/varint.hpp
         support/writer.hpp
-        tree/hash_tree.hpp
-        tree/hash_tree_internal.hpp
-        tree/key_tree.hpp
-        tree/mutable_hash_tree.hpp
-        tree/mutable_node.hpp
-        tree/node_ref.hpp
-        )
+)
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
@@ -70,7 +62,6 @@ set(${PROJECT_NAME}_SOURCES
         core/pointer.cpp
         core/shared_keys.cpp
         core/slice_core.cpp
-        core/storage.cpp
         core/value.cpp
         core/value_dump.cpp
         json/json_delta.cpp
@@ -92,10 +83,6 @@ set(${PROJECT_NAME}_SOURCES
         support/string_table.cpp
         support/varint.cpp
         support/writer.cpp
-        tree/hash_tree.cpp
-        tree/key_tree.cpp
-        tree/mutable_hash_tree.cpp
-        tree/node_ref.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
