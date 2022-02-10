@@ -126,6 +126,31 @@ auto critical(log_t& log, const S& format_str, Args&&... args) -> void {
     log.critical(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
+template<typename S>
+auto info(log_t& log, const S& format_str) -> void {
+    log.info(format_str);
+}
+
+template<typename S>
+auto debug(log_t& log, const S& format_str) -> void {
+    log.debug(format_str);
+}
+
+template<typename S>
+auto warn(log_t& log, const S& format_str) -> void {
+    log.warn(format_str);
+}
+
+template<typename S>
+auto error(log_t& log, const S& format_str) -> void {
+    log.error(format_str);
+}
+
+template<typename S>
+auto critical(log_t& log, const S& format_str) -> void {
+    log.critical(format_str);
+}
+
 auto get_logger(const std::string&) -> log_t;
 auto get_logger() -> log_t;
 auto initialization_logger(std::shared_ptr<spdlog::logger>) -> void;
