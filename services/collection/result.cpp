@@ -1,7 +1,12 @@
 #include "result.hpp"
 
+#include <utility>
+
+result_insert_one::result_insert_one()
+    : inserted_id_(result_t::null_id()) {}
+
 result_insert_one::result_insert_one(result_insert_one::result_t id)
-    : inserted_id_(id) {}
+    : inserted_id_(std::move(id)) {}
 
 const result_insert_one::result_t& result_insert_one::inserted_id() const {
     return inserted_id_;
@@ -77,12 +82,17 @@ const result_delete::result_t& result_delete::deleted_ids() const {
     return deleted_ids_;
 }
 
-result_update::result_update(result_update::result_t&& modified_ids, result_update::result_t&& nomodified_ids)
-    : modified_ids_(std::move(modified_ids))
-    , nomodified_ids_(std::move(nomodified_ids)) {
+result_update::result_update()
+    : upserted_id_(document_id_t::null_id()) {
 }
 
-result_update::result_update(std::string&& upserted_id)
+result_update::result_update(result_update::result_t&& modified_ids, result_update::result_t&& nomodified_ids)
+    : modified_ids_(std::move(modified_ids))
+    , nomodified_ids_(std::move(nomodified_ids))
+    , upserted_id_(document_id_t::null_id()) {
+}
+
+result_update::result_update(document_id_t&& upserted_id)
     : upserted_id_(std::move(upserted_id)) {
 }
 
@@ -94,6 +104,6 @@ const result_update::result_t& result_update::nomodified_ids() const {
     return nomodified_ids_;
 }
 
-const std::string& result_update::upserted_id() const {
+const result_update::document_id_t& result_update::upserted_id() const {
     return upserted_id_;
 }

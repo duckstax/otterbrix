@@ -260,6 +260,12 @@ auto to_pylist(const std::vector<std::string> &src) -> py::list {
     return res;
 }
 
+auto to_pylist(const std::vector<components::document::document_id_t>& src) -> py::list {
+    py::list res;
+    for (const auto &str : src) res.append(str.to_string_view());
+    return res;
+}
+
 auto to_sorter(const py::handle &sort_dict) -> services::storage::sort::sorter_t {
     services::storage::sort::sorter_t sorter;
     for (const py::handle key : sort_dict) {

@@ -57,8 +57,8 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
         to_document(document, doc);
         auto session_tmp = duck_charmer::session_t();
         auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
-        log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().size());
-        return result.inserted_id();
+        log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().is_null() ? 0 : 1);
+        return result.inserted_id().to_string();
     }
     throw std::runtime_error("wrapper_collection::insert_one");
     return std::string();
@@ -93,7 +93,7 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
         to_document(fields, update);
         auto session_tmp = duck_charmer::session_t();
         auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id());
+        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();
@@ -108,7 +108,7 @@ wrapper_result_update wrapper_collection::update_many(py::object cond, py::objec
         to_document(fields, update);
         auto session_tmp = duck_charmer::session_t();
         auto result = ptr_->update_many(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id());
+        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();

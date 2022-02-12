@@ -3,7 +3,6 @@ project(document)
 set( ${PROJECT_NAME}_HEADERS
         document.hpp
         document_view.hpp
-        index.hpp
         core/array.hpp
         core/base.hpp
         core/deep_iterator.hpp
@@ -56,6 +55,10 @@ set( ${PROJECT_NAME}_HEADERS
         tree/mutable_hash_tree.hpp
         tree/mutable_node.hpp
         tree/node_ref.hpp
+        tree_storage/document_id.hpp
+        tree_storage/index.hpp
+        tree_storage/range.hpp
+        tree_storage/tree_storage.hpp
         )
 
 set(${PROJECT_NAME}_SOURCES
@@ -96,6 +99,9 @@ set(${PROJECT_NAME}_SOURCES
         tree/key_tree.cpp
         tree/mutable_hash_tree.cpp
         tree/node_ref.cpp
+        tree_storage/document_id.cpp
+        tree_storage/range.cpp
+        tree_storage/tree_storage.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
