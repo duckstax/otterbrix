@@ -11,7 +11,7 @@
 #include "protocol/forward.hpp"
 
 #include "components/cursor/cursor.hpp"
-#include "components/document/tree_storage/tree_storage.hpp"
+#include "components/btree_storage/btree_storage.hpp"
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
 #include "components/document/support/ref_counted.hpp"
@@ -30,11 +30,11 @@ namespace document::impl {
 
 namespace services::storage {
 
-    using storage_t = components::document::tree::storage_t;
+    using storage_t = components::btree::storage_t;
     using document_id_t = components::document::document_id_t;
     using document_t = components::document::document_t;
     using document_view_t = components::document::document_view_t;
-    using components::document::tree::make_document;
+    using components::btree::make_document;
     using components::parser::find_condition_ptr;
 
     class collection_t final : public goblin_engineer::abstract_service {
@@ -65,7 +65,7 @@ namespace services::storage {
         result_update update_one_(const find_condition_ptr& cond, const document_t& update, bool upsert);
         result_update update_many_(const find_condition_ptr& cond, const document_t& update, bool upsert);
         void remove_(const document_id_t& id);
-        bool update_(const document_id_t& id, const document_t& update);
+        bool update_(const document_id_t& id, const document_t& update, bool is_commit);
         document_t update2insert(const document_t& update) const;
 
         log_t log_;

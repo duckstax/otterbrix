@@ -1,6 +1,6 @@
 #pragma once
 #include "components/document/document_view.hpp"
-#include "components/document/tree_storage/document_id.hpp"
+#include "components/document/document_id.hpp"
 #include <vector>
 
 class result_insert_one {

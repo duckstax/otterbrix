@@ -136,9 +136,7 @@ namespace services::storage {
     }
 
     document_id_t collection_t::insert_(const document_t& document, int version) {
-        auto id = document.is_exists("_id")
-                      ? document_id_t(document.get_string("_id"))
-                      : document_id_t::generate();
+        auto id = document_id_t(document.get_string("_id"));
         if (storage_.contains(id)) {
             //todo error primary key
         } else {
@@ -218,10 +216,9 @@ namespace services::storage {
         auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
-            auto res = update_(id, update)
+            auto res = update_(id, update, true)
                            ? result_update({id}, {})
                            : result_update({}, {id});
-            //reindex_();
             return res;
         }
         if (upsert) {
@@ -236,7 +233,7 @@ namespace services::storage {
         auto finded_docs = search_(cond);
         for (const auto& finded_doc : *finded_docs) {
             auto id = document_id_t(finded_doc.get_string("_id"));
-            if (update_(id, update)) {
+            if (update_(id, update, true)) {
                 modified.push_back(id);
             } else {
                 nomodified.push_back(id);
@@ -245,7 +242,6 @@ namespace services::storage {
         if (upsert && modified.empty() && nomodified.empty()) {
             return result_update(insert_(update2insert(update)));
         }
-        //reindex_();
         return result_update(std::move(modified), std::move(nomodified));
     }
 
@@ -253,10 +249,13 @@ namespace services::storage {
         storage_.erase(storage_.find(id));
     }
 
-    bool collection_t::update_(const document_id_t& id, const document_t& update) {
+    bool collection_t::update_(const document_id_t& id, const document_t& update, bool is_commit) {
         auto &document = storage_.at(id);
         if (document) {
-            return document->update(update);
+            if (document->update(update) && is_commit) {
+                document->commit();
+                return true;
+            }
         }
         return false;
     }
@@ -300,6 +299,7 @@ namespace services::storage {
                 }
             }
         }
+        doc->as_dict()->as_mutable()->set("_id", update.get_string("_id"));
         return document_t(doc->as_dict(), true);
     }
 

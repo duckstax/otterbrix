@@ -1,6 +1,6 @@
 #include "range.hpp"
 
-namespace components::document {
+namespace components::btree {
 
     void data_ranges_t::add_range(const range_t& range) {
         range_t new_range = range;

@@ -1,6 +1,7 @@
 #include "document.hpp"
 #include "mutable/mutable_dict.h"
 #include "document/json/json_coder.hpp"
+#include "document_id.hpp"
 #include <iostream>
 
 using ::document::impl::mutable_array_t;
@@ -178,6 +179,12 @@ document_t document_t::from_json(const std::string &json) {
     auto dict = mutable_dict_t::new_dict(doc->root()->as_dict()).detach();
     document_t document(dict, true);
     return document;
+}
+
+void document_t::generate_id_if_not() {
+    if (!is_exists("_id")) {
+        add_string("_id", document_id_t::generate().to_string());
+    }
 }
 
 ::document::retained_t<::document::impl::mutable_array_t> document_t::create_array() {

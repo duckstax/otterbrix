@@ -1,7 +1,7 @@
 #include "document_view.hpp"
 #include "core/dict.hpp"
 #include "core/array.hpp"
-#include "tree_storage/index.hpp"
+#include "structure.hpp"
 #include <iostream>
 
 using ::document::impl::value_type;
@@ -173,7 +173,8 @@ object_handle document_view_t::get(std::string &&key) const {
     auto field = index_ ? index_->get(std::move(key)) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(uint64_t(index::field::offset))->as_unsigned(), field_array->get(uint64_t(index::field::size))->as_unsigned());
+        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
+                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -182,7 +183,8 @@ object_handle document_view_t::get(const std::string &key) const {
     auto field = index_ ? index_->get(key) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(uint64_t(index::field::offset))->as_unsigned(), field_array->get(uint64_t(index::field::size))->as_unsigned());
+        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
+                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -191,7 +193,8 @@ object_handle document_view_t::get(uint32_t index) const {
     auto field = array_->get(index);
     if (field && field->type() == value_type::array) {
         auto field_array = field->as_array();
-        return get_value(field_array->get(uint64_t(index::field::offset))->as_unsigned(), field_array->get(uint64_t(index::field::size))->as_unsigned());
+        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
+                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
     }
     return object_handle();
 }
@@ -295,7 +298,7 @@ object_type document_view_t::get_type(const ::document::impl::value_t *field) co
             if (array->count() > 0 && (array->get(0)->type() == value_type::array || array->get(0)->type() == value_type::dict)) {
                 return object_type::ARRAY;
             } else {
-                return static_cast<object_type>(field->as_array()->get(uint64_t(index::field::type))->as_int());
+                return static_cast<object_type>(structure::get_attribute(field, structure::attribute::type)->as_int());
             }
         }
     }

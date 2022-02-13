@@ -1,9 +1,11 @@
-#include "tree_storage.hpp"
+#include "btree_storage.hpp"
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
-#include <components/document/tree_storage/index.hpp>
+#include <components/document/structure.hpp>
 
-namespace components::document::tree {
+using namespace components::document;
+
+namespace components::btree {
 
     using ::document::impl::mutable_array_t;
     using ::document::impl::mutable_dict_t;
@@ -13,8 +15,6 @@ namespace components::document::tree {
 
 
     field_index_t insert_field_(document_data_t &data, field_value_t value, int version) {
-        using components::document::index::field;
-
         if (value->type() == value_type::array) {
             auto index_array = mutable_array_t::new_array();
             auto array = value->as_array();
@@ -35,11 +35,12 @@ namespace components::document::tree {
         auto offset = data.size();
         msgpack::pack(data, document::document_t::get_msgpack_object(value));
 
-        index->resize(static_cast<uint32_t>(field::const_fields));
-        index->set(static_cast<uint32_t>(field::type), document::document_t::get_msgpack_type(value));
-        index->set(static_cast<uint32_t>(field::offset), offset);
-        index->set(static_cast<uint32_t>(field::size), data.size() - offset);
-        index->set(static_cast<uint32_t>(field::version), version);
+        index->append(document::document_t::get_msgpack_type(value));
+        index->append(offset);
+        index->append(data.size() - offset);
+        if (version) {
+            index->append(version);
+        }
         return index;
     }
 
@@ -63,8 +64,8 @@ namespace components::document::tree {
 
     msgpack::object_handle get_value_(const document_data_t &data, field_value_t index) {
         if (index && index->as_array()) {
-            auto offset = index->as_array()->get(uint64_t(index::field::offset))->as_unsigned();
-            auto size = index->as_array()->get(uint64_t(index::field::size))->as_unsigned();
+            auto offset = structure::get_attribute(index, structure::attribute::offset)->as_unsigned();
+            auto size = structure::get_attribute(index, structure::attribute::size)->as_unsigned();
             auto buffer = data.data() + offset;
             return msgpack::unpack(buffer, size);
         }
@@ -129,10 +130,10 @@ namespace components::document::tree {
                 if (a->get(0)->as_array()) {
                     reindex_(it.value()->as_array()->as_mutable(), min_value, delta);
                 } else {
-                    if (a->count() >= uint64_t(index::field::offset)) {
-                        auto offset = a->get(uint64_t(index::field::offset))->as_unsigned();
+                    if (structure::is_attribute(a, structure::attribute::offset)) {
+                        auto offset = structure::get_attribute(a, structure::attribute::offset)->as_unsigned();
                         if (offset >= min_value) {
-                            a->set(uint64_t(index::field::offset), offset - delta);
+                            structure::set_attribute(a, structure::attribute::offset, offset - delta);
                         }
                     }
                 }
@@ -163,14 +164,14 @@ namespace components::document::tree {
                 if (new_value != old_value.get()) {
                     ::document::impl::mutable_array_t* mod_index = nullptr;
                     if (index_field) {
-                        auto offset = index_field->as_array()->get(uint64_t(index::field::offset))->as_unsigned();
-                        auto size = index_field->as_array()->get(uint64_t(index::field::size))->as_unsigned();
+                        auto offset = structure::get_attribute(index_field, structure::attribute::offset)->as_unsigned();
+                        auto size = structure::get_attribute(index_field, structure::attribute::size)->as_unsigned();
                         removed_data_.add_range({offset, offset + size - 1});
                         mod_index = index_field->as_array()->as_mutable();
                         auto new_offset = data.size();
                         msgpack::pack(data, new_value);
-                        mod_index->set(uint64_t(index::field::offset), new_offset);
-                        mod_index->set(uint64_t(index::field::size), data.size() - new_offset);
+                        structure::set_attribute(mod_index, structure::attribute::offset, new_offset);
+                        structure::set_attribute(mod_index, structure::attribute::size, data.size() - new_offset);
                     } else {
                         append_field_(structure, data, key_field, it_field.value());
                     }
@@ -190,9 +191,7 @@ namespace components::document::tree {
           removed_data_.reverse_sort();
           for (const auto& range : removed_data_.ranges()) {
               auto delta = range.second - range.first + 1;
-              for (auto it = structure->begin(); it; ++it) {
-                  reindex_(it.value()->as_dict()->as_mutable(), range.second, delta);
-              }
+              reindex_(structure->as_dict()->as_mutable(), range.second, delta);
           }
 
           //data
