@@ -181,12 +181,6 @@ document_t document_t::from_json(const std::string &json) {
     return document;
 }
 
-void document_t::generate_id_if_not() {
-    if (!is_exists("_id")) {
-        add_string("_id", document_id_t::generate().to_string());
-    }
-}
-
 ::document::retained_t<::document::impl::mutable_array_t> document_t::create_array() {
     return mutable_array_t::new_array();
 }

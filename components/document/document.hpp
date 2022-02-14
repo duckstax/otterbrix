@@ -70,8 +70,6 @@ public:
     std::string to_json() const;
     static document_t from_json(const std::string &json);
 
-    void generate_id_if_not();
-
     static ::document::retained_t<::document::impl::mutable_array_t> create_array();
 
     static msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
