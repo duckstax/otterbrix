@@ -3,6 +3,7 @@ project(test_wal)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
+        test_base_wal.cpp
         test_wal.cpp
 )
 
@@ -13,6 +14,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::log
         rocketjoe::wal
+        rocketjoe_protocol
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

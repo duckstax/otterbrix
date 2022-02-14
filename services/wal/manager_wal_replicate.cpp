@@ -1,0 +1,1 @@
+#include "manager_wal_replicate.hpp"

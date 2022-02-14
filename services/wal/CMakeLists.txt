@@ -4,8 +4,10 @@ set( ${PROJECT_NAME}_HEADERS
         )
 
 set(${PROJECT_NAME}_SOURCES
+        dto.cpp
+        manager_wal_replicate.cpp
         wal.cpp
-        )
+)
 
 add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_HEADERS}

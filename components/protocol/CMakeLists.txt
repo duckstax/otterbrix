@@ -1,31 +1,10 @@
 project(protocol CXX)
 
 list(APPEND HEADER_${PROJECT_NAME}
-        base.cpp
-        base.hpp
-        CMakeLists.txt
-        forward.hpp
-        insert.cpp
-        insert.hpp
-        protocol.hpp
-        request_select.cpp
-        request_select.hpp
-        response_select.cpp
-        response_select.hpp
-)
+  find.hpp
 
 list(APPEND SOURCE_${PROJECT_NAME}
-        base.cpp
-        base.hpp
-        CMakeLists.txt
-        forward.hpp
-        insert.cpp
-        insert.hpp
-        protocol.hpp
-        request_select.cpp
-        request_select.hpp
-        response_select.cpp
-        response_select.hpp
+
 )
 
 

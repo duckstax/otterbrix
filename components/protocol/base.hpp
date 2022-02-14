@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <variant>
 
 #include <components/document/document.hpp>
 
@@ -22,8 +23,8 @@ enum class DataType {
     VARCHAR,
 };
 
-enum class statement_type {
-    error, // unused
+enum class statement_type : char {
+    error = 0x00, // unused
     create_database,
     create_collection,
     drop_collection,
@@ -37,27 +38,26 @@ enum class statement_type {
 
 // Base struct for every SQL statement
 struct statement_t {
-    statement_t(statement_type type);
+    statement_t(statement_type type, size_t size , const std::string& database, const std::string& collection)
+        : type_(type)
+        , size_(size+init_size_)
+        , database_(database)
+        , collection_(collection) {}
 
     virtual ~statement_t();
 
-    statement_type type() const;
+    ///    std::vector<Expr*>* hints;
+    size_t size() {
+        return size_;
+    }
 
-    bool isType(statement_type type) const;
 
-    // Shorthand for isType(type).
-    bool is(statement_type type) const;
-
-    // Length of the string in the SQL query string
-    std::size_t stringLength;
-
-    std::vector<Expr*>* hints;
-
-private:
     statement_type type_;
     std::string database_;
     std::string collection_;
-    components::document::document_t document_;
+private:
+    const size_t init_size_ {2};
+    const size_t size_ ;
 };
 
 enum class transaction_command : char {
@@ -72,12 +72,19 @@ struct transaction_statement : statement_t {
     transaction_command command;
 };
 
-struct find_t : statement_t {
+enum class  join_t { inner, full, left, right, cross, natural };
 
-    void to_msgpack(msgpack::object const& o){
+struct collection_ref_t {
 
-    }
-    template<typename Stream>
-    void to_msgpack(msgpack::packer<Stream>& o){}
-    void to_msgpack(msgpack::object::with_zone& o){}
+};
+
+struct join_definition_t {
+    join_definition_t();
+    virtual ~join_definition_t();
+
+    collection_ref_t* left;
+    collection_ref_t* right;
+    /// Expr* condition;
+
+    join_t type;
 };

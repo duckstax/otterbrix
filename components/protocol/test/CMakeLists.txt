@@ -3,7 +3,7 @@ project(test_protocol)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        test_wal.cpp
+
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
