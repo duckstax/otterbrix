@@ -34,10 +34,10 @@ std::size_t wrapper_result_update::modified_count() const {
 }
 
 py::object wrapper_result_update::upserted_id() const {
-    if (result.upserted_id().empty()) {
+    if (result.upserted_id().is_null()) {
         py::none();
     }
-    return py::str(result.upserted_id());
+    return py::str(result.upserted_id().to_string());
 }
 
 }
