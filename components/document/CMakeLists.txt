@@ -2,8 +2,9 @@ project(document)
 
 set( ${PROJECT_NAME}_HEADERS
         document.hpp
+        document_id.hpp
         document_view.hpp
-        index.hpp
+        structure.hpp
         core/array.hpp
         core/base.hpp
         core/deep_iterator.hpp
@@ -60,7 +61,9 @@ set( ${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
+        document_id.cpp
         document_view.cpp
+        structure.cpp
         core/array.cpp
         core/deep_iterator.cpp
         core/dict.cpp
