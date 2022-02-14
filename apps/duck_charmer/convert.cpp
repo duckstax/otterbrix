@@ -247,7 +247,6 @@ auto from_object(const document_view_t &document, uint32_t index) -> py::object 
 
 void update_document(const py::handle& source, document_t& target) {
     for (const py::handle key : source) {
-        //std::cerr << py::str(key).cast<std::string>()  << std::endl;
         update_document_inner(py::str(key).cast<std::string>(), source[key], target);
     }
 
@@ -256,7 +255,17 @@ void update_document(const py::handle& source, document_t& target) {
 
 auto to_pylist(const std::vector<std::string> &src) -> py::list {
     py::list res;
-    for (const auto &str : src) res.append(str);
+    for (const auto &str : src) {
+        res.append(str);
+    }
+    return res;
+}
+
+auto to_pylist(const std::vector<components::document::document_id_t>& src) -> py::list {
+    py::list res;
+    for (const auto &str : src) {
+        res.append(str.to_string_view());
+    }
     return res;
 }
 
