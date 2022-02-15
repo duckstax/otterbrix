@@ -8,13 +8,10 @@
 #include "writer.hpp"
 #include "slice_io.hpp"
 #include "path.hpp"
-#include "key_tree.hpp"
-#include "storage.hpp"
 
 using namespace document::impl;
 using document::slice_t;
 using document::alloc_slice_t;
-using document::key_tree_t;
 
 document::alloc_slice_t encoding_end(encoder_t &enc) {
     enc.end();
@@ -617,43 +614,6 @@ TEST_CASE("impl::encoder_t::snip") {
     value_t::dump(data);
 }
 
-TEST_CASE("impl::encoder_t::key_tree_t") {
-    const char* raw_str[] = {"cow",	"bull", "horse", "goat", "sheep", "donkey", "mule", "pig", "cat", "dog",
-                             "mouse", "rat", "hamster", "wolf", "fox", "bear", "tiger", "lion", "elephant", "monkey",
-                             "camel", "rabbit", "hare", "squirrel", "zebra", "rhino", "deer", "hedgehog"};
-    size_t n = sizeof(raw_str) / sizeof(char*);
-    std::vector<slice_t> strings(n);
-    size_t len = 0;
-    for (size_t i = 0; i < n; ++i) {
-        strings[i] = slice_t(raw_str[i]);
-        len += strings[i].size;
-    }
-
-    key_tree_t keys = key_tree_t::from_strings(strings);
-    std::vector<bool> ids(n + 1);
-    for (size_t i = 0; i < n; ++i) {
-        auto id = keys[strings[i]];
-        REQUIRE(id);
-        REQUIRE_FALSE(ids[id]);
-        ids[id] = true;
-
-        slice_t lookup = keys[id];
-        REQUIRE(lookup);
-        REQUIRE(lookup.buf);
-        REQUIRE(lookup == strings[i]);
-    }
-
-    REQUIRE_FALSE(keys[slice_t("")]);
-    REQUIRE_FALSE(keys[slice_t("ca")]);
-    REQUIRE_FALSE(keys[slice_t("cats")]);
-    REQUIRE(keys[slice_t("cat")] == 4);
-
-    REQUIRE_FALSE(keys[0].buf);
-    REQUIRE(keys[1].buf);
-    REQUIRE(keys[n].buf);
-    REQUIRE_FALSE(keys[n+1].buf);
-}
-
 TEST_CASE("impl::encoder_t::double encoding") {
     double d = M_PI;
     float f = 2.71828f;
@@ -706,11 +666,11 @@ TEST_CASE("impl::encoder_t::int encoding") {
 }
 
 
+/*
 TEST_CASE("JSON") {
 
     SECTION("incomplete") {
-        document::encoder_t enc;
-        REQUIRE(!enc.convert_json("{"));
+        REQUIRE(!document::impl::json_coder::from_json("{"));
         REQUIRE(enc.error() == document::error_code::json_error);
         REQUIRE(std::string(enc.error_message()) == "JSON error: incomplete JSON");
     }
@@ -740,3 +700,4 @@ TEST_CASE("JSON") {
     }
 
 }
+*/

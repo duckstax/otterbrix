@@ -3,7 +3,6 @@ project(test_document_base)
 set( ${PROJECT_NAME}_SOURCES
     test_api.cpp
     test_encoder.cpp
-    test_hash_tree.cpp
     test_mutable.cpp
     test_shared_keys.cpp
     test_support.cpp

@@ -1,8 +1,10 @@
 #include <catch2/catch.hpp>
-#include "storage.hpp"
 #include "temp_array.hpp"
 #include "slice_io.hpp"
 #include "bitmap.hpp"
+#include "concurrent_map.hpp"
+#include "small_vector.hpp"
+#include "writer.hpp"
 #include <future>
 
 using namespace document;

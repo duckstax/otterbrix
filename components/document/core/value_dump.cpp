@@ -1,7 +1,6 @@
 #include <stdio.h>
 
 #include <ostream>
-#include <iomanip>
 #include <map>
 #include <cmath>
 #include <optional>
@@ -9,6 +8,7 @@
 
 #include "doc.hpp"
 #include "pointer.hpp"
+#include "dict.hpp"
 
 namespace document { namespace impl {
 

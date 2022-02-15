@@ -11,7 +11,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/doc.hpp
         core/encoder.hpp
         core/internal.hpp
-        core/mutable.hpp
         core/path.hpp
         core/pointer.hpp
         core/shared_keys.hpp

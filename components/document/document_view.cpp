@@ -317,7 +317,7 @@ object_type document_view_t::get_type(uint32_t index) const {
 }
 
 object_handle document_view_t::get_value(offset_t offset, std::size_t size) const {
-    assert(offset + size > storage_->size());
+    assert(offset + size <= storage_->size());
     auto data = storage_->data() + offset;
     return msgpack::unpack(data, size);
 }
