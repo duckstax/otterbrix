@@ -25,12 +25,19 @@ struct entry_t final {
 
 template<class T>
 struct wal_entry_t final {
+    wal_entry_t(){}
     size_tt size_;
     T entry_;
+    crc32_t  last_crc32_;
+    log_number_t log_number_;
+    statement_type type_;
     crc32_t crc32_;
 };
 
 crc32_t pack(buffer_t& storage, char* data, size_t size);
+buffer_t read_payload(buffer_t& input, int index_start, int index_stop);
+crc32_t read_crc32(buffer_t& input, int index_start);
+size_tt read_size_impl(buffer_t& input, int index_start) ;
 
 template<class T>
 crc32_t pack(buffer_t& storage, crc32_t last_crc32, log_number_t log_number, T& data) {
@@ -47,16 +54,20 @@ crc32_t pack(buffer_t& storage, crc32_t last_crc32, log_number_t log_number, T& 
 }
 
 template<class T>
-void  unpack_v3(buffer_t& storage,wal_entry_t<T>& entry){
+void  unpack(buffer_t& storage,wal_entry_t<T>& entry){
     auto start = 0;
     auto finish = entry.size_;
     auto buffer = read_payload(storage, start, finish);
     msgpack::unpacked msg;
     msgpack::unpack(msg, buffer.data(), buffer.size());
     const auto& o = msg.get();
-    entry.entry_ = o.as<T>();
+    entry.last_crc32_ = o.via.array.ptr[0].as<crc32_t>();
+    entry.log_number_ = o.via.array.ptr[1].as<log_number_t>();
+    entry.type_ = static_cast<statement_type>(o.via.array.ptr[2].as<char>());
+    entry.entry_ = o.via.array.ptr[3].as<T>();
     entry.crc32_ = read_crc32(storage, entry.size_);
 }
+
 /*
 crc32_t pack(buffer_t& storage, entry_t&);
 

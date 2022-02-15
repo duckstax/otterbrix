@@ -58,7 +58,7 @@ wal_replicate_t::~wal_replicate_t() {
     ::close(fd_);
 }
 
-static size_tt read_size_impl(buffer_t& input, int index_start) {
+size_tt read_size_impl(buffer_t& input, int index_start) {
     size_tt size_tmp = 0;
     size_tmp = 0xff00 & size_tt(input[index_start] << 8);
     size_tmp |= 0x00ff & size_tt(input[index_start + 1]);

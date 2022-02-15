@@ -42,13 +42,14 @@ buffer_t read_payload(buffer_t& input, int index_start, int index_stop) {
     buffer_t buffer(input.begin() + index_start, input.begin() + index_stop);
     return buffer;
 }
-
+/*
 size_tt read_size_impl(buffer_t& input, int index_start) {
     size_tt size_tmp = 0;
     size_tmp = 0xff00 & size_tt(input[index_start] << 8);
     size_tmp |= 0x00ff & size_tt(input[index_start + 1]);
     return size_tmp;
 }
+ */
 
 size_tt read_size_impl(char* input, int index_start) {
     size_tt size_tmp = 0;

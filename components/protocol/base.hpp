@@ -43,6 +43,8 @@ struct statement_t {
         , database_(database)
         , collection_(collection) {}
 
+    statement_t() :type_(statement_type::error){}
+
     virtual ~statement_t();
 
     ///    std::vector<Expr*>* hints;
