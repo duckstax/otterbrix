@@ -2,7 +2,6 @@
 #include "temp_array.hpp"
 #include "slice_io.hpp"
 #include "bitmap.hpp"
-#include "concurrent_map.hpp"
 #include "small_vector.hpp"
 #include "writer.hpp"
 #include <future>
@@ -78,8 +77,8 @@ TEST_CASE("hash") {
         ++bucket[index];
     }
     int hist[size] = {0};
-    for (int i = 0; i < size; ++i) {
-        ++hist[bucket[i]];
+    for (int i : bucket) {
+        ++hist[i];
     }
     int total = 0;
     for (int i = size - 1; i >= 0; --i) {
@@ -89,111 +88,6 @@ TEST_CASE("hash") {
         }
     }
     REQUIRE(total == count_keys);
-}
-
-
-TEST_CASE("concurrent_map_t") {
-    SECTION("basic") {
-        concurrent_map_t map(2048);
-        REQUIRE(map.count() == 0);
-        REQUIRE(map.capacity() >= 2048);
-        REQUIRE(map.string_bytes_count() == 0);
-        REQUIRE(map.string_bytes_capacity() >= 2048 * 16);
-
-        REQUIRE(map.find("cat").key == nullptr);
-        auto cat = map.insert("cat", 0x1298);
-        REQUIRE(cat.key == "cat");
-        REQUIRE(cat.value == 0x1298);
-
-        auto found = map.find("cat");
-        REQUIRE(found.key == cat.key);
-        REQUIRE(found.value == cat.value);
-
-        found = map.insert("cat", 0xdead);
-        REQUIRE(found.key == cat.key);
-        REQUIRE(found.value == cat.value);
-
-        found = map.find("dog");
-        REQUIRE_FALSE(found.key);
-        REQUIRE_FALSE(map.remove("dog"));
-
-        for (int pass = 1; pass <= 2; ++pass) {
-            for (uint16_t i = 0; i < 2000; ++i) {
-                char keybuf[10];
-                sprintf(keybuf, "k-%04d", i);
-                auto result = (pass == 1) ? map.insert(keybuf, i) : map.find(keybuf);
-                REQUIRE(result.key == keybuf);
-                REQUIRE(result.value == i);
-            }
-        }
-
-        REQUIRE(map.remove("cat"));
-        found = map.find("cat");
-        REQUIRE_FALSE(found.key);
-        REQUIRE(map.count() == 2000);
-        REQUIRE(map.string_bytes_count() > 0);
-    }
-
-    SECTION("concurrency") {
-        constexpr int size = 6000;
-        concurrent_map_t map(size);
-        REQUIRE(map.count() == 0);
-        REQUIRE(map.capacity() >= size);
-        REQUIRE(map.string_bytes_capacity() >= 65535);
-
-        std::vector<std::string> keys;
-        for (int i = 0; i < size; ++i) {
-            char keybuf[10];
-            sprintf(keybuf, "%x", i);
-            keys.push_back(keybuf);
-        }
-
-        auto reader = [&](unsigned step) {
-            unsigned index = static_cast<unsigned>(random()) % size;
-            for (int n = 0; n < 2 * size; ++n) {
-                auto e = map.find(keys[index].c_str());
-                if (e.key) {
-                    REQUIRE(e.key == keys[index].c_str());
-                    REQUIRE(e.value == index);
-                }
-                index = (index + step) % size;
-            }
-        };
-
-        auto writer = [&](unsigned step, bool delete_too) {
-            unsigned const start_index = static_cast<unsigned>(random()) % size;
-            auto index = start_index;
-            for (int n = 0; n < size; n++) {
-                auto value = static_cast<uint16_t>(index & 0xFFFF);
-                auto e = map.insert(keys[index].c_str(), value);
-                if (e.key == null_slice) {
-                    throw std::runtime_error("concurrent_map_t overflow");
-                }
-                REQUIRE(e.key == keys[index].c_str());
-                REQUIRE(e.value == value);
-                index = (index + step) % size;
-            }
-            if (delete_too) {
-                index = start_index;
-                for (int n = 0; n < size; n++) {
-                    map.remove(keys[index].c_str());
-                    index = (index + step) % size;
-                }
-            }
-        };
-
-        auto f1 = std::async(reader, 7);
-        auto f2 = std::async(reader, 53);
-        auto f3 = std::async(writer, 23, true);
-        auto f4 = std::async(writer, 91, true);
-
-        f1.wait();
-        f2.wait();
-        f3.wait();
-        f4.wait();
-
-        REQUIRE(map.count() == 0);
-    }
 }
 
 
@@ -248,7 +142,7 @@ TEST_CASE("Base64 encode and decode") {
     std::vector<std::string> strings = {"a", "ab", "abc", "abcd", "abcde"};
     std::vector<std::string> encode_strings = {"YQ==", "YWI=", "YWJj", "YWJjZA==", "YWJjZGU="};
     size_t i = 0;
-    for (auto str : strings) {
+    for (const auto& str : strings) {
         auto encode_str = writer_t::encode_base64(static_cast<slice_t>(str));
         REQUIRE(encode_str == static_cast<slice_t>(encode_strings[i++]));
         auto decode_str = writer_t::decode_base64(static_cast<slice_t>(encode_str));

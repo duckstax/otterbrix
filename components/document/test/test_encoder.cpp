@@ -5,10 +5,12 @@
 #include "array.hpp"
 #include "dict.hpp"
 #include "json_coder.hpp"
+#include "encoder.hpp"
 #include "writer.hpp"
 #include "slice_io.hpp"
 #include "path.hpp"
 
+using namespace document;
 using namespace document::impl;
 using document::slice_t;
 using document::alloc_slice_t;
@@ -21,7 +23,7 @@ document::alloc_slice_t encoding_end(encoder_t &enc) {
     return res;
 }
 
-void require_hex(const alloc_slice_t &value, std::string compare_hex) {
+void require_hex(const alloc_slice_t &value, const std::string& compare_hex) {
     std::string hex;
     for (size_t i = 0; i < value.size; ++i) {
         char str[4];
@@ -176,7 +178,7 @@ TEST_CASE("impl::encoder_t::int") {
     req_uint(UINT64_MAX, "1FFF FFFF FFFF FFFF FF00 8005");
 
     for (int bits = 0; bits < 64; ++bits) {
-        int64_t i = 1LL << bits;
+        auto i = static_cast<int64_t>(1LL << bits);
         req_int(i);
         if (bits < 63) {
             req_int(-i);
@@ -348,7 +350,7 @@ TEST_CASE("impl::encoder_t::deep") {
 
 TEST_CASE("impl::encoder_t::json string") {
     encoder_t enc;
-    auto req_json = [&](std::string json, slice_t compare_value, std::string compare_error = std::string()) {
+    auto req_json = [&](std::string json, slice_t compare_value, const std::string& compare_error = std::string()) {
         json = std::string("[\"") + json + std::string("\"]");
         try {
             auto value = json_coder::from_json(enc, json);
@@ -666,38 +668,32 @@ TEST_CASE("impl::encoder_t::int encoding") {
 }
 
 
-/*
 TEST_CASE("JSON") {
 
     SECTION("incomplete") {
-        REQUIRE(!document::impl::json_coder::from_json("{"));
-        REQUIRE(enc.error() == document::error_code::json_error);
-        REQUIRE(std::string(enc.error_message()) == "JSON error: incomplete JSON");
+        try {
+            document::impl::json_coder::from_json("{");
+        } catch (const exception_t &exception) {
+            REQUIRE(exception.code == document::error_code::json_error);
+            REQUIRE(std::string(exception.what()) == "JSON error: incomplete JSON");
+        }
     }
 
     SECTION("no error with internal encoder") {
-        document::encoder_t enc;
-        REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == document::error_code::no_error);
-    }
-
-    SECTION("no error with json encoder") {
-        document::encoder_t enc(encode_format::json);
-        REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == document::error_code::no_error);
+        encoder_t enc;
+        REQUIRE(document::impl::json_coder::from_json("{}"));
     }
 
     SECTION("decode to json") {
-        document::encoder_t enc(encode_format::json);
+        json_encoder_t enc;
         enc.begin_dict();
-        enc.write_key("int");
+        enc.write_key(slice_t("int"));
         enc.write_int(100);
-        enc.write_key("str");
-        enc.write_string("abc");
+        enc.write_key(slice_t("str"));
+        enc.write_string(slice_t("abc"));
         enc.end_dict();
         auto data = enc.finish();
         REQUIRE(data.as_string() == R"r({"int":100,"str":"abc"})r");
     }
 
 }
-*/
