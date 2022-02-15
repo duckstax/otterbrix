@@ -5,7 +5,8 @@ list(APPEND HEADER_${PROJECT_NAME}
         )
 
 list(APPEND SOURCE_${PROJECT_NAME}
-
+base.cpp
+        insert_many.cpp
 )
 
 
@@ -22,6 +23,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::document
 )
 
 target_include_directories(

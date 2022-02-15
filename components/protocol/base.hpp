@@ -47,7 +47,6 @@ struct statement_t {
 
     ///    std::vector<Expr*>* hints;
 
-
     statement_type type() const {
         return type_;
     }
@@ -55,7 +54,6 @@ struct statement_t {
     statement_type type_;
     std::string database_;
     std::string collection_;
-
 };
 
 enum class transaction_command : char {

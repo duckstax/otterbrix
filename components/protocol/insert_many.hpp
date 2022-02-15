@@ -6,14 +6,14 @@
 
 struct insert_many_t : statement_t {
     insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_t> documents)
-        : statement_t(statement_type::insert_many,  database, collection)
+        : statement_t(statement_type::insert_many, database, collection)
         , documents_(std::move(documents)){};
     insert_many_t() = default;
     insert_many_t(const insert_many_t&) = default;
     insert_many_t& operator=(const insert_many_t&) = default;
     insert_many_t(insert_many_t&&) = default;
     insert_many_t& operator=(insert_many_t&&) = default;
-    ~insert_many_t() = default;
+    ~insert_many_t();
     std::list<components::document::document_t> documents_;
 };
 
