@@ -56,7 +56,7 @@ size_tt read_size_impl(char* input, int index_start) {
     size_tmp |= 0x00ff & (size_tt(input[index_start + 1]));
     return size_tmp;
 }
-
+/*
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
@@ -118,8 +118,8 @@ namespace msgpack {
         } // namespace adaptor
     }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack
-
-
+*/
+/*
 crc32_t pack(buffer_t& storage, entry_t& entry) {
     msgpack::sbuffer input;
     msgpack::pack(input, entry);
@@ -153,7 +153,7 @@ void unpack_v2(buffer_t& storage, wal_entry_t& entry) {
     entry.entry_ = o.as<entry_t>();
     entry.crc32_ = read_crc32(storage, entry.size_);
 }
-
+*/
 crc32_t pack(buffer_t& storage, char* input, size_t size) {
     auto last_crc32_ = crc32c::Crc32c(input, size);
     append_size(storage, size);

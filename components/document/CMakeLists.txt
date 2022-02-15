@@ -75,6 +75,7 @@ set(${PROJECT_NAME}_SOURCES
         core/value_dump.cpp
         json/json_delta.cpp
         json/json_coder.cpp
+        msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
         mutable/mutable_value.cpp

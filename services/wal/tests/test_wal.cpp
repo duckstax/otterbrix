@@ -8,21 +8,26 @@
 #include <msgpack.hpp>
 #include <string>
 
-#include <components/protocol/find.hpp>
+#include <components/protocol/insert_many.hpp>
+#include "manager_wal_replicate.hpp"
+#include "wal.hpp"
 
-
-TEST_CASE("find base") {
+TEST_CASE("insert_many_t test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<wdr_t>(log, 1, 1000);
-    auto allocate_byte = sizeof(wal_t);
-    auto allocate_byte_alignof = alignof(wal_t);
+    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(log, 1, 1000);
+    auto allocate_byte = sizeof(wal_replicate_t);
+    auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_t(nullptr, log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(nullptr, log, boost::filesystem::current_path());
 
+    const std::string database = "test_database";
+    const std::string collection = "test_collection";
+    std::list<components::document::document_t> documents ;
+    insert_many_t data(database,collection,documents) ;
 
-    wal->add_event(statement_packet_t&statement);
-
+    wal->insert_many(data);
+/*
     wal_entry_t entry;
 
     entry.size_ = wal->read_size(0);
@@ -40,5 +45,5 @@ TEST_CASE("find base") {
     msgpack::unpacked msg_1;
     msgpack::unpack(msg_1, entry.entry_.payload_.data(), entry.entry_.payload_.size());
     const auto& o_1 = msg_1.get();
-
+*/
 }

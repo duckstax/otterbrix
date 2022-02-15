@@ -24,6 +24,7 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::log
+        rocketjoe::protocol
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

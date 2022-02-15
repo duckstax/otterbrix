@@ -1,7 +1,8 @@
 project(protocol CXX)
 
 list(APPEND HEADER_${PROJECT_NAME}
-  find.hpp
+
+        )
 
 list(APPEND SOURCE_${PROJECT_NAME}
 
@@ -26,7 +27,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        "../../../"
+        insert_many.hpp
 )
 
 if(DEV_MODE)

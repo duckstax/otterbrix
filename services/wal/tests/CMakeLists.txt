@@ -12,9 +12,9 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::protocol
         rocketjoe::log
         rocketjoe::wal
-        rocketjoe_protocol
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

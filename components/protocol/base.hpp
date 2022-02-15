@@ -38,26 +38,24 @@ enum class statement_type : char {
 
 // Base struct for every SQL statement
 struct statement_t {
-    statement_t(statement_type type, size_t size , const std::string& database, const std::string& collection)
+    statement_t(statement_type type,  const std::string& database, const std::string& collection)
         : type_(type)
-        , size_(size+init_size_)
         , database_(database)
         , collection_(collection) {}
 
     virtual ~statement_t();
 
     ///    std::vector<Expr*>* hints;
-    size_t size() {
-        return size_;
-    }
 
+
+    statement_type type() const {
+        return type_;
+    }
 
     statement_type type_;
     std::string database_;
     std::string collection_;
-private:
-    const size_t init_size_ {2};
-    const size_t size_ ;
+
 };
 
 enum class transaction_command : char {

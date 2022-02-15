@@ -18,7 +18,7 @@ struct get_t {
     std::string key;
     MSGPACK_DEFINE(flags, key);
 };
-
+/*
 TEST_CASE("2 level serilizate to msgpack") {
     msgpack::sbuffer input;
     get_t req;
@@ -81,7 +81,7 @@ TEST_CASE("msgpack to bin") {
 
     REQUIRE(req_1.key == "key0");
     REQUIRE(req_1.flags == 0);
-}
+}*/
 /*
 TEST_CASE("wal add event") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
