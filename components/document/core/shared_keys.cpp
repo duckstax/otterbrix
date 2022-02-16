@@ -3,6 +3,7 @@
 #include "value.hpp"
 #include "array.hpp"
 #include "encoder.hpp"
+#include <iostream>
 
 namespace document { namespace impl {
 
@@ -51,7 +52,6 @@ bool key_t::operator< (const key_t &k) const noexcept {
 
 
 shared_keys_t::shared_keys_t()
-    : _table(2047)
 {}
 
 shared_keys_t::shared_keys_t(slice_t state_data)
@@ -116,9 +116,9 @@ alloc_slice_t shared_keys_t::state_data() const {
 }
 
 bool shared_keys_t::encode(slice_t str, int &key) const {
-    auto entry = _table.find(str);
-    if (_usually_true(entry.key != null_slice)) {
-        key = entry.value;
+    auto entry = _table.find(std::string(str));
+    if (_usually_true(entry != _table.end())) {
+        key = entry->second;
         return true;
     }
     return false;
@@ -137,15 +137,14 @@ bool shared_keys_t::encode_and_add(slice_t str, int &key) {
 }
 
 bool shared_keys_t::_add(slice_t str, int &key) {
-    auto value = uint16_t(_count);
-    auto entry = _table.insert(str, value);
-    if (!entry.key)
+    if (_table.find(std::string(str)) != _table.end()) {
         return false;
-    if (entry.value == value) {
-        _by_key[value] = entry.key;
-        ++_count;
     }
-    key = entry.value;
+    auto value = uint16_t(_count);
+    auto entry = _table.insert_or_assign(std::string(str), value).first;
+    _by_key[value] = entry->first;
+    ++_count;
+    key = entry->second;
     return true;
 }
 
@@ -214,7 +213,7 @@ void shared_keys_t::revert_to_count(size_t count) {
         return;
     }
     for (int key = _count - 1; key >= int(count); --key) {
-        _table.remove(_by_key[key]);
+        _table.erase(std::string(_by_key[key]));
         _by_key[key] = null_slice;
     }
     _count = unsigned(count);

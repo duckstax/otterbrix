@@ -27,8 +27,6 @@ set( ${PROJECT_NAME}_HEADERS
         mutable/value_slot.hpp
         support/better_assert.hpp
         support/bitmap.hpp
-        support/concurrent_arena.hpp
-        support/concurrent_map.hpp
         support/delimiter.hpp
         support/diff_match_patch.hpp
         support/endian.hpp
@@ -71,8 +69,6 @@ set(${PROJECT_NAME}_SOURCES
         mutable/value_slot.cpp
         support/better_assert.cpp
         support/bitmap.cpp
-        support/concurrent_arena.cpp
-        support/concurrent_map.cpp
         support/exception.cpp
         support/num_conversion.cpp
         support/parse_date.cpp

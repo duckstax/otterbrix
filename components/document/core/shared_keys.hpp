@@ -1,11 +1,11 @@
 #pragma once
 
 #include "ref_counted.hpp"
-#include "concurrent_map.hpp"
 #include <array>
 #include <mutex>
 #include <vector>
 #include "better_assert.hpp"
+#include "slice.hpp"
 
 namespace document { namespace impl {
 
@@ -87,7 +87,7 @@ private:
     unsigned _count {0};
     bool _in_transaction {true};
     mutable std::vector<platform_string_t> _platform_strings_by_key;
-    concurrent_map_t _table;
+    std::unordered_map<std::string, uint16_t> _table;
     std::array<slice_t, max_count> _by_key;
 };
 
