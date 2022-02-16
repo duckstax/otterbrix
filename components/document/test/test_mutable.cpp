@@ -3,6 +3,7 @@
 #include "mutable_dict.h"
 #include "slice_io.hpp"
 #include "encoder.hpp"
+#include "json_coder.hpp"
 
 using namespace document;
 using namespace document::impl;
@@ -663,6 +664,10 @@ TEST_CASE("mutable_dict_t with key and persistent_shared_key_st") {
 
 
 TEST_CASE("mutable_dict_t from file") {
+    {
+        auto data = json_coder::from_json(read_file("test/small-test.json"));
+        write_to_file(data, "test/small-test.rj");
+    }
     auto data = read_file("test/small-test.rj");
     auto doc = doc_t::from_slice(data, doc_t::trust_type::trusted);
     auto dog = doc->as_dict();
