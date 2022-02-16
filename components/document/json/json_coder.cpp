@@ -2,6 +2,8 @@
 #include "parse_date.hpp"
 #include "better_assert.hpp"
 #include "num_conversion.hpp"
+#include "array.hpp"
+#include "dict.hpp"
 #include <boost/json.hpp>
 #include <algorithm>
 #include <map>

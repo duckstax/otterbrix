@@ -1,7 +1,9 @@
 #include <catch2/catch.hpp>
 #include "path.hpp"
 #include "doc.hpp"
-#include "storage_impl.hpp"
+#include "shared_keys.hpp"
+#include "encoder.hpp"
+#include "json_coder.hpp"
 #include "slice_io.hpp"
 #include <limits.h>
 

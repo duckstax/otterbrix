@@ -5,16 +5,15 @@
 #include "array.hpp"
 #include "dict.hpp"
 #include "json_coder.hpp"
+#include "encoder.hpp"
 #include "writer.hpp"
 #include "slice_io.hpp"
 #include "path.hpp"
-#include "key_tree.hpp"
-#include "storage.hpp"
 
+using namespace document;
 using namespace document::impl;
 using document::slice_t;
 using document::alloc_slice_t;
-using document::key_tree_t;
 
 document::alloc_slice_t encoding_end(encoder_t &enc) {
     enc.end();
@@ -24,7 +23,7 @@ document::alloc_slice_t encoding_end(encoder_t &enc) {
     return res;
 }
 
-void require_hex(const alloc_slice_t &value, std::string compare_hex) {
+void require_hex(const alloc_slice_t &value, const std::string& compare_hex) {
     std::string hex;
     for (size_t i = 0; i < value.size; ++i) {
         char str[4];
@@ -179,7 +178,7 @@ TEST_CASE("impl::encoder_t::int") {
     req_uint(UINT64_MAX, "1FFF FFFF FFFF FFFF FF00 8005");
 
     for (int bits = 0; bits < 64; ++bits) {
-        int64_t i = 1LL << bits;
+        auto i = static_cast<int64_t>(1LL << bits);
         req_int(i);
         if (bits < 63) {
             req_int(-i);
@@ -351,7 +350,7 @@ TEST_CASE("impl::encoder_t::deep") {
 
 TEST_CASE("impl::encoder_t::json string") {
     encoder_t enc;
-    auto req_json = [&](std::string json, slice_t compare_value, std::string compare_error = std::string()) {
+    auto req_json = [&](std::string json, slice_t compare_value, const std::string& compare_error = std::string()) {
         json = std::string("[\"") + json + std::string("\"]");
         try {
             auto value = json_coder::from_json(enc, json);
@@ -617,43 +616,6 @@ TEST_CASE("impl::encoder_t::snip") {
     value_t::dump(data);
 }
 
-TEST_CASE("impl::encoder_t::key_tree_t") {
-    const char* raw_str[] = {"cow",	"bull", "horse", "goat", "sheep", "donkey", "mule", "pig", "cat", "dog",
-                             "mouse", "rat", "hamster", "wolf", "fox", "bear", "tiger", "lion", "elephant", "monkey",
-                             "camel", "rabbit", "hare", "squirrel", "zebra", "rhino", "deer", "hedgehog"};
-    size_t n = sizeof(raw_str) / sizeof(char*);
-    std::vector<slice_t> strings(n);
-    size_t len = 0;
-    for (size_t i = 0; i < n; ++i) {
-        strings[i] = slice_t(raw_str[i]);
-        len += strings[i].size;
-    }
-
-    key_tree_t keys = key_tree_t::from_strings(strings);
-    std::vector<bool> ids(n + 1);
-    for (size_t i = 0; i < n; ++i) {
-        auto id = keys[strings[i]];
-        REQUIRE(id);
-        REQUIRE_FALSE(ids[id]);
-        ids[id] = true;
-
-        slice_t lookup = keys[id];
-        REQUIRE(lookup);
-        REQUIRE(lookup.buf);
-        REQUIRE(lookup == strings[i]);
-    }
-
-    REQUIRE_FALSE(keys[slice_t("")]);
-    REQUIRE_FALSE(keys[slice_t("ca")]);
-    REQUIRE_FALSE(keys[slice_t("cats")]);
-    REQUIRE(keys[slice_t("cat")] == 4);
-
-    REQUIRE_FALSE(keys[0].buf);
-    REQUIRE(keys[1].buf);
-    REQUIRE(keys[n].buf);
-    REQUIRE_FALSE(keys[n+1].buf);
-}
-
 TEST_CASE("impl::encoder_t::double encoding") {
     double d = M_PI;
     float f = 2.71828f;
@@ -709,31 +671,26 @@ TEST_CASE("impl::encoder_t::int encoding") {
 TEST_CASE("JSON") {
 
     SECTION("incomplete") {
-        document::encoder_t enc;
-        REQUIRE(!enc.convert_json("{"));
-        REQUIRE(enc.error() == document::error_code::json_error);
-        REQUIRE(std::string(enc.error_message()) == "JSON error: incomplete JSON");
+        try {
+            document::impl::json_coder::from_json("{");
+        } catch (const exception_t &exception) {
+            REQUIRE(exception.code == document::error_code::json_error);
+            REQUIRE(std::string(exception.what()) == "JSON error: incomplete JSON");
+        }
     }
 
     SECTION("no error with internal encoder") {
-        document::encoder_t enc;
-        REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == document::error_code::no_error);
-    }
-
-    SECTION("no error with json encoder") {
-        document::encoder_t enc(encode_format::json);
-        REQUIRE(enc.convert_json("{}"));
-        REQUIRE(enc.error() == document::error_code::no_error);
+        encoder_t enc;
+        REQUIRE(document::impl::json_coder::from_json("{}"));
     }
 
     SECTION("decode to json") {
-        document::encoder_t enc(encode_format::json);
+        json_encoder_t enc;
         enc.begin_dict();
-        enc.write_key("int");
+        enc.write_key(slice_t("int"));
         enc.write_int(100);
-        enc.write_key("str");
-        enc.write_string("abc");
+        enc.write_key(slice_t("str"));
+        enc.write_string(slice_t("abc"));
         enc.end_dict();
         auto data = enc.finish();
         REQUIRE(data.as_string() == R"r({"int":100,"str":"abc"})r");
