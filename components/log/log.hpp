@@ -100,7 +100,6 @@ public:
 private:
     std::shared_ptr<spdlog::logger> logger_;
 };
-
 template<typename S, typename... Args>
 auto info(log_t& log, const S& format_str, Args&&... args) -> void {
     log.info(fmt::format(format_str, std::forward<Args>(args)...));
@@ -126,6 +125,11 @@ auto critical(log_t& log, const S& format_str, Args&&... args) -> void {
     log.critical(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
+template<typename S, typename... Args>
+auto trace(log_t& log,const S& format_str, Args&&... args) -> void {
+    log.trace(fmt::format(format_str, std::forward<Args>(args)...));
+}
+
 template<typename S>
 auto info(log_t& log, const S& format_str) -> void {
     log.info(format_str);
@@ -149,6 +153,11 @@ auto error(log_t& log, const S& format_str) -> void {
 template<typename S>
 auto critical(log_t& log, const S& format_str) -> void {
     log.critical(format_str);
+}
+
+template<typename S>
+auto trace(log_t& log,const S& format_str) -> void {
+    log.trace(format_str);
 }
 
 auto get_logger(const std::string&) -> log_t;

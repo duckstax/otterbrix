@@ -23,6 +23,7 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::cursor
         rocketjoe::session
+        rocketjoe::protocol
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

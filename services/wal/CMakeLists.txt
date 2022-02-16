@@ -1,7 +1,7 @@
 project(wal)
 
 set( ${PROJECT_NAME}_HEADERS
-        )
+)
 
 set(${PROJECT_NAME}_SOURCES
         dto.cpp
@@ -27,7 +27,13 @@ target_link_libraries(
         rocketjoe::protocol
 )
 
-target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
+target_include_directories(
+        rocketjoe_${PROJECT_NAME}
+        PRIVATE
+        dto.hpp
+        PUBLIC
+        wal.hpp
+        manager_wal_replicate.hpp
 )
 
 if (DEV_MODE)

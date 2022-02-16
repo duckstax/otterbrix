@@ -26,6 +26,7 @@ namespace duck_charmer {
         log_t log_;
         goblin_engineer::supervisor manager_database_;
         goblin_engineer::supervisor manager_dispatcher_;
+        goblin_engineer::supervisor manager_wal_;
         std::unique_ptr<duck_charmer::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
 } // namespace duck_charmer
