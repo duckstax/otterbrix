@@ -4,6 +4,7 @@
 #include "temp_array.hpp"
 #include "diff_match_patch.hpp"
 #include "num_conversion.hpp"
+#include "dict.hpp"
 #include <sstream>
 #include <unordered_set>
 #include "better_assert.hpp"
@@ -260,14 +261,14 @@ inline void json_delta_t::_patch_dict(const dict_t* NONNULL old, const dict_t* N
         _decoder->begin_dict(old);
         for (dict_t::iterator i(delta); i; ++i) {
             _decoder->write_key(i.key_string());
-            _apply(old->get(i.key()), i.value());
+            _apply(old->get(i.key()->to_string()), i.value());
         }
         _decoder->end_dict();
     } else {
         _decoder->begin_dict();
         unsigned delta_keys_used = 0;
         for (dict_t::iterator i(old); i; ++i) {
-            const value_t *value_delta = delta->get(i.key());
+            const value_t *value_delta = delta->get(i.key()->to_string());
             if (value_delta)
                 ++delta_keys_used;
             if (!is_delta_deletion(value_delta)) {
@@ -281,7 +282,7 @@ inline void json_delta_t::_patch_dict(const dict_t* NONNULL old, const dict_t* N
         }
         if (delta_keys_used < delta->count()) {
             for (dict_t::iterator i(delta); i; ++i) {
-                if (old->get(i.key()) == nullptr) {
+                if (old->get(i.key()->to_string()) == nullptr) {
                     _decoder->write_key(i.key_string());
                     _apply(nullptr, i.value());
                 }
