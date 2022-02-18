@@ -4,6 +4,7 @@
 #include <array>
 #include <mutex>
 #include <vector>
+#include <unordered_map>
 #include "better_assert.hpp"
 #include "slice.hpp"
 
