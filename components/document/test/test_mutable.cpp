@@ -1,8 +1,9 @@
 #include <catch2/catch.hpp>
 #include "mutable_array.h"
 #include "mutable_dict.h"
-#include "storage_impl.hpp"
 #include "slice_io.hpp"
+#include "encoder.hpp"
+#include "json_coder.hpp"
 
 using namespace document;
 using namespace document::impl;
@@ -96,10 +97,10 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(16)->as_int() == -9223372036854775807LL);
 
         mutable_array_t::iterator_t i1(ma);
-        for (uint32_t i = 0; i < size; ++i) {
+        for (auto type : types) {
             REQUIRE(i1);
             REQUIRE(i1.value() != nullptr);
-            REQUIRE(i1.value()->type() == types[i]);
+            REQUIRE(i1.value()->type() == type);
             ++i1;
         }
         REQUIRE_FALSE(i1);
@@ -663,6 +664,10 @@ TEST_CASE("mutable_dict_t with key and persistent_shared_key_st") {
 
 
 TEST_CASE("mutable_dict_t from file") {
+    {
+        auto data = json_coder::from_json(read_file("test/small-test.json"));
+        write_to_file(data, "test/small-test.rj");
+    }
     auto data = read_file("test/small-test.rj");
     auto doc = doc_t::from_slice(data, doc_t::trust_type::trusted);
     auto dog = doc->as_dict();
@@ -676,5 +681,4 @@ TEST_CASE("mutable_dict_t from file") {
     REQUIRE(achievement->get("name")->as_string() == slice_t("He alwais get home"));
     achievement->set("name", slice_t("No achievements"));
     REQUIRE(achievement->get("name")->as_string() == slice_t("No achievements"));
-
 }

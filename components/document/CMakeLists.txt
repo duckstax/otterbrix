@@ -12,14 +12,11 @@ set( ${PROJECT_NAME}_HEADERS
         core/doc.hpp
         core/encoder.hpp
         core/internal.hpp
-        core/mutable.hpp
         core/path.hpp
         core/pointer.hpp
         core/shared_keys.hpp
         core/slice_core.hpp
         core/slice.hpp
-        core/storage.hpp
-        core/storage_impl.hpp
         core/value.hpp
         json/json_delta.hpp
         json/json_coder.hpp
@@ -31,8 +28,6 @@ set( ${PROJECT_NAME}_HEADERS
         mutable/value_slot.hpp
         support/better_assert.hpp
         support/bitmap.hpp
-        support/concurrent_arena.hpp
-        support/concurrent_map.hpp
         support/delimiter.hpp
         support/diff_match_patch.hpp
         support/endian.hpp
@@ -51,13 +46,7 @@ set( ${PROJECT_NAME}_HEADERS
         support/temp_array.hpp
         support/varint.hpp
         support/writer.hpp
-        tree/hash_tree.hpp
-        tree/hash_tree_internal.hpp
-        tree/key_tree.hpp
-        tree/mutable_hash_tree.hpp
-        tree/mutable_node.hpp
-        tree/node_ref.hpp
-        )
+)
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
@@ -73,7 +62,6 @@ set(${PROJECT_NAME}_SOURCES
         core/pointer.cpp
         core/shared_keys.cpp
         core/slice_core.cpp
-        core/storage.cpp
         core/value.cpp
         core/value_dump.cpp
         json/json_delta.cpp
@@ -84,8 +72,6 @@ set(${PROJECT_NAME}_SOURCES
         mutable/value_slot.cpp
         support/better_assert.cpp
         support/bitmap.cpp
-        support/concurrent_arena.cpp
-        support/concurrent_map.cpp
         support/exception.cpp
         support/num_conversion.cpp
         support/parse_date.cpp
@@ -95,10 +81,6 @@ set(${PROJECT_NAME}_SOURCES
         support/string_table.cpp
         support/varint.cpp
         support/writer.cpp
-        tree/hash_tree.cpp
-        tree/key_tree.cpp
-        tree/mutable_hash_tree.cpp
-        tree/node_ref.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -125,7 +107,6 @@ target_include_directories(
         json
         mutable
         support
-        tree
 )
 
 if (DEV_MODE)
