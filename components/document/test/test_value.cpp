@@ -1,9 +1,11 @@
 #include <catch2/catch.hpp>
-#include "storage.hpp"
 #include "varint.hpp"
 #include "pointer.hpp"
+#include "array.hpp"
+#include "dict.hpp"
 
 using namespace document;
+using document::impl::value_type;
 
 TEST_CASE("value_t") {
 
