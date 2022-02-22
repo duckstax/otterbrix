@@ -42,18 +42,18 @@ namespace duck_charmer {
     public:
         /// blocking method
         wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
-        auto create_database(duck_charmer::session_t& session, const std::string& name) -> wrapper_database_ptr ;
-        auto create_collection(duck_charmer::session_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
-        result_drop_collection drop_collection(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
-        auto insert_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
-        auto insert_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
-        auto find(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
-        auto find_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_find_one&;
-        auto delete_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
-        auto delete_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
-        auto update_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
-        auto update_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
-        result_size size(duck_charmer::session_t& session, const std::string& database, const std::string& collection);
+        auto create_database(duck_charmer::session_id_t& session, const std::string& name) -> wrapper_database_ptr ;
+        auto create_collection(duck_charmer::session_id_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
+        result_drop_collection drop_collection(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection);
+        auto insert_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t &document) -> result_insert_one&;
+        auto insert_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many&;
+        auto find(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr;
+        auto find_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_find_one&;
+        auto delete_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
+        auto delete_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> result_delete&;
+        auto update_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
+        auto update_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update&;
+        result_size size(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection);
 
     protected:
         auto add_actor_impl(goblin_engineer::actor) -> void override{
@@ -77,16 +77,16 @@ namespace duck_charmer {
 
     private:
         /// async method
-        auto create_database_finish(duck_charmer::session_t&,services::storage::database_create_result) -> void;
-        auto create_collection_finish(duck_charmer::session_t& session,services::storage::collection_create_result) -> void;
-        auto drop_collection_finish(duck_charmer::session_t& session,result_drop_collection result) -> void;
-        auto insert_one_finish(duck_charmer::session_t& session,result_insert_one result) -> void;
-        auto insert_many_finish(duck_charmer::session_t& session,result_insert_many result) -> void;
-        auto find_finish(duck_charmer::session_t& session,components::cursor::cursor_t*) -> void;
-        auto find_one_finish(duck_charmer::session_t& session,result_find_one result) -> void;
-        auto delete_finish(duck_charmer::session_t& session,result_delete result) -> void;
-        auto update_finish(duck_charmer::session_t& session,result_update result) -> void;
-        auto size_finish(duck_charmer::session_t& session,result_size result) -> void;
+        auto create_database_finish(duck_charmer::session_id_t&,services::storage::database_create_result) -> void;
+        auto create_collection_finish(duck_charmer::session_id_t& session,services::storage::collection_create_result) -> void;
+        auto drop_collection_finish(duck_charmer::session_id_t& session,result_drop_collection result) -> void;
+        auto insert_one_finish(duck_charmer::session_id_t& session,result_insert_one result) -> void;
+        auto insert_many_finish(duck_charmer::session_id_t& session,result_insert_many result) -> void;
+        auto find_finish(duck_charmer::session_id_t& session,components::cursor::cursor_t*) -> void;
+        auto find_one_finish(duck_charmer::session_id_t& session,result_find_one result) -> void;
+        auto delete_finish(duck_charmer::session_id_t& session,result_delete result) -> void;
+        auto update_finish(duck_charmer::session_id_t& session,result_update result) -> void;
+        auto size_finish(duck_charmer::session_id_t& session,result_size result) -> void;
 
         void init() {
             i = 0;
@@ -108,8 +108,8 @@ namespace duck_charmer {
         std::mutex output_mtx_;
         spin_lock input_mtx_;
         std::condition_variable cv_;
-        duck_charmer::session_t input_session_;
-        duck_charmer::session_t output_session_;
+        duck_charmer::session_id_t input_session_;
+        duck_charmer::session_id_t output_session_;
         std::variant<
             result_insert_one,
             result_insert_many,

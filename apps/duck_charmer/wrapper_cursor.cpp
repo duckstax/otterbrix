@@ -7,7 +7,7 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-wrapper_cursor::wrapper_cursor(components::session::session_t session, wrapper_cursor::pointer cursor)
+wrapper_cursor::wrapper_cursor(components::session::session_id_t session, wrapper_cursor::pointer cursor)
         : session_(session)
         , ptr_(cursor)
         , dispatcher_(goblin_engineer::address_t::empty_address()) {

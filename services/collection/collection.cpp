@@ -3,8 +3,11 @@
 #include "components/document/index.hpp"
 #include "components/document/mutable/mutable_array.h"
 #include "components/document/mutable/mutable_dict.h"
-#include "protocol/insert.hpp"
-#include "protocol/request_select.hpp"
+#include "protocol/insert_many.hpp"
+
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 using ::document::impl::mutable_array_t;
 using ::document::impl::mutable_dict_t;
@@ -105,7 +108,7 @@ namespace services::storage {
         storage_.clear();
     }
 
-    auto collection_t::size(session_t& session) -> void {
+    auto collection_t::size(session_id_t& session) -> void {
         log_.debug("collection {}::size", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -115,7 +118,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "size_finish", session, result);
     }
 
-    void collection_t::insert_one(session_t& session, document_t& document) {
+    void collection_t::insert_one(session_id_t& session, document_t& document) {
         log_.debug("collection_t::insert_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -125,7 +128,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
     }
 
-    void collection_t::insert_many(session_t& session, std::list<document_t>& documents) {
+    void collection_t::insert_many(session_id_t& session, std::list<document_t>& documents) {
         log_.debug("collection_t::insert_many : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -143,7 +146,7 @@ namespace services::storage {
         }
     }
 
-    auto collection_t::find(const session_t& session, find_condition_ptr cond) -> void {
+    auto collection_t::find(const session_id_t& session, find_condition_ptr cond) -> void {
         log_.debug("collection::find : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -155,7 +158,7 @@ namespace services::storage {
         }
     }
 
-    void collection_t::find_one(const session_t& session, find_condition_ptr cond) {
+    void collection_t::find_one(const session_id_t& session, find_condition_ptr cond) {
         log_.debug("collection::find_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -165,7 +168,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
     }
 
-    auto collection_t::delete_one(const session_t& session, find_condition_ptr cond) -> void {
+    auto collection_t::delete_one(const session_id_t& session, find_condition_ptr cond) -> void {
         log_.debug("collection::delete_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -175,7 +178,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
-    auto collection_t::delete_many(const session_t& session, find_condition_ptr cond) -> void {
+    auto collection_t::delete_many(const session_id_t& session, find_condition_ptr cond) -> void {
         log_.debug("collection::delete_many : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -185,7 +188,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
-    auto collection_t::update_one(const session_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void {
+    auto collection_t::update_one(const session_id_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void {
         log_.debug("collection::update_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -195,7 +198,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
-    auto collection_t::update_many(const session_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void {
+    auto collection_t::update_many(const session_id_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void {
         log_.debug("collection::update_many : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -205,7 +208,7 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
-    void collection_t::drop(const session_t& session) {
+    void collection_t::drop(const session_id_t& session) {
         log_.debug("collection::drop : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -579,7 +582,7 @@ namespace services::storage {
         }
     }
 
-    void collection_t::close_cursor(session_t& session) {
+    void collection_t::close_cursor(session_id_t& session) {
         cursor_storage_.erase(session);
     }
 

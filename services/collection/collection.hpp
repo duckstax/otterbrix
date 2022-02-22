@@ -8,7 +8,7 @@
 #include "log/log.hpp"
 
 #include "protocol/base.hpp"
-#include "protocol/forward.hpp"
+#include "protocol/insert_many.hpp"
 
 #include "components/cursor/cursor.hpp"
 #include "components/document/document.hpp"
@@ -65,17 +65,17 @@ namespace services::storage {
         collection_t(goblin_engineer::supervisor_t*, std::string name, log_t& log);
         ~collection_t();
 
-        auto size(session_t& session) -> void;
-        void insert_one(session_t& session_t, document_t& document);
-        void insert_many(session_t& session, std::list<document_t>& documents);
-        auto find(const session_t& session, find_condition_ptr cond) -> void;
-        auto find_one(const session_t& session, find_condition_ptr cond) -> void;
-        auto delete_one(const session_t& session, find_condition_ptr cond) -> void;
-        auto delete_many(const session_t& session, find_condition_ptr cond) -> void;
-        auto update_one(const session_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void;
-        auto update_many(const session_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void;
-        void drop(const session_t& session);
-        void close_cursor(session_t& session);
+        auto size(session_id_t& session) -> void;
+        void insert_one(session_id_t& session_t, document_t& document);
+        void insert_many(session_id_t& session, std::list<document_t>& documents);
+        auto find(const session_id_t& session, find_condition_ptr cond) -> void;
+        auto find_one(const session_id_t& session, find_condition_ptr cond) -> void;
+        auto delete_one(const session_id_t& session, find_condition_ptr cond) -> void;
+        auto delete_many(const session_id_t& session, find_condition_ptr cond) -> void;
+        auto update_one(const session_id_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void;
+        auto update_many(const session_id_t& session, find_condition_ptr cond, const document_t& update, bool upsert) -> void;
+        void drop(const session_id_t& session);
+        void close_cursor(session_id_t& session);
 
     private:
         std::string gen_id() const;
@@ -106,7 +106,7 @@ namespace services::storage {
         goblin_engineer::address_t database_;
         index_t index_;
         storage_t storage_;
-        std::unordered_map<session_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
+        std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
         removed_data_t removed_data_;
 
