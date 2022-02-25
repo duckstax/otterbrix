@@ -30,9 +30,10 @@ namespace components::btree {
             msgpack::object_map msg_dict{dict->count(), new msgpack::object_kv[dict->count()]};
             int i = 0;
             for (auto it = dict->begin(); it; ++it) {
-                msg_dict.ptr[i].key = msgpack::object(std::string_view(it.key()->to_string()));
-//                auto *s = new std::string(it.key()->to_string());
-//                msg_dict.ptr[i].key = msgpack::object(s->data());
+                //todo kick memory leak
+                //msg_dict.ptr[i].key = msgpack::object(std::string_view(it.key()->to_string()));
+                auto *s = new std::string(it.key()->to_string());
+                msg_dict.ptr[i].key = msgpack::object(s->data());
                 msg_dict.ptr[i].val = to_msgpack_(it.value());
                 ++i;
             }
@@ -94,7 +95,6 @@ namespace components::btree {
         auto structure = to_msgpack_(document->structure);
         msgpack::type::tuple<std::string, msgpack::object> src(document->data.data(), structure);
         msgpack::pack(buffer, src);
-        std::cerr << structure << std::endl;
         return buffer;
     }
 
