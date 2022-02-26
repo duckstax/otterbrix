@@ -22,7 +22,7 @@ namespace components::btree {
         document_data_t data;
 
         document_t();
-        document_t(document_structure_t structure, const std::string &data);
+        document_t(document_structure_t structure, const msgpack::sbuffer &data);
 
         bool update(const input_document_t& update);
         void commit();

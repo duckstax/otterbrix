@@ -49,6 +49,8 @@ namespace components::btree {
             return msgpack_object_(msg_array);
         } else if (structure->is_unsigned()) {
             return msgpack::object(structure->as_unsigned());
+        } else if (structure->is_int()) {
+            return msgpack::object(structure->as_int());
         }
         return {};
     }
@@ -62,6 +64,8 @@ namespace components::btree {
                 auto val = msg_dict.ptr[i].val;
                 if (val.type == msgpack::type::object_type::POSITIVE_INTEGER) {
                     dict->set(key, val.as<uint64_t>());
+                } else if (val.type == msgpack::type::object_type::NEGATIVE_INTEGER) {
+                    dict->set(key, val.as<int64_t>());
                 } else {
                     auto value = to_structure_(val);
                     if (value) {
@@ -77,6 +81,8 @@ namespace components::btree {
                 auto val = msg_array.ptr[i];
                 if (val.type == msgpack::type::object_type::POSITIVE_INTEGER) {
                     array->append(val.as<uint64_t>());
+                } else if (val.type == msgpack::type::object_type::NEGATIVE_INTEGER) {
+                    array->append(val.as<int64_t>());
                 } else {
                     auto value = to_structure_(val);
                     if (value) {
@@ -90,19 +96,19 @@ namespace components::btree {
     }
 
 
-    msgpack::sbuffer serialize(const document_unique_ptr& document) {
-        msgpack::sbuffer buffer;
+    serialized_document_t serialize(const document_unique_ptr& document) {
+        serialized_document_t serialized_document;
         auto structure = to_msgpack_(document->structure);
-        msgpack::type::tuple<std::string, msgpack::object> src(document->data.data(), structure);
-        msgpack::pack(buffer, src);
-        return buffer;
+        msgpack::pack(serialized_document.structure, structure);
+        serialized_document.data.write(document->data.data(), document->data.size());
+        return serialized_document;
     }
 
-    document_unique_ptr deserialize(const msgpack::sbuffer& buffer) {
-        auto deserialized_handle = msgpack::unpack(buffer.data(), buffer.size());
-        auto deserialized = deserialized_handle.get();
-        auto dst = deserialized.as<msgpack::type::tuple<std::string, msgpack::object>>();
-        return std::make_unique<document_t>(to_structure_(dst.get<1>())->as_dict()->as_mutable(), dst.get<0>());
+    document_unique_ptr deserialize(const serialized_document_t& serialized_document) {
+        auto deserialized_structure_handle = msgpack::unpack(serialized_document.structure.data(), serialized_document.structure.size());
+        auto deserialized_structure = deserialized_structure_handle.get();
+        auto msg_structure = deserialized_structure.as<msgpack::object>();
+        return std::make_unique<document_t>(to_structure_(msg_structure)->as_dict()->as_mutable(), serialized_document.data);
     }
 
 }

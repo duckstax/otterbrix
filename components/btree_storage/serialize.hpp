@@ -3,7 +3,12 @@
 
 namespace components::btree {
 
-    msgpack::sbuffer serialize(const document_unique_ptr& document);
-    document_unique_ptr deserialize(const msgpack::sbuffer& buffer);
+    struct serialized_document_t {
+        msgpack::sbuffer structure;
+        msgpack::sbuffer data;
+    };
+
+    serialized_document_t serialize(const document_unique_ptr& document);
+    document_unique_ptr deserialize(const serialized_document_t& serialized_document);
 
 }
