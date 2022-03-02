@@ -146,6 +146,11 @@ namespace components::btree {
         : structure(mutable_dict_t::new_dict()) {
     }
 
+    document_t::document_t(document_structure_t structure, const msgpack::sbuffer& data)
+        : structure(std::move(structure)) {
+        this->data.write(data.data(), data.size());
+    }
+
     bool document_t::update(const input_document_t& update) {
         for (auto it_update = update.begin(); it_update; ++it_update) {
             auto key_update = static_cast<std::string>(it_update.key()->as_string());
