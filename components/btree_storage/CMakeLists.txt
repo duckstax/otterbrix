@@ -3,11 +3,13 @@ set(CURRENT_TARGET btree_storage)
 list(APPEND CURRENT_TARGET_HEADERS
         btree_storage.hpp
         range.hpp
+        serialize.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
         btree_storage.cpp
         range.cpp
+        serialize.cpp
 )
 
 add_library(rocketjoe_${CURRENT_TARGET}
@@ -24,3 +26,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::document
 )
+
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif()
