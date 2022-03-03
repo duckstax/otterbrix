@@ -58,7 +58,8 @@ namespace services::dispatcher {
     dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, goblin_engineer::address_t mdb,goblin_engineer::address_t mwal , log_t& log, std::string name)
         : goblin_engineer::abstract_service(manager_database, std::move(name))
         , log_(log.clone())
-        , mdb_(mdb) {
+        , mdb_(mdb)
+        , mwal_(mwal) {
         log_.trace("dispatcher_t::dispatcher_t name:{}", type());
         add_handler(manager_database::create_database, &dispatcher_t::create_database);
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
@@ -185,8 +186,8 @@ namespace services::dispatcher {
     void dispatcher_t::insert_many_finish(components::session::session_id_t& session, result_insert_many& result) {
         log_.debug("dispatcher_t::insert_many_finish session: {}", session.data());
         auto&s = ::find(session_to_address_,session);
-        goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
         goblin_engineer::send(address_book("wal"), dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
+        goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
         ::remove(session_to_address_,session);
     }
     void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_t& condition, goblin_engineer::address_t address) {
@@ -311,7 +312,7 @@ namespace services::dispatcher {
 
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
         trace(log_,"manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
-        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"), log_, std::move(name));
+        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"),address_book("manager_wal"), log_, std::move(name));
         std::string type(address.type().data(), address.type().size());
         trace(log_,"address: {} pointer: {}", type, address.get());
         dispatcher_to_address_book_.emplace(type, address);

@@ -12,7 +12,7 @@
 
 class wal_replicate_t final : public goblin_engineer::abstract_service {
 public:
-    wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
+    wal_replicate_t(goblin_engineer::supervisor_t* manager, boost::filesystem::path path,log_t& log);
     void create_database( std::string& name){}
     void create_collection( std::string& database_name, std::string& collections_name){}
     void drop_collection( std::string& database_name, std::string& collection_name){}

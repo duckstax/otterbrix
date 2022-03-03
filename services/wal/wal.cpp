@@ -29,7 +29,7 @@ auto open_file(boost::filesystem::path path) {
     return fd_;
 }
 
-wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
+wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager, boost::filesystem::path path,log_t& log)
     : goblin_engineer::abstract_service(manager, "wal")
     , log_(log.clone())
     , path_(std::move(path)) {

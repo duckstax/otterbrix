@@ -12,13 +12,15 @@ namespace duck_charmer {
     using services::dispatcher::manager_dispatcher_t;
     constexpr static char* name_dispatcher = "dispatcher";
     spaces::spaces() {
-        std::string log_dir("/tmp/docker_logs/");
+        std::string log_dir("/tmp/");
         log_ = initialization_logger("duck_charmer", log_dir);
         log_.set_level(log_t::level::trace);
         trace(log_, "spaces::spaces()");
+        boost::filesystem::path current_path = boost::filesystem::current_path();
 
         trace(log_, "manager_wal start");
-        manager_wal_ = goblin_engineer::make_manager_service<manager_wal_replicate_t>(log_, 1, 1000);
+        manager_wal_ = goblin_engineer::make_manager_service<manager_wal_replicate_t>(current_path,log_, 1, 1000);
+        goblin_engineer::send(manager_wal_, goblin_engineer::address_t::empty_address(), "create" );
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_database start");
@@ -30,6 +32,8 @@ namespace duck_charmer {
         trace(log_, "manager_dispatcher finish");
 
         wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_, name_dispatcher);
+        goblin_engineer::link(manager_wal_,manager_database_);
+        goblin_engineer::link(manager_wal_,manager_dispatcher_);
         goblin_engineer::link(manager_database_, manager_dispatcher_);
         goblin_engineer::send(manager_dispatcher_, goblin_engineer::address_t::empty_address(), "create", components::session::session_id_t(), std::string(name_dispatcher));
         trace(log_, "manager_dispatcher create dispatcher");
