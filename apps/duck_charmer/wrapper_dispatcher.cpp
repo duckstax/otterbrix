@@ -235,8 +235,9 @@ namespace duck_charmer {
         notify();
     }
 
+
     auto wrapper_dispatcher_t::insert_one_finish(duck_charmer::session_id_t& session,result_insert_one result) -> void {
-        log_.trace("wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().size());
+        log_.trace("wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().is_null() ? 0 : 1);
         intermediate_store_ = result;
         input_session_ = session;
         notify();

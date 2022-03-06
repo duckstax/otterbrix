@@ -1,6 +1,7 @@
 #include "document.hpp"
 #include "mutable/mutable_dict.h"
 #include "document/json/json_coder.hpp"
+#include "document_id.hpp"
 #include <iostream>
 
 using ::document::impl::mutable_array_t;
