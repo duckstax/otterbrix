@@ -33,22 +33,22 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_size()
-                          : result_size(size_());
+                      ? result_size()
+                      : result_size(size_());
         goblin_engineer::send(dispatcher, address(), "size_finish", session, result);
     }
 
-    void collection_t::insert_one(session_t& session, document_t& document) {
+    void collection_t::insert_one(session_t& session, document_ptr& document) {
         log_.debug("collection_t::insert_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_insert_one()
-                          : result_insert_one(insert_(document));
+                      ? result_insert_one()
+                      : result_insert_one(insert_(document));
         goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
     }
 
-    void collection_t::insert_many(session_t& session, std::list<document_t>& documents) {
+    void collection_t::insert_many(session_t& session, std::list<document_ptr> &documents) {
         log_.debug("collection_t::insert_many : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
@@ -83,8 +83,8 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_find_one()
-                          : search_one_(cond);
+                      ? result_find_one()
+                      : search_one_(cond);
         goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
     }
 
@@ -93,8 +93,8 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_delete()
-                          : delete_one_(cond);
+                      ? result_delete()
+                      : delete_one_(cond);
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
@@ -103,28 +103,28 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_delete()
-                          : delete_many_(cond);
+                      ? result_delete()
+                      : delete_many_(cond);
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
-    auto collection_t::update_one(const session_t& session, const find_condition_ptr& cond, const document_t& update, bool upsert) -> void {
+    auto collection_t::update_one(const session_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
         log_.debug("collection::update_one : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_update()
-                          : update_one_(cond, update, upsert);
+                      ? result_update()
+                      : update_one_(cond, update, upsert);
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
-    auto collection_t::update_many(const session_t& session, const find_condition_ptr& cond, const document_t& update, bool upsert) -> void {
+    auto collection_t::update_many(const session_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
         log_.debug("collection::update_many : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                          ? result_update()
-                          : update_many_(cond, update, upsert);
+                      ? result_update()
+                      : update_many_(cond, update, upsert);
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
@@ -135,12 +135,13 @@ namespace services::storage {
         goblin_engineer::send(dispatcher, address(), "drop_collection_finish_collection", session, result_drop_collection(drop_()), std::string(database_.type()), std::string(type()));
     }
 
-    document_id_t collection_t::insert_(const document_t& document, int version) {
-        auto id = document_id_t(document.get_string("_id"));
+    document_id_t collection_t::insert_(const document_ptr&document) {
+        document_view_t view(document);
+        auto id = document_id_t(view.get_string("_id"));
         if (storage_.contains(id)) {
             //todo error primary key
         } else {
-            storage_.insert_or_assign(id, make_document(document, version));
+            storage_.insert_or_assign(id, document);
             return id;
         }
         return document_id_t::null_id();
@@ -149,7 +150,7 @@ namespace services::storage {
     document_view_t collection_t::get_(const document_id_t& id) const {
         if (storage_.contains(id)) {
             const auto &doc = storage_.at(id);
-            return document_view_t(doc->structure, &doc->data);
+            return document_view_t(doc);
         } else {
             //todo error not valid id
         }
@@ -171,9 +172,8 @@ namespace services::storage {
     result_find collection_t::search_(const find_condition_ptr& cond) {
         result_find::result_t res;
         for (auto &it : storage_) {
-            auto doc = get_(it.first);
-            if (!cond || cond->is_fit(doc)) {
-                res.push_back(doc);
+            if (!cond || cond->is_fit(it.second)) {
+                res.push_back(document_view_t(it.second));
             }
         }
         return result_find(std::move(res));
@@ -181,9 +181,8 @@ namespace services::storage {
 
     result_find_one collection_t::search_one_(const find_condition_ptr& cond) {
         for (auto &it : storage_) {
-            auto doc = get_(it.first);
-            if (!cond || cond->is_fit(doc)) {
-                return result_find_one(doc);
+            if (!cond || cond->is_fit(it.second)) {
+                return result_find_one(document_view_t(it.second));
             }
         }
         return result_find_one();
@@ -212,13 +211,13 @@ namespace services::storage {
         return result_delete(std::move(deleted));
     }
 
-    result_update collection_t::update_one_(const find_condition_ptr& cond, const document_t& update, bool upsert) {
+    result_update collection_t::update_one_(const find_condition_ptr& cond, const document_ptr& update, bool upsert) {
         auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
             auto res = update_(id, update, true)
-                           ? result_update({id}, {})
-                           : result_update({}, {id});
+                       ? result_update({id}, {})
+                       : result_update({}, {id});
             return res;
         }
         if (upsert) {
@@ -227,7 +226,7 @@ namespace services::storage {
         return result_update();
     }
 
-    result_update collection_t::update_many_(const find_condition_ptr& cond, const document_t& update, bool upsert) {
+    result_update collection_t::update_many_(const find_condition_ptr& cond, const document_ptr& update, bool upsert) {
         result_update::result_t modified;
         result_update::result_t nomodified;
         auto finded_docs = search_(cond);
@@ -249,10 +248,10 @@ namespace services::storage {
         storage_.erase(storage_.find(id));
     }
 
-    bool collection_t::update_(const document_id_t& id, const document_t& update, bool is_commit) {
+    bool collection_t::update_(const document_id_t& id, const document_ptr& update, bool is_commit) {
         auto &document = storage_.at(id);
         if (document) {
-            if (document->update(update) && is_commit) {
+            if (document->update(*update) && is_commit) {
                 document->commit();
                 return true;
             }
@@ -260,9 +259,11 @@ namespace services::storage {
         return false;
     }
 
-    document_t collection_t::update2insert(const document_t& update) const {
+    document_ptr collection_t::update2insert(const document_ptr& update) const {
         ::document::impl::value_t* doc = mutable_dict_t::new_dict().detach();
-        for (auto it = update.begin(); it; ++it) {
+        document_view_t view(update);
+        auto update_dict = view.to_dict();
+        for (auto it = update_dict->begin(); it; ++it) {
             auto key = static_cast<std::string_view>(it.key()->as_string());
             if (key == "$set" || key == "$inc") {
                 auto values = it.value()->as_dict();
@@ -299,8 +300,8 @@ namespace services::storage {
                 }
             }
         }
-        doc->as_dict()->as_mutable()->set("_id", update.get_string("_id"));
-        return document_t(doc->as_dict(), true);
+        doc->as_dict()->as_mutable()->set("_id", view.get_string("_id"));
+        return components::document::make_document(doc->as_dict());
     }
 
     void collection_t::close_cursor(session_t& session) {
@@ -308,12 +309,12 @@ namespace services::storage {
     }
 
 #ifdef DEV_MODE
-    void collection_t::insert_test(document_t&& doc) {
-        insert_(std::move(doc));
+    void collection_t::insert_test(const document_ptr &doc) {
+        insert_(doc);
     }
 
     result_find collection_t::find_test(find_condition_ptr cond) {
-        return search_(std::move(cond));
+        return search_(cond);
     }
 
     std::size_t collection_t::size_test() const {
@@ -325,19 +326,19 @@ namespace services::storage {
     }
 
     result_delete collection_t::delete_one_test(find_condition_ptr cond) {
-        return delete_one_(std::move(cond));
+        return delete_one_(cond);
     }
 
     result_delete collection_t::delete_many_test(find_condition_ptr cond) {
-        return delete_many_(std::move(cond));
+        return delete_many_(cond);
     }
 
-    result_update collection_t::update_one_test(find_condition_ptr cond, const document_t& update, bool upsert) {
-        return update_one_(std::move(cond), update, upsert);
+    result_update collection_t::update_one_test(find_condition_ptr cond, const document_ptr& update, bool upsert) {
+        return update_one_(cond, update, upsert);
     }
 
-    result_update collection_t::update_many_test(find_condition_ptr cond, const document_t& update, bool upsert) {
-        return update_many_(std::move(cond), update, upsert);
+    result_update collection_t::update_many_test(find_condition_ptr cond, const document_ptr& update, bool upsert) {
+        return update_many_(cond, update, upsert);
     }
 
 #endif

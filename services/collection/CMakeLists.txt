@@ -29,7 +29,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::parser
-        rocketjoe::btree_storage
+        rocketjoe::serialize
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

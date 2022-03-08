@@ -1,122 +1,62 @@
 #pragma once
 
-#include <memory>
-#include <string>
 #include <msgpack.hpp>
+#include "mutable/mutable_value.hpp"
 #include "support/ref_counted.hpp"
-#include "document/mutable/mutable_array.h"
+#include "range.hpp"
 
 namespace document::impl {
-class mutable_dict_t;
-class dict_t;
-class dict_iterator_t;
+    class dict_t;
+    class mutable_dict_t;
 }
 
 namespace components::document {
 
-class document_t final {
-    using storage_t = ::document::impl::mutable_dict_t*;
-    using const_storage_t = const ::document::impl::dict_t*;
-    using iterator = ::document::impl::dict_iterator_t;
+    using document_structure_t = ::document::retained_t<::document::impl::mutable_dict_t>;
+    using document_data_t = msgpack::sbuffer;
 
-public:
-    using value_t = const ::document::impl::value_t*;
+    class document_t : public ::document::ref_counted_t {
+    public:
+        document_structure_t structure;
+        document_data_t data;
 
-    document_t();
-    explicit document_t(const ::document::impl::dict_t *dict, bool is_owner = false);
-    document_t(const document_t &src);
-    document_t(document_t &&src);
-    ~document_t();
-    document_t &operator =(document_t &&src);
+        document_t();
+        document_t(document_structure_t structure, const document_data_t &data);
 
-    void add_null(const std::string &key);
-    void add_bool(const std::string &key, bool value);
-    void add_ulong(const std::string &key, ulong value);
-    void add_long(const std::string &key, long value);
-    void add_double(const std::string &key, double value);
-    void add_string(const std::string &key, std::string value);
-    void add_array(const std::string &key, ::document::impl::array_t *array);
-    void add_dict(const std::string &key, ::document::impl::dict_t *dict);
-    void add_dict(const std::string &key, const document_t &dict);
-    void add_dict(const std::string &key, document_t &&dict);
-    void add(const std::string &key, const ::document::impl::value_t *value);
+        template <class T> void set(const std::string &key, T value);
 
-    bool is_exists(const std::string &key) const;
-    bool is_null(const std::string &key) const;
-    bool is_bool(const std::string &key) const;
-    bool is_ulong(const std::string &key) const;
-    bool is_long(const std::string &key) const;
-    bool is_double(const std::string &key) const;
-    bool is_string(const std::string &key) const;
-    bool is_array(const std::string &key) const;
-    bool is_dict(const std::string &key) const;
+        bool update(const document_t& update);
+        void commit();
+        void rollback();
 
-    const ::document::impl::value_t *get(const std::string &key) const;
-    bool get_bool(const std::string &key) const;
-    ulong get_ulong(const std::string &key) const;
-    long get_long(const std::string &key) const;
-    double get_double(const std::string &key) const;
-    std::string get_string(const std::string &key) const;
-    const ::document::impl::array_t *get_array(const std::string &key) const;
-    document_t get_dict(const std::string &key) const;
-    const_storage_t get_storage() const;
+    private:
+        data_ranges_t removed_data_;
 
-    template <class T> T get_as(const std::string &) const;
+        void set_(const std::string &key, const ::document::impl::value_t *value);
+    };
 
-    ::document::retained_const_t<::document::impl::value_t> value() const;
+    using document_ptr = ::document::retained_t<document_t>;
 
-    iterator begin() const;
+    document_ptr make_document();
+    document_ptr make_document(document_structure_t structure, const document_data_t &data);
+    document_ptr make_document(const ::document::impl::dict_t *dict, int version = 0);
 
-    std::string to_json() const;
-    static document_t from_json(const std::string &json);
+    document_ptr document_from_json(const std::string &json);
+    std::string document_to_json(const document_ptr &doc);
+    std::string document_to_string(const document_ptr &doc);
 
-    static ::document::retained_t<::document::impl::mutable_array_t> create_array();
-
-    static msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
-    static msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
-
-private:
-    storage_t storage_;
-    bool is_owner_;
-};
+    msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
+    msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
 
 
-template <class T>
-T document_t::get_as(const std::string &) const {
-    static_assert(true, "not supported");
-    return T();
-}
+    template<class T>
+    void document_t::set(const std::string& key, T value) {
+        set_(key, ::document::impl::new_value(value).get());
+    }
 
-template<> inline bool document_t::get_as<bool>(const std::string &key) const {
-    return get_bool(key);
-}
-
-template<> inline ulong document_t::get_as<ulong>(const std::string &key) const {
-    return get_ulong(key);
-}
-
-template<> inline long document_t::get_as<long>(const std::string &key) const {
-    return get_long(key);
-}
-
-template<> inline double document_t::get_as<double>(const std::string &key) const {
-    return get_double(key);
-}
-
-template<> inline std::string document_t::get_as<std::string>(const std::string &key) const {
-    return get_string(key);
-}
-
-template<> inline const ::document::impl::array_t *document_t::get_as<const ::document::impl::array_t *>(const std::string &key) const {
-    return get_array(key);
-}
-
-template<> inline document_t document_t::get_as<document_t>(const std::string &key) const {
-    return get_dict(key);
-}
-
-
-using document_ptr = std::unique_ptr<document_t>;
-auto make_document() -> document_ptr;
+    template<>
+    inline void document_t::set(const std::string& key, const std::string &value) {
+        set_(key, ::document::impl::new_value(::document::slice_t(value)).get());
+    }
 
 }

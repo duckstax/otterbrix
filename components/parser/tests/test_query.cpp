@@ -1,21 +1,23 @@
 #include <catch2/catch.hpp>
-#include "parser/find_condition.hpp"
+#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/parser/find_condition.hpp>
 
 using namespace components::parser;
 
-document_t gen_doc() {
-    document_t doc;
-    doc.add_string("_id", "1");
-    doc.add_string("name", "Rex");
-    doc.add_string("type", "dog");
-    doc.add_long("age", 6);
-    doc.add_bool("male", true);
+components::document::document_ptr gen_doc() {
+    auto doc = document::impl::mutable_dict_t::new_dict().detach();
+    doc->set("_id", std::string("1"));
+    doc->set("name", std::string("Rex"));
+    doc->set("type", std::string("dog"));
+    doc->set("age", 6);
+    doc->set("male", true);
     auto ar = ::document::impl::mutable_array_t::new_array().detach();
     ar->append(3);
     ar->append(4);
     ar->append(5);
-    doc.add_array("ar", ar);
-    return doc;
+    doc->set("ar", ar);
+    return components::document::make_document(doc);
 }
 
 TEST_CASE("query_t create") {
