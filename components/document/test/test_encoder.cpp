@@ -1,14 +1,13 @@
 #include <catch2/catch.hpp>
-#include "encoder.hpp"
-#include "pointer.hpp"
-#include "slice.hpp"
-#include "array.hpp"
-#include "dict.hpp"
-#include "json_coder.hpp"
-#include "encoder.hpp"
-#include "writer.hpp"
-#include "slice_io.hpp"
-#include "path.hpp"
+#include <components/document/core/encoder.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/slice.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
+#include <components/document/core/path.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/support/writer.hpp>
+#include <components/document/support/slice_io.hpp>
 
 using namespace document;
 using namespace document::impl;

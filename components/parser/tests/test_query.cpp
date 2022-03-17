@@ -6,13 +6,13 @@
 using namespace components::parser;
 
 components::document::document_ptr gen_doc() {
-    auto doc = document::impl::mutable_dict_t::new_dict().detach();
+    auto doc = document::impl::mutable_dict_t::new_dict();
     doc->set("_id", std::string("1"));
     doc->set("name", std::string("Rex"));
     doc->set("type", std::string("dog"));
     doc->set("age", 6);
     doc->set("male", true);
-    auto ar = ::document::impl::mutable_array_t::new_array().detach();
+    auto ar = ::document::impl::mutable_array_t::new_array();
     ar->append(3);
     ar->append(4);
     ar->append(5);

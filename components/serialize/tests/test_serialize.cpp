@@ -6,25 +6,25 @@
 using namespace components::document;
 using namespace components::serialize;
 
-document::impl::array_t *gen_array(int num) {
-    auto *array = document::impl::mutable_array_t::new_array().detach();
+document::retained_t<document::impl::array_t> gen_array(int num) {
+    auto array = document::impl::mutable_array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(num + i);
     }
     return array;
 }
 
-document::impl::dict_t *gen_dict(int num) {
-    auto *dict = document::impl::mutable_dict_t::new_dict().detach();
+document::retained_t<document::impl::dict_t> gen_dict(int num) {
+    auto dict = document::impl::mutable_dict_t::new_dict();
     dict->set("odd", num % 2 != 0);
     dict->set("even", num % 2 == 0);
     dict->set("three", num % 3 == 0);
     dict->set("five", num % 5 == 0);
-    return reinterpret_cast<document::impl::dict_t *>(dict);
+    return dict;
 }
 
 document_ptr gen_doc(int num) {
-    auto doc = document::impl::mutable_dict_t::new_dict().detach();
+    auto doc = document::impl::mutable_dict_t::new_dict();
     doc->set("_id", std::to_string(num));
     doc->set("count", num);
     doc->set("countStr", std::to_string(num));
@@ -32,19 +32,19 @@ document_ptr gen_doc(int num) {
     doc->set("countBool", num % 2 != 0);
     doc->set("countArray", gen_array(num));
     doc->set("countDict", gen_dict(num));
-    auto array = document::impl::mutable_array_t::new_array().detach();
+    auto array = document::impl::mutable_array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(gen_array(num + i));
     }
     doc->set("nestedArray", array);
-    array = document::impl::mutable_array_t::new_array().detach();
+    array = document::impl::mutable_array_t::new_array();
     for (int i = 0; i < 5; ++i) {
-        auto dict = document::impl::mutable_dict_t::new_dict().detach();
+        auto dict = document::impl::mutable_dict_t::new_dict();
         dict->set("number", num + i);
         array->append(dict);
     }
     doc->set("dictArray", array);
-    auto dict = document::impl::mutable_dict_t::new_dict().detach();
+    auto dict = document::impl::mutable_dict_t::new_dict();
     for (int i = 0; i < 5; ++i) {
         dict->set(std::to_string(num + i), gen_dict(num + i));
     }

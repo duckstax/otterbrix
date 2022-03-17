@@ -1,9 +1,8 @@
 #include "string_table.hpp"
-#include "platform_compat.hpp"
-#include <algorithm>
+#include <components/document/support/platform_compat.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <stdlib.h>
 #include <vector>
-#include "better_assert.hpp"
 
 namespace document {
 

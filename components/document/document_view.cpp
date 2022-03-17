@@ -1,9 +1,9 @@
 #include "document_view.hpp"
-#include "core/dict.hpp"
-#include "core/array.hpp"
-#include "core/doc.hpp"
-#include "mutable_dict.h"
-#include "structure.hpp"
+#include <components/document/core/dict.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/structure.hpp>
 #include <iostream>
 
 using ::document::impl::value_type;

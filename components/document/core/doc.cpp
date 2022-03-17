@@ -1,15 +1,14 @@
 #include "doc.hpp"
-#include "shared_keys.hpp"
-#include "pointer.hpp"
-#include "json_coder.hpp"
-#include "exception.hpp"
-#include "mutable_dict.h"
-#include "mutable_array.h"
-#include <algorithm>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/mutable/mutable_array.h>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <functional>
 #include <mutex>
 #include <vector>
-#include "better_assert.hpp"
 
 #define Log(FMT,...)
 #define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)

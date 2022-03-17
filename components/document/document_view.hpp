@@ -1,8 +1,8 @@
 #pragma once
 
 #include <msgpack.hpp>
-#include "document/support/ref_counted.hpp"
-#include "document.hpp"
+#include <components/document/support/ref_counted.hpp>
+#include <components/document/document.hpp>
 
 namespace document::impl {
 class dict_t;

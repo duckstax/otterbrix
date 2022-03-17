@@ -246,6 +246,51 @@ namespace components::document {
         return document;
     }
 
+    document_ptr make_upsert_document(const document_ptr& source) {
+        ::document::impl::value_t* doc = mutable_dict_t::new_dict().detach();
+        document_view_t view(source);
+        auto update_dict = view.to_dict();
+        for (auto it = update_dict->begin(); it; ++it) {
+            auto cmd = static_cast<std::string_view>(it.key()->as_string());
+            if (cmd == "$set" || cmd == "$inc") {
+                auto values = it.value()->as_dict();
+                for (auto it_field = values->begin(); it_field; ++it_field) {
+                    auto key = static_cast<std::string>(it_field.key()->as_string());
+                    std::size_t dot_pos = key.find('.');
+                    auto sub_doc = doc;
+                    while (dot_pos != std::string::npos) {
+                        auto key_parent = key.substr(0, dot_pos);
+                        key = key.substr(dot_pos + 1, key.size() - dot_pos);
+                        auto dot_pos_next = key.find('.');
+                        auto next_key = dot_pos_next != std::string::npos
+                                        ? key.substr(0, dot_pos_next - 1)
+                                        : key;
+                        ::document::impl::value_t* next_sub_doc = nullptr;
+                        if (next_key.find_first_not_of("0123456789") == std::string::npos) {
+                            next_sub_doc = mutable_array_t::new_array().detach();
+                        } else {
+                            next_sub_doc = mutable_dict_t::new_dict().detach();
+                        }
+                        if (sub_doc->type() == value_type::dict) {
+                            sub_doc->as_dict()->as_mutable()->set(key_parent, next_sub_doc);
+                        } else if (sub_doc->type() == value_type::array) {
+                            sub_doc->as_array()->as_mutable()->append(next_sub_doc);
+                        }
+                        sub_doc = next_sub_doc;
+                        dot_pos = dot_pos_next;
+                    }
+                    if (sub_doc->type() == value_type::dict) {
+                        sub_doc->as_dict()->as_mutable()->set(key, it_field.value());
+                    } else if (sub_doc->type() == value_type::array) {
+                        sub_doc->as_array()->as_mutable()->append(it_field.value());
+                    }
+                }
+            }
+        }
+        doc->as_dict()->as_mutable()->set("_id", view.get_string("_id"));
+        return components::document::make_document(doc->as_dict());
+    }
+
     document_ptr document_from_json(const std::string &json) {
         auto doc = ::document::impl::doc_t::from_json(json);
         auto dict = mutable_dict_t::new_dict(doc->root()->as_dict());

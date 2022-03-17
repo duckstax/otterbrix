@@ -1,9 +1,9 @@
 #pragma once
 
 #include <msgpack.hpp>
-#include "mutable/mutable_value.hpp"
-#include "support/ref_counted.hpp"
-#include "range.hpp"
+#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/support/ref_counted.hpp>
+#include <components/document/range.hpp>
 
 namespace document::impl {
     class dict_t;
@@ -40,6 +40,8 @@ namespace components::document {
     document_ptr make_document();
     document_ptr make_document(document_structure_t structure, const document_data_t &data);
     document_ptr make_document(const ::document::impl::dict_t *dict, int version = 0);
+
+    document_ptr make_upsert_document(const document_ptr& source);
 
     document_ptr document_from_json(const std::string &json);
     std::string document_to_json(const document_ptr &doc);

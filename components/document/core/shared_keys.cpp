@@ -1,9 +1,8 @@
 #include "shared_keys.hpp"
-#include "exception.hpp"
-#include "value.hpp"
-#include "array.hpp"
-#include "encoder.hpp"
-#include <iostream>
+#include <components/document/support/exception.hpp>
+#include <components/document/core/value.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/encoder.hpp>
 
 namespace document { namespace impl {
 

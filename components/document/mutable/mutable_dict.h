@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../core/dict.hpp"
-#include "mutable_dict.hpp"
+#include <components/document/core/dict.hpp>
+#include <components/document/mutable/mutable_dict.hpp>
 
 namespace document { namespace impl {
 

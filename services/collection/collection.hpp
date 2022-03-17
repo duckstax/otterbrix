@@ -14,7 +14,6 @@
 #include "components/cursor/cursor.hpp"
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
-#include "components/document/support/ref_counted.hpp"
 #include "components/parser/conditional_expression.hpp"
 #include "components/session/session.hpp"
 
@@ -25,7 +24,6 @@
 namespace services::storage {
 
     using document_id_t = components::document::document_id_t;
-    using document_t = components::document::document_t;
     using document_ptr = components::document::document_ptr;
     using storage_t = absl::btree_map<document_id_t, document_ptr>;
     using document_view_t = components::document::document_view_t;
@@ -60,7 +58,6 @@ namespace services::storage {
         result_update update_many_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);
         void remove_(const document_id_t& id);
         bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
-        document_ptr update2insert(const document_ptr& update) const;
 
         log_t log_;
         goblin_engineer::address_t database_;

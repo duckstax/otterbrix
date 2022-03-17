@@ -7,16 +7,16 @@
 
 using namespace services::storage;
 
-document::impl::mutable_dict_t* gen_sub_doc(const std::string& name, bool male) {
-    auto *dict = ::document::impl::mutable_dict_t::new_dict().detach();
+document::retained_t<document::impl::mutable_dict_t> gen_sub_doc(const std::string& name, bool male) {
+    auto dict = ::document::impl::mutable_dict_t::new_dict();
     dict->set("name", name);
     dict->set("male", male);
     return dict;
 }
 
 document_ptr gen_doc(const std::string& id, const std::string& name, const std::string& type, ulong age, bool male,
-                     std::initializer_list<std::string> friends, document::impl::mutable_dict_t* sub_doc) {
-    auto dict = document::impl::mutable_dict_t::new_dict().detach();
+                     std::initializer_list<std::string> friends, const document::retained_t<document::impl::mutable_dict_t> &sub_doc) {
+    auto dict = document::impl::mutable_dict_t::new_dict();
     dict->set("_id", id);
     dict->set("name", name);
     dict->set("type", type);
@@ -31,7 +31,7 @@ document_ptr gen_doc(const std::string& id, const std::string& name, const std::
     sub_doc->set("sub", gen_sub_doc(name, male));
     dict->set("sub_doc", sub_doc);
 
-    return components::document::make_document(reinterpret_cast<const document::impl::dict_t *>(dict));
+    return components::document::make_document(dict);
 }
 
 collection_ptr gen_collection() {

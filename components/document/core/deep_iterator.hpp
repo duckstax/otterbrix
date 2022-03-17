@@ -1,7 +1,7 @@
 #pragma once
 
-#include "array.hpp"
-#include "dict.hpp"
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <memory>
 #include <vector>
 #include <deque>

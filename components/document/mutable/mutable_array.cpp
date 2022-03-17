@@ -1,8 +1,8 @@
 #include "mutable_array.hpp"
-#include "mutable_dict.hpp"
 #include "mutable_array.h"
-#include "varint.hpp"
-#include "better_assert.hpp"
+#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/support/varint.hpp>
+#include <components/document/support/better_assert.hpp>
 
 namespace document { namespace impl {
 

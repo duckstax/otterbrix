@@ -1,9 +1,9 @@
 #include "writer.hpp"
-#include "platform_compat.hpp"
-#include "exception.hpp"
-#include "boost/beast/core/detail/base64.hpp"
+#include <components/document/support/platform_compat.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/better_assert.hpp>
+#include <boost/beast/core/detail/base64.hpp>
 #include <algorithm>
-#include "better_assert.hpp"
 
 namespace document {
 
