@@ -1,5 +1,5 @@
 #ifndef assert_always
-    #include "platform_compat.hpp"
+    #include <components/document/support/platform_compat.hpp>
     #ifdef __cpp_exceptions
         #include <stdexcept>
     #else

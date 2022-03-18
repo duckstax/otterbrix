@@ -1,6 +1,6 @@
 #pragma once
 
-#include "platform_compat.hpp"
+#include <components/document/support/platform_compat.hpp>
 #include <algorithm>
 #include <atomic>
 #include <utility>

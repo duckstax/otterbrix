@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ref_counted.hpp"
-#include "value.hpp"
-#include "slice.hpp"
+#include <components/document/core/value.hpp>
+#include <components/document/core/slice.hpp>
+#include <components/document/support/ref_counted.hpp>
 #include <atomic>
 #include <utility>
 

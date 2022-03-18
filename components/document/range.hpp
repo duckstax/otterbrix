@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 
-namespace components::btree {
+namespace components::document {
 
     class data_ranges_t {
     public:

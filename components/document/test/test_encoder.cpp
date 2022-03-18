@@ -1,14 +1,13 @@
 #include <catch2/catch.hpp>
-#include "encoder.hpp"
-#include "pointer.hpp"
-#include "slice.hpp"
-#include "array.hpp"
-#include "dict.hpp"
-#include "json_coder.hpp"
-#include "encoder.hpp"
-#include "writer.hpp"
-#include "slice_io.hpp"
-#include "path.hpp"
+#include <components/document/core/encoder.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/slice.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
+#include <components/document/core/path.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/support/writer.hpp>
+#include <components/document/support/slice_io.hpp>
 
 using namespace document;
 using namespace document::impl;
@@ -445,48 +444,50 @@ TEST_CASE("impl::encoder_t::json binary") {
 }
 
 TEST_CASE("impl::encoder_t::json from file") {
-    encoder_t enc;
-    auto data = document::read_file("test/big-test.json");
-    enc.unique_strings(true);
-    auto value = json_coder::from_json(enc, data);
-    REQUIRE(value.buf);
-    document::write_to_file(value, "test/big-test.rj");
-}
+    SECTION("save into internal") {
+        encoder_t enc;
+        auto data = document::read_file("test/big-test.json");
+        enc.unique_strings(true);
+        auto value = json_coder::from_json(enc, data);
+        REQUIRE(value.buf);
+        document::write_to_file(value, "test/big-test.rj");
+    }
 
-TEST_CASE("impl::encoder_t::internal from file") {
-    auto doc = document::read_file("test/big-test.rj");
-    auto value = value_t::from_trusted_data(doc);
-    REQUIRE(value);
-    REQUIRE(value->type() == value_type::array);
-    REQUIRE(value->as_array());
-}
+    SECTION("internal from file") {
+        auto doc = document::read_file("test/big-test.rj");
+        auto value = value_t::from_trusted_data(doc);
+        REQUIRE(value);
+        REQUIRE(value->type() == value_type::array);
+        REQUIRE(value->as_array());
+    }
 
-TEST_CASE("impl::encoder_t::get in array and dict") {
-    auto doc = document::read_file("test/big-test.rj");
-    auto root = value_t::from_trusted_data(doc)->as_array();
-    auto dog = root->get(6)->as_dict();
-    REQUIRE(dog);
-    auto name = dog->get("name");
-    REQUIRE(name);
-    REQUIRE(name->as_string() == slice_t("Toby"));
-}
+    SECTION("get in array and dict") {
+        auto doc = document::read_file("test/big-test.rj");
+        auto root = value_t::from_trusted_data(doc)->as_array();
+        auto dog = root->get(6)->as_dict();
+        REQUIRE(dog);
+        auto name = dog->get("name");
+        REQUIRE(name);
+        REQUIRE(name->as_string() == slice_t("Toby"));
+    }
 
-TEST_CASE("impl::encoder_t::path_t") {
-    auto data = document::read_file("test/big-test.rj");
-    const value_t *root = value_t::from_data(data);
-    REQUIRE(root->as_array()->count() == 10);
+    SECTION("path_t") {
+        auto data = document::read_file("test/big-test.rj");
+        const value_t* root = value_t::from_data(data);
+        REQUIRE(root->as_array()->count() == 10);
 
-    path_t p1{"$[3].name"};
-    const value_t *name = p1.eval(root);
-    REQUIRE(name);
-    REQUIRE(name->type() == value_type::string);
-    REQUIRE(name->as_string() == slice_t("Charlie"));
+        path_t p1{"$[3].name"};
+        const value_t* name = p1.eval(root);
+        REQUIRE(name);
+        REQUIRE(name->type() == value_type::string);
+        REQUIRE(name->as_string() == slice_t("Charlie"));
 
-    path_t p2{"[-1].name"};
-    name = p2.eval(root);
-    REQUIRE(name);
-    REQUIRE(name->type() == value_type::string);
-    REQUIRE(name->as_string() == slice_t("Albert"));
+        path_t p2{"[-1].name"};
+        name = p2.eval(root);
+        REQUIRE(name);
+        REQUIRE(name->type() == value_type::string);
+        REQUIRE(name->as_string() == slice_t("Albert"));
+    }
 }
 
 TEST_CASE("impl::encoder_t::multy item") {

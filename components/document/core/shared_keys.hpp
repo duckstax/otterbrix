@@ -1,12 +1,12 @@
 #pragma once
 
-#include "ref_counted.hpp"
 #include <array>
 #include <mutex>
 #include <vector>
 #include <unordered_map>
-#include "better_assert.hpp"
-#include "slice.hpp"
+#include <components/document/support/ref_counted.hpp>
+#include <components/document/support/better_assert.hpp>
+#include <components/document/core/slice.hpp>
 
 namespace document { namespace impl {
 

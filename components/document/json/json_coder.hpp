@@ -1,10 +1,10 @@
 #pragma once
 
-#include "exception.hpp"
-#include "num_conversion.hpp"
-#include "value.hpp"
-#include "encoder.hpp"
-#include "slice.hpp"
+#include <components/document/support/exception.hpp>
+#include <components/document/support/num_conversion.hpp>
+#include <components/document/core/value.hpp>
+#include <components/document/core/encoder.hpp>
+#include <components/document/core/slice.hpp>
 #include <stdio.h>
 
 namespace boost { namespace json {

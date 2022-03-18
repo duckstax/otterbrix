@@ -1,9 +1,8 @@
 #include "json_coder.hpp"
-#include "parse_date.hpp"
-#include "better_assert.hpp"
-#include "num_conversion.hpp"
-#include "array.hpp"
-#include "dict.hpp"
+#include <components/document/support/parse_date.hpp>
+#include <components/document/support/better_assert.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <boost/json.hpp>
 #include <algorithm>
 #include <map>

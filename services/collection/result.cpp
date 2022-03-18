@@ -55,18 +55,6 @@ result_size::result_t result_size::operator*() const {
     return size_;
 }
 
-result_get_document::result_get_document(result_get_document::result_t&& doc)
-    : doc_(std::move(doc)) {
-}
-
-const result_get_document::result_t& result_get_document::operator*() const {
-    return doc_;
-}
-
-result_get_document::result_t* result_get_document::operator->() {
-    return &doc_;
-}
-
 result_drop_collection::result_drop_collection(result_drop_collection::result_t success)
     : success_(success) {}
 

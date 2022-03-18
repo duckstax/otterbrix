@@ -1,8 +1,7 @@
 #include "path.hpp"
-#include "shared_keys.hpp"
-#include "exception.hpp"
-#include "platform_compat.hpp"
-#include "slice_stream.hpp"
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/slice_stream.hpp>
 #include <iostream>
 #include <sstream>
 

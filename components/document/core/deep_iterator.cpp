@@ -1,5 +1,5 @@
 #include "deep_iterator.hpp"
-#include "shared_keys.hpp"
+#include <components/document/core/shared_keys.hpp>
 #include <sstream>
 
 namespace document { namespace impl {

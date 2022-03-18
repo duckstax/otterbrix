@@ -1,6 +1,6 @@
 #pragma once
 
-#include "slice.hpp"
+#include <components/document/core/slice.hpp>
 
 namespace document {
 
