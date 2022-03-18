@@ -1,6 +1,6 @@
 #pragma once
 
-#include "small_vector_base.hpp"
+#include <components/document/support/small_vector_base.hpp>
 
 namespace document {
 

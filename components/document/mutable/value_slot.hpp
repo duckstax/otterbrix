@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mutable_value.hpp"
-#include "../support/endian.hpp"
+#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/support/endian.hpp>
 #include <limits.h>
 
 namespace document { namespace impl {

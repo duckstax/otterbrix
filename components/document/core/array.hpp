@@ -1,6 +1,6 @@
 #pragma once
 
-#include "value.hpp"
+#include <components/document/core/value.hpp>
 
 namespace document { namespace impl {
 

@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
-#include "temp_array.hpp"
-#include "slice_io.hpp"
-#include "bitmap.hpp"
-#include "small_vector.hpp"
-#include "writer.hpp"
+#include <components/document/support/temp_array.hpp>
+#include <components/document/support/slice_io.hpp>
+#include <components/document/support/bitmap.hpp>
+#include <components/document/support/small_vector.hpp>
+#include <components/document/support/writer.hpp>
 #include <future>
 
 using namespace document;

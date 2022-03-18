@@ -1,8 +1,8 @@
 #pragma once
 
-#include "dict.hpp"
-#include "value_slot.hpp"
-#include "shared_keys.hpp"
+#include <components/document/mutable/value_slot.hpp>
+#include <components/document/core/dict.hpp>
+#include <components/document/core/shared_keys.hpp>
 #include <deque>
 #include <map>
 

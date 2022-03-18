@@ -1,18 +1,16 @@
 #include "value.hpp"
-#include "pointer.hpp"
-#include "array.hpp"
-#include "dict.hpp"
-#include "internal.hpp"
-#include "doc.hpp"
-#include "mutable_value.hpp"
-#include "endian.hpp"
-#include "exception.hpp"
-#include "varint.hpp"
-#include "platform_compat.hpp"
-#include "json_coder.hpp"
-#include "parse_date.hpp"
-#include <math.h>
-#include "better_assert.hpp"
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
+#include <components/document/core/internal.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/support/endian.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/varint.hpp>
+#include <components/document/support/parse_date.hpp>
+#include <components/document/support/better_assert.hpp>
 
 
 namespace document { namespace impl {

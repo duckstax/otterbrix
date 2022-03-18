@@ -1,9 +1,8 @@
 #include "array.hpp"
-#include "mutable_array.h"
-#include "mutable_dict.hpp"
-#include "internal.hpp"
-#include "platform_compat.hpp"
-#include "varint.hpp"
+#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/core/internal.hpp>
+#include <components/document/support/varint.hpp>
 
 
 namespace document { namespace impl {

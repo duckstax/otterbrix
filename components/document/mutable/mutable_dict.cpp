@@ -1,10 +1,10 @@
 #include "mutable_dict.hpp"
-#include "mutable_array.hpp"
-#include "value_slot.hpp"
 #include "mutable_dict.h"
-#include "encoder.hpp"
-#include "shared_keys.hpp"
-#include "better_assert.hpp"
+#include <components/document/mutable/mutable_array.hpp>
+#include <components/document/mutable/value_slot.hpp>
+#include <components/document/core/encoder.hpp>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/support/better_assert.hpp>
 
 namespace document { namespace impl {
 

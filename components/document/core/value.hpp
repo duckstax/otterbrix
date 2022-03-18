@@ -2,10 +2,10 @@
 
 #include <iosfwd>
 #include <stdint.h>
-#include "../support/exception.hpp"
-#include "../support/endian.hpp"
-#include "internal.hpp"
-#include "slice.hpp"
+#include <components/document/support/exception.hpp>
+#include <components/document/support/endian.hpp>
+#include <components/document/core/internal.hpp>
+#include <components/document/core/slice.hpp>
 
 namespace document {
     class writer_t;

@@ -1,8 +1,8 @@
 #include "value_slot.hpp"
-#include "mutable_array.hpp"
-#include "mutable_dict.hpp"
-#include "encoder.hpp"
-#include "varint.hpp"
+#include <components/document/mutable/mutable_array.hpp>
+#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/core/encoder.hpp>
+#include <components/document/support/varint.hpp>
 #include <algorithm>
 
 namespace document { namespace impl {
