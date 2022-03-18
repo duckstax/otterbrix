@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <memory>
-#include "../core/base.hpp"
+#include <components/document/core/base.hpp>
 
 namespace document {
 class backtrace_t;

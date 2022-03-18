@@ -1,9 +1,9 @@
 #include <catch2/catch.hpp>
-#include "mutable_array.h"
-#include "mutable_dict.h"
-#include "slice_io.hpp"
-#include "encoder.hpp"
-#include "json_coder.hpp"
+#include <components/document/core/encoder.hpp>
+#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/support/slice_io.hpp>
+#include <components/document/json/json_coder.hpp>
 
 using namespace document;
 using namespace document::impl;

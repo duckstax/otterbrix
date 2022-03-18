@@ -1,7 +1,7 @@
 #pragma once
 
-#include "platform_compat.hpp"
-#include "endianness.hpp"
+#include <components/document/support/platform_compat.hpp>
+#include <components/document/support/endianness.hpp>
 
 namespace document { namespace endian {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "slice_core.hpp"
+#include <components/document/core/slice_core.hpp>
 #include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>

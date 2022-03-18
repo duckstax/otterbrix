@@ -6,9 +6,9 @@
 #include <optional>
 #include <sstream>
 
-#include "doc.hpp"
-#include "pointer.hpp"
-#include "dict.hpp"
+#include <components/document/core/doc.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/dict.hpp>
 
 namespace document { namespace impl {
 

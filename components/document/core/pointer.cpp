@@ -1,8 +1,8 @@
 #include "pointer.hpp"
-#include "doc.hpp"
+#include <components/document/core/doc.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <tuple>
 #include <stdio.h>
-#include "better_assert.hpp"
 
 namespace document { namespace impl { namespace internal {
 

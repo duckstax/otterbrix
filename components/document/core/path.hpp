@@ -1,7 +1,7 @@
 #pragma once
 
-#include "dict.hpp"
-#include "function_ref.hpp"
+#include <components/document/core/dict.hpp>
+#include <components/document/support/function_ref.hpp>
 #include <iosfwd>
 #include <memory>
 #include <string>

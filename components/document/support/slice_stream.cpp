@@ -1,6 +1,6 @@
 #include "slice_stream.hpp"
-#include "varint.hpp"
-#include "better_assert.hpp"
+#include <components/document/support/varint.hpp>
+#include <components/document/support/better_assert.hpp>
 
 namespace document {
 

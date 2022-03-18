@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
-#include "base.hpp"
+#include <components/document/core/base.hpp>
 
 
 namespace document {

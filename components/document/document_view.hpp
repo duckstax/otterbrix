@@ -1,8 +1,8 @@
 #pragma once
 
 #include <msgpack.hpp>
-#include "document/support/ref_counted.hpp"
-#include "iostream"
+#include <components/document/support/ref_counted.hpp>
+#include <components/document/document.hpp>
 
 namespace document::impl {
 class dict_t;
@@ -34,6 +34,8 @@ public:
 
     document_view_t();
     document_view_t(index_t index, storage_t storage);
+    explicit document_view_t(const document_t &src);
+    explicit document_view_t(const document_ptr &src);
     document_view_t(const document_view_t &src);
     document_view_t &operator=(const document_view_t &src);
 
@@ -118,6 +120,7 @@ public:
     compare_t compare(const document_view_t &other, const std::string &key) const;
 
     std::string to_json() const;
+    ::document::retained_t<::document::impl::dict_t> to_dict() const;
 
 private:
     index_t index_;

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "platform_compat.hpp"
+#include <components/document/support/platform_compat.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <string.h>
 #include <utility>
-#include "better_assert.hpp"
 
 namespace document {
 
