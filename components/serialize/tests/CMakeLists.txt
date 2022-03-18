@@ -1,4 +1,4 @@
-project(test_btree_storage)
+project(test_serialize)
 
 set(${PROJECT_NAME}_SOURCES
         main.cpp
@@ -11,7 +11,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::document
-        rocketjoe::btree_storage
+        rocketjoe::serialize
 )
 
 include(CTest)

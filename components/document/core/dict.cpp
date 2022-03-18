@@ -1,12 +1,11 @@
 #include "dict.hpp"
-#include "mutable_dict.h"
-#include "shared_keys.hpp"
-#include "doc.hpp"
-#include "internal.hpp"
-#include "platform_compat.hpp"
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/core/internal.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <atomic>
 #include <string>
-#include "better_assert.hpp"
 
 namespace document { namespace impl {
 

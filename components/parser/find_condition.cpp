@@ -6,10 +6,6 @@ bool find_condition_and::check_document(const document_view_t &doc) const {
     return check_document_(doc);
 }
 
-bool find_condition_and::check_document(const document_t &doc) const {
-    return check_document_(doc);
-}
-
 template<class T> bool find_condition_and::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (!condition->is_fit(doc)) {
@@ -24,10 +20,6 @@ bool find_condition_or::check_document(const document_view_t &doc) const {
     return check_document_(doc);
 }
 
-bool find_condition_or::check_document(const document_t &doc) const {
-    return check_document_(doc);
-}
-
 template<class T> bool find_condition_or::check_document_(const T &doc) const {
     for (const auto &condition : conditions_) {
         if (condition->is_fit(doc)) {
@@ -39,10 +31,6 @@ template<class T> bool find_condition_or::check_document_(const T &doc) const {
 
 
 bool find_condition_not::check_document(const document_view_t &doc) const {
-    return check_document_(doc);
-}
-
-bool find_condition_not::check_document(const document_t &doc) const {
     return check_document_(doc);
 }
 

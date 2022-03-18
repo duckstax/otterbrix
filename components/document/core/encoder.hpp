@@ -1,11 +1,11 @@
 #pragma once
 
-#include "value.hpp"
-#include "writer.hpp"
-#include "doc.hpp"
-#include "string_table.hpp"
-#include "small_vector.hpp"
-#include "function_ref.hpp"
+#include <components/document/core/value.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/support/writer.hpp>
+#include <components/document/support/string_table.hpp>
+#include <components/document/support/small_vector.hpp>
+#include <components/document/support/function_ref.hpp>
 
 namespace document { namespace impl {
 

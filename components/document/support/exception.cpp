@@ -1,5 +1,5 @@
 #include "exception.hpp"
-#include "platform_compat.hpp"
+#include <components/document/support/platform_compat.hpp>
 #include <errno.h>
 #include <stdarg.h>
 #include <memory>

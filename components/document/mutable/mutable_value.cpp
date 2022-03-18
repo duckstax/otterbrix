@@ -1,11 +1,11 @@
 #include "mutable_value.hpp"
-#include "mutable_array.hpp"
-#include "mutable_dict.hpp"
-#include "doc.hpp"
-#include "exception.hpp"
-#include "varint.hpp"
+#include <components/document/mutable/mutable_array.hpp>
+#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/varint.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <algorithm>
-#include "better_assert.hpp"
 
 namespace document { namespace impl { namespace internal {
 

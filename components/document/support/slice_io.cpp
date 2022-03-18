@@ -2,9 +2,9 @@
 
 #if FL_HAVE_FILESYSTEM
 
-#include "exception.hpp"
-#include "platform_compat.hpp"
-#include "num_conversion.hpp"
+#include <components/document/support/exception.hpp>
+#include <components/document/support/platform_compat.hpp>
+#include <components/document/support/num_conversion.hpp>
 #include <fcntl.h>
 #include <errno.h>
 

@@ -1,9 +1,8 @@
 #include "serialize.hpp"
-#include <components/document/document.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
 
-namespace components::btree {
+namespace components::serialize {
 
     using ::document::impl::value_t;
     using ::document::impl::value_type;
@@ -96,7 +95,7 @@ namespace components::btree {
     }
 
 
-    serialized_document_t serialize(const document_unique_ptr& document) {
+    serialized_document_t serialize(const document_ptr& document) {
         serialized_document_t serialized_document;
         auto structure = to_msgpack_(document->structure);
         msgpack::pack(serialized_document.structure, structure);
@@ -104,11 +103,11 @@ namespace components::btree {
         return serialized_document;
     }
 
-    document_unique_ptr deserialize(const serialized_document_t& serialized_document) {
+    document_ptr deserialize(const serialized_document_t& serialized_document) {
         auto deserialized_structure_handle = msgpack::unpack(serialized_document.structure.data(), serialized_document.structure.size());
         auto deserialized_structure = deserialized_structure_handle.get();
         auto msg_structure = deserialized_structure.as<msgpack::object>();
-        return std::make_unique<document_t>(to_structure_(msg_structure)->as_dict()->as_mutable(), serialized_document.data);
+        return components::document::make_document(to_structure_(msg_structure)->as_dict()->as_mutable(), serialized_document.data);
     }
 
 }

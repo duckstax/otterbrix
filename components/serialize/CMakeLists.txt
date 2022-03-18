@@ -1,14 +1,10 @@
-set(CURRENT_TARGET btree_storage)
+set(CURRENT_TARGET serialize)
 
 list(APPEND CURRENT_TARGET_HEADERS
-        btree_storage.hpp
-        range.hpp
         serialize.hpp
 )
 
 list(APPEND CURRENT_TARGET_SOURCES
-        btree_storage.cpp
-        range.cpp
         serialize.cpp
 )
 

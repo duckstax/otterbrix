@@ -1,13 +1,12 @@
 #include "json_delta.hpp"
-#include "json_coder.hpp"
-#include "exception.hpp"
-#include "temp_array.hpp"
-#include "diff_match_patch.hpp"
-#include "num_conversion.hpp"
-#include "dict.hpp"
+#include <components/document/core/dict.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/temp_array.hpp>
+#include <components/document/support/better_assert.hpp>
+#include <components/document/support/diff_match_patch.hpp>
 #include <sstream>
 #include <unordered_set>
-#include "better_assert.hpp"
 
 namespace document { namespace impl {
 
