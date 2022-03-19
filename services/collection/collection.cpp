@@ -1,9 +1,5 @@
 #include "collection.hpp"
 
-
-#include "protocol/insert.hpp"
-
-
 namespace services::storage {
 
     collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
