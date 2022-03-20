@@ -3,7 +3,9 @@ project(test_serialize)
 set(${PROJECT_NAME}_SOURCES
         main.cpp
         test_serialize.cpp
-        )
+       # test_pack_msgpack.cpp
+        generaty.cpp
+)
 
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 

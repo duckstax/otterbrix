@@ -5,7 +5,7 @@
 #include <msgpack/adaptor/list.hpp>
 
 struct insert_many_t : statement_t {
-    insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_t> documents)
+    insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_ptr> documents)
         : statement_t(statement_type::insert_many, database, collection)
         , documents_(std::move(documents)){};
     insert_many_t() = default;
@@ -14,7 +14,7 @@ struct insert_many_t : statement_t {
     insert_many_t(insert_many_t&&) = default;
     insert_many_t& operator=(insert_many_t&&) = default;
     ~insert_many_t();
-    std::list<components::document::document_t> documents_;
+    std::list<components::document::document_ptr> documents_;
 };
 
 // User defined class template specialization
@@ -35,7 +35,7 @@ namespace msgpack {
 
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto documents = o.via.array.ptr[2].as<std::list<components::document::document_t>>();
+                    auto documents = o.via.array.ptr[2].as<std::list<components::document::document_ptr>>();
                     v = std::move(insert_many_t(database, collection, documents));
                     return o;
                 }

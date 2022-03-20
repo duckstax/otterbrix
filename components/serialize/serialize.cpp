@@ -110,4 +110,21 @@ namespace components::serialize {
         return components::document::make_document(to_structure_(msg_structure)->as_dict()->as_mutable(), serialized_document.data);
     }
 
+
+    msgpack::object pack(const document_ptr& document) {
+        msgpack::object res;
+        res.type = msgpack::type::object_type::ARRAY;
+        msgpack::object_array array{2, new msgpack::object[2]};
+        array.ptr[0] =to_msgpack_(document->structure);
+        auto data_handle = msgpack::unpack(document->data.data(),document->data.size());
+        array.ptr[1] = msgpack::object(data_handle.get());
+        res.via.array = array;
+        return res;
+    }
+
+
+    document_ptr unpack(const msgpack::object& object) {
+    ///    return components::document::make_document(to_structure_(object.via.array.ptr[0])->as_dict()->as_mutable(), object.via.array.ptr[1]);
+    }
+
 }

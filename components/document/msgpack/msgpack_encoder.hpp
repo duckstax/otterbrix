@@ -11,12 +11,12 @@ namespace msgpack {
 
             template<>
             struct convert<components::document::document_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::document::document_t& v) const {
-                    if (o.type != msgpack::type::MAP) {
+                msgpack::object const& operator()(msgpack::object const& o, components::document::document_ptr& v) const {
+                    if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
 
-                    v = std::move( components::document::document_t());
+                    v = std::move( components::document::document_ptr());
                     return o;
                 }
             };
@@ -24,8 +24,8 @@ namespace msgpack {
             template<>
             struct pack<components::document::document_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::document::document_t const& v) const {
-                    o.pack_map(1);
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::document::document_ptr const& v) const {
+                    o.pack_array(2);
 
                     return o;
                 }
