@@ -69,19 +69,6 @@ private:
     result_t size_{0};
 };
 
-class result_get_document {
-public:
-    using result_t = components::document::document_view_t;
-
-    result_get_document() = default;
-    explicit result_get_document(result_t&& doc);
-    const result_t& operator*() const;
-    result_t* operator->();
-
-private:
-    result_t doc_;
-};
-
 class result_drop_collection {
 public:
     using result_t = bool;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../core/value.hpp"
-#include "../support/ref_counted.hpp"
+#include <components/document/core/value.hpp>
+#include <components/document/support/ref_counted.hpp>
 
 namespace document { namespace impl {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../core/array.hpp"
-#include "mutable_array.hpp"
+#include <components/document/core/array.hpp>
+#include <components/document/mutable/mutable_array.hpp>
 
 namespace document { namespace impl {
 

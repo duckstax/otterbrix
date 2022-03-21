@@ -1,5 +1,5 @@
 #pragma once
-#include "base.hpp"
+#include <components/document/core/base.hpp>
 #include "insert.hpp"
 #include "request_select.hpp"
 #include <msgpack.hpp>

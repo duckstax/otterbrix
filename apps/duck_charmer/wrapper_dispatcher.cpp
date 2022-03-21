@@ -71,7 +71,7 @@ namespace duck_charmer {
         return std::get<result_drop_collection>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t &document) -> result_insert_one& {
+    auto wrapper_dispatcher_t::insert_one(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_ptr &document) -> result_insert_one& {
         log_.trace("wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -86,7 +86,7 @@ namespace duck_charmer {
         return std::get<result_insert_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_t> &documents) -> result_insert_many& {
+    auto wrapper_dispatcher_t::insert_many(duck_charmer::session_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_ptr> &documents) -> result_insert_many& {
         log_.trace("wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -101,7 +101,7 @@ namespace duck_charmer {
         return std::get<result_insert_many>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_t condition) -> wrapper_cursor_ptr {
+    auto wrapper_dispatcher_t::find(duck_charmer::session_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition) -> wrapper_cursor_ptr {
         log_.trace("wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -117,7 +117,7 @@ namespace duck_charmer {
         return wrapper_cursor_ptr(new wrapper_cursor(session, std::get<components::cursor::cursor_t*>(intermediate_store_)));
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_t &session, const std::string& database, const std::string &collection, components::document::document_t condition) -> result_find_one& {
+    auto wrapper_dispatcher_t::find_one(components::session::session_t &session, const std::string& database, const std::string &collection, components::document::document_ptr condition) -> result_find_one& {
         log_.trace("wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
@@ -133,7 +133,7 @@ namespace duck_charmer {
         return std::get<result_find_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
+    auto wrapper_dispatcher_t::delete_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_ptr condition) -> result_delete& {
         log_.trace("wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
@@ -149,7 +149,7 @@ namespace duck_charmer {
         return std::get<result_delete>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition) -> result_delete& {
+    auto wrapper_dispatcher_t::delete_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_ptr condition) -> result_delete& {
         log_.trace("wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
@@ -165,7 +165,7 @@ namespace duck_charmer {
         return std::get<result_delete>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update& {
+    auto wrapper_dispatcher_t::update_one(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_ptr condition, components::document::document_ptr update, bool upsert) -> result_update& {
         log_.trace("wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
@@ -183,7 +183,7 @@ namespace duck_charmer {
         return std::get<result_update>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_t condition, components::document::document_t update, bool upsert) -> result_update& {
+    auto wrapper_dispatcher_t::update_many(components::session::session_t &session, const std::string &database, const std::string &collection, components::document::document_ptr condition, components::document::document_ptr update, bool upsert) -> result_update& {
         log_.trace("wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(

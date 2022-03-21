@@ -69,12 +69,20 @@ void parse_find_condition_array_(find_condition_t *parent_condition, const array
 }
 
 
-find_condition_ptr parse_find_condition(const document_t &condition) {
+find_condition_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t> &condition) {
     auto res_condition = make_condition<find_condition_t>();
-    for (auto it = condition.begin(); it; ++it) {
+    for (auto it = condition->begin(); it; ++it) {
         parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
     }
     return res_condition;
+}
+
+find_condition_ptr parse_find_condition(const document_view_t &condition) {
+    return parse_find_condition_(condition.to_dict());
+}
+
+find_condition_ptr parse_find_condition(const document_ptr &condition) {
+    return parse_find_condition(document_view_t(condition));
 }
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "array.hpp"
+#include <components/document/core/array.hpp>
 #include <memory>
 
 namespace document { namespace impl {

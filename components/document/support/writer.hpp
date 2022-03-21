@@ -1,10 +1,10 @@
 #pragma once
 
-#include "slice.hpp"
+#include <components/document/core/slice.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <stdio.h>
 #include <vector>
 #include <boost/container/small_vector.hpp>
-#include "better_assert.hpp"
 
 using boost::container::small_vector;
 

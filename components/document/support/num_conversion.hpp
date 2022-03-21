@@ -1,11 +1,11 @@
 #pragma once
 
-#include "platform_compat.hpp"
+#include <components/document/support/platform_compat.hpp>
 
 #if __has_include("Error.hh")
 #include "Error.hh"
 #else
-#include "exception.hpp"
+#include <components/document/support/exception.hpp>
 #endif
 
 #include <cstddef>

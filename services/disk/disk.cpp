@@ -1,8 +1,6 @@
 #include "disk.hpp"
-#include <string_view>
 #include <rocksdb/db.h>
-#include <components/btree_storage/serialize.hpp>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/serialize/serialize.hpp>
 #include "metadata.hpp"
 
 namespace services::disk {
@@ -59,10 +57,10 @@ namespace services::disk {
         delete db_;
     }
 
-    void disk_t::save_document(const std::string& database, const std::string& collection, const document_id_t& id, document_unique_ptr &&document) {
+    void disk_t::save_document(const std::string& database, const std::string& collection, const document_id_t& id, const document_ptr &document) {
         if (db_) {
             auto key = gen_key(database, collection, id);
-            auto serialized_document = components::btree::serialize(document);
+            auto serialized_document = components::serialize::serialize(document);
             rocksdb::WriteBatch batch;
             batch.Put(gen_key(key_structure, key), to_string_view(serialized_document.structure));
             batch.Put(gen_key(key_data, key), to_string_view(serialized_document.data));
@@ -70,21 +68,21 @@ namespace services::disk {
         }
     }
 
-    document_unique_ptr disk_t::load_document(const std::string& id_rocks) const {
+    document_ptr disk_t::load_document(const std::string& id_rocks) const {
         if (db_) {
             std::vector<std::string> read_document(2);
             auto statuses = db_->MultiGet(rocksdb::ReadOptions(), {gen_key(key_structure, id_rocks), gen_key(key_data, id_rocks)}, &read_document);
             if (statuses_ok(statuses)) {
-                components::btree::serialized_document_t serialized_document;
+                components::serialize::serialized_document_t serialized_document;
                 serialized_document.structure.write(read_document.at(0).data(), read_document.at(0).size());
                 serialized_document.data.write(read_document.at(1).data(), read_document.at(1).size());
-                return components::btree::deserialize(serialized_document);
+                return components::serialize::deserialize(serialized_document);
             }
         }
         return nullptr;
     }
 
-    document_unique_ptr disk_t::load_document(const std::string& database, const std::string& collection, const document_id_t& id) const {
+    document_ptr disk_t::load_document(const std::string& database, const std::string& collection, const document_id_t& id) const {
         return load_document(gen_key(database, collection, id));
     }
 

@@ -10,13 +10,11 @@
 
 namespace py = pybind11;
 
-void to_document(const py::handle& source, components::document::document_t& target);
+auto to_document(const py::handle& source) -> components::document::document_ptr;
 auto from_document(const components::document::document_view_t& document) -> py::object;
 
 auto from_object(const components::document::document_view_t& document, const std::string& key) -> py::object;
 auto from_object(const components::document::document_view_t& document, uint32_t index) -> py::object;
-
-void update_document(const py::handle& source, components::document::document_t& target);
 
 auto to_pylist(const std::vector<std::string> &src) -> py::list;
 auto to_pylist(const std::vector<components::document::document_id_t> &src) -> py::list;
