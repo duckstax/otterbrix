@@ -29,7 +29,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* structure) {
             //msg_dict.ptr[i].key = msgpack::object(std::string_view(it.key()->to_string()));
             auto* s = new std::string(it.key()->to_string());
             o.pack(s->data());
-            o.pack(it.value());
+            to_msgpack_(o, it.value());
             ++i;
         }
         return;
@@ -98,7 +98,7 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<components::document::document_t> final {
+            struct convert<components::document::document_ptr> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::document::document_ptr& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
@@ -112,7 +112,7 @@ namespace msgpack {
             };
 
             template<>
-            struct pack<components::document::document_t> final {
+            struct pack<components::document::document_ptr> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::document::document_ptr const& v) const {
                     o.pack_array(2);
@@ -123,8 +123,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<components::document::document_t> final {
-                void operator()(msgpack::object::with_zone& o, components::document::document_t const& v) const {
+            struct object_with_zone<components::document::document_ptr> final {
+                void operator()(msgpack::object::with_zone& o, components::document::document_ptr const& v) const {
                     o.type = type::ARRAY;
                 }
             };
