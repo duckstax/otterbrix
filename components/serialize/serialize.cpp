@@ -16,6 +16,15 @@ namespace components::serialize {
         return res;
     }
 
+    msgpack::object msgpack_object_bin(const components::document::document_ptr& doc) {
+        auto data = std::make_unique<char[]>(doc->data.size());
+        std::memcpy(data.get(), doc->data.data(), doc->data.size());
+        msgpack::object res;
+        res.type = msgpack::type::object_type::BIN;
+        res.via.bin = msgpack::object_bin{static_cast<uint32_t>(doc->data.size()), data.release()};
+        return res;
+    }
+
     msgpack::object msgpack_object_(const msgpack::object_map &map) {
         msgpack::object res;
         res.type = msgpack::type::object_type::MAP;
@@ -116,15 +125,20 @@ namespace components::serialize {
         res.type = msgpack::type::object_type::ARRAY;
         msgpack::object_array array{2, new msgpack::object[2]};
         array.ptr[0] =to_msgpack_(document->structure);
-        auto data_handle = msgpack::unpack(document->data.data(),document->data.size());
-        array.ptr[1] = msgpack::object(data_handle.get());
+        array.ptr[1] = msgpack_object_bin(document);
         res.via.array = array;
         return res;
     }
 
 
     document_ptr unpack(const msgpack::object& object) {
-    ///    return components::document::make_document(to_structure_(object.via.array.ptr[0])->as_dict()->as_mutable(), object.via.array.ptr[1]);
+        msgpack::sbuffer tmp;
+        tmp.write(object.via.array.ptr[1].via.bin.ptr,object.via.array.ptr[1].via.bin.size);
+
+        return components::document::make_document(
+            to_structure_(object.via.array.ptr[0])->as_dict()->as_mutable(),
+            tmp
+          );
     }
 
 }

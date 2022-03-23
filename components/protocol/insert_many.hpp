@@ -1,7 +1,9 @@
 #pragma once
 
+#include <boost/beast/core/span.hpp>
 #include "base.hpp"
 #include "components/document/msgpack/msgpack_encoder.hpp"
+#include "components/serialize/serialize.hpp"
 #include <msgpack/adaptor/list.hpp>
 
 struct insert_many_t : statement_t {
@@ -35,7 +37,15 @@ namespace msgpack {
 
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto documents = o.via.array.ptr[2].as<std::list<components::document::document_ptr>>();
+
+                    std::list<components::document::document_ptr> documents;
+
+
+                    boost::beast::span<msgpack::object>raw_data(o.via.array.ptr[2].via.array.ptr,o.via.array.ptr[2].via.array.size);
+                        for(const auto&i:raw_data) {
+                            documents.emplace_back( components::serialize::unpack(i));
+                        }
+
                     v = std::move(insert_many_t(database, collection, documents));
                     return o;
                 }
@@ -48,7 +58,8 @@ namespace msgpack {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
-                    o.pack(v.documents_);
+                    o.pack_array(v.documents_.size());
+                    o.pack
                     return o;
                 }
             };
@@ -61,7 +72,7 @@ namespace msgpack {
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                    o.via.array.ptr[2] = msgpack::object(v.documents_, o.zone);
+                   /// o.via.array.ptr[2] = msgpack::object(v.documents_, o.zone);
                 }
             };
 
