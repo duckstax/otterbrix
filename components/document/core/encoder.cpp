@@ -1,18 +1,17 @@
 #include "encoder.hpp"
-#include "pointer.hpp"
-#include "shared_keys.hpp"
-#include "mutable_dict.h"
-#include "endian.hpp"
-#include "varint.hpp"
-#include "exception.hpp"
-#include "parse_date.hpp"
-#include "platform_compat.hpp"
-#include "temp_array.hpp"
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/support/endian.hpp>
+#include <components/document/support/varint.hpp>
+#include <components/document/support/exception.hpp>
+#include <components/document/support/parse_date.hpp>
+#include <components/document/support/temp_array.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <algorithm>
 #include <cmath>
 #include <float.h>
 #include <stdlib.h>
-#include "better_assert.hpp"
 
 namespace document { namespace impl {
 

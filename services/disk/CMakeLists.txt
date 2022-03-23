@@ -23,7 +23,7 @@ target_link_libraries(
     rocketjoe_${PROJECT_NAME} PRIVATE
     ${CONAN_LIBS}
     rocketjoe::document
-    rocketjoe::btree_storage
+    rocketjoe::serialize
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

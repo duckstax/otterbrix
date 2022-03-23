@@ -3,7 +3,7 @@
 #include <atomic>
 #include <cstddef>
 #include <functional>
-#include "better_assert.hpp"
+#include <components/document/support/better_assert.hpp>
 
 #ifdef _MSC_VER
 #include <Windows.h>

@@ -5,6 +5,7 @@
 namespace components::parser {
 
 using components::document::document_t;
+using components::document::document_ptr;
 using components::document::document_view_t;
 using ::document::impl::value_t;
 
@@ -12,7 +13,7 @@ using ::document::impl::value_t;
 class conditional_expression {
 public:
     conditional_expression() = default;
-    explicit conditional_expression(const std::string &key);
+    explicit conditional_expression(std::string key);
     virtual ~conditional_expression() = default;
 
     template <class T> bool is_fit(const T &doc) {
@@ -29,10 +30,10 @@ private:
     std::string full_key_;
 
     virtual bool check_document(const document_view_t &) const = 0;
-    virtual bool check_document(const document_t &) const = 0;
 
-    const document_view_t prepare_document_(const document_view_t &doc);
-    const document_t prepare_document_(const document_t &doc);
+    document_view_t prepare_document_(const document_view_t &doc);
+    document_view_t prepare_document_(const document_t &doc);
+    document_view_t prepare_document_(const document_ptr &doc);
 };
 using conditional_expression_ptr = std::shared_ptr<conditional_expression>;
 
@@ -40,16 +41,13 @@ using conditional_expression_ptr = std::shared_ptr<conditional_expression>;
 class find_condition_t : public conditional_expression {
 public:
     find_condition_t() = default;
-    find_condition_t(std::vector<conditional_expression_ptr> &&conditions);
-    find_condition_t(const std::vector<conditional_expression_ptr> &conditions);
+    explicit find_condition_t(std::vector<conditional_expression_ptr> &&conditions);
+    explicit find_condition_t(const std::vector<conditional_expression_ptr> &conditions);
     void add(conditional_expression_ptr &&condition);
     bool check_document(const document_view_t &doc) const override;
-    bool check_document(const document_t &doc) const override;
     bool is_union() const override;
 protected:
     std::vector<conditional_expression_ptr> conditions_;
-private:
-    template <class T> bool check_document_(const T &doc) const;
 };
 using find_condition_ptr = std::shared_ptr<find_condition_t>;
 

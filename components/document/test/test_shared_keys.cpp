@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
-#include "path.hpp"
-#include "doc.hpp"
-#include "shared_keys.hpp"
-#include "encoder.hpp"
-#include "json_coder.hpp"
-#include "slice_io.hpp"
+#include <components/document/core/path.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/core/encoder.hpp>
+#include <components/document/json/json_coder.hpp>
+#include <components/document/support/slice_io.hpp>
 #include <limits.h>
 
 using namespace document::impl;

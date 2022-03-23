@@ -1,7 +1,9 @@
 #include "document_view.hpp"
-#include "core/dict.hpp"
-#include "core/array.hpp"
-#include "structure.hpp"
+#include <components/document/core/dict.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/doc.hpp>
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/structure.hpp>
 #include <iostream>
 
 using ::document::impl::value_type;
@@ -18,6 +20,18 @@ document_view_t::document_view_t(document_view_t::index_t index, document_view_t
     : index_(index)
     , array_(nullptr)
     , storage_(storage) {
+}
+
+document_view_t::document_view_t(const document_t &src)
+    : index_(src.structure)
+    , array_(nullptr)
+    , storage_(&src.data) {
+}
+
+document_view_t::document_view_t(const document_ptr &src)
+    : index_(src->structure)
+    , array_(nullptr)
+    , storage_(&src->data) {
 }
 
 document_view_t::document_view_t(const document_view_t &src)
@@ -283,6 +297,12 @@ std::string document_view_t::to_json() const {
     return std::string();
 }
 
+::document::retained_t<::document::impl::dict_t> document_view_t::to_dict() const {
+    //todo erase serialize to json
+    auto doc = ::document::impl::doc_t::from_json(to_json());
+    return ::document::impl::mutable_dict_t::new_dict(doc->root()->as_dict());
+}
+
 document_view_t::document_view_t(document_view_t::array_t array, document_view_t::storage_t storage)
     : index_(nullptr)
     , array_(array)
@@ -331,11 +351,11 @@ std::string document_view_t::to_json_dict() const {
         if (!res.str().empty()) res << ",";
         auto key = static_cast<std::string>(it.key()->as_string());
         if (is_dict(key)) {
-            res << key << ":" << get_dict(std::move(key)).to_json();
+            res << "\"" << key << "\"" << ":" << get_dict(std::move(key)).to_json();
         } else if (is_array(key)) {
-            res << key << ":" << get_array(std::move(key)).to_json();
+            res << "\"" << key << "\"" << ":" << get_array(std::move(key)).to_json();
         } else {
-            res << key << ":" << *get(std::move(key));
+            res << "\"" << key << "\"" << ":" << *get(std::move(key));
         }
     }
     return "{" + res.str() + "}";

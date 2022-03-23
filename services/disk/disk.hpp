@@ -1,5 +1,6 @@
 #pragma once
-#include <components/btree_storage/btree_storage.hpp>
+#include <components/document/document.hpp>
+#include <components/document/document_id.hpp>
 
 namespace rocksdb {
     class DB;
@@ -10,8 +11,7 @@ namespace services::disk {
     class metadata_t;
 
     using metadata_ptr = std::unique_ptr<metadata_t>;
-    using components::btree::document_t;
-    using components::btree::document_unique_ptr;
+    using components::document::document_ptr;
     using components::document::document_id_t;
 
     class disk_t {
@@ -21,9 +21,9 @@ namespace services::disk {
         disk_t &operator=(disk_t const&) = delete;
         ~disk_t();
 
-        void save_document(const std::string &database, const std::string &collection, const document_id_t &id, document_unique_ptr &&document);
-        [[nodiscard]] document_unique_ptr load_document(const std::string& id_rocks) const;
-        [[nodiscard]] document_unique_ptr load_document(const std::string& database, const std::string& collection, const document_id_t& id) const;
+        void save_document(const std::string &database, const std::string &collection, const document_id_t &id, const document_ptr &document);
+        [[nodiscard]] document_ptr load_document(const std::string& id_rocks) const;
+        [[nodiscard]] document_ptr load_document(const std::string& database, const std::string& collection, const document_id_t& id) const;
         void remove_document(const std::string &database, const std::string &collection, const document_id_t &id);
         [[nodiscard]] std::vector<std::string> load_list_documents(const std::string &database, const std::string &collection) const;
 

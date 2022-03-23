@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
-#include "varint.hpp"
-#include "pointer.hpp"
-#include "array.hpp"
-#include "dict.hpp"
+#include <components/document/support/varint.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 
 using namespace document;
 using document::impl::value_type;

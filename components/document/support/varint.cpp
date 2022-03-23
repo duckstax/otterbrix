@@ -1,8 +1,8 @@
 #include "varint.hpp"
-#include "slice.hpp"
-#include "endian.hpp"
+#include <components/document/core/slice.hpp>
+#include <components/document/support/endian.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <algorithm>
-#include "better_assert.hpp"
 
 namespace document {
 
