@@ -115,18 +115,22 @@ namespace services::disk {
         return {};
     }
 
-    void disk_t::append_database(const std::string& database) {
+    bool disk_t::append_database(const std::string& database) {
         if (metadata_ && !metadata_->is_exists_database(database)) {
             metadata_->append_database(database);
             flush_metadata();
+            return true;
         }
+        return false;
     }
 
-    void disk_t::remove_database(const std::string& database) {
+    bool disk_t::remove_database(const std::string& database) {
         if (metadata_ && metadata_->is_exists_database(database)) {
             metadata_->remove_database(database);
             flush_metadata();
+            return true;
         }
+        return false;
     }
 
     std::vector<std::string> disk_t::collections(const std::string &database) const {
@@ -136,18 +140,22 @@ namespace services::disk {
         return {};
     }
 
-    void disk_t::append_collection(const std::string& database, const std::string& collection) {
+    bool disk_t::append_collection(const std::string& database, const std::string& collection) {
         if (metadata_ && !metadata_->is_exists_collection(database, collection)) {
             metadata_->append_collection(database, collection);
             flush_metadata();
+            return true;
         }
+        return false;
     }
 
-    void disk_t::remove_collection(const std::string& database, const std::string& collection) {
+    bool disk_t::remove_collection(const std::string& database, const std::string& collection) {
         if (metadata_ && metadata_->is_exists_collection(database, collection)) {
             metadata_->remove_collection(database, collection);
             flush_metadata();
+            return true;
         }
+        return false;
     }
 
     void disk_t::flush_metadata() {

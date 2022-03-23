@@ -3,11 +3,16 @@ project(disk)
 set(${PROJECT_NAME}_HEADERS
     disk.hpp
     metadata.hpp
+    route.hpp
+    disk_replicate.hpp
+    result.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
     disk.cpp
     metadata.cpp
+    disk_replicate.cpp
+    result.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

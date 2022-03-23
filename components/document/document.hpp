@@ -4,6 +4,7 @@
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/range.hpp>
+#include <components/document/document_id.hpp>
 
 namespace document::impl {
     class dict_t;
@@ -42,6 +43,8 @@ namespace components::document {
     document_ptr make_document(const ::document::impl::dict_t *dict, int version = 0);
 
     document_ptr make_upsert_document(const document_ptr& source);
+
+    document_id_t get_document_id(const document_ptr &document);
 
     document_ptr document_from_json(const std::string &json);
     std::string document_to_json(const document_ptr &doc);

@@ -28,12 +28,12 @@ namespace services::disk {
         [[nodiscard]] std::vector<std::string> load_list_documents(const std::string &database, const std::string &collection) const;
 
         [[nodiscard]] std::vector<std::string> databases() const;
-        void append_database(const std::string &database);
-        void remove_database(const std::string &database);
+        [[nodiscard]] bool append_database(const std::string &database);
+        [[nodiscard]] bool remove_database(const std::string &database);
 
         [[nodiscard]] std::vector<std::string> collections(const std::string &database) const;
-        void append_collection(const std::string &database, const std::string &collection);
-        void remove_collection(const std::string &database, const std::string &collection);
+        [[nodiscard]] bool append_collection(const std::string &database, const std::string &collection);
+        [[nodiscard]] bool remove_collection(const std::string &database, const std::string &collection);
 
     private:
         rocksdb::DB* db_;
