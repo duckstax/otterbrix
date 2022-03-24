@@ -30,5 +30,5 @@ auto manager_wal_replicate_t::add_supervisor_impl(goblin_engineer::supervisor) -
 }
 
 void manager_wal_replicate_t::creat_wal_worker() {
-    spawn_actor<wal_replicate_t>(path_,log_);
+    spawn_actor<wal_replicate_t>(log_,path_);
 }

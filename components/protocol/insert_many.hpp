@@ -7,9 +7,7 @@
 #include <msgpack/adaptor/list.hpp>
 
 struct insert_many_t : statement_t {
-    insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_ptr> documents)
-        : statement_t(statement_type::insert_many, database, collection)
-        , documents_(std::move(documents)){};
+    insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_ptr> documents);
     insert_many_t() = default;
     insert_many_t(const insert_many_t&) = default;
     insert_many_t& operator=(const insert_many_t&) = default;
@@ -37,15 +35,7 @@ namespace msgpack {
 
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
-
-                    std::list<components::document::document_ptr> documents;
-
-
-                    boost::beast::span<msgpack::object>raw_data(o.via.array.ptr[2].via.array.ptr,o.via.array.ptr[2].via.array.size);
-                        for(const auto&i:raw_data) {
-                            documents.emplace_back( components::serialize::unpack(i));
-                        }
-
+                    auto documents = o.via.array.ptr[2].as<std::list<components::document::document_ptr>>();
                     v = std::move(insert_many_t(database, collection, documents));
                     return o;
                 }
@@ -58,8 +48,7 @@ namespace msgpack {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
-                    o.pack_array(v.documents_.size());
-                    o.pack
+                    o.pack(v.documents_);
                     return o;
                 }
             };

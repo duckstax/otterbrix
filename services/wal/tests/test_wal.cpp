@@ -15,16 +15,16 @@
 TEST_CASE("insert_many_t test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(log, 1, 1000);
+    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(),log, 1, 1000);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(nullptr, log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
-    std::list<components::document::document_t> documents ;
-    insert_many_t data(database,collection,documents) ;
+    std::list<components::document::document_ptr> documents ;
+    insert_many_t data(database,collection,std::move(documents));
 
     wal->insert_many(data);
 /*
