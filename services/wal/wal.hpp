@@ -39,6 +39,9 @@ private:
     buffer_t buffer_;
 #ifdef DEV_MODE
 public:
+    std::size_t writed() const {
+        return writed_;
+    };
     size_tt read_size(size_t start_index);
     buffer_t read(size_t start_index, size_t finish_index);
 #endif
