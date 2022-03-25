@@ -90,9 +90,14 @@ buffer_t wal_replicate_t::read(size_t start_index, size_t finish_index) {
 
 void wal_replicate_t::insert_many(insert_many_t& data) {
     buffer_.clear();
-
     last_crc32_ = pack(buffer_,last_crc32_,log_number_,data) ;
+    write_();
+}
 
-    write();
-
+void wal_replicate_t::write_() {
+    std::vector<iovec> iodata;
+    iodata.emplace_back(iovec{buffer_.data(), buffer_.size()});
+    int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
+    writed_ += size_write;
+    ++log_number_;
 }

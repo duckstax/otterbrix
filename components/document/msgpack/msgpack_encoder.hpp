@@ -52,7 +52,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* structure) {
     return;
 }
 
-const value_t* to_structure_(const msgpack::object& msg_object) ;
+const value_t *to_structure(const msgpack::object &msg_object);
 
 // User defined class template specialization
 namespace msgpack {
@@ -68,7 +68,7 @@ namespace msgpack {
 
                     msgpack::sbuffer tmp;
                     tmp.write(o.via.array.ptr[1].via.bin.ptr, o.via.array.ptr[1].via.bin.size);
-                    v = components::document::make_document(to_structure_(o.via.array.ptr[0])->as_dict()->as_mutable(), tmp);
+                    v = components::document::make_document(to_structure(o.via.array.ptr[0])->as_dict()->as_mutable(), tmp);
                     return o;
                 }
             };

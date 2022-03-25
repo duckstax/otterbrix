@@ -23,12 +23,13 @@ TEST_CASE("insert_many_t test") {
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
+
     std::list<components::document::document_ptr> documents ;
     insert_many_t data(database,collection,std::move(documents));
 
     wal->insert_many(data);
-/*
-    wal_entry_t entry;
+
+    wal_entry_t<insert_many_t> entry;
 
     entry.size_ = wal->read_size(0);
 
@@ -38,12 +39,10 @@ TEST_CASE("insert_many_t test") {
 
     auto crc32_index = entry.size_;
     crc32_t crc32 = crc32c::Crc32c(output.data(),crc32_index);
-    unpack_v2(output,entry);
+
+    unpack(output,entry);
+    entry.crc32_ = read_crc32(output, entry.size_);
 
     REQUIRE(entry.crc32_ == crc32);
 
-    msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1, entry.entry_.payload_.data(), entry.entry_.payload_.size());
-    const auto& o_1 = msg_1.get();
-*/
 }

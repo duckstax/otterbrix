@@ -26,13 +26,7 @@ public:
     void last_id() {}
     ~wal_replicate_t() override;
 private:
-    void write(){
-        std::vector<iovec> iodata;
-        iodata.emplace_back(iovec{buffer_.data(), buffer_.size()});
-        int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
-        writed_ += size_write;
-        ++log_number_;
-    };
+    void write_();
     bool file_exist_(boost::filesystem::path path);
 
     log_t log_;

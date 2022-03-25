@@ -11,17 +11,6 @@ using buffer_t = std::vector<buffer_element_t>;
 using size_tt = std::uint16_t;
 using log_number_t = std::uint64_t;
 using crc32_t = std::uint32_t;
-/*
-struct entry_t final {
-    entry_t() = default;
-    entry_t(crc32_t last_crc32, log_number_t logNumber)
-        : last_crc32_(last_crc32)
-        , log_number_(logNumber) {}
-
-    crc32_t last_crc32_;
-    log_number_t log_number_;
-};
-*/
 
 template<class T>
 struct wal_entry_t final {
@@ -55,23 +44,11 @@ crc32_t pack(buffer_t& storage, crc32_t last_crc32, log_number_t log_number, T& 
 
 template<class T>
 void  unpack(buffer_t& storage,wal_entry_t<T>& entry){
-    auto start = 0;
-    auto finish = entry.size_;
-    auto buffer = read_payload(storage, start, finish);
     msgpack::unpacked msg;
-    msgpack::unpack(msg, buffer.data(), buffer.size());
+    msgpack::unpack(msg, storage.data(), storage.size());
     const auto& o = msg.get();
     entry.last_crc32_ = o.via.array.ptr[0].as<crc32_t>();
     entry.log_number_ = o.via.array.ptr[1].as<log_number_t>();
     entry.type_ = static_cast<statement_type>(o.via.array.ptr[2].as<char>());
-    entry.entry_ = o.via.array.ptr[3].as<T>();
-    entry.crc32_ = read_crc32(storage, entry.size_);
+    entry.entry_ = std::move(o.via.array.ptr[3].as<T>());
 }
-
-/*
-crc32_t pack(buffer_t& storage, entry_t&);
-
-void unpack(buffer_t& storage, wal_entry_t&);
-
-void unpack_v2(buffer_t& storage, wal_entry_t&);
- */
