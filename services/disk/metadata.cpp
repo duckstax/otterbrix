@@ -1,24 +1,11 @@
 #include "metadata.hpp"
 #include <algorithm>
+#include <fstream>
 
 namespace services::disk {
 
-    metadata_t::packdata_t metadata_t::pack() const {
-        packdata_t res;
-        for (const auto& it : data_) {
-            if (!res.empty()) {
-                res += "\n";
-            }
-            res += it.first + ":";
-            for (const auto &collection : it.second) {
-                res += collection + ";";
-            }
-        }
-        return res;
-    }
-
-    metadata_t::metadata_ptr metadata_t::extract(const metadata_t::packdata_t& package) {
-        return std::make_unique<metadata_t>(package);
+    metadata_t::metadata_ptr metadata_t::open(const std::string &file_name) {
+        return std::unique_ptr<metadata_t>(new metadata_t(file_name));
     }
 
     metadata_t::databases_t metadata_t::databases() const {
@@ -43,14 +30,23 @@ namespace services::disk {
         return data_.find(database) != data_.end();
     }
 
-    void metadata_t::append_database(const metadata_t::database_name_t& database) {
+    bool metadata_t::append_database(const metadata_t::database_name_t& database, bool is_flush) {
         if (!is_exists_database(database)) {
             data_.insert_or_assign(database, collections_t());
+            if (is_flush) {
+                flush_();
+            }
+            return true;
         }
+        return false;
     }
 
-    void metadata_t::remove_database(const metadata_t::database_name_t& database) {
-        data_.erase(database);
+    bool metadata_t::remove_database(const metadata_t::database_name_t& database, bool is_flush) {
+        bool result = data_.erase(database) > 0;
+        if (is_flush && result) {
+            flush_();
+        }
+        return result;
     }
 
     bool metadata_t::is_exists_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection) const {
@@ -61,46 +57,70 @@ namespace services::disk {
         return false;
     }
 
-    void metadata_t::append_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection) {
+    bool metadata_t::append_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection, bool is_flush) {
         if (!is_exists_collection(database, collection)) {
             auto it = data_.find(database);
             if (it != data_.end()) {
                 it->second.push_back(collection);
+                if (is_flush) {
+                    flush_();
+                }
+                return true;
             }
         }
+        return false;
     }
 
-    void metadata_t::remove_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection) {
+    bool metadata_t::remove_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection, bool is_flush) {
         auto it = data_.find(database);
         if (it != data_.end()) {
-            it->second.erase(std::remove(it->second.begin(), it->second.end(), collection), it->second.end());
-        }
-    }
-
-    metadata_t::metadata_t(const metadata_t::packdata_t& package) {
-        auto trim = [](std::string &str) {
-            str.erase(std::remove_if(str.begin(), str.end(), [](char c) {
-                          return c == ';' || c == ':' || c == '\n';
-                      }), str.end());
-        };
-        size_t pos = 0;
-        database_name_t database;
-        while (pos != std::string::npos) {
-            auto pos_db = package.find(':', pos + 1);
-            auto pos_col = package.find(';', pos + 1);
-            if (pos_db < pos_col && pos_db != std::string::npos) {
-                database = package.substr(pos, pos_db - pos);
-                trim(database);
-                append_database(database);
-                pos = pos_db;
-            } else if (pos_col != std::string::npos) {
-                auto collection = package.substr(pos, pos_col - pos);
-                trim(collection);
-                append_collection(database, collection);
-                pos = pos_col;
-            } else {
-                pos = std::string::npos;
+            auto it_collection = std::remove(it->second.begin(), it->second.end(), collection);
+            if (it_collection != it->second.end()) {
+                it->second.erase(it_collection, it->second.end());
+                if (is_flush) {
+                    flush_();
+                }
+                return true;
             }
         }
+        return false;
+    }
+
+    metadata_t::metadata_t(const std::string &file_name)
+        : file_name_(file_name) {
+        std::ifstream file(file_name.data());
+        if (file.is_open()) {
+            std::string line;
+            while (std::getline(file, line)) {
+                auto pos_db = line.find(':');
+                if (pos_db != std::string::npos) {
+                    auto database = line.substr(0, pos_db);
+                    append_database(database, false);
+                    auto pos = pos_db + 1;
+                    auto pos_col = line.find(';', pos);
+                    while (pos_col != std::string::npos) {
+                        auto collection = line.substr(pos, pos_col - pos);
+                        append_collection(database, collection, false);
+                        pos = pos_col + 1;
+                        pos_col = line.find(';', pos);
+                    }
+                }
+            }
+        }
+        file.close();
+    }
+
+    void metadata_t::flush_() {
+        std::ofstream file(file_name_.data());
+        if (file.is_open()) {
+            for (const auto& it : data_) {
+                file << it.first + ":";
+                for (const auto& collection : it.second) {
+                    file << collection + ";";
+                }
+                file << "\n";
+            }
+        }
+        file.close();
     }
 } //namespace services::disk

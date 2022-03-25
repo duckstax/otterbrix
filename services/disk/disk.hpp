@@ -10,36 +10,38 @@ namespace services::disk {
 
     class metadata_t;
 
+    using rocks_id = std::string;
+    using database_name_t = std::string;
+    using collection_name_t = std::string;
     using metadata_ptr = std::unique_ptr<metadata_t>;
+    using db_ptr = std::unique_ptr<rocksdb::DB>;
     using components::document::document_ptr;
     using components::document::document_id_t;
 
     class disk_t {
     public:
-        explicit disk_t(const std::string_view &file_name);
+        explicit disk_t(const std::string &file_name);
         disk_t(const disk_t &) = delete;
         disk_t &operator=(disk_t const&) = delete;
         ~disk_t();
 
-        void save_document(const std::string &database, const std::string &collection, const document_id_t &id, const document_ptr &document);
-        [[nodiscard]] document_ptr load_document(const std::string& id_rocks) const;
-        [[nodiscard]] document_ptr load_document(const std::string& database, const std::string& collection, const document_id_t& id) const;
-        void remove_document(const std::string &database, const std::string &collection, const document_id_t &id);
-        [[nodiscard]] std::vector<std::string> load_list_documents(const std::string &database, const std::string &collection) const;
+        void save_document(const database_name_t &database, const collection_name_t &collection, const document_id_t &id, const document_ptr &document);
+        [[nodiscard]] document_ptr load_document(const rocks_id& id_rocks) const;
+        [[nodiscard]] document_ptr load_document(const database_name_t &database, const collection_name_t &collection, const document_id_t& id) const;
+        void remove_document(const database_name_t &database, const collection_name_t &collection, const document_id_t &id);
+        [[nodiscard]] std::vector<rocks_id> load_list_documents(const database_name_t &database, const collection_name_t &collection) const;
 
-        [[nodiscard]] std::vector<std::string> databases() const;
-        [[nodiscard]] bool append_database(const std::string &database);
-        [[nodiscard]] bool remove_database(const std::string &database);
+        [[nodiscard]] std::vector<database_name_t> databases() const;
+        bool append_database(const database_name_t &database);
+        bool remove_database(const database_name_t &database);
 
-        [[nodiscard]] std::vector<std::string> collections(const std::string &database) const;
-        [[nodiscard]] bool append_collection(const std::string &database, const std::string &collection);
-        [[nodiscard]] bool remove_collection(const std::string &database, const std::string &collection);
+        [[nodiscard]] std::vector<collection_name_t> collections(const database_name_t &database) const;
+        bool append_collection(const database_name_t &database, const collection_name_t &collection);
+        bool remove_collection(const database_name_t &database, const collection_name_t &collection);
 
     private:
-        rocksdb::DB* db_;
+        db_ptr db_;
         metadata_ptr metadata_;
-
-        void flush_metadata();
     };
 
 } //namespace services::disk

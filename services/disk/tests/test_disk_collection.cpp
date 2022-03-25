@@ -9,14 +9,15 @@ using namespace services::disk;
 
 TEST_CASE("sync collection from disk") {
     SECTION("save collection into disk") {
+        remove((file_db + "/metadata").data());
         disk_t disk(file_db);
-        disk.append_database(database_name1);
-        disk.append_database(database_name2);
+        REQUIRE(disk.append_database(database_name1));
+        REQUIRE(disk.append_database(database_name2));
         for (int num = 1; num <= 100; ++num) {
             if (num % 2 == 0) {
-                disk.append_collection(database_name1, "collection_" + std::to_string(num));
+                REQUIRE(disk.append_collection(database_name1, "collection_" + std::to_string(num)));
             } else {
-                disk.append_collection(database_name2, "collection_" + std::to_string(num));
+                REQUIRE(disk.append_collection(database_name2, "collection_" + std::to_string(num)));
             }
         }
     }
@@ -30,8 +31,8 @@ TEST_CASE("sync collection from disk") {
     SECTION("delete collection from disk") {
         disk_t disk(file_db);
         for (int num = 1; num <= 100; ++num) {
-            disk.remove_collection(database_name1, "collection_" + std::to_string(num));
-            disk.remove_collection(database_name2, "collection_" + std::to_string(num));
+            REQUIRE(disk.remove_collection(database_name1, "collection_" + std::to_string(num)) == (num % 2 == 0));
+            REQUIRE(disk.remove_collection(database_name2, "collection_" + std::to_string(num)) != (num % 2 == 0));
         }
         REQUIRE(disk.collections(database_name1).empty());
         REQUIRE(disk.collections(database_name2).empty());

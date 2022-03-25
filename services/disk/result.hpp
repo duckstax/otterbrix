@@ -5,6 +5,9 @@
 
 namespace services::disk {
 
+    using database_name_t = std::string;
+    using collection_name_t = std::string;
+
     class result_success {
     public:
         result_success() = default;
@@ -18,7 +21,7 @@ namespace services::disk {
 
     class result_read_databases {
     public:
-        using result_t = std::vector<std::string>;
+        using result_t = std::vector<database_name_t>;
 
         result_read_databases() = default;
         explicit result_read_databases(result_t&& databases);
@@ -31,7 +34,7 @@ namespace services::disk {
 
     class result_read_collections {
     public:
-        using result_t = std::vector<std::string>;
+        using result_t = std::vector<collection_name_t>;
 
         result_read_collections() = default;
         explicit result_read_collections(result_t&& collections);

@@ -7,9 +7,10 @@ using namespace services::disk;
 
 TEST_CASE("sync database from disk") {
     SECTION("save databases into disk") {
+        remove((file_db + "/metadata").data());
         disk_t disk(file_db);
         for (int num = 1; num <= 10; ++num) {
-            disk.append_database("database_" + std::to_string(num));
+            REQUIRE(disk.append_database("database_" + std::to_string(num)));
         }
     }
 
@@ -22,7 +23,7 @@ TEST_CASE("sync database from disk") {
     SECTION("delete database from disk") {
         disk_t disk(file_db);
         for (int num = 1; num <= 10; num += 2) {
-            disk.remove_database("database_" + std::to_string(num));
+            REQUIRE(disk.remove_database("database_" + std::to_string(num)));
         }
         auto databases = disk.databases();
         REQUIRE(databases.size() == 5);

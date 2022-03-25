@@ -58,6 +58,7 @@ using namespace services::disk;
 
 TEST_CASE("sync documents from disk") {
     SECTION("save document into disk") {
+        remove((file_db + "/metadata").data());
         disk_t disk(file_db);
         for (int num = 1; num <= 100; ++num) {
             disk.save_document(database_name, collection_name, document_id_t(std::to_string(num)), gen_doc(num));
