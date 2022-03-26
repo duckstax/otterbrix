@@ -4,6 +4,7 @@
 #include <excutor.hpp>
 #include <log/log.hpp>
 #include <boost/filesystem.hpp>
+#include <components/protocol/insert_many.hpp>
 
 
 using manager = goblin_engineer::basic_manager_service_t<goblin_engineer::base_policy_light>;
@@ -12,6 +13,7 @@ class manager_wal_replicate_t final : public manager {
 public:
     manager_wal_replicate_t(boost::filesystem::path,log_t& log, size_t num_workers, size_t max_throughput);
     void creat_wal_worker();
+    void insert_many( insert_many_t& data);
 protected:
     auto executor_impl() noexcept -> goblin_engineer::abstract_executor* override;
     //NOTE: behold thread-safety!

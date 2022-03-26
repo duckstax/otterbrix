@@ -188,11 +188,15 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::insert_many_finish(components::session::session_id_t& session, result_insert_many& result) {
-        log_.debug("dispatcher_t::insert_many_finish session: {}", session.data());
+        trace(log_,"dispatcher_t::insert_many_finish session: {}", session.data());
         auto&s = ::find(session_to_address_,session);
-        goblin_engineer::send(address_book("wal"), dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
+        trace(log_,"dispatcher_t::insert_many_finish session: 0 ");
+        goblin_engineer::send(mwal_, dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
+        trace(log_,"dispatcher_t::insert_many_finish session: 1 ");
         goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
+        trace(log_,"dispatcher_t::insert_many_finish session: 2 ");
         ::remove(session_to_address_,session);
+        trace(log_,"dispatcher_t::insert_many_finish session: 3 ");
     }
 
     void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, goblin_engineer::address_t address) {

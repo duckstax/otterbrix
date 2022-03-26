@@ -55,3 +55,8 @@ if (DEV_MODE)
     )
     file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
+
+if (DEV_MODE)
+    add_definitions(-DDEV_MODE)
+    add_subdirectory(test)
+endif()

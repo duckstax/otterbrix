@@ -33,6 +33,7 @@ wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager,log_t& l
     : goblin_engineer::abstract_service(manager, "wal")
     , log_(log.clone())
     , path_(std::move(path)) {
+    add_handler("insert_many",&wal_replicate_t::insert_many);
     auto not_existed = not file_exist_(path_);
     if (not_existed) {
         boost::filesystem::create_directory(path_);
@@ -89,6 +90,7 @@ buffer_t wal_replicate_t::read(size_t start_index, size_t finish_index) {
 }
 
 void wal_replicate_t::insert_many(insert_many_t& data) {
+    trace(log_,"wal_replicate_t::insert_many {}::{}",data.database_,data.collection_);
     buffer_.clear();
     last_crc32_ = pack(buffer_,last_crc32_,log_number_,data) ;
     write_();
