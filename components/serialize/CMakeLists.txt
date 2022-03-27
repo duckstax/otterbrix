@@ -1,24 +1,24 @@
-set(CURRENT_TARGET serialize)
+project(serialize)
 
-list(APPEND CURRENT_TARGET_HEADERS
+list(APPEND ${PROJECT_NAME}_HEADERS
         serialize.hpp
 )
 
-list(APPEND CURRENT_TARGET_SOURCES
+list(APPEND ${PROJECT_NAME}_SOURCES
         serialize.cpp
 )
 
-add_library(rocketjoe_${CURRENT_TARGET}
-        ${CURRENT_TARGET_HEADERS}
-        ${CURRENT_TARGET_SOURCES}
+add_library(rocketjoe_${PROJECT_NAME}
+        ${${PROJECT_NAME}_HEADERS}
+        ${${PROJECT_NAME}_SOURCES}
 )
 
-add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
+add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
+set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${CURRENT_TARGET} PRIVATE
+        rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::document
 )

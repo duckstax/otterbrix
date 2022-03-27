@@ -1,11 +1,13 @@
 project(wal)
 
 set( ${PROJECT_NAME}_HEADERS
-        )
+)
 
 set(${PROJECT_NAME}_SOURCES
+        dto.cpp
+        manager_wal_replicate.cpp
         wal.cpp
-        )
+)
 
 add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_HEADERS}
@@ -22,9 +24,16 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::log
+        rocketjoe::protocol
 )
 
-target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
+target_include_directories(
+        rocketjoe_${PROJECT_NAME}
+        PRIVATE
+        dto.hpp
+        PUBLIC
+        wal.hpp
+        manager_wal_replicate.hpp
 )
 
 if (DEV_MODE)

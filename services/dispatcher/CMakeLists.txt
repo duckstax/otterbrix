@@ -1,16 +1,17 @@
 project(dispatcher)
 
-set( ${PROJECT_NAME}_HEADERS
-    dispatcher.hpp
+set(${PROJECT_NAME}_HEADERS
+        dispatcher.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
-    dispatcher.cpp
+        dispatcher.cpp
+        session.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-            ${${PROJECT_NAME}_HEADERS}
-            ${${PROJECT_NAME}_SOURCES}
+        ${${PROJECT_NAME}_HEADERS}
+        ${${PROJECT_NAME}_SOURCES}
 )
 
 add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
@@ -23,12 +24,14 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::cursor
         rocketjoe::session
+        rocketjoe::protocol
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
         dispatcher.hpp
+        session.hpp
 )
 
 if (DEV_MODE)
-#    add_subdirectory(tests)
-endif()
+    #    add_subdirectory(tests)
+endif ()

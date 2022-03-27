@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <crc32c/crc32c.h>
 #include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
 #include <wal/wal.hpp>
@@ -7,102 +8,28 @@
 #include <msgpack.hpp>
 #include <string>
 
-#include <crc32c/crc32c.h>
+#include "manager_wal_replicate.hpp"
+#include "wal.hpp"
+#include <components/protocol/insert_many.hpp>
 
-struct get_t {
-    get_t() {}
-    get_t(uint32_t f, const std::string& k)
-        : flags(f)
-        , key(k) {}
-    uint32_t flags;
-    std::string key;
-    MSGPACK_DEFINE(flags, key);
-};
-
-TEST_CASE("2 level serilizate to msgpack") {
-    msgpack::sbuffer input;
-    get_t req;
-    req.flags = 0;
-    req.key = "key0";
-    msgpack::pack(input, req);
-    buffer_t binary_input;
-    std::copy(input.data(), input.data() + input.size(), std::back_inserter(binary_input));
-
-    entry_t entry(42, Type::create_collection, 21, binary_input);
-    msgpack::sbuffer input_1;
-    msgpack::pack(input_1, entry);
-
-    msgpack::unpacked msg;
-    msgpack::unpack(msg, input_1.data(), input_1.size());
-    const auto& o = msg.get();
-    auto output = o.as<entry_t>();
-
-    REQUIRE(output.last_crc32_ == 42);
-    REQUIRE(output.type_ == Type::create_collection);
-    REQUIRE(output.log_number_ == 21);
-
-    msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1, reinterpret_cast<char*>(output.payload_.data()), output.payload_.size());
-    const auto& o_1 = msg_1.get();
-    get_t req_1;
-    o_1.convert(req_1);
-
-    REQUIRE(req_1.key == "key0");
-    REQUIRE(req_1.flags == 0);
-}
-
-TEST_CASE("msgpack to bin") {
-    msgpack::sbuffer input;
-    get_t req;
-    req.flags = 0;
-    req.key = "key0";
-    msgpack::pack(input, req);
-    buffer_t binary_input;
-    std::copy(input.data(), input.data() + input.size(), std::back_inserter(binary_input));
-    entry_t entry(42, Type::create_collection, 21, binary_input);
-
-    buffer_t storage_;
-    crc32_t crc32 = pack(storage_, entry);
-
-    wal_entry_t wal_entry;
-    unpack(storage_, wal_entry);
-
-    REQUIRE(wal_entry.entry_.last_crc32_ == 42);
-    REQUIRE(wal_entry.entry_.type_ == Type::create_collection);
-    REQUIRE(wal_entry.entry_.log_number_ == 21);
-    REQUIRE(wal_entry.crc32_ == crc32);
-    REQUIRE(wal_entry.size_ == 25);
-
-    msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1, reinterpret_cast<char*>(wal_entry.entry_.payload_.data()), wal_entry.entry_.payload_.size());
-    const auto& o_1 = msg_1.get();
-    get_t req_1;
-    o_1.convert(req_1);
-
-    REQUIRE(req_1.key == "key0");
-    REQUIRE(req_1.flags == 0);
-}
-
-TEST_CASE("wal add event") {
+TEST_CASE("base insert many test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<wdr_t>(log, 1, 1000);
-    auto allocate_byte = sizeof(wal_t);
-    auto allocate_byte_alignof = alignof(wal_t);
+    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto allocate_byte = sizeof(wal_replicate_t);
+    auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_t(nullptr, log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
 
-    msgpack::sbuffer input;
-    get_t req;
-    req.flags = 0;
-    req.key = "key0";
-    msgpack::pack(input, req);
-    buffer_t binary_input;
-    std::copy(input.data(), input.data() + input.size(), std::back_inserter(binary_input));
+    const std::string database = "test_database";
+    const std::string collection = "test_collection";
 
-    wal->add_event(Type::create_collection, binary_input);
+    std::list<components::document::document_ptr> documents;
+    insert_many_t data(database, collection, std::move(documents));
 
-    wal_entry_t entry;
+    wal->insert_many(data);
+
+    wal_entry_t<insert_many_t> entry;
 
     entry.size_ = wal->read_size(0);
 
@@ -111,18 +38,51 @@ TEST_CASE("wal add event") {
     auto output = wal->read(start, finish);
 
     auto crc32_index = entry.size_;
-    crc32_t crc32 = crc32c::Crc32c(output.data(),crc32_index);
-    unpack_v2(output,entry);
+    crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
+
+    unpack(output, entry);
+    entry.crc32_ = read_crc32(output, entry.size_);
 
     REQUIRE(entry.crc32_ == crc32);
+}
 
-    msgpack::unpacked msg_1;
-    msgpack::unpack(msg_1, entry.entry_.payload_.data(), entry.entry_.payload_.size());
-    const auto& o_1 = msg_1.get();
-    get_t req_1;
-    o_1.convert(req_1);
+TEST_CASE("advanced insert many test") {
+    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    log.set_level(log_t::level::trace);
+    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto allocate_byte = sizeof(wal_replicate_t);
+    auto allocate_byte_alignof = alignof(wal_replicate_t);
+    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
 
-    REQUIRE(req_1.key == "key0");
-    REQUIRE(req_1.flags == 0);
 
+    const std::string database = "test_database";
+    const std::string collection = "test_collection";
+
+    for (int i = 0; i <= 3; ++i) {
+        std::list<components::document::document_ptr> documents;
+        insert_many_t data(database, collection, std::move(documents));
+        wal->insert_many(data);
+    }
+
+    int read_index = 0;
+
+    for(int i = 0; i <= 3; ++i) {
+        wal_entry_t<insert_many_t> entry;
+
+        entry.size_ = wal->read_size(read_index);
+
+        auto start = sizeof(size_tt);
+        auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
+        auto output = wal->read(start, finish);
+
+        auto crc32_index = entry.size_;
+        crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
+
+        unpack(output, entry);
+        entry.crc32_ = read_crc32(output, entry.size_);
+
+        REQUIRE(entry.crc32_ == crc32);
+        read_index += sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
+    }
 }
