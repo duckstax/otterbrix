@@ -15,16 +15,3 @@ namespace services::dispatcher {
     } // namespace dispatcher
 
 } // namespace services::dispatcher
-
-enum class Type : char {
-    init = 0x00,
-    create_database,
-    create_collection,
-    drop_collection,
-    insert_one,
-    insert_many,
-    delete_one,
-    delete_many,
-    update_one,
-    update_many
-};

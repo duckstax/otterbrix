@@ -33,7 +33,7 @@ namespace services::storage {
         execute();
     }
 
-    void manager_database_t::create(session_t& session, std::string& name) {
+    void manager_database_t::create(session_id_t& session, std::string& name) {
         log_.debug("manager_database_t:create {}", name);
         auto address = spawn_supervisor<database_t>(std::string(name), log_, 1, 1000);
         databases_.emplace(address.type(), address);
@@ -67,7 +67,7 @@ namespace services::storage {
         execute();
     }
 
-    void database_t::create(session_t& session, std::string& name) {
+    void database_t::create(session_id_t& session, std::string& name) {
         log_.debug("database_t::create {}", name);
         auto address = spawn_actor<collection_t>(std::string(name), log_);
         collections_.emplace(address.type(), address);
@@ -75,7 +75,7 @@ namespace services::storage {
         return goblin_engineer::send(current_message()->sender(), self, "create_collection_finish", session, collection_create_result(true), std::string(self.type()), address);
     }
 
-    void database_t::drop(components::session::session_t& session, std::string& name) {
+    void database_t::drop(components::session::session_id_t& session, std::string& name) {
         log_.debug("database_t::drop {}", name);
         auto self = database_t::address();
         auto collection = collections_.find(name);

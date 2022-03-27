@@ -1,10 +1,10 @@
 #include "dispatcher.hpp"
 #include "components/tracy/tracy.hpp"
-#include <services/collection/route.hpp>
-#include <components/document/document.hpp>
-#include "route.hpp"
-#include <services/database/database.hpp>
 #include "parser/parser.hpp"
+#include "route.hpp"
+#include <components/document/document.hpp>
+#include <services/collection/route.hpp>
+#include <services/database/database.hpp>
 
 namespace services::dispatcher {
 
@@ -13,9 +13,9 @@ namespace services::dispatcher {
         , log_(log.clone())
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         ZoneScoped;
-        log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}",num_workers,max_throughput);
-        add_handler("create",&manager_dispatcher_t::create);
-        add_handler("connect_me",&manager_dispatcher_t::connect_me);
+        log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
+        add_handler("create", &manager_dispatcher_t::create);
+        add_handler("connect_me", &manager_dispatcher_t::connect_me);
         add_handler(manager_database::create_database, &manager_dispatcher_t::create_database);
         add_handler(database::create_collection, &manager_dispatcher_t::create_collection);
         add_handler(database::drop_collection, &manager_dispatcher_t::drop_collection);
@@ -55,11 +55,12 @@ namespace services::dispatcher {
         log_.error("manager_dispatcher_t::add_supervisor_impl");
     }
 
-    dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database,goblin_engineer::address_t mdb , log_t& log,std::string name)
+    dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, goblin_engineer::address_t mdb,goblin_engineer::address_t mwal , log_t& log, std::string name)
         : goblin_engineer::abstract_service(manager_database, std::move(name))
         , log_(log.clone())
-        , mdb_(mdb) {
-        log_.trace("dispatcher_t::dispatcher_t name:{}",type());
+        , mdb_(mdb)
+        , mwal_(mwal) {
+        log_.trace("dispatcher_t::dispatcher_t name:{}", type());
         add_handler(manager_database::create_database, &dispatcher_t::create_database);
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
         add_handler(database::create_collection, &dispatcher_t::create_collection);
@@ -86,76 +87,77 @@ namespace services::dispatcher {
         add_handler(collection::close_cursor, &dispatcher_t::close_cursor);
     }
 
-    void dispatcher_t::create_database(components::session::session_t& session, std::string& name,goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::create_database: session {} , name create_database {}",session.data(), name);
+    void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, goblin_engineer::address_t address) {
+        trace(log_,"dispatcher_t::create_database: session {} , name create_database {}", session.data(), name);
         session_to_address_.emplace(session, address);
-        goblin_engineer::send(mdb_,dispatcher_t::address() , manager_database::create_database, session, std::move(name));
+        goblin_engineer::send(mdb_, dispatcher_t::address(), manager_database::create_database, session, std::move(name));
     }
 
-    void dispatcher_t::create_database_finish(components::session::session_t& session, storage::database_create_result result, goblin_engineer::address_t database) {
+    void dispatcher_t::create_database_finish(components::session::session_id_t& session, storage::database_create_result result, goblin_engineer::address_t database) {
         auto type = database.type();
-        log_.debug("dispatcher_t::create_database: session {} , name create_database {}",session.data(), type);
+        trace(log_,"dispatcher_t::create_database: session {} , name create_database {}", session.data(), type);
 
         if (result.created_) {
             auto md = address_book("manager_dispatcher");
-            goblin_engineer::link(md,database);
+            goblin_engineer::link(md, database);
             database_address_book_.emplace(type, database);
             log_.trace("add database_create_result");
         }
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "create_database_finish", session,result);
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "create_database_finish", session, result);
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::create_collection(components::session::session_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::create_collection: session {} , database_name {} , collection_name {}",session.data(), database_name, collections_name);
-        session_to_address_.emplace(session,address);
+    void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, goblin_engineer::address_t address) {
+        trace(log_,"dispatcher_t::create_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collections_name);
+        session_to_address_.emplace(session, address);
         goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), "create_collection", session, collections_name);
     }
 
-    void dispatcher_t::create_collection_finish(components::session::session_t& session, storage::collection_create_result result, std::string& database_name, goblin_engineer::address_t collection) {
+    void dispatcher_t::create_collection_finish(components::session::session_id_t& session, storage::collection_create_result result, std::string& database_name, goblin_engineer::address_t collection) {
         auto type = collection.type();
-        log_.debug("create_collection_finish: {}", type);
-        if(result.created_){
+        trace(log_,"create_collection_finish: {}", type);
+        if (result.created_) {
             auto md = address_book("manager_dispatcher");
-            goblin_engineer::link(md,collection);
+            goblin_engineer::link(md, collection);
             collection_address_book_.emplace(key_collection_t(database_name, std::string(type)), collection);
             log_.trace("add database_create_result");
         }
-        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"create_collection_finish",session,result);
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "create_collection_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::drop_collection(components::session::session_t &session, std::string &database_name, std::string &collection_name, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
+    void dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, goblin_engineer::address_t address) {
+        trace(log_,"dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
         auto it_collection = collection_address_book_.find({database_name, collection_name});
         if (it_collection != collection_address_book_.end()) {
-            session_to_address_.emplace(session,address);
+            session_to_address_.emplace(session, address);
             goblin_engineer::send(it_collection->second, dispatcher_t::address(), database::drop_collection, session);
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "drop_collection_finish", session, result_drop_collection(false));
         }
     }
-    void dispatcher_t::drop_collection_finish_collection(components::session::session_t &session, result_drop_collection &result, std::string &database_name, std::string &collection_name) {
-        log_.debug("dispatcher_t::drop_collection_finish_collection: database_name {} , collection_name {}, result: {}", session.data(), database_name, collection_name, result.is_success());
+    void dispatcher_t::drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name) {
+        trace(log_,"dispatcher_t::drop_collection_finish_collection: database_name {} , collection_name {}, result: {}", session.data(), database_name, collection_name, result.is_success());
         if (result.is_success()) {
             goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::drop_collection, session, collection_name);
         } else {
-            goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "drop_collection_finish", session, result);
+            goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "drop_collection_finish", session, result);
             session_to_address_.erase(session);
         }
     }
-    void dispatcher_t::drop_collection_finish(components::session::session_t &session, result_drop_collection &result, std::string& database_name, goblin_engineer::address_t collection) {
+    void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, goblin_engineer::address_t collection) {
         auto type = collection.type();
-        log_.debug("drop_collection_finish: {}", type);
-        if (result.is_success()){
+        trace(log_,"drop_collection_finish: {}", type);
+        if (result.is_success()) {
             //auto md = address_book("manager_dispatcher");
             //goblin_engineer::link(md,collection);
             collection_address_book_.erase({database_name, std::string(type)});
-            log_.trace("collection {} dropped", type);
+            trace(log_,"collection {} dropped", type);
         }
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "drop_collection_finish", session, result);
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "drop_collection_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::insert_one(components::session::session_t& session, std::string &database_name, std::string& collection, components::document::document_ptr& document, goblin_engineer::address_t address) {
+
+    void dispatcher_t::insert_one(components::session::session_id_t& session, std::string &database_name, std::string& collection, components::document::document_ptr& document, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::insert_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -163,32 +165,43 @@ namespace services::dispatcher {
             session_to_address_.emplace(session, address);
             goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_one, session, std::move(document));
         } else {
-            goblin_engineer::send(address,dispatcher_t::address(),"insert_one_finish",session,result_insert_one());
+            goblin_engineer::send(address, dispatcher_t::address(), "insert_one_finish", session, result_insert_one());
         }
     }
-    void dispatcher_t::insert_many(components::session::session_t &session, std::string& database_name, std::string &collection, std::list<components::document::document_ptr> &documents, goblin_engineer::address_t address) {
+
+    void dispatcher_t::insert_many(components::session::session_id_t &session, std::string& database_name, std::string &collection, std::list<components::document::document_ptr> &documents, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::insert_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            session_to_address_.emplace(session, address);
+            make_session(session_to_address_,session, session_t(address,std::move(insert_many_t(database_name,collection,documents))));
             goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_many, session, std::move(documents));
         } else {
-            goblin_engineer::send(address,dispatcher_t::address(),"insert_many_finish",session,result_insert_many());
+            goblin_engineer::send(address, dispatcher_t::address(), "insert_many_finish", session, result_insert_many());
         }
     }
-    void dispatcher_t::insert_one_finish(components::session::session_t& session, result_insert_one& result) {
-        log_.debug("dispatcher_t::insert_one_finish session: {}",session.data());
-        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_one_finish",session,result);
+
+    void dispatcher_t::insert_one_finish(components::session::session_id_t& session, result_insert_one& result) {
+        trace(log_,"dispatcher_t::insert_one_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "insert_one_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::insert_many_finish(components::session::session_t &session, result_insert_many &result) {
-        log_.debug("dispatcher_t::insert_many_finish session: {}",session.data());
-        goblin_engineer::send(session_to_address_.at(session),dispatcher_t::address(),"insert_many_finish",session,result);
-        session_to_address_.erase(session);
+
+    void dispatcher_t::insert_many_finish(components::session::session_id_t& session, result_insert_many& result) {
+        trace(log_,"dispatcher_t::insert_many_finish session: {}", session.data());
+        auto&s = ::find(session_to_address_,session);
+        trace(log_,"dispatcher_t::insert_many_finish session: 0 ");
+        goblin_engineer::send(mwal_, dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
+        trace(log_,"dispatcher_t::insert_many_finish session: 1 ");
+        goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
+        trace(log_,"dispatcher_t::insert_many_finish session: 2 ");
+        ::remove(session_to_address_,session);
+        trace(log_,"dispatcher_t::insert_many_finish session: 3 ");
     }
-    void dispatcher_t::find(components::session::session_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, goblin_engineer::address_t address) {
+
+    void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::find: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
@@ -198,16 +211,17 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "find_finish", session, result_find());
         }
     }
-    void dispatcher_t::find_finish(components::session::session_t& session, components::cursor::sub_cursor_t* cursor) {
-        log_.debug("dispatcher_t::find_finish session: {}", session.data());
+    void dispatcher_t::find_finish(components::session::session_id_t& session, components::cursor::sub_cursor_t* cursor) {
+        trace(log_,"dispatcher_t::find_finish session: {}", session.data());
         auto result = new components::cursor::cursor_t();
         if (cursor) {
             result->push(cursor);
         }
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_finish", session, result);
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "find_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::find_one(components::session::session_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
+
+    void dispatcher_t::find_one(components::session::session_id_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::find_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -218,12 +232,13 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "find_one_finish", session, result_find_one());
         }
     }
-    void dispatcher_t::find_one_finish(components::session::session_t &session, result_find_one &result) {
-        log_.debug("dispatcher_t::find_one_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "find_one_finish", session, result);
+    void dispatcher_t::find_one_finish(components::session::session_id_t& session, result_find_one& result) {
+        trace(log_,"dispatcher_t::find_one_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "find_one_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::delete_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
+
+    void dispatcher_t::delete_one(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::delete_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -234,7 +249,8 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "delete_finish", session, result_delete());
         }
     }
-    void dispatcher_t::delete_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
+
+    void dispatcher_t::delete_many(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::delete_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -245,12 +261,13 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "delete_finish", session, result_delete());
         }
     }
-    void dispatcher_t::delete_finish(session_t &session, result_delete &result) {
-        log_.debug("dispatcher_t::delete_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "delete_finish", session, result);
+    void dispatcher_t::delete_finish(session_id_t& session, result_delete& result) {
+        trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "delete_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::update_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
+
+    void dispatcher_t::update_one(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -261,7 +278,8 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
         }
     }
-    void dispatcher_t::update_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
+
+    void dispatcher_t::update_many(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
         log_.debug("dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -272,13 +290,13 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "update_finish", session, result_update());
         }
     }
-    void dispatcher_t::update_finish(session_t &session, result_update &result) {
-        log_.debug("dispatcher_t::update_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "update_finish", session, result);
+    void dispatcher_t::update_finish(session_id_t& session, result_update& result) {
+        trace(log_,"dispatcher_t::update_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "update_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::size(components::session::session_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::size: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
+        trace(log_,"dispatcher_t::size: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
@@ -288,14 +306,14 @@ namespace services::dispatcher {
             goblin_engineer::send(address, dispatcher_t::address(), "size_finish", session, result_size());
         }
     }
-    void dispatcher_t::size_finish(components::session::session_t& session, result_size& result) {
-        log_.debug("dispatcher_t::size_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session), dispatcher_t::address(), "size_finish", session, result);
+    void dispatcher_t::size_finish(components::session::session_id_t& session, result_size& result) {
+        trace(log_,"dispatcher_t::size_finish session: {}", session.data());
+        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "size_finish", session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::close_cursor(components::session::session_t& session) {
-        log_.debug(" dispatcher_t::close_cursor ");
-        log_.debug("Session : {}", session.data());
+    void dispatcher_t::close_cursor(components::session::session_id_t& session) {
+        trace(log_," dispatcher_t::close_cursor ");
+        trace(log_,"Session : {}", session.data());
         auto it = cursor_.find(session);
         if (it != cursor_.end()) {
             for (auto& i : *it->second) {
@@ -307,103 +325,103 @@ namespace services::dispatcher {
         }
     }
 
-    void manager_dispatcher_t::create(components::session::session_t& session, std::string& name) {
-        log_.trace("manager_dispatcher_t::create session: {} , name: {} ",session.data(),name);
-        auto address =  spawn_actor<dispatcher_t>(address_book("manager_database"),log_,std::move(name));
-        std::string type(address.type().data(),address.type().size());
-        log_.trace("address: {} pointer: {}",type,address.get());
-        dispatcher_to_address_book_.emplace(type,address);
+    void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
+        trace(log_,"manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
+        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"),address_book("manager_wal"), log_, std::move(name));
+        std::string type(address.type().data(), address.type().size());
+        trace(log_,"address: {} pointer: {}", type, address.get());
+        dispatcher_to_address_book_.emplace(type, address);
         dispathers_.emplace_back(address);
     }
-    void manager_dispatcher_t::connect_me(components::session::session_t& session, std::string& name) {
-        log_.trace("manager_dispatcher_t::connect_me session: {} , name: {} ",session.data(),name);
+    void manager_dispatcher_t::connect_me(components::session::session_id_t& session, std::string& name) {
+        trace(log_,"manager_dispatcher_t::connect_me session: {} , name: {} ", session.data(), name);
         auto dispatcher = dispatcher_to_address_book_.at(name);
-        log_.trace("dispatcher: {}",dispatcher.type());
-        goblin_engineer::link(dispatcher,current_message()->sender());
+        trace(log_,"dispatcher: {}", dispatcher.type());
+        goblin_engineer::link(dispatcher, current_message()->sender());
     }
 
-    void manager_dispatcher_t::create_database(session_t& session, std::string& name) {
-        log_.trace("manager_dispatcher_t::create_database session: {} , name: {} ",session.data(),name);
-        return goblin_engineer::send(dispathers_[0],address(),manager_database::create_database,session,std::move(name),current_message()->sender());
+    void manager_dispatcher_t::create_database(session_id_t& session, std::string& name) {
+        trace(log_,"manager_dispatcher_t::create_database session: {} , name: {} ", session.data(), name);
+        return goblin_engineer::send(dispathers_[0], address(), manager_database::create_database, session, std::move(name), current_message()->sender());
     }
 
-    void manager_dispatcher_t::create_collection(session_t& session, std::string& database_name,std::string& collection_name) {
-        log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ",session.data(),database_name,collection_name);
-        return goblin_engineer::send(dispathers_[0],address(),database::create_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
+    void manager_dispatcher_t::create_collection(session_id_t& session, std::string& database_name, std::string& collection_name) {
+        log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
+        return goblin_engineer::send(dispathers_[0], address(), database::create_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
     }
 
-    void manager_dispatcher_t::drop_collection(components::session::session_t &session, std::string &database_name, std::string &collection_name) {
-        log_.trace("manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ",session.data(),database_name,collection_name);
-        return goblin_engineer::send(dispathers_[0],address(),database::drop_collection,session,std::move(database_name),std::move(collection_name),current_message()->sender());
+    void manager_dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name) {
+        log_.trace("manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
+        return goblin_engineer::send(dispathers_[0], address(), database::drop_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert_one(session_t& session, std::string& database_name, std::string& collection_name, components::document::document_ptr& document) {
+
+    void manager_dispatcher_t::insert_one(session_id_t& session, std::string& database_name, std::string& collection_name, components::document::document_ptr& document) {
         log_.trace("manager_dispatcher_t::insert_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
         return goblin_engineer::send(dispathers_[0], address(), collection::insert_one, session, std::move(database_name), std::move(collection_name), std::move(document), current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert_many(session_t& session, std::string& database_name, std::string& collection_name, std::list<components::document::document_ptr>& documents) {
+    void manager_dispatcher_t::insert_many(session_id_t& session, std::string& database_name, std::string& collection_name, std::list<components::document::document_ptr>& documents) {
         log_.trace("manager_dispatcher_t::insert_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
         return goblin_engineer::send(dispathers_[0],address(), collection::insert_many, session, std::move(database_name), std::move(collection_name), std::move(documents), current_message()->sender());
     }
 
-    void manager_dispatcher_t::find(session_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
+    void manager_dispatcher_t::find(session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
         log_.trace("manager_dispatcher_t::find session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::find, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::find_one(session_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition) {
+    void manager_dispatcher_t::find_one(session_id_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition) {
         log_.trace("manager_dispatcher_t::find_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::find_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
+    void manager_dispatcher_t::delete_one(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
         log_.trace("manager_dispatcher_t::delete_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::delete_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
+    void manager_dispatcher_t::delete_many(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
         log_.trace("manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::delete_many, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_one(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
+    void manager_dispatcher_t::update_one(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
         log_.trace("manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::update_one, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_many(session_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
+    void manager_dispatcher_t::update_many(session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
         log_.trace("manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
         return goblin_engineer::send(dispathers_[0], address(), collection::update_many, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
     }
 
-    void manager_dispatcher_t::size(session_t& session, std::string& database_name, std::string& collection) {
-        log_.trace("manager_dispatcher_t::size session: {} , database: {}, collection name: {} ", session.data(), database_name, collection);
+    void manager_dispatcher_t::size(session_id_t& session, std::string& database_name, std::string& collection) {
+        trace(log_,"manager_dispatcher_t::size session: {} , database: {}, collection name: {} ", session.data(), database_name, collection);
         goblin_engineer::send(dispathers_[0], address(), collection::size, session, std::move(database_name), std::move(collection), current_message()->sender());
     }
-    void manager_dispatcher_t::close_cursor(session_t& session) {
+    void manager_dispatcher_t::close_cursor(session_id_t& session) {
     }
 
-
-    key_collection_t::key_collection_t(const std::string &database, const std::string &collection)
+    key_collection_t::key_collection_t(const std::string& database, const std::string& collection)
         : database_(database)
         , collection_(collection) {
     }
 
-    const std::string &key_collection_t::database() const {
+    const std::string& key_collection_t::database() const {
         return database_;
     }
 
-    const std::string &key_collection_t::collection() const {
+    const std::string& key_collection_t::collection() const {
         return collection_;
     }
 
-    bool key_collection_t::operator ==(const key_collection_t &other) const {
+    bool key_collection_t::operator==(const key_collection_t& other) const {
         return database_ == other.database_ && collection_ == other.collection_;
     }
 
-    std::size_t key_collection_t::hash::operator()(const key_collection_t &key) const {
+    std::size_t key_collection_t::hash::operator()(const key_collection_t& key) const {
         return std::hash<std::string>()(key.database()) ^ std::hash<std::string>()(key.collection());
     }
 
-}
+} // namespace services::dispatcher
