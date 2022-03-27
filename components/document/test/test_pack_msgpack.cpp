@@ -78,7 +78,6 @@ TEST_CASE("natyve pack document") {
     REQUIRE(doc1->structure->get("countBool")->as_bool() == doc2->structure->get("countBool")->as_bool());
     REQUIRE(doc1->structure->get("countArray")->as_array()->count() == doc2->structure->get("countArray")->as_array()->count());
     REQUIRE(doc1->structure->get("countDict")->as_dict()->count() == doc2->structure->get("countDict")->as_dict()->count());
-
 }
 
 
@@ -101,5 +100,4 @@ TEST_CASE("natyve pack document  and zone") {
     REQUIRE(doc1->structure->get("countBool")->as_bool() == doc2->structure->get("countBool")->as_bool());
     REQUIRE(doc1->structure->get("countArray")->as_array()->count() == doc2->structure->get("countArray")->as_array()->count());
     REQUIRE(doc1->structure->get("countDict")->as_dict()->count() == doc2->structure->get("countDict")->as_dict()->count());
-
 }

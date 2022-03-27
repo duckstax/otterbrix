@@ -93,8 +93,8 @@ namespace msgpack {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
-                    //o.via.array.ptr[0] = to_msgpack_(v->structure, o.zone);
-                    //o.via.array.ptr[1] = to_bin(v, o.zone);
+                    o.via.array.ptr[0] = to_msgpack_(v->structure, o.zone);
+                    o.via.array.ptr[1] = to_bin(v, o.zone);
                 }
             };
 
