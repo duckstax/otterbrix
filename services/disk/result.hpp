@@ -2,11 +2,9 @@
 #include <string>
 #include <vector>
 #include <components/document/document.hpp>
+#include <components/protocol/base.hpp>
 
 namespace services::disk {
-
-    using database_name_t = std::string;
-    using collection_name_t = std::string;
 
     class result_success {
     public:

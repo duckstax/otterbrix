@@ -35,7 +35,7 @@ namespace services::disk {
     }
 
 
-    disk_t::disk_t(const std::string& file_name)
+    disk_t::disk_t(const path_t& file_name)
         : db_(nullptr)
         , metadata_(nullptr) {
         rocksdb::Options options;
@@ -43,10 +43,10 @@ namespace services::disk {
         options.OptimizeLevelStyleCompaction();
         options.create_if_missing = true;
         rocksdb::DB *db;
-        auto status = rocksdb::DB::Open(options, file_name, &db);
+        auto status = rocksdb::DB::Open(options, file_name.string(), &db);
         if (status.ok()) {
             db_.reset(db);
-            metadata_ = metadata_t::open(file_name + "/metadata");
+            metadata_ = metadata_t::open(file_name / "metadata");
         } else {
             throw std::runtime_error("db open failed");
         }

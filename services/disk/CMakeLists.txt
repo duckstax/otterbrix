@@ -4,14 +4,14 @@ set(${PROJECT_NAME}_HEADERS
     disk.hpp
     metadata.hpp
     route.hpp
-    disk_replicate.hpp
+        manager_disk.hpp
     result.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
     disk.cpp
     metadata.cpp
-    disk_replicate.cpp
+        manager_disk.cpp
     result.cpp
 )
 

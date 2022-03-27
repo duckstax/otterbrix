@@ -2,6 +2,8 @@
 
 namespace services::disk::route {
 
+    static constexpr auto create_agent = "create_agent";
+
     static constexpr auto read_databases = "disk::read_databases";
     static constexpr auto append_database = "disk::append_database";
     static constexpr auto remove_database = "disk::remove_database";

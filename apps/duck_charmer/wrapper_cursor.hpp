@@ -20,7 +20,7 @@ public:
     using type = components::cursor::cursor_t;
     using pointer = type*;
 
-    wrapper_cursor(components::session::session_t session, pointer cursor);
+    wrapper_cursor(components::session::session_id_t session, pointer cursor);
 
     void close();
     bool has_next();
@@ -36,7 +36,7 @@ public:
 
 private:
     std::atomic_bool close_;
-    duck_charmer::session_t session_;
+    duck_charmer::session_id_t session_;
     pointer ptr_;
     goblin_engineer::address_t dispatcher_;
 

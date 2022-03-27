@@ -4,7 +4,7 @@
 
 namespace services::disk {
 
-    metadata_t::metadata_ptr metadata_t::open(const std::string &file_name) {
+    metadata_t::metadata_ptr metadata_t::open(const path_t &file_name) {
         return std::unique_ptr<metadata_t>(new metadata_t(file_name));
     }
 
@@ -86,9 +86,9 @@ namespace services::disk {
         return false;
     }
 
-    metadata_t::metadata_t(const std::string &file_name)
+    metadata_t::metadata_t(const path_t &file_name)
         : file_name_(file_name) {
-        std::ifstream file(file_name.data());
+        std::ifstream file(file_name);
         if (file.is_open()) {
             std::string line;
             while (std::getline(file, line)) {
@@ -111,7 +111,7 @@ namespace services::disk {
     }
 
     void metadata_t::flush_() {
-        std::ofstream file(file_name_.data());
+        std::ofstream file(file_name_);
         if (file.is_open()) {
             for (const auto& it : data_) {
                 file << it.first + ":";

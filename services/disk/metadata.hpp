@@ -3,11 +3,13 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <boost/filesystem.hpp>
 
 namespace services::disk {
 
     class metadata_t {
     public:
+        using path_t = boost::filesystem::path;
         using database_name_t = std::string;
         using collection_name_t = std::string;
         using collections_t = std::vector<collection_name_t>;
@@ -15,7 +17,7 @@ namespace services::disk {
         using data_t = std::unordered_map<database_name_t, collections_t>;
         using metadata_ptr = std::unique_ptr<metadata_t>;
 
-        static metadata_ptr open(const std::string &file_name);
+        static metadata_ptr open(const path_t &file_name);
 
         databases_t databases() const;
         const collections_t &collections(const database_name_t &database) const;
@@ -35,9 +37,9 @@ namespace services::disk {
         metadata_t &operator=(metadata_t &&) = delete;
     private:
         data_t data_;
-        std::string file_name_;
+        path_t file_name_;
 
-        explicit metadata_t(const std::string &file_name);
+        explicit metadata_t(const path_t &file_name);
         void flush_();
     };
 

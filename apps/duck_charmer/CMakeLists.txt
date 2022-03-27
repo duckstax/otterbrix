@@ -44,6 +44,7 @@ target_link_libraries(
         rocketjoe::document
         rocketjoe::dispatcher
         rocketjoe::parser
+        rocketjoe::wal
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
@@ -53,4 +54,9 @@ if (DEV_MODE)
         "test/*.py"
     )
     file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+if (DEV_MODE)
+    add_definitions(-DDEV_MODE)
+    add_subdirectory(test)
 endif()

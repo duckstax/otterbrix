@@ -4,7 +4,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
 namespace duck_charmer {
-    using components::session::session_t;
+    using components::session::session_id_t;
 
     class wrapper_collection;
     using wrapper_collection_ptr = boost::intrusive_ptr<wrapper_collection>;
