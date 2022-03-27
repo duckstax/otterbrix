@@ -6,25 +6,28 @@
 
 #include <components/document/document.hpp>
 
+using database_name_t = std::string;
+using collection_name_t = std::string;
+
 enum class DataType {
-    UNKNOWN,
-    CHAR,
-    DATE,
-    DATETIME,
-    DECIMAL,
-    DOUBLE,
-    FLOAT,
-    INT,
-    LONG,
-    REAL,
-    SMALLINT,
-    TEXT,
-    TIME,
-    VARCHAR,
+    unknown,
+    char_,
+    date,
+    datetime,
+    decimal,
+    double_,
+    float_,
+    int_,
+    long_,
+    real,
+    smallint,
+    text,
+    time,
+    varchar,
 };
 
 enum class statement_type : char {
-    error = 0x00, // unused
+    unused = 0x00, // unused
     create_database,
     create_collection,
     drop_collection,
@@ -43,7 +46,7 @@ struct statement_t {
         , database_(database)
         , collection_(collection) {}
 
-    statement_t() :type_(statement_type::error){}
+    statement_t() :type_(statement_type::unused){}
 
     virtual ~statement_t();
 
@@ -54,14 +57,14 @@ struct statement_t {
     }
 
     statement_type type_;
-    std::string database_;
-    std::string collection_;
+    database_name_t database_;
+    collection_name_t collection_;
 };
 
 enum class transaction_command : char {
-    Begin,
-    Commit,
-    Rollback
+    begin,
+    commit,
+    rollback
 };
 
 struct transaction_statement : statement_t {

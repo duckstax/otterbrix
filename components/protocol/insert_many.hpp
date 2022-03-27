@@ -7,7 +7,7 @@
 #include <msgpack/adaptor/list.hpp>
 
 struct insert_many_t : statement_t {
-    insert_many_t(const std::string& database, const std::string& collection, std::list<components::document::document_ptr> documents);
+    insert_many_t(const database_name_t & database, const collection_name_t & collection, std::list<components::document::document_ptr> documents);
     insert_many_t() = default;
     insert_many_t(const insert_many_t&) = default;
     insert_many_t& operator=(const insert_many_t&) = default;
@@ -61,7 +61,7 @@ namespace msgpack {
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                   /// o.via.array.ptr[2] = msgpack::object(v.documents_, o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.documents_, o.zone);
                 }
             };
 

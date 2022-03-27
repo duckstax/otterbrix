@@ -1,30 +1,31 @@
 #pragma once
 
+#include "goblin-engineer/core.hpp"
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
-#include "goblin-engineer/core.hpp"
 
+#include <components/protocol/insert_many.hpp>
 #include <msgpack.hpp>
 #include <msgpack/adaptor/vector.hpp>
-#include <components/protocol/insert_many.hpp>
 
 #include "dto.hpp"
 
 class wal_replicate_t final : public goblin_engineer::abstract_service {
 public:
-    wal_replicate_t(goblin_engineer::supervisor_t* manager,log_t& log, boost::filesystem::path path);
-    void create_database( std::string& name){}
-    void create_collection( std::string& database_name, std::string& collections_name){}
-    void drop_collection( std::string& database_name, std::string& collection_name){}
-    void drop_database( std::string& database_name){}
-    void insert_one( std::string& database_name, std::string& collection, components::document::document_t& document){}
-    void insert_many( insert_many_t& data);
-    void delete_one( std::string& database_name, std::string& collection, components::document::document_t& condition){}
-    void delete_many( std::string& database_name, std::string& collection, components::document::document_t& condition){}
-    void update_one( std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert){}
-    void update_many( std::string& database_name, std::string& collection, components::document::document_t& condition, components::document::document_t update, bool upsert){}
+    wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
+    void create_database(std::string& name) {}
+    void create_collection(database_name_t& database, collection_name_t& collections) {}
+    void drop_collection(database_name_t& database, collection_name_t& collection) {}
+    void drop_database(database_name_t& database) {}
+    void insert_one(database_name_t& database, collection_name_t& collection, components::document::document_t& document) {}
+    void insert_many(insert_many_t& data);
+    void delete_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}
+    void delete_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}
+    void update_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
+    void update_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
     void last_id() {}
     ~wal_replicate_t() override;
+
 private:
     void write_();
     bool file_exist_(boost::filesystem::path path);

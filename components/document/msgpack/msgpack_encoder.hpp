@@ -18,6 +18,8 @@ void to_bin(msgpack::packer<Stream>& o, const components::document::document_ptr
     o.pack_bin_body(data.release(), doc->data.size());
 }
 
+msgpack::object to_bin(const components::document::document_ptr& doc,msgpack::zone& zone);
+
 template<typename Stream>
 void to_msgpack_(msgpack::packer<Stream>& o, const value_t* structure) {
     if (structure->type() == value_type::dict) {
@@ -53,6 +55,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* structure) {
 }
 
 const value_t *to_structure(const msgpack::object &msg_object);
+msgpack::object to_msgpack_(const value_t *structure,msgpack::zone& zone);
 
 // User defined class template specialization
 namespace msgpack {
@@ -88,6 +91,10 @@ namespace msgpack {
             struct object_with_zone<components::document::document_ptr> final {
                 void operator()(msgpack::object::with_zone& o, components::document::document_ptr const& v) const {
                     o.type = type::ARRAY;
+                    o.via.array.size = 2;
+                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    //o.via.array.ptr[0] = to_msgpack_(v->structure, o.zone);
+                    //o.via.array.ptr[1] = to_bin(v, o.zone);
                 }
             };
 
