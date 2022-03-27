@@ -1,31 +1,12 @@
 project(protocol CXX)
 
 list(APPEND HEADER_${PROJECT_NAME}
-        base.cpp
-        base.hpp
-        CMakeLists.txt
-        forward.hpp
-        insert.cpp
-        insert.hpp
-        protocol.hpp
-        request_select.cpp
-        request_select.hpp
-        response_select.cpp
-        response_select.hpp
-)
+
+        )
 
 list(APPEND SOURCE_${PROJECT_NAME}
-        base.cpp
-        base.hpp
-        CMakeLists.txt
-        forward.hpp
-        insert.cpp
-        insert.hpp
-        protocol.hpp
-        request_select.cpp
-        request_select.hpp
-        response_select.cpp
-        response_select.hpp
+base.cpp
+        insert_many.cpp
 )
 
 
@@ -42,22 +23,15 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::document
 )
 
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        "../../../"
+        insert_many.hpp
 )
 
 if(DEV_MODE)
-    #add_subdirectory(test)
+   # add_subdirectory(test)
 endif()
-
-install(TARGETS
-        rocketjoe_${PROJECT_NAME}
-
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-)

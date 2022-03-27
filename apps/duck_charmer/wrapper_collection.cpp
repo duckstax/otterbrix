@@ -38,7 +38,7 @@ std::string wrapper_collection::print() {
 
 std::size_t wrapper_collection::size() {
     log_.trace("wrapper_collection::size");
-    auto session_tmp = duck_charmer::session_t();
+    auto session_tmp = duck_charmer::session_id_t();
     return *(ptr_->size(session_tmp, database_, name_));
 }
 
@@ -62,7 +62,7 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
     if (py::isinstance<py::dict>(document)) {
         auto doc = to_document(document);
         generate_document_id_if_not_exists(doc);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
         log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().is_null() ? 0 : 1);
         return result.inserted_id().to_string();
@@ -80,7 +80,7 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
             generate_document_id_if_not_exists(doc);
             docs.push_back(std::move(doc));
         }
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->insert_many(session_tmp, database_, name_, docs);
         log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
         py::list list;
@@ -99,7 +99,7 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
         auto condition = to_document(cond);
         auto update = to_document(fields);
         generate_document_id_if_not_exists(update);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
         log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
         return wrapper_result_update(result);
@@ -113,7 +113,7 @@ wrapper_result_update wrapper_collection::update_many(py::object cond, py::objec
         auto condition = to_document(cond);
         auto update = to_document(fields);
         generate_document_id_if_not_exists(update);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_many(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
         log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
         return wrapper_result_update(result);
@@ -125,7 +125,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
     log_.trace("wrapper_collection::find");
     if (py::isinstance<py::dict>(cond)) {
         auto condition = to_document(cond);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::find {} records", result->size());
         return result;
@@ -138,7 +138,7 @@ auto wrapper_collection::find_one(py::object cond) -> py::dict {
     log_.trace("wrapper_collection::find_one");
     if (py::isinstance<py::dict>(cond)) {
         auto condition = to_document(cond);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->find_one(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::find_one {}", result.is_find());
         return from_document(*result);
@@ -151,7 +151,7 @@ wrapper_result_delete wrapper_collection::delete_one(py::object cond) {
     log_.trace("wrapper_collection::delete_one");
     if (py::isinstance<py::dict>(cond)) {
         auto condition = to_document(cond);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->delete_one(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
         return wrapper_result_delete(result);
@@ -163,7 +163,7 @@ wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
     log_.trace("wrapper_collection::delete_many");
     if (py::isinstance<py::dict>(cond)) {
         auto condition = to_document(cond);
-        auto session_tmp = duck_charmer::session_t();
+        auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->delete_many(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
         return wrapper_result_delete(result);
@@ -174,7 +174,7 @@ wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
 bool wrapper_collection::drop() {
     log_.debug("wrapper_collection::drop: {}", name_);
     result_drop_collection result;
-    auto session_tmp = duck_charmer::session_t();
+    auto session_tmp = duck_charmer::session_id_t();
     result = ptr_->drop_collection(session_tmp, database_, name_);
     log_.debug("wrapper_collection::drop {}", result.is_success());
     return result.is_success();

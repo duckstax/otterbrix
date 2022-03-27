@@ -6,12 +6,12 @@
 
 namespace components::session {
 
-    class session_t final {
+    class session_id_t final {
     public:
-        session_t();
+        session_id_t();
         std::size_t hash() const;
-        bool operator==(const session_t &other) const;
-        bool operator==(const session_t &other);
+        bool operator==(const session_id_t&other) const;
+        bool operator==(const session_id_t&other);
         auto data() const -> std::uint64_t ;
 
     private:
@@ -21,13 +21,13 @@ namespace components::session {
 
 }
 
-inline bool operator==(components::session::session_t &left, components::session::session_t &right ){
+inline bool operator==(components::session::session_id_t&left, components::session::session_id_t&right ){
         return (left == right);
 }
 
 namespace std {
-    template<> struct hash<components::session::session_t>{
-        std::size_t operator()(components::session::session_t const& s) const noexcept {
+    template<> struct hash<components::session::session_id_t>{
+        std::size_t operator()(components::session::session_id_t const& s) const noexcept {
             return s.hash();
         }
     };

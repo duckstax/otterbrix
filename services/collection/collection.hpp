@@ -9,7 +9,7 @@
 #include "log/log.hpp"
 
 #include "protocol/base.hpp"
-#include "protocol/forward.hpp"
+#include "protocol/insert_many.hpp"
 
 #include "components/cursor/cursor.hpp"
 #include "components/document/document.hpp"
@@ -32,18 +32,17 @@ namespace services::storage {
     class collection_t final : public goblin_engineer::abstract_service {
     public:
         collection_t(goblin_engineer::supervisor_t*, std::string name, log_t& log);
-
-        auto size(session_t& session) -> void;
-        void insert_one(session_t& session_t, document_ptr& document);
-        void insert_many(session_t& session, std::list<document_ptr> &documents);
-        auto find(const session_t& session, const find_condition_ptr& cond) -> void;
-        auto find_one(const session_t& session, const find_condition_ptr& cond) -> void;
-        auto delete_one(const session_t& session, const find_condition_ptr& cond) -> void;
-        auto delete_many(const session_t& session, const find_condition_ptr& cond) -> void;
-        auto update_one(const session_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
-        auto update_many(const session_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
-        void drop(const session_t& session);
-        void close_cursor(session_t& session);
+        auto size(session_id_t& session) -> void;
+        void insert_one(session_id_t& session_t, document_ptr& document);
+        void insert_many(session_id_t& session, std::list<document_ptr> &documents);
+        auto find(const session_id_t& session, const find_condition_ptr& cond) -> void;
+        auto find_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
+        auto delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
+        auto delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void;
+        auto update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
+        auto update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
+        void drop(const session_id_t& session);
+        void close_cursor(session_id_t& session);
 
     private:
         document_id_t insert_(const document_ptr&document);
@@ -62,7 +61,7 @@ namespace services::storage {
         log_t log_;
         goblin_engineer::address_t database_;
         storage_t storage_;
-        std::unordered_map<session_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
+        std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
 
 #ifdef DEV_MODE
