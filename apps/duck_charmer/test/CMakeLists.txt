@@ -3,8 +3,7 @@ project(test_duck_charmer)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        spaces.cpp
-        test_collection.cpp
+        spaces.hpp
 )
 
 set( ${PROJECT_NAME}_HEADERS
