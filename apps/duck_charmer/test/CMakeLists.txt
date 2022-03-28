@@ -3,12 +3,16 @@ project(test_duck_charmer)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        #../spaces.cpp
-        #../wrapper_dispatcher.cpp
-        #test_duck_charmer_init.cpp
+        spaces.cpp
+        test_collection.cpp
 )
 
-add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
+set( ${PROJECT_NAME}_HEADERS
+        spaces.cpp
+        test_collection.cpp
+        )
+
+add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
@@ -22,10 +26,6 @@ target_link_libraries(
         rocketjoe::dispatcher
         rocketjoe::parser
         rocketjoe::wal
-)
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ..
 )
 
 include(CTest)
