@@ -88,7 +88,7 @@ namespace services::disk {
 
     metadata_t::metadata_t(const path_t &file_name)
         : file_name_(file_name) {
-        std::ifstream file(file_name);
+        std::ifstream file(file_name.c_str());
         if (file.is_open()) {
             std::string line;
             while (std::getline(file, line)) {
@@ -111,7 +111,7 @@ namespace services::disk {
     }
 
     void metadata_t::flush_() {
-        std::ofstream file(file_name_);
+        std::ofstream file(file_name_.c_str());
         if (file.is_open()) {
             for (const auto& it : data_) {
                 file << it.first + ":";
