@@ -3,28 +3,15 @@ project(test_duck_charmer)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        spaces.hpp
-)
-
-set( ${PROJECT_NAME}_HEADERS
-        spaces.cpp
         test_collection.cpp
         )
 
-add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEADERS})
+add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::log
-        rocketjoe::database
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::parser
-        rocketjoe::wal
+        rocketjoe::duck_charmer
 )
 
 include(CTest)

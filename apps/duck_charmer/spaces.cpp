@@ -5,6 +5,15 @@
 #include <services/wal/manager_wal_replicate.hpp>
 
 namespace duck_charmer {
+    spaces* spaces::instance_ = nullptr;
+
+    spaces* spaces::get_instance() {
+        if (instance_ == nullptr) {
+            instance_ = new spaces();
+        }
+        return instance_;
+    }
+
     wrapper_dispatcher_t* spaces::dispatcher() {
         return wrapper_dispatcher_.get();
     }

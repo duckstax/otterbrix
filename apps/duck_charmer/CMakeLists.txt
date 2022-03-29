@@ -16,7 +16,6 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_sources
         convert.cpp
-        main.cpp
         spaces.cpp
         wrapper_client.cpp
         wrapper_collection.cpp
@@ -27,15 +26,7 @@ set(${PROJECT_NAME}_sources
         wrapper_result.cpp
 )
 
-include_directories(
-        ${PROJECT_SOURCE_DIR}
-)
-
-pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
-
-target_link_libraries(
-        ${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
+set(ROCKETJOE_LIBS
         rocketjoe::log
         rocketjoe::database
         rocketjoe::collection
@@ -45,6 +36,18 @@ target_link_libraries(
         rocketjoe::dispatcher
         rocketjoe::parser
         rocketjoe::wal
+        )
+
+include_directories(
+        ${PROJECT_SOURCE_DIR}
+)
+
+pybind11_add_module(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
+
+target_link_libraries(
+        ${PROJECT_NAME} PRIVATE
+        ${CONAN_LIBS}
+        ${ROCKETJOE_LIBS}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
@@ -57,6 +60,20 @@ if (DEV_MODE)
 endif()
 
 if (DEV_MODE)
-    add_definitions(-DDEV_MODE)
+    add_library(rocketjoe_${PROJECT_NAME}
+            ${${PROJECT_NAME}_headers}
+            ${${PROJECT_NAME}_sources}
+            )
+
+    add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+
+    set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+
+    target_link_libraries(
+            rocketjoe_${PROJECT_NAME} PRIVATE
+            ${CONAN_LIBS}
+            ${ROCKETJOE_LIBS}
+    )
+
     add_subdirectory(test)
 endif()
