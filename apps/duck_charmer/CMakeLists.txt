@@ -16,6 +16,7 @@ set(${PROJECT_NAME}_headers
 
 set(${PROJECT_NAME}_sources
         convert.cpp
+        main.cpp
         spaces.cpp
         wrapper_client.cpp
         wrapper_collection.cpp
@@ -42,7 +43,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}
 )
 
-pybind11_add_module(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
+pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
@@ -60,6 +61,16 @@ if (DEV_MODE)
 endif()
 
 if (DEV_MODE)
+    set(${PROJECT_NAME}_headers
+            spaces.hpp
+            wrapper_dispatcher.hpp
+            )
+
+    set(${PROJECT_NAME}_sources
+            spaces.cpp
+            wrapper_dispatcher.cpp
+            )
+
     add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_headers}
             ${${PROJECT_NAME}_sources}

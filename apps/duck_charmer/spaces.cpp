@@ -40,7 +40,7 @@ namespace duck_charmer {
         manager_dispatcher_ = goblin_engineer::make_manager_service<manager_dispatcher_t>(log_, 1, 1000);
         trace(log_, "manager_dispatcher finish");
 
-        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_, name_dispatcher);
+        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_);
         goblin_engineer::link(manager_wal_,manager_database_);
         goblin_engineer::link(manager_wal_,manager_dispatcher_);
         goblin_engineer::link(manager_database_, manager_dispatcher_);
