@@ -12,6 +12,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::duck_charmer
+        rocketjoe::test_generaty
 )
 
 include(CTest)
