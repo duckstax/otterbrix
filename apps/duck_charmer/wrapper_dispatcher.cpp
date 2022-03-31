@@ -27,8 +27,8 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
-        log_.trace("wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), database);
-        log_.trace("type address : {}", address_book("manager_dispatcher").type());
+        trace(log_, "wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), database);
+        trace(log_, "type address : {}", address_book("manager_dispatcher").type());
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -40,8 +40,8 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void {
-        log_.trace("wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database, collection);
-        log_.trace("type address : {}", address_book("manager_dispatcher").type());
+        trace(log_, "wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database, collection);
+        trace(log_, "type address : {}", address_book("manager_dispatcher").type());
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -54,7 +54,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection {
-        log_.trace("wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
+        trace(log_, "wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -68,7 +68,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one &{
-        log_.trace("wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
+        trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -83,7 +83,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many &{
-        log_.trace("wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
+        trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -98,7 +98,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t* {
-        log_.trace("wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
+        trace(log_, "wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -113,7 +113,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one &{
-        log_.trace("wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
+        trace(log_, "wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -128,7 +128,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete &{
-        log_.trace("wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+        trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -143,7 +143,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete &{
-        log_.trace("wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+        trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -158,7 +158,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update &{
-        log_.trace("wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+        trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -175,7 +175,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update &{
-        log_.trace("wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+        trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), database, collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -192,7 +192,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size {
-        log_.trace("wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
+        trace(log_, "wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
         goblin_engineer::send(
             address_book("manager_dispatcher"),
@@ -219,13 +219,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void {
         std::unique_lock<spin_lock> _(input_mtx_);
         auto tmp = std::move(msg);
-        log_.trace("wrapper_dispatcher_t::enqueue_base msg type: {}", tmp->command());
+        trace(log_, "wrapper_dispatcher_t::enqueue_base msg type: {}", tmp->command());
         set_current_message(std::move(tmp));
         execute();
     }
 
     auto wrapper_dispatcher_t::create_database_finish(session_id_t &session, services::storage::database_create_result result) -> void {
-        log_.trace("wrapper_dispatcher_t::create_database_finish session: {} , result: {} ", session.data(), result.created_);
+        trace(log_, "wrapper_dispatcher_t::create_database_finish session: {} , result: {} ", session.data(), result.created_);
         intermediate_store_ = result;
         input_session_ = session;
         notify();
@@ -244,14 +244,14 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::insert_one_finish(session_id_t &session, result_insert_one result) -> void {
-        log_.trace("wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().is_null() ? 0 : 1);
+        trace(log_, "wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().is_null() ? 0 : 1);
         intermediate_store_ = result;
         input_session_ = session;
         notify();
     }
 
     void wrapper_dispatcher_t::insert_many_finish(session_id_t &session, result_insert_many result) {
-        log_.trace("wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
+        trace(log_, "wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

@@ -50,7 +50,7 @@ namespace duck_charmer {
         auto tmp_1 = manager_dispatcher_->address();
         goblin_engineer::link(tmp_1, tmp);
 
-        debug(log_, "spaces::spaces() final");
+        trace(log_, "spaces::spaces() final");
     }
 
     log_t& spaces::get_log() {
