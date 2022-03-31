@@ -17,7 +17,8 @@ namespace duck_charmer {
     wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
         log_.debug("wrapper_client::get_or_create name database: {}", name);
         auto session_tmp = duck_charmer::session_id_t();
-        auto result = ptr_->create_database(session_tmp, name);
+        ptr_->create_database(session_tmp, name);
+        auto result = wrapper_database_ptr(new wrapper_database(name, ptr_, log_));
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
         names_.emplace(name,result);
         return result;

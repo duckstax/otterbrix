@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include "generaty.hpp"
+#include <components/tests/generaty.hpp>
 
 
 TEST_CASE("serialize document") {

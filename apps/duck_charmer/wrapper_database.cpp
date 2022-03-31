@@ -26,7 +26,8 @@ namespace duck_charmer {
     wrapper_collection_ptr wrapper_database::create(const std::string& collection_name) {
         log_.debug("wrapper_database::create name collection: {}", collection_name);
         auto session_tmp = duck_charmer::session_id_t();
-        auto result = ptr_->create_collection(session_tmp, name_, collection_name);
+        ptr_->create_collection(session_tmp, name_, collection_name);
+        auto result = wrapper_collection_ptr(new wrapper_collection(collection_name, name_, ptr_, log_));
         log_.debug("wrapper_client::get_or_create return wrapper_database_ptr");
         collections_.emplace(collection_name, result);
         return result;
