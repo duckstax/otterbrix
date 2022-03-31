@@ -10,3 +10,7 @@ add_subdirectory(cursor)
 add_subdirectory(session)
 add_subdirectory(parser)
 add_subdirectory(serialize)
+
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif()

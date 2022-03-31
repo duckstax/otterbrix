@@ -2,33 +2,26 @@
 #include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <mutex>
-
-#include <pybind11/pybind11.h>
-
-#include <components/log/log.hpp>
 #include <goblin-engineer/core.hpp>
-
-#include "cursor/cursor.hpp"
-#include "forward.hpp"
+#include <mutex>
+#include <variant>
+#include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
-#include "services/collection/result.hpp"
-#include "wrapper_cursor.hpp"
-#include "services/database/result_database.hpp"
+#include <components/log/log.hpp>
+#include <components/session/session.hpp>
+#include <components/protocol/base.hpp>
+#include <services/collection/result.hpp>
+#include <services/database/result_database.hpp>
 
 class spin_lock final {
 public:
     spin_lock() = default;
     spin_lock(const spin_lock&) = delete;
     spin_lock(spin_lock&&) = default;
-    spin_lock& operator=(const spin_lock&) = delete;
-    spin_lock& operator=(spin_lock&&) = default;
-    void lock() {
-        while (_lock.test_and_set(std::memory_order_acquire)) continue;
-    }
-    void unlock() {
-        _lock.clear(std::memory_order_release);
-    }
+    spin_lock &operator=(const spin_lock&) = delete;
+    spin_lock &operator=(spin_lock&&) = default;
+    void lock();
+    void unlock();
 
 private:
     std::atomic_flag _lock = ATOMIC_FLAG_INIT;
@@ -37,79 +30,55 @@ private:
 namespace duck_charmer {
 
     using manager_t = goblin_engineer::basic_manager_service_t<goblin_engineer::base_policy_light>;
+    using components::session::session_id_t;
+    using components::document::document_ptr;
 
-    class PYBIND11_EXPORT wrapper_dispatcher_t final : public manager_t {
+    class wrapper_dispatcher_t final : public manager_t {
     public:
         /// blocking method
-        wrapper_dispatcher_t(log_t& log,const std::string& name_dispather );
-        auto create_database(duck_charmer::session_id_t& session, const std::string& name) -> wrapper_database_ptr ;
-        auto create_collection(duck_charmer::session_id_t& session,const std::string& database_name, const std::string& collection_name) -> wrapper_collection_ptr;
-        result_drop_collection drop_collection(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection);
-        auto insert_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr &document) -> result_insert_one&;
-        auto insert_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, std::list<components::document::document_ptr> &documents) -> result_insert_many&;
-        auto find(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition) -> wrapper_cursor_ptr;
-        auto find_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition) -> result_find_one&;
-        auto delete_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition) -> result_delete&;
-        auto delete_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition) -> result_delete&;
-        auto update_one(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition, components::document::document_ptr update, bool upsert) -> result_update&;
-        auto update_many(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection, components::document::document_ptr condition, components::document::document_ptr update, bool upsert) -> result_update&;
-        result_size size(duck_charmer::session_id_t& session, const std::string& database, const std::string& collection);
+        explicit wrapper_dispatcher_t(log_t &log);
+        auto create_database(session_id_t &session, const database_name_t &database) -> void;
+        auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
+        auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
+        auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one&;
+        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many&;
+        auto find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t*;
+        auto find_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one&;
+        auto delete_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
+        auto delete_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
+        auto update_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
+        auto update_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
+        auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
 
     protected:
-        auto add_actor_impl(goblin_engineer::actor) -> void override{
-            throw std::runtime_error("wrapper_dispatcher_t::add_actor_impl");
-        }
-        auto add_supervisor_impl(goblin_engineer::supervisor) -> void override {
-            throw std::runtime_error("wrapper_dispatcher_t::add_supervisor_impl");
-        }
-
-        auto executor_impl() noexcept -> goblin_engineer::abstract_executor*  {
-            throw std::runtime_error("wrapper_dispatcher_t::executor_impl");
-        }
-
-        auto enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void {
-            std::unique_lock<spin_lock> _(input_mtx_);
-            auto tmp = std::move(msg);
-            log_.trace("wrapper_dispatcher_t::enqueue_base msg type: {}",tmp->command());
-            set_current_message(std::move(tmp));
-            execute();
-        }
+        auto add_actor_impl(goblin_engineer::actor) -> void final;
+        auto add_supervisor_impl(goblin_engineer::supervisor) -> void final;
+        auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
+        auto enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void final;
 
     private:
         /// async method
-        auto create_database_finish(duck_charmer::session_id_t&,services::storage::database_create_result) -> void;
-        auto create_collection_finish(duck_charmer::session_id_t& session,services::storage::collection_create_result) -> void;
-        auto drop_collection_finish(duck_charmer::session_id_t& session,result_drop_collection result) -> void;
-        auto insert_one_finish(duck_charmer::session_id_t& session,result_insert_one result) -> void;
-        auto insert_many_finish(duck_charmer::session_id_t& session,result_insert_many result) -> void;
-        auto find_finish(duck_charmer::session_id_t& session,components::cursor::cursor_t*) -> void;
-        auto find_one_finish(duck_charmer::session_id_t& session,result_find_one result) -> void;
-        auto delete_finish(duck_charmer::session_id_t& session,result_delete result) -> void;
-        auto update_finish(duck_charmer::session_id_t& session,result_update result) -> void;
-        auto size_finish(duck_charmer::session_id_t& session,result_size result) -> void;
+        auto create_database_finish(session_id_t &session, services::storage::database_create_result result) -> void;
+        auto create_collection_finish(session_id_t &session, services::storage::collection_create_result result) -> void;
+        auto drop_collection_finish(session_id_t &session, result_drop_collection result) -> void;
+        auto insert_one_finish(session_id_t &session, result_insert_one result) -> void;
+        auto insert_many_finish(session_id_t &session, result_insert_many result) -> void;
+        auto find_finish(session_id_t &session, components::cursor::cursor_t *cursor) -> void;
+        auto find_one_finish(session_id_t &session, result_find_one result) -> void;
+        auto delete_finish(session_id_t &session, result_delete result) -> void;
+        auto update_finish(session_id_t &session, result_update result) -> void;
+        auto size_finish(session_id_t &session, result_size result) -> void;
 
-        void init() {
-            i = 0;
-        }
-
-        void wait() {
-            std::unique_lock<std::mutex> lk(output_mtx_);
-            cv_.wait(lk, [this]() { return i == 1; });
-        }
-
-        void notify() {
-            i = 1;
-            cv_.notify_all();
-        }
+        void init();
+        void wait();
+        void notify();
 
         log_t log_;
-        const std::string name_;
         std::atomic_int i = 0;
         std::mutex output_mtx_;
         spin_lock input_mtx_;
         std::condition_variable cv_;
-        duck_charmer::session_id_t input_session_;
-        duck_charmer::session_id_t output_session_;
+        session_id_t input_session_;
         std::variant<
             result_insert_one,
             result_insert_many,
@@ -123,4 +92,4 @@ namespace duck_charmer {
             services::storage::collection_create_result>
             intermediate_store_;
     };
-}
+} // namespace duck_charmer
