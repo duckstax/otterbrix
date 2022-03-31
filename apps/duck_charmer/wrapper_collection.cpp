@@ -128,7 +128,7 @@ auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
         log_.debug("wrapper_collection::find {} records", result->size());
-        return result;
+        return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result));
     }
     throw std::runtime_error("wrapper_collection::find");
     return wrapper_cursor_ptr();

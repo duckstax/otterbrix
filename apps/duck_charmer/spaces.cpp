@@ -5,6 +5,15 @@
 #include <services/wal/manager_wal_replicate.hpp>
 
 namespace duck_charmer {
+    spaces* spaces::instance_ = nullptr;
+
+    spaces* spaces::get_instance() {
+        if (instance_ == nullptr) {
+            instance_ = new spaces();
+        }
+        return instance_;
+    }
+
     wrapper_dispatcher_t* spaces::dispatcher() {
         return wrapper_dispatcher_.get();
     }
@@ -31,7 +40,7 @@ namespace duck_charmer {
         manager_dispatcher_ = goblin_engineer::make_manager_service<manager_dispatcher_t>(log_, 1, 1000);
         trace(log_, "manager_dispatcher finish");
 
-        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_, name_dispatcher);
+        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(log_);
         goblin_engineer::link(manager_wal_,manager_database_);
         goblin_engineer::link(manager_wal_,manager_dispatcher_);
         goblin_engineer::link(manager_database_, manager_dispatcher_);
@@ -41,7 +50,7 @@ namespace duck_charmer {
         auto tmp_1 = manager_dispatcher_->address();
         goblin_engineer::link(tmp_1, tmp);
 
-        debug(log_, "spaces::spaces() final");
+        trace(log_, "spaces::spaces() final");
     }
 
     log_t& spaces::get_log() {
