@@ -31,7 +31,7 @@ namespace services::storage {
 
     class collection_t final : public goblin_engineer::abstract_service {
     public:
-        collection_t(goblin_engineer::supervisor_t*, std::string name, log_t& log);
+        collection_t(goblin_engineer::supervisor_t*, std::string name, log_t& log, goblin_engineer::address_t mdisk);
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);
@@ -60,6 +60,7 @@ namespace services::storage {
 
         log_t log_;
         goblin_engineer::address_t database_;
+        goblin_engineer::address_t mdisk_;
         storage_t storage_;
         std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};

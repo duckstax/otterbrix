@@ -87,7 +87,7 @@ namespace services::dispatcher {
 
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:
-        dispatcher_t(goblin_engineer::supervisor_t* manager_database,goblin_engineer::address_t,goblin_engineer::address_t, log_t& log,std::string name);
+        dispatcher_t(goblin_engineer::supervisor_t* manager_database,goblin_engineer::address_t,goblin_engineer::address_t,goblin_engineer::address_t, log_t& log,std::string name);
         void create_database(components::session::session_id_t& session, std::string& name,goblin_engineer::address_t address);
         void create_database_finish(components::session::session_id_t& session,storage::database_create_result,goblin_engineer::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address);
@@ -117,6 +117,7 @@ namespace services::dispatcher {
         log_t log_;
         goblin_engineer::address_t mdb_;
         goblin_engineer::address_t mwal_;
+        goblin_engineer::address_t mdisk_;
         session_storage_t session_to_address_;
         std::unordered_map<components::session::session_id_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
         std::unordered_map<key_collection_t, goblin_engineer::address_t, key_collection_t::hash> collection_address_book_;
