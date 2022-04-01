@@ -2,15 +2,6 @@
 
 namespace services::disk {
 
-    result_success::result_success(bool success)
-        : success_(success) {
-    }
-
-    bool result_success::is_success() const {
-        return success_;
-    }
-
-
     result_read_databases::result_read_databases(result_read_databases::result_t&& databases)
         :databases_(std::move(databases)) {
     }

@@ -6,17 +6,6 @@
 
 namespace services::disk {
 
-    class result_success {
-    public:
-        result_success() = default;
-        explicit result_success(bool success);
-        [[nodiscard]] bool is_success() const;
-
-    private:
-        bool success_{false};
-    };
-
-
     class result_read_databases {
     public:
         using result_t = std::vector<database_name_t>;

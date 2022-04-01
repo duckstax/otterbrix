@@ -17,6 +17,17 @@ namespace services::disk {
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         trace(log_, "manager_disk num_workers : {} , max_throughput: {}", num_workers, max_throughput);
         add_handler(route::create_agent, &manager_disk_t::create_agent);
+        add_handler(route::read_databases, &manager_disk_t::read_databases);
+        add_handler(route::append_database, &manager_disk_t::append_database);
+        add_handler(route::remove_database, &manager_disk_t::remove_database);
+        add_handler(route::read_collections, &manager_disk_t::read_collections);
+        add_handler(route::append_collection, &manager_disk_t::append_collection);
+        add_handler(route::remove_collection, &manager_disk_t::remove_collection);
+        add_handler(route::read_documents, &manager_disk_t::read_documents);
+        add_handler(route::write_documents, &manager_disk_t::write_documents);
+        add_handler(route::remove_documents, &manager_disk_t::remove_documents);
+        add_handler(route::write_documents_flush, &manager_disk_t::write_documents_flush);
+        add_handler(route::remove_documents_flush, &manager_disk_t::remove_documents_flush);
         trace(log_, "manager_disk start thread pool");
         e_->start();
     }
@@ -26,6 +37,69 @@ namespace services::disk {
         trace(log_, "manager_disk create_agent : {}", name_agent);
         auto address = spawn_actor<agent_disk_t>(path_db_, name_agent, log_);
         agents_.emplace_back(address);
+    }
+
+    auto manager_disk_t::read_databases(session_id_t& session) -> void {
+        trace(log_, "manager_disk_t::read_databases , session : {}", session.data());
+        goblin_engineer::send(agent(), address(), route::read_databases, session);
+    }
+
+    auto manager_disk_t::append_database(session_id_t& session, const database_name_t &database) -> void {
+        trace(log_, "manager_disk_t::append_database , session : {} , database : {}", session.data(), database);
+        goblin_engineer::send(agent(), address(), route::append_database, session, database);
+    }
+
+    auto manager_disk_t::remove_database(session_id_t& session, const database_name_t &database) -> void {
+        trace(log_, "manager_disk_t::remove_database , session : {} , database : {}", session.data(), database);
+        goblin_engineer::send(agent(), address(), route::remove_database, session, database);
+    }
+
+    auto manager_disk_t::read_collections(session_id_t& session, const database_name_t &database) -> void {
+        trace(log_, "manager_disk_t::read_collections , session : {} , database : {}", session.data(), database);
+        goblin_engineer::send(agent(), address(), route::read_collections, session, database);
+    }
+
+    auto manager_disk_t::append_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
+        trace(log_, "manager_disk_t::append_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
+        goblin_engineer::send(agent(), address(), route::append_collection, session, database, collection);
+    }
+
+    auto manager_disk_t::remove_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
+        trace(log_, "manager_disk_t::remove_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
+        goblin_engineer::send(agent(), address(), route::remove_collection, session, database, collection);
+    }
+
+    auto manager_disk_t::read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
+        trace(log_, "manager_disk_t::read_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
+        goblin_engineer::send(agent(), address(), route::read_documents, session, database, collection);
+    }
+
+    auto manager_disk_t::write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void {
+        trace(log_, "manager_disk_t::write_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
+        queue_update_.emplace(session, update_documents_t({database, collection, documents}));
+    }
+
+    auto manager_disk_t::remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void {
+        trace(log_, "manager_disk_t::remove_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
+        queue_remove_.emplace(session, remove_documents_t({database, collection, documents}));
+    }
+
+    auto manager_disk_t::write_documents_flush(session_id_t& session) -> void {
+        trace(log_, "manager_disk_t::write_documents_flush , session : {}", session.data());
+        auto it = queue_update_.find(session);
+        if (it != queue_update_.end()) {
+            goblin_engineer::send(agent(), address(), route::write_documents, session, it->second.database, it->second.collection, it->second.documents);
+            queue_update_.erase(it);
+        }
+    }
+
+    auto manager_disk_t::remove_documents_flush(session_id_t& session) -> void {
+        trace(log_, "manager_disk_t::remove_documents_flush , session : {}", session.data());
+        auto it = queue_remove_.find(session);
+        if (it != queue_remove_.end()) {
+            goblin_engineer::send(agent(), address(), route::remove_documents, session, it->second.database, it->second.collection, it->second.documents);
+            queue_remove_.erase(it);
+        }
     }
 
     auto manager_disk_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
@@ -43,6 +117,10 @@ namespace services::disk {
 
     auto manager_disk_t::add_supervisor_impl(goblin_engineer::supervisor) -> void {
         log_.error("manager_disk_t::add_supervisor_impl");
+    }
+
+    auto manager_disk_t::agent() -> goblin_engineer::address_t& {
+        return agents_[0];
     }
 
 
@@ -65,43 +143,39 @@ namespace services::disk {
     }
 
     auto agent_disk_t::read_databases(session_id_t& session) -> void {
-        log_.debug("{}::read_databases", type());
+        trace(log_, "{}::read_databases , session : {}", type(), session.data());
         auto dispatcher = address_book(name_dispatcher);
         goblin_engineer::send(dispatcher, address(), route::read_databases_finish, session, result_read_databases(disk_.databases()));
     }
 
     auto agent_disk_t::append_database(session_id_t& session, const database_name_t &database) -> void {
-        log_.debug("{}::append_database(database={})", type(), database);
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::append_database_finish, session, result_success(disk_.append_database(database)));
+        trace(log_, "{}::append_database , session : {} , database : {}", type(), session.data(), database);
+        disk_.append_database(database);
     }
 
     auto agent_disk_t::remove_database(session_id_t& session, const database_name_t &database) -> void {
-        log_.debug("{}::remove_database(database={})", type(), database);
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::remove_database_finish, session, result_success(disk_.remove_database(database)));
+        trace(log_, "{}::remove_database , session : {} , database : {}", type(), session.data(), database);
+        disk_.remove_database(database);
     }
 
     auto agent_disk_t::read_collections(session_id_t& session, const database_name_t &database) -> void {
-        log_.debug("{}::read_collections(database={})", type(), database);
+        trace(log_, "{}::read_collections , session : {} , database : {}", type(), session.data(), database);
         auto dispatcher = address_book(name_dispatcher);
         goblin_engineer::send(dispatcher, address(), route::read_collections_finish, session, result_read_collections(disk_.collections(database)));
     }
 
     auto agent_disk_t::append_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
-        log_.debug("{}::append_collection(database={}, collection={})", type(), database, collection);
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::append_collection_finish, session, result_success(disk_.append_collection(database, collection)));
+        trace(log_, "{}::append_collection , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
+        disk_.append_collection(database, collection);
     }
 
     auto agent_disk_t::remove_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
-        log_.debug("{}::remove_collection(database={}, collection={})", type(), database, collection);
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::remove_collection_finish, session, result_success(disk_.remove_collection(database, collection)));
+        trace(log_, "{}::remove_collection , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
+        disk_.remove_collection(database, collection);
     }
 
     auto agent_disk_t::read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
-        log_.debug("{}::read_documents(database={}, collection={})", type(), database, collection);
+        trace(log_, "{}::read_documents , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
         result_read_documents::result_t documents;
         for (const auto &id : disk_.load_list_documents(database, collection)) {
             documents.push_back(disk_.load_document(id));
@@ -111,27 +185,20 @@ namespace services::disk {
     }
 
     auto agent_disk_t::write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void {
-        log_.debug("{}::write_documents(database={}, collection={})", type(), database, collection);
-        bool result = true;
+        trace(log_, "{}::write_documents , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
         for (const auto &document : documents) {
             auto id = components::document::get_document_id(document);
-            if (id.is_null()) {
-                result = false;
-            } else {
+            if (!id.is_null()) {
                 disk_.save_document(database, collection, id, document);
             }
         }
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::write_documents_finish, session, result_success(result));
     }
 
     auto agent_disk_t::remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void {
-        log_.debug("{}::remove_documents(database={}, collection={})", type(), database, collection);
+        trace(log_, "{}::remove_documents , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
         for (const auto &id : documents) {
             disk_.remove_document(database, collection, id);
         }
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::remove_documents_finish, session, result_success(true));
     }
 
 } //namespace services::disk

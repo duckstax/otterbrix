@@ -1,11 +1,13 @@
 #include "collection.hpp"
+#include <services/disk/route.hpp>
 
 namespace services::storage {
 
-    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
+    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log, goblin_engineer::address_t mdisk)
         : goblin_engineer::abstract_service(database, std::move(name))
         , log_(log.clone())
-        , database_(database->address()) {
+        , database_(database->address())
+        , mdisk_(mdisk) {
         add_handler(collection::insert_one, &collection_t::insert_one);
         add_handler(collection::insert_many, &collection_t::insert_many);
         add_handler(collection::find, &collection_t::find);
@@ -37,6 +39,10 @@ namespace services::storage {
         auto result = dropped_
                       ? result_insert_one()
                       : result_insert_one(insert_(document));
+        if (!result.inserted_id().is_null()) {
+            std::vector<document_ptr> new_documents = {document};
+            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
+        }
         goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
     }
 

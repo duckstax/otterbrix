@@ -34,7 +34,7 @@ namespace services::storage {
         auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final override;
         auto enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void override;
         ~database_t();
-        void create(session_id_t& session, std::string& name);
+        void create(session_id_t& session, std::string& name, goblin_engineer::address_t mdisk);
         void drop(session_id_t& session, std::string& name);
 
     private:
