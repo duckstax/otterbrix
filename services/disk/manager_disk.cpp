@@ -76,29 +76,31 @@ namespace services::disk {
 
     auto manager_disk_t::write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void {
         trace(log_, "manager_disk_t::write_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        queue_update_.emplace(session, update_documents_t({database, collection, documents}));
+        commands_.emplace(session, command_write_documents_t({database, collection, documents}));
     }
 
     auto manager_disk_t::remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void {
         trace(log_, "manager_disk_t::remove_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        queue_remove_.emplace(session, remove_documents_t({database, collection, documents}));
+        commands_.emplace(session, command_remove_documents_t({database, collection, documents}));
     }
 
     auto manager_disk_t::write_documents_flush(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::write_documents_flush , session : {}", session.data());
-        auto it = queue_update_.find(session);
-        if (it != queue_update_.end()) {
-            goblin_engineer::send(agent(), address(), route::write_documents, session, it->second.database, it->second.collection, it->second.documents);
-            queue_update_.erase(it);
+        auto it = commands_.find(session);
+        if (it != commands_.end()) {
+            const auto &command = it->second.get<command_write_documents_t>();
+            goblin_engineer::send(agent(), address(), route::write_documents, session, command.database, command.collection, command.documents);
+            commands_.erase(it);
         }
     }
 
     auto manager_disk_t::remove_documents_flush(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::remove_documents_flush , session : {}", session.data());
-        auto it = queue_remove_.find(session);
-        if (it != queue_remove_.end()) {
-            goblin_engineer::send(agent(), address(), route::remove_documents, session, it->second.database, it->second.collection, it->second.documents);
-            queue_remove_.erase(it);
+        auto it = commands_.find(session);
+        if (it != commands_.end()) {
+            const auto &command = it->second.get<command_remove_documents_t>();
+            goblin_engineer::send(agent(), address(), route::remove_documents, session, command.database, command.collection, command.documents);
+            commands_.erase(it);
         }
     }
 

@@ -5,25 +5,12 @@
 #include <log/log.hpp>
 #include <components/session/session.hpp>
 #include "disk.hpp"
+#include "command.hpp"
 
 namespace services::disk {
 
-    struct update_documents_t {
-        database_name_t database;
-        collection_name_t collection;
-        std::vector<document_ptr> documents;
-    };
-
-    struct remove_documents_t {
-        database_name_t database;
-        collection_name_t collection;
-        std::vector<document_id_t> documents;
-    };
-
     using name_t = std::string;
     using session_id_t = ::components::session::session_id_t;
-    using queue_update_t = std::unordered_map<session_id_t, update_documents_t>;
-    using queue_remove_t = std::unordered_map<session_id_t, remove_documents_t>;
     using manager_t = goblin_engineer::basic_manager_service_t<goblin_engineer::base_policy_light>;
 
     class manager_disk_t final : public manager_t {
@@ -57,8 +44,7 @@ namespace services::disk {
         goblin_engineer::executor_ptr e_;
         std::vector<goblin_engineer::actor> actor_storage_;
         std::vector<goblin_engineer::address_t> agents_;
-        queue_update_t queue_update_;
-        queue_remove_t queue_remove_;
+        command_storage_t commands_;
 
         auto agent() -> goblin_engineer::address_t&;
     };
