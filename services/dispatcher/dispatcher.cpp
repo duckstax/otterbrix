@@ -190,7 +190,9 @@ namespace services::dispatcher {
     void dispatcher_t::insert_one_finish(components::session::session_id_t& session, result_insert_one& result) {
         trace(log_,"dispatcher_t::insert_one_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "insert_one_finish", session, result);
-        goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::write_documents_flush, session);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::write_documents_flush, session); //todo after wal
+        }
         session_to_address_.erase(session);
     }
 
@@ -200,6 +202,9 @@ namespace services::dispatcher {
         trace(log_,"dispatcher_t::insert_many_finish session: 0 ");
         goblin_engineer::send(mwal_, dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
         trace(log_,"dispatcher_t::insert_many_finish session: 1 ");
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::write_documents_flush, session); //todo after wal
+        }
         goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
         trace(log_,"dispatcher_t::insert_many_finish session: 2 ");
         ::remove(session_to_address_,session);
@@ -271,6 +276,9 @@ namespace services::dispatcher {
     void dispatcher_t::delete_finish(session_id_t& session, result_delete& result) {
         trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "delete_finish", session, result);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_documents, session);
+        }
         session_to_address_.erase(session);
     }
 
@@ -300,6 +308,9 @@ namespace services::dispatcher {
     void dispatcher_t::update_finish(session_id_t& session, result_update& result) {
         trace(log_,"dispatcher_t::update_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "update_finish", session, result);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::write_documents_flush, session); //todo after wal
+        }
         session_to_address_.erase(session);
     }
     void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
