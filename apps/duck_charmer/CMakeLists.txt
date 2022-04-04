@@ -37,6 +37,7 @@ set(ROCKETJOE_LIBS
         rocketjoe::dispatcher
         rocketjoe::parser
         rocketjoe::wal
+        rocketjoe::disk
         )
 
 include_directories(

@@ -291,6 +291,10 @@ namespace components::document {
         return components::document::make_document(doc->as_dict());
     }
 
+    document_id_t get_document_id(const document_ptr &document) {
+        return document_id_t(components::document::document_view_t(document).get_string("_id"));
+    }
+
     document_ptr document_from_json(const std::string &json) {
         auto doc = ::document::impl::doc_t::from_json(json);
         auto dict = mutable_dict_t::new_dict(doc->root()->as_dict());
