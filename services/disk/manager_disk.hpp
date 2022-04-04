@@ -3,7 +3,6 @@
 #include <goblin-engineer/core.hpp>
 #include <excutor.hpp>
 #include <log/log.hpp>
-#include <components/session/session.hpp>
 #include "disk.hpp"
 #include "command.hpp"
 
@@ -64,8 +63,8 @@ namespace services::disk {
         auto remove_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
 
         auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
-        auto write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void;
-        auto remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void;
+        auto write_documents(const command_write_documents_t &command) -> void;
+        auto remove_documents(const command_remove_documents_t &command) -> void;
 
     private:
         log_t log_;

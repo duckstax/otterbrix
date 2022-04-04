@@ -20,7 +20,7 @@ namespace services::disk {
     class command_t {
     public:
         template<class T>
-        command_t(T command)
+        explicit command_t(T command)
             : data_(std::forward<T>(command)) {}
 
         template<class T>

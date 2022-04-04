@@ -57,6 +57,8 @@ namespace services::storage {
         result_update update_many_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);
         void remove_(const document_id_t& id);
         bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
+        void send_update_to_disk_(const session_id_t& session, const result_update &result);
+        void send_delete_to_disk_(const session_id_t& session, const result_delete &result);
 
         log_t log_;
         goblin_engineer::address_t database_;
