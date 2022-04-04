@@ -15,6 +15,7 @@ target_link_libraries(
         rocketjoe::protocol
         rocketjoe::log
         rocketjoe::wal
+        rocketjoe::test_generaty
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
