@@ -273,7 +273,7 @@ namespace services::storage {
         for (const auto &id : result.modified_ids()) {
             update_documents.push_back(storage_.at(id));
         }
-        if (result.upserted_id().is_null()) {
+        if (!result.upserted_id().is_null()) {
             update_documents.push_back(storage_.at(result.upserted_id()));
         }
         if (!update_documents.empty()) {
@@ -283,7 +283,7 @@ namespace services::storage {
 
     void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete &result) {
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), result.deleted_ids());
+            goblin_engineer::send(mdisk_, address(), disk::route::remove_documents, session, std::string(database_.type()), std::string(type()), result.deleted_ids());
         }
     }
 

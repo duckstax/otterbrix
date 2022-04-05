@@ -55,12 +55,12 @@ namespace services::disk {
         ~agent_disk_t() final;
 
         auto read_databases(session_id_t& session) -> void;
-        auto append_database(session_id_t& session, const database_name_t &database) -> void;
-        auto remove_database(session_id_t& session, const database_name_t &database) -> void;
+        auto append_database(const database_name_t &database) -> void;
+        auto remove_database(const database_name_t &database) -> void;
 
         auto read_collections(session_id_t& session, const database_name_t &database) -> void;
-        auto append_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
-        auto remove_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
+        auto append_collection(const database_name_t &database, const collection_name_t &collection) -> void;
+        auto remove_collection(const database_name_t &database, const collection_name_t &collection) -> void;
 
         auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto write_documents(const command_write_documents_t &command) -> void;

@@ -277,7 +277,7 @@ namespace services::dispatcher {
         trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "delete_finish", session, result);
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_documents, session);
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_documents_flush, session);
         }
         session_to_address_.erase(session);
     }
