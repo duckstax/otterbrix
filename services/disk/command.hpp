@@ -17,22 +17,11 @@ namespace services::disk {
     };
 
 
-    class command_t {
-    public:
-        template<class T>
-        explicit command_t(T command)
-            : data_(std::forward<T>(command)) {}
+    using command_t = std::variant<command_write_documents_t,
+                                   command_remove_documents_t>;
 
-        template<class T>
-        T& get() {
-            return std::get<T>(data_);
-        }
+    using command_storage_t = std::unordered_map<components::session::session_id_t, std::vector<command_t>>;
 
-    private:
-        std::variant<command_write_documents_t,
-                     command_remove_documents_t> data_;
-    };
-
-    using command_storage_t = std::unordered_map<components::session::session_id_t, command_t>;
+    void append_command(command_storage_t &storage, const components::session::session_id_t &session, const command_t &command);
 
 } //namespace services::disk
