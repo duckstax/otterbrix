@@ -2,6 +2,7 @@
 
 #include <services/collection/route.hpp>
 #include <services/database/route.hpp>
+#include <services/disk/route.hpp>
 
 namespace duck_charmer {
 
@@ -15,6 +16,10 @@ namespace duck_charmer {
 
     namespace collection {
         using namespace services::storage::collection;
+    }
+
+    namespace disk {
+        using namespace services::disk::route;
     }
 
 } // namespace kv

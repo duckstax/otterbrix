@@ -42,7 +42,7 @@ collection_ptr gen_collection() {
     auto allocate_byte = sizeof(collection_t);
     auto allocate_byte_alignof = alignof(collection_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto collection = new (buffer) collection_t(nullptr, "TestCollection", log);
+    auto collection = new (buffer) collection_t(nullptr, "TestCollection", log, goblin_engineer::address_t::empty_address());
 
     collection->insert_test(gen_doc("id_1", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
     collection->insert_test(gen_doc("id_2", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));
