@@ -10,6 +10,7 @@ public:
     result_insert_one();
     explicit result_insert_one(result_t id);
     const result_t& inserted_id() const;
+    bool empty() const;
 
 private:
     result_t inserted_id_;
@@ -23,6 +24,7 @@ public:
     result_insert_many() = default;
     explicit result_insert_many(result_t&& inserted_ids);
     const result_t& inserted_ids() const;
+    bool empty() const;
 
 private:
     result_t inserted_ids_;
@@ -88,6 +90,7 @@ public:
     result_delete() = default;
     explicit result_delete(result_t&& deleted_ids);
     const result_t& deleted_ids() const;
+    bool empty() const;
 
 private:
     result_t deleted_ids_;
@@ -105,6 +108,7 @@ public:
     const result_t& modified_ids() const;
     const result_t& nomodified_ids() const;
     const document_id_t& upserted_id() const;
+    bool empty() const;
 
 private:
     result_t modified_ids_;

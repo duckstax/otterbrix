@@ -1,11 +1,13 @@
 #include "collection.hpp"
+#include <services/disk/route.hpp>
 
 namespace services::storage {
 
-    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log)
+    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log, goblin_engineer::address_t mdisk)
         : goblin_engineer::abstract_service(database, std::move(name))
         , log_(log.clone())
-        , database_(database->address()) {
+        , database_(database->address())
+        , mdisk_(mdisk) {
         add_handler(collection::insert_one, &collection_t::insert_one);
         add_handler(collection::insert_many, &collection_t::insert_many);
         add_handler(collection::find, &collection_t::find);
@@ -37,6 +39,10 @@ namespace services::storage {
         auto result = dropped_
                       ? result_insert_one()
                       : result_insert_one(insert_(document));
+        if (!result.empty()) {
+            std::vector<document_ptr> new_documents = {document};
+            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
+        }
         goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
     }
 
@@ -47,12 +53,17 @@ namespace services::storage {
         if (dropped_) {
             goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many());
         } else {
+            std::vector<document_ptr> new_documents;
             std::vector<document_id_t> result;
             for (const auto& document : documents) {
                 auto id = insert_(document);
                 if (!id.is_null()) {
                     result.emplace_back(std::move(id));
+                    new_documents.push_back(document);
                 }
+            }
+            if (!new_documents.empty()) {
+                goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
             }
             goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
         }
@@ -88,6 +99,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_delete()
                       : delete_one_(cond);
+        send_delete_to_disk_(session, result);
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
@@ -98,6 +110,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_delete()
                       : delete_many_(cond);
+        send_delete_to_disk_(session, result);
         goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
     }
 
@@ -109,6 +122,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_update()
                       : update_one_(cond, update, upsert);
+        send_update_to_disk_(session, result);
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
@@ -119,6 +133,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_update()
                       : update_many_(cond, update, upsert);
+        send_update_to_disk_(session, result);
         goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
     }
 
@@ -251,6 +266,25 @@ namespace services::storage {
             }
         }
         return false;
+    }
+
+    void collection_t::send_update_to_disk_(const session_id_t& session, const result_update &result) {
+        std::vector<document_ptr> update_documents;
+        for (const auto &id : result.modified_ids()) {
+            update_documents.push_back(storage_.at(id));
+        }
+        if (!result.upserted_id().is_null()) {
+            update_documents.push_back(storage_.at(result.upserted_id()));
+        }
+        if (!update_documents.empty()) {
+            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), update_documents);
+        }
+    }
+
+    void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete &result) {
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, address(), disk::route::remove_documents, session, std::string(database_.type()), std::string(type()), result.deleted_ids());
+        }
     }
 
 

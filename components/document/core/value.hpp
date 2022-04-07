@@ -159,8 +159,8 @@ namespace document { namespace impl {
     }
 
     template<> bool value_t::as<bool>() const;
-    template<> uint64_t value_t::as<uint64_t>() const;;
-    template<> int64_t value_t::as<int64_t>() const;;
+    template<> uint64_t value_t::as<uint64_t>() const;
+    template<> int64_t value_t::as<int64_t>() const;
     template<> double value_t::as<double>() const;
     template<> std::string value_t::as<std::string>() const;
 

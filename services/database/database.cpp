@@ -67,9 +67,9 @@ namespace services::storage {
         execute();
     }
 
-    void database_t::create(session_id_t& session, std::string& name) {
+    void database_t::create(session_id_t& session, std::string& name, goblin_engineer::address_t mdisk) {
         log_.debug("database_t::create {}", name);
-        auto address = spawn_actor<collection_t>(std::string(name), log_);
+        auto address = spawn_actor<collection_t>(std::string(name), log_, mdisk);
         collections_.emplace(address.type(), address);
         auto self = database_t::address();
         return goblin_engineer::send(current_message()->sender(), self, "create_collection_finish", session, collection_create_result(true), std::string(self.type()), address);

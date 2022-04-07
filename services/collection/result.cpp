@@ -12,12 +12,20 @@ const result_insert_one::result_t& result_insert_one::inserted_id() const {
     return inserted_id_;
 }
 
+bool result_insert_one::empty() const {
+    return inserted_id_.is_null();
+}
+
 result_insert_many::result_insert_many(result_t&& inserted_ids)
     : inserted_ids_(std::move(inserted_ids)) {
 }
 
 const result_insert_many::result_t& result_insert_many::inserted_ids() const {
     return inserted_ids_;
+}
+
+bool result_insert_many::empty() const {
+    return inserted_ids_.empty();
 }
 
 result_find::result_find(result_t&& finded_docs)
@@ -70,6 +78,11 @@ const result_delete::result_t& result_delete::deleted_ids() const {
     return deleted_ids_;
 }
 
+bool result_delete::empty() const {
+    return deleted_ids_.empty();
+}
+
+
 result_update::result_update()
     : upserted_id_(document_id_t::null_id()) {
 }
@@ -94,4 +107,8 @@ const result_update::result_t& result_update::nomodified_ids() const {
 
 const result_update::document_id_t& result_update::upserted_id() const {
     return upserted_id_;
+}
+
+bool result_update::empty() const {
+    return modified_ids().empty() && upserted_id().is_null();
 }
