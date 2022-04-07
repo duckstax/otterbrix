@@ -88,16 +88,7 @@ namespace services::disk {
     auto manager_disk_t::flush(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::flush , session : {}", session.data());
         for (const auto &command : commands_.at(session)) {
-            auto send_command = std::visit([](const auto &c) {
-                using command_type = std::decay_t<decltype(c)>;
-                if constexpr (std::is_same_v<command_type, command_write_documents_t>) {
-                    return route::write_documents;
-                } else if constexpr (std::is_same_v<command_type, command_remove_documents_t>) {
-                    return route::remove_documents;
-                }
-                return "";
-            }, command);
-            goblin_engineer::send(agent(), address(), send_command, command);
+            goblin_engineer::send(agent(), address(), command.name(), command);
         }
         commands_.erase(session);
     }
@@ -185,7 +176,7 @@ namespace services::disk {
     }
 
     auto agent_disk_t::write_documents(const command_t &command) -> void {
-        auto write_command = std::get<command_write_documents_t>(command);
+        auto &write_command = command.get<command_write_documents_t>();
         trace(log_, "{}::write_documents , database : {} , collection : {} , {} documents", type(), write_command.database, write_command.collection, write_command.documents.size());
         for (const auto &document : write_command.documents) {
             auto id = components::document::get_document_id(document);
@@ -196,7 +187,7 @@ namespace services::disk {
     }
 
     auto agent_disk_t::remove_documents(const command_t &command) -> void {
-        auto remove_command = std::get<command_remove_documents_t>(command);
+        auto &remove_command = command.get<command_remove_documents_t>();
         trace(log_, "{}::remove_documents , database : {} , collection : {} , {} documents", type(), remove_command.database, remove_command.collection, remove_command.documents.size());
         for (const auto &id : remove_command.documents) {
             disk_.remove_document(remove_command.database, remove_command.collection, id);

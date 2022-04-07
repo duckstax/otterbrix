@@ -1,6 +1,6 @@
 #include "metadata.hpp"
 #include <algorithm>
-#include <fstream>
+#include <fcntl.h>
 
 namespace services::disk {
 
@@ -17,7 +17,7 @@ namespace services::disk {
         return names;
     }
 
-    const metadata_t::collections_t &metadata_t::collections(const metadata_t::database_name_t& database) const {
+    const metadata_t::collections_t &metadata_t::collections(const database_name_t& database) const {
         auto it = data_.find(database);
         if (it != data_.end()) {
             return it->second;
@@ -30,7 +30,7 @@ namespace services::disk {
         return data_.find(database) != data_.end();
     }
 
-    bool metadata_t::append_database(const metadata_t::database_name_t& database, bool is_flush) {
+    bool metadata_t::append_database(const database_name_t& database, bool is_flush) {
         if (!is_exists_database(database)) {
             data_.insert_or_assign(database, collections_t());
             if (is_flush) {
@@ -41,7 +41,7 @@ namespace services::disk {
         return false;
     }
 
-    bool metadata_t::remove_database(const metadata_t::database_name_t& database, bool is_flush) {
+    bool metadata_t::remove_database(const database_name_t& database, bool is_flush) {
         bool result = data_.erase(database) > 0;
         if (is_flush && result) {
             flush_();
@@ -49,7 +49,7 @@ namespace services::disk {
         return result;
     }
 
-    bool metadata_t::is_exists_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection) const {
+    bool metadata_t::is_exists_collection(const database_name_t& database, const collection_name_t& collection) const {
         auto it = data_.find(database);
         if (it != data_.end()) {
             return std::find(it->second.begin(), it->second.end(), collection) != it->second.end();
@@ -57,7 +57,7 @@ namespace services::disk {
         return false;
     }
 
-    bool metadata_t::append_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection, bool is_flush) {
+    bool metadata_t::append_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
         if (!is_exists_collection(database, collection)) {
             auto it = data_.find(database);
             if (it != data_.end()) {
@@ -71,7 +71,7 @@ namespace services::disk {
         return false;
     }
 
-    bool metadata_t::remove_collection(const metadata_t::database_name_t& database, const metadata_t::collection_name_t& collection, bool is_flush) {
+    bool metadata_t::remove_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
         auto it = data_.find(database);
         if (it != data_.end()) {
             auto it_collection = std::remove(it->second.begin(), it->second.end(), collection);
@@ -88,39 +88,54 @@ namespace services::disk {
 
     metadata_t::metadata_t(const path_t &file_name)
         : file_name_(file_name) {
-        std::ifstream file(file_name.c_str());
-        if (file.is_open()) {
-            std::string line;
-            while (std::getline(file, line)) {
-                auto pos_db = line.find(':');
-                if (pos_db != std::string::npos) {
-                    auto database = line.substr(0, pos_db);
-                    append_database(database, false);
-                    auto pos = pos_db + 1;
-                    auto pos_col = line.find(';', pos);
-                    while (pos_col != std::string::npos) {
-                        auto collection = line.substr(pos, pos_col - pos);
-                        append_collection(database, collection, false);
-                        pos = pos_col + 1;
-                        pos_col = line.find(';', pos);
-                    }
-                }
+        constexpr std::size_t size_buffer = 1024;
+        auto file = ::open(file_name_.c_str(), O_RDONLY, 0777);
+        __off_t pos = 0;
+        std::string data;
+        char buffer[size_buffer];
+        auto size_read = ::pread(file, &buffer, size_buffer, pos);
+        while (size_read > 0) {
+            data += std::string(buffer, size_read);
+            pos += size_read;
+            size_read = ::pread(file, &buffer, size_buffer, pos);
+        }
+        ::close(file);
+        std::size_t pos_new_line = 0;
+        auto pos_db = data.find(':', pos_new_line);
+        while (pos_db != std::string::npos) {
+            auto database = data.substr(pos_new_line, pos_db - pos_new_line);
+            append_database(database, false);
+            auto pos = pos_db + 1;
+            auto pos_col = data.find(';', pos);
+            auto pos_end_line = data.find('\n', pos);
+            while (pos_col != std::string::npos && pos_col < pos_end_line) {
+                auto collection = data.substr(pos, pos_col - pos);
+                append_collection(database, collection, false);
+                pos = pos_col + 1;
+                pos_col = data.find(';', pos);
+            }
+            if (pos_end_line != std::string::npos) {
+                pos_new_line = pos_end_line + 1;
+                pos_db = data.find(':', pos_new_line);
+            } else {
+                break;
             }
         }
-        file.close();
     }
 
     void metadata_t::flush_() {
-        std::ofstream file(file_name_.c_str());
-        if (file.is_open()) {
-            for (const auto& it : data_) {
-                file << it.first + ":";
-                for (const auto& collection : it.second) {
-                    file << collection + ";";
-                }
-                file << "\n";
+        auto file = ::open(file_name_.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
+        std::string data;
+        for (auto& it : data_) {
+            data += it.first + ":";
+            for (const auto& collection : it.second) {
+                data += collection + ";";
             }
+            data += "\n";
         }
-        file.close();
+        iovec write_data{data.data(), data.size()};
+        ::pwritev(file, &write_data, 1, 0);
+        ::close(file);
     }
+
 } //namespace services::disk

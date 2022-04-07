@@ -17,8 +17,26 @@ namespace services::disk {
     };
 
 
-    using command_t = std::variant<command_write_documents_t,
-                                   command_remove_documents_t>;
+    class command_t {
+        using command_name_t = std::string;
+
+    public:
+        template <class T>
+        explicit command_t(const T command)
+            : command_(command) {}
+
+        template<class T>
+        const T& get() const {
+            return std::get<T>(command_);
+        }
+
+        command_name_t name() const;
+
+    private:
+        std::variant<command_write_documents_t,
+                     command_remove_documents_t>
+            command_;
+    };
 
     using command_storage_t = std::unordered_map<components::session::session_id_t, std::vector<command_t>>;
 

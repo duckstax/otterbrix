@@ -1,6 +1,19 @@
 #include "command.hpp"
+#include "route.hpp"
 
 namespace services::disk {
+
+    command_t::command_name_t command_t::name() const {
+        return std::visit([](const auto &c) {
+            using command_type = std::decay_t<decltype(c)>;
+            if constexpr (std::is_same_v<command_type, command_write_documents_t>) {
+                return route::write_documents;
+            } else if constexpr (std::is_same_v<command_type, command_remove_documents_t>) {
+                return route::remove_documents;
+            }
+            static_assert(true, "Not valid command type");
+        }, command_);
+    }
 
     void append_command(command_storage_t &storage, const components::session::session_id_t &session, const command_t &command) {
         auto it = storage.find(session);

@@ -4,19 +4,19 @@
 #include <unordered_map>
 #include <memory>
 #include <boost/filesystem.hpp>
+#include <components/protocol/base.hpp>
 
 namespace services::disk {
 
     class metadata_t {
-    public:
+
         using path_t = boost::filesystem::path;
-        using database_name_t = std::string;
-        using collection_name_t = std::string;
         using collections_t = std::vector<collection_name_t>;
-        using databases_t = std::vector<collection_name_t>;
+        using databases_t = std::vector<database_name_t>;
         using data_t = std::unordered_map<database_name_t, collections_t>;
         using metadata_ptr = std::unique_ptr<metadata_t>;
 
+    public:
         static metadata_ptr open(const path_t &file_name);
 
         databases_t databases() const;
