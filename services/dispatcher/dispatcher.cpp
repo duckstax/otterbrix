@@ -5,6 +5,7 @@
 #include <components/document/document.hpp>
 #include <services/collection/route.hpp>
 #include <services/database/database.hpp>
+#include <services/disk/route.hpp>
 
 namespace services::dispatcher {
 
@@ -55,11 +56,13 @@ namespace services::dispatcher {
         log_.error("manager_dispatcher_t::add_supervisor_impl");
     }
 
-    dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, goblin_engineer::address_t mdb,goblin_engineer::address_t mwal , log_t& log, std::string name)
+    dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, goblin_engineer::address_t mdb, goblin_engineer::address_t mwal,
+                               goblin_engineer::address_t mdisk, log_t& log, std::string name)
         : goblin_engineer::abstract_service(manager_database, std::move(name))
         , log_(log.clone())
         , mdb_(mdb)
-        , mwal_(mwal) {
+        , mwal_(mwal)
+        , mdisk_(mdisk) {
         log_.trace("dispatcher_t::dispatcher_t name:{}", type());
         add_handler(manager_database::create_database, &dispatcher_t::create_database);
         add_handler("create_database_finish", &dispatcher_t::create_database_finish);
@@ -101,6 +104,7 @@ namespace services::dispatcher {
             auto md = address_book("manager_dispatcher");
             goblin_engineer::link(md, database);
             database_address_book_.emplace(type, database);
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_database, session, std::string(type));
             log_.trace("add database_create_result");
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "create_database_finish", session, result);
@@ -110,7 +114,7 @@ namespace services::dispatcher {
     void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, goblin_engineer::address_t address) {
         trace(log_,"dispatcher_t::create_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collections_name);
         session_to_address_.emplace(session, address);
-        goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), "create_collection", session, collections_name);
+        goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), "create_collection", session, collections_name, mdisk_);
     }
 
     void dispatcher_t::create_collection_finish(components::session::session_id_t& session, storage::collection_create_result result, std::string& database_name, goblin_engineer::address_t collection) {
@@ -120,6 +124,7 @@ namespace services::dispatcher {
             auto md = address_book("manager_dispatcher");
             goblin_engineer::link(md, collection);
             collection_address_book_.emplace(key_collection_t(database_name, std::string(type)), collection);
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(type));
             log_.trace("add database_create_result");
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "create_collection_finish", session, result);
@@ -151,6 +156,7 @@ namespace services::dispatcher {
             //auto md = address_book("manager_dispatcher");
             //goblin_engineer::link(md,collection);
             collection_address_book_.erase({database_name, std::string(type)});
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(type));
             trace(log_,"collection {} dropped", type);
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "drop_collection_finish", session, result);
@@ -184,6 +190,9 @@ namespace services::dispatcher {
     void dispatcher_t::insert_one_finish(components::session::session_id_t& session, result_insert_one& result) {
         trace(log_,"dispatcher_t::insert_one_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "insert_one_finish", session, result);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session); //todo after wal
+        }
         session_to_address_.erase(session);
     }
 
@@ -193,6 +202,9 @@ namespace services::dispatcher {
         trace(log_,"dispatcher_t::insert_many_finish session: 0 ");
         goblin_engineer::send(mwal_, dispatcher_t::address(), "insert_many", s.get<insert_many_t>());
         trace(log_,"dispatcher_t::insert_many_finish session: 1 ");
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session); //todo after wal
+        }
         goblin_engineer::send(s.address(), dispatcher_t::address(), "insert_many_finish", session, result);
         trace(log_,"dispatcher_t::insert_many_finish session: 2 ");
         ::remove(session_to_address_,session);
@@ -264,6 +276,9 @@ namespace services::dispatcher {
     void dispatcher_t::delete_finish(session_id_t& session, result_delete& result) {
         trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "delete_finish", session, result);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session);
+        }
         session_to_address_.erase(session);
     }
 
@@ -293,6 +308,9 @@ namespace services::dispatcher {
     void dispatcher_t::update_finish(session_id_t& session, result_update& result) {
         trace(log_,"dispatcher_t::update_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "update_finish", session, result);
+        if (!result.empty()) {
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session); //todo after wal
+        }
         session_to_address_.erase(session);
     }
     void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
@@ -327,7 +345,7 @@ namespace services::dispatcher {
 
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
         trace(log_,"manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
-        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"),address_book("manager_wal"), log_, std::move(name));
+        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"), address_book("manager_wal"), address_book("manager_disk"), log_, std::move(name));
         std::string type(address.type().data(), address.type().size());
         trace(log_,"address: {} pointer: {}", type, address.get());
         dispatcher_to_address_book_.emplace(type, address);
