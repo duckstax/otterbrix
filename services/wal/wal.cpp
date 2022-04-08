@@ -9,6 +9,7 @@
 
 #include <crc32c/crc32c.h>
 #include "dto.hpp"
+#include "route.hpp"
 
 std::string get_time_to_string() {
     auto now = std::chrono::system_clock::now();
@@ -18,6 +19,8 @@ std::string get_time_to_string() {
     ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%H:%M:%S");
     return ss.str();
 }
+
+using namespace services::wal;
 
 constexpr static auto wal_name = ".wal";
 
@@ -33,7 +36,8 @@ wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager,log_t& l
     : goblin_engineer::abstract_service(manager, "wal")
     , log_(log.clone())
     , path_(std::move(path)) {
-    add_handler("insert_many",&wal_replicate_t::insert_many);
+    add_handler(route::insert_one, &wal_replicate_t::insert_one);
+    add_handler(route::insert_many, &wal_replicate_t::insert_many);
     auto not_existed = not file_exist_(path_);
     if (not_existed) {
         boost::filesystem::create_directory(path_);
@@ -89,11 +93,20 @@ buffer_t wal_replicate_t::read(size_t start_index, size_t finish_index) {
     return buffer;
 }
 
-void wal_replicate_t::insert_many(insert_many_t& data) {
-    trace(log_,"wal_replicate_t::insert_many {}::{}",data.database_,data.collection_);
+void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, insert_one_t& data) {
+    trace(log_, "wal_replicate_t::insert_one {}::{}", data.database_, data.collection_);
     buffer_.clear();
-    last_crc32_ = pack(buffer_,last_crc32_,log_number_,data) ;
+    last_crc32_ = pack(buffer_, last_crc32_, log_number_, data);
     write_();
+    goblin_engineer::send(sender, address(), route::success, session, last_crc32_);
+}
+
+void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, insert_many_t& data) {
+    trace(log_, "wal_replicate_t::insert_many {}::{}", data.database_, data.collection_);
+    buffer_.clear();
+    last_crc32_ = pack(buffer_, last_crc32_, log_number_, data);
+    write_();
+    goblin_engineer::send(sender, address(), route::success, session, last_crc32_);
 }
 
 void wal_replicate_t::write_() {
