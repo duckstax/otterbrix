@@ -9,6 +9,8 @@
 
 #include <crc32c/crc32c.h>
 
+using namespace services::wal;
+
 TEST_CASE("pack and unpack") {
 
     const std::string database = "test_database";

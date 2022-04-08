@@ -3,6 +3,7 @@
 #include <services/collection/route.hpp>
 #include <services/database/route.hpp>
 #include <services/disk/route.hpp>
+#include <services/wal/route.hpp>
 
 namespace duck_charmer {
 
@@ -20,6 +21,10 @@ namespace duck_charmer {
 
     namespace disk {
         using namespace services::disk::route;
+    }
+
+    namespace wal {
+        using namespace services::wal::route;
     }
 
 } // namespace kv

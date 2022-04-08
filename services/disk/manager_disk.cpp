@@ -87,10 +87,13 @@ namespace services::disk {
 
     auto manager_disk_t::flush(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::flush , session : {}", session.data());
-        for (const auto &command : commands_.at(session)) {
-            goblin_engineer::send(agent(), address(), command.name(), command);
+        auto it = commands_.find(session);
+        if (it != commands_.end()) {
+            for (const auto& command : commands_.at(session)) {
+                goblin_engineer::send(agent(), address(), command.name(), command);
+            }
+            commands_.erase(session);
         }
-        commands_.erase(session);
     }
 
     auto manager_disk_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {

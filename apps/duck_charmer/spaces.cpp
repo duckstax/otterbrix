@@ -30,8 +30,8 @@ namespace duck_charmer {
         boost::filesystem::path current_path = boost::filesystem::current_path();
 
         trace(log_, "manager_wal start");
-        manager_wal_ = goblin_engineer::make_manager_service<manager_wal_replicate_t>(current_path,log_, 1, 1000);
-        goblin_engineer::send(manager_wal_, goblin_engineer::address_t::empty_address(), "create" );
+        manager_wal_ = goblin_engineer::make_manager_service<services::wal::manager_wal_replicate_t>(current_path, log_, 1, 1000);
+        goblin_engineer::send(manager_wal_, goblin_engineer::address_t::empty_address(), wal::create);
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_database start");
