@@ -29,7 +29,7 @@ namespace services::disk {
         auto write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void;
         auto remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void;
 
-        auto flush(session_id_t& session) -> void;
+        auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
     protected:
         auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
@@ -65,6 +65,8 @@ namespace services::disk {
         auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto write_documents(const command_t &command) -> void;
         auto remove_documents(const command_t &command) -> void;
+
+        auto fix_wal_id(wal::id_t wal_id) -> void;
 
     private:
         log_t log_;

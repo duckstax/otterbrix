@@ -31,7 +31,9 @@ jobs:
           conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
+          conan remote add duckstax http://conan.duckstax.com:9300
           conan remote add cyberduckninja http://conan.cyberduckninja.com:9300
+          conan remote list
 
       - name: download dependencies
         run: |

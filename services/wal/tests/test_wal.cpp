@@ -15,8 +15,58 @@
 #include <components/tests/generaty.hpp>
 #include <components/document/document_view.hpp>
 
-TEST_CASE("base insert many test") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs_base/");
+using namespace services::wal;
+
+TEST_CASE("insert one test") {
+    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    log.set_level(log_t::level::trace);
+    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto allocate_byte = sizeof(wal_replicate_t);
+    auto allocate_byte_alignof = alignof(wal_replicate_t);
+    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
+
+    const std::string database = "test_database";
+    const std::string collection = "test_collection";
+
+    for (int num = 1; num <= 5; ++num) {
+        auto document = gen_doc(num);
+        insert_one_t data(database, collection, std::move(document));
+        auto session = components::session::session_id_t();
+        auto address = actor_zeta::base::address_t::address_t::empty_address();
+        wal->insert_one(session, address, data);
+    }
+
+    std::size_t read_index = 0;
+    for (int num = 1; num <= 5; ++num) {
+        wal_entry_t<insert_one_t> entry;
+
+        entry.size_ = wal->read_size(read_index);
+
+        auto start = read_index + sizeof(size_tt);
+        auto finish = read_index + sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
+        auto output = wal->read(start, finish);
+
+        auto crc32_index = entry.size_;
+        crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
+
+        unpack(output, entry);
+        entry.crc32_ = read_crc32(output, entry.size_);
+
+        REQUIRE(entry.crc32_ == crc32);
+        REQUIRE(entry.entry_.database_ == database);
+        REQUIRE(entry.entry_.collection_ == collection);
+        document_view_t view(entry.entry_.document_);
+        REQUIRE(view.get_string("_id") == std::to_string(num));
+        REQUIRE(view.get_long("count") == num);
+        REQUIRE(view.get_string("countStr") == std::to_string(num));
+
+        read_index = finish;
+    }
+}
+
+TEST_CASE("insert many empty test") {
+    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
     auto allocate_byte = sizeof(wal_replicate_t);
@@ -30,7 +80,9 @@ TEST_CASE("base insert many test") {
     std::list<components::document::document_ptr> documents;
     insert_many_t data(database, collection, std::move(documents));
 
-    wal->insert_many(data);
+    auto session = components::session::session_id_t();
+    auto address = actor_zeta::base::address_t::address_t::empty_address();
+    wal->insert_many(session, address, data);
 
     wal_entry_t<insert_many_t> entry;
 
@@ -47,47 +99,6 @@ TEST_CASE("base insert many test") {
     entry.crc32_ = read_crc32(output, entry.size_);
 
     REQUIRE(entry.crc32_ == crc32);
-}
-
-TEST_CASE("advanced insert many test") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs_advanced/");
-    log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
-    auto allocate_byte = sizeof(wal_replicate_t);
-    auto allocate_byte_alignof = alignof(wal_replicate_t);
-    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
-
-
-    const std::string database = "test_database";
-    const std::string collection = "test_collection";
-
-    for (int i = 0; i <= 3; ++i) {
-        std::list<components::document::document_ptr> documents;
-        insert_many_t data(database, collection, std::move(documents));
-        wal->insert_many(data);
-    }
-
-    int read_index = 0;
-
-    for(int i = 0; i <= 3; ++i) {
-        wal_entry_t<insert_many_t> entry;
-
-        entry.size_ = wal->read_size(read_index);
-
-        auto start = sizeof(size_tt);
-        auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
-        auto output = wal->read(start, finish);
-
-        auto crc32_index = entry.size_;
-        crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
-
-        unpack(output, entry);
-        entry.crc32_ = read_crc32(output, entry.size_);
-
-        REQUIRE(entry.crc32_ == crc32);
-        read_index += sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
-    }
 }
 
 TEST_CASE("insert many test") {
@@ -108,18 +119,19 @@ TEST_CASE("insert many test") {
             documents.push_back(gen_doc(num));
         }
         insert_many_t data(database, collection, std::move(documents));
-        wal->insert_many(data);
+        auto session = components::session::session_id_t();
+        auto address = actor_zeta::base::address_t::address_t::empty_address();
+        wal->insert_many(session, address, data);
     }
 
     std::size_t read_index = 0;
-
-    for(int i = 0; i <= 3; ++i) {
+    for (int i = 0; i <= 3; ++i) {
         wal_entry_t<insert_many_t> entry;
 
         entry.size_ = wal->read_size(read_index);
 
-        auto start = sizeof(size_tt);
-        auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
+        auto start = read_index + sizeof(size_tt);
+        auto finish = read_index + sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
         auto output = wal->read(start, finish);
 
         auto crc32_index = entry.size_;
@@ -141,6 +153,6 @@ TEST_CASE("insert many test") {
             REQUIRE(view.get_string("countStr") == std::to_string(num));
         }
 
-        read_index += sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
+        read_index = finish;
     }
 }
