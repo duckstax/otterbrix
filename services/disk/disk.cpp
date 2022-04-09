@@ -8,6 +8,7 @@ namespace services::disk {
     const std::string key_separator = "::";
     const std::string key_structure = "structure";
     const std::string key_data = "data";
+    const std::string key_wal_id = "wal::id";
 
     std::string gen_key(const std::string &key, const std::string &sub_key) {
         return key + key_separator + sub_key;
@@ -119,6 +120,10 @@ namespace services::disk {
 
     bool disk_t::remove_collection(const database_name_t &database, const collection_name_t &collection) {
         return metadata_->remove_collection(database, collection);
+    }
+
+    void disk_t::fix_wal_id(wal::id_t wal_id) {
+        db_->Put(rocksdb::WriteOptions(), key_wal_id, std::to_string(wal_id));
     }
 
 } //namespace services::disk

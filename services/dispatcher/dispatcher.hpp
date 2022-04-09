@@ -10,8 +10,9 @@
 #include <components/excutor.hpp>
 #include <components/log/log.hpp>
 
-#include "services/database/result_database.hpp"
+#include <services/database/result_database.hpp>
 #include <services/collection/result.hpp>
+#include <services/wal/base.hpp>
 
 #include "session.hpp"
 
@@ -112,6 +113,7 @@ namespace services::dispatcher {
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address);
         void size_finish(components::session::session_id_t&, result_size& result);
         void close_cursor(components::session::session_id_t& session);
+        void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
 
     private:
         log_t log_;

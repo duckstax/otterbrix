@@ -14,6 +14,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::protocol
         rocketjoe::log
+        rocketjoe::session
         rocketjoe::wal
         rocketjoe::test_generaty
 )

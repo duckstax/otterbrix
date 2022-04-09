@@ -85,12 +85,16 @@ namespace services::disk {
         append_command(commands_, session, command_t(command));
     }
 
-    auto manager_disk_t::flush(session_id_t& session) -> void {
+    auto manager_disk_t::flush(session_id_t& session, wal::id_t wal_id) -> void {
         trace(log_, "manager_disk_t::flush , session : {}", session.data());
-        for (const auto &command : commands_.at(session)) {
-            goblin_engineer::send(agent(), address(), command.name(), command);
+        auto it = commands_.find(session);
+        if (it != commands_.end()) {
+            for (const auto& command : commands_.at(session)) {
+                goblin_engineer::send(agent(), address(), command.name(), command);
+            }
+            commands_.erase(session);
+            goblin_engineer::send(agent(), address(), route::fix_wal_id, wal_id);
         }
-        commands_.erase(session);
     }
 
     auto manager_disk_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
@@ -128,6 +132,7 @@ namespace services::disk {
         add_handler(route::read_documents, &agent_disk_t::read_documents);
         add_handler(route::write_documents, &agent_disk_t::write_documents);
         add_handler(route::remove_documents, &agent_disk_t::remove_documents);
+        add_handler(route::fix_wal_id, &agent_disk_t::fix_wal_id);
     }
 
     agent_disk_t::~agent_disk_t() {
@@ -192,6 +197,11 @@ namespace services::disk {
         for (const auto &id : remove_command.documents) {
             disk_.remove_document(remove_command.database, remove_command.collection, id);
         }
+    }
+    
+    auto agent_disk_t::fix_wal_id(wal::id_t wal_id) -> void {
+        trace(log_, "{}::fix_wal_id : {}", type(), wal_id);
+        disk_.fix_wal_id(wal_id);
     }
 
 } //namespace services::disk
