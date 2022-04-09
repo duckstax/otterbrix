@@ -2,6 +2,7 @@
 
 #include <goblin-engineer/core.hpp>
 
+#include <protocol/insert_one.hpp>
 #include <protocol/insert_many.hpp>
 
 #include <components/session/session.hpp>
@@ -27,7 +28,9 @@ public:
 
 private:
     goblin_engineer::address_t address_;
-    std::variant<insert_many_t> data_;
+    std::variant<insert_one_t,
+                 insert_many_t>
+        data_;
     ///components::session::session_id_t session_;
 };
 

@@ -15,7 +15,9 @@ namespace services::disk::route {
     static constexpr auto read_documents = "disk::read_documents";
     static constexpr auto write_documents = "disk::write_documents";
     static constexpr auto remove_documents = "disk::remove_documents";
+
     static constexpr auto flush = "disk::flush";
+    static constexpr auto fix_wal_id = "disk::fix_wal_id";
 
     static constexpr auto read_databases_finish = "disk::read_databases_finish";
     static constexpr auto read_collections_finish = "disk::read_collections_finish";

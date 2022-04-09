@@ -5,7 +5,8 @@ list(APPEND HEADER_${PROJECT_NAME}
         )
 
 list(APPEND SOURCE_${PROJECT_NAME}
-base.cpp
+        base.cpp
+        insert_one.cpp
         insert_many.cpp
 )
 
@@ -29,6 +30,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
+        insert_one.hpp
         insert_many.hpp
 )
 

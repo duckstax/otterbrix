@@ -3,6 +3,7 @@
 #include <components/document/document_id.hpp>
 #include <components/protocol/base.hpp>
 #include <boost/filesystem.hpp>
+#include <wal/base.hpp>
 
 namespace rocksdb {
     class DB;
@@ -39,6 +40,8 @@ namespace services::disk {
         [[nodiscard]] std::vector<collection_name_t> collections(const database_name_t &database) const;
         bool append_collection(const database_name_t &database, const collection_name_t &collection);
         bool remove_collection(const database_name_t &database, const collection_name_t &collection);
+
+        void fix_wal_id(wal::id_t wal_id);
 
     private:
         db_ptr db_;
