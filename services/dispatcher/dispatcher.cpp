@@ -170,7 +170,7 @@ namespace services::dispatcher {
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_,session, session_t(address, insert_one_t(database_name, collection, document)));
+            make_session(session_to_address_, session, session_t(address, insert_one_t(database_name, collection, document)));
             goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_one, session, std::move(document));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "insert_one_finish", session, result_insert_one());
@@ -182,7 +182,7 @@ namespace services::dispatcher {
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_,session, session_t(address, insert_many_t(database_name, collection, documents)));
+            make_session(session_to_address_, session, session_t(address, insert_many_t(database_name, collection, documents)));
             goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::insert_many, session, std::move(documents));
         } else {
             goblin_engineer::send(address, dispatcher_t::address(), "insert_many_finish", session, result_insert_many());
@@ -271,7 +271,7 @@ namespace services::dispatcher {
         trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "delete_finish", session, result);
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session);
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
         }
         session_to_address_.erase(session);
     }
@@ -303,7 +303,7 @@ namespace services::dispatcher {
         trace(log_,"dispatcher_t::update_finish session: {}", session.data());
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), "update_finish", session, result);
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session); //todo after wal
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
         }
         session_to_address_.erase(session);
     }
@@ -338,8 +338,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::wal_success(components::session::session_id_t& session, services::wal::id_t wal_id) {
-        //todo wal_id
-        goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session);
+        goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal_id);
     }
 
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
