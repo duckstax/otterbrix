@@ -17,9 +17,17 @@ document::retained_t<document::impl::dict_t> gen_dict(int num) {
     return dict;
 }
 
+std::string gen_id(int num) {
+    auto res = std::to_string(num);
+    while (res.size() < 24) {
+        res = "0" + res;
+    }
+    return res;
+}
+
 document_ptr gen_doc(int num) {
     auto doc = document::impl::mutable_dict_t::new_dict();
-    doc->set("_id", std::to_string(num));
+    doc->set("_id", gen_id(num));
     doc->set("count", num);
     doc->set("countStr", std::to_string(num));
     doc->set("countDouble", float(num) + 0.1);

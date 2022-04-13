@@ -13,9 +13,11 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
-void generate_document_id_if_not_exists(components::document::document_ptr &document) {
+using components::document::document_id_t;
+
+void generate_document_id_if_not_exists(components::document::document_ptr &document, document_id_t &generator) {
     if (!document_view_t(document).is_exists("_id")) {
-        document->set("_id", components::document::document_id_t::generate().to_string());
+        document->set("_id", generator.next().to_string());
     }
 }
 
@@ -61,7 +63,8 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
     log_.trace("wrapper_collection::insert_one");
     if (py::isinstance<py::dict>(document)) {
         auto doc = to_document(document);
-        generate_document_id_if_not_exists(doc);
+        auto generator = document_id_t::generate();
+        generate_document_id_if_not_exists(doc, generator);
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
         log_.debug("wrapper_collection::insert_one {} inserted", result.inserted_id().is_null() ? 0 : 1);
@@ -75,9 +78,10 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     log_.trace("wrapper_collection::insert_many");
     if (py::isinstance<py::list>(documents)) {
         std::list<components::document::document_ptr> docs;
+        auto generator = document_id_t::generate();
         for (const auto document : documents) {
             auto doc = to_document(document);
-            generate_document_id_if_not_exists(doc);
+            generate_document_id_if_not_exists(doc, generator);
             docs.push_back(std::move(doc));
         }
         auto session_tmp = duck_charmer::session_id_t();
@@ -85,7 +89,7 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
         log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
         py::list list;
         for (const auto &id : result.inserted_ids()) {
-            list.append(id.to_string_view());
+            list.append(id.to_string());
         }
         return list;
     }
@@ -98,10 +102,11 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
     if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
         auto condition = to_document(cond);
         auto update = to_document(fields);
-        generate_document_id_if_not_exists(update);
+        auto generator = document_id_t::generate();
+        generate_document_id_if_not_exists(update, generator);
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
+        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();
@@ -109,13 +114,14 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
 
 wrapper_result_update wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
     log_.trace("wrapper_collection::update_many");
+    auto generator = document_id_t::generate();
     if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
         auto condition = to_document(cond);
         auto update = to_document(fields);
-        generate_document_id_if_not_exists(update);
+        generate_document_id_if_not_exists(update, generator);
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_many(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
+        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();

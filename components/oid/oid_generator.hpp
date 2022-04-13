@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include "oid.hpp"
 
 template <uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
@@ -9,6 +10,13 @@ class oid_generator_t {
     static constexpr uint offset_increment = offset_random + SizeRandom;
     static constexpr uint size = SizeTimestamp + SizeRandom + SizeIncrement;
     using oid_size_t = oid_t<size>;
+
+    struct initializer_random {
+        initializer_random() {
+            time_t t;
+            srandom(static_cast<uint>(std::time(&t)));
+        }
+    };
 
 public:
     oid_generator_t() {
@@ -23,13 +31,23 @@ public:
         std::memcpy(increment_, start_oid.data() + offset_increment, SizeIncrement);
     }
 
-    oid_size_t next() const {
-        inc();
+    explicit oid_generator_t(const oid_generator_t &other) {
+        std::memcpy(timestamp_, other.timestamp_, SizeTimestamp);
+        std::memcpy(random_, other.random_, SizeRandom);
+        std::memcpy(increment_, other.increment_, SizeIncrement);
+    }
+
+    oid_size_t get() const {
         oid_size_t oid;
         oid.fill(offset_timestamp, timestamp_, SizeTimestamp);
         oid.fill(offset_random, random_, SizeRandom);
         oid.fill(offset_increment, increment_, SizeIncrement);
         return oid;
+    }
+
+    oid_size_t next() const {
+        inc();
+        return get();
     }
 
 private:
@@ -49,24 +67,29 @@ private:
         std::memcpy(timestamp_, sec.data(), SizeTimestamp);
     }
 
+    static void initialize() {
+        static initializer_random initializer;
+    }
+
     void init_random() {
-        time_t t;
-        srandom(static_cast<uint>(std::time(&t)));
+        initialize();
         for (uint i = 0; i < SizeRandom; ++i) {
             random_[i] = char(random());
         }
     }
 
     void init_increment() {
-        std::memset(increment_, 0x00, SizeIncrement);
+        for (uint i = 0; i < SizeIncrement; ++i) {
+            increment_[i] = char(random());
+        }
     }
 
     void inc() const {
-        uint i = 1;
-        while (i <= SizeIncrement) {
-            ++increment_[SizeIncrement - i];
-            if (increment_[SizeIncrement - i] == 0) {
-                ++i;
+        uint i = SizeIncrement - 1;
+        while (i >= 0) {
+            ++increment_[i];
+            if (increment_[i] == 0) {
+                --i;
             } else {
                 break;
             }

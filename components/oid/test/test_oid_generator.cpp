@@ -15,12 +15,10 @@ TEST_CASE("oid_generator::generate") {
     REQUIRE(generator.next() == oid8_t("012345670123456789100101"));
 }
 
-//#include <unistd.h>
 //#include <iostream>
 //TEST_CASE("oid_generator") {
 //    for (uint i = 0; i < 10; ++i) {
 //        std::cerr << "~~~ GENERATING N" << i + 1 << " ~~~" << std::endl;
-//        usleep(1000000);
 //        oid_generator_t<4, 5, 3> generator;
 //        for (uint j = 0; j < 100; ++j) {
 //            std::cerr << generator.next() << std::endl;

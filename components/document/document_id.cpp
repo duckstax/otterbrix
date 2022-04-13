@@ -1,76 +1,54 @@
 #include "document_id.hpp"
-#include <boost/uuid/random_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
+#include <cassert>
+#include <utility>
 
 namespace components::document {
 
-    document_id_t::document_id_t(std::string id)
-        : value_(std::move(id)) {}
+    document_id_t::document_id_t(const std::string &id)
+        : super(id)
+        , generator_(nullptr) {}
 
-    document_id_t::document_id_t(const std::string_view& id)
-        : value_(id) {}
+    document_id_t::document_id_t(std::string_view id)
+        : super(std::string(id))
+        , generator_(nullptr) {}
 
-    document_id_t::document_id_t(document_id_t&& id) noexcept
-        : value_(std::move(id.value_))
-        , null_(id.null_) {}
+    document_id_t::document_id_t(document_id_t &&id) noexcept
+        : super(id)
+        , generator_(std::move(id.generator_)) {
+    }
 
-    document_id_t& document_id_t::operator=(std::string id) {
-        value_ = std::move(id);
+    document_id_t& document_id_t::operator=(const document_id_t &id) {
+        super::operator=(id);
+        generator_ = id.generator_;
         return *this;
     }
 
-    document_id_t& document_id_t::operator=(const std::string_view& id) {
-        value_ = id;
-        return *this;
-    }
-
-    document_id_t& document_id_t::operator=(const document_id_t& id) {
-        value_ = id.value_;
-        null_ = id.null_;
-        return *this;
-    }
-
-    document_id_t& document_id_t::operator=(document_id_t&& id) {
-        value_ = std::move(id.value_);
-        null_ = id.null_;
-        id.null_ = true;
+    document_id_t& document_id_t::operator=(document_id_t &&id) noexcept {
+        super::operator=(id);
+        generator_ = std::move(id.generator_);
         return *this;
     }
 
     document_id_t document_id_t::generate() {
-        static boost::uuids::random_generator generator;
-        return document_id_t(boost::uuids::to_string(generator()));
+        auto generator = std::make_shared<generator_t>();
+        return document_id_t(generator->get(), generator);
     }
 
     document_id_t document_id_t::null_id() {
-        return document_id_t();
+        return document_id_t(null(), nullptr);
     }
 
-    bool document_id_t::operator==(const document_id_t& other) const {
-        return value_ == other.value_;
-    }
-
-    bool document_id_t::operator!=(const document_id_t& other) const {
-        return value_ != other.value_;
-    }
-
-    bool document_id_t::operator<(const document_id_t& other) const {
-        return value_ < other.value_;
-    }
-
-    std::string document_id_t::to_string() const {
-        return value_;
-    }
-
-    std::string_view document_id_t::to_string_view() const {
-        return std::string_view(value_);
+    document_id_t document_id_t::next() const {
+        assert(generator_ != nullptr);
+        return document_id_t(generator_->next(), generator_);
     }
 
     bool document_id_t::is_null() const {
-        return null_;
+        return this->compare(null_id()) == 0;
     }
 
-    document_id_t::document_id_t()
-        : null_(true) {}
+    document_id_t::document_id_t(const super &id, generator_ptr generator)
+        : super(id)
+        , generator_(std::move(generator)) {}
 
 }

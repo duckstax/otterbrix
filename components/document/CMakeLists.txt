@@ -101,6 +101,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         boost_json
         dl
+        rocketjoe::oid
 )
 
 target_include_directories(

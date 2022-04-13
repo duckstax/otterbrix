@@ -11,17 +11,21 @@ public:
     oid_t() = default;
 
     oid_t(const std::string &str) {
-        if (is_valid(str)) {
-            for (uint i = 0; i < Size; ++i) {
-                hex_to_char(str.data() + 2 * i, data_[i]);
-            }
-        } else {
-            this->clear();
-        }
+        init(str);
     }
 
     oid_t(const oid_t& other) {
         std::memcpy(data_, other.data_, Size);
+    }
+
+    oid_t &operator=(const std::string &str) {
+        init(str);
+        return *this;
+    }
+
+    oid_t &operator=(const oid_t &other) {
+        std::memcpy(data_, other.data_, Size);
+        return *this;
     }
 
     void clear() {
@@ -86,6 +90,16 @@ public:
 
 private:
     char data_[Size];
+
+    void init(const std::string &str) {
+        if (is_valid(str)) {
+            for (uint i = 0; i < Size; ++i) {
+                hex_to_char(str.data() + 2 * i, data_[i]);
+            }
+        } else {
+            this->clear();
+        }
+    }
 };
 
 
