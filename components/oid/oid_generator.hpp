@@ -5,6 +5,7 @@
 
 template <uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
 class oid_generator_t {
+
     static constexpr uint offset_timestamp = 0;
     static constexpr uint offset_random = offset_timestamp + SizeTimestamp;
     static constexpr uint offset_increment = offset_random + SizeRandom;
@@ -19,9 +20,17 @@ class oid_generator_t {
     };
 
 public:
+    using time_value_t = uint32_t;
+
     oid_generator_t() {
-        init_random();
         init_timestamp();
+        init_random();
+        init_increment();
+    }
+
+    explicit oid_generator_t(time_value_t time) {
+        init_timestamp(time);
+        init_random();
         init_increment();
     }
 
@@ -55,20 +64,18 @@ private:
     char random_[SizeRandom];
     mutable char increment_[SizeIncrement];
 
-    void init_timestamp() {
-        time_t t;
-        auto sec = std::to_string(time(&t));
-        if (sec.size() > SizeTimestamp) {
-            sec = sec.substr(sec.size() - SizeTimestamp);
-        }
-        while (sec.size() < SizeTimestamp) {
-            sec += sec;
-        }
-        std::memcpy(timestamp_, sec.data(), SizeTimestamp);
-    }
-
     static void initialize() {
         static initializer_random initializer;
+    }
+
+    void init_timestamp(time_value_t time) {
+        for (int i = 0; i < SizeTimestamp; ++i) {
+            timestamp_[SizeTimestamp - i - 1] = char(time >> 8 * i);
+        }
+    }
+
+    void init_timestamp() {
+        init_timestamp(static_cast<time_value_t>(time(nullptr)));
     }
 
     void init_random() {

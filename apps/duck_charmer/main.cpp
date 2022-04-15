@@ -4,6 +4,7 @@
 #include "wrapper_collection.hpp"
 #include "wrapper_database.hpp"
 #include "wrapper_cursor.hpp"
+#include "wrapper_document_id.hpp"
 #include "wrapper_document.hpp"
 #include "wrapper_result.hpp"
 
@@ -53,6 +54,23 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("drop", &wrapper_collection::drop)
         ;
 
+    py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")
+        .def(py::init([](){
+            return wrapper_document_id();
+        }))
+        .def(py::init([](const py::str& s){
+            return wrapper_document_id(s);
+        }))
+        .def(py::init([](const py::int_& time){
+            return wrapper_document_id(time);
+        }))
+        .def("__repr__", &wrapper_document_id::to_string)
+        .def("getTimestamp", &wrapper_document_id::get_timestamp)
+        .def("toString", &wrapper_document_id::to_string)
+        .def("valueOf", &wrapper_document_id::value_of)
+        .def_property_readonly("str", &wrapper_document_id::to_string)
+        ;
+
     py::class_<wrapper_document, boost::intrusive_ptr<wrapper_document>>(m, "Document")
         .def("__repr__", &wrapper_document::print)
         .def("__getitem__", &wrapper_document::get)
@@ -86,11 +104,4 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id)
         ;
-
-    m.def(
-        "generate_id",
-        []() {
-            boost::uuids::random_generator generator;
-            return boost::uuids::to_string(generator());
-        });
 }

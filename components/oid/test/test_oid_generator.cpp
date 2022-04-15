@@ -15,6 +15,26 @@ TEST_CASE("oid_generator::generate") {
     REQUIRE(generator.next() == oid8_t("012345670123456789100101"));
 }
 
+TEST_CASE("oid_generator::generate by time") {
+    using generator_t = oid_generator_t<4, 5, 3>;
+    {
+        generator_t generator(0x1);
+        REQUIRE(generator.get().to_string().substr(0, 8) == "00000001");
+    }
+    {
+        generator_t generator(0xffff);
+        REQUIRE(generator.get().to_string().substr(0, 8) == "0000ffff");
+    }
+    {
+        generator_t generator(0x12345678);
+        REQUIRE(generator.get().to_string().substr(0, 8) == "12345678");
+    }
+    {
+        generator_t generator(0xffffffff);
+        REQUIRE(generator.get().to_string().substr(0, 8) == "ffffffff");
+    }
+}
+
 //#include <iostream>
 //TEST_CASE("oid_generator") {
 //    for (uint i = 0; i < 10; ++i) {

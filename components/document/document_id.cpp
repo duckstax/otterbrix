@@ -34,8 +34,21 @@ namespace components::document {
         return document_id_t(generator->get(), generator);
     }
 
+    document_id_t document_id_t::generate(time_value_t time) {
+        auto generator = std::make_shared<generator_t>(time);
+        return document_id_t(generator->get(), generator);
+    }
+
     document_id_t document_id_t::null_id() {
         return document_id_t(null(), nullptr);
+    }
+
+    document_id_t::time_value_t document_id_t::get_timestamp() const {
+        time_value_t value = 0;
+        for (int i = 0; i < size_timestamp; ++i) {
+            value = (value << 8) + static_cast<time_value_t>(static_cast<uint8_t>(*(data() + i)));
+        }
+        return value;
     }
 
     document_id_t document_id_t::next() const {
