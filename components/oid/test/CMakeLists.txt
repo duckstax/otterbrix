@@ -1,9 +1,7 @@
 project(test_oid)
 
 set( ${PROJECT_NAME}_SOURCES
-        test_hex.cpp
         test_oid.cpp
-        test_oid_generator.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})

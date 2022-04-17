@@ -7,13 +7,13 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
     wrapper_document_id::wrapper_document_id()
-        : id_(document_id_t::generate()) {}
+        : id_(document_id_t()) {}
 
     wrapper_document_id::wrapper_document_id(const std::string& str)
         : id_(str) {}
 
-    wrapper_document_id::wrapper_document_id(time_value_t time)
-        : id_(document_id_t::generate(time)) {}
+    wrapper_document_id::wrapper_document_id(oid::timestamp_value_t time)
+        : id_(document_id_t(time)) {}
 
     std::string wrapper_document_id::value_of() const {
         return id_.to_string();
@@ -23,7 +23,7 @@ namespace duck_charmer {
         return std::string("ObjectId(\"") + id_.to_string() + std::string("\")");
     }
 
-    wrapper_document_id::time_value_t wrapper_document_id::get_timestamp() const {
+    oid::timestamp_value_t wrapper_document_id::get_timestamp() const {
         return id_.get_timestamp();
     }
 

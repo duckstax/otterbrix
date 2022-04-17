@@ -1,9 +1,8 @@
 set(CURRENT_TARGET oid)
 
 list(APPEND CURRENT_${TARGET_HEADERS}
-        hex.hpp
         oid.hpp
-        oid_generator.hpp
+        hex.hpp
         )
 
 list(APPEND CURRENT_${TARGET_HEADERS}
