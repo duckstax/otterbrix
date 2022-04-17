@@ -4,7 +4,7 @@
 #include <ctime>
 #include <algorithm>
 #include <functional>
-#include "hex.hpp"
+#include <charconv>
 
 namespace oid {
 
@@ -174,10 +174,11 @@ namespace oid {
     std::string oid_t<Size>::to_string() const {
         std::string str(2 * Size, '0');
         for (uint i = 0; i < Size; ++i) {
-            char c[2];
-            char_to_hex(data_[i], c);
-            str[2 * i] = c[0];
-            str[2 * i + 1] = c[1];
+            if (data_[i] < 16) {
+                std::to_chars(str.data() + 2 * i + 1, str.data() + 2 * (i + 1), data_[i], 16);
+            } else {
+                std::to_chars(str.data() + 2 * i, str.data() + 2 * (i + 1), data_[i], 16);
+            }
         }
         return str;
     }
@@ -220,14 +221,16 @@ namespace oid {
         if (str.size() != 2 * Size) {
             return false;
         }
-        return std::all_of(str.begin(), str.end(), &is_hex);
+        return std::all_of(str.begin(), str.end(), [](char c) {
+                return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+            });
     }
 
     template<uint Size>
     void oid_t<Size>::init(const std::string& str) {
         if (is_valid(str)) {
             for (uint i = 0; i < Size; ++i) {
-                hex_to_char(str.data() + 2 * i, data_[i]);
+                std::from_chars(str.data() + 2 * i, str.data() + 2 * (i + 1), data_[i], 16);
             }
         } else {
             this->clear();
