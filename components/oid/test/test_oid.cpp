@@ -4,7 +4,7 @@
 using namespace oid;
 
 TEST_CASE("oid::is_valid") {
-    using oid8_t = oid_t<8>;
+    using oid8_t = oid_t<4, 2, 2>;
 
     REQUIRE(oid8_t::is_valid("0123456789abcdef"));
     REQUIRE_FALSE(oid8_t::is_valid("0123456789abcde"));
@@ -13,7 +13,7 @@ TEST_CASE("oid::is_valid") {
 }
 
 TEST_CASE("oid::initialization") {
-    using oid8_t = oid_t<8>;
+    using oid8_t = oid_t<4, 2, 2>;
 
     REQUIRE(oid8_t("0123456789abcdef").to_string() == "0123456789abcdef");
     REQUIRE(oid8_t("0123456789abcde").to_string() == "0000000000000000");
@@ -22,7 +22,7 @@ TEST_CASE("oid::initialization") {
 }
 
 TEST_CASE("oid::operators") {
-    using oid1_t = oid_t<8>;
+    using oid1_t = oid_t<4, 2, 2>;
 
     REQUIRE(oid1_t("0000000000000000") == oid1_t::null());
     REQUIRE(oid1_t::null() < oid1_t("0000000000000001"));
@@ -31,7 +31,7 @@ TEST_CASE("oid::operators") {
 }
 
 TEST_CASE("oid::generate by time") {
-    using oid12_t = oid_t<12>;
+    using oid12_t = oid_t<4, 5, 3>;
     REQUIRE(oid12_t(0x1).get_timestamp() == 0x1);
     REQUIRE(oid12_t(0xffff).get_timestamp() == 0xffff);
     REQUIRE(oid12_t(0x12345678).get_timestamp() == 0x12345678);
@@ -40,7 +40,7 @@ TEST_CASE("oid::generate by time") {
 
 //#include <iostream>
 //TEST_CASE("oid::generate") {
-//    using oid12_t = oid_t<12>;
+//    using oid12_t = oid_t<4, 5, 3>;
 //    for (uint i = 0; i < 10; ++i) {
 //        std::cerr << "~~~ GENERATING N" << i + 1 << " ~~~" << std::endl;
 //        for (uint j = 0; j < 100; ++j) {
