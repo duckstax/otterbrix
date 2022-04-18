@@ -4,7 +4,6 @@
 #include <ctime>
 #include <algorithm>
 #include <functional>
-#include <charconv>
 
 namespace oid {
 
@@ -114,6 +113,23 @@ namespace oid {
 
     // implementation
 
+    inline char to_char_(uint8_t value) {
+        if (value < 10) {
+            return char('0' + value);
+        }
+        return char('a' + value - 10);
+    }
+
+    inline uint8_t from_char_(char c) {
+        if (c >= '0' && c <= '9') {
+            return uint8_t(c - '0');
+        }
+        if (c >= 'a' && c <= 'f') {
+            return uint8_t(c + 10 - 'a');
+        }
+        return uint8_t(c + 10 - 'A');
+    }
+
     template<uint Size>
     oid_t<Size>::oid_t() {
         timestamp_generator::write(data_ + offset_timestamp);
@@ -172,15 +188,12 @@ namespace oid {
 
     template<uint Size>
     std::string oid_t<Size>::to_string() const {
-        std::string str(2 * Size, '0');
+        char str[2 * Size];
         for (uint i = 0; i < Size; ++i) {
-            if (data_[i] < 16) {
-                std::to_chars(str.data() + 2 * i + 1, str.data() + 2 * (i + 1), data_[i], 16);
-            } else {
-                std::to_chars(str.data() + 2 * i, str.data() + 2 * (i + 1), data_[i], 16);
-            }
+            str[2 * i] = to_char_(data_[i] / 0x10);
+            str[2 * i + 1] = to_char_(data_[i] % 0x10);
         }
-        return str;
+        return std::string(str, 2 * Size);
     }
 
     template<uint Size>
@@ -230,7 +243,7 @@ namespace oid {
     void oid_t<Size>::init(const std::string& str) {
         if (is_valid(str)) {
             for (uint i = 0; i < Size; ++i) {
-                std::from_chars(str.data() + 2 * i, str.data() + 2 * (i + 1), data_[i], 16);
+                data_[i] = from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]);
             }
         } else {
             this->clear();
