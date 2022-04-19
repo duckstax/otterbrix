@@ -12,7 +12,7 @@ namespace oid {
     using random_value_t = uint64_t;
     using increment_value_t = uint32_t;
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
     class oid_t {
         static constexpr uint size = SizeTimestamp + SizeRandom + SizeIncrement;
         static constexpr uint offset_timestamp = 0;
@@ -103,8 +103,8 @@ namespace oid {
         void clear();
     };
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    inline std::ostream& operator<<(std::ostream& stream, const oid_t<SizeTimestamp, SizeRandom, SizeIncrement>& oid) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    inline std::ostream& operator<<(std::ostream& stream, const oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>& oid) {
         return (stream << oid.to_string());
     }
 
@@ -128,49 +128,49 @@ namespace oid {
         return uint8_t(c + 10 - 'A');
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::oid_t() {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::oid_t() {
         timestamp_generator::write(data_ + offset_timestamp);
         random_generator::write(data_ + offset_random);
         increment_generator::write(data_ + offset_increment);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(timestamp_value_t timestamp) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(timestamp_value_t timestamp) {
         timestamp_generator::write(data_ + offset_timestamp, timestamp);
         random_generator::write(data_ + offset_random);
         increment_generator::write(data_ + offset_increment);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(const std::string& str) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(const std::string& str) {
         init(str);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(const oid_t& other) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::oid_t(const oid_t& other) {
         std::memcpy(data_, other.data_, size);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>& oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::operator=(const std::string& str) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>& oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::operator=(const std::string& str) {
         init(str);
         return *this;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement>& oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::operator=(const oid_t& other) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>& oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::operator=(const oid_t& other) {
         std::memcpy(data_, other.data_, size);
         return *this;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    int oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::compare(const oid_t& other) const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    int oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::compare(const oid_t& other) const {
         return std::memcmp(data_, other.data_, size);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    bool oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::is_null() const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    bool oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::is_null() const {
         for (uint i = 0; i < size; ++i) {
             if (data_[i] > 0) {
                 return false;
@@ -179,13 +179,13 @@ namespace oid {
         return true;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    const byte_t* oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::data() const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    const byte_t* oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::data() const {
         return data_;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    std::string oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::to_string() const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    std::string oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::to_string() const {
         char str[2 * size];
         for (uint i = 0; i < size; ++i) {
             str[2 * i] = to_char_(data_[i] / 0x10);
@@ -194,8 +194,8 @@ namespace oid {
         return std::string(str, 2 * size);
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    timestamp_value_t oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::get_timestamp() const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    timestamp_value_t oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::get_timestamp() const {
         timestamp_value_t value = 0;
         for (uint i = 0; i < SizeTimestamp; ++i) {
             value = (value << 8) + static_cast<timestamp_value_t>(*(data() + offset_timestamp + i));
@@ -203,32 +203,32 @@ namespace oid {
         return value;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement> oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::null() {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement> oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::null() {
         oid_t oid_null{};
         oid_null.clear();
         return oid_null;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    oid_t<SizeTimestamp, SizeRandom, SizeIncrement> oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::max() {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement> oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::max() {
         oid_t oid_max{};
         std::memset(oid_max.data_, 0xFF, size);
         return oid_max;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    bool oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::operator==(const oid_t<SizeTimestamp, SizeRandom, SizeIncrement>& other) const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    bool oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::operator==(const oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>& other) const {
         return compare(other) == 0;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    bool oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::operator<(const oid_t<SizeTimestamp, SizeRandom, SizeIncrement>& other) const {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    bool oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::operator<(const oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>& other) const {
         return compare(other) < 0;
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    bool oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::is_valid(const std::string& str) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    bool oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::is_valid(const std::string& str) {
         if (str.size() != 2 * size) {
             return false;
         }
@@ -237,8 +237,8 @@ namespace oid {
             });
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    void oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::init(const std::string& str) {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    void oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::init(const std::string& str) {
         if (is_valid(str)) {
             for (uint i = 0; i < size; ++i) {
                 data_[i] = from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]);
@@ -248,8 +248,8 @@ namespace oid {
         }
     }
 
-    template<uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
-    void oid_t<SizeTimestamp, SizeRandom, SizeIncrement>::clear() {
+    template<class T, uint SizeTimestamp, uint SizeRandom, uint SizeIncrement>
+    void oid_t<T, SizeTimestamp, SizeRandom, SizeIncrement>::clear() {
         std::memset(data_, 0x00, size);
     }
 
