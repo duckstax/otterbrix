@@ -3,10 +3,10 @@
 #include <utility>
 
 result_insert_one::result_insert_one()
-    : inserted_id_(result_t::null_id()) {}
+    : inserted_id_(result_t::null()) {}
 
-result_insert_one::result_insert_one(result_insert_one::result_t id)
-    : inserted_id_(std::move(id)) {}
+result_insert_one::result_insert_one(const result_insert_one::result_t &id)
+    : inserted_id_(id) {}
 
 const result_insert_one::result_t& result_insert_one::inserted_id() const {
     return inserted_id_;
@@ -84,13 +84,13 @@ bool result_delete::empty() const {
 
 
 result_update::result_update()
-    : upserted_id_(document_id_t::null_id()) {
+    : upserted_id_(document_id_t::null()) {
 }
 
 result_update::result_update(result_update::result_t&& modified_ids, result_update::result_t&& nomodified_ids)
     : modified_ids_(std::move(modified_ids))
     , nomodified_ids_(std::move(nomodified_ids))
-    , upserted_id_(document_id_t::null_id()) {
+    , upserted_id_(document_id_t::null()) {
 }
 
 result_update::result_update(document_id_t&& upserted_id)

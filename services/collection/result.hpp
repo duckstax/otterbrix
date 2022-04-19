@@ -8,7 +8,7 @@ public:
     using result_t = components::document::document_id_t;
 
     result_insert_one();
-    explicit result_insert_one(result_t id);
+    explicit result_insert_one(const result_t &id);
     const result_t& inserted_id() const;
     bool empty() const;
 
