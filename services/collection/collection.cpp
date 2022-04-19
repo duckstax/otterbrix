@@ -1,6 +1,8 @@
 #include "collection.hpp"
 #include <services/disk/route.hpp>
 
+using namespace services::collection;
+
 namespace services::storage {
 
     collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log, goblin_engineer::address_t mdisk)
@@ -8,17 +10,17 @@ namespace services::storage {
         , log_(log.clone())
         , database_(database->address())
         , mdisk_(mdisk) {
-        add_handler(collection::insert_one, &collection_t::insert_one);
-        add_handler(collection::insert_many, &collection_t::insert_many);
-        add_handler(collection::find, &collection_t::find);
-        add_handler(collection::find_one, &collection_t::find_one);
-        add_handler(collection::delete_one, &collection_t::delete_one);
-        add_handler(collection::delete_many, &collection_t::delete_many);
-        add_handler(collection::update_one, &collection_t::update_one);
-        add_handler(collection::update_many, &collection_t::update_many);
-        add_handler(collection::size, &collection_t::size);
-        add_handler(collection::drop_collection, &collection_t::drop);
-        add_handler(collection::close_cursor, &collection_t::close_cursor);
+        add_handler(route::insert_one, &collection_t::insert_one);
+        add_handler(route::insert_many, &collection_t::insert_many);
+        add_handler(route::find, &collection_t::find);
+        add_handler(route::find_one, &collection_t::find_one);
+        add_handler(route::delete_one, &collection_t::delete_one);
+        add_handler(route::delete_many, &collection_t::delete_many);
+        add_handler(route::update_one, &collection_t::update_one);
+        add_handler(route::update_many, &collection_t::update_many);
+        add_handler(route::size, &collection_t::size);
+        add_handler(route::drop_collection, &collection_t::drop);
+        add_handler(route::close_cursor, &collection_t::close_cursor);
     }
 
     auto collection_t::size(session_id_t& session) -> void {
@@ -28,7 +30,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_size()
                       : result_size(size_());
-        goblin_engineer::send(dispatcher, address(), "size_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::size_finish, session, result);
     }
 
 
@@ -43,7 +45,7 @@ namespace services::storage {
             std::vector<document_ptr> new_documents = {document};
             goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
         }
-        goblin_engineer::send(dispatcher, address(), "insert_one_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::insert_one_finish, session, result);
     }
 
     void collection_t::insert_many(session_id_t& session, std::list<document_ptr> &documents) {
@@ -51,7 +53,7 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         if (dropped_) {
-            goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many());
+            goblin_engineer::send(dispatcher, address(), route::insert_many_finish, session, result_insert_many());
         } else {
             std::vector<document_ptr> new_documents;
             std::vector<document_id_t> result;
@@ -65,7 +67,7 @@ namespace services::storage {
             if (!new_documents.empty()) {
                 goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
             }
-            goblin_engineer::send(dispatcher, address(), "insert_many_finish", session, result_insert_many(std::move(result)));
+            goblin_engineer::send(dispatcher, address(), route::insert_many_finish, session, result_insert_many(std::move(result)));
         }
     }
 
@@ -74,10 +76,10 @@ namespace services::storage {
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
         if (dropped_) {
-            goblin_engineer::send(dispatcher, address(), "find_finish", session, nullptr);
+            goblin_engineer::send(dispatcher, address(), route::find_finish, session, nullptr);
         } else {
             auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(cond)));
-            goblin_engineer::send(dispatcher, address(), "find_finish", session, result.first->second.get());
+            goblin_engineer::send(dispatcher, address(), route::find_finish, session, result.first->second.get());
         }
     }
 
@@ -89,7 +91,7 @@ namespace services::storage {
         auto result = dropped_
                       ? result_find_one()
                       : search_one_(cond);
-        goblin_engineer::send(dispatcher, address(), "find_one_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::find_one_finish, session, result);
     }
 
     auto collection_t::delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void {
@@ -100,7 +102,7 @@ namespace services::storage {
                       ? result_delete()
                       : delete_one_(cond);
         send_delete_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::delete_finish, session, result);
     }
 
     auto collection_t::delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void {
@@ -111,7 +113,7 @@ namespace services::storage {
                       ? result_delete()
                       : delete_many_(cond);
         send_delete_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), "delete_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::delete_finish, session, result);
     }
 
 
@@ -123,7 +125,7 @@ namespace services::storage {
                       ? result_update()
                       : update_one_(cond, update, upsert);
         send_update_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::update_finish, session, result);
     }
 
     auto collection_t::update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
@@ -134,14 +136,14 @@ namespace services::storage {
                       ? result_update()
                       : update_many_(cond, update, upsert);
         send_update_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), "update_finish", session, result);
+        goblin_engineer::send(dispatcher, address(), route::update_finish, session, result);
     }
 
     void collection_t::drop(const session_id_t& session) {
         log_.debug("collection::drop : {}", type());
         auto dispatcher = address_book("dispatcher");
         log_.debug("dispatcher : {}", dispatcher.type());
-        goblin_engineer::send(dispatcher, address(), "drop_collection_finish_collection", session, result_drop_collection(drop_()), std::string(database_.type()), std::string(type()));
+        goblin_engineer::send(dispatcher, address(), route::drop_collection_finish, session, result_drop_collection(drop_()), std::string(database_.type()), std::string(type()));
     }
 
     document_id_t collection_t::insert_(const document_ptr&document) {

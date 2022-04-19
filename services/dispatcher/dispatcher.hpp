@@ -15,6 +15,7 @@
 #include <services/wal/base.hpp>
 
 #include "session.hpp"
+#include "route.hpp"
 
 namespace services::dispatcher {
 
@@ -30,7 +31,7 @@ namespace services::dispatcher {
             goblin_engineer::send(
                 address(),
                 address(),
-                "create",
+                route::create,
                 components::session::session_id_t(),
                 std::string(name_dispatcher)
             );
