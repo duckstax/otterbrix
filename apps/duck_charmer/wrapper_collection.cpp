@@ -13,9 +13,11 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace duck_charmer {
 
+using components::document::document_id_t;
+
 void generate_document_id_if_not_exists(components::document::document_ptr &document) {
     if (!document_view_t(document).is_exists("_id")) {
-        document->set("_id", components::document::document_id_t::generate().to_string());
+        document->set("_id", document_id_t().to_string());
     }
 }
 
@@ -85,7 +87,7 @@ pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
         log_.debug("wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
         py::list list;
         for (const auto &id : result.inserted_ids()) {
-            list.append(id.to_string_view());
+            list.append(id.to_string());
         }
         return list;
     }
@@ -101,7 +103,7 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
         generate_document_id_if_not_exists(update);
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
+        log_.debug("wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();
@@ -115,7 +117,7 @@ wrapper_result_update wrapper_collection::update_many(py::object cond, py::objec
         generate_document_id_if_not_exists(update);
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->update_many(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
-        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string_view());
+        log_.debug("wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
     return wrapper_result_update();

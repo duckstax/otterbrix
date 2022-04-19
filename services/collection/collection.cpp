@@ -153,7 +153,7 @@ namespace services::storage {
             storage_.insert_or_assign(id, document);
             return id;
         }
-        return document_id_t::null_id();
+        return document_id_t::null();
     }
 
     document_view_t collection_t::get_(const document_id_t& id) const {
