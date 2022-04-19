@@ -167,7 +167,7 @@ TEST_CASE("duck_charmer::test_collection") {
     SECTION("find_one") {
         {
             auto session = duck_charmer::session_id_t();
-            auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("_id", "$eq", std::string("1")));
+            auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("_id", "$eq", gen_id(1)));
             REQUIRE(c->get_long("count") == 1);
         }
         {

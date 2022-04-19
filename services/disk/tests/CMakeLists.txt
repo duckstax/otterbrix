@@ -15,6 +15,7 @@ target_link_libraries(
     ${CONAN_LIBS}
     rocketjoe::document
     rocketjoe::disk
+    rocketjoe::test_generaty
 )
 
 include(CTest)

@@ -57,7 +57,7 @@ TEST_CASE("insert one test") {
         REQUIRE(entry.entry_.database_ == database);
         REQUIRE(entry.entry_.collection_ == collection);
         document_view_t view(entry.entry_.document_);
-        REQUIRE(view.get_string("_id") == std::to_string(num));
+        REQUIRE(view.get_string("_id") == gen_id(num));
         REQUIRE(view.get_long("count") == num);
         REQUIRE(view.get_string("countStr") == std::to_string(num));
 
@@ -148,7 +148,7 @@ TEST_CASE("insert many test") {
         for (const auto &doc : entry.entry_.documents_) {
             ++num;
             document_view_t view(doc);
-            REQUIRE(view.get_string("_id") == std::to_string(num));
+            REQUIRE(view.get_string("_id") == gen_id(num));
             REQUIRE(view.get_long("count") == num);
             REQUIRE(view.get_string("countStr") == std::to_string(num));
         }

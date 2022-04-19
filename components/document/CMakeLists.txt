@@ -51,7 +51,6 @@ set( ${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
-        document_id.cpp
         document_view.cpp
         range.cpp
         structure.cpp

@@ -8,9 +8,15 @@ client = Client()
 friedrich_database = client["FriedrichDatabase"]
 friedrich_collection = friedrich_database["FriedrichCollection"]
 
+def gen_id(num):
+    res = str(num)
+    while (len(res) < 24):
+        res = '0' + res
+    return res
+
 for num in range(50):
     new_obj = {}
-    new_obj['_id'] = str(num)
+    new_obj['_id'] = gen_id(num)
     new_obj['count'] = num
     new_obj['countStr'] = str(num)
     new_obj['countFloat'] = float(num) + 0.1
@@ -30,7 +36,7 @@ for num in range(50):
 list_doc = []
 for num in range(50,100):
     new_obj = {}
-    new_obj['_id'] = str(num)
+    new_obj['_id'] = gen_id(num)
     new_obj['count'] = num
     new_obj['countStr'] = str(num)
     new_obj['countFloat'] = float(num) + 0.1
@@ -51,7 +57,7 @@ friedrich_collection.insert(list_doc)
 list_doc = []
 for num in range(100):
     new_obj = {}
-    new_obj['_id'] = str(num)
+    new_obj['_id'] = gen_id(num)
     list_doc.append(new_obj)
 friedrich_collection.insert(list_doc) # not inserted (not unique id)
 
@@ -95,7 +101,7 @@ def test_collection_cursor():
 
 
 def test_collection_find_one():
-    c = friedrich_collection.find_one({'_id': {'$eq': '1'}})
+    c = friedrich_collection.find_one({'_id': {'$eq': gen_id(1)}})
     assert c['count'] == 1
     c = friedrich_collection.find_one({'count': {'$eq': 10}})
     assert c['count'] == 10

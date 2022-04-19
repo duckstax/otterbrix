@@ -15,7 +15,6 @@ def gen_collection(request):
     collection = database[collection_name]
     for num in range(100):
         obj = {}
-        obj['_id'] = str(num) #delete
         obj['count'] = num
         obj['countStr'] = str(num)
         obj['countFloat'] = float(num) + 0.1
@@ -329,11 +328,11 @@ def test_update_with_upsert(gen_collection):
     result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
     assert result.modified_count == 0
     assert result.matched_count == 0
-    assert len(result.upserted_id) == 0
+    assert result.upserted_id == '000000000000000000000000'
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
 
     result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
     assert result.modified_count == 0
     assert result.matched_count == 0
-    assert len(result.upserted_id) > 0
+    assert result.upserted_id != '000000000000000000000000'
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1
