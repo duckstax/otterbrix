@@ -21,9 +21,9 @@ namespace services::wal {
     public:
         wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
         void create_database(std::string& name) {}
+        void drop_database(database_name_t& database) {}
         void create_collection(database_name_t& database, collection_name_t& collections) {}
         void drop_collection(database_name_t& database, collection_name_t& collection) {}
-        void drop_database(database_name_t& database) {}
         void insert_one(session_id_t& session, address_t& sender, insert_one_t& data);
         void insert_many(session_id_t& session, address_t& sender, insert_many_t& data);
         void delete_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}

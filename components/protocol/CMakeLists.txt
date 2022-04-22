@@ -6,6 +6,8 @@ list(APPEND HEADER_${PROJECT_NAME}
 
 list(APPEND SOURCE_${PROJECT_NAME}
         base.cpp
+        database.cpp
+        collection.cpp
         insert_one.cpp
         insert_many.cpp
 )
