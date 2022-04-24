@@ -1,16 +1,13 @@
 #pragma once
-#include <services/collection/route.hpp>
 
-namespace services::storage {
+namespace services::database::route {
 
-    namespace manager_database {
-        static constexpr auto create_database = "create_database";
-        using services::storage::collection::drop_collection;
-    }
+    static constexpr auto create_database = "database::create_database";
+    static constexpr auto create_collection = "database::create_collection";
+    static constexpr auto drop_collection = "database::drop_collection";
 
-    namespace database {
-        static constexpr auto create_collection = "create_collection";
-        static constexpr auto drop_collection = "drop_collection";
-    } // namespace database
+    static constexpr auto create_database_finish = "database::create_database_finish";
+    static constexpr auto create_collection_finish = "database::create_collection_finish";
+    static constexpr auto drop_collection_finish = "database::drop_collection_finish";
 
-} // namespace services::storage
+} // services::database::route
