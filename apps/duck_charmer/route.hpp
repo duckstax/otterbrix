@@ -1,22 +1,23 @@
 #pragma once
 
-#include <services/collection/route.hpp>
+#include <services/dispatcher/route.hpp>
 #include <services/database/route.hpp>
+#include <services/collection/route.hpp>
 #include <services/disk/route.hpp>
 #include <services/wal/route.hpp>
 
 namespace duck_charmer {
 
-    namespace manager_database {
-       using namespace services::storage::manager_database;
+    namespace dispatcher {
+        using namespace services::dispatcher::route;
     }
 
     namespace database {
-        using namespace services::storage::database;
+        using namespace services::database::route;
     }
 
     namespace collection {
-        using namespace services::storage::collection;
+        using namespace services::collection::route;
     }
 
     namespace disk {
@@ -27,4 +28,4 @@ namespace duck_charmer {
         using namespace services::wal::route;
     }
 
-} // namespace kv
+} // namespace duck_charmer

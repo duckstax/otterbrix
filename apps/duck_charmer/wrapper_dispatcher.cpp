@@ -14,16 +14,16 @@ namespace duck_charmer {
     wrapper_dispatcher_t::wrapper_dispatcher_t(log_t &log)
         : manager_t("wrapper_dispatcher")
         , log_(log.clone()) {
-        add_handler("create_database_finish", &wrapper_dispatcher_t::create_database_finish);
-        add_handler("create_collection_finish", &wrapper_dispatcher_t::create_collection_finish);
-        add_handler("drop_collection_finish", &wrapper_dispatcher_t::drop_collection_finish);
-        add_handler("insert_one_finish", &wrapper_dispatcher_t::insert_one_finish);
-        add_handler("insert_many_finish", &wrapper_dispatcher_t::insert_many_finish);
-        add_handler("find_finish", &wrapper_dispatcher_t::find_finish);
-        add_handler("find_one_finish", &wrapper_dispatcher_t::find_one_finish);
-        add_handler("delete_finish", &wrapper_dispatcher_t::delete_finish);
-        add_handler("update_finish", &wrapper_dispatcher_t::update_finish);
-        add_handler("size_finish", &wrapper_dispatcher_t::size_finish);
+        add_handler(database::create_database_finish, &wrapper_dispatcher_t::create_database_finish);
+        add_handler(database::create_collection_finish, &wrapper_dispatcher_t::create_collection_finish);
+        add_handler(database::drop_collection_finish, &wrapper_dispatcher_t::drop_collection_finish);
+        add_handler(collection::insert_one_finish, &wrapper_dispatcher_t::insert_one_finish);
+        add_handler(collection::insert_many_finish, &wrapper_dispatcher_t::insert_many_finish);
+        add_handler(collection::find_finish, &wrapper_dispatcher_t::find_finish);
+        add_handler(collection::find_one_finish, &wrapper_dispatcher_t::find_one_finish);
+        add_handler(collection::delete_finish, &wrapper_dispatcher_t::delete_finish);
+        add_handler(collection::update_finish, &wrapper_dispatcher_t::update_finish);
+        add_handler(collection::size_finish, &wrapper_dispatcher_t::size_finish);
     }
 
     auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
@@ -33,7 +33,7 @@ namespace duck_charmer {
         goblin_engineer::send(
             address_book("manager_dispatcher"),
             address(),
-            "create_database",
+            database::create_database,
             session,
             database);
         wait();
@@ -46,7 +46,7 @@ namespace duck_charmer {
         goblin_engineer::send(
             address_book("manager_dispatcher"),
             address(),
-            "create_collection",
+            database::create_collection,
             session,
             database,
             collection);
