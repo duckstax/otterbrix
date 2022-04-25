@@ -104,7 +104,7 @@ namespace services::wal {
     void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, insert_one_t& data) {
         trace(log_, "wal_replicate_t::insert_one {}::{}", data.database_, data.collection_);
         buffer_.clear();
-        last_crc32_ = pack(buffer_, last_crc32_, log_number_, data);
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
         write_();
         send_success(session, sender);
     }
@@ -112,7 +112,7 @@ namespace services::wal {
     void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, insert_many_t& data) {
         trace(log_, "wal_replicate_t::insert_many {}::{}", data.database_, data.collection_);
         buffer_.clear();
-        last_crc32_ = pack(buffer_, last_crc32_, log_number_, data);
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
         write_();
         send_success(session, sender);
     }
@@ -122,7 +122,7 @@ namespace services::wal {
         iodata.emplace_back(iovec{buffer_.data(), buffer_.size()});
         int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
         writed_ += size_write;
-        ++log_number_;
+        next_id(id_);
     }
 
 } //namespace services::wal

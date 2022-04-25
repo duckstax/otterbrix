@@ -16,9 +16,9 @@ namespace services::wal {
 
     void append_crc32(buffer_t& storage, crc32_t crc32) {
         storage.push_back(buffer_element_t(crc32 >> 24 & 0xff));
-        storage.push_back((buffer_element_t(crc32 >> 16 & 0xff)));
-        storage.push_back((buffer_element_t(crc32 >> 8 & 0xff)));
-        storage.push_back((buffer_element_t(crc32 & 0xff)));
+        storage.push_back(buffer_element_t(crc32 >> 16 & 0xff));
+        storage.push_back(buffer_element_t(crc32 >> 8 & 0xff));
+        storage.push_back(buffer_element_t(crc32 & 0xff));
     }
 
     void append_size(buffer_t& storage, size_tt size) {

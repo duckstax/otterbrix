@@ -40,7 +40,7 @@ namespace services::wal {
 
         log_t log_;
         boost::filesystem::path path_;
-        std::atomic<log_number_t> log_number_{0};
+        atomic_id_t id_{0};
         crc32_t last_crc32_{0};
         std::size_t writed_{0};
         std::size_t read_{0};
