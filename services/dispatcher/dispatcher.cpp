@@ -106,7 +106,8 @@ namespace services::dispatcher {
             auto md = address_book("manager_dispatcher");
             goblin_engineer::link(md, database);
             database_address_book_.emplace(type, database);
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_database, session, std::string(type));
+            goblin_engineer::send(mdisk_, address(), disk::route::append_database, session, database_name_t(type));
+            goblin_engineer::send(mwal_, address(), wal::route::create_database, session, components::protocol::create_database_t(database_name_t(type)));
             log_.trace("add database_create_result");
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_database_finish, session, result);
@@ -126,7 +127,8 @@ namespace services::dispatcher {
             auto md = address_book("manager_dispatcher");
             goblin_engineer::link(md, collection);
             collection_address_book_.emplace(key_collection_t(database_name, std::string(type)), collection);
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(type));
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, collection_name_t(type));
+            goblin_engineer::send(mwal_, address(), wal::route::create_collection, session, components::protocol::create_collection_t(database_name, collection_name_t(type)));
             log_.trace("add database_create_result");
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_collection_finish, session, result);
@@ -158,7 +160,8 @@ namespace services::dispatcher {
             //auto md = address_book("manager_dispatcher");
             //goblin_engineer::link(md,collection);
             collection_address_book_.erase({database_name, std::string(type)});
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(type));
+            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, collection_name_t(type));
+            goblin_engineer::send(mwal_, address(), wal::route::drop_collection, session, components::protocol::drop_collection_t(database_name, collection_name_t(type)));
             trace(log_,"collection {} dropped", type);
         }
         goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);

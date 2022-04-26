@@ -9,7 +9,6 @@
 #include "log/log.hpp"
 
 #include "protocol/base.hpp"
-#include "protocol/insert_many.hpp"
 
 #include "components/cursor/cursor.hpp"
 #include "components/document/document.hpp"

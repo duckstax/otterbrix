@@ -11,6 +11,10 @@ namespace services::wal {
         , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
         trace(log_, "manager_wal_replicate_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
         add_handler(route::create, &manager_wal_replicate_t::creat_wal_worker);
+        add_handler(route::create_database, &manager_wal_replicate_t::create_database);
+        add_handler(route::drop_database, &manager_wal_replicate_t::drop_database);
+        add_handler(route::create_collection, &manager_wal_replicate_t::create_collection);
+        add_handler(route::drop_collection, &manager_wal_replicate_t::drop_collection);
         add_handler(route::insert_one, &manager_wal_replicate_t::insert_one);
         add_handler(route::insert_many, &manager_wal_replicate_t::insert_many);
         trace(log_, "manager_wal_replicate_t start thread pool");
@@ -37,6 +41,26 @@ namespace services::wal {
     void manager_wal_replicate_t::creat_wal_worker() {
         auto address = spawn_actor<wal_replicate_t>(log_, path_);
         dispathers_.emplace_back(address);
+    }
+
+    void manager_wal_replicate_t::create_database(session_id_t& session, components::protocol::create_database_t& data) {
+        trace(log_, "manager_wal_replicate_t::create_database {}", data.database_);
+        goblin_engineer::send(dispathers_[0], address(), route::create_database, session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::drop_database(session_id_t& session, components::protocol::drop_database_t& data) {
+        trace(log_, "manager_wal_replicate_t::drop_database {}", data.database_);
+        goblin_engineer::send(dispathers_[0], address(), route::drop_database, session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::create_collection(session_id_t& session, components::protocol::create_collection_t& data) {
+        trace(log_, "manager_wal_replicate_t::create_collection {}::{}", data.database_, data.collection_);
+        goblin_engineer::send(dispathers_[0], address(), route::create_collection, session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::drop_collection(session_id_t& session, components::protocol::drop_collection_t& data) {
+        trace(log_, "manager_wal_replicate_t::drop_collection {}::{}", data.database_, data.collection_);
+        goblin_engineer::send(dispathers_[0], address(), route::drop_collection, session, current_message()->sender(), std::move(data));
     }
 
     void manager_wal_replicate_t::insert_one(session_id_t& session, insert_one_t& data) {

@@ -17,19 +17,20 @@ namespace services::disk {
         manager_disk_t(path_t path_db, log_t& log, size_t num_workers, size_t max_throughput);
         void create_agent();
 
-        auto read_databases(session_id_t& session) -> void;
         auto append_database(session_id_t& session, const database_name_t &database) -> void;
         auto remove_database(session_id_t& session, const database_name_t &database) -> void;
 
-        auto read_collections(session_id_t& session, const database_name_t &database) -> void;
         auto append_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto remove_collection(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
 
-        auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto write_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_ptr> &documents) -> void;
         auto remove_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection, const std::vector<document_id_t> &documents) -> void;
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
+
+        auto read_databases(session_id_t& session) -> void;
+        auto read_collections(session_id_t& session, const database_name_t &database) -> void;
+        auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
 
     protected:
         auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
@@ -54,19 +55,20 @@ namespace services::disk {
         agent_disk_t(goblin_engineer::supervisor_t *manager, const path_t &path_db, const name_t &name, log_t& log);
         ~agent_disk_t() final;
 
-        auto read_databases(session_id_t& session) -> void;
-        auto append_database(const database_name_t &database) -> void;
-        auto remove_database(const database_name_t &database) -> void;
+        auto append_database(const command_t &command) -> void;
+        auto remove_database(const command_t &command) -> void;
 
-        auto read_collections(session_id_t& session, const database_name_t &database) -> void;
-        auto append_collection(const database_name_t &database, const collection_name_t &collection) -> void;
-        auto remove_collection(const database_name_t &database, const collection_name_t &collection) -> void;
+        auto append_collection(const command_t &command) -> void;
+        auto remove_collection(const command_t &command) -> void;
 
-        auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto write_documents(const command_t &command) -> void;
         auto remove_documents(const command_t &command) -> void;
 
         auto fix_wal_id(wal::id_t wal_id) -> void;
+
+        auto read_databases(session_id_t& session) -> void;
+        auto read_collections(session_id_t& session, const database_name_t &database) -> void;
+        auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
 
     private:
         log_t log_;

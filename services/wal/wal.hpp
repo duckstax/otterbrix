@@ -5,8 +5,7 @@
 #include <log/log.hpp>
 
 #include <components/session/session.hpp>
-#include <components/protocol/insert_one.hpp>
-#include <components/protocol/insert_many.hpp>
+#include <components/protocol/protocol.hpp>
 #include <msgpack.hpp>
 #include <msgpack/adaptor/vector.hpp>
 
@@ -20,10 +19,10 @@ namespace services::wal {
 
     public:
         wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
-        void create_database(std::string& name) {}
-        void drop_database(database_name_t& database) {}
-        void create_collection(database_name_t& database, collection_name_t& collections) {}
-        void drop_collection(database_name_t& database, collection_name_t& collection) {}
+        void create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data);
+        void drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data);
+        void create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data);
+        void drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data);
         void insert_one(session_id_t& session, address_t& sender, insert_one_t& data);
         void insert_many(session_id_t& session, address_t& sender, insert_many_t& data);
         void delete_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}

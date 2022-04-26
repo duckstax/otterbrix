@@ -5,8 +5,7 @@
 #include <log/log.hpp>
 #include <boost/filesystem.hpp>
 #include <components/session/session.hpp>
-#include <components/protocol/insert_one.hpp>
-#include <components/protocol/insert_many.hpp>
+#include <components/protocol/protocol.hpp>
 
 namespace services::wal {
 
@@ -18,6 +17,10 @@ namespace services::wal {
     public:
         manager_wal_replicate_t(boost::filesystem::path, log_t& log, size_t num_workers, size_t max_throughput);
         void creat_wal_worker();
+        void create_database(session_id_t& session, components::protocol::create_database_t& data);
+        void drop_database(session_id_t& session, components::protocol::drop_database_t& data);
+        void create_collection(session_id_t& session, components::protocol::create_collection_t& data);
+        void drop_collection(session_id_t& session, components::protocol::drop_collection_t& data);
         void insert_one(session_id_t& session, insert_one_t& data);
         void insert_many(session_id_t& session, insert_many_t& data);
 

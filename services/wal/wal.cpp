@@ -38,6 +38,10 @@ namespace services::wal {
         : goblin_engineer::abstract_service(manager, "wal")
         , log_(log.clone())
         , path_(std::move(path)) {
+        add_handler(route::create_database, &wal_replicate_t::create_database);
+        add_handler(route::drop_database, &wal_replicate_t::drop_database);
+        add_handler(route::create_collection, &wal_replicate_t::create_collection);
+        add_handler(route::drop_collection, &wal_replicate_t::drop_collection);
         add_handler(route::insert_one, &wal_replicate_t::insert_one);
         add_handler(route::insert_many, &wal_replicate_t::insert_many);
         auto not_existed = not file_exist_(path_);
@@ -99,6 +103,38 @@ namespace services::wal {
         buffer.resize(size_read);
         ::pread(fd_, buffer.data(), size_read, start_index);
         return buffer;
+    }
+
+    void wal_replicate_t::create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data) {
+        trace(log_, "wal_replicate_t::create_database {}", data.database_);
+        buffer_.clear();
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
+        write_();
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data) {
+        trace(log_, "wal_replicate_t::drop_database {}", data.database_);
+        buffer_.clear();
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
+        write_();
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data) {
+        trace(log_, "wal_replicate_t::create_collection {}::{}", data.database_, data.collection_);
+        buffer_.clear();
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
+        write_();
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data) {
+        trace(log_, "wal_replicate_t::drop_collection {}::{}", data.database_, data.collection_);
+        buffer_.clear();
+        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
+        write_();
+        send_success(session, sender);
     }
 
     void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, insert_one_t& data) {

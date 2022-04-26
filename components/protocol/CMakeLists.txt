@@ -1,13 +1,15 @@
 project(protocol CXX)
 
 list(APPEND HEADER_${PROJECT_NAME}
-
+        protocol.hpp
         )
 
 list(APPEND SOURCE_${PROJECT_NAME}
         base.cpp
-        database.cpp
-        collection.cpp
+        create_database.cpp
+        drop_database.cpp
+        drop_collection.cpp
+        create_collection.cpp
         insert_one.cpp
         insert_many.cpp
 )
@@ -32,8 +34,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        insert_one.hpp
-        insert_many.hpp
+        protocol.hpp
 )
 
 if(DEV_MODE)

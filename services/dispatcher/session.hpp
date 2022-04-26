@@ -1,10 +1,7 @@
 #pragma once
 
 #include <goblin-engineer/core.hpp>
-
-#include <protocol/insert_one.hpp>
-#include <protocol/insert_many.hpp>
-
+#include <components/protocol/protocol.hpp>
 #include <components/session/session.hpp>
 #include <utility>
 

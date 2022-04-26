@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <msgpack.hpp>
 #include <vector>
-#include "components/protocol/insert_many.hpp"
+#include "components/protocol/base.hpp"
 #include "base.hpp"
 
 namespace services::wal {
