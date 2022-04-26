@@ -419,7 +419,7 @@ conan_paths.cmake
 conanbuildinfo.cmake
 conanbuildinfo.txt
 conaninfo.txt
-
 **/.#session.*
 build
 .vscode
+*.wal
