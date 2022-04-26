@@ -20,8 +20,6 @@ actor-zeta:fPIC=True
 goblin-engineer:cxx_standard=17
 goblin-engineer:fPIC=True
 OpenSSL:shared = True
-#rabbitmq-c:shared = True
-#rabbitmq-c:ssl = False
 
 [generators]
 cmake
