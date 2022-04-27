@@ -67,7 +67,7 @@ namespace services::wal {
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
-            goblin_engineer::send(sender, address(), route::success, session, services::wal::id_t(last_crc32_));
+            goblin_engineer::send(sender, address(), route::success, session, wal::id_t(id_));
         }
     }
 

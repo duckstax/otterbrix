@@ -75,7 +75,7 @@ namespace services::disk {
     }
 
     auto manager_disk_t::flush(session_id_t& session, wal::id_t wal_id) -> void {
-        trace(log_, "manager_disk_t::flush , session : {}", session.data());
+        trace(log_, "manager_disk_t::flush , session : {} , wal_id : {}", session.data(), wal_id);
         auto it = commands_.find(session);
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
