@@ -1,6 +1,6 @@
 #pragma once
 
-#include <filesystem>
+#include <boost/filesystem.hpp>
 
 #include <goblin-engineer/core.hpp>
 
@@ -13,7 +13,7 @@ namespace services::wasm {
         wasm_runner_t(actor_zeta::base::supervisor_abstract* env);
 
     private:
-        auto load_code(const std::filesystem::path& path) -> void;
+        auto load_code(const boost::filesystem::path& path) -> void;
 
         components::wasm_runner::wasm_manager_t wasm_manager_;
         std::shared_ptr<proxy_wasm::PluginHandleBase> wasm_;

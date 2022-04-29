@@ -9,8 +9,8 @@ using namespace std;
 
 namespace services::wasm {
 
-    string read_wasm_file(const filesystem::path& path) {
-        ifstream file(path, ios::binary);
+    string read_wasm_file(const boost::filesystem::path& path) {
+        ifstream file(path.string(), ios::binary);
         stringstream file_string_stream;
 
         file_string_stream << file.rdbuf();
@@ -24,7 +24,7 @@ namespace services::wasm {
         add_handler("load_code", &wasm_runner_t::load_code);
     }
 
-    auto wasm_runner_t::load_code(const filesystem::path& path) -> void {
+    auto wasm_runner_t::load_code(const boost::filesystem::path& path) -> void {
         auto code = read_wasm_file(path);
 
         wasm_manager_.initialize("", "", "", "", false, "", "", {}, {}, code, false);
