@@ -6,8 +6,6 @@
 #include <proxy-wasm/null.h>
 #include <proxy-wasm/wamr.h>
 
-#include <iostream>
-
 using namespace std;
 using namespace proxy_wasm;
 
@@ -73,7 +71,7 @@ namespace components::wasm_runner {
         : ContextBase(wasm)
         , log_(get_logger()) {}
 
-    wasm_context_t::wasm_context_t(WasmBase* wasm, const shared_ptr<proxy_wasm::PluginBase>& plugin)
+    wasm_context_t::wasm_context_t(WasmBase* wasm, const shared_ptr<PluginBase>& plugin)
         : ContextBase(wasm, plugin)
         , log_(get_logger()) {}
 
@@ -192,7 +190,7 @@ namespace components::wasm_runner {
 
     auto wasm_manager_t::create_plugin_and_initialize(string_view plugin_name, string_view plugin_id,
                                                       string_view plugin_vm_id, string_view plugin_configuration,
-                                                      bool fail_open) const -> std::unique_ptr<proxy_wasm::PluginBase> {
+                                                      bool fail_open) const -> unique_ptr<PluginBase> {
         boost::uuids::random_generator uuid_generator;
         auto plugin_key = to_string(uuid_generator());
 
@@ -253,7 +251,7 @@ namespace components::wasm_runner {
             return make_shared<WasmHandleBase>(move(wasm_clone));
         };
 
-        return proxy_wasm::createWasm(vm_key, code, plugin_, wasm_factory, wasm_clone_factory, allow_precompiled);
+        return createWasm(vm_key, code, plugin_, wasm_factory, wasm_clone_factory, allow_precompiled);
     }
 
 } // namespace components::wasm_runner
