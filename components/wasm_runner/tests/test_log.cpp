@@ -1,6 +1,7 @@
-#include <filesystem>
 #include <fstream>
 #include <sstream>
+
+#include <boost/filesystem.hpp>
 
 #include <catch2/catch.hpp>
 
@@ -12,7 +13,7 @@ using namespace std;
 using namespace proxy_wasm;
 using namespace components::wasm_runner;
 
-string read_test_wasm_file(const filesystem::path& base_path) {
+string read_test_wasm_file(const boost::filesystem::path& base_path) {
     auto path = "tests" / base_path;
 
     ifstream file(path, ios::binary);
