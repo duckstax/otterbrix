@@ -1,5 +1,3 @@
-#include <filesystem>
-
 #include <catch2/catch.hpp>
 
 #include <components/log/log.hpp>
