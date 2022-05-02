@@ -18,7 +18,7 @@ public:
     auto enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void override;
 
 private:
-    auto start(const std::filesystem::path& wasm_path) -> void;
+    auto start(const boost::filesystem::path& wasm_path) -> void;
 
     unique_ptr<actor_zeta::executor::abstract_executor> coordinator_;
     unordered_set<actor_zeta::detail::string_view> system_;
@@ -45,7 +45,7 @@ auto test_wasm_t::enqueue_base(actor_zeta::message_ptr msg, actor_zeta::executio
     }
 }
 
-auto test_wasm_t::start(const filesystem::path& wasm_path) -> void {
+auto test_wasm_t::start(const boost::filesystem::path& wasm_path) -> void {
     auto wasm = address_book("wasm_runner");
 
     if (!wasm) {
@@ -60,7 +60,7 @@ TEST_CASE("wasm_t", "[API]") {
     auto log = initialization_logger("wasm", log_dir);
     auto services_manager = goblin_engineer::make_manager_service<test_wasm_t>();
 
-    actor_zeta::send(services_manager, actor_zeta::address_t::empty_address(), "start", filesystem::path("tests") / "log_wasm.wasm");
+    actor_zeta::send(services_manager, actor_zeta::address_t::empty_address(), "start", boost::filesystem::path("tests") / "log_wasm.wasm");
 
     // Temporary hack
     std::this_thread::sleep_for(std::chrono::seconds(1));
