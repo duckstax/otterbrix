@@ -53,7 +53,7 @@ auto test_wasm_t::start(const boost::filesystem::path& wasm_path) -> void {
     actor_zeta::send(wasm, address(), "load_code", wasm_path);
 }
 
-TEST_CASE("wasm_t", "[API]") {
+TEST_CASE("wasm_runner_t load and execute", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm", log_dir);
     auto services_manager = goblin_engineer::make_manager_service<test_wasm_t>();

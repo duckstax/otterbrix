@@ -117,7 +117,7 @@ auto mock_wasm_manager_t::clone_wasm(shared_ptr<WasmHandleBase> wasm) const -> u
     });
 }
 
-TEST_CASE("wasm_t", "[API]") {
+TEST_CASE("wasm_manager_t log", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
     auto wasm = read_test_wasm_file("log_wasm.wasm");
