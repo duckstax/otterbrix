@@ -16,7 +16,7 @@ using namespace components::wasm_runner;
 string read_test_wasm_file(const boost::filesystem::path& base_path) {
     auto path = "tests" / base_path;
 
-    ifstream file(path, ios::binary);
+    ifstream file(path.string(), ios::binary);
     stringstream file_string_stream;
 
     file_string_stream << file.rdbuf();
