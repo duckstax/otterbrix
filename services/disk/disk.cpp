@@ -1,5 +1,6 @@
 #include "disk.hpp"
 #include <rocksdb/db.h>
+#include <components/document/file.hpp>
 #include <components/serialize/serialize.hpp>
 #include "metadata.hpp"
 
@@ -8,7 +9,6 @@ namespace services::disk {
     const std::string key_separator = "::";
     const std::string key_structure = "structure";
     const std::string key_data = "data";
-    const std::string key_wal_id = "wal::id";
 
     std::string gen_key(const std::string &key, const std::string &sub_key) {
         return key + key_separator + sub_key;
@@ -38,6 +38,7 @@ namespace services::disk {
 
     disk_t::disk_t(const path_t& file_name)
         : db_(nullptr)
+        , path_(file_name)
         , metadata_(nullptr) {
         rocksdb::Options options;
         options.IncreaseParallelism();
@@ -47,7 +48,7 @@ namespace services::disk {
         auto status = rocksdb::DB::Open(options, file_name.string(), &db);
         if (status.ok()) {
             db_.reset(db);
-            metadata_ = metadata_t::open(file_name / "metadata");
+            metadata_ = metadata_t::open(file_name / "METADATA");
         } else {
             throw std::runtime_error("db open failed");
         }
@@ -123,7 +124,8 @@ namespace services::disk {
     }
 
     void disk_t::fix_wal_id(wal::id_t wal_id) {
-        db_->Put(rocksdb::WriteOptions(), key_wal_id, std::to_string(wal_id));
+        auto id = std::to_string(wal_id);
+        components::file::write(path_ / "WAL_ID", id);
     }
 
 } //namespace services::disk

@@ -6,6 +6,7 @@ set( ${PROJECT_NAME}_HEADERS
         document_view.hpp
         range.hpp
         structure.hpp
+        file.hpp
         core/array.hpp
         core/base.hpp
         core/deep_iterator.hpp
@@ -54,6 +55,7 @@ set(${PROJECT_NAME}_SOURCES
         document_view.cpp
         range.cpp
         structure.cpp
+        file.cpp
         core/array.cpp
         core/deep_iterator.cpp
         core/dict.cpp

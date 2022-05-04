@@ -1,6 +1,6 @@
 #include "metadata.hpp"
 #include <algorithm>
-#include <fcntl.h>
+#include <components/document/file.hpp>
 
 namespace services::disk {
 
@@ -88,18 +88,7 @@ namespace services::disk {
 
     metadata_t::metadata_t(const path_t &file_name)
         : file_name_(file_name) {
-        constexpr std::size_t size_buffer = 1024;
-        auto file = ::open(file_name_.c_str(), O_RDONLY, 0777);
-        __off_t pos = 0;
-        std::string data;
-        char buffer[size_buffer];
-        auto size_read = ::pread(file, &buffer, size_buffer, pos);
-        while (size_read > 0) {
-            data += std::string(buffer, size_read);
-            pos += size_read;
-            size_read = ::pread(file, &buffer, size_buffer, pos);
-        }
-        ::close(file);
+        std::string data = components::file::readall(file_name);
         std::size_t pos_new_line = 0;
         auto pos_db = data.find(':', pos_new_line);
         while (pos_db != std::string::npos) {
@@ -124,7 +113,6 @@ namespace services::disk {
     }
 
     void metadata_t::flush_() {
-        auto file = ::open(file_name_.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
         std::string data;
         for (auto& it : data_) {
             data += it.first + ":";
@@ -133,9 +121,7 @@ namespace services::disk {
             }
             data += "\n";
         }
-        iovec write_data{data.data(), data.size()};
-        ::pwritev(file, &write_data, 1, 0);
-        ::close(file);
+        components::file::write(file_name_, data);
     }
 
 } //namespace services::disk

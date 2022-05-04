@@ -45,6 +45,7 @@ namespace services::disk {
 
     private:
         db_ptr db_;
+        path_t path_;
         metadata_ptr metadata_;
     };
 
