@@ -1,11 +1,6 @@
 #include "wal.hpp"
-
-#include <fcntl.h>
 #include <unistd.h>
-#include <ctime>
-
 #include <utility>
-#include <chrono>
 
 #include <crc32c/crc32c.h>
 #include "dto.hpp"
@@ -13,26 +8,15 @@
 
 namespace services::wal {
 
-    std::string get_time_to_string() {
-        auto now = std::chrono::system_clock::now();
-        auto in_time_t = std::chrono::system_clock::to_time_t(now);
-
-        std::stringstream ss;
-        ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%H:%M:%S");
-        return ss.str();
-    }
-
-    using namespace services::wal;
-
     constexpr static auto wal_name = ".wal";
 
-    auto open_file(boost::filesystem::path path) {
-        auto file_name = get_time_to_string();
-        file_name.append(wal_name);
-        auto file_path = path / file_name;
-        auto fd_ = ::open(file_path.c_str(), O_CREAT | O_RDWR | O_TRUNC, 0777);
-        return fd_;
+    bool file_exist_(const boost::filesystem::path &path) {
+        boost::filesystem::file_status s = boost::filesystem::file_status{};
+        return boost::filesystem::status_known(s)
+                   ? boost::filesystem::exists(s)
+                   : boost::filesystem::exists(path);
     }
+
 
     wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
         : goblin_engineer::abstract_service(manager, "wal")
@@ -44,25 +28,10 @@ namespace services::wal {
         add_handler(route::drop_collection, &wal_replicate_t::drop_collection);
         add_handler(route::insert_one, &wal_replicate_t::insert_one);
         add_handler(route::insert_many, &wal_replicate_t::insert_many);
-        auto not_existed = not file_exist_(path_);
-        if (not_existed) {
+        if (!file_exist_(path_)) {
             boost::filesystem::create_directory(path_);
-            fd_ = open_file(path);
         }
-
-        fd_ = open_file(path);
-    }
-
-    bool wal_replicate_t::file_exist_(boost::filesystem::path path) {
-        boost::filesystem::file_status s = boost::filesystem::file_status{};
-        log_.trace(path.c_str());
-        if (boost::filesystem::status_known(s) ? boost::filesystem::exists(s) : boost::filesystem::exists(path)) {
-            log_.trace("exists");
-            return true;
-        } else {
-            log_.trace("does not exist");
-            return false;
-        }
+        file_ = std::make_unique<components::file::file_t>(path_ / wal_name);
     }
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
@@ -72,7 +41,6 @@ namespace services::wal {
     }
 
     wal_replicate_t::~wal_replicate_t() {
-        ::close(fd_);
     }
 
     size_tt read_size_impl(buffer_t& input, int index_start) {
@@ -82,7 +50,7 @@ namespace services::wal {
         return size_tmp;
     }
 
-    static size_tt read_size_impl(char* input, int index_start) {
+    static size_tt read_size_impl(const char* input, int index_start) {
         size_tt size_tmp = 0;
         size_tmp = 0xff00 & (size_tt(input[index_start] << 8));
         size_tmp |= 0x00ff & (size_tt(input[index_start + 1]));
@@ -91,17 +59,15 @@ namespace services::wal {
 
     size_tt wal_replicate_t::read_size(size_t start_index) {
         auto size_read = sizeof(size_tt);
-        auto buffer = std::make_unique<char[]>(size_read);
-        ::pread(fd_, buffer.get(), size_read, start_index);
-        auto size_blob = read_size_impl(buffer.get(), 0);
+        auto buffer = file_->read(size_read, off64_t(start_index));
+        auto size_blob = read_size_impl(buffer.data(), 0);
         return size_blob;
     }
 
     buffer_t wal_replicate_t::read(size_t start_index, size_t finish_index) {
         auto size_read = finish_index - start_index;
         buffer_t buffer;
-        buffer.resize(size_read);
-        ::pread(fd_, buffer.data(), size_read, start_index);
+        file_->read(buffer, size_read, off64_t(start_index));
         return buffer;
     }
 
@@ -154,10 +120,8 @@ namespace services::wal {
     }
 
     void wal_replicate_t::write_() {
-        std::vector<iovec> iodata;
-        iodata.emplace_back(iovec{buffer_.data(), buffer_.size()});
-        int size_write = ::pwritev(fd_, iodata.data(), iodata.size(), writed_);
-        writed_ += size_write;
+        file_->append(buffer_.data(), buffer_.size());
+        writed_ += buffer_.size();
         next_id(id_);
     }
 

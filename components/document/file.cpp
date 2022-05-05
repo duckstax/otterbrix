@@ -36,14 +36,23 @@ namespace components::file {
         return data;
     }
 
+    void file_t::read(std::vector<char> &desc, ::size_t size, __off64_t offset) const {
+        desc.resize(size);
+        ::pread(fd_, desc.data(), size, offset);
+    }
+
     void file_t::clear() {
         offset_ = 0;
         ::ftruncate(fd_, offset_);
     }
 
-    void file_t::append(std::string& data) {
-        iovec write_data{data.data(), data.size()};
+    void file_t::append(char *data, std::size_t size) {
+        iovec write_data{data, size};
         offset_ += ::pwritev(fd_, &write_data, 1, offset_);
+    }
+
+    void file_t::append(std::string &data) {
+        append(data.data(), data.size());
     }
 
     void file_t::rewrite(std::string& data) {
