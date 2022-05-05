@@ -1,6 +1,5 @@
 #include "metadata.hpp"
 #include <algorithm>
-#include <components/document/file.hpp>
 
 namespace services::disk {
 
@@ -87,8 +86,8 @@ namespace services::disk {
     }
 
     metadata_t::metadata_t(const path_t &file_name)
-        : file_name_(file_name) {
-        std::string data = components::file::readall(file_name);
+        : file_(file_name) {
+        std::string data = file_.readall();
         std::size_t pos_new_line = 0;
         auto pos_db = data.find(':', pos_new_line);
         while (pos_db != std::string::npos) {
@@ -121,7 +120,7 @@ namespace services::disk {
             }
             data += "\n";
         }
-        components::file::write(file_name_, data);
+        file_.rewrite(data);
     }
 
 } //namespace services::disk

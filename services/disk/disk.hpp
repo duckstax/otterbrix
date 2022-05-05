@@ -2,6 +2,7 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/protocol/base.hpp>
+#include <components/document/file.hpp>
 #include <boost/filesystem.hpp>
 #include <wal/base.hpp>
 
@@ -19,6 +20,7 @@ namespace services::disk {
     using db_ptr = std::unique_ptr<rocksdb::DB>;
     using components::document::document_ptr;
     using components::document::document_id_t;
+    using components::file::file_t;
 
     class disk_t {
     public:
@@ -45,8 +47,8 @@ namespace services::disk {
 
     private:
         db_ptr db_;
-        path_t path_;
         metadata_ptr metadata_;
+        file_t file_wal_id_;
     };
 
 } //namespace services::disk

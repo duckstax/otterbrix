@@ -4,35 +4,51 @@
 
 namespace components::file {
 
-    void write(const path_t &path, std::string &data) {
-        auto f = ::open(path.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0777);
-        iovec write_data{data.data(), data.size()};
-        ::pwritev(f, &write_data, 1, 0);
-        ::close(f);
+    file_t::file_t(const path_t &path)
+        : fd_(::open(path.c_str(), O_CREAT | O_RDWR, 0777))
+        , offset_(0) {
     }
 
-    void append(const path_t &path, std::string &data) {
-        //todo test
-        auto f = ::open(path.c_str(), O_CREAT | O_APPEND, 0777);
-        iovec write_data{data.data(), data.size()};
-        ::pwritev(f, &write_data, 1, 0);
-        ::close(f);
+    file_t::~file_t() {
+        ::close(fd_);
     }
 
-    std::string readall(const path_t &path) {
-        constexpr std::size_t size_buffer = 1024;
-        auto file = ::open(path.c_str(), O_RDONLY, 0777);
-        __off_t pos = 0;
-        std::string data;
-        char buffer[size_buffer];
-        auto size_read = ::pread(file, &buffer, size_buffer, pos);
-        while (size_read > 0) {
-            data += std::string(buffer, std::size_t(size_read));
-            pos += size_read;
-            size_read = ::pread(file, &buffer, size_buffer, pos);
+    std::string file_t::read(std::size_t size, __off64_t offset) const {
+        std::string data(size, '\0');
+        auto size_read = ::pread(fd_, &data[0], size, offset);
+        if (size_read < 0) {
+            return std::string();
         }
-        ::close(file);
+        data.resize(size_t(size_read));
         return data;
+    }
+
+    std::string file_t::readall() const {
+        constexpr std::size_t size_buffer = 1024;
+        __off64_t pos = 0;
+        std::string data;
+        std::string buffer = read(size_buffer);
+        while (!buffer.empty()) {
+            data += buffer;
+            pos += __off64_t(buffer.size());
+            buffer = read(size_buffer, pos);
+        }
+        return data;
+    }
+
+    void file_t::clear() {
+        offset_ = 0;
+        ::ftruncate(fd_, offset_);
+    }
+
+    void file_t::append(std::string& data) {
+        iovec write_data{data.data(), data.size()};
+        offset_ += ::pwritev(fd_, &write_data, 1, offset_);
+    }
+
+    void file_t::rewrite(std::string& data) {
+        clear();
+        append(data);
     }
 
 } //namespace components::file

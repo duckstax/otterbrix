@@ -1,6 +1,5 @@
 #include "disk.hpp"
 #include <rocksdb/db.h>
-#include <components/document/file.hpp>
 #include <components/serialize/serialize.hpp>
 #include "metadata.hpp"
 
@@ -38,8 +37,8 @@ namespace services::disk {
 
     disk_t::disk_t(const path_t& file_name)
         : db_(nullptr)
-        , path_(file_name)
-        , metadata_(nullptr) {
+        , metadata_(nullptr)
+        , file_wal_id_(file_name / "WAL_ID") {
         rocksdb::Options options;
         options.IncreaseParallelism();
         options.OptimizeLevelStyleCompaction();
@@ -125,7 +124,7 @@ namespace services::disk {
 
     void disk_t::fix_wal_id(wal::id_t wal_id) {
         auto id = std::to_string(wal_id);
-        components::file::write(path_ / "WAL_ID", id);
+        file_wal_id_.rewrite(id);
     }
 
 } //namespace services::disk
