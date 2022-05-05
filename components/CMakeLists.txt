@@ -1,6 +1,5 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-#add_subdirectory(amqp)
 #add_subdirectory(configuration)
 add_subdirectory(log)
 add_subdirectory(oid)
@@ -11,6 +10,7 @@ add_subdirectory(cursor)
 add_subdirectory(session)
 add_subdirectory(parser)
 add_subdirectory(serialize)
+add_subdirectory(wasm_runner)
 
 if (DEV_MODE)
     add_subdirectory(tests)

@@ -1,12 +1,12 @@
 #pragma once
 
-namespace services::wal::route {
+namespace services::wal {
+    enum class route : uint64_t {
+        create,
 
-    static constexpr auto create = "wal::create";
+        insert_one,
+        insert_many,
 
-    static constexpr auto insert_one = "wal::insert_one";
-    static constexpr auto insert_many = "wal::insert_many";
-
-    static constexpr auto success = "wal::success";
-
-} // namespace services::wal::route
+        success,
+    };
+} // namespace services::wal

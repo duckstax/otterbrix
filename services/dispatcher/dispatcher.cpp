@@ -1,23 +1,33 @@
 #include "dispatcher.hpp"
-#include "components/tracy/tracy.hpp"
 #include "parser/parser.hpp"
+
+#include "core/tracy/tracy.hpp"
+
 #include <components/document/document.hpp>
+
+#include <services/collection/route.hpp>
 #include <services/database/database.hpp>
 #include <services/database/route.hpp>
-#include <services/collection/route.hpp>
 #include <services/disk/route.hpp>
 #include <services/wal/route.hpp>
 
 namespace services::dispatcher {
 
-    manager_dispatcher_t::manager_dispatcher_t(log_t& log, size_t num_workers, size_t max_throughput)
-        : manager("manager_dispatcher")
+    manager_dispatcher_t::manager_dispatcher_t(
+        actor_zeta::detail::pmr::memory_resource* mr,
+        actor_zeta::address_t manager_database,
+        actor_zeta::address_t manager_wal,
+        actor_zeta::address_t manager_disk,
+        log_t& log, size_t num_workers, size_t max_throughput)
+        : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
+        , manager_database_(manager_database)
+        , manager_wal_(manager_wal)
+        , manager_disk_(manager_disk)
         , log_(log.clone())
-        , e_(new goblin_engineer::shared_work(num_workers, max_throughput), goblin_engineer::detail::thread_pool_deleter()) {
+        , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
         ZoneScoped;
-        log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
+        trace(log_, "manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
         add_handler(route::create, &manager_dispatcher_t::create);
-        add_handler(route::connect_me, &manager_dispatcher_t::connect_me);
         add_handler(database::route::create_database, &manager_dispatcher_t::create_database);
         add_handler(database::route::create_collection, &manager_dispatcher_t::create_collection);
         add_handler(database::route::drop_collection, &manager_dispatcher_t::drop_collection);
@@ -31,7 +41,7 @@ namespace services::dispatcher {
         add_handler(collection::route::update_many, &manager_dispatcher_t::update_many);
         add_handler(collection::route::size, &manager_dispatcher_t::size);
         add_handler(collection::route::close_cursor, &manager_dispatcher_t::close_cursor);
-        log_.trace("manager_dispatcher_t start thread pool");
+        trace(log_, "manager_dispatcher_t start thread pool");
         e_->start();
     }
 
@@ -40,31 +50,31 @@ namespace services::dispatcher {
         e_->stop();
     }
 
-    auto manager_dispatcher_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
+    auto manager_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_.get();
     }
 
     //NOTE: behold thread-safety!
-    auto manager_dispatcher_t::enqueue_base(goblin_engineer::message_ptr msg, actor_zeta::execution_device*) -> void {
+    auto manager_dispatcher_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
         ZoneScoped;
         set_current_message(std::move(msg));
-        execute();
-    }
-    auto manager_dispatcher_t::add_actor_impl(goblin_engineer::actor a) -> void {
-        actor_storage_.emplace_back(std::move(a));
-    }
-    auto manager_dispatcher_t::add_supervisor_impl(goblin_engineer::supervisor) -> void {
-        log_.error("manager_dispatcher_t::add_supervisor_impl");
+        execute(this, current_message());
     }
 
-    dispatcher_t::dispatcher_t(goblin_engineer::supervisor_t* manager_database, goblin_engineer::address_t mdb, goblin_engineer::address_t mwal,
-                               goblin_engineer::address_t mdisk, log_t& log, std::string name)
-        : goblin_engineer::abstract_service(manager_database, std::move(name))
+    dispatcher_t::dispatcher_t(
+        manager_dispatcher_ptr manager_dispatcher,
+        actor_zeta::address_t mdb,
+        actor_zeta::address_t mwal,
+        actor_zeta::address_t mdisk,
+        log_t& log,
+        std::string name)
+        : actor_zeta::basic_async_actor(manager_dispatcher.get(), std::move(name))
         , log_(log.clone())
-        , mdb_(mdb)
-        , mwal_(mwal)
-        , mdisk_(mdisk) {
-        log_.trace("dispatcher_t::dispatcher_t name:{}", type());
+        , manager_dispatcher_(manager_dispatcher->address())
+        , manager_database_(mdb)
+        , manager_wal_(mwal)
+        , manager_disk_(mdisk) {
+        trace(log_, "dispatcher_t::dispatcher_t start name:{}", type());
         add_handler(database::route::create_database, &dispatcher_t::create_database);
         add_handler(database::route::create_database_finish, &dispatcher_t::create_database_finish);
         add_handler(database::route::create_collection, &dispatcher_t::create_collection);
@@ -90,331 +100,329 @@ namespace services::dispatcher {
         add_handler(collection::route::size_finish, &dispatcher_t::size_finish);
         add_handler(collection::route::close_cursor, &dispatcher_t::close_cursor);
         add_handler(wal::route::success, &dispatcher_t::wal_success);
+        trace(log_, "dispatcher_t::dispatcher_t finish name:{}", type());
     }
 
-    void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, goblin_engineer::address_t address) {
-        trace(log_,"dispatcher_t::create_database: session {} , name create_database {}", session.data(), name);
+    void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {
+        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), name);
         session_to_address_.emplace(session, address);
-        goblin_engineer::send(mdb_, dispatcher_t::address(), database::route::create_database, session, std::move(name));
+        actor_zeta::send(manager_database_, dispatcher_t::address(), database::route::create_database, session, std::move(name));
     }
 
-    void dispatcher_t::create_database_finish(components::session::session_id_t& session, storage::database_create_result result, goblin_engineer::address_t database) {
+    void dispatcher_t::create_database_finish(components::session::session_id_t& session, database::database_create_result result, actor_zeta::address_t database) {
         auto type = database.type();
-        trace(log_,"dispatcher_t::create_database: session {} , name create_database {}", session.data(), type);
+        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), type);
 
         if (result.created_) {
-            auto md = address_book("manager_dispatcher");
+            auto md = manager_dispatcher_;
             goblin_engineer::link(md, database);
             database_address_book_.emplace(type, database);
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_database, session, std::string(type));
-            log_.trace("add database_create_result");
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_database, session, std::string(type));
+            trace(log_, "add database_create_result");
         }
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_database_finish, session, result);
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_database_finish, session, result);
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, goblin_engineer::address_t address) {
-        trace(log_,"dispatcher_t::create_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collections_name);
+    void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address) {
+        trace(log_, "dispatcher_t::create_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collections_name);
         session_to_address_.emplace(session, address);
-        goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::route::create_collection, session, collections_name, mdisk_);
+        actor_zeta::send(database_address_book_.at(database_name), dispatcher_t::address(), database::route::create_collection, session, collections_name, manager_disk_);
     }
 
-    void dispatcher_t::create_collection_finish(components::session::session_id_t& session, storage::collection_create_result result, std::string& database_name, goblin_engineer::address_t collection) {
+    void dispatcher_t::create_collection_finish(components::session::session_id_t& session, database::collection_create_result result, std::string& database_name, actor_zeta::address_t collection) {
         auto type = collection.type();
-        trace(log_,"create_collection_finish: {}", type);
+        trace(log_, "create_collection_finish: {}", type);
         if (result.created_) {
-            auto md = address_book("manager_dispatcher");
+            auto md = manager_dispatcher_;
             goblin_engineer::link(md, collection);
             collection_address_book_.emplace(key_collection_t(database_name, std::string(type)), collection);
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(type));
-            log_.trace("add database_create_result");
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(type));
+            trace(log_, "add database_create_result");
         }
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_collection_finish, session, result);
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_collection_finish, session, result);
         session_to_address_.erase(session);
     }
-    void dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, goblin_engineer::address_t address) {
-        trace(log_,"dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
+    void dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address) {
+        trace(log_, "dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
         auto it_collection = collection_address_book_.find({database_name, collection_name});
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::drop_collection, session);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::drop_collection, session);
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), database::route::drop_collection_finish, session, result_drop_collection(false));
+            actor_zeta::send(address, dispatcher_t::address(), database::route::drop_collection_finish, session, result_drop_collection(false));
         }
     }
     void dispatcher_t::drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name) {
-        trace(log_,"dispatcher_t::drop_collection_finish_collection: database_name {} , collection_name {}, result: {}", session.data(), database_name, collection_name, result.is_success());
+        trace(log_, "dispatcher_t::drop_collection_finish_collection: database_name {} , collection_name {}, result: {}", session.data(), database_name, collection_name, result.is_success());
         if (result.is_success()) {
-            goblin_engineer::send(database_address_book_.at(database_name), dispatcher_t::address(), database::route::drop_collection, session, collection_name);
+            actor_zeta::send(database_address_book_.at(database_name), dispatcher_t::address(), database::route::drop_collection, session, collection_name);
         } else {
-            goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);
             session_to_address_.erase(session);
         }
     }
-    void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, goblin_engineer::address_t collection) {
+    void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, actor_zeta::address_t collection) {
         auto type = collection.type();
-        trace(log_,"drop_collection_finish: {}", type);
+        trace(log_, "drop_collection_finish: {}", type);
         if (result.is_success()) {
-            //auto md = address_book("manager_dispatcher");
-            //goblin_engineer::link(md,collection);
+            auto md = address_book("manager_dispatcher");
+            goblin_engineer::link(md, collection);
             collection_address_book_.erase({database_name, std::string(type)});
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(type));
-            trace(log_,"collection {} dropped", type);
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(type));
+            trace(log_, "collection {} dropped", type);
         }
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::insert_one(components::session::session_id_t& session, std::string &database_name, std::string& collection, components::document::document_ptr& document, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::insert_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::insert_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, insert_one_t(database_name, collection, document)));
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::insert_one, session, std::move(document));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::insert_one, session, std::move(document));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::insert_one_finish, session, result_insert_one());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::insert_one_finish, session, result_insert_one());
         }
     }
 
-    void dispatcher_t::insert_many(components::session::session_id_t &session, std::string& database_name, std::string &collection, std::list<components::document::document_ptr> &documents, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::insert_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::list<components::document::document_ptr>& documents, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::insert_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, insert_many_t(database_name, collection, documents)));
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::insert_many, session, std::move(documents));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::insert_many, session, std::move(documents));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::insert_many_finish, session, result_insert_many());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::insert_many_finish, session, result_insert_many());
         }
     }
 
     void dispatcher_t::insert_one_finish(components::session::session_id_t& session, result_insert_one& result) {
-        trace(log_,"dispatcher_t::insert_one_finish session: {}", session.data());
-        auto&s = ::find(session_to_address_, session);
-        goblin_engineer::send(mwal_, dispatcher_t::address(), wal::route::insert_one, session, s.get<insert_one_t>());
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::insert_one_finish, session, result);
+        trace(log_, "dispatcher_t::insert_one_finish session: {}", session.data());
+        auto& s = ::find(session_to_address_, session);
+        actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::route::insert_one, session, s.get<insert_one_t>());
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::insert_one_finish, session, result);
         session_to_address_.erase(session);
     }
 
     void dispatcher_t::insert_many_finish(components::session::session_id_t& session, result_insert_many& result) {
-        trace(log_,"dispatcher_t::insert_many_finish session: {}", session.data());
-        auto&s = ::find(session_to_address_, session);
-        goblin_engineer::send(mwal_, dispatcher_t::address(), wal::route::insert_many, session, s.get<insert_many_t>());
-        goblin_engineer::send(s.address(), dispatcher_t::address(), collection::route::insert_many_finish, session, result);
+        trace(log_, "dispatcher_t::insert_many_finish session: {}", session.data());
+        auto& s = ::find(session_to_address_, session);
+        actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::route::insert_many, session, s.get<insert_many_t>());
+        actor_zeta::send(s.address(), dispatcher_t::address(), collection::route::insert_many_finish, session, result);
         ::remove(session_to_address_, session);
     }
 
-    void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::find: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::find: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
 
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::find, session, components::parser::parse_find_condition(condition));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::find, session, components::parser::parse_find_condition(condition));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::find_finish, session, result_find());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::find_finish, session, result_find());
         }
     }
     void dispatcher_t::find_finish(components::session::session_id_t& session, components::cursor::sub_cursor_t* cursor) {
-        trace(log_,"dispatcher_t::find_finish session: {}", session.data());
+        trace(log_, "dispatcher_t::find_finish session: {}", session.data());
         auto result = new components::cursor::cursor_t();
         if (cursor) {
             result->push(cursor);
         }
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::find_finish, session, result);
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::find_finish, session, result);
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::find_one(components::session::session_id_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::find_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::find_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::find_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::find_one, session, components::parser::parse_find_condition(condition));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::find_one, session, components::parser::parse_find_condition(condition));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::find_one_finish, session, result_find_one());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::find_one_finish, session, result_find_one());
         }
     }
     void dispatcher_t::find_one_finish(components::session::session_id_t& session, result_find_one& result) {
-        trace(log_,"dispatcher_t::find_one_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::find_one_finish, session, result);
+        trace(log_, "dispatcher_t::find_one_finish session: {}", session.data());
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::find_one_finish, session, result);
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::delete_one(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::delete_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::delete_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::delete_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::delete_one, session, components::parser::parse_find_condition(condition));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::delete_one, session, components::parser::parse_find_condition(condition));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::delete_finish, session, result_delete());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::delete_finish, session, result_delete());
         }
     }
 
-    void dispatcher_t::delete_many(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::delete_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::delete_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::delete_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::delete_many, session, components::parser::parse_find_condition(condition));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::delete_many, session, components::parser::parse_find_condition(condition));
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::delete_finish, session, result_delete());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::delete_finish, session, result_delete());
         }
     }
     void dispatcher_t::delete_finish(components::session::session_id_t& session, result_delete& result) {
-        trace(log_,"dispatcher_t::delete_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::delete_finish, session, result);
+        trace(log_, "dispatcher_t::delete_finish session: {}", session.data());
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::delete_finish, session, result);
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
         }
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::update_one(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::update_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::update_one, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::update_one, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::update_finish, session, result_update());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::update_finish, session, result_update());
         }
     }
 
-    void dispatcher_t::update_many(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert, goblin_engineer::address_t address) {
-        log_.debug("dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::update_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::update_many, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::update_many, session, components::parser::parse_find_condition(condition), std::move(update), upsert);
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::update_finish, session, result_update());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::update_finish, session, result_update());
         }
     }
     void dispatcher_t::update_finish(components::session::session_id_t& session, result_update& result) {
-        trace(log_,"dispatcher_t::update_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::update_finish, session, result);
+        trace(log_, "dispatcher_t::update_finish session: {}", session.data());
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::update_finish, session, result);
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::flush, session, wal::id_t()); //todo after wal
         }
         session_to_address_.erase(session);
     }
-    void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, goblin_engineer::address_t address) {
-        trace(log_,"dispatcher_t::size: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
+    void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address) {
+        trace(log_, "dispatcher_t::size: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            goblin_engineer::send(it_collection->second, dispatcher_t::address(), collection::route::size, session);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::route::size, session);
         } else {
-            goblin_engineer::send(address, dispatcher_t::address(), collection::route::size_finish, session, result_size());
+            actor_zeta::send(address, dispatcher_t::address(), collection::route::size_finish, session, result_size());
         }
     }
     void dispatcher_t::size_finish(components::session::session_id_t& session, result_size& result) {
-        trace(log_,"dispatcher_t::size_finish session: {}", session.data());
-        goblin_engineer::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::size_finish, session, result);
+        trace(log_, "dispatcher_t::size_finish session: {}", session.data());
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::route::size_finish, session, result);
         session_to_address_.erase(session);
     }
     void dispatcher_t::close_cursor(components::session::session_id_t& session) {
-        trace(log_," dispatcher_t::close_cursor ");
-        trace(log_,"Session : {}", session.data());
+        trace(log_, " dispatcher_t::close_cursor ");
+        trace(log_, "Session : {}", session.data());
         auto it = cursor_.find(session);
         if (it != cursor_.end()) {
             for (auto& i : *it->second) {
-                goblin_engineer::send(i->address(), address(), collection::route::close_cursor, session);
+                actor_zeta::send(i->address(), address(), collection::route::close_cursor, session);
             }
             cursor_.erase(it);
         } else {
-            log_.error("Not find session : {}", session.data());
+            error(log_, "Not find session : {}", session.data());
         }
     }
 
     void dispatcher_t::wal_success(components::session::session_id_t& session, services::wal::id_t wal_id) {
-        goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::flush, session, wal_id);
+        actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::flush, session, wal_id);
     }
 
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
-        trace(log_,"manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
-        auto address = spawn_actor<dispatcher_t>(address_book("manager_database"), address_book("manager_wal"), address_book("manager_disk"), log_, std::move(name));
-        std::string type(address.type().data(), address.type().size());
-        trace(log_,"address: {} pointer: {}", type, address.get());
-        dispatcher_to_address_book_.emplace(type, address);
-        dispathers_.emplace_back(address);
-    }
-    void manager_dispatcher_t::connect_me(components::session::session_id_t& session, std::string& name) {
-        trace(log_,"manager_dispatcher_t::connect_me session: {} , name: {} ", session.data(), name);
-        auto dispatcher = dispatcher_to_address_book_.at(name);
-        trace(log_,"dispatcher: {}", dispatcher.type());
-        goblin_engineer::link(dispatcher, current_message()->sender());
+        trace(log_, "manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
+        auto target = spawn_actor<dispatcher_t>(
+            [this, name](dispatcher_t* ptr) {
+                trace(log_, "address: {} pointer: {}", name, ptr->address().get());
+            },
+            manager_database_, manager_wal_, manager_disk_, log_, std::string(name));
+        std::string type(name);
+        trace(log_, "address: {} pointer: {}", type, target.get());
+        dispatcher_to_address_book_.emplace(type, target);
+        dispathers_.emplace_back(target);
     }
 
     void manager_dispatcher_t::create_database(components::session::session_id_t& session, std::string& name) {
-        trace(log_,"manager_dispatcher_t::create_database session: {} , name: {} ", session.data(), name);
-        return goblin_engineer::send(dispathers_[0], address(), database::route::create_database, session, std::move(name), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::create_database session: {} , name: {} ", session.data(), name);
+        return actor_zeta::send(dispathers_[0], address(), database::route::create_database, session, std::move(name), current_message()->sender());
     }
 
     void manager_dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name) {
-        log_.trace("manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
-        return goblin_engineer::send(dispathers_[0], address(), database::route::create_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
+        return actor_zeta::send(dispathers_[0], address(), database::route::create_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
     }
 
     void manager_dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name) {
-        log_.trace("manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
-        return goblin_engineer::send(dispathers_[0], address(), database::route::drop_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
+        return actor_zeta::send(dispathers_[0], address(), database::route::drop_collection, session, std::move(database_name), std::move(collection_name), current_message()->sender());
     }
 
-
     void manager_dispatcher_t::insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, components::document::document_ptr& document) {
-        log_.trace("manager_dispatcher_t::insert_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::insert_one, session, std::move(database_name), std::move(collection_name), std::move(document), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::insert_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::insert_one, session, std::move(database_name), std::move(collection_name), std::move(document), current_message()->sender());
     }
 
     void manager_dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, std::list<components::document::document_ptr>& documents) {
-        log_.trace("manager_dispatcher_t::insert_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
-        return goblin_engineer::send(dispathers_[0],address(), collection::route::insert_many, session, std::move(database_name), std::move(collection_name), std::move(documents), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::insert_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::insert_many, session, std::move(database_name), std::move(collection_name), std::move(documents), current_message()->sender());
     }
 
     void manager_dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
-        log_.trace("manager_dispatcher_t::find session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::find, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::find session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::find, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::find_one(components::session::session_id_t &session, std::string& database_name, std::string &collection, components::document::document_ptr &condition) {
-        log_.trace("manager_dispatcher_t::find_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::find_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
+    void manager_dispatcher_t::find_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
+        trace(log_, "manager_dispatcher_t::find_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::find_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_one(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
-        log_.trace("manager_dispatcher_t::delete_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::delete_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
+    void manager_dispatcher_t::delete_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
+        trace(log_, "manager_dispatcher_t::delete_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::delete_one, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_many(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition) {
-        log_.trace("manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::delete_many, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
+    void manager_dispatcher_t::delete_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition) {
+        trace(log_, "manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::delete_many, session, std::move(database_name), std::move(collection), std::move(condition), current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_one(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
-        log_.trace("manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::update_one, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
+    void manager_dispatcher_t::update_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert) {
+        trace(log_, "manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::update_one, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_many(components::session::session_id_t &session, std::string &database_name, std::string &collection, components::document::document_ptr &condition, components::document::document_ptr &update, bool upsert) {
-        log_.trace("manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
-        return goblin_engineer::send(dispathers_[0], address(), collection::route::update_many, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
+    void manager_dispatcher_t::update_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert) {
+        trace(log_, "manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection);
+        return actor_zeta::send(dispathers_[0], address(), collection::route::update_many, session, std::move(database_name), std::move(collection), std::move(condition), std::move(update), upsert, current_message()->sender());
     }
 
     void manager_dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection) {
-        trace(log_,"manager_dispatcher_t::size session: {} , database: {}, collection name: {} ", session.data(), database_name, collection);
-        goblin_engineer::send(dispathers_[0], address(), collection::route::size, session, std::move(database_name), std::move(collection), current_message()->sender());
+        trace(log_, "manager_dispatcher_t::size session: {} , database: {}, collection name: {} ", session.data(), database_name, collection);
+        actor_zeta::send(dispathers_[0], address(), collection::route::size, session, std::move(database_name), std::move(collection), current_message()->sender());
     }
     void manager_dispatcher_t::close_cursor(components::session::session_id_t& session) {
     }

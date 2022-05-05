@@ -74,7 +74,7 @@ namespace components::cursor {
         return nullptr;
     }
 
-    goblin_engineer::address_t& sub_cursor_t::address() {
+    actor_zeta::address_t& sub_cursor_t::address() {
         return collection_;
     }
 
@@ -86,7 +86,7 @@ namespace components::cursor {
         return data_;
     }
 
-    sub_cursor_t::sub_cursor_t(goblin_engineer::address_t collection, const std::vector<data_t> &data)
+    sub_cursor_t::sub_cursor_t(actor_zeta::address_t collection, const std::vector<data_t> &data)
         : collection_(collection)
         , data_(data) {
     }

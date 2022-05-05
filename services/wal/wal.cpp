@@ -34,8 +34,8 @@ namespace services::wal {
         return fd_;
     }
 
-    wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
-        : goblin_engineer::abstract_service(manager, "wal")
+    wal_replicate_t::wal_replicate_t(manager_wr_ptr manager, log_t& log, boost::filesystem::path path)
+        : actor_zeta::basic_async_actor(manager.get(), "wal")
         , log_(log.clone())
         , path_(std::move(path)) {
         add_handler(route::insert_one, &wal_replicate_t::insert_one);
@@ -51,19 +51,19 @@ namespace services::wal {
 
     bool wal_replicate_t::file_exist_(boost::filesystem::path path) {
         boost::filesystem::file_status s = boost::filesystem::file_status{};
-        log_.trace(path.c_str());
+        trace(log_,path.c_str());
         if (boost::filesystem::status_known(s) ? boost::filesystem::exists(s) : boost::filesystem::exists(path)) {
-            log_.trace("exists");
+            trace(log_,"exists");
             return true;
         } else {
-            log_.trace("does not exist");
+            trace(log_,"does not exist");
             return false;
         }
     }
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
-            goblin_engineer::send(sender, address(), route::success, session, services::wal::id_t(last_crc32_));
+            actor_zeta::send(sender, address(), route::success, session, services::wal::id_t(last_crc32_));
         }
     }
 

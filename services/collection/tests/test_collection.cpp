@@ -5,7 +5,8 @@
 #include <parser/parser.hpp>
 #include <catch2/catch.hpp>
 
-using namespace services::storage;
+using namespace services::collection;
+using namespace services::database;
 
 document::retained_t<document::impl::mutable_dict_t> gen_sub_doc(const std::string& name, bool male) {
     auto dict = ::document::impl::mutable_dict_t::new_dict();
@@ -37,12 +38,12 @@ document_ptr gen_doc(const std::string& id, const std::string& name, const std::
 collection_ptr gen_collection() {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-
-    auto manager = goblin_engineer::make_manager_service<manager_database_t>(log, 1, 1000);
+    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto manager = actor_zeta::spawn_supervisor<manager_database_t>(resource,log, 1, 1000);
     auto allocate_byte = sizeof(collection_t);
     auto allocate_byte_alignof = alignof(collection_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto collection = new (buffer) collection_t(nullptr, "TestCollection", log, goblin_engineer::address_t::empty_address());
+    auto collection = new (buffer) collection_t(manager.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
 
     collection->insert_test(gen_doc("12345678123456789a00ff01", "Rex", "dog", 6, true, {"Lucy", "Charlie"}, gen_sub_doc("Lucy", true)));
     collection->insert_test(gen_doc("12345678123456789a00ff02", "Lucy", "dog", 2, false, {"Rex", "Charlie"}, gen_sub_doc("Rex", true)));

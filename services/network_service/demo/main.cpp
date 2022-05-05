@@ -49,7 +49,7 @@ public:
         log_.info(request_tmp.body().c_str());
         response_t response;
         response.result(200);
-        goblin_engineer::send(addresses("network_service"), self(), "http_write", id, std::move(response));
+        actor_zeta::send(addresses("network_service"), self(), "http_write", id, std::move(response));
     }
 
     void ws_dispatch(std::uintptr_t id, std::string& request, size_t size) {
@@ -57,7 +57,7 @@ public:
         log_.info("http_dispatch");
         log_.info(request_tmp);
 
-        goblin_engineer::send(addresses("network_service"), self(), "ws_write", id, std::move(request_tmp));
+        actor_zeta::send(addresses("network_service"), self(), "ws_write", id, std::move(request_tmp));
     }
 
 private:

@@ -1,12 +1,14 @@
 #pragma once
-#include <goblin-engineer/core.hpp>
 
-#include "services/collection/collection.hpp"
-#include "services/database/database.hpp"
+#include <pybind11.h>
 
-#include "components/log/log.hpp"
+#include <components/log/log.hpp>
 
-#include "dispatcher/dispatcher.hpp"
+#include <services/dispatcher/dispatcher.hpp>
+#include <services/wal/manager_wal_replicate.hpp>
+#include <services/disk/manager_disk.hpp>
+#include <services/database/database.hpp>
+
 #include "wrapper_dispatcher.hpp"
 
 namespace duck_charmer {
@@ -24,10 +26,11 @@ namespace duck_charmer {
         static spaces* instance_;
 
         log_t log_;
-        goblin_engineer::supervisor manager_database_;
-        goblin_engineer::supervisor manager_dispatcher_;
-        goblin_engineer::supervisor manager_wal_;
-        goblin_engineer::supervisor manager_disk_;
+        actor_zeta::detail::pmr::memory_resource* resource;
+        services::database::manager_database_ptr manager_database_;
+        services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
+        services::wal::manager_wal_ptr manager_wal_;
+        services::disk::manager_disk_ptr manager_disk_;
         std::unique_ptr<duck_charmer::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
 } // namespace duck_charmer

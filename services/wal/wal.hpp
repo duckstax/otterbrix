@@ -1,25 +1,25 @@
 #pragma once
 
-#include <goblin-engineer/core.hpp>
+#include <actor-zeta.hpp>
+
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
 
 #include <components/session/session.hpp>
 #include <components/protocol/insert_one.hpp>
 #include <components/protocol/insert_many.hpp>
-#include <msgpack.hpp>
-#include <msgpack/adaptor/vector.hpp>
 
 #include "dto.hpp"
+#include "manager_wal_replicate.hpp"
 
 namespace services::wal {
 
-    class wal_replicate_t final : public goblin_engineer::abstract_service {
+    class wal_replicate_t final : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
-        using address_t = actor_zeta::base::address_t;
+        using address_t = actor_zeta::address_t;
 
     public:
-        wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path);
+        wal_replicate_t(manager_wr_ptr manager, log_t& log, boost::filesystem::path path);
         void create_database(std::string& name) {}
         void create_collection(database_name_t& database, collection_name_t& collections) {}
         void drop_collection(database_name_t& database, collection_name_t& collection) {}

@@ -21,10 +21,7 @@ namespace kv {
         e_->stop();
     }
 
-    auto manager_dispatcher_t::executor() noexcept -> goblin_engineer::abstract_executor* {
-        return e_.get();
-    }
-    auto manager_dispatcher_t::get_executor() noexcept -> goblin_engineer::abstract_executor* {
+    auto manager_dispatcher_t::executor() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_.get();
     }
 
@@ -60,27 +57,27 @@ namespace kv {
             case protocol_op::create_database:
                 break;
             case protocol_op::select: {
-                return goblin_engineer::send(self(), self(), "select", std::move(session), std::move(std::get<select_t>(protocol.data_)));
+                return actor_zeta::send(self(), self(), "select", std::move(session), std::move(std::get<select_t>(protocol.data_)));
             }
 
             case protocol_op::insert: {
-                return goblin_engineer::send(self(), self(), "insert", std::move(session), std::move(std::get<insert_t>(protocol.data_)));
+                return actor_zeta::send(self(), self(), "insert", std::move(session), std::move(std::get<insert_t>(protocol.data_)));
             }
             case protocol_op::erase: {
-                return goblin_engineer::send(self(), self(), "erase", std::move(session), std::move(std::get<erase_t>(protocol.data_)));
+                return actor_zeta::send(self(), self(), "erase", std::move(session), std::move(std::get<erase_t>(protocol.data_)));
             }
         }
     }
     void dispatcher_t::erase(session_t session, const erase_t& value) {
-        goblin_engineer::send(addresses("collection"), self(), "erase", std::move(session), std::move(value));
+        actor_zeta::send(addresses("collection"), self(), "erase", std::move(session), std::move(value));
     }
 
     void dispatcher_t::insert(session_t session, const insert_t& value) {
-        goblin_engineer::send(addresses("collection"), self(), "insert", std::move(session), std::move(value));
+        actor_zeta::send(addresses("collection"), self(), "insert", std::move(session), std::move(value));
     }
 
     void dispatcher_t::select(session_t session, const select_t& value) {
-        goblin_engineer::send(addresses("collection"), self(), "select", std::move(session), std::move(value));
+        actor_zeta::send(addresses("collection"), self(), "select", std::move(session), std::move(value));
     }
 
 } // namespace kv
