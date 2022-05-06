@@ -56,8 +56,9 @@ namespace components::file {
     }
 
     void file_t::rewrite(std::string& data) {
-        clear();
+        offset_ = 0;
         append(data);
+        ::ftruncate(fd_, offset_);
     }
 
 } //namespace components::file
