@@ -38,7 +38,7 @@ namespace services::disk {
     disk_t::disk_t(const path_t& file_name)
         : db_(nullptr)
         , metadata_(nullptr)
-        , file_wal_id_(file_name / "WAL_ID") {
+        , file_wal_id_(nullptr) {
         rocksdb::Options options;
         options.IncreaseParallelism();
         options.OptimizeLevelStyleCompaction();
@@ -48,6 +48,7 @@ namespace services::disk {
         if (status.ok()) {
             db_.reset(db);
             metadata_ = metadata_t::open(file_name / "METADATA");
+            file_wal_id_ = std::make_unique<components::file::file_t>(file_name / "WAL_ID");
         } else {
             throw std::runtime_error("db open failed");
         }
@@ -124,7 +125,7 @@ namespace services::disk {
 
     void disk_t::fix_wal_id(wal::id_t wal_id) {
         auto id = std::to_string(wal_id);
-        file_wal_id_.rewrite(id);
+        file_wal_id_->rewrite(id);
     }
 
 } //namespace services::disk
