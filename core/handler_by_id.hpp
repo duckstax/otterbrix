@@ -10,7 +10,8 @@ enum class group_id_t : uint8_t {
     database,
     collection,
     wal,
-    disk
+    disk,
+    wasm
 };
 
 template <class T>

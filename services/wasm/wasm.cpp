@@ -18,10 +18,10 @@ namespace services::wasm {
         return file_string_stream.str();
     }
 
-    wasm_runner_t::wasm_runner_t(actor_zeta::base::supervisor_abstract* env)
-        : goblin_engineer::abstract_service(env, "wasm_runner")
+    wasm_runner_t::wasm_runner_t(manager_wasm_runner_t* env)
+        : actor_zeta::basic_async_actor(env, "wasm_runner")
         , wasm_manager_(components::wasm_runner::engine_t::wamr) {
-        add_handler("load_code", &wasm_runner_t::load_code);
+        add_handler(handler_id(route::create), &wasm_runner_t::load_code);
     }
 
     auto wasm_runner_t::load_code(const boost::filesystem::path& path) -> void {
