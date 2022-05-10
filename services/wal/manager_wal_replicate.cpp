@@ -1,6 +1,9 @@
 #include "manager_wal_replicate.hpp"
+
 #include "wal.hpp"
 #include "route.hpp"
+
+#include <core/system_command.hpp>
 
 namespace services::wal {
 
@@ -10,9 +13,10 @@ namespace services::wal {
         , log_(log.clone())
         , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
         trace(log_, "manager_wal_replicate_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
-        add_handler(route::create, &manager_wal_replicate_t::creat_wal_worker);
-        add_handler(route::insert_one, &manager_wal_replicate_t::insert_one);
-        add_handler(route::insert_many, &manager_wal_replicate_t::insert_many);
+        add_handler(handler_id(route::create), &manager_wal_replicate_t::creat_wal_worker);
+        add_handler(handler_id(route::insert_one), &manager_wal_replicate_t::insert_one);
+        add_handler(handler_id(route::insert_many), &manager_wal_replicate_t::insert_many);
+        add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_t::sync);
         trace(log_, "manager_wal_replicate_t start thread pool");
         e_->start();
     }

@@ -2,9 +2,10 @@
 
 #include <actor-zeta.hpp>
 
-#include <RocketJoe/core/excutor.hpp>
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
+
+#include <core/excutor.hpp>
 
 #include <components/session/session.hpp>
 #include <components/protocol/insert_one.hpp>
@@ -16,6 +17,18 @@ namespace services::wal {
         using session_id_t = components::session::session_id_t;
 
     public:
+        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
+
+        enum class unpack_rules : uint64_t {
+            manager_disk = 0,
+            manager_dispatcher = 1
+        };
+
+        void sync(address_pack& pack) {
+            manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
+            manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
+        }
+
         manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,boost::filesystem::path, log_t& log, size_t num_workers, size_t max_throughput);
         void creat_wal_worker();
         void insert_one(session_id_t& session, insert_one_t& data);

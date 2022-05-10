@@ -1,7 +1,8 @@
 #include "dispatcher.hpp"
 #include "parser/parser.hpp"
 
-#include "core/tracy/tracy.hpp"
+#include <core/tracy/tracy.hpp>
+#include <core/system_command.hpp>
 
 #include <components/document/document.hpp>
 
@@ -15,14 +16,8 @@ namespace services::dispatcher {
 
     manager_dispatcher_t::manager_dispatcher_t(
         actor_zeta::detail::pmr::memory_resource* mr,
-        actor_zeta::address_t manager_database,
-        actor_zeta::address_t manager_wal,
-        actor_zeta::address_t manager_disk,
         log_t& log, size_t num_workers, size_t max_throughput)
         : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
-        , manager_database_(manager_database)
-        , manager_wal_(manager_wal)
-        , manager_disk_(manager_disk)
         , log_(log.clone())
         , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
         ZoneScoped;
@@ -41,6 +36,7 @@ namespace services::dispatcher {
         add_handler(collection::route::update_many, &manager_dispatcher_t::update_many);
         add_handler(collection::route::size, &manager_dispatcher_t::size);
         add_handler(collection::route::close_cursor, &manager_dispatcher_t::close_cursor);
+        add_handler(core::handler_id(core::route::sync), &manager_dispatcher_t::sync);
         trace(log_, "manager_dispatcher_t start thread pool");
         e_->start();
     }
@@ -62,13 +58,13 @@ namespace services::dispatcher {
     }
 
     dispatcher_t::dispatcher_t(
-        manager_dispatcher_ptr manager_dispatcher,
+        manager_dispatcher_t* manager_dispatcher,
         actor_zeta::address_t mdb,
         actor_zeta::address_t mwal,
         actor_zeta::address_t mdisk,
         log_t& log,
         std::string name)
-        : actor_zeta::basic_async_actor(manager_dispatcher.get(), std::move(name))
+        : actor_zeta::basic_async_actor(manager_dispatcher, std::move(name))
         , log_(log.clone())
         , manager_dispatcher_(manager_dispatcher->address())
         , manager_database_(mdb)
@@ -109,15 +105,13 @@ namespace services::dispatcher {
         actor_zeta::send(manager_database_, dispatcher_t::address(), database::route::create_database, session, std::move(name));
     }
 
-    void dispatcher_t::create_database_finish(components::session::session_id_t& session, database::database_create_result result, actor_zeta::address_t database) {
-        auto type = database.type();
-        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), type);
-
+    void dispatcher_t::create_database_finish(components::session::session_id_t& session, database::database_create_result result,std::string& database_name, actor_zeta::address_t database) {
+        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), database_name);
         if (result.created_) {
-            auto md = manager_dispatcher_;
-            goblin_engineer::link(md, database);
-            database_address_book_.emplace(type, database);
-            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_database, session, std::string(type));
+           /// auto md = manager_dispatcher_;
+            ///goblin_engineer::link(md, database);
+            database_address_book_.emplace(database_name, database);
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_database, session, std::string(database_name));
             trace(log_, "add database_create_result");
         }
         actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_database_finish, session, result);
@@ -130,14 +124,13 @@ namespace services::dispatcher {
         actor_zeta::send(database_address_book_.at(database_name), dispatcher_t::address(), database::route::create_collection, session, collections_name, manager_disk_);
     }
 
-    void dispatcher_t::create_collection_finish(components::session::session_id_t& session, database::collection_create_result result, std::string& database_name, actor_zeta::address_t collection) {
-        auto type = collection.type();
-        trace(log_, "create_collection_finish: {}", type);
+    void dispatcher_t::create_collection_finish(components::session::session_id_t& session, database::collection_create_result result, std::string& database_name, std::string& collection_name,actor_zeta::address_t collection) {
+        trace(log_, "create_collection_finish: {}", collection_name);
         if (result.created_) {
-            auto md = manager_dispatcher_;
-            goblin_engineer::link(md, collection);
-            collection_address_book_.emplace(key_collection_t(database_name, std::string(type)), collection);
-            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(type));
+           /// auto md = manager_dispatcher_;
+            //goblin_engineer::link(md, collection);
+            collection_address_book_.emplace(key_collection_t(database_name, std::string(collection_name)), collection);
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::append_collection, session, database_name, std::string(collection_name));
             trace(log_, "add database_create_result");
         }
         actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::create_collection_finish, session, result);
@@ -162,15 +155,15 @@ namespace services::dispatcher {
             session_to_address_.erase(session);
         }
     }
-    void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, actor_zeta::address_t collection) {
-        auto type = collection.type();
-        trace(log_, "drop_collection_finish: {}", type);
+
+    void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name,actor_zeta::address_t collection) {
+        trace(log_, "drop_collection_finish: {}", collection_name);
         if (result.is_success()) {
-            auto md = address_book("manager_dispatcher");
-            goblin_engineer::link(md, collection);
-            collection_address_book_.erase({database_name, std::string(type)});
-            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(type));
-            trace(log_, "collection {} dropped", type);
+            ///auto md = address_book("manager_dispatcher");
+            ///goblin_engineer::link(md, collection);
+            collection_address_book_.erase({database_name, std::string(collection_name)});
+            actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::route::remove_collection, session, database_name, std::string(collection_name));
+            trace(log_, "collection {} dropped", collection_name);
         }
         actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::route::drop_collection_finish, session, result);
         session_to_address_.erase(session);

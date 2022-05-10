@@ -34,8 +34,8 @@ namespace services::wal {
         return fd_;
     }
 
-    wal_replicate_t::wal_replicate_t(manager_wr_ptr manager, log_t& log, boost::filesystem::path path)
-        : actor_zeta::basic_async_actor(manager.get(), "wal")
+    wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, boost::filesystem::path path)
+        : actor_zeta::basic_async_actor(manager, "wal")
         , log_(log.clone())
         , path_(std::move(path)) {
         add_handler(route::insert_one, &wal_replicate_t::insert_one);

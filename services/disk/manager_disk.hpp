@@ -16,7 +16,17 @@ namespace services::disk {
 
     class manager_disk_t final : public actor_zeta::cooperative_supervisor<manager_disk_t> {
     public:
-        manager_disk_t(actor_zeta::detail::pmr::memory_resource*,wal::manager_wr_ptr wal, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput);
+        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
+
+        enum class unpack_rules : uint64_t {
+            manager_wal = 0,
+        };
+
+        void sync(address_pack& pack) {
+            manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
+
+        }
+        manager_disk_t(actor_zeta::detail::pmr::memory_resource*, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput);
         void create_agent();
 
         auto read_databases(session_id_t& session) -> void;
@@ -38,7 +48,7 @@ namespace services::disk {
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void;
 
     private:
-        actor_zeta::address_t wal_manager_;
+        actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         path_t path_db_;
         log_t log_;
         actor_zeta::scheduler_ptr e_;

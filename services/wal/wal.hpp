@@ -19,7 +19,7 @@ namespace services::wal {
         using address_t = actor_zeta::address_t;
 
     public:
-        wal_replicate_t(manager_wr_ptr manager, log_t& log, boost::filesystem::path path);
+        wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, boost::filesystem::path path);
         void create_database(std::string& name) {}
         void create_collection(database_name_t& database, collection_name_t& collections) {}
         void drop_collection(database_name_t& database, collection_name_t& collection) {}

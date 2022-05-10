@@ -12,6 +12,7 @@
 #include <core/excutor.hpp>
 
 #include <services/collection/result.hpp>
+#include <services/database/forward.hpp>
 #include <services/database/result_database.hpp>
 #include <services/wal/base.hpp>
 
@@ -22,11 +23,26 @@ namespace services::dispatcher {
 
     class manager_dispatcher_t final : public actor_zeta::cooperative_supervisor<manager_dispatcher_t> {
     public:
-        manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource*,
-                             actor_zeta::address_t manager_database,
-                             actor_zeta::address_t manager_wal,
-                             actor_zeta::address_t manager_disk,
-                             log_t& log, size_t num_workers, size_t max_throughput);
+        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t>;
+
+        enum class unpack_rules : uint64_t {
+            manager_database = 0,
+            manager_wal = 1,
+            manager_disk = 2
+        };
+
+        void sync(address_pack& pack) {
+            manager_database_ = std::get<static_cast<uint64_t>(unpack_rules::manager_database)>(pack);
+            manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
+            manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
+        }
+
+        manager_dispatcher_t(
+            actor_zeta::detail::pmr::memory_resource*,
+            log_t& log,
+            size_t num_workers,
+            size_t max_throughput);
+
         ~manager_dispatcher_t() override;
 
         ///-----
@@ -61,9 +77,9 @@ namespace services::dispatcher {
     private:
         log_t log_;
         actor_zeta::scheduler_ptr e_;
-        actor_zeta::address_t manager_database_;
-        actor_zeta::address_t manager_wal_;
-        actor_zeta::address_t manager_disk_;
+        actor_zeta::address_t manager_database_ = actor_zeta::address_t::empty_address();
+        actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
+        actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
         std::vector<actor_zeta::actor> actor_storage_;
         std::unordered_map<std::string, actor_zeta::address_t> dispatcher_to_address_book_;
         std::vector<actor_zeta::address_t> dispathers_;
@@ -90,14 +106,14 @@ namespace services::dispatcher {
 
     class dispatcher_t final : public actor_zeta::basic_async_actor {
     public:
-        dispatcher_t(manager_dispatcher_ptr, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
+        dispatcher_t(manager_dispatcher_t*, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
         void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
-        void create_database_finish(components::session::session_id_t& session, database::database_create_result, actor_zeta::address_t);
+        void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, actor_zeta::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address);
-        void create_collection_finish(components::session::session_id_t& session, database::collection_create_result, std::string& database_name, actor_zeta::address_t);
+        void create_collection_finish(components::session::session_id_t& session, database::collection_create_result, std::string& database_name,std::string& collection_name, actor_zeta::address_t);
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address);
         void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
-        void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, actor_zeta::address_t collection);
+        void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, actor_zeta::address_t collection);
         void insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address);
         void insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::list<components::document::document_ptr>& documents, actor_zeta::address_t address);
         void insert_one_finish(components::session::session_id_t& session, result_insert_one& result);

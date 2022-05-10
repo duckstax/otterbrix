@@ -1,8 +1,12 @@
 #include "database.hpp"
 
-#include "core/tracy/tracy.hpp"
-#include "services/database/result_database.hpp"
+#include <core/tracy/tracy.hpp>
+#include <core/system_command.hpp>
+
+#include <services/database/result_database.hpp>
 #include <services/collection/collection.hpp>
+
+#include "route.hpp"
 
 using namespace services::database;
 
@@ -13,7 +17,8 @@ namespace services::database {
         , log_(log.clone())
         , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
         ZoneScoped;
-        add_handler(route::create_database, &manager_database_t::create);
+        add_handler(handler_id(route::create_database), &manager_database_t::create);
+        add_handler(core::handler_id(core::route::sync), &manager_database_t::sync);
         debug(log_, "manager_database_t start thread pool");
         e_->start();
     }
@@ -41,13 +46,13 @@ namespace services::database {
                 auto target = ptr->address();
                 databases_.emplace(name, target);
                 auto self = this->address();
-                return actor_zeta::send(current_message()->sender(), self, route::create_database_finish, session, database_create_result(true), target);
+                return actor_zeta::send(current_message()->sender(), self, route::create_database_finish, session, database_create_result(true),std::string(name), target);
             },
             std::string(name), log_, 1, 1000);
     }
 
-    database_t::database_t(manager_database_ptr supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)
-        : actor_zeta::cooperative_supervisor<database_t>(supervisor.get(), std::string(name))
+    database_t::database_t(manager_database_t* supervisor, std::string name, log_t& log, size_t num_workers, size_t max_throughput)
+        : actor_zeta::cooperative_supervisor<database_t>(supervisor, std::string(name))
         , name_(name)
         , log_(log.clone())
         , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
@@ -80,7 +85,7 @@ namespace services::database {
                 collections_.emplace(name, ptr);
             },
             std::string(name), log_, mdisk);
-        return actor_zeta::send(current_message()->sender(), this->address(), route::create_collection_finish, session, collection_create_result(true), std::string(name), address);
+        return actor_zeta::send(current_message()->sender(), this->address(), route::create_collection_finish, session, collection_create_result(true),std::string(name_), std::string(name), address);
     }
 
     void database_t::drop(components::session::session_id_t& session, std::string& name) {
@@ -90,13 +95,12 @@ namespace services::database {
         if (collection != collections_.end()) {
             auto target = collection->second->address();
             collections_.erase(collection);
-            return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(true), std::string(name_), target);
+            return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(true), std::string(name_),std::string(name), target);
         }
-        return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(false), std::string(name_), self);
+        return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(false), std::string(name_),std::string(name), self);
     }
 
     const std::string& database_t::name() {
         return name_;
     }
-
 } // namespace services::storage

@@ -1,5 +1,7 @@
 #include "manager_disk.hpp"
 
+#include <core/system_command.hpp>
+
 #include "result.hpp"
 #include "route.hpp"
 #include <utility>
@@ -8,9 +10,8 @@ namespace services::disk {
 
     using components::document::document_id_t;
 
-    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,wal::manager_wr_ptr wal, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
+    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
         : actor_zeta::cooperative_supervisor<manager_disk_t>(mr, "manager_disk")
-        , wal_manager_(wal->address())
         , path_db_(std::move(path_db))
         , log_(log.clone())
         , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
@@ -26,6 +27,7 @@ namespace services::disk {
         add_handler(route::write_documents, &manager_disk_t::write_documents);
         add_handler(route::remove_documents, &manager_disk_t::remove_documents);
         add_handler(route::flush, &manager_disk_t::flush);
+        add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
         trace(log_, "manager_disk start thread pool");
         e_->start();
 

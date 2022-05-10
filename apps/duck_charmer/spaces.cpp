@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "core/system_command.hpp"
+
 namespace duck_charmer {
     spaces* spaces::instance_ = nullptr;
 
@@ -21,7 +23,9 @@ namespace duck_charmer {
     }
 
     using services::dispatcher::manager_dispatcher_t;
+
     constexpr static char* name_dispatcher = "dispatcher";
+
     spaces::spaces() {
         std::string log_dir("/tmp/");
         log_ = initialization_logger("duck_charmer", log_dir);
@@ -53,14 +57,35 @@ namespace duck_charmer {
         trace(log_, "manager_dispatcher finish");
 
         wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(resource, manager_dispatcher_->address(), log_);
-        goblin_engineer::link(manager_wal_,manager_database_);
-        goblin_engineer::link(manager_wal_,manager_dispatcher_);
-        goblin_engineer::link(manager_database_, manager_dispatcher_);
-        goblin_engineer::link(manager_disk_, manager_dispatcher_);
         trace(log_, "manager_dispatcher create dispatcher");
-        auto tmp = wrapper_dispatcher_->address();
-        auto tmp_1 = manager_dispatcher_->address();
-        goblin_engineer::link(tmp_1, tmp);
+
+        actor_zeta::send(
+            manager_dispatcher_,
+            actor_zeta::address_t::empty_address(),
+            handler_id(core::route::sync),
+            manager_database_->address(),
+            manager_wal_->address(),
+            manager_disk_->address());
+
+        actor_zeta::send(
+            manager_wal_,
+            actor_zeta::address_t::empty_address(),
+            handler_id(core::route::sync),
+            manager_disk_->address(),
+            manager_dispatcher_->address());
+
+
+        actor_zeta::send(
+            manager_disk_,
+            actor_zeta::address_t::empty_address(),
+            handler_id(core::route::sync),
+            manager_dispatcher_->address());
+
+        actor_zeta::send(
+            manager_database_,
+            actor_zeta::address_t::empty_address(),
+            handler_id(core::route::sync),
+            manager_dispatcher_->address());
 
         trace(log_, "spaces::spaces() final");
     }

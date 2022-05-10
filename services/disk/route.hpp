@@ -1,5 +1,7 @@
 #pragma once
 
+#include <core/handler_by_id.hpp>
+
 namespace services::disk {
     enum class route : uint64_t {
         create_agent,
@@ -23,4 +25,8 @@ namespace services::disk {
         read_collections_finish,
         read_documents_finish,
     };
+
+    inline uint64_t handler_id(route type) {
+        return handler_id(group_id_t::disk, type);
+    }
 } // namespace services::disk

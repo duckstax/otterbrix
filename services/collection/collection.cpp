@@ -1,12 +1,15 @@
 #include "collection.hpp"
+
+#include <core/system_command.hpp>
+
 #include <services/disk/route.hpp>
 
 using namespace services::collection;
 
 namespace services::collection {
 
-    collection_t::collection_t(database::database_ptr database, const std::string& name, log_t& log, actor_zeta::address_t mdisk)
-        : actor_zeta::basic_async_actor(database.get(), std::string(name))
+    collection_t::collection_t(database::database_t* database, const std::string& name, log_t& log, actor_zeta::address_t mdisk)
+        : actor_zeta::basic_async_actor(database, std::string(name))
         , name_(name)
         , database_name_(database->name())
         , log_(log.clone())
@@ -22,7 +25,7 @@ namespace services::collection {
         add_handler(route::update_many, &collection_t::update_many);
         add_handler(route::size, &collection_t::size);
         add_handler(route::drop_collection, &collection_t::drop);
-        add_handler(route::close_cursor, &collection_t::close_cursor);
+        add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
     }
 
     auto collection_t::size(session_id_t& session) -> void {
