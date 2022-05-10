@@ -21,7 +21,7 @@ namespace duck_charmer {
     }
 
     using services::dispatcher::manager_dispatcher_t;
-    constexpr static char* name_dispatcher = "dispatcher";
+    constexpr static auto name_dispatcher = "dispatcher";
     spaces::spaces() {
         std::string log_dir("/tmp/");
         log_ = initialization_logger("duck_charmer", log_dir);

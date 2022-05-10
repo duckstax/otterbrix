@@ -7,4 +7,4 @@ add_subdirectory(wal)
 add_subdirectory(disk)
 #add_subdirectory(interactive_python)
 #add_subdirectory(jupyter)
-add_subdirectory(wasm)
+#add_subdirectory(wasm) #todo uncomment

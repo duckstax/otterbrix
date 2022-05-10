@@ -11,7 +11,7 @@ add_subdirectory(cursor)
 add_subdirectory(session)
 add_subdirectory(parser)
 add_subdirectory(serialize)
-add_subdirectory(wasm_runner)
+#add_subdirectory(wasm_runner) #todo uncomment
 
 if (DEV_MODE)
     add_subdirectory(tests)
