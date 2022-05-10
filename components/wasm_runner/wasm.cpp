@@ -99,7 +99,6 @@ namespace components::wasm_runner {
                 break;
             case log_t::level::critical:
                 critical(log_,message);
-
                 break;
             default:
                 return WasmResult::BadArgument;
