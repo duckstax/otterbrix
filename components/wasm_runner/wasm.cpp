@@ -54,11 +54,11 @@ namespace components::wasm_runner {
     }
 
     auto wasm_vm_integration_t::error(string_view message) -> void {
-        log_.error(message);
+        ::error(log_,message);
     }
 
     auto wasm_vm_integration_t::trace(string_view message) -> void {
-        log_.trace(message);
+        ::trace(log_,message);
     }
 
     auto wasm_vm_integration_t::getNullVmFunction(string_view /*function_name*/, bool /*returns_word*/,
@@ -78,27 +78,27 @@ namespace components::wasm_runner {
     WasmResult wasm_context_t::log(uint32_t log_level, string_view message) {
         switch (static_cast<log_t::level>(log_level)) {
             case log_t::level::trace:
-                log_.trace(message);
+                trace(log_,message);
 
                 break;
             case log_t::level::debug:
-                log_.debug(message);
+                debug(log_,message);
 
                 break;
             case log_t::level::info:
-                log_.info(message);
+                info(log_,message);
 
                 break;
             case log_t::level::warn:
-                log_.warn(message);
+                warn(log_,message);
 
                 break;
             case log_t::level::err:
-                log_.error(message);
+                ::error(log_,message);
 
                 break;
             case log_t::level::critical:
-                log_.critical(message);
+                critical(log_,message);
 
                 break;
             default:
