@@ -53,7 +53,7 @@ namespace duck_charmer {
         goblin_engineer::link(manager_database_, manager_dispatcher_);
         goblin_engineer::link(manager_disk_, manager_dispatcher_);
         goblin_engineer::send(manager_dispatcher_, goblin_engineer::address_t::empty_address(), dispatcher::create, components::session::session_id_t(), std::string(name_dispatcher));
-        trace(log_, "manager_dispatcher create dispatcher");
+        goblin_engineer::send(manager_dispatcher_, goblin_engineer::address_t::empty_address(), dispatcher::load, components::session::session_id_t());
         auto tmp = wrapper_dispatcher_->address();
         auto tmp_1 = manager_dispatcher_->address();
         goblin_engineer::link(tmp_1, tmp);

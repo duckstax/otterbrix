@@ -28,6 +28,7 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
+        auto load(session_id_t& session) -> void;
         auto read_databases(session_id_t& session) -> void;
         auto read_collections(session_id_t& session, const database_name_t &database) -> void;
         auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
@@ -66,9 +67,7 @@ namespace services::disk {
 
         auto fix_wal_id(wal::id_t wal_id) -> void;
 
-        auto read_databases(session_id_t& session) -> void;
-        auto read_collections(session_id_t& session, const database_name_t &database) -> void;
-        auto read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void;
+        auto load(session_id_t& session, goblin_engineer::address_t dispatcher) -> void;
 
     private:
         log_t log_;

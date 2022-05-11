@@ -39,6 +39,7 @@ namespace services::dispatcher {
         ///------
         void create( components::session::session_id_t& session,std::string& name );
         void connect_me(components::session::session_id_t& session, std::string& name);
+        void load(components::session::session_id_t& session);
         void create_database(components::session::session_id_t& session, std::string& name);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
@@ -90,6 +91,7 @@ namespace services::dispatcher {
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:
         dispatcher_t(goblin_engineer::supervisor_t* manager_database,goblin_engineer::address_t,goblin_engineer::address_t,goblin_engineer::address_t, log_t& log,std::string name);
+        void load(components::session::session_id_t& session, goblin_engineer::address_t address);
         void create_database(components::session::session_id_t& session, std::string& name,goblin_engineer::address_t address);
         void create_database_finish(components::session::session_id_t& session,storage::database_create_result,goblin_engineer::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name,std::string& collections_name,goblin_engineer::address_t address);

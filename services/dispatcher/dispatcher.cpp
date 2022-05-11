@@ -18,6 +18,7 @@ namespace services::dispatcher {
         log_.trace("manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
         add_handler(route::create, &manager_dispatcher_t::create);
         add_handler(route::connect_me, &manager_dispatcher_t::connect_me);
+        add_handler(route::load, &manager_dispatcher_t::load);
         add_handler(database::route::create_database, &manager_dispatcher_t::create_database);
         add_handler(database::route::create_collection, &manager_dispatcher_t::create_collection);
         add_handler(database::route::drop_collection, &manager_dispatcher_t::drop_collection);
@@ -65,6 +66,7 @@ namespace services::dispatcher {
         , mwal_(mwal)
         , mdisk_(mdisk) {
         log_.trace("dispatcher_t::dispatcher_t name:{}", type());
+        add_handler(route::load, &dispatcher_t::load);
         add_handler(database::route::create_database, &dispatcher_t::create_database);
         add_handler(database::route::create_database_finish, &dispatcher_t::create_database_finish);
         add_handler(database::route::create_collection, &dispatcher_t::create_collection);
@@ -90,6 +92,12 @@ namespace services::dispatcher {
         add_handler(collection::route::size_finish, &dispatcher_t::size_finish);
         add_handler(collection::route::close_cursor, &dispatcher_t::close_cursor);
         add_handler(wal::route::success, &dispatcher_t::wal_success);
+    }
+
+    void dispatcher_t::load(components::session::session_id_t &session, goblin_engineer::address_t address) {
+        trace(log_, "dispatcher_t::load: session {}", session.data());
+        session_to_address_.emplace(session, address);
+        goblin_engineer::send(mdisk_, dispatcher_t::address(), disk::route::load, session);
     }
 
     void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, goblin_engineer::address_t address) {
@@ -357,6 +365,11 @@ namespace services::dispatcher {
         auto dispatcher = dispatcher_to_address_book_.at(name);
         trace(log_,"dispatcher: {}", dispatcher.type());
         goblin_engineer::link(dispatcher, current_message()->sender());
+    }
+
+    void manager_dispatcher_t::load(components::session::session_id_t &session) {
+        trace(log_, "manager_dispatcher_t::load session: {}", session.data());
+        goblin_engineer::send(dispathers_[0], address(), route::load, session);
     }
 
     void manager_dispatcher_t::create_database(components::session::session_id_t& session, std::string& name) {

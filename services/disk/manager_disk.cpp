@@ -6,8 +6,6 @@
 
 namespace services::disk {
 
-    constexpr static auto name_dispatcher = "dispatcher";
-
     using components::document::document_id_t;
 
     manager_disk_t::manager_disk_t(path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
@@ -24,9 +22,7 @@ namespace services::disk {
         add_handler(route::write_documents, &manager_disk_t::write_documents);
         add_handler(route::remove_documents, &manager_disk_t::remove_documents);
         add_handler(route::flush, &manager_disk_t::flush);
-        add_handler(route::read_databases, &manager_disk_t::read_databases);
-        add_handler(route::read_collections, &manager_disk_t::read_collections);
-        add_handler(route::read_documents, &manager_disk_t::read_documents);
+        add_handler(route::load, &manager_disk_t::load);
         trace(log_, "manager_disk start thread pool");
         e_->start();
     }
@@ -86,19 +82,9 @@ namespace services::disk {
         }
     }
 
-    auto manager_disk_t::read_databases(session_id_t& session) -> void {
-        trace(log_, "manager_disk_t::read_databases , session : {}", session.data());
-        goblin_engineer::send(agent(), address(), route::read_databases, session);
-    }
-
-    auto manager_disk_t::read_collections(session_id_t& session, const database_name_t &database) -> void {
-        trace(log_, "manager_disk_t::read_collections , session : {} , database : {}", session.data(), database);
-        goblin_engineer::send(agent(), address(), route::read_collections, session, database);
-    }
-
-    auto manager_disk_t::read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
-        trace(log_, "manager_disk_t::read_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        goblin_engineer::send(agent(), address(), route::read_documents, session, database, collection);
+    void manager_disk_t::load(session_id_t &session) {
+        trace(log_, "manager_disk_t::load , session : {}", session.data());
+        goblin_engineer::send(agent(), address(), route::load, session, current_message()->sender());
     }
 
     auto manager_disk_t::executor_impl() noexcept -> goblin_engineer::abstract_executor* {
@@ -134,9 +120,7 @@ namespace services::disk {
         add_handler(route::write_documents, &agent_disk_t::write_documents);
         add_handler(route::remove_documents, &agent_disk_t::remove_documents);
         add_handler(route::fix_wal_id, &agent_disk_t::fix_wal_id);
-        add_handler(route::read_databases, &agent_disk_t::read_databases);
-        add_handler(route::read_collections, &agent_disk_t::read_collections);
-        add_handler(route::read_documents, &agent_disk_t::read_documents);
+        add_handler(route::load, &agent_disk_t::load);
     }
 
     agent_disk_t::~agent_disk_t() {
@@ -190,26 +174,39 @@ namespace services::disk {
         disk_.fix_wal_id(wal_id);
     }
 
-    auto agent_disk_t::read_databases(session_id_t& session) -> void {
-        trace(log_, "{}::read_databases , session : {}", type(), session.data());
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::read_databases_finish, session, result_read_databases(disk_.databases()));
-    }
-
-    auto agent_disk_t::read_collections(session_id_t& session, const database_name_t &database) -> void {
-        trace(log_, "{}::read_collections , session : {} , database : {}", type(), session.data(), database);
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::read_collections_finish, session, result_read_collections(disk_.collections(database)));
-    }
-
-    auto agent_disk_t::read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
-        trace(log_, "{}::read_documents , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
-        result_read_documents::result_t documents;
-        for (const auto &id : disk_.load_list_documents(database, collection)) {
-            documents.push_back(disk_.load_document(id));
+    void agent_disk_t::load(session_id_t &session, goblin_engineer::address_t dispatcher) {
+        trace(log_, "{}::load , session : {}", type(), session.data());
+        auto databases = result_read_databases(disk_.databases());
+        goblin_engineer::send(dispatcher, address(), route::load_databases, session, databases);
+        for (const auto &database : databases.databases()) {
+            auto collections = result_read_collections(disk_.collections(database));
+            goblin_engineer::send(dispatcher, address(), route::load_collections, session, database, collections);
+            for (const auto &collection : collections.collections()) {
+                goblin_engineer::send(dispatcher, address(), route::load_documents, session, database, collection, result_read_collections(disk_.collections(database)));
+            }
         }
-        auto dispatcher = address_book(name_dispatcher);
-        goblin_engineer::send(dispatcher, address(), route::read_documents_finish, session, result_read_documents(std::move(documents)));
     }
+
+//    auto agent_disk_t::read_databases(session_id_t& session) -> void {
+//        trace(log_, "{}::read_databases , session : {}", type(), session.data());
+//        auto dispatcher = address_book(name_dispatcher);
+//        goblin_engineer::send(dispatcher, address(), route::read_databases_finish, session, result_read_databases(disk_.databases()));
+//    }
+
+//    auto agent_disk_t::read_collections(session_id_t& session, const database_name_t &database) -> void {
+//        trace(log_, "{}::read_collections , session : {} , database : {}", type(), session.data(), database);
+//        auto dispatcher = address_book(name_dispatcher);
+//        goblin_engineer::send(dispatcher, address(), route::read_collections_finish, session, result_read_collections(disk_.collections(database)));
+//    }
+
+//    auto agent_disk_t::read_documents(session_id_t& session, const database_name_t &database, const collection_name_t &collection) -> void {
+//        trace(log_, "{}::read_documents , session : {} , database : {} , collection : {}", type(), session.data(), database, collection);
+//        result_read_documents::result_t documents;
+//        for (const auto &id : disk_.load_list_documents(database, collection)) {
+//            documents.push_back(disk_.load_document(id));
+//        }
+//        auto dispatcher = address_book(name_dispatcher);
+//        goblin_engineer::send(dispatcher, address(), route::read_documents_finish, session, result_read_documents(std::move(documents)));
+//    }
 
 } //namespace services::disk
