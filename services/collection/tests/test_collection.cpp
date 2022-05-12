@@ -56,16 +56,20 @@ struct context_t final  {
 using context_ptr = std::unique_ptr<context_t>;
 
 context_ptr make_context(log_t& log) {
-    auto* context = new context_t;
+    auto context = std::make_unique<context_t>();
     context->resource = actor_zeta::detail::pmr::get_default_resource();
-    context->manager_database_ = actor_zeta::spawn_supervisor<manager_database_t>(context->resource,log,1,1000);
-    context->database_ = actor_zeta::spawn_supervisor<database_t>(context->manager_database_.get(),"TestDataBase",log,1,1000);
+    //todo begin comment
+//    context->manager_database_ = actor_zeta::spawn_supervisor<manager_database_t>(context->resource,log,1,1000);
+//    context->database_ = actor_zeta::spawn_supervisor<database_t>(nullptr,"TestDataBase",log,1,1000);
+    //end comment
 
     auto allocate_byte = sizeof(collection_t);
     auto allocate_byte_alignof = alignof(collection_t);
     void* buffer = context->resource->allocate(allocate_byte, allocate_byte_alignof);
-    auto* collection = new (buffer) collection_t(context->database_.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
+    //todo nullptr instead of database
+    auto* collection = new (buffer) collection_t(nullptr/*context->database_.get()*/, "TestCollection", log, actor_zeta::address_t::empty_address());
     context->collection_.reset(collection);
+    return context;
 };
 
 collection_t* d(context_ptr&ptr){
