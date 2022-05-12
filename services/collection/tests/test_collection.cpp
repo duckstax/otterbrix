@@ -35,7 +35,7 @@ document_ptr gen_doc(const std::string& id, const std::string& name, const std::
     return components::document::make_document(dict);
 }
 
-struct context_t final : actor_zeta::ref_counted {
+struct context_t final  {
     using collection_ptr = actor_zeta::intrusive_ptr<collection_t>;
 
     collection_t* operator->() const noexcept {
@@ -53,7 +53,7 @@ struct context_t final : actor_zeta::ref_counted {
 };
 
 
-using context_ptr = actor_zeta::intrusive_ptr<context_t>;
+using context_ptr = std::unique_ptr<context_t>;
 
 context_ptr make_context(log_t& log) {
     auto* context = new context_t;
