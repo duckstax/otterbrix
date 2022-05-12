@@ -15,16 +15,16 @@ namespace services::collection {
         , log_(log.clone())
         , database_(database->address())
         , mdisk_(mdisk) {
-        add_handler(route::insert_one, &collection_t::insert_one);
-        add_handler(route::insert_many, &collection_t::insert_many);
-        add_handler(route::find, &collection_t::find);
-        add_handler(route::find_one, &collection_t::find_one);
-        add_handler(route::delete_one, &collection_t::delete_one);
-        add_handler(route::delete_many, &collection_t::delete_many);
-        add_handler(route::update_one, &collection_t::update_one);
-        add_handler(route::update_many, &collection_t::update_many);
-        add_handler(route::size, &collection_t::size);
-        add_handler(route::drop_collection, &collection_t::drop);
+        add_handler(handler_id(route::insert_one), &collection_t::insert_one);
+        add_handler(handler_id(route::insert_many), &collection_t::insert_many);
+        add_handler(handler_id(route::find), &collection_t::find);
+        add_handler(handler_id(route::find_one), &collection_t::find_one);
+        add_handler(handler_id(route::delete_one), &collection_t::delete_one);
+        add_handler(handler_id(route::delete_many), &collection_t::delete_many);
+        add_handler(handler_id(route::update_one), &collection_t::update_one);
+        add_handler(handler_id(route::update_many), &collection_t::update_many);
+        add_handler(handler_id(route::size), &collection_t::size);
+        add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
     }
 

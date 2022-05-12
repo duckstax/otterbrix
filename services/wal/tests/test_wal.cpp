@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <crc32c/crc32c.h>
-#include <goblin-engineer/core.hpp>
+#include <actor-zeta.hpp>
 #include <log/log.hpp>
 #include <wal/wal.hpp>
 
@@ -20,7 +20,7 @@ using namespace services::wal;
 TEST_CASE("insert one test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -68,7 +68,7 @@ TEST_CASE("insert one test") {
 TEST_CASE("insert many empty test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -104,7 +104,7 @@ TEST_CASE("insert many empty test") {
 TEST_CASE("insert many test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
