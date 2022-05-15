@@ -37,21 +37,21 @@ namespace duck_charmer {
         resource = actor_zeta::detail::pmr::get_default_resource();
 
         trace(log_, "manager_wal start");
-        manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource,scheduler_.get(), current_path, log_, 1, 1000);
+        manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource,scheduler_.get(), current_path, log_);
         trace(log_, "manager_wal finish");
 
 
         trace(log_, "manager_disk start");
-        manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource,scheduler_.get(), current_path / "disk", log_, 1, 1000);
+        manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource,scheduler_.get(), current_path / "disk", log_);
         trace(log_, "manager_disk finish");
 
         trace(log_, "manager_database start");
-        manager_database_ = actor_zeta::spawn_supervisor<services::database::manager_database_t>(resource,scheduler_.get(), log_, 1, 1000);
+        manager_database_ = actor_zeta::spawn_supervisor<services::database::manager_database_t>(resource,scheduler_.get(), log_);
         trace(log_, "manager_database finish");
 
 
         trace(log_, "manager_dispatcher start");
-        manager_dispatcher_ = actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource,scheduler_.get(), log_, 1, 1000);
+        manager_dispatcher_ = actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource,scheduler_.get(), log_);
         trace(log_, "manager_dispatcher finish");
 
         wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(resource, manager_dispatcher_->address(), log_);

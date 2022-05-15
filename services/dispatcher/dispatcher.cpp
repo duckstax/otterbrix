@@ -17,12 +17,12 @@ namespace services::dispatcher {
     manager_dispatcher_t::manager_dispatcher_t(
         actor_zeta::detail::pmr::memory_resource* mr,
         actor_zeta::scheduler_raw scheduler,
-        log_t& log, size_t num_workers, size_t max_throughput)
+        log_t& log)
         : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
         , log_(log.clone())
         , e_(scheduler) {
         ZoneScoped;
-        trace(log_, "manager_dispatcher_t::manager_dispatcher_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
+        trace(log_, "manager_dispatcher_t::manager_dispatcher_t ");
         add_handler(handler_id(route::create), &manager_dispatcher_t::create);
         add_handler(database::handler_id(database::route::create_database), &manager_dispatcher_t::create_database);
         add_handler(database::handler_id(database::route::create_collection), &manager_dispatcher_t::create_collection);
@@ -38,7 +38,7 @@ namespace services::dispatcher {
         add_handler(collection::handler_id(collection::route::size), &manager_dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::close_cursor), &manager_dispatcher_t::close_cursor);
         add_handler(core::handler_id(core::route::sync), &manager_dispatcher_t::sync);
-        trace(log_, "manager_dispatcher_t start thread pool");
+        trace(log_, "manager_dispatcher_t finish");
     }
 
     manager_dispatcher_t::~manager_dispatcher_t() {

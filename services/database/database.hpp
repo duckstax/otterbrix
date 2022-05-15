@@ -25,7 +25,7 @@ namespace services::database {
 
         }
 
-        manager_database_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,log_t& log, size_t num_workers, size_t max_throughput);
+        manager_database_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,log_t& log);
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* ;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~manager_database_t();

@@ -10,12 +10,12 @@ namespace services::disk {
 
     using components::document::document_id_t;
 
-    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
+    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler, path_t path_db, log_t& log)
         : actor_zeta::cooperative_supervisor<manager_disk_t>(mr, "manager_disk")
         , path_db_(std::move(path_db))
         , log_(log.clone())
         , e_(scheduler) {
-        trace(log_, "manager_disk num_workers : {} , max_throughput: {}", num_workers, max_throughput);
+        trace(log_, "manager_disk start");
         add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
         add_handler(handler_id(route::read_databases), &manager_disk_t::read_databases);
         add_handler(handler_id(route::append_database), &manager_disk_t::append_database);
@@ -28,7 +28,7 @@ namespace services::disk {
         add_handler(handler_id(route::remove_documents), &manager_disk_t::remove_documents);
         add_handler(handler_id(route::flush), &manager_disk_t::flush);
         add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
-        trace(log_, "manager_disk start thread pool");
+        trace(log_, "manager_disk finish");
 
     }
 

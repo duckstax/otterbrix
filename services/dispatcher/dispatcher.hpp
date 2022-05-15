@@ -40,9 +40,7 @@ namespace services::dispatcher {
         manager_dispatcher_t(
             actor_zeta::detail::pmr::memory_resource*,
             actor_zeta::scheduler_raw,
-            log_t& log,
-            size_t num_workers,
-            size_t max_throughput);
+            log_t& log);
 
         ~manager_dispatcher_t() override;
 

@@ -12,7 +12,7 @@ using namespace services::database;
 
 namespace services::database {
 
-    manager_database_t::manager_database_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler , log_t& log, size_t num_workers, size_t max_throughput)
+    manager_database_t::manager_database_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler , log_t& log)
         : actor_zeta::cooperative_supervisor<manager_database_t>(mr, "manager_database")
         , log_(log.clone())
         , e_(scheduler) {
