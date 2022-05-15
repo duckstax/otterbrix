@@ -6,6 +6,8 @@
 #include <actor-zeta.hpp>
 #include <actor-zeta/detail/memory_resource.hpp>
 
+#include <core/spinlock/spinlock.hpp>
+
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
@@ -74,6 +76,7 @@ namespace services::dispatcher {
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
 
     private:
+        spin_lock lock_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         actor_zeta::address_t manager_database_ = actor_zeta::address_t::empty_address();

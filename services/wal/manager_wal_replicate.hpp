@@ -12,6 +12,7 @@
 #include <components/protocol/insert_many.hpp>
 
 #include <core/excutor.hpp>
+#include <core/spinlock/spinlock.hpp>
 
 namespace services::wal {
 
@@ -51,6 +52,7 @@ namespace services::wal {
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
 
     private:
+        spin_lock lock_;
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_dispatcher_ = actor_zeta::address_t::empty_address();
         boost::filesystem::path path_;

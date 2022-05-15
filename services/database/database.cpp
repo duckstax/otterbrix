@@ -33,6 +33,7 @@ namespace services::database {
     //NOTE: behold thread-safety!
     auto manager_database_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
         ZoneScoped;
+        std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
         execute(this, current_message());
     }
@@ -70,6 +71,7 @@ namespace services::database {
     //NOTE: behold thread-safety!
     auto database_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
         ZoneScoped;
+        std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
         execute(this, current_message());
     }

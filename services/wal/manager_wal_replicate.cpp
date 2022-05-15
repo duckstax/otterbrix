@@ -25,6 +25,7 @@ namespace services::wal {
     }
 
     auto manager_wal_replicate_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
+        std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
         execute(this,current_message());
     }
