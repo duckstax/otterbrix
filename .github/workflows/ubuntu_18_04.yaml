@@ -32,14 +32,13 @@ jobs:
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com:9300
-          conan remote add cyberduckninja http://conan.cyberduckninja.com:9300
           conan remote list
 
       - name: download dependencies
         run: |
           mkdir build && cd build
           cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release -o actor-zeta:cxx_standard=14
+          conan install . --build missing -s build_type=Release
 
       - name: build
         env:
