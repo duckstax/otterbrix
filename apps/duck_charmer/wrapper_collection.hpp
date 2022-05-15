@@ -12,10 +12,10 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "wrapper_cursor.hpp"
-#include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
+
 #include "forward.hpp"
+#include "wrapper_cursor.hpp"
 #include "wrapper_dispatcher.hpp"
 #include "wrapper_result.hpp"
 

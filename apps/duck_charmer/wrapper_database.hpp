@@ -9,8 +9,6 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include <goblin-engineer/core.hpp>
-
 #include <log/log.hpp>
 
 #include "wrapper_collection.hpp"

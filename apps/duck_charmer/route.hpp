@@ -1,31 +1,37 @@
 #pragma once
 
-#include <services/dispatcher/route.hpp>
-#include <services/database/route.hpp>
 #include <services/collection/route.hpp>
+#include <services/database/route.hpp>
 #include <services/disk/route.hpp>
+#include <services/dispatcher/route.hpp>
 #include <services/wal/route.hpp>
 
 namespace duck_charmer {
 
     namespace dispatcher {
-        using namespace services::dispatcher::route;
+        using services::dispatcher::route;
+        using services::dispatcher::handler_id;
+
     }
 
     namespace database {
-        using namespace services::database::route;
+        using services::database::route;
+        using services::database::handler_id;
     }
 
     namespace collection {
-        using namespace services::collection::route;
+        using services::collection::route;
+        using services::collection::handler_id;
     }
 
     namespace disk {
-        using namespace services::disk::route;
+        using services::disk::route;
+        using services::disk::handler_id;
     }
 
     namespace wal {
-        using namespace services::wal::route;
+        using services::wal::route;
+        using services::wal::handler_id;
     }
 
 } // namespace duck_charmer

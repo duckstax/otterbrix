@@ -3,8 +3,6 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-#include "nlohmann/json.hpp"
-
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 

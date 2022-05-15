@@ -9,11 +9,11 @@
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
 #include <log/log.hpp>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "goblin-engineer/core.hpp"
 #include "forward.hpp"
 #include "wrapper_dispatcher.hpp"
 

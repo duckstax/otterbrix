@@ -1,59 +1,64 @@
 #include "collection.hpp"
+
+#include <core/system_command.hpp>
+
 #include <services/disk/route.hpp>
 
 using namespace services::collection;
 
-namespace services::storage {
+namespace services::collection {
 
-    collection_t::collection_t(goblin_engineer::supervisor_t* database, std::string name, log_t& log, goblin_engineer::address_t mdisk)
-        : goblin_engineer::abstract_service(database, std::move(name))
+    collection_t::collection_t(database::database_t* database, const std::string& name, log_t& log, actor_zeta::address_t mdisk)
+        : actor_zeta::basic_async_actor(database, std::string(name))
+        , name_(name)
+        , database_name_(database->name()) //todo for run test [default: database->name()]
         , log_(log.clone())
-        , database_(database->address())
+        , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk) {
-        add_handler(route::insert_one, &collection_t::insert_one);
-        add_handler(route::insert_many, &collection_t::insert_many);
-        add_handler(route::find, &collection_t::find);
-        add_handler(route::find_one, &collection_t::find_one);
-        add_handler(route::delete_one, &collection_t::delete_one);
-        add_handler(route::delete_many, &collection_t::delete_many);
-        add_handler(route::update_one, &collection_t::update_one);
-        add_handler(route::update_many, &collection_t::update_many);
-        add_handler(route::size, &collection_t::size);
-        add_handler(route::drop_collection, &collection_t::drop);
-        add_handler(route::close_cursor, &collection_t::close_cursor);
+        add_handler(handler_id(route::insert_one), &collection_t::insert_one);
+        add_handler(handler_id(route::insert_many), &collection_t::insert_many);
+        add_handler(handler_id(route::find), &collection_t::find);
+        add_handler(handler_id(route::find_one), &collection_t::find_one);
+        add_handler(handler_id(route::delete_one), &collection_t::delete_one);
+        add_handler(handler_id(route::delete_many), &collection_t::delete_many);
+        add_handler(handler_id(route::update_one), &collection_t::update_one);
+        add_handler(handler_id(route::update_many), &collection_t::update_many);
+        add_handler(handler_id(route::size), &collection_t::size);
+        add_handler(handler_id(route::drop_collection), &collection_t::drop);
+        add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
     }
 
     auto collection_t::size(session_id_t& session) -> void {
-        log_.debug("collection {}::size", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection {}::size", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher->id());
         auto result = dropped_
                       ? result_size()
                       : result_size(size_());
-        goblin_engineer::send(dispatcher, address(), route::size_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session, result);
     }
 
 
     void collection_t::insert_one(session_id_t& session, document_ptr& document) {
-        log_.debug("collection_t::insert_one : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection_t::insert_one : {}", name_);
+        auto dispatcher =  current_message()->sender();
+        //todo: debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_insert_one()
                       : result_insert_one(insert_(document));
         if (!result.empty()) {
             std::vector<document_ptr> new_documents = {document};
-            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), new_documents);
         }
-        goblin_engineer::send(dispatcher, address(), route::insert_one_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result);
     }
 
     void collection_t::insert_many(session_id_t& session, std::list<document_ptr> &documents) {
-        log_.debug("collection_t::insert_many : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection_t::insert_many : {}", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         if (dropped_) {
-            goblin_engineer::send(dispatcher, address(), route::insert_many_finish, session, result_insert_many());
+            actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many());
         } else {
             std::vector<document_ptr> new_documents;
             std::vector<document_id_t> result;
@@ -65,85 +70,85 @@ namespace services::storage {
                 }
             }
             if (!new_documents.empty()) {
-                goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), new_documents);
+                actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), new_documents);
             }
-            goblin_engineer::send(dispatcher, address(), route::insert_many_finish, session, result_insert_many(std::move(result)));
+            actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(std::move(result)));
         }
     }
 
     auto collection_t::find(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        log_.debug("collection::find : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::find : {}", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         if (dropped_) {
-            goblin_engineer::send(dispatcher, address(), route::find_finish, session, nullptr);
+            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
             auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(cond)));
-            goblin_engineer::send(dispatcher, address(), route::find_finish, session, result.first->second.get());
+            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
         }
     }
 
 
     void collection_t::find_one(const session_id_t& session, const find_condition_ptr& cond) {
-        log_.debug("collection::find_one : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::find_one : {}", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_find_one()
                       : search_one_(cond);
-        goblin_engineer::send(dispatcher, address(), route::find_one_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result);
     }
 
     auto collection_t::delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        log_.debug("collection::delete_one : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::delete_one : {}", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_delete()
                       : delete_one_(cond);
         send_delete_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), route::delete_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
     auto collection_t::delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        log_.debug("collection::delete_many : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::delete_many : {}", name_);
+        auto dispatcher =current_message()->sender();
+        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_delete()
                       : delete_many_(cond);
         send_delete_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), route::delete_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
 
     auto collection_t::update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
-        log_.debug("collection::update_one : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::update_one : {}", name_);
+        auto dispatcher = current_message()->sender();
+        ///todo debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_update()
                       : update_one_(cond, update, upsert);
         send_update_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), route::update_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
     }
 
     auto collection_t::update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
-        log_.debug("collection::update_many : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
+        debug(log_,"collection::update_many : {}", name_);
+        auto dispatcher = current_message()->sender();
+        ///todo :debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
                       ? result_update()
                       : update_many_(cond, update, upsert);
         send_update_to_disk_(session, result);
-        goblin_engineer::send(dispatcher, address(), route::update_finish, session, result);
+        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
     }
 
     void collection_t::drop(const session_id_t& session) {
-        log_.debug("collection::drop : {}", type());
-        auto dispatcher = address_book("dispatcher");
-        log_.debug("dispatcher : {}", dispatcher.type());
-        goblin_engineer::send(dispatcher, address(), route::drop_collection_finish, session, result_drop_collection(drop_()), std::string(database_.type()), std::string(type()));
+        debug(log_,"collection::drop : {}", name_);
+        auto dispatcher = current_message()->sender();
+        /// todo: debug(log_,"dispatcher : {}", dispatcher.type());
+        actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(type()));
     }
 
     document_id_t collection_t::insert_(const document_ptr&document) {
@@ -279,13 +284,13 @@ namespace services::storage {
             update_documents.push_back(storage_.at(result.upserted_id()));
         }
         if (!update_documents.empty()) {
-            goblin_engineer::send(mdisk_, address(), disk::route::write_documents, session, std::string(database_.type()), std::string(type()), update_documents);
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), update_documents);
         }
     }
 
     void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete &result) {
         if (!result.empty()) {
-            goblin_engineer::send(mdisk_, address(), disk::route::remove_documents, session, std::string(database_.type()), std::string(type()), result.deleted_ids());
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents), session, std::string(database_name_), std::string(type()), result.deleted_ids());
         }
     }
 
