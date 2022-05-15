@@ -11,6 +11,8 @@
 #include <components/protocol/insert_one.hpp>
 #include <components/protocol/insert_many.hpp>
 
+#include <core/excutor.hpp>
+
 namespace services::wal {
 
     class manager_wal_replicate_t final : public actor_zeta::cooperative_supervisor<manager_wal_replicate_t> {
@@ -29,7 +31,7 @@ namespace services::wal {
             manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
         }
 
-        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,boost::filesystem::path, log_t& log, size_t num_workers, size_t max_throughput);
+        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,boost::filesystem::path, log_t& log, size_t num_workers, size_t max_throughput);
         void creat_wal_worker();
         void insert_one(session_id_t& session, insert_one_t& data);
         void insert_many(session_id_t& session, insert_many_t& data);

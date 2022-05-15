@@ -7,11 +7,11 @@
 
 namespace services::wal {
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*mr,boost::filesystem::path path, log_t& log, size_t num_workers, size_t max_throughput)
+    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*mr,actor_zeta::scheduler_raw scheduler,boost::filesystem::path path, log_t& log, size_t num_workers, size_t max_throughput)
         : actor_zeta::cooperative_supervisor<manager_wal_replicate_t>(mr,"manager_wal")
         , path_(path)
         , log_(log.clone())
-        , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
+        , e_(scheduler) {
         trace(log_, "manager_wal_replicate_t num_workers : {} , max_throughput: {}", num_workers, max_throughput);
         add_handler(handler_id(route::create), &manager_wal_replicate_t::creat_wal_worker);
         add_handler(handler_id(route::insert_one), &manager_wal_replicate_t::insert_one);
