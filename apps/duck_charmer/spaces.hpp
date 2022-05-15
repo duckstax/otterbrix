@@ -11,6 +11,8 @@
 
 #include "wrapper_dispatcher.hpp"
 
+#include <core/excutor.hpp>
+
 namespace duck_charmer {
     class PYBIND11_EXPORT spaces final {
     public:
@@ -26,6 +28,7 @@ namespace duck_charmer {
         static spaces* instance_;
 
         log_t log_;
+        actor_zeta::scheduler_ptr  scheduler_;
         actor_zeta::detail::pmr::memory_resource* resource;
         services::database::manager_database_ptr manager_database_;
         services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
