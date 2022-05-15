@@ -2,15 +2,32 @@
 
 #include <boost/filesystem.hpp>
 
-#include <goblin-engineer/core.hpp>
-
 #include <components/wasm_runner/wasm.hpp>
+
+#include "core/excutor.hpp"
+
+#include <actor-zeta.hpp>
+#include "core/handler_by_id.hpp"
 
 namespace services::wasm {
 
-    class wasm_runner_t final : public goblin_engineer::abstract_service {
+    enum class route : uint64_t {
+        load_code
+    };
+
+    inline uint64_t handler_id(route type) {
+        return handler_id(group_id_t::wasm, type);
+    }
+
+
+    class wasm_runner_t final : public actor_zeta::basic_async_actor {
     public:
-        wasm_runner_t(actor_zeta::base::supervisor_abstract* env);
+        template<class Manager>
+        wasm_runner_t(Manager* env)
+            : actor_zeta::basic_async_actor(env, "wasm_runner")
+            , wasm_manager_(components::wasm_runner::engine_t::wamr) {
+            add_handler(handler_id(route::load_code), &wasm_runner_t::load_code);
+        }
 
     private:
         auto load_code(const boost::filesystem::path& path) -> void;

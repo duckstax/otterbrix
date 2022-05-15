@@ -1,42 +1,33 @@
 #pragma once
+
 #include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <goblin-engineer/core.hpp>
 #include <mutex>
 #include <variant>
+
+#include <actor-zeta.hpp>
+
+#include <core/spinlock/spinlock.hpp>
+
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
 #include <components/session/session.hpp>
 #include <components/protocol/base.hpp>
+
 #include <services/collection/result.hpp>
 #include <services/database/result_database.hpp>
 
-class spin_lock final {
-public:
-    spin_lock() = default;
-    spin_lock(const spin_lock&) = delete;
-    spin_lock(spin_lock&&) = default;
-    spin_lock &operator=(const spin_lock&) = delete;
-    spin_lock &operator=(spin_lock&&) = default;
-    void lock();
-    void unlock();
-
-private:
-    std::atomic_flag _lock = ATOMIC_FLAG_INIT;
-};
-
 namespace duck_charmer {
 
-    using manager_t = goblin_engineer::basic_manager_service_t<goblin_engineer::base_policy_light>;
     using components::session::session_id_t;
     using components::document::document_ptr;
 
-    class wrapper_dispatcher_t final : public manager_t {
+    class wrapper_dispatcher_t final : public actor_zeta::cooperative_supervisor<wrapper_dispatcher_t> {
     public:
         /// blocking method
-        explicit wrapper_dispatcher_t(log_t &log);
+        wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
         auto create_database(session_id_t &session, const database_name_t &database) -> void;
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
@@ -51,15 +42,14 @@ namespace duck_charmer {
         auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
 
     protected:
-        auto add_actor_impl(goblin_engineer::actor) -> void final;
-        auto add_supervisor_impl(goblin_engineer::supervisor) -> void final;
-        auto executor_impl() noexcept -> goblin_engineer::abstract_executor* final;
-        auto enqueue_base(actor_zeta::message_ptr msg, actor_zeta::execution_device*) -> void final;
+
+        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;
+        auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
 
     private:
         /// async method
-        auto create_database_finish(session_id_t &session, services::storage::database_create_result result) -> void;
-        auto create_collection_finish(session_id_t &session, services::storage::collection_create_result result) -> void;
+        auto create_database_finish(session_id_t &session, services::database::database_create_result result) -> void;
+        auto create_collection_finish(session_id_t &session, services::database::collection_create_result result) -> void;
         auto drop_collection_finish(session_id_t &session, result_drop_collection result) -> void;
         auto insert_one_finish(session_id_t &session, result_insert_one result) -> void;
         auto insert_many_finish(session_id_t &session, result_insert_many result) -> void;
@@ -73,6 +63,7 @@ namespace duck_charmer {
         void wait();
         void notify();
 
+        actor_zeta::address_t manager_dispatcher_;
         log_t log_;
         std::atomic_int i = 0;
         std::mutex output_mtx_;
@@ -88,8 +79,8 @@ namespace duck_charmer {
             result_delete,
             result_update,
             result_drop_collection,
-            services::storage::database_create_result,
-            services::storage::collection_create_result>
+            services::database::database_create_result,
+            services::database::collection_create_result>
             intermediate_store_;
     };
 } // namespace duck_charmer

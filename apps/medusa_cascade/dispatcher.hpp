@@ -22,7 +22,7 @@ namespace kv {
     };
 
     ///using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<manager_dispatcher_t>;
-    using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<network_service_t>;
+    ///using manager_dispatcher_ptr = goblin_engineer::intrusive_ptr<network_service_t>;
 
     class dispatcher_t final : public goblin_engineer::abstract_service {
     public:

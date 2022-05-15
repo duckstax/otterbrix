@@ -40,7 +40,7 @@ namespace services::disk {
         : db_(nullptr)
         , metadata_(nullptr) {
         rocksdb::Options options;
-        options.IncreaseParallelism();
+        //options.IncreaseParallelism();
         options.OptimizeLevelStyleCompaction();
         options.create_if_missing = true;
         rocksdb::DB *db;
