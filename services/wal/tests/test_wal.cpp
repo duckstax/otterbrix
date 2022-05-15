@@ -23,7 +23,7 @@ TEST_CASE("insert one test") {
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -73,7 +73,7 @@ TEST_CASE("insert many empty test") {
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -111,7 +111,7 @@ TEST_CASE("insert many test") {
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log, 1, 1000);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
