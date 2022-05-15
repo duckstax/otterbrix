@@ -39,6 +39,7 @@ namespace services::dispatcher {
 
         manager_dispatcher_t(
             actor_zeta::detail::pmr::memory_resource*,
+            actor_zeta::scheduler_raw,
             log_t& log,
             size_t num_workers,
             size_t max_throughput);
@@ -50,7 +51,7 @@ namespace services::dispatcher {
             actor_zeta::send(
                 address(),
                 address(),
-                route::create,
+                handler_id(route::create),
                 components::session::session_id_t(),
                 std::string(name_dispatcher));
         }
@@ -76,7 +77,7 @@ namespace services::dispatcher {
 
     private:
         log_t log_;
-        actor_zeta::scheduler_ptr e_;
+        actor_zeta::scheduler_raw e_;
         actor_zeta::address_t manager_database_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();

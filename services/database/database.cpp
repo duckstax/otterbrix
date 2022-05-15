@@ -20,12 +20,10 @@ namespace services::database {
         add_handler(handler_id(route::create_database), &manager_database_t::create);
         add_handler(core::handler_id(core::route::sync), &manager_database_t::sync);
         debug(log_, "manager_database_t start thread pool");
-       /// e_->start();
     }
 
     manager_database_t::~manager_database_t() {
         ZoneScoped;
-      ///  e_->stop();
     }
 
     auto manager_database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -46,7 +44,7 @@ namespace services::database {
                 auto target = ptr->address();
                 databases_.emplace(name, target);
                 auto self = this->address();
-                return actor_zeta::send(current_message()->sender(), self, route::create_database_finish, session, database_create_result(true),std::string(name), target);
+                return actor_zeta::send(current_message()->sender(), self, handler_id(route::create_database_finish), session, database_create_result(true),std::string(name), target);
             },
             std::string(name), log_, 1, 1000);
     }
@@ -57,14 +55,12 @@ namespace services::database {
         , log_(log.clone())
         , e_(supervisor->scheduler()) {
         ZoneScoped;
-        add_handler(route::create_collection, &database_t::create);
-        add_handler(route::drop_collection, &database_t::drop);
-       /// e_->start();
+        add_handler(handler_id(route::create_collection), &database_t::create);
+        add_handler(handler_id(route::drop_collection), &database_t::drop);
     }
 
     database_t::~database_t() {
         ZoneScoped;
-      ////  e_->stop();
     }
 
     auto database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -85,7 +81,7 @@ namespace services::database {
                 collections_.emplace(name, ptr);
             },
             std::string(name), log_, mdisk);
-        return actor_zeta::send(current_message()->sender(), this->address(), route::create_collection_finish, session, collection_create_result(true),std::string(name_), std::string(name), address);
+        return actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::create_collection_finish), session, collection_create_result(true),std::string(name_), std::string(name), address);
     }
 
     void database_t::drop(components::session::session_id_t& session, std::string& name) {
@@ -95,9 +91,9 @@ namespace services::database {
         if (collection != collections_.end()) {
             auto target = collection->second->address();
             collections_.erase(collection);
-            return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(true), std::string(name_),std::string(name), target);
+            return actor_zeta::send(current_message()->sender(), self, handler_id(route::drop_collection_finish), session, result_drop_collection(true), std::string(name_),std::string(name), target);
         }
-        return actor_zeta::send(current_message()->sender(), self, route::drop_collection_finish, session, result_drop_collection(false), std::string(name_),std::string(name), self);
+        return actor_zeta::send(current_message()->sender(), self, handler_id(route::drop_collection_finish), session, result_drop_collection(false), std::string(name_),std::string(name), self);
     }
 
     const std::string& database_t::name() {

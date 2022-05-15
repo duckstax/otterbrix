@@ -55,7 +55,7 @@ namespace services::wal {
         actor_zeta::address_t manager_dispatcher_ = actor_zeta::address_t::empty_address();
         boost::filesystem::path path_;
         log_t log_;
-        actor_zeta::scheduler_ptr e_;
+        actor_zeta::scheduler_raw e_;
         std::unordered_map<std::string, actor_zeta::address_t> dispatcher_to_address_book_;
         std::vector<actor_zeta::address_t> dispathers_;
     };

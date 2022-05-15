@@ -8,16 +8,16 @@ namespace duck_charmer {
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")
         , manager_dispatcher_(manager_dispatcher)
         ,log_(log.clone()) {
-        add_handler(database::route::create_database_finish, &wrapper_dispatcher_t::create_database_finish);
-        add_handler(database::route::create_collection_finish, &wrapper_dispatcher_t::create_collection_finish);
-        add_handler(database::route::drop_collection_finish, &wrapper_dispatcher_t::drop_collection_finish);
-        add_handler(collection::route::insert_one_finish, &wrapper_dispatcher_t::insert_one_finish);
-        add_handler(collection::route::insert_many_finish, &wrapper_dispatcher_t::insert_many_finish);
-        add_handler(collection::route::find_finish, &wrapper_dispatcher_t::find_finish);
-        add_handler(collection::route::find_one_finish, &wrapper_dispatcher_t::find_one_finish);
-        add_handler(collection::route::delete_finish, &wrapper_dispatcher_t::delete_finish);
-        add_handler(collection::route::update_finish, &wrapper_dispatcher_t::update_finish);
-        add_handler(collection::route::size_finish, &wrapper_dispatcher_t::size_finish);
+        add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
+        add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
+        add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
+        add_handler(collection::handler_id(collection::route::insert_one_finish), &wrapper_dispatcher_t::insert_one_finish);
+        add_handler(collection::handler_id(collection::route::insert_many_finish), &wrapper_dispatcher_t::insert_many_finish);
+        add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
+        add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
+        add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
+        add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
+        add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
     }
 
     auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
@@ -27,7 +27,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            database::route::create_database,
+            database::handler_id(database::route::create_database),
             session,
             database);
         wait();
@@ -40,7 +40,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            database::route::create_collection,
+            database::handler_id(database::route::create_collection),
             session,
             database,
             collection);
@@ -53,7 +53,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            database::route::drop_collection,
+            database::handler_id(database::route::drop_collection),
             session,
             database,
             collection);
@@ -67,7 +67,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::insert_one,
+            collection::handler_id(collection::route::insert_one),
             session,
             database,
             collection,
@@ -82,7 +82,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::insert_many,
+            collection::handler_id(collection::route::insert_many),
             session,
             database,
             collection,
@@ -97,7 +97,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::find,
+            collection::handler_id(collection::route::find),
             session,
             database,
             collection,
@@ -112,7 +112,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::find_one,
+            collection::handler_id(collection::route::find_one),
             session,
             database,
             collection,
@@ -127,7 +127,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::delete_one,
+            collection::handler_id(collection::route::delete_one),
             session,
             database,
             collection,
@@ -142,7 +142,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::delete_many,
+            collection::handler_id(collection::route::delete_many),
             session,
             database,
             collection,

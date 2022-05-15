@@ -10,26 +10,25 @@ namespace services::disk {
 
     using components::document::document_id_t;
 
-    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
+    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler, path_t path_db, log_t& log, size_t num_workers, size_t max_throughput)
         : actor_zeta::cooperative_supervisor<manager_disk_t>(mr, "manager_disk")
         , path_db_(std::move(path_db))
         , log_(log.clone())
-        , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
+        , e_(scheduler) {
         trace(log_, "manager_disk num_workers : {} , max_throughput: {}", num_workers, max_throughput);
-        add_handler(route::create_agent, &manager_disk_t::create_agent);
-        add_handler(route::read_databases, &manager_disk_t::read_databases);
-        add_handler(route::append_database, &manager_disk_t::append_database);
-        add_handler(route::remove_database, &manager_disk_t::remove_database);
-        add_handler(route::read_collections, &manager_disk_t::read_collections);
-        add_handler(route::append_collection, &manager_disk_t::append_collection);
-        add_handler(route::remove_collection, &manager_disk_t::remove_collection);
-        add_handler(route::read_documents, &manager_disk_t::read_documents);
-        add_handler(route::write_documents, &manager_disk_t::write_documents);
-        add_handler(route::remove_documents, &manager_disk_t::remove_documents);
-        add_handler(route::flush, &manager_disk_t::flush);
+        add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
+        add_handler(handler_id(route::read_databases), &manager_disk_t::read_databases);
+        add_handler(handler_id(route::append_database), &manager_disk_t::append_database);
+        add_handler(handler_id(route::remove_database), &manager_disk_t::remove_database);
+        add_handler(handler_id(route::read_collections), &manager_disk_t::read_collections);
+        add_handler(handler_id(route::append_collection), &manager_disk_t::append_collection);
+        add_handler(handler_id(route::remove_collection), &manager_disk_t::remove_collection);
+        add_handler(handler_id(route::read_documents), &manager_disk_t::read_documents);
+        add_handler(handler_id(route::write_documents), &manager_disk_t::write_documents);
+        add_handler(handler_id(route::remove_documents), &manager_disk_t::remove_documents);
+        add_handler(handler_id(route::flush), &manager_disk_t::flush);
         add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
         trace(log_, "manager_disk start thread pool");
-        e_->start();
 
     }
 
@@ -45,37 +44,37 @@ namespace services::disk {
 
     auto manager_disk_t::read_databases(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::read_databases , session : {}", session.data());
-        actor_zeta::send(agent(), current_message()->sender(), route::read_databases, session);
+        actor_zeta::send(agent(), current_message()->sender(), handler_id(route::read_databases), session);
     }
 
     auto manager_disk_t::append_database(session_id_t& session, const database_name_t& database) -> void {
         trace(log_, "manager_disk_t::append_database , session : {} , database : {}", session.data(), database);
-        actor_zeta::send(agent(),  current_message()->sender(), route::append_database, database);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::append_database), database);
     }
 
     auto manager_disk_t::remove_database(session_id_t& session, const database_name_t& database) -> void {
         trace(log_, "manager_disk_t::remove_database , session : {} , database : {}", session.data(), database);
-        actor_zeta::send(agent(),  current_message()->sender(), route::remove_database, database);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::remove_database), database);
     }
 
     auto manager_disk_t::read_collections(session_id_t& session, const database_name_t& database) -> void {
         trace(log_, "manager_disk_t::read_collections , session : {} , database : {}", session.data(), database);
-        actor_zeta::send(agent(),  current_message()->sender(), route::read_collections, session, database);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::read_collections), session, database);
     }
 
     auto manager_disk_t::append_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void {
         trace(log_, "manager_disk_t::append_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        actor_zeta::send(agent(),  current_message()->sender(), route::append_collection, database, collection);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::append_collection), database, collection);
     }
 
     auto manager_disk_t::remove_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void {
         trace(log_, "manager_disk_t::remove_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        actor_zeta::send(agent(),  current_message()->sender(), route::remove_collection, database, collection);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::remove_collection), database, collection);
     }
 
     auto manager_disk_t::read_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void {
         trace(log_, "manager_disk_t::read_documents , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        actor_zeta::send(agent(),  current_message()->sender(), route::read_documents, session, database, collection);
+        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::read_documents), session, database, collection);
     }
 
     auto manager_disk_t::write_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_ptr>& documents) -> void {
@@ -98,12 +97,12 @@ namespace services::disk {
                 actor_zeta::send(agent(),  current_message()->sender(), command.name(), command);
             }
             commands_.erase(session);
-            actor_zeta::send(agent(), current_message()->sender(), route::fix_wal_id, wal_id);
+            actor_zeta::send(agent(), current_message()->sender(), handler_id(route::fix_wal_id), wal_id);
         }
     }
 
     auto manager_disk_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_.get();
+        return e_;
     }
 
     auto manager_disk_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
@@ -119,16 +118,16 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, name)
         , log_(log.clone())
         , disk_(path_db) {
-        add_handler(route::read_databases, &agent_disk_t::read_databases);
-        add_handler(route::append_database, &agent_disk_t::append_database);
-        add_handler(route::remove_database, &agent_disk_t::remove_database);
-        add_handler(route::read_collections, &agent_disk_t::read_collections);
-        add_handler(route::append_collection, &agent_disk_t::append_collection);
-        add_handler(route::remove_collection, &agent_disk_t::remove_collection);
-        add_handler(route::read_documents, &agent_disk_t::read_documents);
-        add_handler(route::write_documents, &agent_disk_t::write_documents);
-        add_handler(route::remove_documents, &agent_disk_t::remove_documents);
-        add_handler(route::fix_wal_id, &agent_disk_t::fix_wal_id);
+        add_handler(handler_id(route::read_databases), &agent_disk_t::read_databases);
+        add_handler(handler_id(route::append_database), &agent_disk_t::append_database);
+        add_handler(handler_id(route::remove_database), &agent_disk_t::remove_database);
+        add_handler(handler_id(route::read_collections), &agent_disk_t::read_collections);
+        add_handler(handler_id(route::append_collection), &agent_disk_t::append_collection);
+        add_handler(handler_id(route::remove_collection), &agent_disk_t::remove_collection);
+        add_handler(handler_id(route::read_documents), &agent_disk_t::read_documents);
+        add_handler(handler_id(route::write_documents), &agent_disk_t::write_documents);
+        add_handler(handler_id(route::remove_documents), &agent_disk_t::remove_documents);
+        add_handler(handler_id(route::fix_wal_id), &agent_disk_t::fix_wal_id);
     }
 
     agent_disk_t::~agent_disk_t() {

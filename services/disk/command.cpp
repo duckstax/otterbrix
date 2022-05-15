@@ -9,9 +9,9 @@ namespace services::disk {
             [](const auto& c) {
                 using command_type = std::decay_t<decltype(c)>;
                 if constexpr (std::is_same_v<command_type, command_write_documents_t>) {
-                    return static_cast<uint64_t>(route::write_documents);
+                    return static_cast<uint64_t>(handler_id(route::write_documents));
                 } else if constexpr (std::is_same_v<command_type, command_remove_documents_t>) {
-                    return static_cast<uint64_t>(route::remove_documents);
+                    return static_cast<uint64_t>(handler_id(route::remove_documents));
                 }
                 static_assert(true, "Not valid command type");
             },

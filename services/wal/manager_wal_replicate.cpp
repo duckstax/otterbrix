@@ -18,11 +18,10 @@ namespace services::wal {
         add_handler(handler_id(route::insert_many), &manager_wal_replicate_t::insert_many);
         add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_t::sync);
         trace(log_, "manager_wal_replicate_t start thread pool");
-        e_->start();
     }
 
     auto manager_wal_replicate_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_.get();
+        return e_;
     }
 
     auto manager_wal_replicate_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
@@ -38,12 +37,12 @@ namespace services::wal {
 
     void manager_wal_replicate_t::insert_one(session_id_t& session, insert_one_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_one");
-        actor_zeta::send(dispathers_[0], address(), route::insert_one, session, current_message()->sender(), std::move(data));
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::insert_one), session, current_message()->sender(), std::move(data));
     }
 
     void manager_wal_replicate_t::insert_many(session_id_t& session, insert_many_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_many");
-        actor_zeta::send(dispathers_[0], address(), route::insert_many, session, current_message()->sender(), std::move(data));
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::insert_many), session, current_message()->sender(), std::move(data));
     }
 
 } //namespace services::wal

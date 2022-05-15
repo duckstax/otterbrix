@@ -18,7 +18,6 @@ namespace kv {
 
     manager_dispatcher_t::~manager_dispatcher_t() {
         ZoneScoped;
-        e_->stop();
     }
 
     auto manager_dispatcher_t::executor() noexcept -> actor_zeta::scheduler_abstract_t* {

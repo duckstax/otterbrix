@@ -51,7 +51,7 @@ auto test_wasm_t::start(const boost::filesystem::path& wasm_path) -> void {
         actors_.emplace_back(ptr);
     });
 
-    actor_zeta::send(wasm, address(), handler_id(wasm::route::load_code), wasm_path);
+    actor_zeta::send(wasm, address(), wasm::handler_id(wasm::route::load_code), wasm_path);
 }
 
 TEST_CASE("wasm_runner_t load and execute", "[API]") {
