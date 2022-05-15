@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include <goblin-engineer/core.hpp>
 #include <log/log.hpp>
 #include <wal/wal.hpp>
 

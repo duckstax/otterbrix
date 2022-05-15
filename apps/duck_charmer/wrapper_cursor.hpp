@@ -2,8 +2,6 @@
 #include <components/cursor/cursor.hpp>
 #include <components/session/session.hpp>
 
-#include <goblin-engineer/core.hpp>
-
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
@@ -38,7 +36,7 @@ private:
     std::atomic_bool close_;
     duck_charmer::session_id_t session_;
     pointer ptr_;
-    goblin_engineer::address_t dispatcher_;
+    actor_zeta::address_t dispatcher_;
 
     py::object get_(const std::string &key) const;
     py::object get_(std::size_t index) const;

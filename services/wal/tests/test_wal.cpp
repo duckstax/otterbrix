@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <crc32c/crc32c.h>
-#include <goblin-engineer/core.hpp>
+#include <actor-zeta.hpp>
 #include <log/log.hpp>
 #include <wal/wal.hpp>
 
@@ -14,13 +14,16 @@
 
 #include <components/tests/generaty.hpp>
 #include <components/document/document_view.hpp>
+#include <core/non_thread_scheduler/scheduler_test.hpp>
 
 using namespace services::wal;
 
 TEST_CASE("insert one test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
+    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -52,7 +55,7 @@ TEST_CASE("insert one test") {
 
         unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
-
+        scheduler_->run();
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_.database_ == database);
         REQUIRE(entry.entry_.collection_ == collection);
@@ -68,7 +71,9 @@ TEST_CASE("insert one test") {
 TEST_CASE("insert many empty test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
+    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -97,14 +102,16 @@ TEST_CASE("insert many empty test") {
 
     unpack(output, entry);
     entry.crc32_ = read_crc32(output, entry.size_);
-
+    scheduler_->run();
     REQUIRE(entry.crc32_ == crc32);
 }
 
 TEST_CASE("insert many test") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto manager = goblin_engineer::make_manager_service<manager_wal_replicate_t>(boost::filesystem::current_path(), log, 1, 1000);
+    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
+    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
@@ -139,7 +146,7 @@ TEST_CASE("insert many test") {
 
         unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
-
+        scheduler_->run();
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_.database_ == database);
         REQUIRE(entry.entry_.collection_ == collection);

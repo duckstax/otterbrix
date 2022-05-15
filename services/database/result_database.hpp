@@ -1,6 +1,6 @@
 #pragma once
 
-namespace services::storage {
+namespace services::database {
 
     struct database_create_result final {
         database_create_result(bool created)

@@ -40,7 +40,8 @@ set(ROCKETJOE_LIBS
         rocketjoe::parser
         rocketjoe::wal
         rocketjoe::disk
-        )
+        rocketjoe::locks
+)
 
 include_directories(
         ${PROJECT_SOURCE_DIR}

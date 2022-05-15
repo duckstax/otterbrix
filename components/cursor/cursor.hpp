@@ -1,7 +1,10 @@
 #pragma once
-#include <components/document/document_view.hpp>
-#include <goblin-engineer/core.hpp>
+
 #include <vector>
+
+#include <actor-zeta/actor-zeta.hpp>
+
+#include <components/document/document_view.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
@@ -15,12 +18,12 @@ namespace components::cursor {
 
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
     public:
-        sub_cursor_t(goblin_engineer::address_t collection, const std::vector<data_t> &data);
-        goblin_engineer::address_t& address();
+        sub_cursor_t(actor_zeta::address_t collection, const std::vector<data_t> &data);
+        actor_zeta::address_t& address();
         std::size_t size() const;
         std::vector<data_t> &data();
     private:
-        goblin_engineer::address_t collection_;
+        actor_zeta::address_t collection_;
         std::vector<data_t> data_;
     };
 
