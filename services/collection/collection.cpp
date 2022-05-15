@@ -72,7 +72,7 @@ namespace services::collection {
             if (!new_documents.empty()) {
                 actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), new_documents);
             }
-            actor_zeta::send(dispatcher, address(), route::insert_many_finish, session, result_insert_many(std::move(result)));
+            actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(std::move(result)));
         }
     }
 

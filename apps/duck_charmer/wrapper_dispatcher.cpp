@@ -157,7 +157,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::update_one,
+            collection::handler_id(collection::route::update_one),
             session,
             database,
             collection,
@@ -174,7 +174,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::update_many,
+            collection::handler_id(collection::route::update_many),
             session,
             database,
             collection,
@@ -191,7 +191,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::route::size,
+            collection::handler_id(collection::route::size),
             session,
             database,
             collection);
