@@ -12,24 +12,24 @@ using namespace services::database;
 
 namespace services::database {
 
-    manager_database_t::manager_database_t(actor_zeta::detail::pmr::memory_resource* mr, log_t& log, size_t num_workers, size_t max_throughput)
+    manager_database_t::manager_database_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler , log_t& log, size_t num_workers, size_t max_throughput)
         : actor_zeta::cooperative_supervisor<manager_database_t>(mr, "manager_database")
         , log_(log.clone())
-        , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
+        , e_(scheduler) {
         ZoneScoped;
         add_handler(handler_id(route::create_database), &manager_database_t::create);
         add_handler(core::handler_id(core::route::sync), &manager_database_t::sync);
         debug(log_, "manager_database_t start thread pool");
-        e_->start();
+       /// e_->start();
     }
 
     manager_database_t::~manager_database_t() {
         ZoneScoped;
-        e_->stop();
+      ///  e_->stop();
     }
 
     auto manager_database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_.get();
+        return e_;
     }
 
     //NOTE: behold thread-safety!
@@ -55,20 +55,20 @@ namespace services::database {
         : actor_zeta::cooperative_supervisor<database_t>(supervisor, std::string(name))
         , name_(name)
         , log_(log.clone())
-        , e_(new actor_zeta::shared_work(num_workers, max_throughput), actor_zeta::detail::thread_pool_deleter()) {
+        , e_(supervisor->scheduler()) {
         ZoneScoped;
         add_handler(route::create_collection, &database_t::create);
         add_handler(route::drop_collection, &database_t::drop);
-        e_->start();
+       /// e_->start();
     }
 
     database_t::~database_t() {
         ZoneScoped;
-        e_->stop();
+      ////  e_->stop();
     }
 
     auto database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_.get();
+        return e_;
     }
 
     //NOTE: behold thread-safety!

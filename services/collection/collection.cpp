@@ -11,7 +11,7 @@ namespace services::collection {
     collection_t::collection_t(database::database_t* database, const std::string& name, log_t& log, actor_zeta::address_t mdisk)
         : actor_zeta::basic_async_actor(database, std::string(name))
         , name_(name)
-        , database_name_(database ? database->name() : "") //todo for run test [default: database->name()]
+        , database_name_(database->name()) //todo for run test [default: database->name()]
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk) {

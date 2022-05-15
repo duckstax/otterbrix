@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
+        non_thread_scheduler
         rocketjoe::log
         rocketjoe::collection
         rocketjoe::database

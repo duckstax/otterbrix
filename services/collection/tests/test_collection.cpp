@@ -5,6 +5,8 @@
 #include <parser/parser.hpp>
 #include <catch2/catch.hpp>
 
+#include <core/non_thread_scheduler/scheduler_test.hpp>
+
 using namespace services::collection;
 using namespace services::database;
 
@@ -46,6 +48,9 @@ struct context_t final  {
         return *(collection_);
     }
 
+    ~context_t() {}
+
+    actor_zeta::scheduler_ptr scheduler_;
     actor_zeta::detail::pmr::memory_resource *resource;
     std::unique_ptr<manager_database_t> manager_database_;
     std::unique_ptr<database_t> database_;
@@ -57,17 +62,16 @@ using context_ptr = std::unique_ptr<context_t>;
 
 context_ptr make_context(log_t& log) {
     auto context = std::make_unique<context_t>();
+    context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
     context->resource = actor_zeta::detail::pmr::get_default_resource();
-    //todo begin comment
-//    context->manager_database_ = actor_zeta::spawn_supervisor<manager_database_t>(context->resource,log,1,1000);
-//    context->database_ = actor_zeta::spawn_supervisor<database_t>(nullptr,"TestDataBase",log,1,1000);
+    context->manager_database_ = actor_zeta::spawn_supervisor<manager_database_t>(context->resource,context->scheduler_.get(),log,1,1000);
+    context->database_ = actor_zeta::spawn_supervisor<database_t>(context->manager_database_.get(),"TestDataBase",log,1,1000);
     //end comment
 
     auto allocate_byte = sizeof(collection_t);
     auto allocate_byte_alignof = alignof(collection_t);
     void* buffer = context->resource->allocate(allocate_byte, allocate_byte_alignof);
-    //todo nullptr instead of database
-    auto* collection = new (buffer) collection_t(nullptr/*context->database_.get()*/, "TestCollection", log, actor_zeta::address_t::empty_address());
+    auto* collection = new (buffer) collection_t(context->database_.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
     context->collection_.reset(collection);
     return context;
 };
@@ -168,7 +172,7 @@ TEST_CASE("collection_t delete_one") {
 }
 
 TEST_CASE("collection_t delete_many") {
-    auto collection = gen_collection();
+    auto collection = std::move(gen_collection());
     REQUIRE(d(collection)->size_test() == 5);
     REQUIRE(d(collection)->delete_many_test(parse_find_condition("{\"type\": { \"$eq\": \"dog\"}}")).deleted_ids().size() == 3);
     REQUIRE(d(collection)->size_test() == 2);
