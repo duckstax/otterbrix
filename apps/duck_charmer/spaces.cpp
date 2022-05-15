@@ -38,13 +38,13 @@ namespace duck_charmer {
 
         trace(log_, "manager_wal start");
         manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource,scheduler_.get(), current_path, log_, 1, 1000);
-        actor_zeta::send(manager_wal_, actor_zeta::address_t::empty_address(), wal::route::create);
+        actor_zeta::send(manager_wal_, actor_zeta::address_t::empty_address(), wal::handler_id(wal::route::create));
         trace(log_, "manager_wal finish");
 
 
         trace(log_, "manager_disk start");
         manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource, current_path / "disk", log_, 1, 1000);
-        actor_zeta::send(manager_disk_, actor_zeta::address_t::empty_address(), disk::route::create_agent);
+        actor_zeta::send(manager_disk_, actor_zeta::address_t::empty_address(), disk::handler_id(disk::route::create_agent));
         trace(log_, "manager_disk finish");
 
         trace(log_, "manager_database start");
