@@ -39,7 +39,7 @@ jobs:
         run: |
           mkdir build && cd build
           cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release
+          conan install . --build missing -s build_type=Release -o actor-zeta:cxx_standard=14
 
       - name: build
         env:
