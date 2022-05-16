@@ -1,9 +1,16 @@
 #pragma once
 
-namespace services::dispatcher::route {
+#include <core/handler_by_id.hpp>
 
-    static constexpr auto create = "dispatcher::create";
-    static constexpr auto connect_me = "dispatcher::connect_me";
-    static constexpr auto load = "dispatcher::load";
+namespace services::dispatcher {
 
-} // namespace services::dispatcher::route
+    enum class route : uint64_t {
+        create,
+        load
+    };
+
+    inline uint64_t handler_id(route type) {
+        return handler_id(group_id_t::dispatcher, type);
+    }
+
+} // namespace services::dispatcher

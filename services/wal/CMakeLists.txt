@@ -25,6 +25,7 @@ target_link_libraries(
         ${CONAN_LIBS}
         rocketjoe::log
         rocketjoe::protocol
+        rocketjoe::locks
 )
 
 target_include_directories(

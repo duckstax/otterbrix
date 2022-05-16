@@ -34,12 +34,11 @@ namespace services::disk {
         std::vector<components::document::document_id_t> documents;
     };
 
-
     class command_t {
-        using command_name_t = std::string;
-
     public:
-        template <class T>
+        using command_name_t = uint64_t;
+
+        template<class T>
         explicit command_t(const T command)
             : command_(command) {}
 

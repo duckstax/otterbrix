@@ -1,17 +1,24 @@
 #pragma once
+#include <core/handler_by_id.hpp>
 
-namespace services::wal::route {
+namespace services::wal {
 
-    static constexpr auto create = "wal::create";
+    enum class route : uint64_t {
+        create,
 
-    static constexpr auto create_database = "wal::create_database";
-    static constexpr auto drop_database = "wal::drop_database";
-    static constexpr auto create_collection = "wal::create_collection";
-    static constexpr auto drop_collection = "wal::drop_collection";
+        create_database,
+        drop_database,
+        create_collection,
+        drop_collection,
 
-    static constexpr auto insert_one = "wal::insert_one";
-    static constexpr auto insert_many = "wal::insert_many";
+        insert_one,
+        insert_many,
 
-    static constexpr auto success = "wal::success";
+        success,
+    };
 
-} // namespace services::wal::route
+    inline uint64_t handler_id(route type) {
+        return handler_id(group_id_t::wal, type);
+    }
+
+} // namespace services::wal

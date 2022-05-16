@@ -1,20 +1,23 @@
 #pragma once
 
-#include <goblin-engineer/core.hpp>
-#include <components/protocol/protocol.hpp>
+#include <actor-zeta.hpp>
+
+#include <protocol/insert_one.hpp>
+#include <protocol/insert_many.hpp>
+
 #include <components/session/session.hpp>
 #include <utility>
 
 class session_t {
 public:
-    explicit session_t(goblin_engineer::address_t address);
+    explicit session_t(actor_zeta::address_t address);
 
     template<class T>
-    session_t(goblin_engineer::address_t address,T statment )
+    session_t(actor_zeta::address_t address,T statment )
         :address_(address)
         , data_(std::forward<T>(statment)){}
 
-    goblin_engineer::address_t address() {
+    actor_zeta::address_t address() {
         return address_;
     }
 
@@ -24,7 +27,7 @@ public:
     }
 
 private:
-    goblin_engineer::address_t address_;
+    actor_zeta::address_t address_;
     std::variant<insert_one_t,
                  insert_many_t>
         data_;

@@ -2,25 +2,25 @@
 #include <memory>
 #include <unordered_map>
 
-#include <goblin-engineer/core.hpp>
 #include <absl/container/btree_map.h>
 #include <pybind11/pytypes.h>
 
-#include "log/log.hpp"
+#include <components/protocol/base.hpp>
+#include <components/protocol/insert_many.hpp>
+#include <components/log/log.hpp>
+#include <components/cursor/cursor.hpp>
+#include <components/document/document.hpp>
+#include <components/document/document_view.hpp>
+#include <components/parser/conditional_expression.hpp>
+#include <components/session/session.hpp>
 
-#include "protocol/base.hpp"
-
-#include "components/cursor/cursor.hpp"
-#include "components/document/document.hpp"
-#include "components/document/document_view.hpp"
-#include "components/parser/conditional_expression.hpp"
-#include "components/session/session.hpp"
+#include <services/database/database.hpp>
 
 #include "forward.hpp"
 #include "result.hpp"
 #include "route.hpp"
 
-namespace services::storage {
+namespace services::collection {
 
     using document_id_t = components::document::document_id_t;
     using document_ptr = components::document::document_ptr;
@@ -28,9 +28,9 @@ namespace services::storage {
     using document_view_t = components::document::document_view_t;
     using components::parser::find_condition_ptr;
 
-    class collection_t final : public goblin_engineer::abstract_service {
+    class collection_t final : public actor_zeta::basic_async_actor {
     public:
-        collection_t(goblin_engineer::supervisor_t*, std::string name, log_t& log, goblin_engineer::address_t mdisk);
+        collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);
@@ -59,9 +59,11 @@ namespace services::storage {
         void send_update_to_disk_(const session_id_t& session, const result_update &result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete &result);
 
+        const std::string name_;
+        const std::string database_name_;
         log_t log_;
-        goblin_engineer::address_t database_;
-        goblin_engineer::address_t mdisk_;
+        actor_zeta::address_t database_;
+        actor_zeta::address_t mdisk_;
         storage_t storage_;
         std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
@@ -78,7 +80,5 @@ namespace services::storage {
         result_update update_many_test(find_condition_ptr cond, const document_ptr& update, bool upsert);
 #endif
     };
-
-    using collection_ptr = goblin_engineer::intrusive_ptr<collection_t>;
 
 } // namespace services::storage

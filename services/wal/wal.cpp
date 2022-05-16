@@ -17,17 +17,16 @@ namespace services::wal {
                    : boost::filesystem::exists(path);
     }
 
-
-    wal_replicate_t::wal_replicate_t(goblin_engineer::supervisor_t* manager, log_t& log, boost::filesystem::path path)
-        : goblin_engineer::abstract_service(manager, "wal")
+    wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, boost::filesystem::path path)
+        : actor_zeta::basic_async_actor(manager, "wal")
         , log_(log.clone())
         , path_(std::move(path)) {
-        add_handler(route::create_database, &wal_replicate_t::create_database);
-        add_handler(route::drop_database, &wal_replicate_t::drop_database);
-        add_handler(route::create_collection, &wal_replicate_t::create_collection);
-        add_handler(route::drop_collection, &wal_replicate_t::drop_collection);
-        add_handler(route::insert_one, &wal_replicate_t::insert_one);
-        add_handler(route::insert_many, &wal_replicate_t::insert_many);
+        add_handler(handler_id(route::create_database), &wal_replicate_t::create_database);
+        add_handler(handler_id(route::drop_database), &wal_replicate_t::drop_database);
+        add_handler(handler_id(route::create_collection), &wal_replicate_t::create_collection);
+        add_handler(handler_id(route::drop_collection), &wal_replicate_t::drop_collection);
+        add_handler(handler_id(route::insert_one), &wal_replicate_t::insert_one);
+        add_handler(handler_id(route::insert_many), &wal_replicate_t::insert_many);
         if (!file_exist_(path_)) {
             boost::filesystem::create_directory(path_);
         }
@@ -36,7 +35,7 @@ namespace services::wal {
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
-            goblin_engineer::send(sender, address(), route::success, session, wal::id_t(id_));
+            actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(last_crc32_));
         }
     }
 

@@ -40,7 +40,7 @@ namespace services::disk {
         , metadata_(nullptr)
         , file_wal_id_(nullptr) {
         rocksdb::Options options;
-        options.IncreaseParallelism();
+        //options.IncreaseParallelism();
         options.OptimizeLevelStyleCompaction();
         options.create_if_missing = true;
         rocksdb::DB *db;

@@ -1,25 +1,34 @@
 #pragma once
 
-namespace services::disk::route {
+#include <core/handler_by_id.hpp>
 
-    static constexpr auto create_agent = "disk::create_agent";
+namespace services::disk {
+    enum class route : uint64_t {
+        create_agent,
 
-    static constexpr auto append_database = "disk::append_database";
-    static constexpr auto remove_database = "disk::remove_database";
+        read_databases,
+        append_database,
+        remove_database,
 
-    static constexpr auto append_collection = "disk::append_collection";
-    static constexpr auto remove_collection = "disk::remove_collection";
+        read_collections,
+        append_collection,
+        remove_collection,
 
-    static constexpr auto write_documents = "disk::write_documents";
-    static constexpr auto remove_documents = "disk::remove_documents";
+        read_documents,
+        write_documents,
+        remove_documents,
 
-    static constexpr auto flush = "disk::flush";
-    static constexpr auto fix_wal_id = "disk::fix_wal_id";
+        flush,
+        fix_wal_id,
 
-    static constexpr auto load = "disk::load";
-    static constexpr auto load_databases = "disk::load_databases";
-    static constexpr auto load_collections = "disk::load_collections";
-    static constexpr auto load_documents = "disk::load_documents";
-    static constexpr auto load_finish = "disk::load_finish";
+        load,
 
-} // namespace services::disk::route
+        read_databases_finish,
+        read_collections_finish,
+        read_documents_finish,
+    };
+
+    inline uint64_t handler_id(route type) {
+        return handler_id(group_id_t::disk, type);
+    }
+} // namespace services::disk
