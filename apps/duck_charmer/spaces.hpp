@@ -3,6 +3,7 @@
 #include <pybind11.h>
 
 #include <components/log/log.hpp>
+#include <components/configuration/configuration.hpp>
 
 #include <services/dispatcher/dispatcher.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
@@ -20,11 +21,12 @@ namespace duck_charmer {
         void operator=(const spaces&) = delete;
 
         static spaces* get_instance();
+        static void reload(const components::config& config);
         log_t& get_log();
         duck_charmer::wrapper_dispatcher_t* dispatcher();
 
     protected:
-        spaces();
+        spaces(const components::config& config);
         static spaces* instance_;
 
         log_t log_;

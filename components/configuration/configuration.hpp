@@ -2,6 +2,8 @@
 
 #include <boost/filesystem.hpp>
 
+#include <components/log/log.hpp>
+
 namespace components {
 
     enum class sandbox_mode_t : std::uint8_t {
@@ -30,6 +32,29 @@ namespace components {
         python_sandbox_configuration python_configuration_;
         operating_mode operating_mode_;
         unsigned short int port_http_;
+    };
+
+    struct config_log final {
+        boost::filesystem::path path {boost::filesystem::current_path() / "log"};
+        log_t::level level {log_t::level::trace};
+    };
+
+    struct config_wal final {
+        boost::filesystem::path path {boost::filesystem::current_path() / "wal"};
+    };
+
+    struct config_disk final {
+        boost::filesystem::path path {boost::filesystem::current_path() / "disk"};
+    };
+
+    struct config final {
+        config_log log;
+        config_wal wal;
+        config_disk disk;
+
+        static config default_config() {
+            return config();
+        }
     };
 
 } // namespace rocketjoe

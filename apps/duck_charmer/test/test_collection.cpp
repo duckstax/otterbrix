@@ -6,8 +6,8 @@
 #include <components/protocol/base.hpp>
 #include <components/tests/generaty.hpp>
 
-static const database_name_t database_name = "FriedrichDatabase";
-static const collection_name_t collection_name = "FriedrichCollection";
+static const database_name_t database_name = "TestDatabase";
+static const collection_name_t collection_name = "TestCollection";
 
 template<class T>
 document::retained_t<mutable_dict_t> make_dict(const std::string& field, const std::string& key, T value) {
