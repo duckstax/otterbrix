@@ -1,27 +1,22 @@
 #include <catch2/catch.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <apps/duck_charmer/spaces.hpp>
 #include <services/disk/disk.hpp>
 #include <components/tests/generaty.hpp>
+#include "test_config.hpp"
 
 constexpr uint count_databases = 2;
 constexpr uint count_collections = 5;
 constexpr uint count_documents = 10;
 
-static const database_name_t database_name = "FriedrichDatabase";
-static const collection_name_t collection_name = "FriedrichCollection";
+static const database_name_t database_name = "TestDatabase";
+static const collection_name_t collection_name = "TestCollection";
 
-void clear_(const boost::filesystem::path &current_path) {
-    boost::filesystem::remove_all(current_path / "disk");
-    boost::filesystem::remove(current_path / ".wal");
-}
 
 TEST_CASE("duck_charmer::test_save_load::disk") {
-    auto current_path = boost::filesystem::current_path();
-    clear_(current_path);
+    auto config = test_create_config("/tmp/test_save_load/disk");
 
     SECTION("initialization") {
-        services::disk::disk_t disk(current_path / "disk");
+        services::disk::disk_t disk(config.disk.path);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             disk.append_database(db_name);
@@ -37,8 +32,8 @@ TEST_CASE("duck_charmer::test_save_load::disk") {
     }
 
     SECTION("load") {
-        auto* space = duck_charmer::spaces::get_instance();
-        auto* dispatcher = space->dispatcher();
+        test_spaces space(config);
+        auto* dispatcher = space.dispatcher();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {

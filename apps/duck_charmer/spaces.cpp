@@ -9,31 +9,12 @@
 #include "core/system_command.hpp"
 
 namespace duck_charmer {
-    spaces* spaces::instance_ = nullptr;
-
-    spaces* spaces::get_instance() {
-        if (instance_ == nullptr) {
-            instance_ = new spaces(components::config::default_config());
-        }
-        return instance_;
-    }
-
-    void spaces::reload(const components::config &config) {
-        if (instance_ != nullptr) {
-            throw std::runtime_error("spaces already initialized");
-        }
-        instance_ = new spaces(config);
-    }
-
-    wrapper_dispatcher_t* spaces::dispatcher() {
-        return wrapper_dispatcher_.get();
-    }
 
     using services::dispatcher::manager_dispatcher_t;
 
     constexpr static char* name_dispatcher = "dispatcher";
 
-    spaces::spaces(const components::config& config)
+    base_spaces::base_spaces(const components::config& config)
         : scheduler_(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter()) {
         log_ = initialization_logger("duck_charmer", config.log.path.c_str());
         log_.set_level(config.log.level);
@@ -95,8 +76,30 @@ namespace duck_charmer {
         trace(log_, "spaces::spaces() final");
     }
 
-    log_t& spaces::get_log() {
+    log_t& base_spaces::get_log() {
         return log_;
+    }
+
+    wrapper_dispatcher_t* base_spaces::dispatcher() {
+        return wrapper_dispatcher_.get();
+    }
+
+    base_spaces::~base_spaces() {
+        trace(log_, "delete spaces");
+    }
+
+
+    spaces* spaces::instance_ = nullptr;
+
+    spaces* spaces::get_instance() {
+        if (instance_ == nullptr) {
+            instance_ = new spaces();
+        }
+        return instance_;
+    }
+
+    spaces::spaces()
+        : base_spaces(components::config::default_config()) {
     }
 
 } // namespace duck_charmer

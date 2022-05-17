@@ -15,19 +15,19 @@
 #include <core/excutor.hpp>
 
 namespace duck_charmer {
-    class PYBIND11_EXPORT spaces final {
-    public:
-        spaces(spaces& other) = delete;
-        void operator=(const spaces&) = delete;
 
-        static spaces* get_instance();
-        static void reload(const components::config& config);
+    class base_spaces {
+    public:
+        base_spaces(base_spaces& other) = delete;
+        void operator=(const base_spaces&) = delete;
+
         log_t& get_log();
         duck_charmer::wrapper_dispatcher_t* dispatcher();
 
+        ~base_spaces();
+
     protected:
-        spaces(const components::config& config);
-        static spaces* instance_;
+        base_spaces(const components::config& config);
 
         log_t log_;
         actor_zeta::scheduler_ptr  scheduler_;
@@ -38,4 +38,18 @@ namespace duck_charmer {
         services::disk::manager_disk_ptr manager_disk_;
         std::unique_ptr<duck_charmer::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
+
+
+    class PYBIND11_EXPORT spaces final : public base_spaces {
+    public:
+        spaces(spaces& other) = delete;
+        void operator=(const spaces&) = delete;
+
+        static spaces* get_instance();
+
+    protected:
+        spaces();
+        static spaces* instance_;
+    };
+
 } // namespace duck_charmer

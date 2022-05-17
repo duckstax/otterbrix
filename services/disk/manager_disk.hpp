@@ -24,9 +24,11 @@ namespace services::disk {
 
         void sync(address_pack& pack) {
             manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
-
         }
+
         manager_disk_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw, path_t path_db, log_t& log);
+        ~manager_disk_t() final;
+
         void create_agent();
 
         auto append_database(session_id_t& session, const database_name_t& database) -> void;

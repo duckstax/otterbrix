@@ -33,6 +33,13 @@ namespace services::disk {
 
     }
 
+    manager_disk_t::~manager_disk_t() {
+        trace(log_, "delete manager_disk_t");
+        for (auto agent : agents_) {
+            delete static_cast<agent_disk_t*>(agent.get());
+        }
+    }
+
     void manager_disk_t::create_agent() {
         auto name_agent = "agent_disk_" + std::to_string(agents_.size() + 1);
         trace(log_, "manager_disk create_agent : {}", name_agent);
@@ -135,6 +142,7 @@ namespace services::disk {
     }
 
     agent_disk_t::~agent_disk_t() {
+        trace(log_, "delete {}", type());
     }
 
     auto agent_disk_t::append_database(const database_name_t& database) -> void {
