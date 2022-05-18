@@ -5,8 +5,7 @@
 namespace services::dispatcher {
 
     enum class route : uint64_t {
-        create,
-        load
+        create
     };
 
     inline uint64_t handler_id(route type) {

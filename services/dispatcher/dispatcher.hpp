@@ -57,7 +57,7 @@ namespace services::dispatcher {
         }
         ///------
         void create(components::session::session_id_t& session, std::string& name);
-        void load(components::session::session_id_t& session);
+        void load();
         void create_database(components::session::session_id_t& session, std::string& name);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);

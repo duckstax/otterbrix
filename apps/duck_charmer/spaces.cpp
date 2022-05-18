@@ -56,7 +56,6 @@ namespace duck_charmer {
             core::handler_id(core::route::sync),
             std::make_tuple(manager_disk_->address(), manager_dispatcher_->address()));
 
-
         actor_zeta::send(
             manager_disk_,
             actor_zeta::address_t::empty_address(),
@@ -72,6 +71,7 @@ namespace duck_charmer {
         actor_zeta::send(manager_wal_, actor_zeta::address_t::empty_address(), wal::handler_id(wal::route::create));
         actor_zeta::send(manager_disk_, actor_zeta::address_t::empty_address(), disk::handler_id(disk::route::create_agent));
         manager_dispatcher_->create_dispatcher(name_dispatcher);
+        manager_dispatcher_->load();
         scheduler_->start();
         trace(log_, "spaces::spaces() final");
     }

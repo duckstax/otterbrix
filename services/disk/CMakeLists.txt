@@ -5,7 +5,6 @@ set(${PROJECT_NAME}_HEADERS
         disk.hpp
         manager_disk.hpp
         metadata.hpp
-        result.hpp
         route.hpp
 )
 
@@ -14,7 +13,6 @@ set(${PROJECT_NAME}_SOURCES
         disk.cpp
         manager_disk.cpp
         metadata.cpp
-        result.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
