@@ -17,6 +17,7 @@
 #include <services/database/forward.hpp>
 #include <services/database/result_database.hpp>
 #include <services/wal/base.hpp>
+#include <services/disk/result.hpp>
 
 #include "route.hpp"
 #include "session.hpp"
@@ -46,7 +47,8 @@ namespace services::dispatcher {
     class dispatcher_t final : public actor_zeta::basic_async_actor {
     public:
         dispatcher_t(manager_dispatcher_t*, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
-        void load();
+        void load(components::session::session_id_t &session, actor_zeta::address_t sender);
+        void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
         void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
         void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, actor_zeta::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address);
@@ -122,7 +124,7 @@ namespace services::dispatcher {
         }
         ///------
         void create(components::session::session_id_t& session, std::string& name);
-        void load();
+        void load(components::session::session_id_t &session);
         void create_database(components::session::session_id_t& session, std::string& name);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);

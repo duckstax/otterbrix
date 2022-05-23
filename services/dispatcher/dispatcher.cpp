@@ -52,6 +52,8 @@ namespace services::dispatcher {
         , manager_wal_(mwal)
         , manager_disk_(mdisk) {
         trace(log_, "dispatcher_t::dispatcher_t start name:{}", type());
+        add_handler(core::handler_id(core::route::load), &dispatcher_t::load);
+        add_handler(disk::handler_id(disk::route::load_finish), &dispatcher_t::load_from_disk_result);
         add_handler(database::handler_id(database::route::create_database), &dispatcher_t::create_database);
         add_handler(database::handler_id(database::route::create_database_finish), &dispatcher_t::create_database_finish);
         add_handler(database::handler_id(database::route::create_collection), &dispatcher_t::create_collection);
@@ -80,11 +82,19 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::dispatcher_t finish name:{}", type());
     }
 
-    void dispatcher_t::load() {
-        trace(log_, "dispatcher_t::load");
-        auto *manager_disk = static_cast<services::disk::manager_disk_t*>(manager_disk_.get());
-        auto *manager_database = static_cast<services::database::manager_database_t*>(manager_database_.get());
-        //manager_database_.create_databases(manager_disk->databases());
+    void dispatcher_t::load(components::session::session_id_t &session, actor_zeta::address_t sender) {
+        trace(log_, "dispatcher_t::load: session {}", session.data());
+        session_to_address_.emplace(session, sender);
+        actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::load), session);
+    }
+
+    void dispatcher_t::load_from_disk_result(components::session::session_id_t &session, const disk::result_load_t &result) {
+        trace(log_, "dispatcher_t::load_from_disk_result: session {}", session.data());
+        for (const auto &database : *result) {
+            trace(log_, "___{}", database.name);
+        }
+        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
+        session_to_address_.erase(session);
     }
 
     void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {
@@ -356,6 +366,7 @@ namespace services::dispatcher {
         ZoneScoped;
         trace(log_, "manager_dispatcher_t::manager_dispatcher_t ");
         add_handler(handler_id(route::create), &manager_dispatcher_t::create);
+        add_handler(core::handler_id(core::route::load), &manager_dispatcher_t::load);
         add_handler(database::handler_id(database::route::create_database), &manager_dispatcher_t::create_database);
         add_handler(database::handler_id(database::route::create_collection), &manager_dispatcher_t::create_collection);
         add_handler(database::handler_id(database::route::drop_collection), &manager_dispatcher_t::drop_collection);
@@ -398,9 +409,9 @@ namespace services::dispatcher {
             manager_database_, manager_wal_, manager_disk_, log_, std::string(name));
     }
 
-    void manager_dispatcher_t::load() {
-        trace(log_, "manager_dispatcher_t::load");
-        dispatchers_[0]->load();
+    void manager_dispatcher_t::load(components::session::session_id_t &session) {
+        trace(log_, "manager_dispatcher_t::load session: {}", session.data());
+        return actor_zeta::send(dispatcher(), address(), core::handler_id(core::route::load), session, current_message()->sender());
     }
 
     void manager_dispatcher_t::create_database(components::session::session_id_t& session, std::string& name) {

@@ -7,9 +7,12 @@ inline components::config test_create_config(const boost::filesystem::path &path
     config.log.path = path;
     config.disk.path = path;
     config.wal.path = path;
+    return config;
+}
+
+inline void test_clear_directory(const components::config &config) {
     boost::filesystem::remove_all(config.disk.path);
     boost::filesystem::create_directories(config.disk.path);
-    return config;
 }
 
 class test_spaces final : public duck_charmer::base_spaces {

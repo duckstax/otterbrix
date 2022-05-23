@@ -16,6 +16,7 @@ TEST_CASE("duck_charmer::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
 
     SECTION("initialization") {
+        test_clear_directory(config);
         services::disk::disk_t disk(config.disk.path);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
@@ -34,6 +35,7 @@ TEST_CASE("duck_charmer::test_save_load::disk") {
     SECTION("load") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
+        dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {

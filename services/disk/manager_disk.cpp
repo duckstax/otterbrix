@@ -3,7 +3,7 @@
 #include <core/system_command.hpp>
 
 #include "route.hpp"
-#include <utility>
+#include "result.hpp"
 
 namespace services::disk {
 
@@ -13,6 +13,8 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, name)
         , log_(log.clone())
         , disk_(path_db) {
+        trace(log_, "{}::create", type());
+        add_handler(handler_id(route::load), &agent_disk_t::load);
         add_handler(handler_id(route::append_database), &agent_disk_t::append_database);
         add_handler(handler_id(route::remove_database), &agent_disk_t::remove_database);
         add_handler(handler_id(route::append_collection), &agent_disk_t::append_collection);
@@ -20,6 +22,23 @@ namespace services::disk {
         add_handler(handler_id(route::write_documents), &agent_disk_t::write_documents);
         add_handler(handler_id(route::remove_documents), &agent_disk_t::remove_documents);
         add_handler(handler_id(route::fix_wal_id), &agent_disk_t::fix_wal_id);
+    }
+
+    auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
+        trace(log_, "{}::load , session : {}", type(), session.data());
+        result_load_t result(disk_.databases());
+        for (auto &database : *result) {
+            database.set_collection(disk_.collections(database.name));
+            for (auto &collection : database.collections) {
+                auto id_documents = disk_.load_list_documents(database.name, collection.name);
+                collection.documents.resize(id_documents.size());
+                std::size_t i = 0;
+                for (const auto &id : id_documents) {
+                    collection.documents[i++] = disk_.load_document(id);
+                }
+            }
+        }
+        actor_zeta::send(dispatcher, address(), handler_id(route::load_finish), session, result);
     }
 
     auto agent_disk_t::append_database(const database_name_t& database) -> void {
@@ -66,22 +85,6 @@ namespace services::disk {
         disk_.fix_wal_id(wal_id);
     }
 
-    auto agent_disk_t::databases() -> std::vector<database_name_t> {
-        return disk_.databases();
-    }
-
-    auto agent_disk_t::collections(const database_name_t &database_name) -> std::vector<collection_name_t> {
-        return disk_.collections(database_name);
-    }
-
-    auto agent_disk_t::documents(const database_name_t &database_name, const collection_name_t &collection_name) -> std::vector<document_ptr> {
-        std::vector<document_ptr> documents;
-        for (const auto &id : disk_.load_list_documents(database_name, collection_name)) {
-            documents.push_back(disk_.load_document(id));
-        }
-        return documents;
-    }
-
 
     manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::scheduler_raw scheduler, path_t path_db, log_t& log)
         : actor_zeta::cooperative_supervisor<manager_disk_t>(mr, "manager_disk")
@@ -90,6 +93,7 @@ namespace services::disk {
         , e_(scheduler) {
         trace(log_, "manager_disk start");
         add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
+        add_handler(handler_id(route::load), &manager_disk_t::load);
         add_handler(handler_id(route::append_database), &manager_disk_t::append_database);
         add_handler(handler_id(route::remove_database), &manager_disk_t::remove_database);
         add_handler(handler_id(route::append_collection), &manager_disk_t::append_collection);
@@ -112,24 +116,29 @@ namespace services::disk {
             path_db_, name_agent, log_);
     }
 
+    auto manager_disk_t::load(session_id_t &session) -> void {
+        trace(log_, "manager_disk_t::load , session : {}", session.data());
+        actor_zeta::send(agent(), address(), handler_id(route::load), session, current_message()->sender());
+    }
+
     auto manager_disk_t::append_database(session_id_t& session, const database_name_t& database) -> void {
         trace(log_, "manager_disk_t::append_database , session : {} , database : {}", session.data(), database);
-        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::append_database), database);
+        actor_zeta::send(agent(), address(), handler_id(route::append_database), database);
     }
 
     auto manager_disk_t::remove_database(session_id_t& session, const database_name_t& database) -> void {
         trace(log_, "manager_disk_t::remove_database , session : {} , database : {}", session.data(), database);
-        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::remove_database), database);
+        actor_zeta::send(agent(), address(), handler_id(route::remove_database), database);
     }
 
     auto manager_disk_t::append_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void {
         trace(log_, "manager_disk_t::append_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::append_collection), database, collection);
+        actor_zeta::send(agent(), address(), handler_id(route::append_collection), database, collection);
     }
 
     auto manager_disk_t::remove_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void {
         trace(log_, "manager_disk_t::remove_collection , session : {} , database : {} , collection : {}", session.data(), database, collection);
-        actor_zeta::send(agent(),  current_message()->sender(), handler_id(route::remove_collection), database, collection);
+        actor_zeta::send(agent(), address(), handler_id(route::remove_collection), database, collection);
     }
 
     auto manager_disk_t::write_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_ptr>& documents) -> void {
@@ -149,23 +158,11 @@ namespace services::disk {
         auto it = commands_.find(session);
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
-                actor_zeta::send(agent(), current_message()->sender(), command.name(), command);
+                actor_zeta::send(agent(), address(), command.name(), command);
             }
             commands_.erase(session);
-            actor_zeta::send(agent(), current_message()->sender(), handler_id(route::fix_wal_id), wal_id);
+            actor_zeta::send(agent(), address(), handler_id(route::fix_wal_id), wal_id);
         }
-    }
-
-    auto manager_disk_t::databases() -> std::vector<database_name_t> {
-        return agents_[0]->databases();
-    }
-
-    auto manager_disk_t::collections(const database_name_t &database_name) -> std::vector<collection_name_t> {
-        return agents_[0]->collections(database_name);
-    }
-
-    auto manager_disk_t::documents(const database_name_t &database_name, const collection_name_t &collection_name) -> std::vector<document_ptr> {
-        return agents_[0]->documents(database_name, collection_name);
     }
 
     auto manager_disk_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {

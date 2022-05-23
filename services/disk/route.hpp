@@ -6,6 +6,9 @@ namespace services::disk {
     enum class route : uint64_t {
         create_agent,
 
+        load,
+        load_finish,
+
         append_database,
         remove_database,
 
@@ -16,7 +19,7 @@ namespace services::disk {
         remove_documents,
 
         flush,
-        fix_wal_id,
+        fix_wal_id
     };
 
     inline uint64_t handler_id(route type) {

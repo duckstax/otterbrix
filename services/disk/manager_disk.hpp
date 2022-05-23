@@ -20,6 +20,8 @@ namespace services::disk {
     public:
         agent_disk_t(manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
 
+        auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
+
         auto append_database(const database_name_t& database) -> void;
         auto remove_database(const database_name_t& database) -> void;
 
@@ -30,10 +32,6 @@ namespace services::disk {
         auto remove_documents(const command_t& command) -> void;
 
         auto fix_wal_id(wal::id_t wal_id) -> void;
-
-        auto databases() -> std::vector<database_name_t>;
-        auto collections(const database_name_t &database_name) -> std::vector<collection_name_t>;
-        auto documents(const database_name_t &database_name, const collection_name_t &collection_name) -> std::vector<document_ptr>;
 
     private:
         log_t log_;
@@ -59,6 +57,8 @@ namespace services::disk {
 
         void create_agent();
 
+        auto load(session_id_t& session) -> void;
+
         auto append_database(session_id_t& session, const database_name_t& database) -> void;
         auto remove_database(session_id_t& session, const database_name_t& database) -> void;
 
@@ -69,10 +69,6 @@ namespace services::disk {
         auto remove_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_id_t>& documents) -> void;
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
-
-        auto databases() -> std::vector<database_name_t>;
-        auto collections(const database_name_t &database_name) -> std::vector<collection_name_t>;
-        auto documents(const database_name_t &database_name, const collection_name_t &collection_name) -> std::vector<document_ptr>;
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t*;
