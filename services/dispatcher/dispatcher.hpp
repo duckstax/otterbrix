@@ -49,6 +49,9 @@ namespace services::dispatcher {
         dispatcher_t(manager_dispatcher_t*, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
+        void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
+        void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
+        void load_create_documents_result(components::session::session_id_t &session);
         void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
         void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, actor_zeta::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address);
@@ -85,6 +88,8 @@ namespace services::dispatcher {
         std::unordered_map<components::session::session_id_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
         std::unordered_map<key_collection_t, actor_zeta::address_t, key_collection_t::hash> collection_address_book_;
         std::unordered_map<std::string, actor_zeta::address_t> database_address_book_;
+        disk::result_load_t load_result_;
+        std::size_t load_count_answers_;
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;

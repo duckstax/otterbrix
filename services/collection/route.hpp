@@ -2,6 +2,7 @@
 #include <core/handler_by_id.hpp>
 namespace services::collection {
     enum class route : uint64_t {
+        create_documents,
         insert_one,
         insert_many,
         find,
@@ -14,6 +15,7 @@ namespace services::collection {
         close_cursor,
         drop_collection,
 
+        create_documents_finish,
         insert_one_finish,
         insert_many_finish,
         find_finish,

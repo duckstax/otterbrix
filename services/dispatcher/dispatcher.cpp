@@ -54,6 +54,9 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::dispatcher_t start name:{}", type());
         add_handler(core::handler_id(core::route::load), &dispatcher_t::load);
         add_handler(disk::handler_id(disk::route::load_finish), &dispatcher_t::load_from_disk_result);
+        add_handler(database::handler_id(database::route::create_databases_finish), &dispatcher_t::load_create_databases_result);
+        add_handler(database::handler_id(database::route::create_collections_finish), &dispatcher_t::load_create_collections_result);
+        add_handler(collection::handler_id(collection::route::create_documents_finish), &dispatcher_t::load_create_documents_result);
         add_handler(database::handler_id(database::route::create_database), &dispatcher_t::create_database);
         add_handler(database::handler_id(database::route::create_database_finish), &dispatcher_t::create_database_finish);
         add_handler(database::handler_id(database::route::create_collection), &dispatcher_t::create_collection);
@@ -83,18 +86,52 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::load(components::session::session_id_t &session, actor_zeta::address_t sender) {
-        trace(log_, "dispatcher_t::load: session {}", session.data());
+        trace(log_, "dispatcher_t::load, session: {}", session.data());
         session_to_address_.emplace(session, sender);
         actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::load), session);
     }
 
     void dispatcher_t::load_from_disk_result(components::session::session_id_t &session, const disk::result_load_t &result) {
-        trace(log_, "dispatcher_t::load_from_disk_result: session {}", session.data());
-        for (const auto &database : *result) {
-            trace(log_, "___{}", database.name);
+        trace(log_, "dispatcher_t::load_from_disk_result, session: {}", session.data());
+        if ((*result).empty()) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
+            session_to_address_.erase(session);
+            load_result_.clear();
+        } else {
+            load_count_answers_ = result.count_collections();
+            load_result_ = result;
+            actor_zeta::send(manager_database_, address(), database::handler_id(database::route::create_databases), session, result.name_databases());
         }
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
-        session_to_address_.erase(session);
+    }
+
+    void dispatcher_t::load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::base::address_t> &result) {
+        trace(log_, "dispatcher_t::load_create_databases_result, session: {}", session.data());
+        for (std::size_t i = 0; i < result.size(); ++i) {
+            database_address_book_.emplace((*load_result_).at(i).name, result.at(i));
+            actor_zeta::send(result.at(i), dispatcher_t::address(), database::handler_id(database::route::create_collections), session, (*load_result_).at(i).name_collections());
+        }
+    }
+
+    void dispatcher_t::load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::base::address_t> &result) {
+        trace(log_, "dispatcher_t::load_create_collections_result, session: {}, database: {}", session.data(), database_name);
+        auto it_database = std::find_if((*load_result_).begin(), (*load_result_).end(), [&database_name](const services::disk::result_database_t &database) {
+            return database.name == database_name;
+        });
+        if (it_database != (*load_result_).end()) {
+            for (std::size_t i = 0; i < result.size(); ++i) {
+                collection_address_book_.emplace(key_collection_t(database_name, it_database->collections.at(i).name), result.at(i));
+                actor_zeta::send(result.at(i), dispatcher_t::address(), collection::handler_id(collection::route::create_documents), session, it_database->collections.at(i).documents);
+            }
+        }
+    }
+
+    void dispatcher_t::load_create_documents_result(components::session::session_id_t &session) {
+        trace(log_, "dispatcher_t::load_create_documents_result, session: {}, wait answers: {}", session.data(), --load_count_answers_);
+        if (load_count_answers_ == 0) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
+            session_to_address_.erase(session);
+            load_result_.clear();
+        }
     }
 
     void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {

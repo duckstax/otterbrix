@@ -15,6 +15,7 @@ namespace services::collection {
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk) {
+        add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
         add_handler(handler_id(route::insert_many), &collection_t::insert_many);
         add_handler(handler_id(route::find), &collection_t::find);
@@ -26,6 +27,14 @@ namespace services::collection {
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
+    }
+
+    void collection_t::create_documents(components::session::session_id_t &session, std::list<document_ptr> &documents) {
+        debug(log_, "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
+        for (const auto& document : documents) {
+            insert_(document);
+        }
+        actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_documents_finish), session);
     }
 
     auto collection_t::size(session_id_t& session) -> void {

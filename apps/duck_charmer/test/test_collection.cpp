@@ -40,7 +40,9 @@ document_ptr make_condition(const std::string& aggregate, const std::list<docume
 }
 
 TEST_CASE("duck_charmer::test_collection") {
-    test_spaces space(test_create_config("/tmp/test_collection"));
+    auto config = test_create_config("/tmp/test_collection");
+    test_clear_directory(config);
+    test_spaces space(config);
     auto* dispatcher = space.dispatcher();
     dispatcher->load();
 

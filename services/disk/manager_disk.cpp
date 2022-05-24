@@ -31,10 +31,8 @@ namespace services::disk {
             database.set_collection(disk_.collections(database.name));
             for (auto &collection : database.collections) {
                 auto id_documents = disk_.load_list_documents(database.name, collection.name);
-                collection.documents.resize(id_documents.size());
-                std::size_t i = 0;
                 for (const auto &id : id_documents) {
-                    collection.documents[i++] = disk_.load_document(id);
+                    collection.documents.push_back(disk_.load_document(id));
                 }
             }
         }
