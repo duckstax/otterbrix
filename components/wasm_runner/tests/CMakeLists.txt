@@ -1,6 +1,6 @@
 project(test_wasm_runner)
 
-set(${PROJECT_NAME}_SOURCES
+list(APPEND ${PROJECT_NAME}_SOURCES
         main.cpp
         test_log.cpp
 )
@@ -14,7 +14,10 @@ target_link_libraries(
         ${CONAN_LIBS}
 )
 
-file(COPY test_files/log_wasm.wasm DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)
+add_subdirectory(log_wasm)
+add_subdirectory(log_quickjs_wasm)
+
+add_dependencies(${PROJECT_NAME} log_wasm log_quickjs_wasm)
 
 include(CTest)
 include(Catch)
