@@ -5,6 +5,7 @@
 #include <actor-zeta.hpp>
 #include <components/protocol/base.hpp>
 #include <components/document/document.hpp>
+#include <services/wal/base.hpp>
 
 namespace services::disk {
 
@@ -26,15 +27,18 @@ namespace services::disk {
 
     public:
         result_load_t() = default;
-        result_load_t(const std::vector<database_name_t> &databases);
+        result_load_t(const std::vector<database_name_t> &databases, wal::id_t wal_id);
         const result_t& operator*() const;
         result_t& operator*();
         std::vector<database_name_t> name_databases() const;
         std::size_t count_collections() const;
         void clear();
 
+        wal::id_t wal_id() const;
+
     private:
         result_t databases_;
+        wal::id_t wal_id_;
     };
 
 } // namespace services::disk

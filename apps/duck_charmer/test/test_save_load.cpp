@@ -1,7 +1,8 @@
 #include <catch2/catch.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <services/disk/disk.hpp>
 #include <components/tests/generaty.hpp>
+#include <services/disk/disk.hpp>
+#include <services/wal/wal.hpp>
 #include "test_config.hpp"
 
 constexpr uint count_databases = 2;

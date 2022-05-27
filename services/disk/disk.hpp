@@ -44,6 +44,7 @@ namespace services::disk {
         bool remove_collection(const database_name_t &database, const collection_name_t &collection);
 
         void fix_wal_id(wal::id_t wal_id);
+        wal::id_t wal_id() const;
 
     private:
         db_ptr db_;

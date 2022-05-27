@@ -92,7 +92,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::load_from_disk_result(components::session::session_id_t &session, const disk::result_load_t &result) {
-        trace(log_, "dispatcher_t::load_from_disk_result, session: {}", session.data());
+        trace(log_, "dispatcher_t::load_from_disk_result, session: {}, wal_id: {}", session.data(), result.wal_id());
         if ((*result).empty()) {
             actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
             session_to_address_.erase(session);

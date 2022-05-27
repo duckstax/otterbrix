@@ -20,7 +20,8 @@ namespace services::disk {
     }
 
 
-    result_load_t::result_load_t(const std::vector<database_name_t> &databases) {
+    result_load_t::result_load_t(const std::vector<database_name_t> &databases, wal::id_t wal_id)
+        : wal_id_(wal_id) {
         databases_.resize(databases.size());
         std::size_t i = 0;
         for (const auto &database : databases) {
@@ -51,6 +52,11 @@ namespace services::disk {
 
     void result_load_t::clear() {
         databases_.clear();
+        wal_id_ = 0;
+    }
+
+    wal::id_t result_load_t::wal_id() const {
+        return wal_id_;
     }
 
     result_load_t::result_t &result_load_t::operator*() {

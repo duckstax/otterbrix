@@ -128,4 +128,8 @@ namespace services::disk {
         file_wal_id_->rewrite(id);
     }
 
+    wal::id_t disk_t::wal_id() const {
+        return wal::id_from_string(file_wal_id_->readall());
+    }
+
 } //namespace services::disk

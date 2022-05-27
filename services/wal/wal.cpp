@@ -35,7 +35,7 @@ namespace services::wal {
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
-            actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(last_crc32_));
+            actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(id_));
         }
     }
 

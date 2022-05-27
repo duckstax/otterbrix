@@ -26,7 +26,7 @@ namespace services::disk {
 
     auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
         trace(log_, "{}::load , session : {}", type(), session.data());
-        result_load_t result(disk_.databases());
+        result_load_t result(disk_.databases(), disk_.wal_id());
         for (auto &database : *result) {
             database.set_collection(disk_.collections(database.name));
             for (auto &collection : database.collections) {
