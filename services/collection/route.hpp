@@ -26,7 +26,7 @@ namespace services::collection {
         drop_collection_finish,
     };
 
-    inline uint64_t handler_id(route type) {
+    constexpr uint64_t handler_id(route type) {
         return handler_id(group_id_t::collection, type);
     }
 } // namespace services::collection

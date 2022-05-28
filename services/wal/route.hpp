@@ -17,7 +17,7 @@ namespace services::wal {
         success,
     };
 
-    inline uint64_t handler_id(route type) {
+    constexpr uint64_t handler_id(route type) {
         return handler_id(group_id_t::wal, type);
     }
 
