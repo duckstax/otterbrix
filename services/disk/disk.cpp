@@ -92,7 +92,8 @@ namespace services::disk {
     std::vector<rocks_id> disk_t::load_list_documents(const database_name_t &database, const collection_name_t &collection) const {
         std::vector<rocks_id> id_documents;
         rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        for (it->Seek(gen_key(key_structure, gen_key(database, collection)) + key_separator); it->Valid(); it->Next()) {
+        auto find_key = gen_key(key_structure, gen_key(database, collection)) + key_separator;
+        for (it->Seek(find_key); it->Valid() && it->key().starts_with(find_key); it->Next()) {
             id_documents.push_back(remove_prefix(it->key().ToString(), key_structure));
         }
         delete it;
