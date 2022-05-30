@@ -13,7 +13,7 @@ class LogWASM(ConanFile):
     generators = 'cmake'
 
     def configure(self):
-        self.settings.compiler.cppstd = 20
+        self.settings.compiler.cppstd = 17
 
     def build(self):
         cmake = CMake(self)
