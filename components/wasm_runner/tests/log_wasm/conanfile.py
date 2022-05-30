@@ -18,6 +18,6 @@ class LogWASM(ConanFile):
     def build(self):
         cmake = CMake(self)
 
-        cmake.configure(source_folder='src')
+        cmake.configure(source_folder='.')
         cmake.build()
 
