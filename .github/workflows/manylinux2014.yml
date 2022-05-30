@@ -50,8 +50,16 @@ jobs:
     - name: Install conan dependencies
       run: |
         pip3 install --no-cache-dir conan
+        conan profile new default --detect --force
+        conan profile new emscripten-module
+        conan profile update settings.compiler=clang emscripten-module
+        conan profile update settings.compiler.version=15 emscripten-module
+        conan profile update settings.compiler.libcxx=libc++ emscripten-module
+        conan profile update settings.arch=wasm emscripten-module
+        conan profile update settings.os=Emscripten emscripten-module
+        echo 'CFLAGS=-s STRICT=1\nCXXFLAGS=-s STRICT=1\nLDFLAGS=--no-entry -s STRICT=1 -s STANDALONE_WASM -s PURE_WASI=1 -s ABORTING_MALLOC=0 -s EXPORTED_FUNCTIONS=['_malloc'] -s ERROR_ON_UNDEFINED_SYMBOLS=0\n[tool_requires]\nemsdk/3.1.7' >> "${HOME}/.conan/profiles/emscripten-module"
         conan remote add cyberduckninja http://conan.cyberduckninja.com:9300
-        conan install -if build . --build -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -s compiler.libcxx=libstdc++11 
+        conan install -if build . --build -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
           
     - name: Build library 
       run: |
