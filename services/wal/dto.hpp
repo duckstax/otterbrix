@@ -55,4 +55,6 @@ namespace services::wal {
         entry.entry_ = std::move(o.via.array.ptr[3].as<T>());
     }
 
+    id_t unpack_wal_id(buffer_t& storage);
+
 } //namespace services::wal

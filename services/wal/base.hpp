@@ -12,6 +12,10 @@ namespace services::wal {
         ++id;
     }
 
+    inline void next_id(id_t &id) {
+        ++id;
+    }
+
     inline id_t id_from_string(const std::string &value) {
         if (value.empty()) {
             return 0;

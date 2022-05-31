@@ -164,4 +164,11 @@ void unpack_v2(buffer_t& storage, wal_entry_t& entry) {
         return last_crc32_;
     }
 
+    id_t unpack_wal_id(buffer_t& storage) {
+        msgpack::unpacked msg;
+        msgpack::unpack(msg, storage.data(), storage.size());
+        const auto& o = msg.get();
+        return o.via.array.ptr[1].as<id_t>();
+    }
+
 } //namespace services::wal

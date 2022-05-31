@@ -14,6 +14,7 @@ namespace services::wal {
         , e_(scheduler) {
         trace(log_, "manager_wal_replicate_t");
         add_handler(handler_id(route::create), &manager_wal_replicate_t::creat_wal_worker);
+        add_handler(handler_id(route::load), &manager_wal_replicate_t::load);
         add_handler(handler_id(route::create_database), &manager_wal_replicate_t::create_database);
         add_handler(handler_id(route::drop_database), &manager_wal_replicate_t::drop_database);
         add_handler(handler_id(route::create_collection), &manager_wal_replicate_t::create_collection);
@@ -38,6 +39,11 @@ namespace services::wal {
         auto address = spawn_actor<wal_replicate_t>([this](wal_replicate_t*ptr){
             dispathers_.emplace_back(ptr->address());
         },log_, path_);
+    }
+
+    void manager_wal_replicate_t::load(session_id_t& session, services::wal::id_t wal_id) {
+        trace(log_, "manager_wal_replicate_t::load, id: {}", wal_id);
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::load), session, current_message()->sender(), wal_id);
     }
 
     void manager_wal_replicate_t::create_database(session_id_t& session, components::protocol::create_database_t& data) {

@@ -6,6 +6,9 @@ namespace services::wal {
     enum class route : uint64_t {
         create,
 
+        load,
+        load_finish,
+
         create_database,
         drop_database,
         create_collection,

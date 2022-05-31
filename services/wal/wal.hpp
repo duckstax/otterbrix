@@ -21,6 +21,7 @@ namespace services::wal {
 
     public:
         wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, boost::filesystem::path path);
+        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data);
         void drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data);
         void create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data);
@@ -31,28 +32,28 @@ namespace services::wal {
 //        void delete_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}
 //        void update_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
 //        void update_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
-        void last_id() {}
         ~wal_replicate_t() override;
 
     private:
-        void write_();
         void send_success(session_id_t& session, address_t& sender);
+
+        template <class T>
+        void write_data_(T &data);
+
+        void init_id();
+        bool find_start_record(services::wal::id_t wal_id, std::size_t &start_index) const;
+        services::wal::id_t read_id(std::size_t start_index) const;
 
         log_t log_;
         boost::filesystem::path path_;
         atomic_id_t id_{0};
         crc32_t last_crc32_{0};
-        std::size_t writed_{0};
-        std::size_t read_{0};
         file_ptr file_;
         buffer_t buffer_;
 #ifdef DEV_MODE
     public:
-        std::size_t writed() const {
-            return writed_;
-        };
-        size_tt read_size(size_t start_index);
-        buffer_t read(size_t start_index, size_t finish_index);
+        size_tt read_size(size_t start_index) const;
+        buffer_t read(size_t start_index, size_t finish_index) const;
 #endif
     };
 

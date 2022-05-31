@@ -18,6 +18,7 @@ namespace components::file {
         void append(char *data, std::size_t size);
         void append(std::string &data);
         void rewrite(std::string &data);
+        void seek_eof();
 
     private:
         int fd_;

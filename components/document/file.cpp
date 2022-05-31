@@ -61,4 +61,8 @@ namespace components::file {
         ::ftruncate(fd_, offset_);
     }
 
+    void file_t::seek_eof() {
+        offset_ = ::lseek64(fd_, 0, SEEK_END);
+    }
+
 } //namespace components::file

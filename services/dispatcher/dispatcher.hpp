@@ -52,6 +52,7 @@ namespace services::dispatcher {
         void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
         void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
         void load_create_documents_result(components::session::session_id_t &session);
+        void load_from_wal_result(components::session::session_id_t &session);
         void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
         void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, actor_zeta::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address);
