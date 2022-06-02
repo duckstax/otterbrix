@@ -19,15 +19,18 @@
 using namespace services::wal;
 
 TEST_CASE("insert one test") {
+    const boost::filesystem::path path = "/tmp/wal/insert_one";
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
+    boost::filesystem::remove_all(path);
+    boost::filesystem::create_directories(path);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,path, log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, path);
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
@@ -69,15 +72,18 @@ TEST_CASE("insert one test") {
 }
 
 TEST_CASE("insert many empty test") {
+    const boost::filesystem::path path = "/tmp/wal/insert_many_empty";
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
+    boost::filesystem::remove_all(path);
+    boost::filesystem::create_directories(path);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,path, log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, path);
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
@@ -107,15 +113,18 @@ TEST_CASE("insert many empty test") {
 }
 
 TEST_CASE("insert many test") {
+    const boost::filesystem::path path = "/tmp/wal/insert_many";
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
+    boost::filesystem::remove_all(path);
+    boost::filesystem::create_directories(path);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,path, log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
+    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, path);
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
