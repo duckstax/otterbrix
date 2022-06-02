@@ -1,6 +1,7 @@
 #include "wal.hpp"
 #include <unistd.h>
 #include <utility>
+#include <crc32c/crc32c.h>
 
 #include "dto.hpp"
 #include "route.hpp"
@@ -15,6 +16,11 @@ namespace services::wal {
                    ? boost::filesystem::exists(s)
                    : boost::filesystem::exists(path);
     }
+
+    std::size_t next_index(std::size_t index, size_tt size) {
+        return index + size + sizeof(size_tt) + sizeof(crc32_t);
+    }
+
 
     wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, boost::filesystem::path path)
         : actor_zeta::basic_async_actor(manager, "wal")
@@ -76,12 +82,16 @@ namespace services::wal {
         trace(log_, "wal_replicate_t::load, id: {}", wal_id);
         std::size_t start_index = 0;
         next_id(wal_id);
+        std::vector<record_t> records;
         if (find_start_record(wal_id, start_index)) {
-            debug(log_, "wal_id: {}, start_index: {}", wal_id, start_index);
-            //todo: load list commands
+            std::size_t size = 0;
+            do {
+                records.emplace_back(read_record(start_index));
+                start_index = next_index(start_index, records[size].size);
+            } while (records[size++].is_valid());
+            records.erase(records.end() - 1);
         }
-        //todo: send list commands
-        actor_zeta::send(sender, address(), handler_id(route::load_finish), session);
+        actor_zeta::send(sender, address(), handler_id(route::load_finish), session, std::move(records));
     }
 
     void wal_replicate_t::create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data) {
@@ -133,7 +143,7 @@ namespace services::wal {
         auto id = read_id(start_index);
         while (id > 0) {
             id_ = id;
-            start_index += read_size(start_index) + sizeof(size_tt) + sizeof(crc32_t);
+            start_index = next_index(start_index, read_size(start_index));
             id = read_id(start_index);
         }
     }
@@ -145,7 +155,7 @@ namespace services::wal {
             for (auto n = first_id; n < wal_id; ++n) {
                 auto size = read_size(start_index);
                 if (size > 0) {
-                    start_index += size + sizeof(size_tt) + sizeof(crc32_t);
+                    start_index = next_index(start_index, size);
                 } else {
                     return false;
                 }
@@ -164,6 +174,29 @@ namespace services::wal {
             return unpack_wal_id(output);
         }
         return 0;
+    }
+
+    record_t wal_replicate_t::read_record(std::size_t start_index) const {
+        record_t record;
+        record.size = read_size(start_index);
+        if (record.size > 0) {
+            auto start = start_index + sizeof(size_tt);
+            auto finish = start + record.size + sizeof(crc32_t);
+            auto output = read(start, finish);
+            record.crc32 = read_crc32(output, record.size);
+            if (record.crc32 == crc32c::Crc32c(output.data(), record.size)) {
+                msgpack::unpacked msg;
+                msgpack::unpack(msg, output.data(), record.size);
+                const auto& o = msg.get();
+                record.last_crc32 = o.via.array.ptr[0].as<crc32_t>();
+                record.id = o.via.array.ptr[1].as<services::wal::id_t>();
+                record.type = static_cast<statement_type>(o.via.array.ptr[2].as<char>());
+                record.set_data(o.via.array.ptr[3]);
+            } else {
+                //todo: error wal content
+            }
+        }
+        return record;
     }
 
 } //namespace services::wal

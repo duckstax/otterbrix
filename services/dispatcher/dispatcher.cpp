@@ -88,6 +88,7 @@ namespace services::dispatcher {
 
     void dispatcher_t::load(components::session::session_id_t &session, actor_zeta::address_t sender) {
         trace(log_, "dispatcher_t::load, session: {}", session.data());
+        load_session_ = session;
         session_to_address_.emplace(session, sender);
         actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::load), session);
     }
@@ -109,7 +110,7 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::load_create_databases_result, session: {}", session.data());
         for (std::size_t i = 0; i < result.size(); ++i) {
             database_address_book_.emplace((*load_result_).at(i).name, result.at(i));
-            actor_zeta::send(result.at(i), dispatcher_t::address(), database::handler_id(database::route::create_collections), session, (*load_result_).at(i).name_collections());
+            actor_zeta::send(result.at(i), dispatcher_t::address(), database::handler_id(database::route::create_collections), session, (*load_result_).at(i).name_collections(), manager_disk_);
         }
     }
 
@@ -134,9 +135,55 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_wal_result(components::session::session_id_t& session) {
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
-        session_to_address_.erase(session);
+    void dispatcher_t::load_from_wal_result(components::session::session_id_t& session, std::vector<services::wal::record_t> &records) {
+        load_count_answers_ = records.size();
+        trace(log_, "dispatcher_t::load_from_wal_result, session: {}, count commands: {}", session.data(), load_count_answers_);
+        if (load_count_answers_ == 0) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
+            session_to_address_.erase(session);
+            return;
+        }
+        last_wal_id_ = records[load_count_answers_ - 1].id;
+        using namespace components::protocol;
+        for (const auto &record : records) {
+            switch (record.type) {
+                case statement_type::create_database: {
+                    auto data = std::get<create_database_t>(record.data);
+                    components::session::session_id_t session_database;
+                    create_database(session_database, data.database_, manager_wal_);
+                    break;
+                }
+                case statement_type::drop_database: {
+                    break;
+                }
+                case statement_type::create_collection: {
+                    auto data = std::get<create_collection_t>(record.data);
+                    components::session::session_id_t session_collection;
+                    create_collection(session_collection, data.database_, data.collection_, manager_wal_);
+                    break;
+                }
+                case statement_type::drop_collection: {
+                    auto data = std::get<drop_collection_t>(record.data);
+                    components::session::session_id_t session_collection;
+                    drop_collection(session_collection, data.database_, data.collection_, manager_wal_);
+                    break;
+                }
+                case statement_type::insert_one: {
+                    auto data = std::get<insert_one_t>(record.data);
+                    components::session::session_id_t session_insert;
+                    insert_one(session_insert, data.database_, data.collection_, data.document_, manager_wal_);
+                    break;
+                }
+                case statement_type::insert_many: {
+                    auto data = std::get<insert_many_t>(record.data);
+                    components::session::session_id_t session_insert;
+                    insert_many(session_insert, data.database_, data.collection_, data.documents_, manager_wal_);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
     }
 
     void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {
@@ -146,17 +193,20 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::create_database_finish(components::session::session_id_t& session, database::database_create_result result, std::string& database_name, actor_zeta::address_t database) {
-        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), database_name);
+        trace(log_, "dispatcher_t::create_database_finish: session {} , name create_database {}", session.data(), database_name);
         if (result.created_) {
-            /// auto md = manager_dispatcher_;
-            ///goblin_engineer::link(md, database);
             database_address_book_.emplace(database_name, database);
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::append_database), session, std::string(database_name));
-            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_database), session, components::protocol::create_database_t(database_name));
-            trace(log_, "add database_create_result");
+            if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+                wal_success(session, last_wal_id_);
+            } else {
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_database), session, components::protocol::create_database_t(database_name));
+            }
         }
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::create_database_finish), session, result);
-        session_to_address_.erase(session);
+        if (!check_load_from_wal(session)) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::create_database_finish), session, result);
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address) {
@@ -168,15 +218,18 @@ namespace services::dispatcher {
     void dispatcher_t::create_collection_finish(components::session::session_id_t& session, database::collection_create_result result, std::string& database_name, std::string& collection_name,actor_zeta::address_t collection) {
         trace(log_, "create_collection_finish: {}", collection_name);
         if (result.created_) {
-            /// auto md = manager_dispatcher_;
-            //goblin_engineer::link(md, collection);
             collection_address_book_.emplace(key_collection_t(database_name, std::string(collection_name)), collection);
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::append_collection), session, database_name, std::string(collection_name));
-            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_collection), session, components::protocol::create_collection_t(database_name, collection_name));
-            trace(log_, "add database_create_result");
+            if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+                wal_success(session, last_wal_id_);
+            } else {
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_collection), session, components::protocol::create_collection_t(database_name, collection_name));
+            }
         }
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::create_collection_finish), session, result);
-        session_to_address_.erase(session);
+        if (!check_load_from_wal(session)) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::create_collection_finish), session, result);
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address) {
@@ -195,23 +248,29 @@ namespace services::dispatcher {
         if (result.is_success()) {
             actor_zeta::send(database_address_book_.at(database_name), dispatcher_t::address(), database::handler_id(database::route::drop_collection), session, collection_name);
         } else {
-            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
-            session_to_address_.erase(session);
+            if (!check_load_from_wal(session)) {
+                actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
+                session_to_address_.erase(session);
+            }
         }
     }
 
     void dispatcher_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name, actor_zeta::address_t collection) {
         trace(log_, "drop_collection_finish: {}", collection_name);
         if (result.is_success()) {
-            ///auto md = address_book("manager_dispatcher");
-            ///goblin_engineer::link(md, collection);
             collection_address_book_.erase({database_name, std::string(collection_name)});
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::remove_collection), session, database_name, std::string(collection_name));
-            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::drop_collection), session, components::protocol::drop_collection_t(database_name, collection_name));
+            if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+                wal_success(session, last_wal_id_);
+            } else {
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::drop_collection), session, components::protocol::drop_collection_t(database_name, collection_name));
+            }
             trace(log_, "collection {} dropped", collection_name);
         }
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
-        session_to_address_.erase(session);
+        if (!check_load_from_wal(session)) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address) {
@@ -240,18 +299,30 @@ namespace services::dispatcher {
 
     void dispatcher_t::insert_one_finish(components::session::session_id_t& session, result_insert_one& result) {
         trace(log_, "dispatcher_t::insert_one_finish session: {}", session.data());
-        auto& s = ::find(session_to_address_, session);
-        actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::insert_one), session, s.get<insert_one_t>());
-        actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_one_finish), session, result);
-        session_to_address_.erase(session);
+        if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+            wal_success(session, last_wal_id_);
+        } else {
+            auto& s = ::find(session_to_address_, session);
+            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::insert_one), session, s.get<insert_one_t>());
+        }
+        if (!check_load_from_wal(session)) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_one_finish), session, result);
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::insert_many_finish(components::session::session_id_t& session, result_insert_many& result) {
         trace(log_, "dispatcher_t::insert_many_finish session: {}", session.data());
-        auto& s = ::find(session_to_address_, session);
-        actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::insert_many), session, s.get<insert_many_t>());
-        actor_zeta::send(s.address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_many_finish), session, result);
-        ::remove(session_to_address_, session);
+        if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+            wal_success(session, last_wal_id_);
+        } else {
+            auto& s = ::find(session_to_address_, session);
+            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::insert_many), session, s.get<insert_many_t>());
+        }
+        if (!check_load_from_wal(session)) {
+            actor_zeta::send(session_to_address_.at(session).address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_many_finish), session, result);
+            ::remove(session_to_address_, session);
+        }
     }
 
     void dispatcher_t::find(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, actor_zeta::address_t address) {
@@ -325,7 +396,9 @@ namespace services::dispatcher {
         if (!result.empty()) {
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal::id_t()); //todo after wal
         }
-        session_to_address_.erase(session);
+        if (!check_load_from_wal(session)) {
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::update_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
@@ -358,7 +431,9 @@ namespace services::dispatcher {
         if (!result.empty()) {
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal::id_t()); //todo after wal
         }
-        session_to_address_.erase(session);
+        if (!check_load_from_wal(session)) {
+            session_to_address_.erase(session);
+        }
     }
 
     void dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address) {
@@ -395,6 +470,17 @@ namespace services::dispatcher {
 
     void dispatcher_t::wal_success(components::session::session_id_t& session, services::wal::id_t wal_id) {
         actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal_id);
+    }
+
+    bool dispatcher_t::check_load_from_wal(components::session::session_id_t& session) {
+        if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
+            if (--load_count_answers_ == 0) {
+                actor_zeta::send(session_to_address_.at(load_session_).address(), dispatcher_t::address(), core::handler_id(core::route::load_finish));
+                session_to_address_.erase(load_session_);
+            }
+            return true;
+        }
+        return false;
     }
 
 

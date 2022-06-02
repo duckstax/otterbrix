@@ -18,6 +18,7 @@
 #include <services/database/result_database.hpp>
 #include <services/wal/base.hpp>
 #include <services/disk/result.hpp>
+#include <services/wal/record.hpp>
 
 #include "route.hpp"
 #include "session.hpp"
@@ -52,7 +53,7 @@ namespace services::dispatcher {
         void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
         void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
         void load_create_documents_result(components::session::session_id_t &session);
-        void load_from_wal_result(components::session::session_id_t &session);
+        void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
         void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
         void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, actor_zeta::address_t);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, actor_zeta::address_t address);
@@ -78,6 +79,7 @@ namespace services::dispatcher {
         void size_finish(components::session::session_id_t&, result_size& result);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
+        bool check_load_from_wal(components::session::session_id_t& session);
 
     private:
         log_t log_;
@@ -90,6 +92,8 @@ namespace services::dispatcher {
         std::unordered_map<key_collection_t, actor_zeta::address_t, key_collection_t::hash> collection_address_book_;
         std::unordered_map<std::string, actor_zeta::address_t> database_address_book_;
         disk::result_load_t load_result_;
+        components::session::session_id_t load_session_;
+        services::wal::id_t last_wal_id_;
         std::size_t load_count_answers_;
     };
 

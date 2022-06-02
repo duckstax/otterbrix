@@ -57,7 +57,7 @@ namespace services::collection {
                       : result_insert_one(insert_(document));
         if (!result.empty()) {
             std::vector<document_ptr> new_documents = {document};
-            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), new_documents);
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), new_documents);
         }
         actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result);
     }
@@ -79,7 +79,7 @@ namespace services::collection {
                 }
             }
             if (!new_documents.empty()) {
-                actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), new_documents);
+                actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), new_documents);
             }
             actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(std::move(result)));
         }
@@ -157,7 +157,7 @@ namespace services::collection {
         debug(log_,"collection::drop : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: debug(log_,"dispatcher : {}", dispatcher.type());
-        actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(type()));
+        actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(name_));
     }
 
     document_id_t collection_t::insert_(const document_ptr&document) {
@@ -293,13 +293,13 @@ namespace services::collection {
             update_documents.push_back(storage_.at(result.upserted_id()));
         }
         if (!update_documents.empty()) {
-            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(type()), update_documents);
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), update_documents);
         }
     }
 
     void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete &result) {
         if (!result.empty()) {
-            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents), session, std::string(database_name_), std::string(type()), result.deleted_ids());
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents), session, std::string(database_name_), std::string(name_), result.deleted_ids());
         }
     }
 

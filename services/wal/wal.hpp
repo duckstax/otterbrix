@@ -10,6 +10,7 @@
 #include <components/document/file.hpp>
 
 #include "dto.hpp"
+#include "record.hpp"
 #include "manager_wal_replicate.hpp"
 
 namespace services::wal {
@@ -43,6 +44,7 @@ namespace services::wal {
         void init_id();
         bool find_start_record(services::wal::id_t wal_id, std::size_t &start_index) const;
         services::wal::id_t read_id(std::size_t start_index) const;
+        record_t read_record(std::size_t start_index) const;
 
         log_t log_;
         boost::filesystem::path path_;
