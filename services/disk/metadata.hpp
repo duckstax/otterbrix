@@ -5,7 +5,7 @@
 #include <memory>
 #include <boost/filesystem.hpp>
 #include <components/protocol/base.hpp>
-#include <components/document/file.hpp>
+#include <core/file/file.hpp>
 
 namespace services::disk {
 
@@ -16,7 +16,7 @@ namespace services::disk {
         using databases_t = std::vector<database_name_t>;
         using data_t = std::unordered_map<database_name_t, collections_t>;
         using metadata_ptr = std::unique_ptr<metadata_t>;
-        using file_t = components::file::file_t;
+        using file_t = core::file::file_t;
 
     public:
         static metadata_ptr open(const path_t &file_name);

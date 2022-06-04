@@ -48,7 +48,7 @@ namespace services::disk {
         if (status.ok()) {
             db_.reset(db);
             metadata_ = metadata_t::open(file_name / "METADATA");
-            file_wal_id_ = std::make_unique<components::file::file_t>(file_name / "WAL_ID");
+            file_wal_id_ = std::make_unique<core::file::file_t>(file_name / "WAL_ID");
         } else {
             throw std::runtime_error("db open failed");
         }

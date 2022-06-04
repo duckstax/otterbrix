@@ -27,6 +27,7 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::protocol
         rocketjoe::locks
+        rocketjoe::file
 )
 
 target_include_directories(

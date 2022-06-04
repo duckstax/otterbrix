@@ -7,7 +7,7 @@
 
 #include <components/session/session.hpp>
 #include <components/protocol/protocol.hpp>
-#include <components/document/file.hpp>
+#include <core/file/file.hpp>
 
 #include "dto.hpp"
 #include "record.hpp"
@@ -18,7 +18,7 @@ namespace services::wal {
     class wal_replicate_t final : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
         using address_t = actor_zeta::address_t;
-        using file_ptr = std::unique_ptr<components::file::file_t>;
+        using file_ptr = std::unique_ptr<core::file::file_t>;
 
     public:
         wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, boost::filesystem::path path);

@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 
-namespace components::file {
+namespace core::file {
 
     file_t::file_t(const path_t &path)
         : fd_(::open(path.c_str(), O_CREAT | O_RDWR, 0777))
@@ -65,4 +65,4 @@ namespace components::file {
         offset_ = ::lseek64(fd_, 0, SEEK_END);
     }
 
-} //namespace components::file
+} //namespace core::file

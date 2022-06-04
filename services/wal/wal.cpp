@@ -36,7 +36,7 @@ namespace services::wal {
         if (!file_exist_(path_)) {
             boost::filesystem::create_directory(path_);
         }
-        file_ = std::make_unique<components::file::file_t>(path_ / wal_name);
+        file_ = std::make_unique<core::file::file_t>(path_ / wal_name);
         file_->seek_eof();
         init_id();
     }

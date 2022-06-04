@@ -2,7 +2,7 @@
 #include <string>
 #include <boost/filesystem.hpp>
 
-namespace components::file {
+namespace core::file {
 
     using path_t = boost::filesystem::path;
 
@@ -25,4 +25,4 @@ namespace components::file {
         __off64_t offset_;
     };
 
-} //namespace components::file
+} //namespace core::file
