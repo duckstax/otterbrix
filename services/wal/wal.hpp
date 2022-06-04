@@ -45,6 +45,8 @@ namespace services::wal {
         bool find_start_record(services::wal::id_t wal_id, std::size_t &start_index) const;
         services::wal::id_t read_id(std::size_t start_index) const;
         record_t read_record(std::size_t start_index) const;
+        size_tt read_size(size_t start_index) const;
+        buffer_t read(size_t start_index, size_t finish_index) const;
 
         log_t log_;
         boost::filesystem::path path_;
@@ -52,10 +54,15 @@ namespace services::wal {
         crc32_t last_crc32_{0};
         file_ptr file_;
         buffer_t buffer_;
+
 #ifdef DEV_MODE
     public:
-        size_tt read_size(size_t start_index) const;
-        buffer_t read(size_t start_index, size_t finish_index) const;
+        bool test_find_start_record(services::wal::id_t wal_id, std::size_t &start_index) const;
+        services::wal::id_t test_read_id(std::size_t start_index) const;
+        std::size_t test_next_record(std::size_t start_index) const;
+        record_t test_read_record(std::size_t start_index) const;
+        size_tt test_read_size(size_t start_index) const;
+        buffer_t test_read(size_t start_index, size_t finish_index) const;
 #endif
     };
 

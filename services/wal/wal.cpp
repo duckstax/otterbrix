@@ -193,10 +193,39 @@ namespace services::wal {
                 record.type = static_cast<statement_type>(o.via.array.ptr[2].as<char>());
                 record.set_data(o.via.array.ptr[3]);
             } else {
+                record.type = statement_type::unused;
                 //todo: error wal content
             }
+        } else {
+            record.type = statement_type::unused;
         }
         return record;
     }
+
+#ifdef DEV_MODE
+    bool wal_replicate_t::test_find_start_record(services::wal::id_t wal_id, std::size_t &start_index) const {
+        return find_start_record(wal_id, start_index);
+    }
+
+    services::wal::id_t wal_replicate_t::test_read_id(std::size_t start_index) const {
+        return read_id(start_index);
+    }
+
+    std::size_t wal_replicate_t::test_next_record(std::size_t start_index) const {
+        return next_index(start_index, read_size(start_index));
+    }
+
+    record_t wal_replicate_t::test_read_record(std::size_t start_index) const {
+        return read_record(start_index);
+    }
+
+    size_tt wal_replicate_t::test_read_size(size_t start_index) const {
+        return read_size(start_index);
+    }
+
+    buffer_t wal_replicate_t::test_read(size_t start_index, size_t finish_index) const {
+        return read(start_index, finish_index);
+    }
+#endif
 
 } //namespace services::wal
