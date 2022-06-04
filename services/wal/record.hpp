@@ -11,13 +11,7 @@ namespace services::wal {
         crc32_t last_crc32;
         id_t id;
         statement_type type;
-        std::variant<components::protocol::create_database_t,
-                     components::protocol::drop_database_t,
-                     components::protocol::create_collection_t,
-                     components::protocol::drop_collection_t,
-                     insert_one_t,
-                     insert_many_t>
-            data;
+        components::protocol::variant_statement_t data;
 
         bool is_valid() const;
         void set_data(msgpack::object& object);
