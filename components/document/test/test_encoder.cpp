@@ -7,6 +7,7 @@
 #include <components/document/json/json_coder.hpp>
 #include <components/document/support/writer.hpp>
 #include <components/document/support/slice_io.hpp>
+#include <components/document/support/num_conversion.hpp>
 
 using namespace document;
 using namespace document::impl;

@@ -25,9 +25,6 @@ set( ${PROJECT_NAME}_HEADERS
         mutable/mutable_value.hpp
         mutable/value_slot.hpp
         support/better_assert.hpp
-        support/bitmap.hpp
-        support/delimiter.hpp
-        support/diff_match_patch.hpp
         support/endian.hpp
         support/endianness.hpp
         support/exception.hpp
@@ -37,7 +34,6 @@ set( ${PROJECT_NAME}_HEADERS
         support/platform_compat.hpp
         support/ref_counted.hpp
         support/slice_io.hpp
-        support/slice_stream.hpp
         support/small_vector_base.hpp
         support/small_vector.hpp
         support/string_table.hpp
@@ -66,13 +62,11 @@ set(${PROJECT_NAME}_SOURCES
         mutable/mutable_value.cpp
         mutable/value_slot.cpp
         support/better_assert.cpp
-        support/bitmap.cpp
         support/exception.cpp
         support/num_conversion.cpp
         support/parse_date.cpp
         support/ref_counted.cpp
         support/slice_io.cpp
-        support/slice_stream.cpp
         support/string_table.cpp
         support/varint.cpp
         support/writer.cpp
