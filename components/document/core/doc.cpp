@@ -8,12 +8,13 @@
 #include <components/document/support/better_assert.hpp>
 #include <functional>
 #include <mutex>
+#include <utility>
 #include <vector>
 
 #define Log(FMT,...)
 #define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
 
-namespace document { namespace impl {
+namespace document::impl {
 
 using namespace internal;
 
@@ -32,15 +33,15 @@ static std::mutex mutex;
 
 scope_t::scope_t(slice_t data, shared_keys_t *sk, slice_t destination) noexcept
     : _sk(sk)
-    , _extern_destination(destination)
-    , _data(data)
+    , _extern_destination(std::move(destination))
+    , _data(std::move(data))
 {
     registr();
 }
 
 scope_t::scope_t(const alloc_slice_t &data, shared_keys_t *sk, slice_t destination) noexcept
     : _sk(sk)
-    , _extern_destination(destination)
+    , _extern_destination(std::move(destination))
     , _data(data)
     , _alloced(data)
 {
@@ -75,7 +76,7 @@ void scope_t::registr() noexcept {
         memory_map = new memory_map_t;
     Log("Register   (%p ... %p) --> scope_t %p, sk=%p [Now %zu]", _data.buf, _data.end(), this, _sk.get(), memory_map->size()+1);
     if (!_is_doc && _data.size == 2) {
-        if (auto t = ((const value_t*)_data.buf)->type(); t != value_type::dict) {
+        if (auto t = reinterpret_cast<const value_t*>(_data.buf)->type(); t != value_type::dict) {
             return;
         }
     }
@@ -123,7 +124,7 @@ void scope_t::unregister() noexcept {
                 ++iter;
             }
         }
-        Warn("unregister(%p) couldn't find an entry for (%p ... %p)", this, _data.buf, _data.end());
+        Warn("unregister(%p) couldn't find an entry for (%p ... %p)", reinterpret_cast<void*>(this), _data.buf, reinterpret_cast<const void*>(_data.end()));
     }
 }
 
@@ -180,21 +181,21 @@ shared_keys_t* scope_t::shared_keys(const value_t *v) noexcept {
 }
 
 const value_t* scope_t::resolve_extern_pointer_to(const void* dst) const noexcept {
-    dst = offsetby(dst, (char*)_extern_destination.end() - (char*)_data.buf);
+    dst = offsetby(dst, reinterpret_cast<const char*>(_extern_destination.end()) - reinterpret_cast<const char*>(_data.buf));
     if (_usually_false(!_extern_destination.is_contains_address(dst)))
         return nullptr;
-    return (const value_t*)dst;
+    return reinterpret_cast<const value_t*>(dst);
 }
 
 const value_t* scope_t::resolve_pointer_from(const internal::pointer_t* src, const void *dst) noexcept {
     std::lock_guard<std::mutex> lock(mutex);
-    auto scope = _containing((const value_t*)src);
+    auto scope = _containing(static_cast<const value_t*>(src));
     return scope ? scope->resolve_extern_pointer_to(dst) : nullptr;
 }
 
 std::pair<const value_t*,slice_t> scope_t::resolve_pointer_from_with_range(const pointer_t* src, const void* dst) noexcept {
     std::lock_guard<std::mutex> lock(mutex);
-    auto scope = _containing((const value_t*)src);
+    auto scope = _containing(static_cast<const value_t*>(src));
     if (!scope)
         return { };
     return { scope->resolve_extern_pointer_to(dst), scope->extern_destination() };
@@ -208,8 +209,8 @@ void scope_t::dump_all() {
     }
     for (auto &entry : *memory_map) {
         auto scope = entry.scope;
-        fprintf(stderr, "%p -- %p (%4zu bytes) --> shared_keys_t[%p]%s\n", scope->_data.buf, scope->_data.end(),
-                scope->_data.size, scope->shared_keys(), (scope->_is_doc ? " (doc_t)" : ""));
+        fprintf(stderr, "%p -- %p (%4zu bytes) --> shared_keys_t[%p]%s\n", scope->_data.buf, reinterpret_cast<const void*>(scope->_data.end()),
+                scope->_data.size, reinterpret_cast<const void*>(scope->shared_keys()), (scope->_is_doc ? " (doc_t)" : ""));
     }
 }
 
@@ -260,7 +261,7 @@ retained_const_t<doc_t> doc_t::containing(const value_t *src) noexcept {
     if (!scope)
         return nullptr;
     assert_postcondition(scope->_is_doc);
-    return retained_const_t<doc_t>((const doc_t*)scope);
+    return retained_const_t<doc_t>(dynamic_cast<const doc_t*>(scope));
 }
 
 const value_t* doc_t::root() const {
@@ -284,12 +285,9 @@ bool doc_t::set_associated(void *pointer, const char *type) {
 }
 
 void* doc_t::get_associated(const char *type) const {
-    if (type == _associated_type || type == nullptr)
-        return _associated_pointer;
-    else if (_associated_type && strcmp(_associated_type, type) == 0)
+    if (type == _associated_type || type == nullptr || (_associated_type && strcmp(_associated_type, type) == 0))
         return _associated_pointer;
     return nullptr;
 }
 
-
-} }
+}

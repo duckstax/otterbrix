@@ -8,12 +8,10 @@ set( ${PROJECT_NAME}_HEADERS
         structure.hpp
         core/array.hpp
         core/base.hpp
-        core/deep_iterator.hpp
         core/dict.hpp
         core/doc.hpp
         core/encoder.hpp
         core/internal.hpp
-        core/path.hpp
         core/pointer.hpp
         core/shared_keys.hpp
         core/slice_core.hpp
@@ -55,16 +53,13 @@ set(${PROJECT_NAME}_SOURCES
         range.cpp
         structure.cpp
         core/array.cpp
-        core/deep_iterator.cpp
         core/dict.cpp
         core/doc.cpp
         core/encoder.cpp
-        core/path.cpp
         core/pointer.cpp
         core/shared_keys.cpp
         core/slice_core.cpp
         core/value.cpp
-        core/value_dump.cpp
         json/json_delta.cpp
         json/json_coder.cpp
         msgpack/msgpack_encoder.cpp

@@ -10,10 +10,10 @@
 #include <components/document/support/better_assert.hpp>
 #include <algorithm>
 #include <cmath>
-#include <float.h>
-#include <stdlib.h>
+#include <cfloat>
+#include <cstdlib>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 using namespace internal;
 
@@ -86,7 +86,7 @@ void encoder_t::set_base(slice_t base, bool mark_extern_pointers, size_t cutoff)
     _base_cutoff = nullptr;
     if (base && cutoff > 0 && cutoff < base.size) {
         assert_precondition(cutoff >= 8);
-        _base_cutoff = (char*)base.end() - cutoff;
+        _base_cutoff = reinterpret_cast<const char*>(base.end()) - cutoff;
     }
     _base_min_used = _base.end();
     _mark_extern_ptrs = mark_extern_pointers;
@@ -137,7 +137,7 @@ slice_t encoder_t::base() const {
 }
 
 slice_t encoder_t::base_used() const {
-    return _base_min_used != 0 ? slice_t(_base_min_used, _base.end()) : slice_t();
+    return _base_min_used != nullptr ? slice_t(_base_min_used, _base.end()) : slice_t();
 }
 
 const string_table_t &encoder_t::strings() const {
@@ -171,7 +171,7 @@ encoder_t::pre_written_value encoder_t::last_value_written() const {
 
 void encoder_t::write_value_again(pre_written_value pos) {
     _throw_if(pos == pre_written_value::none, error_code::encode_error, "Can't rewrite an inline value_t");
-    write_pointer(ssize_t(pos) - _base.size);
+    write_pointer(static_cast<size_t>(pos) - _base.size);
 }
 
 
@@ -198,7 +198,7 @@ uint8_t* encoder_t::place_item() {
         if (_items->tag == tag_dict)
             _blocked_on_key = _writing_key = true;
     }
-    return (uint8_t*) _items->push_back_new();
+    return static_cast<uint8_t*>(_items->push_back_new());
 }
 
 template <bool can_inline>
@@ -247,10 +247,10 @@ void encoder_t::write_bool(bool b) {
 
 void encoder_t::write_int(uint64_t i, bool is_short, bool is_unsigned) {
     if (is_short) {
-        new (place_item()) value_t(tag_short, (i >> 8) & 0x0F, i & 0xFF);
+        new (place_item()) value_t(tag_short, static_cast<int>((i >> 8) & 0x0F), static_cast<int>(i & 0xFF));
     } else {
         byte intbuf[10];
-        auto size = put_int_of_length(intbuf, i, is_unsigned);
+        auto size = put_int_of_length(intbuf, static_cast<int64_t>(i), is_unsigned);
         byte *buf = place_value<false>(tag_int, byte(size - 1), 1 + size);
         if (is_unsigned)
             buf[0] |= 0x08;
@@ -259,7 +259,7 @@ void encoder_t::write_int(uint64_t i, bool is_short, bool is_unsigned) {
 }
 
 void encoder_t::write_int(int64_t i) {
-    write_int(i, (i < 2048 && i >= -2048), false);
+    write_int(static_cast<uint64_t>(i), (i < 2048 && i >= -2048), false);
 }
 
 void encoder_t::write_uint(uint64_t i) {
@@ -269,7 +269,7 @@ void encoder_t::write_uint(uint64_t i) {
 void encoder_t::write_double(double d) {
     _throw_if(std::isnan(d), error_code::invalid_data, "Can't write NaN");
     if (is_float_representable(d)) {
-        return _write_float((float)d);
+        return _write_float(static_cast<float>(d));
     } else {
         endian::little_double swapped = d;
         auto buf = place_value<false>(tag_float, 0x08, 2 + sizeof(swapped));
@@ -295,7 +295,7 @@ void encoder_t::_write_float(float f) {
 }
 
 bool encoder_t::is_float_representable(double n) noexcept {
-    return (fabs(n) <= FLT_MAX && n == (float)n);
+    return (fabs(n) <= FLT_MAX && n == static_cast<float>(n));
 }
 
 const void* encoder_t::write_data(tags tag, slice_t s) {
@@ -330,7 +330,7 @@ const void* encoder_t::_write_string(slice_t s) {
     bool is_new;
     std::tie(entry, is_new) = _strings.insert(s, 0);
     if (!is_new) {
-        ssize_t offset = entry->second - _base.size;
+        size_t offset = entry->second - _base.size;
         if (_items->wide || next_write_pos() - offset <= pointer_t::max_narrow_offset - 32) {
             write_pointer(offset);
             if (offset < 0) {
@@ -347,7 +347,7 @@ const void* encoder_t::_write_string(slice_t s) {
     write_data(tag_string, s);
 
     const void* written_str = _string_storage.write(s);
-    *entry = {{written_str, s.size}, (uint32_t)offset};
+    *entry = {{written_str, s.size}, offset};
     return written_str;
 }
 
@@ -412,7 +412,7 @@ const value_t* encoder_t::min_used(const value_t *value) {
     switch (value->type()) {
     case value_type::array: {
         const value_t *min_value = value;
-        for (array_t::iterator i((const array_t*)value); i; ++i) {
+        for (array_t::iterator i(reinterpret_cast<const array_t*>(value)); i; ++i) {
             min_value = std::min(min_value, min_used(i.value()));
             if (min_value == nullptr)
                 break;
@@ -421,7 +421,7 @@ const value_t* encoder_t::min_used(const value_t *value) {
     }
     case value_type::dict: {
         const value_t *min_value = value;
-        for (dict_t::iterator i((const dict_t*)value, false); i; ++i) {
+        for (dict_t::iterator i(reinterpret_cast<const dict_t*>(value), false); i; ++i) {
             min_value = std::min(min_value, min_used(i.key()));
             min_value = std::min(min_value, min_used(i.value()));
             if (min_value == nullptr)
@@ -438,7 +438,7 @@ void encoder_t::write_value(const value_t *value, const shared_keys_t* &sk, cons
     if (value_in_base(value) && !is_narrow_value(value)) {
         auto min_value = min_used(value);
         if (min_value >= _base_cutoff) {
-            write_pointer( (ssize_t)value - (ssize_t)_base.end() );
+            write_pointer(reinterpret_cast<size_t>(value) - reinterpret_cast<size_t>(_base.end()));
             if (min_value && min_value < _base_min_used)
                 _base_min_used = min_value;
             return;
@@ -473,7 +473,7 @@ void encoder_t::write_value(const value_t *value, const shared_keys_t* &sk, cons
     }
     case tag_dict: {
         ++_copying_collection;
-        auto dict = (const dict_t*)value;
+        auto dict = reinterpret_cast<const dict_t*>(value);
         if (dict->is_mutable()) {
             dict->heap_dict()->write_to(*this);
         } else {
@@ -503,7 +503,7 @@ void encoder_t::write_value(const value_t *value NONNULL, const func_write_value
 }
 
 bool encoder_t::value_in_base(const value_t *value) const {
-    return _base && value >= _base.buf && value < (const void*)_base.end();
+    return _base && value >= _base.buf && value < static_cast<const void*>(_base.end());
 }
 
 bool encoder_t::empty() const {
@@ -522,7 +522,7 @@ void encoder_t::check_pointer_widths(value_array_t *items, size_t write_pos) {
     if (!items->wide) {
         for (value_t &v : *items) {
             if (v.is_pointer()) {
-                ssize_t pos = v.as_pointer()->offset<true>() - _base.size;
+                size_t pos = v.as_pointer()->offset<true>() - _base.size;
                 if (write_pos - pos > pointer_t::max_narrow_offset) {
                     items->wide = true;
                     break;
@@ -538,12 +538,12 @@ void encoder_t::fix_pointers(value_array_t *items) {
     int width = items->wide ? size_wide : size_narrow;
     for (value_t &v : *items) {
         if (v.is_pointer()) {
-            ssize_t pos = v.as_pointer()->offset<true>() - _base.size;
-            assert(pos < (ssize_t)pointer_origin);
+            ssize_t pos = static_cast<ssize_t>(v.as_pointer()->offset<true>()) - static_cast<ssize_t>(_base.size);
+            assert(pos < static_cast<ssize_t>(pointer_origin));
             bool is_external = (pos < 0);
-            v = pointer_t(pointer_origin - pos, width, is_external && _mark_extern_ptrs);
+            v = pointer_t(pointer_origin - static_cast<size_t>(pos), width, is_external && _mark_extern_ptrs);
         }
-        pointer_origin += width;
+        pointer_origin += static_cast<size_t>(width);
     }
 }
 
@@ -579,7 +579,7 @@ void encoder_t::write_key(int n) {
 
 void encoder_t::write_key(const value_t *key, const shared_keys_t *sk) {
     if (key->is_int()) {
-        int int_key = (int)key->as_int();
+        int int_key = static_cast<int>(key->as_int());
         if (!sk) {
             sk = key->shared_keys();
             _throw_if(!sk, error_code::encode_error, "Numeric key given without shared_keys_t");
@@ -690,9 +690,9 @@ void encoder_t::end_collection(tags tag) {
         size_t buf_len = 2;
         if (count >= long_array_count)
             buf_len += size_of_var_int(count - long_array_count);
-        uint32_t inline_count = std::min(count, (uint32_t)long_array_count);
+        uint32_t inline_count = std::min(count, long_array_count);
         byte *buf = place_value<false>(tag, byte(inline_count >> 8), buf_len);
-        buf[1]  = (byte)(inline_count & 0xFF);
+        buf[1]  = static_cast<byte>(inline_count & 0xFF);
         if (count >= long_array_count)
             put_uvar_int(&buf[2], count - long_array_count);
 
@@ -726,7 +726,7 @@ static inline int compare_keys_by_index(const slice_t_c *sa, const slice_t_c *sb
         if (sb->buf)
             return true;
         else
-            return (int)sa->size < (int)sb->size;
+            return static_cast<int>(sa->size) < static_cast<int>(sb->size);
     }
 }
 
@@ -754,15 +754,15 @@ void encoder_t::sort_dict(value_array_t &items) {
         indices[i] = base + i;
     std::sort(&indices[0], &indices[n], &compare_keys_by_index);
     _temp_array(oldBuf, char, 2*n * sizeof(value_t));
-    auto old = (value_t*)oldBuf;
+    auto old = static_cast<value_t*>(oldBuf);
     memcpy(old, &items[0], 2*n * sizeof(value_t));
     for (size_t i = 0; i < n; i++) {
         auto j = indices[i] - base;
-        if ((ssize_t)i != j) {
+        if (static_cast<ssize_t>(i) != j) {
             items[2*i]   = old[2*j];
             items[2*i+1] = old[2*j+1];
         }
     }
 }
 
-} }
+}

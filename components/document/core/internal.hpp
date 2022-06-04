@@ -1,13 +1,13 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #ifndef NDEBUG
 #include <atomic>
 #endif
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
     enum {
         size_narrow = 2,
@@ -60,4 +60,4 @@ namespace document { namespace impl { namespace internal {
 #endif
 
 
-} } }
+}
