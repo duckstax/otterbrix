@@ -17,7 +17,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/slice_core.hpp
         core/slice.hpp
         core/value.hpp
-        json/json_delta.hpp
         json/json_coder.hpp
         mutable/mutable_array.h
         mutable/mutable_array.hpp
@@ -60,7 +59,6 @@ set(${PROJECT_NAME}_SOURCES
         core/shared_keys.cpp
         core/slice_core.cpp
         core/value.cpp
-        json/json_delta.cpp
         json/json_coder.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
