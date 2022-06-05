@@ -99,6 +99,20 @@ TEST_CASE("duck_charmer::test_save_load::disk+wal") {
                 auto address = actor_zeta::address_t::empty_address();
                 insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
+
+                delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
+                wal.delete_one(session, address, delete_one);
+
+                delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
+                wal.delete_many(session, address, delete_many);
+
+                update_one_t update_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 5}})"),
+                                        components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
+                wal.update_one(session, address, update_one);
+
+                update_many_t update_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$gt": 5}})"),
+                                          components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
+                wal.update_many(session, address, update_many);
             }
         }
     }
@@ -113,11 +127,23 @@ TEST_CASE("duck_charmer::test_save_load::disk+wal") {
                 auto session = duck_charmer::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
-                REQUIRE(*size == count_documents + 1);
-                for (uint n_doc = 1; n_doc <= count_documents + 1; ++n_doc) {
-                    auto session_doc = duck_charmer::session_id_t();
+                REQUIRE(*size == count_documents - 3);
+                auto session_doc = duck_charmer::session_id_t();
+
+                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(1))).is_find());
+
+                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(2))).is_find());
+                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(3))).is_find());
+                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(4))).is_find());
+
+                session_doc = duck_charmer::session_id_t();
+                REQUIRE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(5)))->get_ulong("count") == 0);
+
+                for (uint n_doc = 6; n_doc <= count_documents + 1; ++n_doc) {
+                    session_doc = duck_charmer::session_id_t();
                     auto doc_find = dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(int(n_doc))));
                     REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(doc_find->get_ulong("count") == 1000);
                 }
             }
         }
