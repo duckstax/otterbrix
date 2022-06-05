@@ -14,8 +14,6 @@ namespace document::impl::internal {
         size_wide   = 4
     };
 
-    static inline int width(bool wide) { return wide ? size_wide : size_narrow; }
-
     enum tags : uint8_t {
         tag_short,
         tag_int,

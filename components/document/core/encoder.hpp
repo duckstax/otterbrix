@@ -162,8 +162,6 @@ private:
     bool _blocked_on_key {false};
     bool _trailer {true};
     bool _mark_extern_ptrs{false};
-
-    friend class encoder_tests_t;
 };
 
 }

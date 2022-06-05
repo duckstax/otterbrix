@@ -395,9 +395,9 @@ slice_t dict_iterator_t::key_string() const noexcept {
 
 key_t dict_iterator_t::keyt() const noexcept {
     if (_key->is_int())
-        return static_cast<int>(_key->as_int());
+        return key_t(static_cast<int>(_key->as_int()));
     else
-        return _key->as_string();
+        return key_t(_key->as_string());
 }
 
 dict_iterator_t& dict_iterator_t::operator++() {
