@@ -33,6 +33,10 @@ namespace services::wal {
         add_handler(handler_id(route::drop_collection), &wal_replicate_t::drop_collection);
         add_handler(handler_id(route::insert_one), &wal_replicate_t::insert_one);
         add_handler(handler_id(route::insert_many), &wal_replicate_t::insert_many);
+        add_handler(handler_id(route::delete_one), &wal_replicate_t::delete_one);
+        add_handler(handler_id(route::delete_many), &wal_replicate_t::delete_many);
+        add_handler(handler_id(route::update_one), &wal_replicate_t::update_one);
+        add_handler(handler_id(route::update_many), &wal_replicate_t::update_many);
         if (!file_exist_(path_)) {
             boost::filesystem::create_directory(path_);
         }
@@ -126,6 +130,30 @@ namespace services::wal {
 
     void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, insert_many_t& data) {
         trace(log_, "wal_replicate_t::insert_many {}::{}", data.database_, data.collection_);
+        write_data_(data);
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::delete_one(session_id_t& session, address_t& sender, delete_one_t& data) {
+        trace(log_, "wal_replicate_t::delete_one {}::{}", data.database_, data.collection_);
+        write_data_(data);
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::delete_many(session_id_t& session, address_t& sender, delete_many_t& data) {
+        trace(log_, "wal_replicate_t::delete_many {}::{}", data.database_, data.collection_);
+        write_data_(data);
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::update_one(session_id_t& session, address_t& sender, update_one_t& data) {
+        trace(log_, "wal_replicate_t::update_one {}::{}", data.database_, data.collection_);
+        write_data_(data);
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::update_many(session_id_t& session, address_t& sender, update_many_t& data) {
+        trace(log_, "wal_replicate_t::update_many {}::{}", data.database_, data.collection_);
         write_data_(data);
         send_success(session, sender);
     }

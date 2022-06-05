@@ -16,6 +16,10 @@ namespace services::wal {
 
         insert_one,
         insert_many,
+        delete_one,
+        delete_many,
+        update_one,
+        update_many,
 
         success,
     };
