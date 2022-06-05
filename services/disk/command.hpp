@@ -4,6 +4,24 @@
 
 namespace services::disk {
 
+    struct command_append_database_t {
+        database_name_t database;
+    };
+
+    struct command_remove_database_t {
+        database_name_t database;
+    };
+
+    struct command_append_collection_t {
+        database_name_t database;
+        collection_name_t collection;
+    };
+
+    struct command_remove_collection_t {
+        database_name_t database;
+        collection_name_t collection;
+    };
+
     struct command_write_documents_t {
         database_name_t database;
         collection_name_t collection;
@@ -32,9 +50,12 @@ namespace services::disk {
         command_name_t name() const;
 
     private:
-        std::variant<
-            command_write_documents_t,
-            command_remove_documents_t>
+        std::variant<command_append_database_t,
+                     command_remove_database_t,
+                     command_append_collection_t,
+                     command_remove_collection_t,
+                     command_write_documents_t,
+                     command_remove_documents_t>
             command_;
     };
 

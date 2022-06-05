@@ -8,6 +8,7 @@
 
 #include <crc32c/crc32c.h>
 
+using namespace services;
 using namespace services::wal;
 
 TEST_CASE("pack and unpack") {
@@ -19,11 +20,11 @@ TEST_CASE("pack and unpack") {
     insert_many_t data(database,collection,std::move(documents));
 
     const crc32_t  last_crc32 = 42;
-    const log_number_t log_number = 21;
+    const wal::id_t wal_id = 21;
 
     buffer_t  buffer;
 
-    pack(buffer,last_crc32,log_number,data);
+    pack(buffer,last_crc32,wal_id,data);
     wal_entry_t<insert_many_t> entry;
     entry.size_= read_size_impl(buffer, 0);
 
@@ -36,6 +37,6 @@ TEST_CASE("pack and unpack") {
 
     REQUIRE(entry.last_crc32_ == last_crc32);
     REQUIRE(entry.type_ == statement_type::insert_many);
-    REQUIRE(entry.log_number_ == log_number);
+    REQUIRE(entry.id_ == wal_id);
 
 }

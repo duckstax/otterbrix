@@ -9,7 +9,7 @@ using namespace services::disk;
 
 TEST_CASE("sync collection from disk") {
     SECTION("save collection into disk") {
-        remove((file_db + "/metadata").data());
+        remove((file_db + "/METADATA").data());
         disk_t disk(file_db);
         REQUIRE(disk.append_database(database_name1));
         REQUIRE(disk.append_database(database_name2));

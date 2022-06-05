@@ -29,6 +29,7 @@ enum class DataType {
 enum class statement_type : char {
     unused = 0x00, // unused
     create_database,
+    drop_database,
     create_collection,
     drop_collection,
     insert_one,

@@ -31,6 +31,7 @@ namespace services::collection {
     class collection_t final : public actor_zeta::basic_async_actor {
     public:
         collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
+        auto create_documents(session_id_t& session, std::list<document_ptr> &documents) -> void;
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);

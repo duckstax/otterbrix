@@ -11,7 +11,6 @@ namespace duck_charmer {
     namespace dispatcher {
         using services::dispatcher::route;
         using services::dispatcher::handler_id;
-
     }
 
     namespace database {

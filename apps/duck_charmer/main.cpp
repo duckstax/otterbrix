@@ -25,6 +25,7 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def(py::init([](){
             auto* spaces =  spaces::get_instance();
             auto dispatcher =  spaces->dispatcher();
+            dispatcher->load();
             auto log = spaces::get_instance()->get_log().clone();
             return new wrapper_client(log,dispatcher);
         }))

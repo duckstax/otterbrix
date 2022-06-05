@@ -28,6 +28,7 @@ namespace duck_charmer {
     public:
         /// blocking method
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
+        auto load() -> void;
         auto create_database(session_id_t &session, const database_name_t &database) -> void;
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
@@ -48,6 +49,7 @@ namespace duck_charmer {
 
     private:
         /// async method
+        auto load_finish() -> void;
         auto create_database_finish(session_id_t &session, services::database::database_create_result result) -> void;
         auto create_collection_finish(session_id_t &session, services::database::collection_create_result result) -> void;
         auto drop_collection_finish(session_id_t &session, result_drop_collection result) -> void;
