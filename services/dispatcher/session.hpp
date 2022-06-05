@@ -2,8 +2,7 @@
 
 #include <actor-zeta.hpp>
 
-#include <protocol/insert_one.hpp>
-#include <protocol/insert_many.hpp>
+#include <protocol/protocol.hpp>
 
 #include <components/session/session.hpp>
 #include <utility>
@@ -13,9 +12,9 @@ public:
     explicit session_t(actor_zeta::address_t address);
 
     template<class T>
-    session_t(actor_zeta::address_t address,T statment )
-        :address_(address)
-        , data_(std::forward<T>(statment)){}
+    session_t(actor_zeta::address_t address, T statement)
+        : address_(address)
+        , data_(std::forward<T>(statement)) {}
 
     actor_zeta::address_t address() {
         return address_;
@@ -26,10 +25,16 @@ public:
         return std::get<T>(data_);
     }
 
+    statement_type type() const;
+
 private:
     actor_zeta::address_t address_;
     std::variant<insert_one_t,
-                 insert_many_t>
+                 insert_many_t,
+                 delete_one_t,
+                 delete_many_t,
+                 update_one_t,
+                 update_many_t>
         data_;
     ///components::session::session_id_t session_;
 };

@@ -21,6 +21,10 @@ namespace services::wal {
         add_handler(handler_id(route::drop_collection), &manager_wal_replicate_t::drop_collection);
         add_handler(handler_id(route::insert_one), &manager_wal_replicate_t::insert_one);
         add_handler(handler_id(route::insert_many), &manager_wal_replicate_t::insert_many);
+        add_handler(handler_id(route::delete_one), &manager_wal_replicate_t::delete_one);
+        add_handler(handler_id(route::delete_many), &manager_wal_replicate_t::delete_many);
+        add_handler(handler_id(route::update_one), &manager_wal_replicate_t::update_one);
+        add_handler(handler_id(route::update_many), &manager_wal_replicate_t::update_many);
         add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_t::sync);
         trace(log_, "manager_wal_replicate_t start thread pool");
     }
@@ -74,6 +78,26 @@ namespace services::wal {
     void manager_wal_replicate_t::insert_many(session_id_t& session, insert_many_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_many");
         actor_zeta::send(dispathers_[0], address(), handler_id(route::insert_many), session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::delete_one(session_id_t& session, delete_one_t& data) {
+        trace(log_, "manager_wal_replicate_t::delete_one");
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::delete_one), session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::delete_many(session_id_t& session, delete_many_t& data) {
+        trace(log_, "manager_wal_replicate_t::delete_many");
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::delete_many), session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::update_one(session_id_t& session, update_one_t& data) {
+        trace(log_, "manager_wal_replicate_t::update_one");
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::update_one), session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::update_many(session_id_t& session, update_many_t& data) {
+        trace(log_, "manager_wal_replicate_t::update_many");
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::update_many), session, current_message()->sender(), std::move(data));
     }
 
 } //namespace services::wal

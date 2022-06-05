@@ -40,6 +40,10 @@ namespace services::wal {
         void drop_collection(session_id_t& session, components::protocol::drop_collection_t& data);
         void insert_one(session_id_t& session, insert_one_t& data);
         void insert_many(session_id_t& session, insert_many_t& data);
+        void delete_one(session_id_t& session, delete_one_t& data);
+        void delete_many(session_id_t& session, delete_many_t& data);
+        void update_one(session_id_t& session, update_one_t& data);
+        void update_many(session_id_t& session, update_many_t& data);
 
         /// NOTE:  sync behold non thread-safety!
         void set_manager_disk(actor_zeta::address_t disk){

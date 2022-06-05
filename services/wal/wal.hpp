@@ -29,10 +29,10 @@ namespace services::wal {
         void drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data);
         void insert_one(session_id_t& session, address_t& sender, insert_one_t& data);
         void insert_many(session_id_t& session, address_t& sender, insert_many_t& data);
-//        void delete_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}
-//        void delete_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition) {}
-//        void update_one(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
-//        void update_many(database_name_t& database, collection_name_t& collection, components::document::document_t& condition, components::document::document_t update, bool upsert) {}
+        void delete_one(session_id_t& session, address_t& sender, delete_one_t& data);
+        void delete_many(session_id_t& session, address_t& sender, delete_many_t& data);
+        void update_one(session_id_t& session, address_t& sender, update_one_t& data);
+        void update_many(session_id_t& session, address_t& sender, update_many_t& data);
         ~wal_replicate_t() override;
 
     private:
