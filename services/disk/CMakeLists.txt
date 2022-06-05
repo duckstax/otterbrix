@@ -5,8 +5,8 @@ set(${PROJECT_NAME}_HEADERS
         disk.hpp
         manager_disk.hpp
         metadata.hpp
-        result.hpp
         route.hpp
+        result.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -29,6 +29,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
     rocketjoe_${PROJECT_NAME} PRIVATE
     ${CONAN_LIBS}
+    rocketjoe::file
     rocketjoe::document
     rocketjoe::serialize
 )

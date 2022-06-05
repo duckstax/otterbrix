@@ -18,47 +18,66 @@
 
 using namespace services::wal;
 
-TEST_CASE("insert one test") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
-    auto allocate_byte = sizeof(wal_replicate_t);
-    auto allocate_byte_alignof = alignof(wal_replicate_t);
-    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
+constexpr auto database_name = "test_database";
+constexpr auto collection_name = "test_collection";
+constexpr std::size_t count_documents = 5;
 
-    const std::string database = "test_database";
-    const std::string collection = "test_collection";
-
+void test_insert_one(wal_replicate_t *wal) {
     for (int num = 1; num <= 5; ++num) {
         auto document = gen_doc(num);
-        insert_one_t data(database, collection, std::move(document));
+        insert_one_t data(database_name, collection_name, std::move(document));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         wal->insert_one(session, address, data);
     }
+}
+
+struct test_wal {
+    core::non_thread_scheduler::scheduler_test_t *scheduler {nullptr};
+    wal_replicate_t *wal {nullptr};
+};
+
+
+test_wal create_test_wal(const boost::filesystem::path &path) {
+    test_wal result;
+    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    log.set_level(log_t::level::trace);
+    result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
+    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    boost::filesystem::remove_all(path);
+    boost::filesystem::create_directories(path);
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,result.scheduler,path, log);
+    auto allocate_byte = sizeof(wal_replicate_t);
+    auto allocate_byte_alignof = alignof(wal_replicate_t);
+    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
+    result.wal = new (buffer) wal_replicate_t(manager.get(), log, path);
+    return result;
+}
+
+
+TEST_CASE("insert one test") {
+    auto test_wal = create_test_wal("/tmp/wal/insert_one");
+    test_insert_one(test_wal.wal);
 
     std::size_t read_index = 0;
     for (int num = 1; num <= 5; ++num) {
         wal_entry_t<insert_one_t> entry;
 
-        entry.size_ = wal->read_size(read_index);
+        entry.size_ = test_wal.wal->test_read_size(read_index);
 
         auto start = read_index + sizeof(size_tt);
         auto finish = read_index + sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
-        auto output = wal->read(start, finish);
+        auto output = test_wal.wal->test_read(start, finish);
 
         auto crc32_index = entry.size_;
         crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
         unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
-        scheduler_->run();
+        test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
-        REQUIRE(entry.entry_.database_ == database);
-        REQUIRE(entry.entry_.collection_ == collection);
+        REQUIRE(entry.entry_.database_ == database_name);
+        REQUIRE(entry.entry_.collection_ == collection_name);
         document_view_t view(entry.entry_.document_);
         REQUIRE(view.get_string("_id") == gen_id(num));
         REQUIRE(view.get_long("count") == num);
@@ -69,87 +88,65 @@ TEST_CASE("insert one test") {
 }
 
 TEST_CASE("insert many empty test") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
-    auto allocate_byte = sizeof(wal_replicate_t);
-    auto allocate_byte_alignof = alignof(wal_replicate_t);
-    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
-
-    const std::string database = "test_database";
-    const std::string collection = "test_collection";
+    auto test_wal = create_test_wal("/tmp/wal/insert_many_empty");
 
     std::list<components::document::document_ptr> documents;
-    insert_many_t data(database, collection, std::move(documents));
+    insert_many_t data(database_name, collection_name, std::move(documents));
 
     auto session = components::session::session_id_t();
     auto address = actor_zeta::base::address_t::address_t::empty_address();
-    wal->insert_many(session, address, data);
+    test_wal.wal->insert_many(session, address, data);
 
     wal_entry_t<insert_many_t> entry;
 
-    entry.size_ = wal->read_size(0);
+    entry.size_ = test_wal.wal->test_read_size(0);
 
     auto start = sizeof(size_tt);
     auto finish = sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
-    auto output = wal->read(start, finish);
+    auto output = test_wal.wal->test_read(start, finish);
 
     auto crc32_index = entry.size_;
     crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
     unpack(output, entry);
     entry.crc32_ = read_crc32(output, entry.size_);
-    scheduler_->run();
+    test_wal.scheduler->run();
     REQUIRE(entry.crc32_ == crc32);
 }
 
 TEST_CASE("insert many test") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto* scheduler_( new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,scheduler_,boost::filesystem::current_path(), log);
-    auto allocate_byte = sizeof(wal_replicate_t);
-    auto allocate_byte_alignof = alignof(wal_replicate_t);
-    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    auto* wal = new (buffer) wal_replicate_t(manager.get(), log, boost::filesystem::current_path());
-
-    const std::string database = "test_database";
-    const std::string collection = "test_collection";
+    auto test_wal = create_test_wal("/tmp/wal/insert_many");
 
     for (int i = 0; i <= 3; ++i) {
         std::list<components::document::document_ptr> documents;
         for (int num = 1; num <= 5; ++num) {
             documents.push_back(gen_doc(num));
         }
-        insert_many_t data(database, collection, std::move(documents));
+        insert_many_t data(database_name, collection_name, std::move(documents));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
-        wal->insert_many(session, address, data);
+        test_wal.wal->insert_many(session, address, data);
     }
 
     std::size_t read_index = 0;
     for (int i = 0; i <= 3; ++i) {
         wal_entry_t<insert_many_t> entry;
 
-        entry.size_ = wal->read_size(read_index);
+        entry.size_ = test_wal.wal->test_read_size(read_index);
 
         auto start = read_index + sizeof(size_tt);
         auto finish = read_index + sizeof(size_tt) + entry.size_ + sizeof(crc32_t);
-        auto output = wal->read(start, finish);
+        auto output = test_wal.wal->test_read(start, finish);
 
         auto crc32_index = entry.size_;
         crc32_t crc32 = crc32c::Crc32c(output.data(), crc32_index);
 
         unpack(output, entry);
         entry.crc32_ = read_crc32(output, entry.size_);
-        scheduler_->run();
+        test_wal.scheduler->run();
         REQUIRE(entry.crc32_ == crc32);
-        REQUIRE(entry.entry_.database_ == database);
-        REQUIRE(entry.entry_.collection_ == collection);
+        REQUIRE(entry.entry_.database_ == database_name);
+        REQUIRE(entry.entry_.collection_ == collection_name);
         REQUIRE(entry.entry_.documents_.size() == 5);
         int num = 0;
         for (const auto &doc : entry.entry_.documents_) {
@@ -162,4 +159,46 @@ TEST_CASE("insert many test") {
 
         read_index = finish;
     }
+}
+
+TEST_CASE("test find start record") {
+    auto test_wal = create_test_wal("/tmp/wal/find_start_record");
+    test_insert_one(test_wal.wal);
+
+    std::size_t start_index;
+    REQUIRE(test_wal.wal->test_find_start_record(services::wal::id_t(1), start_index));
+    REQUIRE(test_wal.wal->test_find_start_record(services::wal::id_t(5), start_index));
+    REQUIRE_FALSE(test_wal.wal->test_find_start_record(services::wal::id_t(6), start_index));
+    REQUIRE_FALSE(test_wal.wal->test_find_start_record(services::wal::id_t(0), start_index));
+}
+
+TEST_CASE("test read id") {
+    auto test_wal = create_test_wal("/tmp/wal/read_id");
+    test_insert_one(test_wal.wal);
+
+    std::size_t index = 0;
+    for (int num = 1; num <= 5; ++num) {
+        REQUIRE(test_wal.wal->test_read_id(index) == services::wal::id_t(num));
+        index = test_wal.wal->test_next_record(index);
+    }
+    REQUIRE(test_wal.wal->test_read_id(index) == services::wal::id_t(0));
+}
+
+TEST_CASE("test read record") {
+    auto test_wal = create_test_wal("/tmp/wal/read_record");
+    test_insert_one(test_wal.wal);
+
+    std::size_t index = 0;
+    for (int num = 1; num <= 5; ++num) {
+        auto record = test_wal.wal->test_read_record(index);
+        REQUIRE(record.type == statement_type::insert_one);
+        REQUIRE(std::get<insert_one_t>(record.data).database_ == database_name);
+        REQUIRE(std::get<insert_one_t>(record.data).collection_ == collection_name);
+        document_view_t view(std::get<insert_one_t>(record.data).document_);
+        REQUIRE(view.get_string("_id") == gen_id(num));
+        REQUIRE(view.get_long("count") == num);
+        REQUIRE(view.get_string("countStr") == std::to_string(num));
+        index = test_wal.wal->test_next_record(index);
+    }
+    REQUIRE(test_wal.wal->test_read_record(index).type == statement_type::unused);
 }

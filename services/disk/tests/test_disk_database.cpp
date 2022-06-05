@@ -7,7 +7,7 @@ using namespace services::disk;
 
 TEST_CASE("sync database from disk") {
     SECTION("save databases into disk") {
-        remove((file_db + "/metadata").data());
+        remove((file_db + "/METADATA").data());
         disk_t disk(file_db);
         for (int num = 1; num <= 10; ++num) {
             REQUIRE(disk.append_database("database_" + std::to_string(num)));

@@ -5,6 +5,8 @@
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
 
+#include <services/disk/result.hpp>
+
 #include "log/log.hpp"
 
 #include "forward.hpp"
@@ -30,6 +32,7 @@ namespace services::database {
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* ;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~manager_database_t();
+        void create_databases(session_id_t& session, std::vector<database_name_t>& databases);
         void create(session_id_t& session, std::string& name);
 
     private:
@@ -48,6 +51,8 @@ namespace services::database {
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final override;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~database_t();
+        void create_collections(session_id_t& session, std::vector<collection_name_t>& collections,
+                                actor_zeta::address_t manager_disk);
         void create(session_id_t& session, std::string& name, actor_zeta::address_t mdisk);
         void drop(session_id_t& session, std::string& name);
         const std::string& name();

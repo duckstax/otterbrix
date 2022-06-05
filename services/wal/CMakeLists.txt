@@ -5,6 +5,7 @@ set( ${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         dto.cpp
+        record.cpp
         manager_wal_replicate.cpp
         wal.cpp
 )
@@ -26,6 +27,7 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::protocol
         rocketjoe::locks
+        rocketjoe::file
 )
 
 target_include_directories(
@@ -33,6 +35,7 @@ target_include_directories(
         PRIVATE
         dto.hpp
         PUBLIC
+        record.hpp
         wal.hpp
         manager_wal_replicate.hpp
 )

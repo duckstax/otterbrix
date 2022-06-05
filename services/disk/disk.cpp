@@ -8,7 +8,6 @@ namespace services::disk {
     const std::string key_separator = "::";
     const std::string key_structure = "structure";
     const std::string key_data = "data";
-    const std::string key_wal_id = "wal::id";
 
     std::string gen_key(const std::string &key, const std::string &sub_key) {
         return key + key_separator + sub_key;
@@ -38,7 +37,8 @@ namespace services::disk {
 
     disk_t::disk_t(const path_t& file_name)
         : db_(nullptr)
-        , metadata_(nullptr) {
+        , metadata_(nullptr)
+        , file_wal_id_(nullptr) {
         rocksdb::Options options;
         //options.IncreaseParallelism();
         options.OptimizeLevelStyleCompaction();
@@ -47,7 +47,8 @@ namespace services::disk {
         auto status = rocksdb::DB::Open(options, file_name.string(), &db);
         if (status.ok()) {
             db_.reset(db);
-            metadata_ = metadata_t::open(file_name / "metadata");
+            metadata_ = metadata_t::open(file_name / "METADATA");
+            file_wal_id_ = std::make_unique<core::file::file_t>(file_name / "WAL_ID");
         } else {
             throw std::runtime_error("db open failed");
         }
@@ -91,7 +92,8 @@ namespace services::disk {
     std::vector<rocks_id> disk_t::load_list_documents(const database_name_t &database, const collection_name_t &collection) const {
         std::vector<rocks_id> id_documents;
         rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        for (it->Seek(gen_key(key_structure, gen_key(database, collection)) + key_separator); it->Valid(); it->Next()) {
+        auto find_key = gen_key(key_structure, gen_key(database, collection)) + key_separator;
+        for (it->Seek(find_key); it->Valid() && it->key().starts_with(find_key); it->Next()) {
             id_documents.push_back(remove_prefix(it->key().ToString(), key_structure));
         }
         delete it;
@@ -123,7 +125,12 @@ namespace services::disk {
     }
 
     void disk_t::fix_wal_id(wal::id_t wal_id) {
-        db_->Put(rocksdb::WriteOptions(), key_wal_id, std::to_string(wal_id));
+        auto id = std::to_string(wal_id);
+        file_wal_id_->rewrite(id);
+    }
+
+    wal::id_t disk_t::wal_id() const {
+        return wal::id_from_string(file_wal_id_->readall());
     }
 
 } //namespace services::disk
