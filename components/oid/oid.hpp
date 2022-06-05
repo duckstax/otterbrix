@@ -25,6 +25,8 @@ namespace oid {
         explicit oid_t(const std::string& str);
         oid_t(const oid_t& other);
 
+        ~oid_t() = default;
+
         oid_t& operator=(const std::string& str);
         oid_t& operator=(const oid_t& other);
 

@@ -10,19 +10,15 @@ namespace components::session {
     public:
         session_id_t();
         std::size_t hash() const;
-        bool operator==(const session_id_t&other) const;
-        bool operator==(const session_id_t&other);
-        auto data() const -> std::uint64_t ;
+        bool operator==(const session_id_t& other) const;
+        bool operator==(const session_id_t& other);
+        auto data() const -> std::uint64_t;
 
     private:
         std::uint64_t data_;
         std::uint64_t counter_;
     };
 
-}
-
-inline bool operator==(components::session::session_id_t&left, components::session::session_id_t&right ){
-        return (left == right);
 }
 
 namespace std {

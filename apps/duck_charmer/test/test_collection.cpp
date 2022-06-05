@@ -1,49 +1,18 @@
-#include <apps/duck_charmer/spaces.hpp>
 #include <catch2/catch.hpp>
-#include <components/document/document.hpp>
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
 #include <components/protocol/base.hpp>
-#include <components/tests/generaty.hpp>
+#include "test_config.hpp"
 
-static const database_name_t database_name = "FriedrichDatabase";
-static const collection_name_t collection_name = "FriedrichCollection";
-
-template<class T>
-document::retained_t<mutable_dict_t> make_dict(const std::string& field, const std::string& key, T value) {
-    auto key_value = mutable_dict_t::new_dict();
-    key_value->set(key, value);
-    auto cond = mutable_dict_t::new_dict();
-    cond->set(field, key_value);
-    return cond;
-}
-
-template<class T>
-document_ptr make_condition(const std::string& field, const std::string& key, T value) {
-    auto dict = make_dict(field, key, value);
-    return make_document(dict);
-}
-
-document::retained_t<mutable_dict_t> make_dict(const std::string& aggregate, const std::list<document::retained_t<mutable_dict_t>> &sub_dict) {
-    auto dict = mutable_dict_t::new_dict();
-    auto array = mutable_array_t::new_array();
-    for (const auto& sub_cond : sub_dict) {
-        array->append(sub_cond);
-    }
-    dict->set(aggregate, array);
-    return dict;
-}
-
-document_ptr make_condition(const std::string& aggregate, const std::list<document::retained_t<mutable_dict_t>> &sub_conditions) {
-    auto dict = make_dict(aggregate, sub_conditions);
-    return make_document(dict);
-}
+static const database_name_t database_name = "TestDatabase";
+static const collection_name_t collection_name = "TestCollection";
 
 TEST_CASE("duck_charmer::test_collection") {
-    auto* space = duck_charmer::spaces::get_instance();
-    auto* dispatcher = space->dispatcher();
+    auto config = test_create_config("/tmp/test_collection");
+    test_clear_directory(config);
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+    dispatcher->load();
 
-    SECTION("initialization") {
+    INFO("initialization") {
         {
             auto session = duck_charmer::session_id_t();
             dispatcher->create_database(session, database_name);
@@ -58,7 +27,7 @@ TEST_CASE("duck_charmer::test_collection") {
         }
     }
 
-    SECTION("one_insert") {
+    INFO("one_insert") {
         for (int num = 0; num < 50; ++num) {
             {
                 auto doc = gen_doc(num);
@@ -74,7 +43,7 @@ TEST_CASE("duck_charmer::test_collection") {
         REQUIRE(*dispatcher->size(session, database_name, collection_name) == 50);
     }
 
-    SECTION("many_insert") {
+    INFO("many_insert") {
         std::list<components::document::document_ptr> documents;
         for (int num = 50; num < 100; ++num) {
             documents.push_back(gen_doc(num));
@@ -89,7 +58,7 @@ TEST_CASE("duck_charmer::test_collection") {
         }
     }
 
-    SECTION("insert non unique id") {
+    INFO("insert non unique id") {
         for (int num = 0; num < 100; ++num) {
             {
                 auto doc = gen_doc(num);
@@ -105,7 +74,7 @@ TEST_CASE("duck_charmer::test_collection") {
         REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
     }
 
-    SECTION("find") {
+    INFO("find") {
         {
             auto session = duck_charmer::session_id_t();
             auto c = dispatcher->find(session, database_name, collection_name, make_document());
@@ -151,7 +120,7 @@ TEST_CASE("duck_charmer::test_collection") {
         }
     }
 
-    SECTION("cursor") {
+    INFO("cursor") {
         auto session = duck_charmer::session_id_t();
         auto c = dispatcher->find(session, database_name, collection_name, make_document());
         REQUIRE(c->size() == 100);
@@ -164,7 +133,7 @@ TEST_CASE("duck_charmer::test_collection") {
         delete c;
     }
 
-    SECTION("find_one") {
+    INFO("find_one") {
         {
             auto session = duck_charmer::session_id_t();
             auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("_id", "$eq", gen_id(1)));

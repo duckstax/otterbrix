@@ -6,27 +6,23 @@ namespace services::disk {
     enum class route : uint64_t {
         create_agent,
 
-        read_databases,
+        load,
+        load_finish,
+
         append_database,
         remove_database,
 
-        read_collections,
         append_collection,
         remove_collection,
 
-        read_documents,
         write_documents,
         remove_documents,
 
         flush,
-        fix_wal_id,
-
-        read_databases_finish,
-        read_collections_finish,
-        read_documents_finish,
+        fix_wal_id
     };
 
-    inline uint64_t handler_id(route type) {
+    constexpr uint64_t handler_id(route type) {
         return handler_id(group_id_t::disk, type);
     }
 } // namespace services::disk

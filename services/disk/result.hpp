@@ -1,47 +1,44 @@
 #pragma once
-#include <string>
+
 #include <vector>
-#include <components/document/document.hpp>
+#include <list>
+#include <actor-zeta.hpp>
 #include <components/protocol/base.hpp>
+#include <components/document/document.hpp>
+#include <services/wal/base.hpp>
 
 namespace services::disk {
 
-    class result_read_databases {
-    public:
-        using result_t = std::vector<database_name_t>;
+    struct result_collection_t {
+        collection_name_t name;
+        std::list<components::document::document_ptr> documents;
+    };
 
-        result_read_databases() = default;
-        explicit result_read_databases(result_t&& databases);
-        [[nodiscard]] const result_t& databases() const;
+    struct result_database_t {
+        database_name_t name;
+        std::vector<result_collection_t> collections;
+
+        std::vector<collection_name_t> name_collections() const;
+        void set_collection(const std::vector<collection_name_t> &names);
+    };
+
+    class result_load_t {
+        using result_t = std::vector<result_database_t>;
+
+    public:
+        result_load_t() = default;
+        result_load_t(const std::vector<database_name_t> &databases, wal::id_t wal_id);
+        const result_t& operator*() const;
+        result_t& operator*();
+        std::vector<database_name_t> name_databases() const;
+        std::size_t count_collections() const;
+        void clear();
+
+        wal::id_t wal_id() const;
 
     private:
         result_t databases_;
+        wal::id_t wal_id_;
     };
 
-
-    class result_read_collections {
-    public:
-        using result_t = std::vector<collection_name_t>;
-
-        result_read_collections() = default;
-        explicit result_read_collections(result_t&& collections);
-        [[nodiscard]] const result_t& collections() const;
-
-    private:
-        result_t collections_;
-    };
-
-
-    class result_read_documents {
-    public:
-        using result_t = std::vector<components::document::document_ptr>;
-
-        result_read_documents() = default;
-        explicit result_read_documents(result_t&& documents);
-        [[nodiscard]] const result_t& documents() const;
-
-    private:
-        result_t documents_;
-    };
-
-} //namespace services::disk
+} // namespace services::disk

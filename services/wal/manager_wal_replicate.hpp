@@ -6,13 +6,12 @@
 #include <log/log.hpp>
 
 #include <core/excutor.hpp>
+#include <core/spinlock/spinlock.hpp>
 
 #include <components/session/session.hpp>
-#include <components/protocol/insert_one.hpp>
-#include <components/protocol/insert_many.hpp>
+#include <components/protocol/protocol.hpp>
 
-#include <core/excutor.hpp>
-#include <core/spinlock/spinlock.hpp>
+#include "base.hpp"
 
 namespace services::wal {
 
@@ -34,6 +33,11 @@ namespace services::wal {
 
         manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,boost::filesystem::path, log_t& log);
         void creat_wal_worker();
+        void load(session_id_t& session, services::wal::id_t wal_id);
+        void create_database(session_id_t& session, components::protocol::create_database_t& data);
+        void drop_database(session_id_t& session, components::protocol::drop_database_t& data);
+        void create_collection(session_id_t& session, components::protocol::create_collection_t& data);
+        void drop_collection(session_id_t& session, components::protocol::drop_collection_t& data);
         void insert_one(session_id_t& session, insert_one_t& data);
         void insert_many(session_id_t& session, insert_many_t& data);
 

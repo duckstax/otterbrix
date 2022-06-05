@@ -2,6 +2,7 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/protocol/base.hpp>
+#include <core/file/file.hpp>
 #include <boost/filesystem.hpp>
 #include <wal/base.hpp>
 
@@ -19,6 +20,7 @@ namespace services::disk {
     using db_ptr = std::unique_ptr<rocksdb::DB>;
     using components::document::document_ptr;
     using components::document::document_id_t;
+    using file_ptr = std::unique_ptr<core::file::file_t>;
 
     class disk_t {
     public:
@@ -42,10 +44,12 @@ namespace services::disk {
         bool remove_collection(const database_name_t &database, const collection_name_t &collection);
 
         void fix_wal_id(wal::id_t wal_id);
+        wal::id_t wal_id() const;
 
     private:
         db_ptr db_;
         metadata_ptr metadata_;
+        file_ptr file_wal_id_;
     };
 
 } //namespace services::disk

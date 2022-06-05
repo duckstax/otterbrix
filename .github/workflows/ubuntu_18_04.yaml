@@ -25,7 +25,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.45.0 pytest==6.2.5
+          pip install conan==1.48.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
