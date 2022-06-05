@@ -12,6 +12,10 @@ list(APPEND SOURCE_${PROJECT_NAME}
         create_collection.cpp
         insert_one.cpp
         insert_many.cpp
+        delete_one.cpp
+        delete_many.cpp
+        update_one.cpp
+        update_many.cpp
 )
 
 

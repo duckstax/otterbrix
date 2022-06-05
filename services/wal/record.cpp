@@ -27,6 +27,18 @@ namespace services::wal {
             case statement_type::insert_many:
                 data = object.as<insert_many_t>();
                 break;
+            case statement_type::delete_one:
+                data = object.as<delete_one_t>();
+                break;
+            case statement_type::delete_many:
+                data = object.as<delete_many_t>();
+                break;
+            case statement_type::update_one:
+                data = object.as<update_one_t>();
+                break;
+            case statement_type::update_many:
+                data = object.as<update_many_t>();
+                break;
             default:
                 break;
         }
