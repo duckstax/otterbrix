@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
 project(duck_charmer)
 
 set(${PROJECT_NAME}_headers
@@ -42,6 +40,12 @@ set(ROCKETJOE_LIBS
         rocketjoe::disk
         rocketjoe::locks
 )
+
+#SET(PYTHON_EXECUTABLE python3)
+#find_package(Python COMPONENTS Interpreter Development REQUIRED)
+#find_package(pybind11 REQUIRED)
+find_package(Python3 COMPONENTS Interpreter Development.Module)
+include_directories(${Python3_INCLUDE_DIRS})
 
 include_directories(
         ${PROJECT_SOURCE_DIR}

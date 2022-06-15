@@ -1,6 +1,9 @@
 #pragma once
+
 #include <core/handler_by_id.hpp>
+
 namespace services::collection {
+
     enum class route : uint64_t {
         create_documents,
         insert_one,
@@ -14,6 +17,7 @@ namespace services::collection {
         size,
         close_cursor,
         drop_collection,
+        create_index,
 
         create_documents_finish,
         insert_one_finish,
@@ -29,4 +33,5 @@ namespace services::collection {
     constexpr uint64_t handler_id(route type) {
         return handler_id(group_id_t::collection, type);
     }
+
 } // namespace services::collection

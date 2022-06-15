@@ -1,17 +1,19 @@
 #pragma once
+
 #include <memory>
 #include <unordered_map>
 
 #include <absl/container/btree_map.h>
-#include <pybind11/pytypes.h>
 
-#include <components/protocol/base.hpp>
-#include <components/protocol/insert_many.hpp>
-#include <components/log/log.hpp>
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
+#include <components/index/index.hpp>
+#include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
+#include <components/parser/index.hpp>
+#include <components/protocol/base.hpp>
+#include <components/protocol/insert_many.hpp>
 #include <components/session/session.hpp>
 
 #include <services/database/database.hpp>
@@ -44,6 +46,8 @@ namespace services::collection {
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
+        void create_index(index_type);
+
     private:
         document_id_t insert_(const document_ptr&document);
         document_view_t get_(const document_id_t& id) const;
@@ -65,6 +69,7 @@ namespace services::collection {
         log_t log_;
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
+        index_engine_ptr index_engine_;
         storage_t storage_;
         std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};

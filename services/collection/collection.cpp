@@ -27,6 +27,7 @@ namespace services::collection {
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
+        add_handler(handler_id(route::create_index),&collection_t::create_index);
     }
 
     void collection_t::create_documents(components::session::session_id_t &session, std::list<document_ptr> &documents) {
@@ -88,7 +89,7 @@ namespace services::collection {
     auto collection_t::find(const session_id_t& session, const find_condition_ptr& cond) -> void {
         debug(log_,"collection::find : {}", name_);
         auto dispatcher = current_message()->sender();
-        /// todo: log_.debug("dispatcher : {}", dispatcher.type());
+        //debug(log_,"dispatcher : {}", dispatcher->id());
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
@@ -195,19 +196,24 @@ namespace services::collection {
     }
 
     result_find collection_t::search_(const find_condition_ptr& cond) {
-        result_find::result_t res;
-        for (auto &it : storage_) {
-            if (!cond || cond->is_fit(it.second)) {
-                res.push_back(document_view_t(it.second));
+        if (!cond) {
+            result_find::result_t res;
+            for (auto& it : storage_) {
+                if (cond->is_fit(it.second)) {
+                    res.push_back(document_view_t(it.second));
+                }
             }
+            return result_find(std::move(res));
         }
-        return result_find(std::move(res));
+        return result_find();
     }
 
     result_find_one collection_t::search_one_(const find_condition_ptr& cond) {
-        for (auto &it : storage_) {
-            if (!cond || cond->is_fit(it.second)) {
-                return result_find_one(document_view_t(it.second));
+        if (!cond) {
+            for (auto& it : storage_) {
+                if (cond->is_fit(it.second)) {
+                    return result_find_one(document_view_t(it.second));
+                }
             }
         }
         return result_find_one();
