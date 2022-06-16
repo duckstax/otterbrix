@@ -1,5 +1,7 @@
 #include "wasm.hpp"
 
+#include <chrono>
+
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
@@ -69,13 +71,17 @@ namespace components::wasm_runner {
 
     wasm_context_t::wasm_context_t(WasmBase* wasm)
         : ContextBase(wasm)
-        , log_(get_logger()) {}
+        , log_(get_logger())
+        , proporties() {}
 
     wasm_context_t::wasm_context_t(WasmBase* wasm, const shared_ptr<PluginBase>& plugin)
         : ContextBase(wasm, plugin)
-        , log_(get_logger()) {}
+        , log_(get_logger())
+        , proporties() {}
 
     WasmResult wasm_context_t::log(uint32_t log_level, string_view message) {
+        auto status = WasmResult::Ok;
+
         switch (static_cast<log_t::level>(log_level)) {
             case log_t::level::trace:
                 trace(log_,message);
@@ -101,14 +107,38 @@ namespace components::wasm_runner {
                 critical(log_,message);
                 break;
             default:
-                return WasmResult::BadArgument;
+                status = WasmResult::BadArgument;
+
+                break;
         }
 
-        return WasmResult::Ok;
+        return status;
     }
 
     auto wasm_context_t::getLogLevel() -> uint32_t {
         return static_cast<uint32_t>(log_.get_level());
+    }
+
+    auto wasm_context_t::getProperty(string_view path, string* result) -> WasmResult {
+        auto status = WasmResult::NotFound;
+
+        if (path == "plugin_root_id") {
+            *result = root_id();
+            status = WasmResult::Ok;
+        }
+
+        auto search = proporties.find(string(path));
+
+        if (search != proporties.end()) {
+            *result = search->second;
+            status = WasmResult::Ok;
+        }
+
+        return status;
+    }
+
+    auto wasm_context_t::getCurrentTimeNanoseconds() -> uint64_t {
+        return chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now().time_since_epoch()).count();
     }
 
     wasm_t::wasm_t(unique_ptr<WasmVm> vm, string_view vm_id,
@@ -217,7 +247,7 @@ namespace components::wasm_runner {
         vm->integration() = create_vm_integration();
 
         return vm;
-    };
+    }
 
     auto wasm_manager_t::create_wasm(string_view vm_id, string_view vm_configuration,
                                      string_view vm_key, unordered_map<string, string> envs,
