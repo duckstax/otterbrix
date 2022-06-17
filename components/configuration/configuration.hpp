@@ -45,6 +45,7 @@ namespace components {
 
     struct config_disk final {
         boost::filesystem::path path {boost::filesystem::current_path() / "disk"};
+        bool on {true};
     };
 
     struct config final {

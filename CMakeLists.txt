@@ -26,6 +26,7 @@ else()
 endif()
 
 option(DEV_MODE "developer mode" OFF)
+option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
