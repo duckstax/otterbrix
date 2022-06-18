@@ -35,7 +35,6 @@ namespace duck_charmer {
         manager_database_ = actor_zeta::spawn_supervisor<services::database::manager_database_t>(resource, scheduler_.get(), log_);
         trace(log_, "manager_database finish");
 
-
         trace(log_, "manager_dispatcher start");
         manager_dispatcher_ = actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource, scheduler_.get(), log_);
         trace(log_, "manager_dispatcher finish");
