@@ -13,11 +13,11 @@ namespace services::disk {
     using name_t = std::string;
     using session_id_t = ::components::session::session_id_t;
 
-    class manager_disk_t;
+    class base_manager_disk_t;
 
     class agent_disk_t final : public actor_zeta::basic_async_actor {
     public:
-        agent_disk_t(manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
+        agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
 
         auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
 
@@ -40,7 +40,21 @@ namespace services::disk {
     using agent_disk_ptr = std::unique_ptr<agent_disk_t>;
 
 
-    class manager_disk_t final : public actor_zeta::cooperative_supervisor<manager_disk_t> {
+    class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
+    protected:
+        base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
+
+    private:
+        actor_zeta::scheduler_raw e_;
+
+        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;
+        auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
+    };
+
+    using manager_disk_ptr = std::unique_ptr<base_manager_disk_t>;
+
+
+    class manager_disk_t final : public base_manager_disk_t {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
@@ -55,10 +69,8 @@ namespace services::disk {
         manager_disk_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_disk config, log_t& log);
 
         void create_agent();
-        void create_agent_without_disk();
 
         auto load(session_id_t& session) -> void;
-        auto load_without_disk(session_id_t& session) -> void;
 
         auto append_database(session_id_t& session, const database_name_t& database) -> void;
         auto remove_database(session_id_t& session, const database_name_t& database) -> void;
@@ -70,23 +82,26 @@ namespace services::disk {
         auto remove_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_id_t>& documents) -> void;
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
-        auto flush_without_disk(session_id_t& session, wal::id_t wal_id) -> void;
-
-    protected:
-        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t*;
-        auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void;
 
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
-        configuration::config_disk config_;
         log_t log_;
-        actor_zeta::scheduler_raw e_;
+        configuration::config_disk config_;
         std::vector<agent_disk_ptr> agents_;
         command_storage_t commands_;
 
         auto agent() -> actor_zeta::address_t;
     };
 
-    using manager_disk_ptr = std::unique_ptr<manager_disk_t>;
+
+    class manager_disk_empty_t final : public base_manager_disk_t {
+    public:
+        manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
+
+        auto load(session_id_t& session) -> void;
+
+        template<class ...Args>
+        auto nothing(Args&&...args) -> void {}
+    };
 
 } //namespace services::disk

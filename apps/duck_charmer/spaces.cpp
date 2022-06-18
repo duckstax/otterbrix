@@ -28,7 +28,11 @@ namespace duck_charmer {
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_disk start");
-        manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource, scheduler_.get(), config.disk, log_);
+        if (config.disk.on) {
+            manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource, scheduler_.get(), config.disk, log_);
+        } else {
+            manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_empty_t>(resource, scheduler_.get());
+        }
         trace(log_, "manager_disk finish");
 
         trace(log_, "manager_database start");
