@@ -12,9 +12,9 @@ namespace duck_charmer {
 
     using services::dispatcher::manager_dispatcher_t;
 
-    constexpr static char* name_dispatcher = "dispatcher";
+    constexpr static auto name_dispatcher = "dispatcher";
 
-    base_spaces::base_spaces(const components::config& config)
+    base_spaces::base_spaces(const configuration::config& config)
         : scheduler_(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter()) {
         log_ = initialization_logger("duck_charmer", config.log.path.c_str());
         log_.set_level(config.log.level);
@@ -28,7 +28,7 @@ namespace duck_charmer {
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_disk start");
-        manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource, scheduler_.get(), config.disk.path, log_);
+        manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource, scheduler_.get(), config.disk, log_);
         trace(log_, "manager_disk finish");
 
         trace(log_, "manager_database start");
@@ -96,7 +96,7 @@ namespace duck_charmer {
     }
 
     spaces::spaces()
-        : base_spaces(components::config::default_config()) {
+        : base_spaces(configuration::config::default_config()) {
     }
 
 } // namespace duck_charmer

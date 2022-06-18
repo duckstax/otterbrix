@@ -3,10 +3,10 @@
 #include <apps/duck_charmer/spaces.hpp>
 #include <benchmark/benchmark.h>
 
-inline components::config create_null_config() {
-    auto config = components::config::default_config();
+inline configuration::config create_null_config() {
+    auto config = configuration::config::default_config();
     config.log.level = log_t::level::off;
-    //config.disk.on = false; //todo: uncomment
+    config.disk.on = false;
     return config;
 }
 

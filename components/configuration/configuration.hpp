@@ -4,7 +4,7 @@
 
 #include <components/log/log.hpp>
 
-namespace components {
+namespace configuration {
 
     enum class sandbox_mode_t : std::uint8_t {
         none = 0,

@@ -4,9 +4,8 @@
 #include "disk.hpp"
 
 #include <core/excutor.hpp>
-
+#include <configuration/configuration.hpp>
 #include <components/log/log.hpp>
-
 #include <services/wal/manager_wal_replicate.hpp>
 
 namespace services::disk {
@@ -53,11 +52,13 @@ namespace services::disk {
             manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
         }
 
-        manager_disk_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw, path_t path_db, log_t& log);
+        manager_disk_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_disk config, log_t& log);
 
         void create_agent();
+        void create_agent_without_disk();
 
         auto load(session_id_t& session) -> void;
+        auto load_without_disk(session_id_t& session) -> void;
 
         auto append_database(session_id_t& session, const database_name_t& database) -> void;
         auto remove_database(session_id_t& session, const database_name_t& database) -> void;
@@ -69,6 +70,7 @@ namespace services::disk {
         auto remove_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_id_t>& documents) -> void;
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
+        auto flush_without_disk(session_id_t& session, wal::id_t wal_id) -> void;
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t*;
@@ -76,7 +78,7 @@ namespace services::disk {
 
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
-        path_t path_db_;
+        configuration::config_disk config_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         std::vector<agent_disk_ptr> agents_;
