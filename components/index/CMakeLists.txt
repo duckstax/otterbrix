@@ -1,11 +1,14 @@
 project(index)
 
-set( ${PROJECT_NAME}_HEADERS
+set(${PROJECT_NAME}_HEADERS
 
 )
 
 set(${PROJECT_NAME}_SOURCES
-    index.cpp
+        composite_field_index.cpp
+        index.cpp
+        multi_field_index.cpp
+        single_field_index.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -21,19 +24,15 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        boost_json
         dl
 )
 
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        core
-        json
-        mutable
-        support
+
 )
 
 if (DEV_MODE)
     add_subdirectory(test)
-endif()
+endif ()
