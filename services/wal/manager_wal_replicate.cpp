@@ -42,10 +42,12 @@ namespace services::wal {
 
     void manager_wal_replicate_t::create_wal_worker() {
         if (config_.sync_to_disk) {
+            trace(log_, "manager_wal_replicate_t::create_wal_worker");
             auto address = spawn_actor<wal_replicate_t>([this](wal_replicate_t* ptr) {
                 dispathers_.emplace_back(ptr->address());
             }, log_, config_);
         } else {
+            trace(log_, "manager_wal_replicate_t::create_wal_worker without disk");
             auto address = spawn_actor<wal_replicate_without_disk_t>([this](wal_replicate_t* ptr) {
                 dispathers_.emplace_back(ptr->address());
             }, log_, config_);

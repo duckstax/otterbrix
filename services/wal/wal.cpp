@@ -110,61 +110,61 @@ namespace services::wal {
     }
 
     void wal_replicate_t::create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data) {
-        trace(log_, "wal_replicate_t::create_database {}", data.database_);
+        trace(log_, "wal_replicate_t::create_database {}, session: {}", data.database_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data) {
-        trace(log_, "wal_replicate_t::drop_database {}", data.database_);
+        trace(log_, "wal_replicate_t::drop_database {}, session: {}", data.database_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data) {
-        trace(log_, "wal_replicate_t::create_collection {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::create_collection {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data) {
-        trace(log_, "wal_replicate_t::drop_collection {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::drop_collection {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, insert_one_t& data) {
-        trace(log_, "wal_replicate_t::insert_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::insert_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, insert_many_t& data) {
-        trace(log_, "wal_replicate_t::insert_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::insert_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::delete_one(session_id_t& session, address_t& sender, delete_one_t& data) {
-        trace(log_, "wal_replicate_t::delete_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::delete_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::delete_many(session_id_t& session, address_t& sender, delete_many_t& data) {
-        trace(log_, "wal_replicate_t::delete_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::delete_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::update_one(session_id_t& session, address_t& sender, update_one_t& data) {
-        trace(log_, "wal_replicate_t::update_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::update_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::update_many(session_id_t& session, address_t& sender, update_many_t& data) {
-        trace(log_, "wal_replicate_t::update_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::update_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }

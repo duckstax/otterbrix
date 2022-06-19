@@ -21,11 +21,11 @@ namespace services::disk {
 
         auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
 
-        auto append_database(const database_name_t& database) -> void;
-        auto remove_database(const database_name_t& database) -> void;
+        auto append_database(const command_t& command) -> void;
+        auto remove_database(const command_t& command) -> void;
 
-        auto append_collection(const database_name_t& database, const collection_name_t& collection) -> void;
-        auto remove_collection(const database_name_t& database, const collection_name_t& collection) -> void;
+        auto append_collection(const command_t& command) -> void;
+        auto remove_collection(const command_t& command) -> void;
 
         auto write_documents(const command_t& command) -> void;
         auto remove_documents(const command_t& command) -> void;

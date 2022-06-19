@@ -13,7 +13,7 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, name)
         , log_(log.clone())
         , disk_(path_db) {
-        trace(log_, "{}::create", type());
+        trace(log_, "agent_disk::create");
         add_handler(handler_id(route::load), &agent_disk_t::load);
         add_handler(handler_id(route::append_database), &agent_disk_t::append_database);
         add_handler(handler_id(route::remove_database), &agent_disk_t::remove_database);
@@ -25,7 +25,7 @@ namespace services::disk {
     }
 
     auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
-        trace(log_, "{}::load , session : {}", type(), session.data());
+        trace(log_, "agent_disk::load , session : {}", session.data());
         result_load_t result(disk_.databases(), disk_.wal_id());
         for (auto &database : *result) {
             database.set_collection(disk_.collections(database.name));
@@ -39,29 +39,33 @@ namespace services::disk {
         actor_zeta::send(dispatcher, address(), handler_id(route::load_finish), session, result);
     }
 
-    auto agent_disk_t::append_database(const database_name_t& database) -> void {
-        trace(log_, "{}::append_database , database : {}", type(), database);
-        disk_.append_database(database);
+    auto agent_disk_t::append_database(const command_t& command) -> void {
+        auto& cmd = command.get<command_append_database_t>();
+        trace(log_, "agent_disk::append_database , database : {}", cmd.database);
+        disk_.append_database(cmd.database);
     }
 
-    auto agent_disk_t::remove_database(const database_name_t& database) -> void {
-        trace(log_, "{}::remove_database , database : {}", type(), database);
-        disk_.remove_database(database);
+    auto agent_disk_t::remove_database(const command_t& command) -> void {
+        auto& cmd = command.get<command_remove_database_t>();
+        trace(log_, "agent_disk::remove_database , database : {}", cmd.database);
+        disk_.remove_database(cmd.database);
     }
 
-    auto agent_disk_t::append_collection(const database_name_t& database, const collection_name_t& collection) -> void {
-        trace(log_, "{}::append_collection , database : {} , collection : {}", type(), database, collection);
-        disk_.append_collection(database, collection);
+    auto agent_disk_t::append_collection(const command_t& command) -> void {
+        auto& cmd = command.get<command_append_collection_t>();
+        trace(log_, "agent_disk::append_collection , database : {} , collection : {}", cmd.database, cmd.collection);
+        disk_.append_collection(cmd.database, cmd.collection);
     }
 
-    auto agent_disk_t::remove_collection(const database_name_t& database, const collection_name_t& collection) -> void {
-        trace(log_, "{}::remove_collection , database : {} , collection : {}", type(), database, collection);
-        disk_.remove_collection(database, collection);
+    auto agent_disk_t::remove_collection(const command_t& command) -> void {
+        auto& cmd = command.get<command_remove_collection_t>();
+        trace(log_, "agent_disk::remove_collection , database : {} , collection : {}", cmd.database, cmd.collection);
+        disk_.remove_collection(cmd.database, cmd.collection);
     }
 
     auto agent_disk_t::write_documents(const command_t& command) -> void {
         auto& write_command = command.get<command_write_documents_t>();
-        trace(log_, "{}::write_documents , database : {} , collection : {} , {} documents", type(), write_command.database, write_command.collection, write_command.documents.size());
+        trace(log_, "agent_disk::write_documents , database : {} , collection : {} , {} documents", write_command.database, write_command.collection, write_command.documents.size());
         for (const auto& document : write_command.documents) {
             auto id = components::document::get_document_id(document);
             if (!id.is_null()) {
@@ -72,14 +76,14 @@ namespace services::disk {
 
     auto agent_disk_t::remove_documents(const command_t& command) -> void {
         auto& remove_command = command.get<command_remove_documents_t>();
-        trace(log_, "{}::remove_documents , database : {} , collection : {} , {} documents", type(), remove_command.database, remove_command.collection, remove_command.documents.size());
+        trace(log_, "agent_disk::remove_documents , database : {} , collection : {} , {} documents", remove_command.database, remove_command.collection, remove_command.documents.size());
         for (const auto& id : remove_command.documents) {
             disk_.remove_document(remove_command.database, remove_command.collection, id);
         }
     }
 
     auto agent_disk_t::fix_wal_id(wal::id_t wal_id) -> void {
-        trace(log_, "{}::fix_wal_id : {}", type(), wal_id);
+        trace(log_, "agent_disk::fix_wal_id : {}", wal_id);
         disk_.fix_wal_id(wal_id);
     }
 
