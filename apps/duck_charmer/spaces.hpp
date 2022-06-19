@@ -27,7 +27,7 @@ namespace duck_charmer {
         ~base_spaces();
 
     protected:
-        base_spaces(const components::config& config);
+        explicit base_spaces(const configuration::config& config);
 
         log_t log_;
         actor_zeta::scheduler_ptr  scheduler_;
