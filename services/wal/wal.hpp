@@ -8,6 +8,7 @@
 #include <components/session/session.hpp>
 #include <components/protocol/protocol.hpp>
 #include <core/file/file.hpp>
+#include <configuration/configuration.hpp>
 
 #include "dto.hpp"
 #include "record.hpp"
@@ -15,14 +16,14 @@
 
 namespace services::wal {
 
-    class wal_replicate_t final : public actor_zeta::basic_async_actor {
+    class wal_replicate_t : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
         using address_t = actor_zeta::address_t;
         using file_ptr = std::unique_ptr<core::file::file_t>;
 
     public:
-        wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, boost::filesystem::path path);
-        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
+        wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data);
         void drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data);
         void create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data);
@@ -38,6 +39,9 @@ namespace services::wal {
     private:
         void send_success(session_id_t& session, address_t& sender);
 
+        virtual void write_buffer(buffer_t& buffer);
+        virtual void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const;
+
         template <class T>
         void write_data_(T &data);
 
@@ -49,11 +53,10 @@ namespace services::wal {
         buffer_t read(size_t start_index, size_t finish_index) const;
 
         log_t log_;
-        boost::filesystem::path path_;
+        configuration::config_wal config_;
         atomic_id_t id_{0};
         crc32_t last_crc32_{0};
         file_ptr file_;
-        buffer_t buffer_;
 
 #ifdef DEV_MODE
     public:
@@ -64,6 +67,19 @@ namespace services::wal {
         size_tt test_read_size(size_t start_index) const;
         buffer_t test_read(size_t start_index, size_t finish_index) const;
 #endif
+    };
+
+
+    class wal_replicate_without_disk_t final : public wal_replicate_t {
+        using session_id_t = components::session::session_id_t;
+        using address_t = actor_zeta::address_t;
+
+    public:
+        wal_replicate_without_disk_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) final;
+    private:
+        void write_buffer(buffer_t&) final;
+        void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const final;
     };
 
 } //namespace services::wal

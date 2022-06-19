@@ -41,6 +41,7 @@ namespace configuration {
 
     struct config_wal final {
         boost::filesystem::path path {boost::filesystem::current_path() / "wal"};
+        bool sync_to_disk {true};
     };
 
     struct config_disk final {

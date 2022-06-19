@@ -46,11 +46,13 @@ test_wal create_test_wal(const boost::filesystem::path &path) {
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
     boost::filesystem::remove_all(path);
     boost::filesystem::create_directories(path);
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,result.scheduler,path, log);
+    configuration::config_wal config;
+    config.path = path;
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource, result.scheduler, config, log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    result.wal = new (buffer) wal_replicate_t(manager.get(), log, path);
+    result.wal = new (buffer) wal_replicate_t(manager.get(), log, config);
     return result;
 }
 
