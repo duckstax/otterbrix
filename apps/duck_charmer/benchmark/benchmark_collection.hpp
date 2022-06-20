@@ -7,6 +7,7 @@ inline configuration::config create_null_config() {
     auto config = configuration::config::default_config();
     config.log.level = log_t::level::off;
     config.disk.on = false;
+    config.wal.sync_to_disk = false;
     return config;
 }
 
@@ -43,9 +44,9 @@ BENCHMARK(init_space);
 /// create databases
 void create_databases(benchmark::State& state) {
     for (auto _ : state) {
-        //state.PauseTiming();
+        state.PauseTiming();
         auto* dispatcher = unique_spaces::get().dispatcher();
-        //state.ResumeTiming();
+        state.ResumeTiming();
         for (int i = 0; i < state.range(0); ++i) {
             auto session = duck_charmer::session_id_t();
             dispatcher->create_database(session, "database_" + std::to_string(state.range(0)) + "_" + std::to_string(i));

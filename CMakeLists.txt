@@ -36,6 +36,10 @@ if (DEV_MODE)
     enable_testing()
 endif()
 
+if (ALLOW_BENCHMARK)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+endif()
+
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     add_compile_options(
 

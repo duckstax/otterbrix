@@ -21,3 +21,5 @@ target_link_libraries(
         rocketjoe::duck_charmer
         rocketjoe::test_generaty
 )
+
+file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
