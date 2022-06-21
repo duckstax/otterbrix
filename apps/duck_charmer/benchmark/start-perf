@@ -1,5 +1,0 @@
-#!/bin/bash
-
-perf record -g ./benchmark_duck_charmer
-perf script | ~/src/FlameGraph/stackcollapse-perf.pl | ~/src/FlameGraph/flamegraph.pl > diagram.svg
-firefox diagram.svg &
