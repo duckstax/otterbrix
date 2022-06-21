@@ -5,10 +5,10 @@
 void create_databases(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
+    auto session = duck_charmer::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto session = duck_charmer::session_id_t();
             dispatcher->create_database(session, database_name + "_" + std::to_string(state.range(0)) + "_" + std::to_string(i));
         }
     }
@@ -25,7 +25,6 @@ void create_collections(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            session = duck_charmer::session_id_t();
             dispatcher->create_collection(session, database_name, collection_name + "_" + std::to_string(state.range(0)) + "_" + std::to_string(i));
         }
     }
