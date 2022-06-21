@@ -1,5 +1,4 @@
 #include "../classes.hpp"
-#include <components/tests/generaty.hpp>
 
 
 /// insert_one

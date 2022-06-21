@@ -1,0 +1,7 @@
+#!/bin/bash
+
+flame_path=~/src/FlameGraph
+
+perf record -g ./benchmark_find
+perf script | $flame_path/stackcollapse-perf.pl | $flame_path/flamegraph.pl > diagram_find.svg
+firefox diagram_find.svg &

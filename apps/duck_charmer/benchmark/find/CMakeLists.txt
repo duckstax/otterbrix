@@ -1,4 +1,4 @@
-set(project benchmark_init)
+set(project benchmark_find)
 
 cmake_policy(SET CMP0048 NEW)
 PROJECT(${project} VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
