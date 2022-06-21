@@ -9,7 +9,6 @@ void find_one(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto doc = gen_doc(int(10000 * state.range(0) + i));
             dispatcher->find_one(session, database_name, collection_name, make_document());
             dispatcher->find_one(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(i)));
             dispatcher->find_one(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(size_collection - i)));
@@ -27,7 +26,6 @@ void find_many(benchmark::State& state) {
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto doc = gen_doc(int(10000 * state.range(0) + i));
             dispatcher->find(session, database_name, collection_name, make_document());
             dispatcher->find(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(i)));
             dispatcher->find(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(size_collection - i)));
