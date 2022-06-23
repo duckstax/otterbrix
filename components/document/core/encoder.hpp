@@ -7,7 +7,7 @@
 #include <components/document/support/small_vector.hpp>
 #include <components/document/support/function_ref.hpp>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 class shared_keys_t;
 class key_t;
@@ -23,9 +23,12 @@ public:
         none
     };
 
-    encoder_t(size_t reserve_size = 256);
-    encoder_t(FILE *output_file NONNULL);
+    explicit encoder_t(size_t reserve_size = 256);
+    explicit encoder_t(FILE *output_file NONNULL);
     ~encoder_t();
+
+    encoder_t(const encoder_t &) = delete;
+    encoder_t& operator=(const encoder_t &) = delete;
 
     void unique_strings(bool b);
     void set_base(slice_t base, bool mark_extern_pointers = false, size_t cutoff = 0);
@@ -110,8 +113,8 @@ private:
         value_array_t() = default;
         void reset(internal::tags t) { tag = t; wide = false; keys.clear(); }
 
-        internal::tags tag;
-        bool wide;
+        internal::tags tag {internal::tag_short};
+        bool wide {false};
         small_vector_t<slice_t_c, initial_collection_capacity> keys;
     };
 
@@ -125,7 +128,6 @@ private:
     void cache_string(slice_t s, size_t offset_in_base);
     static bool is_narrow_value(const value_t *value NONNULL);
     void write_pointer(size_t pos);
-    void write_special(uint8_t special);
     void write_int(uint64_t i, bool is_short, bool is_unsigned);
     void _write_float(float f);
     const void* write_data(internal::tags tag, slice_t s);
@@ -143,28 +145,23 @@ private:
     void write_value(const value_t *value NONNULL, const shared_keys_t* &sk, const func_write_value *fn);
     const value_t* min_used(const value_t *value);
 
-    encoder_t(const encoder_t &) = delete;
-    encoder_t& operator=(const encoder_t &) = delete;
-
     writer_t _out;
-    value_array_t *_items;
+    value_array_t *_items{nullptr};
     small_vector_t<value_array_t, initial_stack_size> _stack;
-    unsigned _stack_depth;
+    unsigned _stack_depth{0};
     preallocated_string_table_t<initial_string_table_size> _strings;
     writer_t _string_storage;
     bool _unique_strings {true};
     retained_t<shared_keys_t> _shared_keys;
     slice_t _base;
     alloc_slice_t _owned_base;
-    const void* _base_cutoff {0};
-    const void* _base_min_used {0};
+    const void* _base_cutoff {nullptr};
+    const void* _base_min_used {nullptr};
     int _copying_collection {0};
     bool _writing_key {false};
     bool _blocked_on_key {false};
     bool _trailer {true};
     bool _mark_extern_ptrs{false};
-
-    friend class encoder_tests_t;
 };
 
-} }
+}

@@ -1,20 +1,18 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #ifndef NDEBUG
 #include <atomic>
 #endif
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
     enum {
         size_narrow = 2,
         size_wide   = 4
     };
-
-    static inline int width(bool wide) { return wide ? size_wide : size_narrow; }
 
     enum tags : uint8_t {
         tag_short,
@@ -60,4 +58,4 @@ namespace document { namespace impl { namespace internal {
 #endif
 
 
-} } }
+}

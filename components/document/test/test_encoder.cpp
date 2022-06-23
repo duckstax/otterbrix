@@ -4,10 +4,10 @@
 #include <components/document/core/slice.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
-#include <components/document/core/path.hpp>
 #include <components/document/json/json_coder.hpp>
 #include <components/document/support/writer.hpp>
 #include <components/document/support/slice_io.hpp>
+#include <components/document/support/num_conversion.hpp>
 
 using namespace document;
 using namespace document::impl;
@@ -471,23 +471,6 @@ TEST_CASE("impl::encoder_t::json from file") {
         REQUIRE(name->as_string() == slice_t("Toby"));
     }
 
-    SECTION("path_t") {
-        auto data = document::read_file("test/big-test.rj");
-        const value_t* root = value_t::from_data(data);
-        REQUIRE(root->as_array()->count() == 10);
-
-        path_t p1{"$[3].name"};
-        const value_t* name = p1.eval(root);
-        REQUIRE(name);
-        REQUIRE(name->type() == value_type::string);
-        REQUIRE(name->as_string() == slice_t("Charlie"));
-
-        path_t p2{"[-1].name"};
-        name = p2.eval(root);
-        REQUIRE(name);
-        REQUIRE(name->type() == value_type::string);
-        REQUIRE(name->as_string() == slice_t("Albert"));
-    }
 }
 
 TEST_CASE("impl::encoder_t::multy item") {
@@ -576,7 +559,6 @@ TEST_CASE("impl::encoder_t::rewriting value") {
 
     auto data = encoding_end(enc);
     require_hex(data, "4566 6972 7374 7001 8004 0064 4673 6563 6F6E 6400 7001 8005 8009 6002 800B 8005 8003");
-    value_t::dump(data);
     auto root = value_t::from_data(data);
     REQUIRE(root);
     REQUIRE(root->to_json_string() == "[{\"first\":100},{\"second\":{\"first\":100}}]");
@@ -599,7 +581,6 @@ TEST_CASE("impl::encoder_t::snip") {
     REQUIRE(part1);
     auto value1 = value_t::from_data(part1);
     REQUIRE(value1);
-    value_t::dump(part1);
     REQUIRE(value1->to_json_string() == R"({"name":"part 1","part":1})");
 
     enc.begin_dict();
@@ -614,7 +595,6 @@ TEST_CASE("impl::encoder_t::snip") {
 
     document::retained_t<doc_t> doc(new doc_t(data, doc_t::trust_type::untrusted, nullptr, part1));
     REQUIRE(doc->root()->to_json_string() == R"([{"name":"part 1","part":1},{"name":"part 2","part":2}])");
-    value_t::dump(data);
 }
 
 TEST_CASE("impl::encoder_t::double encoding") {

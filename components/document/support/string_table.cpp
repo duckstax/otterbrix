@@ -197,7 +197,7 @@ void string_table_t::dump() const noexcept {
             size_t distance = (i - (int)index + _size) & _size_mask;
             total_distance += distance;
             ++distance_counts[distance];
-            printf("(%2zd) '%.*s'\n", distance, SLICE(key));
+            printf("(%2zd) '%.*s'\n", distance, static_cast<int>(key.size), static_cast<const char*>(key.buf));
         } else {
             printf("--\n");
         }
