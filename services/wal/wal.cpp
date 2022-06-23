@@ -22,10 +22,10 @@ namespace services::wal {
     }
 
 
-    wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, boost::filesystem::path path)
+    wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, configuration::config_wal config)
         : actor_zeta::basic_async_actor(manager, "wal")
         , log_(log.clone())
-        , path_(std::move(path)) {
+        , config_(std::move(config)) {
         add_handler(handler_id(route::load), &wal_replicate_t::load);
         add_handler(handler_id(route::create_database), &wal_replicate_t::create_database);
         add_handler(handler_id(route::drop_database), &wal_replicate_t::drop_database);
@@ -37,18 +37,28 @@ namespace services::wal {
         add_handler(handler_id(route::delete_many), &wal_replicate_t::delete_many);
         add_handler(handler_id(route::update_one), &wal_replicate_t::update_one);
         add_handler(handler_id(route::update_many), &wal_replicate_t::update_many);
-        if (!file_exist_(path_)) {
-            boost::filesystem::create_directory(path_);
+        if (config_.sync_to_disk) {
+            if (!file_exist_(config_.path)) {
+                boost::filesystem::create_directory(config_.path);
+            }
+            file_ = std::make_unique<core::file::file_t>(config_.path / wal_name);
+            file_->seek_eof();
+            init_id();
         }
-        file_ = std::make_unique<core::file::file_t>(path_ / wal_name);
-        file_->seek_eof();
-        init_id();
     }
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
             actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(id_));
         }
+    }
+
+    void wal_replicate_t::write_buffer(buffer_t& buffer) {
+        file_->append(buffer.data(), buffer.size());
+    }
+
+    void wal_replicate_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
+        file_->read(buffer, size, off64_t(start_index));
     }
 
     wal_replicate_t::~wal_replicate_t() {
@@ -70,7 +80,8 @@ namespace services::wal {
 
     size_tt wal_replicate_t::read_size(size_t start_index) const {
         auto size_read = sizeof(size_tt);
-        auto buffer = file_->read(size_read, off64_t(start_index));
+        buffer_t buffer;
+        read_buffer(buffer, start_index, size_read);
         auto size_blob = read_size_impl(buffer.data(), 0);
         return size_blob;
     }
@@ -78,7 +89,7 @@ namespace services::wal {
     buffer_t wal_replicate_t::read(size_t start_index, size_t finish_index) const {
         auto size_read = finish_index - start_index;
         buffer_t buffer;
-        file_->read(buffer, size_read, off64_t(start_index));
+        read_buffer(buffer, start_index, size_read);
         return buffer;
     }
 
@@ -99,61 +110,61 @@ namespace services::wal {
     }
 
     void wal_replicate_t::create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data) {
-        trace(log_, "wal_replicate_t::create_database {}", data.database_);
+        trace(log_, "wal_replicate_t::create_database {}, session: {}", data.database_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data) {
-        trace(log_, "wal_replicate_t::drop_database {}", data.database_);
+        trace(log_, "wal_replicate_t::drop_database {}, session: {}", data.database_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data) {
-        trace(log_, "wal_replicate_t::create_collection {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::create_collection {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data) {
-        trace(log_, "wal_replicate_t::drop_collection {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::drop_collection {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, insert_one_t& data) {
-        trace(log_, "wal_replicate_t::insert_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::insert_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, insert_many_t& data) {
-        trace(log_, "wal_replicate_t::insert_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::insert_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::delete_one(session_id_t& session, address_t& sender, delete_one_t& data) {
-        trace(log_, "wal_replicate_t::delete_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::delete_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::delete_many(session_id_t& session, address_t& sender, delete_many_t& data) {
-        trace(log_, "wal_replicate_t::delete_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::delete_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::update_one(session_id_t& session, address_t& sender, update_one_t& data) {
-        trace(log_, "wal_replicate_t::update_one {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::update_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
     void wal_replicate_t::update_many(session_id_t& session, address_t& sender, update_many_t& data) {
-        trace(log_, "wal_replicate_t::update_many {}::{}", data.database_, data.collection_);
+        trace(log_, "wal_replicate_t::update_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
@@ -161,9 +172,9 @@ namespace services::wal {
     template<class T>
     void wal_replicate_t::write_data_(T &data) {
         next_id(id_);
-        buffer_.clear();
-        last_crc32_ = pack(buffer_, last_crc32_, id_, data);
-        file_->append(buffer_.data(), buffer_.size());
+        buffer_t buffer;
+        last_crc32_ = pack(buffer, last_crc32_, id_, data);
+        write_buffer(buffer);
     }
 
     void wal_replicate_t::init_id() {
@@ -255,5 +266,24 @@ namespace services::wal {
         return read(start_index, finish_index);
     }
 #endif
+
+
+
+    wal_replicate_without_disk_t::wal_replicate_without_disk_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config)
+        : wal_replicate_t(manager, log, std::move(config)) {
+    }
+
+    void wal_replicate_without_disk_t::load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) {
+        std::vector<record_t> records;
+        actor_zeta::send(sender, address(), handler_id(route::load_finish), session, std::move(records));
+    }
+
+    void wal_replicate_without_disk_t::write_buffer(buffer_t&) {
+    }
+
+    void wal_replicate_without_disk_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
+        buffer.resize(size);
+        std::fill(buffer.begin(), buffer.end(), '\0');
+    }
 
 } //namespace services::wal

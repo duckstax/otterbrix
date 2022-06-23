@@ -1,30 +1,50 @@
 #pragma once
 
+#include <apps/duck_charmer/spaces.hpp>
+#include <benchmark/benchmark.h>
 #include <components/document/document.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/tests/generaty.hpp>
-#include <apps/duck_charmer/spaces.hpp>
 
-inline configuration::config test_create_config(const boost::filesystem::path &path) {
+static const database_name_t database_name = "TestDatabase";
+static const collection_name_t collection_name = "TestCollection";
+static constexpr int size_collection = 10000;
+
+
+inline configuration::config create_null_config() {
     auto config = configuration::config::default_config();
-    config.log.path = path;
-    config.disk.path = path;
-    config.wal.path = path;
+    config.log.level = log_t::level::off;
+    config.disk.on = false;
+    config.wal.sync_to_disk = false;
     return config;
 }
 
-inline void test_clear_directory(const configuration::config &config) {
-    boost::filesystem::remove_all(config.disk.path);
-    boost::filesystem::create_directories(config.disk.path);
-}
-
-class test_spaces final : public duck_charmer::base_spaces {
+class unique_spaces final : public duck_charmer::base_spaces {
 public:
-    test_spaces(const configuration::config &config)
-        : duck_charmer::base_spaces(config)
+    static unique_spaces &get() {
+        static unique_spaces spaces_;
+        return spaces_;
+    }
+
+private:
+    unique_spaces()
+        : duck_charmer::base_spaces(create_null_config())
     {}
 };
+
+
+void init_collection() {
+    auto* dispatcher = unique_spaces::get().dispatcher();
+    auto session = duck_charmer::session_id_t();
+    dispatcher->create_database(session, database_name);
+    dispatcher->create_collection(session, database_name, collection_name);
+    std::list<document_ptr> docs;
+    for (int i = 1; i <= size_collection; ++i) {
+        docs.push_back(gen_doc(i));
+    }
+    dispatcher->insert_many(session, database_name, collection_name, docs);
+}
 
 template<class T>
 document::retained_t<mutable_dict_t> make_dict(const std::string& field, const std::string& key, T value) {

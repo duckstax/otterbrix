@@ -36,6 +36,8 @@ namespace services::disk {
 
         wal::id_t wal_id() const;
 
+        static result_load_t empty();
+
     private:
         result_t databases_;
         wal::id_t wal_id_;

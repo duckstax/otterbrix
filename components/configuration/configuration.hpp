@@ -4,7 +4,7 @@
 
 #include <components/log/log.hpp>
 
-namespace components {
+namespace configuration {
 
     enum class sandbox_mode_t : std::uint8_t {
         none = 0,
@@ -41,10 +41,12 @@ namespace components {
 
     struct config_wal final {
         boost::filesystem::path path {boost::filesystem::current_path() / "wal"};
+        bool sync_to_disk {true};
     };
 
     struct config_disk final {
         boost::filesystem::path path {boost::filesystem::current_path() / "disk"};
+        bool on {true};
     };
 
     struct config final {

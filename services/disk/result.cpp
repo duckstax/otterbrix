@@ -63,4 +63,10 @@ namespace services::disk {
         return databases_;
     }
 
+    result_load_t result_load_t::empty() {
+        result_load_t result;
+        result.wal_id_ = 0;
+        return result;
+    }
+
 } // namespace services::disk

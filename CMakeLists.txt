@@ -26,6 +26,7 @@ else()
 endif()
 
 option(DEV_MODE "developer mode" OFF)
+option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
@@ -33,6 +34,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if (DEV_MODE)
     add_definitions(-DDEV_MODE)
     enable_testing()
+endif()
+
+if (ALLOW_BENCHMARK)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
 endif()
 
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))

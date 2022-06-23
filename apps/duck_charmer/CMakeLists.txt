@@ -64,7 +64,7 @@ if (DEV_MODE)
     file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-if (DEV_MODE)
+if (DEV_MODE OR ALLOW_BENCHMARK)
     set(${PROJECT_NAME}_headers
             spaces.hpp
             wrapper_dispatcher.hpp
@@ -89,6 +89,12 @@ if (DEV_MODE)
             ${CONAN_LIBS}
             ${ROCKETJOE_LIBS}
     )
+endif()
 
+if (DEV_MODE)
     add_subdirectory(test)
+endif()
+
+if (ALLOW_BENCHMARK)
+    add_subdirectory(benchmark)
 endif()

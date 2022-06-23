@@ -1,0 +1,12 @@
+#!/bin/bash
+
+perf_script=start-perf
+
+dir=$(pwd)
+for script in $(find . -name $perf_script); do
+  cd $(dirname $script)
+  bash $perf_script
+  cd $dir
+done
+
+firefox $(find . -name *.svg) &

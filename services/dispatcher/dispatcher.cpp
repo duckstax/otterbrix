@@ -211,13 +211,13 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {
-        trace(log_, "dispatcher_t::create_database: session {} , name create_database {}", session.data(), name);
+        trace(log_, "dispatcher_t::create_database: session {} , name {}", session.data(), name);
         session_to_address_.emplace(session, address);
         actor_zeta::send(manager_database_, dispatcher_t::address(), database::handler_id(database::route::create_database), session, std::move(name));
     }
 
     void dispatcher_t::create_database_finish(components::session::session_id_t& session, database::database_create_result result, std::string& database_name, actor_zeta::address_t database) {
-        trace(log_, "dispatcher_t::create_database_finish: session {} , name create_database {}", session.data(), database_name);
+        trace(log_, "dispatcher_t::create_database_finish: session {} , name {}", session.data(), database_name);
         if (result.created_) {
             database_address_book_.emplace(database_name, database);
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::append_database), session, std::string(database_name));
@@ -240,7 +240,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::create_collection_finish(components::session::session_id_t& session, database::collection_create_result result, std::string& database_name, std::string& collection_name,actor_zeta::address_t collection) {
-        trace(log_, "create_collection_finish: {}", collection_name);
+        trace(log_, "create_collection_finish: session {} , {}", session.data(), collection_name);
         if (result.created_) {
             collection_address_book_.emplace(key_collection_t(database_name, std::string(collection_name)), collection);
             actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::append_collection), session, database_name, std::string(collection_name));

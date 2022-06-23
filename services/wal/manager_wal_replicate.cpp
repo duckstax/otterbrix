@@ -7,13 +7,14 @@
 
 namespace services::wal {
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*mr,actor_zeta::scheduler_raw scheduler,boost::filesystem::path path, log_t& log)
+    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*mr, actor_zeta::scheduler_raw scheduler,
+                                                     configuration::config_wal config, log_t& log)
         : actor_zeta::cooperative_supervisor<manager_wal_replicate_t>(mr,"manager_wal")
-        , path_(path)
+        , config_(std::move(config))
         , log_(log.clone())
         , e_(scheduler) {
         trace(log_, "manager_wal_replicate_t");
-        add_handler(handler_id(route::create), &manager_wal_replicate_t::creat_wal_worker);
+        add_handler(handler_id(route::create), &manager_wal_replicate_t::create_wal_worker);
         add_handler(handler_id(route::load), &manager_wal_replicate_t::load);
         add_handler(handler_id(route::create_database), &manager_wal_replicate_t::create_database);
         add_handler(handler_id(route::drop_database), &manager_wal_replicate_t::drop_database);
@@ -39,10 +40,18 @@ namespace services::wal {
         execute(this,current_message());
     }
 
-    void manager_wal_replicate_t::creat_wal_worker() {
-        auto address = spawn_actor<wal_replicate_t>([this](wal_replicate_t*ptr){
-            dispathers_.emplace_back(ptr->address());
-        },log_, path_);
+    void manager_wal_replicate_t::create_wal_worker() {
+        if (config_.sync_to_disk) {
+            trace(log_, "manager_wal_replicate_t::create_wal_worker");
+            auto address = spawn_actor<wal_replicate_t>([this](wal_replicate_t* ptr) {
+                dispathers_.emplace_back(ptr->address());
+            }, log_, config_);
+        } else {
+            trace(log_, "manager_wal_replicate_t::create_wal_worker without disk");
+            auto address = spawn_actor<wal_replicate_without_disk_t>([this](wal_replicate_t* ptr) {
+                dispathers_.emplace_back(ptr->address());
+            }, log_, config_);
+        }
     }
 
     void manager_wal_replicate_t::load(session_id_t& session, services::wal::id_t wal_id) {
