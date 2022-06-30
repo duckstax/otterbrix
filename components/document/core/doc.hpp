@@ -6,7 +6,7 @@
 #include <atomic>
 #include <utility>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 class shared_keys_t;
 class value_t;
@@ -22,6 +22,7 @@ public:
     scope_t(slice_t data, shared_keys_t *sk, slice_t destination = null_slice) noexcept;
     scope_t(const alloc_slice_t &data, shared_keys_t *sk, slice_t destination = null_slice) noexcept;
     scope_t(const scope_t &parent_scope, slice_t data) noexcept;
+    scope_t(const scope_t&) = delete;
 
     virtual ~scope_t();
 
@@ -43,7 +44,6 @@ protected:
     void unregister() noexcept;
 
 private:
-    scope_t(const scope_t&) = delete;
     void registr() noexcept;
 
     retained_t<shared_keys_t> _sk;
@@ -88,7 +88,7 @@ public:
     void *get_associated(const char *type) const;
 
 protected:
-    virtual ~doc_t() = default;
+    ~doc_t() override = default;
 
 private:
     void init(trust_type trust) noexcept;
@@ -99,4 +99,4 @@ private:
     const char *_associated_type { nullptr };
 };
 
-} }
+}

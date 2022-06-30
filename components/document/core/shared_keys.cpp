@@ -4,7 +4,7 @@
 #include <components/document/core/array.hpp>
 #include <components/document/core/encoder.hpp>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 key_t::key_t(slice_t key)
     : _string(key)
@@ -13,14 +13,14 @@ key_t::key_t(slice_t key)
 }
 
 key_t::key_t(int key)
-    : _int((int16_t)key)
+    : _int(static_cast<int16_t>(key))
 {
     assert_precondition(key >= 0 && key <= INT16_MAX);
 }
 
 key_t::key_t(const value_t *v) noexcept {
     if (v->is_int())
-        _int = (int16_t)v->as_int();
+        _int = static_cast<int16_t>(v->as_int());
     else
         _string = v->as_string();
 }
@@ -44,14 +44,11 @@ bool key_t::operator== (const key_t &k) const noexcept {
 
 bool key_t::operator< (const key_t &k) const noexcept {
     if (shared())
-        return k.shared() ? (_int < k._int) : true;
+        return !k.shared() || (_int < k._int);
     else
-        return k.shared() ? false : (_string < k._string);
+        return !k.shared() && (_string < k._string);
 }
 
-
-shared_keys_t::shared_keys_t()
-{}
 
 shared_keys_t::shared_keys_t(slice_t state_data)
     : shared_keys_t()
@@ -65,7 +62,7 @@ shared_keys_t::shared_keys_t(const value_t *state)
     load_from(state);
 }
 
-shared_keys_t::~shared_keys_t() {}
+shared_keys_t::~shared_keys_t() = default;
 
 size_t shared_keys_t::count() const {
     std::lock_guard<std::mutex> lock(_mutex);
@@ -148,7 +145,7 @@ bool shared_keys_t::_add(slice_t str, int &key) {
 }
 
 bool shared_keys_t::_is_unknown_key(int key) const {
-    return (size_t)key >= _count;
+    return static_cast<unsigned>(key) >= _count;
 }
 
 bool shared_keys_t::is_eligible_to_encode(slice_t str) const {
@@ -171,7 +168,7 @@ slice_t shared_keys_t::decode(int key) const {
     _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
     if (_usually_false(key >= static_cast<int>(max_count)))
         return null_slice;
-    slice_t str = _by_key[key];
+    slice_t str = _by_key[static_cast<std::size_t>(key)];
     if (_usually_false(!str))
         return decode_unknown(key);
     return str;
@@ -180,7 +177,7 @@ slice_t shared_keys_t::decode(int key) const {
 slice_t shared_keys_t::decode_unknown(int key) const {
     const_cast<shared_keys_t*>(this)->refresh();
     std::lock_guard<std::mutex> lock(_mutex);
-    return _by_key[key];
+    return _by_key[static_cast<std::size_t>(key)];
 }
 
 std::vector<slice_t> shared_keys_t::by_key() const {
@@ -191,18 +188,18 @@ std::vector<slice_t> shared_keys_t::by_key() const {
 shared_keys_t::platform_string_t shared_keys_t::platform_string_for_key(int key) const {
     _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
     std::lock_guard<std::mutex> lock(_mutex);
-    if ((unsigned)key >= _platform_strings_by_key.size())
+    if (unsigned(key) >= _platform_strings_by_key.size())
         return nullptr;
-    return _platform_strings_by_key[key];
+    return _platform_strings_by_key[static_cast<std::size_t>(key)];
 }
 
 void shared_keys_t::set_platform_string_for_key(int key, shared_keys_t::platform_string_t platformKey) const {
     std::lock_guard<std::mutex> lock(_mutex);
     _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
-    _throw_if((unsigned)key >= _count, error_code::invalid_data, "key is not yet known");
-    if ((unsigned)key >= _platform_strings_by_key.size())
-        _platform_strings_by_key.resize(key + 1);
-    _platform_strings_by_key[key] = platformKey;
+    _throw_if(unsigned(key) >= _count, error_code::invalid_data, "key is not yet known");
+    if (unsigned(key) >= _platform_strings_by_key.size())
+        _platform_strings_by_key.resize(static_cast<std::size_t>(key) + 1);
+    _platform_strings_by_key[static_cast<std::size_t>(key)] = platformKey;
 }
 
 void shared_keys_t::revert_to_count(size_t count) {
@@ -211,9 +208,9 @@ void shared_keys_t::revert_to_count(size_t count) {
         _throw_if(count > _count, error_code::shared_keys_state_error, "can't revert to a bigger count");
         return;
     }
-    for (int key = _count - 1; key >= int(count); --key) {
-        _table.erase(std::string(_by_key[key]));
-        _by_key[key] = null_slice;
+    for (int key = int(_count - 1); key >= int(count); --key) {
+        _table.erase(std::string(_by_key[static_cast<std::size_t>(key)]));
+        _by_key[static_cast<std::size_t>(key)] = null_slice;
     }
     _count = unsigned(count);
 }
@@ -269,4 +266,4 @@ void persistent_shared_key_st::revert() {
     _persisted_count = _committed_persisted_count;
 }
 
-} }
+}

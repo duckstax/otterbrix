@@ -89,10 +89,6 @@ namespace document { namespace impl {
         alloc_slice_t to_json(bool canonical = false) const;
         std::string to_json_string() const;
 
-        static bool dump(slice_t data, std::ostream&);
-        static std::string dump(slice_t data);
-        void dump(std::ostream&) const;
-
         void _retain() const;
         void _release() const;
 

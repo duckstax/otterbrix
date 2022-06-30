@@ -1,7 +1,6 @@
 #pragma once
 
 #include <components/document/support/exception.hpp>
-#include <components/document/support/num_conversion.hpp>
 #include <components/document/core/value.hpp>
 #include <components/document/core/encoder.hpp>
 #include <components/document/core/slice.hpp>

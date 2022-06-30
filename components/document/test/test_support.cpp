@@ -1,10 +1,8 @@
 #include <catch2/catch.hpp>
 #include <components/document/support/temp_array.hpp>
 #include <components/document/support/slice_io.hpp>
-#include <components/document/support/bitmap.hpp>
 #include <components/document/support/small_vector.hpp>
 #include <components/document/support/writer.hpp>
-#include <future>
 
 using namespace document;
 
@@ -46,22 +44,6 @@ TEST_CASE("slice_t") {
     append_to_file(" Append new data.", file_path);
     read_data = read_file(file_path);
     REQUIRE(read_data == "Data to write to a file. Append new data.");
-}
-
-
-TEST_CASE("bitmap_t") {
-    REQUIRE(popcount(0) == 0);
-    REQUIRE(popcount(0l) == 0);
-    REQUIRE(popcount(0ll) == 0);
-    REQUIRE(popcount(-1) == sizeof(int)*8);
-    REQUIRE(popcount(-1l) == sizeof(long)*8);
-    REQUIRE(popcount(-1ll) == sizeof(long long)*8);
-
-    bitmap_t<uint32_t> b(0x12345678);
-    REQUIRE(bitmap_t<uint32_t>::capacity == 32);
-    REQUIRE(!b.empty());
-    REQUIRE(b.bit_count() == 13);
-    REQUIRE(b.index_of_bit(8) == 4);
 }
 
 

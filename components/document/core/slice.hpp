@@ -2,9 +2,9 @@
 
 #include <components/document/core/slice_core.hpp>
 #include <algorithm>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstdio>
+#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -14,8 +14,6 @@
 #ifndef assert_precondition
 #   define assert_precondition(e) assert(e)
 #endif
-
-#define SLICE(S)    (int)(S).size, (const char*)(S).buf
 
 namespace document {
 

@@ -3,7 +3,7 @@
 #include <components/document/core/array.hpp>
 #include <memory>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 class dict_iterator_t;
 class mutable_dict_t;
@@ -16,7 +16,7 @@ public:
 
     class key_t {
     public:
-        key_t(slice_t raw_str);
+        explicit key_t(slice_t raw_str);
         key_t(const key_t&) = delete;
         ~key_t();
         slice_t string() const noexcept;
@@ -26,7 +26,7 @@ public:
         slice_t const _raw_str;
         shared_keys_t* _shared_keys { nullptr };
         uint32_t _hint { 0xffffffff };
-        int32_t _numeric_key;
+        int32_t _numeric_key { 0 };
         bool _has_numeric_key { false };
 
         void set_shared_keys(shared_keys_t *sk);
@@ -71,7 +71,7 @@ protected:
 
 class dict_iterator_t {
 public:
-    dict_iterator_t(const dict_t*) noexcept;
+    explicit dict_iterator_t(const dict_t*) noexcept;
     dict_iterator_t(const dict_t*, const shared_keys_t*) noexcept;
 
     uint32_t count() const noexcept PURE          { return _a._count; }
@@ -98,8 +98,8 @@ private:
     shared_keys_t* find_shared_keys() const;
 
     array_t::impl _a;
-    const value_t *_key;
-    const value_t *_value;
+    const value_t *_key {nullptr};
+    const value_t *_value {nullptr};
     mutable const shared_keys_t *_shared_keys { nullptr };
     std::unique_ptr<dict_iterator_t> _parent;
     int _key_compare { -1 };
@@ -112,4 +112,4 @@ private:
 
 inline dict_t::iterator dict_t::begin() const noexcept  { return iterator(this); }
 
-} }
+}

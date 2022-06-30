@@ -2,9 +2,9 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <tuple>
-#include <stdio.h>
+#include <cstdio>
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
 pointer_t::pointer_t(size_t offset, int width, bool external)
     : value_t(tag_pointer, 0)
@@ -42,7 +42,7 @@ const value_t* pointer_t::deref_extern(bool wide, const value_t *dst) const noex
     if (_usually_true(dst != nullptr))
         return dst;
     if (!wide) {
-        dst = offsetby(this, -(std::ptrdiff_t)legacy_offset<false>());
+        dst = offsetby(this, -static_cast<std::ptrdiff_t>(legacy_offset<false>()));
         auto scope = scope_t::containing(this);
         if (scope && scope->data().is_contains_address(dst))
             return dst;
@@ -50,31 +50,31 @@ const value_t* pointer_t::deref_extern(bool wide, const value_t *dst) const noex
 
     auto off = wide ? offset<true>() : offset<false>();
     fprintf(stderr, "FATAL: Fleece extern pointer at %p, offset -%u,"
-                        " did not resolve to any address\n", this, off);
+                        " did not resolve to any address\n", static_cast<const void*>(this), off);
     return nullptr;
 }
 
 void pointer_t::set_narrow_bytes(uint16_t b) {
-    *(uint16_t*)_byte = b;
+    *reinterpret_cast<uint16_t*>(_byte) = b;
 }
 
 void pointer_t::set_wide_bytes(uint32_t b) {
-    *(uint32_t*)_byte = b;
+    *reinterpret_cast<uint32_t*>(_byte) = b;
 }
 
 uint16_t pointer_t::narrow_bytes() const {
-    return *(uint16_t*)_byte;
+    return *reinterpret_cast<const uint16_t*>(_byte);
 }
 
 uint32_t pointer_t::wide_bytes() const {
-    return *(uint32_t*)_byte;
+    return *reinterpret_cast<const uint32_t*>(_byte);
 }
 
 const value_t* pointer_t::careful_deref(bool wide, const void* &start, const void* &end) const noexcept {
     uint32_t off = wide ? offset<true>() : offset<false>();
     if (off == 0)
         return nullptr;
-    const value_t *target = offsetby(this, -(std::ptrdiff_t)off);
+    const value_t *target = offsetby(this, -static_cast<std::ptrdiff_t>(off));
 
     if (_usually_false(is_external())) {
         slice_t destination;
@@ -82,7 +82,7 @@ const value_t* pointer_t::careful_deref(bool wide, const void* &start, const voi
         if (_usually_false(!target)) {
             if (wide)
                 return nullptr;
-            target = offsetby(this, -(std::ptrdiff_t)legacy_offset<false>());
+            target = offsetby(this, -static_cast<std::ptrdiff_t>(legacy_offset<false>()));
             if (_usually_false(target < start) || _usually_false(target >= end))
                 return nullptr;
             end = this;
@@ -110,4 +110,4 @@ bool pointer_t::validate(bool wide, const void *start) const noexcept {
 }
 
 
-} } }
+}

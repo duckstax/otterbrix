@@ -8,7 +8,7 @@
 #include <components/document/support/better_assert.hpp>
 #include <components/document/core/slice.hpp>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 class encoder_t;
 class value_t;
@@ -16,9 +16,9 @@ class value_t;
 class key_t {
 public:
     key_t() = default;
-    key_t(slice_t key);
-    key_t(int key);
-    key_t(const value_t *v) noexcept;
+    explicit key_t(slice_t key);
+    explicit key_t(int key);
+    explicit key_t(const value_t *v) noexcept;
 
     bool shared() const PURE;
     int as_int() const PURE;
@@ -40,11 +40,11 @@ public:
 
     using platform_string_t = const void*;
 
-    shared_keys_t();
+    shared_keys_t() = default;
     explicit shared_keys_t(slice_t state_data);
     explicit shared_keys_t(const value_t *state);
 
-    bool load_from(slice_t state_data);
+    virtual bool load_from(slice_t state_data);
     virtual bool load_from(const value_t *state);
 
     alloc_slice_t state_data() const;
@@ -72,13 +72,12 @@ public:
     platform_string_t platform_string_for_key(int key) const;
 
 protected:
-    virtual ~shared_keys_t();
+    ~shared_keys_t() override;
     virtual bool is_eligible_to_encode(slice_t str) const PURE;
 
 private:
     friend class persistent_shared_key_st;
 
-    bool _encode_and_add(slice_t string, int &key);
     bool _add(slice_t string, int &key);
     bool _is_unknown_key(int key) const PURE;
     slice_t decode_unknown(int key) const;
@@ -98,9 +97,9 @@ public:
     persistent_shared_key_st();
 
     bool load_from(const value_t *state) override;
-    bool load_from(slice_t state_data);
+    bool load_from(slice_t state_data) override;
 
-    virtual bool refresh() override;
+    bool refresh() override;
     void transaction_begin();
     void save();
     void revert();
@@ -118,4 +117,4 @@ private:
     size_t _committed_persisted_count {0};
 };
 
-} }
+}

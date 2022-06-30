@@ -11,6 +11,7 @@
 #include <components/document/support/varint.hpp>
 #include <components/document/support/parse_date.hpp>
 #include <components/document/support/better_assert.hpp>
+#include <components/document/support/num_conversion.hpp>
 
 
 namespace document { namespace impl {
