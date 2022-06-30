@@ -6,13 +6,14 @@
 
 #include "components/index/index.hpp"
 #include "components/index/single_field_index.hpp"
+#include "components/tests/generaty.hpp"
 
 using namespace components::index;
 
 TEST_CASE("single_field_index") {
     actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
     auto index_engine = make_index_engine(resource);
-    make_index<single_field_index_t>(index_engine, {"1"});
-    auto* index = insert(index_engine, {"1"},);
-
+    auto id = make_index<single_field_index_t>(index_engine, {"1"});
+    ///auto* index = insert(index_engine, id,gen_doc(1));
+    ///index->
 }

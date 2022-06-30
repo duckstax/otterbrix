@@ -25,6 +25,8 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         dl
+        rocketjoe::document
+        rocketjoe::test_generaty
 )
 
 target_include_directories(

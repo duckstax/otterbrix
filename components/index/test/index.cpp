@@ -13,7 +13,7 @@ public:
     explicit dummy(actor_zeta::detail::pmr::memory_resource* resource)
         : index_t(resource) {
     }
-    auto insert_impl() -> void {}
+    auto insert_impl(key_t key, value_t) -> void {}
     auto find_impl(query_t) -> result_set_t {}
 };
 

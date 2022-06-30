@@ -210,13 +210,16 @@ namespace services::collection {
 
     result_find_one collection_t::search_one_(const find_condition_ptr& cond) {
         if (!cond) {
-            for (auto& it : storage_) {
-                if (cond->is_fit(it.second)) {
-                    return result_find_one(document_view_t(it.second));
-                }
-            }
         }
         return result_find_one();
+    }
+
+    auto collection_t::full_scan_one_(const find_condition_ptr& cond) -> result_find_one {
+        for (auto& it : storage_) {
+            if (cond->is_fit(it.second)) {
+                return result_find_one(document_view_t(it.second));
+            }
+        }
     }
 
     result_delete collection_t::delete_one_(const find_condition_ptr& cond) {

@@ -55,6 +55,8 @@ namespace services::collection {
         bool drop_();
         result_find search_(const find_condition_ptr& cond);
         result_find_one search_one_(const find_condition_ptr& cond);
+        result_find full_scan_(const find_condition_ptr& cond);
+        result_find_one full_scan_one_(const find_condition_ptr& cond);
         result_delete delete_one_(const find_condition_ptr& cond);
         result_delete delete_many_(const find_condition_ptr& cond);
         result_update update_one_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);

@@ -1,20 +1,31 @@
 #include "index.hpp"
 
+#include <utility>
+
+#include "document/mutable/mutable_dict.hpp"
+
 namespace components::index {
 
-    void find(const index_engine_ptr& index, keys_base_t params, query_t query) {
-        search_index(index, std::move(params))->find(query);
+    auto find(const index_engine_ptr& index, const keys_base_t& params, query_t query) {
+        return search_index(index, params)->find(std::move(query));
     }
 
-    void insert(const index_engine_ptr& ptr, keys_base_t params, std::vector<document_ptr> docs) {
-        auto * index = search_index(ptr, std::move(params));
-        for(const auto&i:docs) {
-            index->insert(docs);
+    void insert(const index_engine_ptr& ptr, keys_base_t params, std::vector<document_ptr>& docs) {
+        auto* index = search_index(ptr, std::move(params));
+        for (const auto& i : docs) {
+            for (auto& j : params) {
+                /// index->insert(i->structure->get(i));
+            }
         }
     }
 
-    auto search_index(const index_engine_ptr& ptr, keys_base_t keys) -> index_t* {
-        return ptr->find(std::move(keys));
+    void insert_one(const index_engine_ptr& ptr, const keys_base_t& params, document_ptr docs) {
+        auto* index = search_index(ptr, params);
+        ///   index->insert(i->structure->get(i));
+    }
+
+    auto search_index(const index_engine_ptr& ptr, const keys_base_t& keys) -> index_t* {
+        return ptr->find(keys);
     }
 
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr {
@@ -30,18 +41,22 @@ namespace components::index {
         , mapper_(resource) {
     }
 
-    auto index_engine_t::emplace(keys_base_t keys, index_engine_t::value_t value) -> void {
-        mapper_.emplace(std::move(keys), std::move(value));
+    auto index_engine_t::emplace(keys_base_t keys, value_t value) -> uint32_t {
+        auto d = storgae_.insert(storgae_.cend(), wrapper(keys,std::move(value)));
+
+        auto result = mapper_.emplace(std::move(keys), d);
+        auto new_id = index_to_mapper_.size();
+        index_to_mapper_.emplace(new_id, d);
+        return new_id;
     }
 
     actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {
         return resource_;
     }
 
-    auto index_engine_t::find(keys_base_t keys) -> index_raw_ptr {
-        const auto tmp_keys = std::move(keys);
-        auto it = mapper_.find(tmp_keys);
-        return it->second.get();
+    auto index_engine_t::find(const keys_base_t& keys) -> index_raw_ptr {
+        auto it = mapper_.find(keys);
+        ///return it->second.get();
     }
 
     auto index_engine_t::size() const -> std::size_t {
@@ -50,13 +65,15 @@ namespace components::index {
 
     deleter::deleter(actor_zeta::detail::pmr::memory_resource* ptr)
         : ptr_(ptr) {}
+
     index_t::index_t(actor_zeta::detail::pmr::memory_resource* resource)
         : resource_(resource) {}
+
     auto index_t::find(query_t query) -> result_set_t {
         return find_impl(query);
     }
-    auto index_t::insert() {
-        return insert_impl();
+    auto index_t::insert(key_t key, value_t value) {
+        return insert_impl(key, value);
     }
     index_t::~index_t() = default;
 } // namespace components::index
