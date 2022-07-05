@@ -24,9 +24,8 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        dl
         rocketjoe::document
-        rocketjoe::test_generaty
+        dl
 )
 
 target_include_directories(

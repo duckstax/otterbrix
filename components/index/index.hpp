@@ -1,5 +1,8 @@
 #pragma once
+
 #include <map>
+#include <vector>
+#include <string>
 #include <memory>
 #include <scoped_allocator>
 #include <utility>
@@ -19,11 +22,11 @@ namespace components::index {
 
     class query_t {
     public:
-        std::string operator[](std::size_t index){
+        std::pmr::string operator[](std::size_t index){
             return data_[index];
         }
 
-        std::vector<std::string> data_;
+        std::pmr::vector<std::pmr::string> data_;
     private:
 
     };
@@ -34,36 +37,48 @@ namespace components::index {
             data_.emplace_back(doc);
         }
     private:
-        std::vector<document_ptr> data_;
+        std::pmr::vector<document_ptr> data_;
     };
+
+    template<class Target>
+    using base_alocator = std::scoped_allocator_adaptor<actor_zeta::detail::pmr::polymorphic_allocator<Target>>;
+
+    template<class Target>
+    using base_alocator_1 = actor_zeta::detail::pmr::polymorphic_allocator<Target>;
+
+    using keys_base_t = std::pmr::vector<std::pmr::string>;
 
     class index_t {
     public:
-        using key_t = std::string;///::document::impl::value_t;
+        using key_t = std::pmr::string;///::document::impl::value_t;
         using value_t = components::document::document_ptr;
         virtual ~index_t();
-        auto insert(key_t key, value_t);
-        auto find(query_t query) -> result_set_t;
+        void insert(key_t key, value_t);
+        void find(query_t query,result_set_t*);
+        [[nodiscard]] auto keys() const {
+            return std::make_pair(keys_.begin(),keys_.end());
+        }
 
     protected:
-        explicit index_t(actor_zeta::detail::pmr::memory_resource* resource);
-        virtual auto insert_impl(key_t key, value_t) -> void = 0;
-        virtual auto find_impl(query_t) -> result_set_t = 0;
+        explicit index_t(actor_zeta::detail::pmr::memory_resource* resource,const keys_base_t&keys );
+        virtual void insert_impl(key_t key, value_t) = 0;
+        virtual void find_impl(query_t,result_set_t*)  = 0;
         actor_zeta::detail::pmr::memory_resource* resource_;
+        std::pmr::vector<std::pmr::string> keys_;
     };
 
     using index_raw_ptr = index_t*;
     using index_ptr = std::unique_ptr<index_t>;
-    using keys_base_t = std::vector<std::string>;
     using id_index = uint32_t;
 
     struct index_engine_t final {
     public:
         using value_t = index_ptr;
 
+
         explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
-        auto find(const keys_base_t&) -> index_raw_ptr;
-        auto emplace(keys_base_t , value_t ) -> uint32_t ;
+        auto find(id_index id) -> index_raw_ptr;
+        auto emplace(const keys_base_t& , value_t ) -> uint32_t ;
         [[nodiscard]] auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
@@ -71,20 +86,10 @@ namespace components::index {
         template<class Target>
         using base_alocator = std::scoped_allocator_adaptor<actor_zeta::detail::pmr::polymorphic_allocator<Target>>;
         using comparator_t = std::less<keys_base_t>;
+        using base_storgae = std::list<index_ptr ,base_alocator<index_ptr >>;
 
-        struct wrapper final {
-            wrapper(keys_base_t keys_base,value_t index)
-                : keys_base_(std::move(keys_base)),index_(std::move(index)){}
-            value_t index_;
-            const keys_base_t keys_base_;
-        };
-
-        using base_storgae = std::list<wrapper,base_alocator<wrapper>>;
-        using allocator_t = base_alocator<std::pair<const keys_base_t, base_storgae::iterator>>;
-        using allocator_1_t = base_alocator<std::pair<const id_index , base_storgae::iterator>>;
-
-        using keys_to_doc_t = std::map<keys_base_t, base_storgae::iterator , comparator_t, allocator_t>;
-        using index_to_doc_t = std::map<id_index, base_storgae::iterator, std::less<>, allocator_1_t>;
+        using keys_to_doc_t = std::pmr::map<keys_base_t, base_storgae::iterator , comparator_t>;
+        using index_to_doc_t = std::pmr::map<id_index, base_storgae::iterator, std::less<>>;
 
         actor_zeta::detail::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
@@ -110,15 +115,16 @@ namespace components::index {
     using index_engine_ptr = std::unique_ptr<index_engine_t, deleter>;
 
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr;
-    auto search_index(const index_engine_ptr& ptr, keys_base_t keys) -> index_t*;
+    auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t*;
+
 
     template<class Target, class... Args>
-    auto make_index(index_engine_ptr& ptr, keys_base_t&& keys, Args&&... args) -> uint32_t {
-        return ptr->emplace(std::move(keys), std::make_unique<Target>(ptr->resource(), std::forward<Args>(args)...));
+    auto make_index(index_engine_ptr& ptr, const keys_base_t& keys, Args&&... args) -> uint32_t {
+        return ptr->emplace(keys, std::make_unique<Target>(ptr->resource(),keys, std::forward<Args>(args)...));
     }
 
-    void insert(const index_engine_ptr& index, const keys_base_t& params, std::vector<document_ptr>);
-    void insert(const index_engine_ptr& index, uint32_t id, std::vector<document_ptr>);
-    auto find(const index_engine_ptr& index, keys_base_t params, query_t query);
+    void insert(const index_engine_ptr& ptr, id_index id , std::pmr::vector<document_ptr>& docs);
+    void insert_one(const index_engine_ptr& ptr, id_index id, document_ptr docs);
+    void find(const index_engine_ptr& index, id_index id , query_t query,result_set_t* );
 
 } // namespace components::index

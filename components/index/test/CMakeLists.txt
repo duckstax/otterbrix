@@ -11,9 +11,11 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        rocketjoe::log
-        rocketjoe::index
         ${CONAN_LIBS}
+        rocketjoe::log
+        rocketjoe::document
+        rocketjoe::index
+        rocketjoe::test_generaty
 )
 
 include(CTest)

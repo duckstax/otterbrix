@@ -25,15 +25,15 @@ namespace components::index {
         using allocator_type = std::scoped_allocator_adaptor<actor_zeta::detail::pmr::polymorphic_allocator<std::pair<const key_t, value_t>>>;
         using storage = std::multimap<key_t, value_t, comparator, allocator_type>;
 
-        multikey_index_t(actor_zeta::detail::pmr::memory_resource* resource)
-            : index_t(resource)
+        multikey_index_t(actor_zeta::detail::pmr::memory_resource* resource,const keys_base_t&keys)
+            : index_t(resource,keys)
             , data_(resource) {}
 
-        auto insert_impl() -> void  {
+        auto insert_impl(key_t key, value_t) -> void  {
 
         }
 
-        auto find_impl(query_t) -> result_set_t {
+        void find_impl(query_t query,result_set_t*)  {
 
         }
 
