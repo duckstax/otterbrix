@@ -23,6 +23,14 @@ public:
     virtual bool is_union() const;
     virtual void set_value(const value_t *);
 
+    const std::string& key() const {
+        return key_;
+    }
+
+    const std::string& full_key() const {
+        return full_key_;
+    }
+
 protected:
     std::string key_;
 

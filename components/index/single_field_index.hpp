@@ -32,18 +32,12 @@ namespace components::index {
         }
 
         auto find_impl(query_t query, result_set_t* set) -> void {
-            for (auto& i : query.data_) {
+            for (auto& i : query) {
                 auto it = data_.find(i);
                 set->append(it->second);
             }
         }
 
-        auto find_one_impl(query_t query) -> result_set_t {
-            result_set_t set;
-            auto it = data_.find(query[0]);
-            set.append(it->second);
-            return set;
-        }
 
     private:
         storage_t data_;

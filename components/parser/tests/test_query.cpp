@@ -2,7 +2,7 @@
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/parser/find_condition.hpp>
-
+#include <iostream>
 using namespace components::parser;
 
 components::document::document_ptr gen_doc() {
@@ -31,6 +31,8 @@ TEST_CASE("query_t create") {
     REQUIRE(find_condition_lt<long>("age", 7).is_fit(doc));
     REQUIRE(find_condition_gte<long>("age", 4).is_fit(doc));
     REQUIRE(find_condition_lte<long>("age", 6).is_fit(doc));
+    find_condition_lte<long>d("age", 6);
+    std::cerr << "key : " << d.key() << " full key : " << d.full_key();
     REQUIRE_FALSE(find_condition_ne<long>("age", 6).is_fit(doc));
     REQUIRE_FALSE(find_condition_gt<long>("age", 7).is_fit(doc));
     REQUIRE_FALSE(find_condition_lt<long>("age", 6).is_fit(doc));

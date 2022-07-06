@@ -6,9 +6,14 @@
 
 namespace components::index {
 
-    void find(const index_engine_ptr& ptr, id_index id , query_t query,result_set_t* set) {
-        auto* index  = search_index(ptr, id);
+    void find(const index_engine_ptr& ptr, query_t query,result_set_t* set) {
+        auto* index  = search_index(ptr, query);
         index->find(std::move(query),set);
+    }
+
+    void find(const index_engine_ptr& ptr, id_index id , result_set_t* set) {
+        auto* index  = search_index(ptr, id);
+        index->find(id,set);
     }
 
     void insert(const index_engine_ptr& ptr, id_index id , std::vector<document_ptr>& docs) {
@@ -46,6 +51,10 @@ namespace components::index {
         return ptr->find(id);
     }
 
+    auto search_index(const index_engine_ptr& ptr, query_t query) -> index_t* {
+        return ptr->find(query);
+    }
+
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr {
         auto size = sizeof(index_engine_t);
         auto align = alignof(index_engine_t);
@@ -81,6 +90,10 @@ namespace components::index {
         return mapper_.size();
     }
 
+    auto index_engine_t::find(query_t query) -> index_raw_ptr {
+        return mapper_.find(query.data())->second->get();
+    }
+
     deleter::deleter(actor_zeta::detail::pmr::memory_resource* ptr)
         : ptr_(ptr) {}
 
@@ -92,8 +105,16 @@ namespace components::index {
         return find_impl(std::move(query),set);
     }
 
+    void index_t::find(id_index,result_set_t*) {
+
+    }
+
     auto index_t::insert(key_t key, value_t value) -> void  {
         return insert_impl(key, value);
+    }
+
+    auto index_t::keys()  -> std::pair<std::pmr::vector<std::pmr::string>::iterator,std::pmr::vector<std::pmr::string>::iterator> {
+        return std::make_pair(keys_.begin(),keys_.end());
     }
 
     index_t::~index_t() = default;

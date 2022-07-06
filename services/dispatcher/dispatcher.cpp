@@ -6,6 +6,7 @@
 
 #include <components/document/document.hpp>
 #include <components/protocol/protocol.hpp>
+#include <components/ql/parser.hpp>
 
 #include <services/collection/route.hpp>
 #include <services/database/database.hpp>
@@ -378,7 +379,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, address);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, components::parser::parse_find_condition(condition));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, components::ql::parse_find_condition(condition));
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_one_finish), session, result_find_one());
         }
