@@ -5,6 +5,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <flatbuffers/flexbuffers.h>
+
 #include <components/log/log.hpp>
 
 #include "wasm.hpp"
@@ -170,5 +172,45 @@ TEST_CASE("wasm_manager_t log_quickjs", "[API]") {
 
     wasm_manager.initialize("plugin_name1", plugin_id, "plugin_vm_id1", "plugin_configiguration1",
                             false, "vm_id1", "vm_configuration1", {}, {}, wasm, false);
+    wasm_manager.get_or_create_thread_local_plugin();
+}
+
+TEST_CASE("wasm_manager_t flatbuffers", "[API]") {
+    string log_dir(".");
+    auto log = initialization_logger("wasm_runner", log_dir);
+    auto wasm = read_test_wasm_file(boost::filesystem::path("wasm_flatbuffers") / "wasm_flatbuffers.wasm");
+    string_view plugin_id = "m_plugin_id_1";
+    mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
+
+    flexbuffers::Builder fbb;
+    fbb.Int(13);
+    fbb.Map([&]() {
+        fbb.Vector("vec", [&]() {
+            fbb.Int(-100);
+            fbb.String("Fred");
+            fbb.IndirectFloat(4.0f);
+        });
+        fbb.UInt("foo", 100);
+    });
+    fbb.Finish();
+
+    std::string blob;
+    auto to_char = [](uint8_t value) {
+        if (value < 10) {
+            return char('0' + value);
+        }
+        return char('a' + value - 10);
+    };
+    for (const auto byte : fbb.GetBuffer()) {
+        blob.push_back('x');
+        blob.push_back(to_char(byte / 16));
+        blob.push_back(to_char(byte % 16));
+        blob.push_back(' ');
+    }
+    info(log, blob);
+
+    wasm_manager.initialize("m_plugin_name_1", plugin_id, "m_plugin_vm_id_1", "m_plugin_configiguration_1",
+                            false, "m_vm_id_1", "m_vm_configuration_1", {}, {}, wasm, false);
+    wasm_manager.copy_data("document", fbb.GetBuffer());
     wasm_manager.get_or_create_thread_local_plugin();
 }

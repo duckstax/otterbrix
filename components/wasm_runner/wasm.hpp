@@ -91,6 +91,7 @@ namespace components::wasm_runner {
                         bool allow_precompiled) -> void;
 
         auto get_or_create_thread_local_plugin() const -> std::shared_ptr<proxy_wasm::PluginHandleBase>;
+        auto copy_data(const std::string &key, const std::vector<uint8_t> &data) -> void;
 
     protected:
         virtual auto create_plugin(std::string_view plugin_name, std::string_view plugin_id,

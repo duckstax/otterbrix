@@ -46,7 +46,23 @@ add_custom_target("${PROJECT_NAME}_log_quickjs_wasm" COMMAND conan build
                   -bf "${CMAKE_CURRENT_BINARY_DIR}/log_quickjs_wasm"
                   "${CMAKE_CURRENT_SOURCE_DIR}/log_quickjs_wasm")
 
-add_dependencies("${PROJECT_NAME}" "${PROJECT_NAME}_log_wasm" "${PROJECT_NAME}_log_quickjs_wasm")
+execute_process(COMMAND conan install
+        --install-folder "${CMAKE_CURRENT_BINARY_DIR}/wasm_flatbuffers"
+        --profile:build default
+        --profile:host emscripten-module
+        --build missing
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm_flatbuffers"
+        RESULT_VARIABLE RETURN_CODE)
+
+if(NOT "${RETURN_CODE}" STREQUAL "0")
+    message(FATAL_ERROR "Conan install failed='${RETURN_CODE}'")
+endif()
+
+add_custom_target("${PROJECT_NAME}_wasm_flatbuffers" COMMAND conan build
+        -bf "${CMAKE_CURRENT_BINARY_DIR}/wasm_flatbuffers"
+        "${CMAKE_CURRENT_SOURCE_DIR}/wasm_flatbuffers")
+
+add_dependencies("${PROJECT_NAME}" "${PROJECT_NAME}_log_wasm" "${PROJECT_NAME}_log_quickjs_wasm" "${PROJECT_NAME}_wasm_flatbuffers")
 
 include(CTest)
 include(Catch)
