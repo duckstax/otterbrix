@@ -183,31 +183,13 @@ TEST_CASE("wasm_manager_t flatbuffers", "[API]") {
     mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
 
     flexbuffers::Builder fbb;
-    fbb.Int(13);
     fbb.Map([&]() {
-        fbb.Vector("vec", [&]() {
-            fbb.Int(-100);
-            fbb.String("Fred");
-            fbb.IndirectFloat(4.0f);
-        });
-        fbb.UInt("foo", 100);
+        fbb.String("name", "name_document");
+        fbb.Int("count", 10);
     });
     fbb.Finish();
-
-    std::string blob;
-    auto to_char = [](uint8_t value) {
-        if (value < 10) {
-            return char('0' + value);
-        }
-        return char('a' + value - 10);
-    };
-    for (const auto byte : fbb.GetBuffer()) {
-        blob.push_back('x');
-        blob.push_back(to_char(byte / 16));
-        blob.push_back(to_char(byte % 16));
-        blob.push_back(' ');
-    }
-    info(log, blob);
+    auto map = flexbuffers::GetRoot(fbb.GetBuffer()).AsMap();
+    info(log, "name: {}, count: {}", map["name"].AsString().str(), map["count"].AsInt32());
 
     wasm_manager.initialize("m_plugin_name_1", plugin_id, "m_plugin_vm_id_1", "m_plugin_configiguration_1",
                             false, "m_vm_id_1", "m_vm_configuration_1", {}, {}, wasm, false);

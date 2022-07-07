@@ -1,5 +1,6 @@
 #include <proxy_wasm_intrinsics.h>
 #include <proxy_wasm_externs.h>
+#include <flatbuffers/flexbuffers.h>
 
 using namespace std;
 
@@ -15,27 +16,16 @@ wasm_flatbuffers_root_context_t::wasm_flatbuffers_root_context_t(uint32_t id, st
     : RootContext(id, root_id) {}
 
 auto wasm_flatbuffers_root_context_t::onStart(size_t) -> bool {
-    std::string blob;
-    auto to_char = [](uint8_t value) {
-        if (value < 10) {
-            return char('0' + value);
-        }
-        return char('a' + value - 10);
-    };
-
     std::string key = "document";
     const char *value = nullptr;
     size_t value_size = 0;
     uint32_t cas = 0;
     proxy_get_shared_data(key.c_str(), key.size(), &value, &value_size, &cas);
-    for (size_t i = 0; i < value_size; ++i) {
-        uint8_t byte = static_cast<uint8_t>(value[i]);
-        blob.push_back('x');
-        blob.push_back(to_char(byte / 16));
-        blob.push_back(to_char(byte % 16));
-        blob.push_back(' ');
+    if (value_size > 0) {
+        auto map = flexbuffers::GetRoot(reinterpret_cast<const uint8_t*>(value), value_size).AsMap();
+        auto document = "name: " + map["name"].AsString().str() + ", count: ";// + std::to_string(map["count"].AsUInt32());
+        LOG_INFO(document);
     }
-    LOG_INFO(blob);
 
     return true;
 }
