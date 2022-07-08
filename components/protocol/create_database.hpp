@@ -1,11 +1,11 @@
 #pragma once
 
 #include <msgpack/adaptor/list.hpp>
-#include "base.hpp"
+#include "components/ql/ql_statement.hpp"
 
 namespace components::protocol {
 
-    struct create_database_t final : statement_t {
+    struct create_database_t final : ql_statement_t {
         explicit create_database_t(const database_name_t& database);
         create_database_t() = default;
         create_database_t(const create_database_t&) = default;

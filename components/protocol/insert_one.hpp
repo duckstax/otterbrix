@@ -4,9 +4,9 @@
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/serialize/serialize.hpp>
 #include <msgpack/adaptor/list.hpp>
-#include "base.hpp"
+#include "components/ql/ql_statement.hpp"
 
-struct insert_one_t : statement_t {
+struct insert_one_t : ql_statement_t {
     insert_one_t(const database_name_t &database, const collection_name_t &collection, components::document::document_ptr document);
     insert_one_t() = default;
     insert_one_t(const insert_one_t&) = default;

@@ -4,9 +4,9 @@
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/serialize/serialize.hpp>
 #include <msgpack/adaptor/list.hpp>
-#include "base.hpp"
+#include "components/ql/ql_statement.hpp"
 
-struct delete_one_t : statement_t {
+struct delete_one_t : ql_statement_t {
     delete_one_t(const database_name_t &database, const collection_name_t &collection, components::document::document_ptr condition);
     delete_one_t() = default;
     delete_one_t(const delete_one_t&) = default;

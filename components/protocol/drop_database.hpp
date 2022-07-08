@@ -1,11 +1,11 @@
 #pragma once
 
 #include <msgpack/adaptor/list.hpp>
-#include "base.hpp"
+#include "components/ql/ql_statement.hpp"
 
 namespace components::protocol {
 
-    struct drop_database_t final : statement_t {
+    struct drop_database_t final : ql_statement_t {
         explicit drop_database_t(const database_name_t& database);
         drop_database_t() = default;
         drop_database_t(const drop_database_t&) = default;

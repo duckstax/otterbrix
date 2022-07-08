@@ -1,12 +1,12 @@
 #pragma once
 
 #include <boost/beast/core/span.hpp>
-#include "base.hpp"
+#include "components/ql/ql_statement.hpp"
 #include "components/document/msgpack/msgpack_encoder.hpp"
 #include "components/serialize/serialize.hpp"
 #include <msgpack/adaptor/list.hpp>
 
-struct insert_many_t : statement_t {
+struct insert_many_t : ql_statement_t {
     insert_many_t(const database_name_t & database, const collection_name_t & collection, std::list<components::document::document_ptr> documents);
     insert_many_t() = default;
     insert_many_t(const insert_many_t&) = default;
