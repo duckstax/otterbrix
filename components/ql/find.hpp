@@ -1,6 +1,8 @@
-#include <vector>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include "ql_statement.hpp"
 
 enum class condition_type : std::uint8_t {
     novalid,
@@ -18,130 +20,104 @@ enum class condition_type : std::uint8_t {
     union_not
 };
 
-
-using ::document::impl::value_type;
-using ::document::impl::value_t;
 using ::document::impl::array_t;
+using ::document::impl::value_t;
+using ::document::impl::value_type;
 
-/// SIMPLES VALUES ///
-
-template <class T>
-class find_condition_simple {
-    find_condition_simple() = delete;
+template<class T>
+struct find_condition_eq {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr>
 };
 
-
-
-template <class T>
-class find_condition_eq  {
+template<class T>
+struct find_condition_ne {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-template <class T>
-class find_condition_ne  {
+template<class T>
+struct find_condition_gt {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-template <class T>
-class find_condition_gt{
+template<class T>
+struct find_condition_lt {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-template <class T>
-class find_condition_lt  {
+template<class T>
+struct find_condition_gte {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-template <class T>
-class find_condition_gte  {
+template<class T>
+struct find_condition_lte {
+    std::string key_;
+    std::string full_key_;
     T value_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-template <class T>
-class find_condition_lte  {
-    T value_;
-    std::vector<conditional_expression_ptr> conditions_;
-};
-
-
-template <class T>
-class find_condition_between {
-public:
-    find_condition_between(const std::string &key, const T &value1, const T &value2)
-        : value_ (value1)
-        , value2_(value2) {}
-
-private:
+template<class T>
+struct find_condition_between {
+    std::string key_;
+    std::string full_key_;
     T value_;
     T value2_;
-    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-class find_condition_regex  {
-    std::string value ;
-    std::vector<conditional_expression_ptr> conditions_;
+struct find_condition_regex {
+    std::string key_;
+    std::string full_key_;
+    std::string value_;
 };
-
 
 /// ARRAY VALUES ///
 
-template <class T>
-class find_condition_array  {
+template<class T>
+struct find_condition_any {
     std::string key_;
     std::vector<T> values_;
 };
 
-
-template <class T>
-class find_condition_any  {
-    std::string key_;
-    std::vector<T> values_;
-
-
-};
-
-
-template <class T>
-class find_condition_all  {
+template<class T>
+struct find_condition_all {
     std::string key_;
     std::vector<T> values_;
 };
-
 
 /// COMPLEX VALUES ///
 
-class find_condition_and  {
-public:
-    std::vector<conditional_expression_ptr>
+struct find_condition_and {
+    std::string key_;
+    std::string full_key_;
+    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-class find_condition_or  {
-    std::vector<conditional_expression_ptr>
+struct find_condition_or {
+    std::string key_;
+    std::string full_key_;
+    std::vector<conditional_expression_ptr> conditions_;
 };
 
-
-class find_condition_not  {
-    std::vector<conditional_expression_ptr>
+struct find_condition_not {
+    std::string key_;
+    std::string full_key_;
+    std::vector<conditional_expression_ptr> conditions_;
 };
 
-struct find_statement {
+///////////////////////////////////////////////
 
+struct find_statement : public  ql_statement_t {
     std::vector<find_statement*> exps_;
 };
 
-
-conditional_expression_ptr make_find_condition(condition_type type, const std::string &key, const value_t *value);
+conditional_expression_ptr make_find_condition(condition_type type, const std::string& key, const value_t* value);

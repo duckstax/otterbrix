@@ -1,11 +1,10 @@
 project(protocol CXX)
 
-list(APPEND HEADER_${PROJECT_NAME}
+set(HEADER_${PROJECT_NAME}
         protocol.hpp
         )
 
-list(APPEND SOURCE_${PROJECT_NAME}
-        base.cpp
+set( SOURCE_${PROJECT_NAME}
         create_database.cpp
         drop_database.cpp
         drop_collection.cpp
