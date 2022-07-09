@@ -7,6 +7,10 @@ using ::document::impl::dict_t;
 
 namespace components::ql {
 
+    using document::document_view_t;
+    using document::document_t;
+    using document::document_ptr;
+
 condition_type get_condition_(const std::string &key) {
     if (key == "$eq") return condition_type::eq;
     if (key == "$ne") return condition_type::ne;
@@ -23,11 +27,11 @@ condition_type get_condition_(const std::string &key) {
     return condition_type::novalid;
 }
 
-void parse_find_condition_(find_condition_t *parent_condition, const value_t *condition, const std::string &prev_key, const std::string &key_word);
-void parse_find_condition_dict_(find_condition_t *parent_condition, const dict_t *condition, const std::string &prev_key);
-void parse_find_condition_array_(find_condition_t *parent_condition, const array_t *condition, const std::string &prev_key);
+void parse_find_condition_(condition_t *parent_condition, const value_t *condition, const std::string &prev_key, const std::string &key_word);
+void parse_find_condition_dict_(condition_t *parent_condition, const dict_t *condition, const std::string &prev_key);
+void parse_find_condition_array_(condition_t *parent_condition, const array_t *condition, const std::string &prev_key);
 
-void parse_find_condition_(find_condition_t *parent_condition, const value_t *condition, const std::string &prev_key, const std::string &key_word) {
+void parse_find_condition_(condition_t *parent_condition, const value_t *condition, const std::string &prev_key, const std::string &key_word) {
     auto real_key = prev_key;
     auto type = get_condition_(key_word);
     if (type == condition_type::novalid) {
@@ -39,7 +43,7 @@ void parse_find_condition_(find_condition_t *parent_condition, const value_t *co
     auto subcondition = make_find_condition(type, real_key, condition);
     if (subcondition) {
         if (subcondition->is_union()) {
-            parse_find_condition_(static_cast<find_condition_t*>(subcondition.get()), condition, real_key, std::string());
+            parse_find_condition_(static_cast<condition_t*>(subcondition.get()), condition, real_key, std::string());
         }
         parent_condition->add(std::move(subcondition));
     } else {
@@ -51,7 +55,7 @@ void parse_find_condition_(find_condition_t *parent_condition, const value_t *co
     }
 }
 
-void parse_find_condition_dict_(find_condition_t *parent_condition, const dict_t *condition, const std::string &prev_key) {
+void parse_find_condition_dict_(condition_t *parent_condition, const dict_t *condition, const std::string &prev_key) {
     for (auto it = condition->begin(); it; ++it) {
         auto key = std::string(it.key()->as_string());
         if (prev_key.empty()) {
@@ -62,26 +66,26 @@ void parse_find_condition_dict_(find_condition_t *parent_condition, const dict_t
     }
 }
 
-void parse_find_condition_array_(find_condition_t *parent_condition, const array_t *condition, const std::string &prev_key) {
+void parse_find_condition_array_(condition_t *parent_condition, const array_t *condition, const std::string &prev_key) {
     for (auto it = condition->begin(); it; ++it) {
         parse_find_condition_(parent_condition, it.value(), prev_key, std::string());
     }
 }
 
 
-find_condition_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t> &condition) {
-    auto res_condition = make_condition<find_condition_t>();
+condition_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t> &condition) {
+    auto res_condition = make_condition<condition_t>();
     for (auto it = condition->begin(); it; ++it) {
         parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
     }
     return res_condition;
 }
 
-find_condition_ptr parse_find_condition(const document_view_t &condition) {
+condition_ptr parse_find_condition(const document_view_t &condition) {
     return parse_find_condition_(condition.to_dict());
 }
 
-find_condition_ptr parse_find_condition(const document_ptr &condition) {
+condition_ptr parse_find_condition(const document_ptr &condition) {
     return parse_find_condition(document_view_t(condition));
 }
 

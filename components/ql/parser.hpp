@@ -1,10 +1,11 @@
 #pragma once
-#include "find.hpp"
 #include "document/document.hpp"
+#include "document/document_view.hpp"
+#include "find.hpp"
 
 namespace components::ql {
 
-find_condition_ptr parse_find_condition(const document_view_t &condition);
-find_condition_ptr parse_find_condition(const document_ptr &condition);
+condition_ptr parse_find_condition(const document::document_view_t &condition);
+condition_ptr parse_find_condition(const document::document_ptr &condition);
 
 }

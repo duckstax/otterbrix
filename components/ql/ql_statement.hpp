@@ -9,8 +9,6 @@
 using database_name_t = std::string;
 using collection_name_t = std::string;
 
-
-
 enum class statement_type : char {
     unused = 0x00, // unused
     create_database,
@@ -22,7 +20,8 @@ enum class statement_type : char {
     delete_one,
     delete_many,
     update_one,
-    update_many
+    update_many,
+    create_index
 };
 
 // Base struct for every QL statement
@@ -59,7 +58,7 @@ struct join_definition_t {
 
     collection_ref_t* left;
     collection_ref_t* right;
-    /// Expr* condition;
+    /// Expr* condition_t;
 
     join_t type;
 };

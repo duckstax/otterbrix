@@ -6,6 +6,7 @@ set( HEADER_${PROJECT_NAME}
 
 set( SOURCE_${PROJECT_NAME}
         parser.cpp
+        find.cpp
         )
 
 

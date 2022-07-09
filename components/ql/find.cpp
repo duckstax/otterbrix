@@ -8,30 +8,30 @@
     (VALUE->type() == value_type::string) ? static_cast<conditional_expression_ptr>(make_condition<CONDITION<std::string>>(KEY)) : \
     nullptr
 
-conditional_expression_ptr make_find_condition(condition_type type, const std::string &key, const value_t *value) {
-    conditional_expression_ptr condition = nullptr;
+condition_ptr make_find_condition(condition_type type, const std::string &key, const value_t *value) {
+    condition_ptr condition = nullptr;
     switch (type) {
         case condition_type::novalid:
             if (key.empty()) return nullptr;
-            condition = MAKE_FIND_CONDITION(find_condition_eq, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::eq:
-            condition = MAKE_FIND_CONDITION(find_condition_eq, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::ne:
-            condition = MAKE_FIND_CONDITION(find_condition_ne, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::gt:
-            condition = MAKE_FIND_CONDITION(find_condition_gt, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::lt:
-            condition = MAKE_FIND_CONDITION(find_condition_lt, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::gte:
-            condition = MAKE_FIND_CONDITION(find_condition_gte, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::lte:
-            condition = MAKE_FIND_CONDITION(find_condition_lte, key, value);
+            condition = MAKE_FIND_CONDITION(find_condition_eq_ne_gt_lt_gte_lte, key, value);
             break;
         case condition_type::regex:
             return make_condition<find_condition_regex>(key, static_cast<std::string>(value->as_string()));
