@@ -1,4 +1,10 @@
 #include "doc.hpp"
+
+#include <functional>
+#include <mutex>
+#include <utility>
+#include <vector>
+
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/core/pointer.hpp>
 #include <components/document/json/json_coder.hpp>
@@ -6,10 +12,11 @@
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/better_assert.hpp>
-#include <functional>
-#include <mutex>
-#include <utility>
-#include <vector>
+#include <components/document/support/small_vector.hpp>
+#include <components/document/support/small_vector_base.hpp>
+
+#include <boost/container/small_vector.hpp>
+
 
 #define Log(FMT,...)
 #define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
@@ -25,7 +32,7 @@ struct mem_entry_t
     bool operator< (const mem_entry_t &other) const  { return end_of_range < other.end_of_range; }
 };
 
-using memory_map_t = small_vector<mem_entry_t, 10>;
+using memory_map_t = boost::container::small_vector<mem_entry_t, 10>;
 
 static memory_map_t *memory_map;
 static std::mutex mutex;

@@ -64,7 +64,6 @@ protected:
     template <bool WIDE> friend struct dict_impl_t;
     friend class dict_iterator_t;
     friend class value_t;
-    friend class encoder_t;
     friend class internal::heap_dict_t;
 };
 
@@ -106,7 +105,6 @@ private:
 
     friend class value_t;
     friend class value_dumper_t;
-    friend class encoder_t;
 };
 
 

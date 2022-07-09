@@ -1,10 +1,12 @@
 #pragma once
 
+#include <cstdio>
+
 #include <components/document/support/exception.hpp>
 #include <components/document/core/value.hpp>
-#include <components/document/core/encoder.hpp>
 #include <components/document/core/slice.hpp>
-#include <stdio.h>
+#include <components/document/support/writer.hpp>
+
 
 namespace boost { namespace json {
 class value;
@@ -14,7 +16,7 @@ namespace document { namespace impl {
 
 class json_coder {
 public:
-    static alloc_slice_t from_json(encoder_t &enc, slice_t json);
+   /// static alloc_slice_t from_json(encoder_t &enc, slice_t json);
     static alloc_slice_t from_json(slice_t json, shared_keys_t *sk = nullptr);
 };
 

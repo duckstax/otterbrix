@@ -18,7 +18,7 @@ class json_converter_t {
     };
 
 public:
-    json_converter_t(encoder_t &enc) noexcept;
+
 
     bool encode_json(slice_t json);
     std::string error_message() noexcept;
@@ -26,7 +26,6 @@ public:
 private:
     void write_value(const boost::json::value &value);
 
-    encoder_t &_encoder;
     int _error {no_error};
     std::string _error_message;
 };
@@ -370,11 +369,6 @@ void json_encoder_t::end_dict() {
 }
 
 
-json_converter_t::json_converter_t(encoder_t &enc) noexcept
-    : _encoder(enc)
-    , _error(no_error)
-{}
-
 bool json_converter_t::encode_json(slice_t json) {
     _error_message.clear();
     _error = no_error;
@@ -387,7 +381,7 @@ bool json_converter_t::encode_json(slice_t json) {
             _error = error.value();
             _error_message = error.message();
         } else {
-            write_value(value);
+///            write_value(value);
         }
     } catch (std::bad_alloc const& e) {
         _error = error_exception_thrown;
@@ -407,6 +401,7 @@ std::string json_converter_t::error_message() noexcept {
 }
 
 void json_converter_t::write_value(const boost::json::value &value) {
+    /*
     if (value.is_null()) {
         _encoder.write_null();
     } else if (value.is_bool()) {
@@ -433,6 +428,7 @@ void json_converter_t::write_value(const boost::json::value &value) {
         }
         _encoder.end_dict();
     }
+     */
 }
 
 } }

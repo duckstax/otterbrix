@@ -10,7 +10,6 @@ set( ${PROJECT_NAME}_HEADERS
         core/base.hpp
         core/dict.hpp
         core/doc.hpp
-        core/encoder.hpp
         core/internal.hpp
         core/pointer.hpp
         core/shared_keys.hpp
@@ -50,7 +49,6 @@ set(${PROJECT_NAME}_SOURCES
         core/array.cpp
         core/dict.cpp
         core/doc.cpp
-        core/encoder.cpp
         core/pointer.cpp
         core/shared_keys.cpp
         core/slice_core.cpp

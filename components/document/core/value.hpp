@@ -133,8 +133,6 @@ namespace document { namespace impl {
         friend class internal::heap_value_t;
         friend class array_t;
         friend class dict_t;
-        friend class encoder_t;
-        friend class value_dumper_t;
         template <bool WIDE> friend struct dict_impl_t;
     };
 
