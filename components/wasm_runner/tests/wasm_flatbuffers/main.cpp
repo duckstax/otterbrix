@@ -23,7 +23,7 @@ auto wasm_flatbuffers_root_context_t::onStart(size_t) -> bool {
     proxy_get_shared_data(key.c_str(), key.size(), &value, &value_size, &cas);
     if (value_size > 0) {
         auto map = flexbuffers::GetRoot(reinterpret_cast<const uint8_t*>(value), value_size).AsMap();
-        auto document = "name: " + map["name"].AsString().str() + ", count: ";// + std::to_string(map["count"].AsUInt32());
+        auto document = "name: " + map["name"].AsString().str() + ", count: " + std::to_string(map["count"].AsInt32());
         LOG_INFO(document);
     }
 
