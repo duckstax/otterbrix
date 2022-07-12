@@ -12,7 +12,7 @@ bool condition_eq<double>(double v1, double v2) {
 }
 
 template<class T>
-class find_condition_eq_ne_gt_lt_gte_lte final : public condition_t {
+class find_condition_eq_ne_gt_lt_gte_lte final : public expr_t {
 protected:
      bool eq_impl(const condition_t& other) {
         throw std::runtime_error("");

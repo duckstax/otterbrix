@@ -29,27 +29,36 @@ using storage_t = std::variant<bool, uint64_t, int64_t, double, std::string>;
 
 struct expr_t {
 public:
-    bool operator==(const expr_t& other) {
+    bool eq(const expr_t& other) {
         return eq_impl(other);
     }
-    bool operator!=(const expr_t& other) {
+    bool ne(const expr_t& other) {
         return ne_impl(other);
     }
-    bool operator<(const expr_t& other) {
+    bool lt(const expr_t& other) {
         return lt_impl(other);
     }
-    bool operator>(const expr_t& other) {
+    bool gt(const expr_t& other) {
         return gt_impl(other);
     }
-    bool operator<=(const expr_t& other) {
+    bool lte(const expr_t& other) {
         return lte_impl(other);
     }
-    bool operator>=(const expr_t& other) {
+    bool gte(const expr_t& other) {
         return gte_impl(other);
     }
 
+   bool check() {
+       return check_impl();
+   }
+
 protected:
     condition_type  condition_;
+
+    virtual bool check_impl () {
+
+    }
+
     virtual bool eq_impl(const condition_t& other) {
         throw std::runtime_error("");
     }
@@ -78,4 +87,7 @@ protected:
 
 using expr_ptr = expr_t*;
 
-make_condition
+template <class T, class ...Args>
+T* make_expr(Args&&...args ) {
+    return new T(std::forward<Args>(args)...);
+}
