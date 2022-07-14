@@ -31,7 +31,7 @@ TEST_CASE("query_t create") {
     REQUIRE(find_condition_lt<long>("age", 7).is_fit(doc));
     REQUIRE(find_condition_gte<long>("age", 4).is_fit(doc));
     REQUIRE(find_condition_lte<long>("age", 6).is_fit(doc));
-    find_condition_lte<long>d("age", 6);
+    find_condition_lte<long> d("age", 6);
     std::cerr << "key : " << d.key() << " full key : " << d.full_key();
     REQUIRE_FALSE(find_condition_ne<long>("age", 6).is_fit(doc));
     REQUIRE_FALSE(find_condition_gt<long>("age", 7).is_fit(doc));
@@ -42,7 +42,6 @@ TEST_CASE("query_t create") {
     REQUIRE(find_condition_eq<std::string>("name", "Rex").is_fit(doc));
     REQUIRE(find_condition_ne<std::string>("type", "cat").is_fit(doc));
 }
-
 
 TEST_CASE("query_t between/any/all") {
     auto doc = gen_doc();
@@ -63,7 +62,6 @@ TEST_CASE("query_t between/any/all") {
     REQUIRE_FALSE(find_condition_all<long>("ar", v3).is_fit(doc));
 }
 
-
 TEST_CASE("query_t regex") {
     auto doc = gen_doc();
 
@@ -75,38 +73,37 @@ TEST_CASE("query_t regex") {
     REQUIRE_FALSE(find_condition_regex("type", "Dog").is_fit(doc));
 }
 
-
 TEST_CASE("query_t and/or/not") {
     auto doc = gen_doc();
 
     REQUIRE(find_condition_and({make_condition<find_condition_eq<std::string>>("name", "Rex"),
                                 make_condition<find_condition_eq<long>>("age", 6)})
-            .is_fit(doc));
+                .is_fit(doc));
     REQUIRE_FALSE(find_condition_and({make_condition<find_condition_eq<std::string>>("name", "Rex"),
                                       make_condition<find_condition_eq<long>>("age", 5)})
-                  .is_fit(doc));
+                      .is_fit(doc));
     REQUIRE_FALSE(find_condition_and({make_condition<find_condition_eq<std::string>>("name", "Re"),
                                       make_condition<find_condition_eq<long>>("age", 6)})
-                  .is_fit(doc));
+                      .is_fit(doc));
     REQUIRE_FALSE(find_condition_and({make_condition<find_condition_eq<std::string>>("name", "Re"),
                                       make_condition<find_condition_eq<long>>("age", 5)})
-                  .is_fit(doc));
+                      .is_fit(doc));
 
     REQUIRE(find_condition_or({make_condition<find_condition_eq<std::string>>("name", "Rex"),
                                make_condition<find_condition_eq<long>>("age", 6)})
-            .is_fit(doc));
+                .is_fit(doc));
     REQUIRE(find_condition_or({make_condition<find_condition_eq<std::string>>("name", "Rex"),
                                make_condition<find_condition_eq<long>>("age", 5)})
-            .is_fit(doc));
+                .is_fit(doc));
     REQUIRE(find_condition_or({make_condition<find_condition_eq<std::string>>("name", "Re"),
                                make_condition<find_condition_eq<long>>("age", 6)})
-            .is_fit(doc));
+                .is_fit(doc));
     REQUIRE_FALSE(find_condition_or({make_condition<find_condition_eq<std::string>>("name", "Re"),
                                      make_condition<find_condition_eq<long>>("age", 5)})
-                  .is_fit(doc));
+                      .is_fit(doc));
 
     REQUIRE_FALSE(find_condition_not({make_condition<find_condition_eq<std::string>>("name", "Rex")})
-                  .is_fit(doc));
+                      .is_fit(doc));
     REQUIRE(find_condition_not({make_condition<find_condition_eq<std::string>>("name", "Re")})
-            .is_fit(doc));
+                .is_fit(doc));
 }

@@ -1,45 +1,5 @@
 project(document)
 
-set( ${PROJECT_NAME}_HEADERS
-        document.hpp
-        document_id.hpp
-        document_view.hpp
-        range.hpp
-        structure.hpp
-        core/array.hpp
-        core/base.hpp
-        core/dict.hpp
-        core/doc.hpp
-        core/internal.hpp
-        core/pointer.hpp
-        core/shared_keys.hpp
-        core/slice_core.hpp
-        core/slice.hpp
-        core/value.hpp
-        json/json_coder.hpp
-        mutable/mutable_array.h
-        mutable/mutable_array.hpp
-        mutable/mutable_dict.h
-        mutable/mutable_dict.hpp
-        mutable/mutable_value.hpp
-        mutable/value_slot.hpp
-        support/better_assert.hpp
-        support/endian.hpp
-        support/endianness.hpp
-        support/exception.hpp
-        support/function_ref.hpp
-        support/num_conversion.hpp
-        support/parse_date.hpp
-        support/platform_compat.hpp
-        support/ref_counted.hpp
-        support/slice_io.hpp
-        support/small_vector_base.hpp
-        support/small_vector.hpp
-        support/string_table.hpp
-        support/temp_array.hpp
-        support/varint.hpp
-        support/writer.hpp
-)
 
 set(${PROJECT_NAME}_SOURCES
         document.cpp
@@ -53,7 +13,7 @@ set(${PROJECT_NAME}_SOURCES
         core/shared_keys.cpp
         core/slice_core.cpp
         core/value.cpp
-        json/json_coder.cpp
+       # json/json_coder.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
@@ -71,7 +31,6 @@ set(${PROJECT_NAME}_SOURCES
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-            ${${PROJECT_NAME}_HEADERS}
             ${${PROJECT_NAME}_SOURCES}
 )
 

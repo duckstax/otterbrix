@@ -2,9 +2,9 @@ project(test_ql)
 
 add_definitions(-DDEV_MODE)
 
-set( ${PROJECT_NAME}_SOURCES
-    base.cpp
-)
+set(${PROJECT_NAME}_SOURCES
+        base.cpp
+        )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 

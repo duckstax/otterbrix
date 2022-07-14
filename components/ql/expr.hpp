@@ -1,93 +1,156 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include <variant>
 #include <utility>
+#include <variant>
+#include <vector>
 
-enum class condition_type : std::uint8_t {
-    novalid,
-    eq,
-    ne,
-    gt,
-    lt,
-    gte,
-    lte,
-    regex,
-    any,
-    all,
-    union_and,
-    union_or,
-    union_not
-};
+#include <components/field/field.hpp>
 
-using ::document::impl::array_t;
-using ::document::impl::value_t;
-using ::document::impl::value_type;
+namespace components::ql {
 
-using storage_t = std::variant<bool, uint64_t, int64_t, double, std::string>;
+    enum class condition_type : std::uint8_t {
+        novalid,
+        eq,
+        ne,
+        gt,
+        lt,
+        gte,
+        lte,
+        regex,
+        any,
+        all,
+        union_and,
+        union_or,
+        union_not
+    };
 
-struct expr_t {
-public:
-    bool eq(const expr_t& other) {
-        return eq_impl(other);
-    }
-    bool ne(const expr_t& other) {
-        return ne_impl(other);
-    }
-    bool lt(const expr_t& other) {
-        return lt_impl(other);
-    }
-    bool gt(const expr_t& other) {
-        return gt_impl(other);
-    }
-    bool lte(const expr_t& other) {
-        return lte_impl(other);
-    }
-    bool gte(const expr_t& other) {
-        return gte_impl(other);
-    }
+    struct expr_t {
+        condition_type condition_;
+        std::string key_;
+        Field field_;
+        std::vector<expr_t> fields_;
+    };
 
-   bool check() {
-       return check_impl();
-   }
+    using expr_ptr = expr_t*;
 
-protected:
-    condition_type  condition_;
+    template<class Value>
+    expr_ptr make_expr_eq(const std::string& key, Value value) {
+        auto* expr = new expr_t;
 
-    virtual bool check_impl () {
+        expr->condition_ = condition_type::eq;
+        expr->key_ = key;
+        expr->field_ = value;
 
+        return expr;
     }
 
-    virtual bool eq_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    template<class Value>
+    expr_ptr make_expr_ne(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::ne;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
 
-    virtual bool ne_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    template<class Value>
+    expr_ptr make_expr_gt(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::gt;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
 
-    virtual bool gt_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    template<class Value>
+    expr_ptr make_expr_lt(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::lt;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
 
-    virtual bool lt_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    template<class Value>
+    expr_ptr make_expr_gte(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::gte;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
 
-    virtual bool gte_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    template<class Value>
+    expr_ptr make_expr_lte(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::lte;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
 
-    virtual bool lte_impl(const condition_t& other) {
-        throw std::runtime_error("");
+    expr_ptr make_expr_regex(const std::string& key, const std::string& value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::regex;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
     }
-};
 
+    template<class Value>
+    expr_ptr make_expr_any(const std::string& key, Value value) {
+        auto* expr = new expr_t;
 
-using expr_ptr = expr_t*;
+        expr->condition_ = condition_type::any;
+        expr->key_ = key;
+        expr->field_ = value;
 
-template <class T, class ...Args>
-T* make_expr(Args&&...args ) {
-    return new T(std::forward<Args>(args)...);
-}
+        return expr;
+    }
+
+    template<class Value>
+    expr_ptr make_expr_and(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::union_and;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
+    }
+
+    template<class Value>
+    expr_ptr make_expr_union_or(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::union_or;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
+    }
+
+    template<class Value>
+    expr_ptr make_expr_union_not(const std::string& key, Value value) {
+        auto* expr = new expr_t;
+
+        expr->condition_ = condition_type::union_not;
+        expr->key_ = key;
+        expr->field_ = value;
+
+        return expr;
+    }
+} // namespace components::ql

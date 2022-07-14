@@ -14,7 +14,8 @@ namespace services::collection {
         , database_name_(database->name()) //todo for run test [default: database->name()]
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
-        , mdisk_(mdisk) {
+        , mdisk_(mdisk)
+        , index_engine_(new components::index::index_engine_t(resource_),components::index::deleter(resource_)){
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
         add_handler(handler_id(route::insert_many), &collection_t::insert_many);
@@ -208,8 +209,12 @@ namespace services::collection {
         return result_find();
     }
 
+
+
     result_find_one collection_t::search_one_(const find_condition_ptr& cond) {
         if (!cond) {
+            auto* result_set = new components::index::result_set_t(resource_);
+
         }
         return result_find_one();
     }

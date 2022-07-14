@@ -2,6 +2,8 @@
 
 #include <memory>
 #include <unordered_map>
+#include <memory>
+#include <utility>
 
 #include <absl/container/btree_map.h>
 
@@ -11,8 +13,7 @@
 #include <components/index/index.hpp>
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
-#include <components/parser/index.hpp>
-#include <components/protocol/base.hpp>
+#include <components/ql/index.hpp>
 #include <components/protocol/insert_many.hpp>
 #include <components/session/session.hpp>
 
@@ -46,7 +47,7 @@ namespace services::collection {
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
-        void create_index(index_type);
+        void create_index(create_index_t&);
 
     private:
         document_id_t insert_(const document_ptr&document);
@@ -66,12 +67,17 @@ namespace services::collection {
         void send_update_to_disk_(const session_id_t& session, const result_update &result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete &result);
 
+        /**
+         * index
+         */
+
         const std::string name_;
         const std::string database_name_;
         log_t log_;
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
-        index_engine_ptr index_engine_;
+        std::pmr::memory_resource* resource_ = new std::pmr::monotonic_buffer_resource() ;
+        components::index::index_engine_ptr index_engine_;
         storage_t storage_;
         std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
