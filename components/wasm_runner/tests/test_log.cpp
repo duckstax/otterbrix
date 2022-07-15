@@ -185,11 +185,12 @@ TEST_CASE("wasm_manager_t flatbuffers", "[API]") {
     flexbuffers::Builder fbb;
     fbb.Map([&]() {
         fbb.String("name", "name_document");
-        fbb.Int("count", 10);
+        fbb.Int("count", 1000000000000);
+        fbb.Double("value", 1000000000000.0001);
     });
     fbb.Finish();
     auto map = flexbuffers::GetRoot(fbb.GetBuffer()).AsMap();
-    info(log, "name: {}, count: {}", map["name"].AsString().str(), map["count"].AsInt32());
+    info(log, "name: {}, count: {}, value: {}", map["name"].AsString().str(), map["count"].AsInt64(), map["value"].AsDouble());
 
     wasm_manager.initialize("m_plugin_name_1", plugin_id, "m_plugin_vm_id_1", "m_plugin_configiguration_1",
                             false, "m_vm_id_1", "m_vm_configuration_1", {}, {}, wasm, false);

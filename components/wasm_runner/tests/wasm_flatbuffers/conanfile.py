@@ -1,7 +1,7 @@
 from conans import ConanFile, CMake, tools
 
 
-class LogWASM(ConanFile):
+class FlatBuffersWASM(ConanFile):
     name = f'wasm_flatbuffers'
     version = '0.1.0'
     license = 'BSD-3-Clause'
