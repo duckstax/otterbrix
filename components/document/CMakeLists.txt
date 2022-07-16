@@ -27,8 +27,7 @@ set(${PROJECT_NAME}_SOURCES
         support/slice_io.cpp
         support/string_table.cpp
         support/varint.cpp
-        support/writer.cpp
-)
+        )
 
 add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_SOURCES}

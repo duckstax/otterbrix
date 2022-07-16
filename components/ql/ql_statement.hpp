@@ -17,6 +17,8 @@ namespace components::ql {
         drop_database,
         create_collection,
         drop_collection,
+        find,
+        find_one,
         insert_one,
         insert_many,
         delete_one,
@@ -33,8 +35,7 @@ namespace components::ql {
             , database_(database)
             , collection_(collection) {}
 
-        ql_statement_t()
-            : type_(statement_type::unused) {}
+        ql_statement_t() = delete;
 
         virtual ~ql_statement_t() = default;
 

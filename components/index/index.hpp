@@ -59,24 +59,23 @@ namespace components::index {
         std::pmr::vector<document_ptr> data_;
     };
 
-    template<class Target>
-    using base_alocator = std::scoped_allocator_adaptor<actor_zeta::detail::pmr::polymorphic_allocator<Target>>;
 
-    template<class Target>
-    using base_alocator_1 = actor_zeta::detail::pmr::polymorphic_allocator<Target>;
 
     using keys_base_t = std::pmr::vector<std::pmr::string>;
     using id_index = uint32_t;
+    using ::document::impl::array_t;
+    using ::document::impl::value_t;
 
     class index_t {
     public:
-        using key_t = std::pmr::string;///::document::impl::value_t;
+        using key_t = value_t;///::document::impl::value_t;
         using value_t = components::document::document_ptr;
         virtual ~index_t();
         void insert(key_t key, value_t);
         void find(query_t query,result_set_t*);
         void find(id_index,result_set_t*);
         [[nodiscard]] auto keys()  -> std::pair<std::pmr::vector<std::pmr::string>::iterator,std::pmr::vector<std::pmr::string>::iterator>;
+
 
     protected:
         explicit index_t(actor_zeta::detail::pmr::memory_resource* resource,const keys_base_t&keys );
@@ -112,7 +111,7 @@ namespace components::index {
         actor_zeta::detail::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
         index_to_doc_t index_to_mapper_;
-        base_storgae storgae_;
+        base_storgae storage_ ;
 
     };
 

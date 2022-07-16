@@ -13,8 +13,9 @@
 #include <components/index/index.hpp>
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
-#include <components/ql/index.hpp>
 #include <components/protocol/insert_many.hpp>
+#include <components/ql/index.hpp>
+#include <components/ql/find.hpp>
 #include <components/session/session.hpp>
 
 #include <services/database/database.hpp>
@@ -39,7 +40,7 @@ namespace services::collection {
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);
         auto find(const session_id_t& session, const find_condition_ptr& cond) -> void;
-        auto find_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
+        auto find_one(const session_id_t& session,components::ql::find_statement& cond) -> void;
         auto delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
         auto delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void;
         auto update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
@@ -47,7 +48,7 @@ namespace services::collection {
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
-        void create_index(create_index_t&);
+        void create_index(components::ql::create_index_t&);
 
     private:
         document_id_t insert_(const document_ptr&document);
@@ -67,15 +68,16 @@ namespace services::collection {
         void send_update_to_disk_(const session_id_t& session, const result_update &result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete &result);
 
-        /**
-         * index
-         */
-
         const std::string name_;
         const std::string database_name_;
         log_t log_;
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
+
+        /**
+        *  index
+        */
+
         std::pmr::memory_resource* resource_ = new std::pmr::monotonic_buffer_resource() ;
         components::index::index_engine_ptr index_engine_;
         storage_t storage_;

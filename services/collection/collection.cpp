@@ -100,7 +100,7 @@ namespace services::collection {
     }
 
 
-    void collection_t::find_one(const session_id_t& session, const find_condition_ptr& cond) {
+    void collection_t::find_one(const session_id_t& session, const components::ql::find_statement& cond) {
         debug(log_,"collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
@@ -211,11 +211,13 @@ namespace services::collection {
 
 
 
-    result_find_one collection_t::search_one_(const find_condition_ptr& cond) {
-        if (!cond) {
+    result_find_one collection_t::search_one_(components::ql::find_one_statement& cond) {
+       /// if (!cond) {
             auto* result_set = new components::index::result_set_t(resource_);
+            auto* index = index_engine_->find(cond.condition_->key_);
+            index->
 
-        }
+        ///}
         return result_find_one();
     }
 

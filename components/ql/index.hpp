@@ -19,7 +19,7 @@ namespace components::ql {
             : ql_statement_t(statement_type::create_index, database, collection)
             , index_type_(type) {
         }
-        std::vector<std::string> keys_;
+        std::pmr::vector<std::pmr::string> keys_;
         index_type index_type_;
     };
 } // namespace components::ql
