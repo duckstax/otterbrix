@@ -33,11 +33,8 @@ RUN conan install . --build missing -s build_type=Release
 COPY conan/profiles/wasm ./conan/profiles/wasm
 RUN conan config install conan
 COPY conanfile-wasm.txt ./
+RUN conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
 
-# conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./cmake-build-debug/wasm  -of=./wasm
-
-RUN conan install conanfile-wasm.txt  -if=wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release
-RUN ls wasm
 #RUN conan install --profile:build=default --profile:host=wasm --build missing proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable -s build_type=Release
 #RUN conan install --profile:build=default --profile:host=wasm --build missing flatbuffers/2.0.5@_/_ -s build_type=Release
 

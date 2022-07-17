@@ -1,5 +1,6 @@
-PROJECT(log_wasm  LANGUAGES CXX)
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+
+project(log_wasm  LANGUAGES CXX)
 
 set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 set(CONAN_SYSTEM_INCLUDES TRUE)
