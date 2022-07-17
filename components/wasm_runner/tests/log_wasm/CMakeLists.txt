@@ -1,20 +1,12 @@
+PROJECT(log_wasm  LANGUAGES CXX)
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-enable_language(CXX)
 
 set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 set(CONAN_SYSTEM_INCLUDES TRUE)
 
-if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo_multi.cmake")
-    include("${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo_multi.cmake")
-elseif(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-    include("${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-else()
-    message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
-endif()
-
+include(${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake)
+include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
 conan_basic_setup(NO_OUTPUT_DIRS)
-
-project("${CONAN_PACKAGE_NAME}" VERSION "${CONAN_PACKAGE_VERSION}" LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(
@@ -43,8 +35,8 @@ file(GLOB_RECURSE HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPEN
 
 file(GLOB_RECURSE SOURCES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.cpp")
 
-add_executable("${CONAN_PACKAGE_NAME}" "${HEADERS}" "${SOURCES}")
+add_executable("${PROJECT_NAME}" "${HEADERS}" "${SOURCES}")
 
-target_include_directories("${CONAN_PACKAGE_NAME}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
+target_include_directories("${PROJECT_NAME}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 
-conan_target_link_libraries("${CONAN_PACKAGE_NAME}")
+conan_target_link_libraries("${PROJECT_NAME}")

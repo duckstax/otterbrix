@@ -8,9 +8,9 @@ class FlatBuffersWASM(ConanFile):
     author = 'Nikita Makeenkov <nikita.makeenkov@gmail.com>'
     topics = ('wasm')
     settings = 'os', 'compiler', 'build_type', 'arch'
-    requires = ('proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable',
-                'quickjs/2788d71e823b522b178db3b3660ce93689534e6d@duckstax/stable',
-                'flatbuffers/2.0.5')
+    requires = ['flatbuffers/2.0.5','proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable',
+                'quickjs/2788d71e823b522b178db3b3660ce93689534e6d@duckstax/stable'
+                ]
     generators = 'cmake'
 
     def configure(self):

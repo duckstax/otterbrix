@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+PROJECT(log_wasm VERSION  LANGUAGES CXX)
 enable_language(CXX)
 
 set(CMAKE_EXECUTABLE_SUFFIX ".wasm")

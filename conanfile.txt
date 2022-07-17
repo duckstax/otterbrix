@@ -17,8 +17,8 @@ flatbuffers/2.0.5
 actor-zeta/1.0.0a7@duckstax/stable
 
 proxy-wasm-cpp-host/3c703dcc44e7fc24062215e4f3c5c16d616362e8@duckstax/stable
-proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable
-quickjs/2788d71e823b522b178db3b3660ce93689534e6d@duckstax/stable
+emsdk/3.1.7@_/_
+
 
 [options]
 actor-zeta:cxx_standard=17
@@ -27,3 +27,8 @@ actor-zeta:fPIC=True
 
 [generators]
 cmake
+
+
+[imports]
+bin/upstream/emscripten/cmake/Modules/Platform/, Emscripten.cmake* -> ./build_tools
+
