@@ -1,7 +1,6 @@
 #include "doc.hpp"
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/core/pointer.hpp>
-#include <components/document/json/json_coder.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/support/exception.hpp>
@@ -10,6 +9,7 @@
 #include <mutex>
 #include <utility>
 #include <vector>
+#include <boost/container/small_vector.hpp>
 
 #define Log(FMT,...)
 #define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
@@ -25,7 +25,7 @@ struct mem_entry_t
     bool operator< (const mem_entry_t &other) const  { return end_of_range < other.end_of_range; }
 };
 
-using memory_map_t = small_vector<mem_entry_t, 10>;
+using memory_map_t = boost::container::small_vector<mem_entry_t, 10>;
 
 static memory_map_t *memory_map;
 static std::mutex mutex;
@@ -246,10 +246,6 @@ void doc_t::init(trust_type trust) noexcept {
 
 retained_t<doc_t> doc_t::from_slice(const alloc_slice_t &slice, trust_type trust) {
     return new doc_t(slice, trust);
-}
-
-retained_t<doc_t> doc_t::from_json(slice_t json, shared_keys_t *sk) {
-    return new doc_t(json_coder::from_json(json, sk), trust_type::trusted, sk);
 }
 
 retained_const_t<doc_t> doc_t::containing(const value_t *src) noexcept {

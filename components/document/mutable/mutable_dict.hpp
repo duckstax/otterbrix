@@ -76,8 +76,6 @@ public:
     void disconnect_from_source();
     void copy_children(copy_flags flags);
 
-    void write_to(encoder_t &enc);
-
 protected:
     friend class document::impl::array_t;
     friend class document::impl::mutable_dict_t;
@@ -93,7 +91,6 @@ private:
     value_slot_t* _find_value_for(key_t key_to_find) const noexcept;
     value_slot_t& _make_value_for(key_t key);
     heap_collection_t* get_mutable(slice_t str_key, tags if_type);
-    bool too_many_ancestors() const;
 
     uint32_t _count {0};
     retained_const_t<dict_t> _source;

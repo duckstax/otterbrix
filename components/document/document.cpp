@@ -296,17 +296,16 @@ namespace components::document {
     }
 
     document_ptr document_from_json(const std::string &json) {
-        auto doc = ::document::impl::doc_t::from_json(json);
-        auto dict = mutable_dict_t::new_dict(doc->root()->as_dict());
-        return make_document(dict);
+        //todo: implementation
+//        auto doc = ::document::impl::doc_t::from_json(json);
+//        auto dict = mutable_dict_t::new_dict(doc->root()->as_dict());
+//        return make_document(dict);
+        return make_document();
     }
 
     std::string document_to_json(const document_ptr &doc) {
+        //todo: implementation
         return document_view_t(doc).to_json();
-    }
-
-    std::string document_to_string(const document_ptr &doc) {
-        return "STRUCTURE:\n" + doc->structure->to_json_string() + "\nDATA:\n" + std::string(doc->data.data());
     }
 
 

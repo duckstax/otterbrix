@@ -299,8 +299,9 @@ std::string document_view_t::to_json() const {
 
 ::document::retained_t<::document::impl::dict_t> document_view_t::to_dict() const {
     //todo erase serialize to json
-    auto doc = ::document::impl::doc_t::from_json(to_json());
-    return ::document::impl::mutable_dict_t::new_dict(doc->root()->as_dict());
+//    auto doc = ::document::impl::doc_t::from_json(to_json());
+//    return ::document::impl::mutable_dict_t::new_dict(doc->root()->as_dict());
+    return ::document::impl::mutable_dict_t::new_dict();
 }
 
 document_view_t::document_view_t(document_view_t::array_t array, document_view_t::storage_t storage)

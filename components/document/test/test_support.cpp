@@ -1,8 +1,6 @@
 #include <catch2/catch.hpp>
 #include <components/document/support/temp_array.hpp>
 #include <components/document/support/slice_io.hpp>
-#include <components/document/support/small_vector.hpp>
-#include <components/document/support/writer.hpp>
 
 using namespace document;
 
@@ -70,66 +68,4 @@ TEST_CASE("hash") {
         }
     }
     REQUIRE(total == count_keys);
-}
-
-
-TEST_CASE("small_vector_t") {
-    SECTION("small") {
-        small_vector_t<alloc_slice_t, 2> moved_strings;
-        small_vector_t<alloc_slice_t, 2> strings;
-        strings.emplace_back("string 1");
-        strings.emplace_back("string 2");
-        REQUIRE(strings.size() == 2);
-        REQUIRE(strings[0] == "string 1");
-        REQUIRE(strings[1] == "string 2");
-
-        auto moved_strings_constructor(std::move(strings));
-        REQUIRE(moved_strings_constructor.size() == 2);
-        REQUIRE(moved_strings_constructor[0] == "string 1");
-        REQUIRE(moved_strings_constructor[1] == "string 2");
-
-        moved_strings = std::move(moved_strings_constructor);
-        REQUIRE(moved_strings.size() == 2);
-        REQUIRE(moved_strings[0] == "string 1");
-        REQUIRE(moved_strings[1] == "string 2");
-    }
-
-    SECTION("big") {
-        small_vector_t<alloc_slice_t, 2> moved_strings;
-        small_vector_t<alloc_slice_t, 2> strings;
-        strings.emplace_back("string 1");
-        strings.emplace_back("string 2");
-        strings.emplace_back("string 3");
-        REQUIRE(strings.size() == 3);
-        REQUIRE(strings[0] == "string 1");
-        REQUIRE(strings[1] == "string 2");
-        REQUIRE(strings[2] == "string 3");
-
-        auto moved_strings_constructor(std::move(strings));
-        REQUIRE(moved_strings_constructor.size() == 3);
-        REQUIRE(moved_strings_constructor[0] == "string 1");
-        REQUIRE(moved_strings_constructor[1] == "string 2");
-        REQUIRE(moved_strings_constructor[2] == "string 3");
-
-        moved_strings = std::move(moved_strings_constructor);
-        REQUIRE(moved_strings.size() == 3);
-        REQUIRE(moved_strings[0] == "string 1");
-        REQUIRE(moved_strings[1] == "string 2");
-        REQUIRE(moved_strings[2] == "string 3");
-    }
-}
-
-
-TEST_CASE("Base64 encode and decode") {
-    std::vector<std::string> strings = {"a", "ab", "abc", "abcd", "abcde"};
-    std::vector<std::string> encode_strings = {"YQ==", "YWI=", "YWJj", "YWJjZA==", "YWJjZGU="};
-    size_t i = 0;
-    for (const auto& str : strings) {
-        auto encode_str = writer_t::encode_base64(static_cast<slice_t>(str));
-        REQUIRE(encode_str == static_cast<slice_t>(encode_strings[i++]));
-        auto decode_str = writer_t::decode_base64(static_cast<slice_t>(encode_str));
-        REQUIRE(decode_str == str);
-        encode_str.release();
-        decode_str.release();
-    }
 }

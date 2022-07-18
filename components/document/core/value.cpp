@@ -5,7 +5,6 @@
 #include <components/document/core/internal.hpp>
 #include <components/document/core/doc.hpp>
 #include <components/document/mutable/mutable_value.hpp>
-#include <components/document/json/json_coder.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
@@ -225,17 +224,6 @@ const dict_t* value_t::as_dict() const noexcept {
 
 shared_keys_t* value_t::shared_keys() const noexcept {
     return doc_t::shared_keys(this);
-}
-
-alloc_slice_t value_t::to_json(bool canonical) const {
-    json_encoder_t encoder;
-    encoder.set_canonical(canonical);
-    encoder.write_value(this);
-    return encoder.finish();
-}
-
-std::string value_t::to_json_string() const {
-    return to_json().as_string();
 }
 
 bool value_t::is_equal(const value_t *v) const {

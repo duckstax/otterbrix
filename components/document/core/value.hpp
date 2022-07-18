@@ -86,9 +86,6 @@ namespace document { namespace impl {
 
         shared_keys_t* shared_keys() const noexcept PURE;
 
-        alloc_slice_t to_json(bool canonical = false) const;
-        std::string to_json_string() const;
-
         void _retain() const;
         void _release() const;
 

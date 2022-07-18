@@ -76,7 +76,6 @@ public:
     doc_t(const scope_t &parent_scope, slice_t sub_data, trust_type trust = trust_type::untrusted) noexcept;
 
     static retained_t<doc_t> from_slice(const alloc_slice_t &slice, trust_type trust = trust_type::untrusted);
-    static retained_t<doc_t> from_json(slice_t json, shared_keys_t *sk = nullptr);
 
     static retained_const_t<doc_t> containing(const value_t *src NONNULL) noexcept;
 

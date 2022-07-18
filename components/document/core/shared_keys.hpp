@@ -47,9 +47,6 @@ public:
     virtual bool load_from(slice_t state_data);
     virtual bool load_from(const value_t *state);
 
-    alloc_slice_t state_data() const;
-    void write_state(encoder_t &enc) const;
-
     void set_max_key_length(size_t m);
 
     size_t count() const PURE;
@@ -76,8 +73,6 @@ protected:
     virtual bool is_eligible_to_encode(slice_t str) const PURE;
 
 private:
-    friend class persistent_shared_key_st;
-
     bool _add(slice_t string, int &key);
     bool _is_unknown_key(int key) const PURE;
     slice_t decode_unknown(int key) const;
@@ -89,32 +84,6 @@ private:
     mutable std::vector<platform_string_t> _platform_strings_by_key;
     std::unordered_map<std::string, uint16_t> _table;
     std::array<slice_t, max_count> _by_key;
-};
-
-
-class persistent_shared_key_st : public shared_keys_t {
-public:
-    persistent_shared_key_st();
-
-    bool load_from(const value_t *state) override;
-    bool load_from(slice_t state_data) override;
-
-    bool refresh() override;
-    void transaction_begin();
-    void save();
-    void revert();
-    void transaction_end();
-    bool changed() const PURE;
-
-protected:
-    virtual bool read() = 0;
-    virtual void write(slice_t) = 0;
-
-    std::mutex _refresh_mutex;
-
-private:
-    size_t _persisted_count {0};
-    size_t _committed_persisted_count {0};
 };
 
 }

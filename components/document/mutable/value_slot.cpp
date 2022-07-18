@@ -1,9 +1,10 @@
 #include "value_slot.hpp"
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
-#include <components/document/core/encoder.hpp>
 #include <components/document/support/varint.hpp>
 #include <algorithm>
+#include <cfloat>
+#include <cmath>
 
 namespace document { namespace impl {
 
@@ -145,7 +146,7 @@ void value_slot_t::set(float f) {
 }
 
 void value_slot_t::set(double d) {
-    if (encoder_t::is_float_representable(d)) {
+    if (fabs(d) <= FLT_MAX && d == static_cast<float>(d)) {
         set((float)d);
     } else {
         set_pointer(heap_value_t::create(d)->as_value());

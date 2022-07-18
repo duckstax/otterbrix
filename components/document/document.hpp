@@ -48,7 +48,6 @@ namespace components::document {
 
     document_ptr document_from_json(const std::string &json);
     std::string document_to_json(const document_ptr &doc);
-    std::string document_to_string(const document_ptr &doc);
 
     msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
     msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
