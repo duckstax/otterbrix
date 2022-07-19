@@ -63,4 +63,9 @@ namespace components::document {
         set_(key, ::document::impl::new_value(::document::slice_t(value)).get());
     }
 
+    template<>
+    inline void document_t::set(const std::string& key, const ::document::impl::value_t *value) {
+        set_(key, value);
+    }
+
 }
