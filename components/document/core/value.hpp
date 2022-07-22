@@ -7,10 +7,6 @@
 #include <components/document/core/internal.hpp>
 #include <components/document/core/slice.hpp>
 
-namespace document {
-    class writer_t;
-}
-
 namespace document { namespace impl {
     class array_t;
     class dict_t;
@@ -45,9 +41,6 @@ namespace document { namespace impl {
 
     class value_t {
     public:
-        using time_stamp = int64_t;
-        static constexpr time_stamp time_stamp_none = INT64_MIN;
-
         static const value_t* const true_value;
         static const value_t* const false_value;
         static const value_t* const null_value;
@@ -73,7 +66,6 @@ namespace document { namespace impl {
         slice_t as_string() const noexcept PURE;
         slice_t as_data() const noexcept PURE;
 
-        time_stamp as_time_stamp() const noexcept PURE;
         const array_t* as_array() const noexcept PURE;
         const dict_t* as_dict() const noexcept PURE;
 
@@ -85,9 +77,6 @@ namespace document { namespace impl {
         bool is_mutable() const PURE              {return ((size_t)this & 1) != 0;}
 
         shared_keys_t* shared_keys() const noexcept PURE;
-
-        alloc_slice_t to_json(bool canonical = false) const;
-        std::string to_json_string() const;
 
         void _retain() const;
         void _release() const;
@@ -133,21 +122,11 @@ namespace document { namespace impl {
         friend class internal::heap_value_t;
         friend class array_t;
         friend class dict_t;
-        friend class encoder_t;
-        friend class value_dumper_t;
         template <bool WIDE> friend struct dict_impl_t;
     };
 
 
     void release(const value_t *val) noexcept;
-
-    NOINLINE void assign_ref(const value_t* &holder, const value_t *new_value) noexcept;
-
-    template <typename T>
-    static inline void assign_ref(T* &holder, const value_t *new_value) noexcept {
-        assign_ref((const value_t*&)holder, new_value);
-    }
-
 
     template<class TValue> TValue value_t::as() const {
         assert("value_t: not valid type for as");

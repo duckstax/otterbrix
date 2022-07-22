@@ -245,12 +245,6 @@ constexpr dict_t::dict_t()
     : value_t(internal::tag_dict, 0, 0)
 {}
 
-uint32_t dict_t::raw_count() const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->count();
-    return array_t::impl(this)._count;
-}
-
 uint32_t dict_t::count() const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->count();

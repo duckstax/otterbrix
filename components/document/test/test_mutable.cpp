@@ -1,9 +1,7 @@
 #include <catch2/catch.hpp>
-#include <components/document/core/encoder.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
-#include <components/document/support/slice_io.hpp>
-#include <components/document/json/json_coder.hpp>
+#include <components/document/core/slice.hpp>
 
 using namespace document;
 using namespace document::impl;
@@ -105,10 +103,6 @@ TEST_CASE("mutable::mutable_array_t") {
         }
         REQUIRE_FALSE(i1);
 
-        REQUIRE(ma->as_array()->to_json() == slice_t("[null,false,true,0,-123,2021,123456789,-123456789,\"dog\",3.141593,"
-              "3.141592653589793,18446744073709551615,4294967296,4294967296,"
-              "-9223372036854775808,9223372036854775807,-9223372036854775807]"));
-
         ma->remove(3, 5);
         REQUIRE(ma->count() == 12);
         REQUIRE(ma->get(2)->type() == value_type::boolean);
@@ -162,27 +156,6 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(mb->is_changed());
         REQUIRE(mb->get(0) == ma);
         REQUIRE(mb->get_mutable_array(0) == ma);
-
-        encoder_t enc;
-        enc.begin_array();
-        enc << slice_t("dog");
-        enc << slice_t("cat");
-        enc.end_array();
-        auto doc = enc.finish_doc();
-        auto array = doc->as_array();
-        REQUIRE_FALSE(array->as_mutable());
-
-        mb->append(array);
-        REQUIRE(mb->get(1) == array);
-        auto mc = mb->get_mutable_array(1);
-        REQUIRE(mc);
-        REQUIRE(mc == mb->get(1));
-        REQUIRE(mb->get(1)->type() == value_type::array);
-
-        REQUIRE(mc->count() == 2);
-        REQUIRE(mc->as_array()->count() == 2);
-        REQUIRE(mc->get(0)->as_string() == slice_t("dog"));
-        REQUIRE(mc->get(1)->as_string() == slice_t("cat"));
     }
 
     SECTION("copy") {
@@ -208,62 +181,6 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(copy->is_equal(mc));
         REQUIRE_FALSE(copy->get(0) == mc->get(0));
         REQUIRE_FALSE(copy->get(0)->as_array()->get(0) == ma);
-    }
-
-    SECTION("copy immutable") {
-        auto doc = doc_t::from_json(slice_t("[100, \"dog\"]"));
-        auto a = doc->root()->as_array();
-
-        auto copy = mutable_array_t::new_array(a);
-        REQUIRE(copy->source() == a);
-        REQUIRE(copy->is_equal(a));
-
-        auto mb = mutable_array_t::new_array(1);
-        mb->set(0, a);
-        REQUIRE(mb->get(0) == a);
-
-        auto mc = mutable_array_t::new_array(1);
-        mc->set(0, mb);
-        REQUIRE(mc->get(0) == mb);
-
-        copy = mc->copy();
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE(copy->get(0) == mc->get(0));
-
-        copy = mc->copy(deep_copy);
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get(0) == mc->get(0));
-        REQUIRE(copy->get(0)->as_array()->get(0) == a);
-
-        copy = mc->copy(copy_flags(deep_copy_immutables));
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get(0) == mc->get(0));
-        REQUIRE_FALSE(copy->get(0)->as_array()->get(0) == a);
-    }
-
-    SECTION("encoding") {
-        alloc_slice_t data;
-        encoder_t enc;
-        enc.begin_array();
-        enc << "dog";
-        enc << "cat";
-        enc.end_array();
-        data = enc.finish();
-        auto array = value_t::from_data(data)->as_array();
-        REQUIRE(data.size == 16);
-        encoder_t enc2;
-        enc2.set_base(data);
-        enc2.begin_array();
-        enc2 << array->get(1);
-        enc2 << array->get(0);
-        enc2.end_array();
-        auto data2 = enc2.finish();
-        REQUIRE(data2.size == 8);
-        data.append(data2);
-        REQUIRE(data.size == 24);
     }
 
 }
@@ -438,40 +355,6 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == ma);
     }
 
-    SECTION("copy immutable") {
-        auto doc = doc_t::from_json("{\"a\":100,\"b\":\"dog\"}");
-        const dict_t *a = doc->root()->as_dict();
-
-        auto copy = mutable_dict_t::new_dict(a);
-        REQUIRE(copy->source() == a);
-        REQUIRE(copy->is_equal(a));
-
-        auto mb = mutable_dict_t::new_dict();
-        mb->set("a", a);
-        REQUIRE(mb->get("a") == a);
-
-        auto mc = mutable_dict_t::new_dict();
-        mc->set("a", mb);
-        REQUIRE(mc->get("a") == mb);
-
-        copy = mc->copy();
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE(copy->get("a") == mc->get("a"));
-
-        copy = mc->copy(deep_copy);
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get("a") == mc->get("a"));
-        REQUIRE(copy->get("a")->as_dict()->get("a") == a);
-
-        copy = mc->copy(copy_flags(deep_copy_immutables));
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get("a") == mc->get("a"));
-        REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == a);
-    }
-
 }
 
 
@@ -485,200 +368,4 @@ TEST_CASE("mutable long string") {
     for (uint32_t i = 0; i < size; ++i) {
         REQUIRE(ma->get(i)->as_string() == slice_t(chars, i));
     }
-}
-
-
-template <class ITER>
-void require_iterator(ITER &i, const char *key, const char *value) {
-    REQUIRE(i);
-    REQUIRE(i.key_string() == slice_t(key));
-    REQUIRE(i.value()->as_string() == slice_t(value));
-    ++i;
-}
-
-void require_encoding_mutable_dict_with_shared_keys(shared_keys_t *sk) {
-    auto psk = dynamic_cast<persistent_shared_key_st*>(sk);
-    alloc_slice_t data;
-    if (psk) {
-        psk->transaction_begin();
-    }
-
-    encoder_t enc;
-    enc.set_shared_keys(sk);
-    enc.begin_dict();
-    enc.write_key("age");
-    enc << "6";
-    enc.write_key("breed");
-    enc << "Sheepdog";
-    enc.write_key("gender");
-    enc << "male";
-    enc.write_key("index");
-    enc << "1";
-    enc.write_key("name");
-    enc << "Rex";
-    enc.end_dict();
-    data = enc.finish();
-
-    if (psk) {
-        psk->save();
-        psk->transaction_end();
-    }
-
-    auto original = retained_t(new doc_t(data, doc_t::trust_type::trusted, sk));
-    auto original_dict = original->as_dict();
-    auto update = mutable_dict_t::new_dict(original_dict);
-    REQUIRE(update->count() == 5);
-    update->set("type", slice_t("dog"));
-    REQUIRE(update->count() == 6);
-    update->remove("index");
-    REQUIRE(update->count() == 5);
-    update->remove("index");
-    REQUIRE(update->count() == 5);
-    update->remove("invalid");
-    REQUIRE(update->count() == 5);
-
-    mutable_dict_t::iterator i1(update);
-    require_iterator(i1, "age", "6");
-    require_iterator(i1, "breed", "Sheepdog");
-    require_iterator(i1, "gender", "male");
-    require_iterator(i1, "name", "Rex");
-    require_iterator(i1, "type", "dog");
-    REQUIRE_FALSE(i1);
-
-    dict_t::iterator i2(update);
-    require_iterator(i2, "age", "6");
-    require_iterator(i2, "breed", "Sheepdog");
-    require_iterator(i2, "gender", "male");
-    require_iterator(i2, "name", "Rex");
-    require_iterator(i2, "type", "dog");
-    REQUIRE_FALSE(i2);
-
-    if (psk) {
-        psk->transaction_begin();
-    }
-    encoder_t enc2;
-    enc2.set_shared_keys(sk);
-    enc2.set_base(data);
-    enc2.reuse_base_strings();
-    enc2.write_value(update);
-    alloc_slice_t delta = enc2.finish();
-    if (psk) {psk->save(); psk->transaction_end();}
-    REQUIRE(delta.size == (sk ? 20 : 26));
-
-    update->remove_all();
-    REQUIRE(update->count() == 0);
-    mutable_dict_t::iterator i3(update);
-    REQUIRE_FALSE(i3);
-
-    alloc_slice_t combined_data(data);
-    combined_data.append(delta);
-    scope_t combined(combined_data, sk);
-    auto new_dict = value_t::from_data(combined_data)->as_dict();
-
-    REQUIRE(new_dict->get("age")->as_string() == "6");
-    REQUIRE(new_dict->get("breed")->as_string() == "Sheepdog");
-    REQUIRE(new_dict->get("gender")->as_string() == "male");
-    REQUIRE(new_dict->get("name")->as_string() == "Rex");
-    REQUIRE(new_dict->get("type")->as_string() == "dog");
-    REQUIRE_FALSE(new_dict->get("index"));
-
-    dict_t::iterator i4(new_dict);
-    require_iterator(i4, "age", "6");
-    require_iterator(i4, "breed", "Sheepdog");
-    require_iterator(i4, "gender", "male");
-    require_iterator(i4, "name", "Rex");
-    require_iterator(i4, "type", "dog");
-    REQUIRE_FALSE(i4);
-
-    REQUIRE(new_dict->count() == 5);
-}
-
-class persistent_shared_key_t : public persistent_shared_key_st {
-protected:
-    bool read() override {
-        return _data && load_from(_data);
-    }
-
-    void write(slice_t encoded_data) override {
-        _data = encoded_data;
-    }
-
-    alloc_slice_t _data;
-};
-
-
-TEST_CASE("encoding mutable_dict_t") {
-
-    SECTION("without shared_keys_t") {
-        require_encoding_mutable_dict_with_shared_keys(nullptr);
-    }
-
-    SECTION("with shared_keys_t") {
-        auto sk = make_retained<shared_keys_t>();
-        require_encoding_mutable_dict_with_shared_keys(sk);
-    }
-
-    SECTION("with persistent_shared_key_st") {
-        auto sk = make_retained<persistent_shared_key_t>();
-        require_encoding_mutable_dict_with_shared_keys(sk);
-    }
-
-}
-
-
-TEST_CASE("mutable_dict_t with key and persistent_shared_key_st") {
-    auto psk = retained(new persistent_shared_key_t);
-    retained_t<doc_t> doc;
-    psk->transaction_begin();
-    encoder_t enc;
-    enc.set_shared_keys(psk);
-    enc.begin_dict();
-    enc.write_key("name");
-    enc << "Rex";
-    enc.end_dict();
-    doc = enc.finish_doc();
-    psk->save();
-    psk->transaction_end();
-
-    auto root = doc->root()->as_dict();
-    auto mut = mutable_dict_t::new_dict(root);
-    mut->set("age", 6);
-    REQUIRE(mut->get("age")->as_int() == 6);
-
-    retained_t<doc_t> doc2;
-    psk->transaction_begin();
-    encoder_t enc2;
-    enc2.set_shared_keys(psk);
-    enc2.write_value(mut);
-    doc2 = enc2.finish_doc();
-    psk->save();
-    psk->transaction_end();
-
-    auto root2 = doc2->root()->as_dict();
-    REQUIRE(root2->get("age")->as_int() == 6);
-    REQUIRE(mut->get("age")->as_int() == 6);
-    mut->set("age", 7);
-    REQUIRE(mut->count() == 2);
-    REQUIRE(mut->get("age")->as_int() == 7);
-}
-
-
-TEST_CASE("mutable_dict_t from file") {
-    {
-        auto data = json_coder::from_json(read_file("test/small-test.json"));
-        write_to_file(data, "test/small-test.rj");
-    }
-    auto data = read_file("test/small-test.rj");
-    auto doc = doc_t::from_slice(data, doc_t::trust_type::trusted);
-    auto dog = doc->as_dict();
-    auto mp = mutable_dict_t::new_dict(dog);
-    REQUIRE(dog);
-    mp->set("age", 7);
-    auto achievements = mp->get_mutable_array("achievements");
-    REQUIRE(achievements);
-    auto achievement = achievements->get_mutable_dict(0);
-    REQUIRE(achievement);
-    REQUIRE(achievement->get("name")->as_string() == slice_t("He alwais get home"));
-    achievement->set("name", slice_t("No achievements"));
-    REQUIRE(achievement->get("name")->as_string() == slice_t("No achievements"));
 }

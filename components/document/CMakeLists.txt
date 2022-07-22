@@ -10,14 +10,12 @@ set( ${PROJECT_NAME}_HEADERS
         core/base.hpp
         core/dict.hpp
         core/doc.hpp
-        core/encoder.hpp
         core/internal.hpp
         core/pointer.hpp
         core/shared_keys.hpp
         core/slice_core.hpp
         core/slice.hpp
         core/value.hpp
-        json/json_coder.hpp
         mutable/mutable_array.h
         mutable/mutable_array.hpp
         mutable/mutable_dict.h
@@ -28,18 +26,10 @@ set( ${PROJECT_NAME}_HEADERS
         support/endian.hpp
         support/endianness.hpp
         support/exception.hpp
-        support/function_ref.hpp
         support/num_conversion.hpp
-        support/parse_date.hpp
         support/platform_compat.hpp
         support/ref_counted.hpp
-        support/slice_io.hpp
-        support/small_vector_base.hpp
-        support/small_vector.hpp
-        support/string_table.hpp
-        support/temp_array.hpp
         support/varint.hpp
-        support/writer.hpp
 )
 
 set(${PROJECT_NAME}_SOURCES
@@ -50,12 +40,10 @@ set(${PROJECT_NAME}_SOURCES
         core/array.cpp
         core/dict.cpp
         core/doc.cpp
-        core/encoder.cpp
         core/pointer.cpp
         core/shared_keys.cpp
         core/slice_core.cpp
         core/value.cpp
-        json/json_coder.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
@@ -64,12 +52,8 @@ set(${PROJECT_NAME}_SOURCES
         support/better_assert.cpp
         support/exception.cpp
         support/num_conversion.cpp
-        support/parse_date.cpp
         support/ref_counted.cpp
-        support/slice_io.cpp
-        support/string_table.cpp
         support/varint.cpp
-        support/writer.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

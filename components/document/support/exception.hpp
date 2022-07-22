@@ -5,7 +5,6 @@
 #include <components/document/core/base.hpp>
 
 namespace document {
-class backtrace_t;
 
 enum class error_code {
     no_error,
