@@ -6,9 +6,7 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/endian.hpp>
-#include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
-#include <components/document/support/parse_date.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/num_conversion.hpp>
 
@@ -197,19 +195,6 @@ slice_t value_t::as_data() const noexcept {
     return _usually_true(tag() == tag_binary) ? get_string_bytes() : slice_t();
 }
 
-int64_t value_t::as_time_stamp() const noexcept {
-    switch (tag()) {
-    case tag_string:
-        return parse_iso8601_date(as_string());
-    case tag_short:
-    case tag_int:
-    case tag_float:
-        return as_int();
-    default:
-        return invalid_date;
-    }
-}
-
 const array_t* value_t::as_array() const noexcept {
     if (_usually_false(tag() != tag_array))
         return nullptr;
@@ -385,15 +370,6 @@ template<> std::string value_t::as<std::string>() const {
 
 void release(const value_t *val) noexcept {
     heap_value_t::release(val);
-}
-
-void assign_ref(const value_t* &holder, const value_t *new_value) noexcept {
-    const value_t *old_value = holder;
-    if (_usually_true(new_value != old_value)) {
-        heap_value_t::retain(new_value);
-        holder = new_value;
-        heap_value_t::release(old_value);
-    }
 }
 
 } }

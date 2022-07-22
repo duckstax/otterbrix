@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
-#include <components/document/support/slice_io.hpp>
+#include <components/document/core/slice.hpp>
 
 using namespace document;
 using namespace document::impl;

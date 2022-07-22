@@ -77,10 +77,6 @@ void value_slot_t::release_value() {
     }
 }
 
-const value_t* value_slot_t::as_value_or_undefined() const {
-    return _pointer ? as_value() : value_t::undefined_value;
-}
-
 void value_slot_t::set_pointer(const value_t *v) {
     precondition((intptr_t(v) & 0xFF) != inline_tag);
     precondition(v != nullptr);
@@ -156,10 +152,6 @@ void value_slot_t::set(double d) {
 
 void value_slot_t::set(slice_t s) {
     set_string_or_data(tag_string, s);
-}
-
-void value_slot_t::set_data(slice_t s) {
-    set_string_or_data(tag_binary, s);
 }
 
 void value_slot_t::set_value(const value_t *v) {

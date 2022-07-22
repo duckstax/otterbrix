@@ -68,4 +68,7 @@ namespace components::document {
         set_(key, value);
     }
 
+    std::string serialize_document(const document_ptr &document);
+    document_ptr deserialize_document(const std::string &text);
+
 }

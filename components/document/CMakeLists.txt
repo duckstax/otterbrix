@@ -27,12 +27,8 @@ set( ${PROJECT_NAME}_HEADERS
         support/endianness.hpp
         support/exception.hpp
         support/num_conversion.hpp
-        support/parse_date.hpp
         support/platform_compat.hpp
         support/ref_counted.hpp
-        support/slice_io.hpp
-        support/string_table.hpp
-        support/temp_array.hpp
         support/varint.hpp
 )
 
@@ -56,10 +52,7 @@ set(${PROJECT_NAME}_SOURCES
         support/better_assert.cpp
         support/exception.cpp
         support/num_conversion.cpp
-        support/parse_date.cpp
         support/ref_counted.cpp
-        support/slice_io.cpp
-        support/string_table.cpp
         support/varint.cpp
 )
 

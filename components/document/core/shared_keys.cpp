@@ -92,10 +92,6 @@ bool shared_keys_t::load_from(const value_t *state) {
     return true;
 }
 
-void shared_keys_t::set_max_key_length(size_t m) {
-    _max_key_length = m;
-}
-
 bool shared_keys_t::encode(slice_t str, int &key) const {
     auto entry = _table.find(std::string(str));
     if (_usually_true(entry != _table.end())) {
@@ -168,23 +164,6 @@ slice_t shared_keys_t::decode_unknown(int key) const {
 std::vector<slice_t> shared_keys_t::by_key() const {
     std::lock_guard<std::mutex> lock(_mutex);
     return std::vector<slice_t>(&_by_key[0], &_by_key[_count]);
-}
-
-shared_keys_t::platform_string_t shared_keys_t::platform_string_for_key(int key) const {
-    _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
-    std::lock_guard<std::mutex> lock(_mutex);
-    if (unsigned(key) >= _platform_strings_by_key.size())
-        return nullptr;
-    return _platform_strings_by_key[static_cast<std::size_t>(key)];
-}
-
-void shared_keys_t::set_platform_string_for_key(int key, shared_keys_t::platform_string_t platformKey) const {
-    std::lock_guard<std::mutex> lock(_mutex);
-    _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
-    _throw_if(unsigned(key) >= _count, error_code::invalid_data, "key is not yet known");
-    if (unsigned(key) >= _platform_strings_by_key.size())
-        _platform_strings_by_key.resize(static_cast<std::size_t>(key) + 1);
-    _platform_strings_by_key[static_cast<std::size_t>(key)] = platformKey;
 }
 
 void shared_keys_t::revert_to_count(size_t count) {

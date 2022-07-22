@@ -27,3 +27,11 @@ TEST_CASE("document::json") {
     REQUIRE(view.get_dict("countDict").count() == view2.get_dict("countDict").count());
     REQUIRE(view.get_dict("countDict").get_bool("odd") == view2.get_dict("countDict").get_bool("odd"));
 }
+
+TEST_CASE("document::serialize") {
+    auto doc1 = gen_doc(1);
+    auto ser1 = serialize_document(doc1);
+    auto doc2 = deserialize_document(ser1);
+    auto ser2 = serialize_document(doc2);
+    REQUIRE(ser1 == ser2);
+}

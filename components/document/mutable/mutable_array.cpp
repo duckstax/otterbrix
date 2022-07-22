@@ -227,22 +227,6 @@ bool mutable_array_t::is_changed() const {
     return heap_array()->is_changed();
 }
 
-void mutable_array_t::set_changed(bool changed) {
-    heap_array()->set_changed(changed);
-}
-
-value_slot_t &mutable_array_t::setting(uint32_t index) {
-    return heap_array()->setting(index);
-}
-
-value_slot_t &mutable_array_t::inserting(uint32_t index) {
-    return heap_array()->inserting(index);
-}
-
-value_slot_t &mutable_array_t::appending() {
-    return heap_array()->appending();
-}
-
 void mutable_array_t::resize(uint32_t new_size) {
     heap_array()->resize(new_size);
 }

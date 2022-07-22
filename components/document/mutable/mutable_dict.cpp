@@ -331,16 +331,8 @@ bool mutable_dict_t::is_changed() const {
     return heap_dict()->is_changed();
 }
 
-void mutable_dict_t::set_changed(bool changed) {
-    heap_dict()->set_changed(changed);
-}
-
 const value_t *mutable_dict_t::get(slice_t key_to_find) const noexcept {
     return heap_dict()->get(key_to_find);
-}
-
-value_slot_t &mutable_dict_t::setting(slice_t key) {
-    return heap_dict()->setting(key);
 }
 
 void mutable_dict_t::remove(slice_t key) {

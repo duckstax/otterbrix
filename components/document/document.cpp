@@ -358,4 +358,12 @@ namespace components::document {
         return msgpack::object();
     }
 
+    std::string serialize_document(const document_ptr &document) {
+        return document_to_json(document);
+    }
+
+    document_ptr deserialize_document(const std::string &text) {
+        return document_from_json(text);
+    }
+
 }

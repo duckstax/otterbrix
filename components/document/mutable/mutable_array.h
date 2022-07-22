@@ -19,11 +19,6 @@ public:
 
     const array_t* source() const;
     bool is_changed() const;
-    void set_changed(bool changed);
-
-    value_slot_t& setting(uint32_t index);
-    value_slot_t& inserting(uint32_t index);
-    value_slot_t& appending();
 
     template <typename T>
     void set(uint32_t index, T t)  { heap_array()->set(index, t); }

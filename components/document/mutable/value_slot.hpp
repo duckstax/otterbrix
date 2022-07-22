@@ -26,7 +26,6 @@ public:
     explicit operator bool() const PURE;
 
     const value_t* as_value() const PURE;
-    const value_t* as_value_or_undefined() const PURE;
 
     void set(null_value_t);
     void set(bool b);
@@ -37,7 +36,6 @@ public:
     void set(float f);
     void set(double d);
     void set(slice_t s);
-    void set_data(slice_t s);
     void set_value(const value_t* v);
 
     template <class T> void set(const T* t)                    { set_value(t); }

@@ -7,7 +7,6 @@
 #include <map>
 
 namespace document { namespace impl {
-class encoder_t;
 class shared_keys_t;
 } }
 

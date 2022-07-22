@@ -11,9 +11,6 @@
 #include <vector>
 #include <boost/container/small_vector.hpp>
 
-#define Log(FMT,...)
-#define Warn(FMT,...) fprintf(stderr, "DOC: WARNING: " # FMT "\n", __VA_ARGS__)
-
 namespace document::impl {
 
 using namespace internal;
@@ -67,14 +64,9 @@ void scope_t::registr() noexcept {
     _unregistered.test_and_set();
     if (!_data)
         return;
-#if DEBUG
-    if (_data.size < 1e6)
-        _data_hash = _data.hash();
-#endif
     std::lock_guard<std::mutex> lock(mutex);
     if (_usually_false(!memory_map))
         memory_map = new memory_map_t;
-    Log("Register   (%p ... %p) --> scope_t %p, sk=%p [Now %zu]", _data.buf, _data.end(), this, _sk.get(), memory_map->size()+1);
     if (!_is_doc && _data.size == 2) {
         if (auto t = reinterpret_cast<const value_t*>(_data.buf)->type(); t != value_type::dict) {
             return;
@@ -85,7 +77,6 @@ void scope_t::registr() noexcept {
     if (iter != memory_map->begin() && std::prev(iter)->end_of_range == entry.end_of_range) {
         scope_t *existing = std::prev(iter)->scope;
         if (existing->_data == _data && existing->_extern_destination == _extern_destination && existing->_sk == _sk) {
-            Log("Duplicate  (%p ... %p) --> scope_t %p, sk=%p", _data.buf, _data.end(), this, _sk.get());
         } else {
             static const char* const value_type_names[] { "Null", "Boolean", "Number", "String", "Data", "array_t", "dict_t" };
             auto type1 = value_t::from_data(_data)->type();
@@ -104,16 +95,7 @@ void scope_t::registr() noexcept {
 
 void scope_t::unregister() noexcept {
     if (!_unregistered.test_and_set()) {
-#if DEBUG
-        if (_data.size < 1e6 && _data.hash() != _data_hash)
-            exception_t::_throw(error_code::internal_error,
-                                "Memory range (%p .. %p) was altered while scope_t %p (sk=%p) was active. "
-                                "This usually means the scope_t's data was freed/invalidated before the scope_t "
-                                "was unregistered/deleted. Unregister it earlier!",
-                                _data.buf, _data.end(), this, _sk.get());
-#endif
         std::lock_guard<std::mutex> lock(mutex);
-        Log("Unregister (%p ... %p) --> scope_t %p, sk=%p   [now %zu]", _data.buf, _data.end(), this, _sk.get(), memory_map->size()-1);
         mem_entry_t entry = { _data.end(), this };
         auto iter = std::lower_bound(memory_map->begin(), memory_map->end(), entry);
         while (iter != memory_map->end() && iter->end_of_range == entry.end_of_range) {
@@ -124,7 +106,6 @@ void scope_t::unregister() noexcept {
                 ++iter;
             }
         }
-        Warn("unregister(%p) couldn't find an entry for (%p ... %p)", reinterpret_cast<void*>(this), _data.buf, reinterpret_cast<const void*>(_data.end()));
     }
 }
 
@@ -162,10 +143,6 @@ slice_t scope_t::data() const {
     return _data;
 }
 
-alloc_slice_t scope_t::alloced_data() const {
-    return _alloced;
-}
-
 shared_keys_t* scope_t::shared_keys() const {
     return _sk;
 }
@@ -201,19 +178,6 @@ std::pair<const value_t*,slice_t> scope_t::resolve_pointer_from_with_range(const
     return { scope->resolve_extern_pointer_to(dst), scope->extern_destination() };
 }
 
-void scope_t::dump_all() {
-    std::lock_guard<std::mutex> lock(mutex);
-    if (_usually_false(!memory_map)) {
-        fprintf(stderr, "No Scopes have ever been registered.\n");
-        return;
-    }
-    for (auto &entry : *memory_map) {
-        auto scope = entry.scope;
-        fprintf(stderr, "%p -- %p (%4zu bytes) --> shared_keys_t[%p]%s\n", scope->_data.buf, reinterpret_cast<const void*>(scope->_data.end()),
-                scope->_data.size, reinterpret_cast<const void*>(scope->shared_keys()), (scope->_is_doc ? " (doc_t)" : ""));
-    }
-}
-
 
 doc_t::doc_t(const alloc_slice_t &data, trust_type trust, shared_keys_t *sk, slice_t destination) noexcept
     : scope_t(data, sk, destination)
@@ -244,10 +208,6 @@ void doc_t::init(trust_type trust) noexcept {
     _is_doc = true;
 }
 
-retained_t<doc_t> doc_t::from_slice(const alloc_slice_t &slice, trust_type trust) {
-    return new doc_t(slice, trust);
-}
-
 retained_const_t<doc_t> doc_t::containing(const value_t *src) noexcept {
     src = resolve_mutable(src);
     if (!src)
@@ -270,20 +230,6 @@ const dict_t* doc_t::as_dict() const {
 
 const array_t* doc_t::as_array() const {
     return _root ? _root->as_array() : nullptr;
-}
-
-bool doc_t::set_associated(void *pointer, const char *type) {
-    if (_associated_type && type && strcmp(_associated_type, type) != 0)
-        return false;
-    _associated_pointer = pointer;
-    _associated_type = type;
-    return true;
-}
-
-void* doc_t::get_associated(const char *type) const {
-    if (type == _associated_type || type == nullptr || (_associated_type && strcmp(_associated_type, type) == 0))
-        return _associated_pointer;
-    return nullptr;
 }
 
 }
