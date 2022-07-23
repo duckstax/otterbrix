@@ -4,16 +4,6 @@ enable_language(CXX)
 set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 set(CONAN_SYSTEM_INCLUDES TRUE)
 
-if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo_multi.cmake")
-    include("${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo_multi.cmake")
-elseif(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-    include("${CMAKE_CURRENT_BINARY_DIR}/conanbuildinfo.cmake")
-else()
-    message(WARNING "The file conanbuildinfo.cmake doesn't exist, you have to run conan install first")
-endif()
-
-conan_basic_setup(NO_OUTPUT_DIRS)
-
 project("${CONAN_PACKAGE_NAME}" VERSION "${CONAN_PACKAGE_VERSION}" LANGUAGES CXX)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

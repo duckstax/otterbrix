@@ -1,7 +1,7 @@
 #############################################################################################
 # configuration
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
 cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
@@ -87,7 +87,12 @@ include(cmake/clang-format.cmake)
 #############################################################################################
 #conan
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+if(WASM_BUILD)
+    include(${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake)
+else()
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+endif()
+
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
 conan_basic_setup(NO_OUTPUT_DIRS)
 
@@ -108,15 +113,13 @@ endif(CCACHE_FOUND)
 # wasm
 if(WASM_BUILD)
     set(WASM_OBJECT ON)
-    add_definitions(-DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/build_tools/Emscripten.cmake)
-    add_definitions( -DEMSCRIPTEN_ROOT_PATH=${CONAN_EMSDK_ROOT} )
 endif()
 # wasm
 #############################################################################################
 
 include_directories(components)
-add_subdirectory(core)
-add_subdirectory(components)
+#add_subdirectory(core)
+#add_subdirectory(components)
 
 if (WASM_BUILD)
     add_subdirectory(wasm)
