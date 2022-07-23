@@ -1,9 +1,5 @@
-#############################################################################################
-# configuration
-
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
@@ -15,24 +11,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-else()
-    # stack track
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
-endif()
-
 option(DEV_MODE "developer mode" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
-
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
-
-OPTION(WASM_BUILD ON)
-OPTION(WASM_OBJECT "Wasm OBJECT" OFF)
-
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -43,6 +28,15 @@ endif()
 
 if (ALLOW_BENCHMARK)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+    set(WASM_BUILD ON)
+else()
+    # stack track
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 endif()
 
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
@@ -118,8 +112,8 @@ endif()
 #############################################################################################
 
 include_directories(components)
-#add_subdirectory(core)
-#add_subdirectory(components)
+add_subdirectory(core)
+add_subdirectory(components)
 
 if (WASM_BUILD)
     add_subdirectory(wasm)

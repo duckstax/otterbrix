@@ -36,7 +36,13 @@ RUN conan config install conan
 COPY conanfile-wasm.txt ./
 RUN conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
 
-COPY . ../
+COPY ./apps ../apps
+COPY ./cmake ../cmake
+COPY ./components ../components
+COPY ./core ../core
+COPY ./services ../services
+COPY ./wasm ../wasm
+COPY ./CMakeLists.txt ../CMakeLists.txt
 
 WORKDIR /app/build
 RUN conan install emsdk/3.1.16@_/_ -g virtualenv  -s build_type=Release --build missing
@@ -55,10 +61,9 @@ ENV PATH="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733f
 
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON
 RUN cmake --build .
-RUN cmake --build . --target clean
-RUN ls
+
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=OFF -DWASM_BUILD=ON
 RUN cmake --build .
 
-
-CMD ctest -V && pytest
+CMD ctest -V
+CMD pytest

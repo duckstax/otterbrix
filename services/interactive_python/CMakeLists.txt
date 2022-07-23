@@ -34,7 +34,6 @@ add_library(rocketjoe_${CURRENT_TARGET}
 )
 
 SET(PYTHON_EXECUTABLE python3)
-find_package(Python COMPONENTS Interpreter Development REQUIRED)
 #find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development)
 include_directories(${Python3_INCLUDE_DIRS})
