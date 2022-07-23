@@ -5,8 +5,6 @@ list(APPEND ${PROJECT_NAME}_SOURCES
         test_log.cpp
 )
 
-add_subdirectory(log_wasm)
-
 add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
@@ -15,9 +13,6 @@ target_link_libraries(
         rocketjoe::wasm_runner
         ${CONAN_LIBS}
 )
-
-
-add_dependencies("${PROJECT_NAME}" "${PROJECT_NAME}_log_wasm")
 
 include(CTest)
 include(Catch)

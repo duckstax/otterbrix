@@ -30,7 +30,12 @@ option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
+OPTION(WASM_BUILD ON)
+OPTION(WASM_OBJECT "Wasm OBJECT" OFF)
+
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 if (DEV_MODE)
     add_definitions(-DDEV_MODE)
     enable_testing()
@@ -100,20 +105,28 @@ endif(CCACHE_FOUND)
 
 # ccahe
 #############################################################################################
-
-SET(PYTHON_EXECUTABLE python3)
-#find_package(Python COMPONENTS Interpreter Development REQUIRED)
-#find_package(pybind11 REQUIRED)
-find_package(Python3 COMPONENTS Interpreter Development.Module)
-include_directories(${Python3_INCLUDE_DIRS})
+# wasm
+if(WASM_BUILD)
+    set(WASM_OBJECT ON)
+    add_definitions(-DCMAKE_TOOLCHAIN_FILE=${CMAKE_BINARY_DIR}/build_tools/Emscripten.cmake)
+    add_definitions( -DEMSCRIPTEN_ROOT_PATH=${CONAN_EMSDK_ROOT} )
+endif()
+# wasm
+#############################################################################################
 
 include_directories(components)
-include_directories(services)
-
 add_subdirectory(core)
 add_subdirectory(components)
-add_subdirectory(services)
-add_subdirectory(apps)
+
+if (WASM_BUILD)
+    add_subdirectory(wasm)
+else()
+    include_directories(services)
+    add_subdirectory(services)
+    add_subdirectory(apps)
+endif ()
+
+
 
 #set(CPACK_GENERATOR "DEB")
 #set(CPACK_SET_DESTDIR true)

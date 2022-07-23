@@ -5,8 +5,7 @@ project(log_wasm  LANGUAGES CXX)
 set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 set(CONAN_SYSTEM_INCLUDES TRUE)
 
-include(${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake)
-include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
+include("${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake")
 conan_basic_setup(NO_OUTPUT_DIRS)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
@@ -32,11 +31,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
     )
 endif()
 
-file(GLOB_RECURSE HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.hpp")
-
-file(GLOB_RECURSE SOURCES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.cpp")
-
-add_executable("${PROJECT_NAME}" "${HEADERS}" "${SOURCES}")
+add_executable(${PROJECT_NAME} main.cpp)
 
 target_include_directories("${PROJECT_NAME}" PRIVATE "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")
 

@@ -8,6 +8,7 @@ RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
         cmake \
         ninja-build \
         python3-pip \
+        python3-venv \
         python3-dev curl gnupg apt-transport-https && \
     curl -fsSL https://bazel.build/bazel-release.pub.gpg | apt-key add && \
         echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | tee /etc/apt/sources.list.d/bazel.list && \
@@ -35,15 +36,22 @@ RUN conan config install conan
 COPY conanfile-wasm.txt ./
 RUN conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
 
-#RUN conan install --profile:build=default --profile:host=wasm --build missing proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable -s build_type=Release
-#RUN conan install --profile:build=default --profile:host=wasm --build missing flatbuffers/2.0.5@_/_ -s build_type=Release
-
-
 COPY . ../
 
 WORKDIR /app/build
-
-RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+RUN conan install emsdk/3.1.16@_/_ -g virtualenv  -s build_type=Release --build missing
+#RUN  ./activate.sh
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv  $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+#RUN which source
+RUN /bin/bash -c "source ./activate.sh "
+#RUN chmod +x activate.sh
+RUN /bin/bash -c "source ./activate.sh "
+RUN emcc -v
+#RUN ls $EMSCRIPTEN
+RUN file /cmake/Modules/Platform/Emscripten.cmake
+RUN cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=ON -DWASM_BUILD=ON
 RUN cmake --build .
 
 CMD ctest -V && pytest

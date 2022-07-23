@@ -6,4 +6,5 @@ quickjs/2788d71e823b522b178db3b3660ce93689534e6d@duckstax/stable
 
 [generators]
 cmake
+virtualenv
 
