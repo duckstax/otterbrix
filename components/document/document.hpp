@@ -48,7 +48,6 @@ namespace components::document {
 
     document_ptr document_from_json(const std::string &json);
     std::string document_to_json(const document_ptr &doc);
-    std::string document_to_string(const document_ptr &doc);
 
     msgpack::type::object_type get_msgpack_type(const ::document::impl::value_t *value);
     msgpack::object get_msgpack_object(const ::document::impl::value_t *value);
@@ -63,5 +62,13 @@ namespace components::document {
     inline void document_t::set(const std::string& key, const std::string &value) {
         set_(key, ::document::impl::new_value(::document::slice_t(value)).get());
     }
+
+    template<>
+    inline void document_t::set(const std::string& key, const ::document::impl::value_t *value) {
+        set_(key, value);
+    }
+
+    std::string serialize_document(const document_ptr &document);
+    document_ptr deserialize_document(const std::string &text);
 
 }

@@ -121,6 +121,7 @@ public:
 
     std::string to_json() const;
     ::document::retained_t<::document::impl::dict_t> to_dict() const;
+    ::document::retained_t<::document::impl::array_t> to_array() const;
 
 private:
     index_t index_;

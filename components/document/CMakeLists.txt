@@ -13,7 +13,6 @@ set(${PROJECT_NAME}_SOURCES
         core/shared_keys.cpp
         core/slice_core.cpp
         core/value.cpp
-       # json/json_coder.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
@@ -22,10 +21,7 @@ set(${PROJECT_NAME}_SOURCES
         support/better_assert.cpp
         support/exception.cpp
         support/num_conversion.cpp
-        support/parse_date.cpp
         support/ref_counted.cpp
-        support/slice_io.cpp
-        support/string_table.cpp
         support/varint.cpp
         )
 

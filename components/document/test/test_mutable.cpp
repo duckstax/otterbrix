@@ -1,11 +1,7 @@
 #include <catch2/catch.hpp>
-
-#include <components/document/json/json_coder.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
-#include <components/document/support/slice_io.hpp>
-
-#include "doc.hpp"
+#include <components/document/core/slice.hpp>
 
 using namespace document;
 using namespace document::impl;
@@ -107,10 +103,6 @@ TEST_CASE("mutable::mutable_array_t") {
         }
         REQUIRE_FALSE(i1);
 
-        REQUIRE(ma->as_array()->to_json() == slice_t("[null,false,true,0,-123,2021,123456789,-123456789,\"dog\",3.141593,"
-              "3.141592653589793,18446744073709551615,4294967296,4294967296,"
-              "-9223372036854775808,9223372036854775807,-9223372036854775807]"));
-
         ma->remove(3, 5);
         REQUIRE(ma->count() == 12);
         REQUIRE(ma->get(2)->type() == value_type::boolean);
@@ -152,6 +144,20 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE_FALSE(i);
     }
 
+    SECTION("pointer") {
+        auto ma = mutable_array_t::new_array();
+        ma->resize(2);
+        ma->set(0, 100);
+        ma->set(1, 200);
+
+        auto mb = mutable_array_t::new_array();
+        REQUIRE_FALSE(mb->is_changed());
+        mb->append(ma);
+        REQUIRE(mb->is_changed());
+        REQUIRE(mb->get(0) == ma);
+        REQUIRE(mb->get_mutable_array(0) == ma);
+    }
+
     SECTION("copy") {
         auto ma = mutable_array_t::new_array(2);
         ma->set(0, 100);
@@ -175,40 +181,6 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(copy->is_equal(mc));
         REQUIRE_FALSE(copy->get(0) == mc->get(0));
         REQUIRE_FALSE(copy->get(0)->as_array()->get(0) == ma);
-    }
-
-    SECTION("copy immutable") {
-        auto doc = doc_t::from_json(slice_t("[100, \"dog\"]"));
-        auto a = doc->root()->as_array();
-
-        auto copy = mutable_array_t::new_array(a);
-        REQUIRE(copy->source() == a);
-        REQUIRE(copy->is_equal(a));
-
-        auto mb = mutable_array_t::new_array(1);
-        mb->set(0, a);
-        REQUIRE(mb->get(0) == a);
-
-        auto mc = mutable_array_t::new_array(1);
-        mc->set(0, mb);
-        REQUIRE(mc->get(0) == mb);
-
-        copy = mc->copy();
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE(copy->get(0) == mc->get(0));
-
-        copy = mc->copy(deep_copy);
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get(0) == mc->get(0));
-        REQUIRE(copy->get(0)->as_array()->get(0) == a);
-
-        copy = mc->copy(copy_flags(deep_copy_immutables));
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get(0) == mc->get(0));
-        REQUIRE_FALSE(copy->get(0)->as_array()->get(0) == a);
     }
 
 }
@@ -383,40 +355,6 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == ma);
     }
 
-    SECTION("copy immutable") {
-        auto doc = doc_t::from_json("{\"a\":100,\"b\":\"dog\"}");
-        const dict_t *a = doc->root()->as_dict();
-
-        auto copy = mutable_dict_t::new_dict(a);
-        REQUIRE(copy->source() == a);
-        REQUIRE(copy->is_equal(a));
-
-        auto mb = mutable_dict_t::new_dict();
-        mb->set("a", a);
-        REQUIRE(mb->get("a") == a);
-
-        auto mc = mutable_dict_t::new_dict();
-        mc->set("a", mb);
-        REQUIRE(mc->get("a") == mb);
-
-        copy = mc->copy();
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE(copy->get("a") == mc->get("a"));
-
-        copy = mc->copy(deep_copy);
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get("a") == mc->get("a"));
-        REQUIRE(copy->get("a")->as_dict()->get("a") == a);
-
-        copy = mc->copy(copy_flags(deep_copy_immutables));
-        REQUIRE_FALSE(copy == mc);
-        REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get("a") == mc->get("a"));
-        REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == a);
-    }
-
 }
 
 
@@ -430,24 +368,4 @@ TEST_CASE("mutable long string") {
     for (uint32_t i = 0; i < size; ++i) {
         REQUIRE(ma->get(i)->as_string() == slice_t(chars, i));
     }
-}
-
-TEST_CASE("mutable_dict_t from file") {
-    {
-        auto data = json_coder::from_json(read_file("test/small-test.json"));
-        write_to_file(data, "test/small-test.rj");
-    }
-    auto data = read_file("test/small-test.rj");
-    auto doc = doc_t::from_slice(data, doc_t::trust_type::trusted);
-    auto dog = doc->as_dict();
-    auto mp = mutable_dict_t::new_dict(dog);
-    REQUIRE(dog);
-    mp->set("age", 7);
-    auto achievements = mp->get_mutable_array("achievements");
-    REQUIRE(achievements);
-    auto achievement = achievements->get_mutable_dict(0);
-    REQUIRE(achievement);
-    REQUIRE(achievement->get("name")->as_string() == slice_t("He alwais get home"));
-    achievement->set("name", slice_t("No achievements"));
-    REQUIRE(achievement->get("name")->as_string() == slice_t("No achievements"));
 }

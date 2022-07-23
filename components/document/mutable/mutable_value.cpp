@@ -99,10 +99,6 @@ heap_value_t *heap_value_t::create(slice_t s) {
     return create_str(internal::tag_string, s);
 }
 
-heap_value_t *heap_value_t::create_data(slice_t s) {
-    return create_str(internal::tag_binary, s);
-}
-
 heap_value_t* heap_value_t::create_str(tags tag, slice_t s) {
     uint8_t size_buf[max_varint_len32];
     size_t size_byte_count = 0;

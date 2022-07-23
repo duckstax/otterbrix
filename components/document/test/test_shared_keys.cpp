@@ -2,8 +2,7 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
-#include <components/document/json/json_coder.hpp>
-#include <components/document/support/slice_io.hpp>
+#include <components/document/core/slice.hpp>
 #include <climits>
 
 using namespace document::impl;

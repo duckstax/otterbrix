@@ -4,6 +4,7 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/structure.hpp>
 #include <components/document/document_view.hpp>
+#include <boost/json.hpp>
 
 namespace components::document {
 
@@ -295,18 +296,44 @@ namespace components::document {
         return document_id_t(components::document::document_view_t(document).get_string("_id"));
     }
 
+    ::document::retained_const_t<::document::impl::value_t> json2value(const boost::json::value &item) {
+        if (item.is_bool()) {
+            return ::document::impl::new_value(item.get_bool());
+        } else if (item.is_uint64()) {
+            return ::document::impl::new_value(item.get_uint64());
+        } else if (item.is_int64()) {
+            return ::document::impl::new_value(item.get_int64());
+        } else if (item.is_double()) {
+            return ::document::impl::new_value(item.get_double());
+        } else if (item.is_string()) {
+            return ::document::impl::new_value(::document::slice_t(item.get_string().c_str()));
+        } else if (item.is_array()) {
+            auto array = ::document::impl::mutable_array_t::new_array();
+            for (const auto &child : item.get_array()) {
+                array->append(json2value(child));
+            }
+            return array->as_array();
+        } else if (item.is_object()) {
+            auto dict = ::document::impl::mutable_dict_t::new_dict();
+            for (const auto &child : item.get_object()) {
+                dict->set(std::string(child.key()), json2value(child.value()));
+            }
+            return dict->as_dict();
+        }
+        return ::document::impl::value_t::null_value;
+    }
+
     document_ptr document_from_json(const std::string &json) {
-        auto doc = ::document::impl::doc_t::from_json(json);
-        auto dict = mutable_dict_t::new_dict(doc->root()->as_dict());
-        return make_document(dict);
+        auto doc = make_document();
+        auto tree = boost::json::parse(json);
+        for (const auto &item : tree.as_object()) {
+            doc->set(std::string(item.key()), json2value(item.value()).get());
+        }
+        return doc;
     }
 
     std::string document_to_json(const document_ptr &doc) {
         return document_view_t(doc).to_json();
-    }
-
-    std::string document_to_string(const document_ptr &doc) {
-        return "STRUCTURE:\n" + doc->structure->to_json_string() + "\nDATA:\n" + std::string(doc->data.data());
     }
 
 
@@ -329,6 +356,14 @@ namespace components::document {
         if (value->is_double()) return msgpack::object(value->as_double());
         if (value->type() == value_type::string) return msgpack::object(std::string_view(value->as_string()));
         return msgpack::object();
+    }
+
+    std::string serialize_document(const document_ptr &document) {
+        return document_to_json(document);
+    }
+
+    document_ptr deserialize_document(const std::string &text) {
+        return document_from_json(text);
     }
 
 }

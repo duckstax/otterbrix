@@ -55,11 +55,9 @@ public:
 
 protected:
     internal::heap_dict_t* heap_dict() const noexcept PURE;
-    uint32_t raw_count() const noexcept PURE;
     const dict_t* get_parent() const noexcept PURE;
 
     static bool is_magic_parent_key(const value_t *v);
-    static constexpr int magic_parent_key = -2048;
 
     template <bool WIDE> friend struct dict_impl_t;
     friend class dict_iterator_t;
@@ -92,8 +90,6 @@ protected:
 private:
     dict_iterator_t(const dict_t* d, bool) noexcept;
     void read() noexcept;
-    const value_t* raw_key() noexcept             { return _a._first; }
-    const value_t* raw_value() noexcept           { return _a.second(); }
     shared_keys_t* find_shared_keys() const;
 
     array_t::impl _a;
@@ -104,7 +100,6 @@ private:
     int _key_compare { -1 };
 
     friend class value_t;
-    friend class value_dumper_t;
 };
 
 
