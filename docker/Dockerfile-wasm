@@ -46,24 +46,31 @@ COPY ./CMakeLists.txt ../CMakeLists.txt
 
 WORKDIR /app/build
 RUN conan install emsdk/3.1.16@_/_ -g virtualenv  -s build_type=Release --build missing
+
+COPY ./ci/build.sh ./build.sh
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+RUN chmod +x build.sh
+
+RUN ./build.sh
+
 #RUN  ./activate.sh
 #ENV VIRTUAL_ENV=/opt/venv
 #RUN python3 -m venv  $VIRTUAL_ENV
 #ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 #RUN which source
 #RUN /bin/bash -c "source ./activate.sh " &&
-ENV EMSDK="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8"
-ENV EMSCRIPTEN="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/upstream/emscripten"
-ENV EM_CONFIG="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/.emscripten"
-ENV EM_CACHE="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/.emscripten_cache"
-ENV PATH="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8":"/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/upstream/emscripten":"/root/.conan/data/nodejs/16.3.0/_/_/package/4db1be536558d833e52e862fd84d64d75c2b3656/bin"${PATH:+:$PATH}
+#ENV EMSDK="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8"
+#ENV EMSCRIPTEN="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/upstream/emscripten"
+#ENV EM_CONFIG="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/.emscripten"
+#ENV EM_CACHE="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/.emscripten_cache"
+#ENV PATH="/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8":"/root/.conan/data/emsdk/3.1.16/_/_/package/2880313eadc30db92089af7733fe8364772ee5c8/bin/upstream/emscripten":"/root/.conan/data/nodejs/16.3.0/_/_/package/4db1be536558d833e52e862fd84d64d75c2b3656/bin"${PATH:+:$PATH}
 
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON
-RUN cmake --build .
+#RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON
+#RUN cmake --build .
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=OFF -DWASM_BUILD=ON
-RUN cmake --build .
+#RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=OFF -DWASM_BUILD=ON
+#RUN cmake --build .
 
-CMD ctest -V
-CMD pytest
+#CMD ctest -V
+#CMD pytest

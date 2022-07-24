@@ -295,7 +295,7 @@ gen
 *.md
 *.py
 *.yml
-**/*.sh
+#**/*.sh
 
 **/.#session.*
 /.dockerignore

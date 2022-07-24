@@ -26,5 +26,3 @@ cmake
 
 
 [imports]
-bin/upstream/emscripten/cmake/Modules/Platform/, Emscripten.cmake* -> ./build_tools
-
