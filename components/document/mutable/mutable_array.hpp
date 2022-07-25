@@ -1,18 +1,17 @@
 #pragma once
 
+#include <vector>
+
 #include <components/document/core/array.hpp>
 #include <components/document/mutable/value_slot.hpp>
 #include <components/document/support/better_assert.hpp>
-#include <vector>
 
-/*
 namespace document { namespace impl {
 class mutable_array_t;
 class mutable_dict_t;
 } }
- */
 
-namespace document::impl::internal {
+namespace document { namespace impl { namespace internal {
 
 class heap_array_t : public heap_collection_t {
 public:
@@ -79,4 +78,4 @@ private:
     retained_const_t<array_t> _source;
 };
 
-}
+} } }
