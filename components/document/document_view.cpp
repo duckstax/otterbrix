@@ -4,7 +4,7 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/structure.hpp>
-#include <iostream>
+#include <sstream>
 
 using ::document::impl::value_type;
 
@@ -217,8 +217,8 @@ bool document_view_t::get_bool(std::string &&key) const {
     return get_as<bool>(std::move(key));
 }
 
-ulong document_view_t::get_ulong(std::string &&key) const {
-    return get_as<ulong>(std::move(key));
+uint32_t document_view_t::get_ulong(std::string &&key) const {
+    return get_as<uint32_t>(std::move(key));
 }
 
 long document_view_t::get_long(std::string &&key) const {
@@ -283,7 +283,7 @@ compare_t document_view_t::compare(const document_view_t &other, const std::stri
     if (!is_exists(key) && other.is_exists(key))  return compare_t::more;
     if (!is_exists(key) && !other.is_exists(key)) return compare_t::equals;
     if (is_bool(key) && other.is_bool(key)) return equals_<bool>(*this, other, key);
-    if (is_ulong(key) && other.is_ulong(key)) return equals_<ulong>(*this, other, key);
+    if (is_ulong(key) && other.is_ulong(key)) return equals_<std::uint32_t>(*this, other, key);
     if (is_long(key) && other.is_long(key)) return equals_<long>(*this, other, key);
     if (is_float(key) && other.is_float(key)) return equals_<float>(*this, other, key);
     if (is_double(key) && other.is_double(key)) return equals_<double>(*this, other, key);
@@ -306,7 +306,7 @@ std::string document_view_t::to_json() const {
         } else if (is_bool(key)) {
             dict->set(key, get_as<bool>(key));
         } else if (is_ulong(key)) {
-            dict->set(key, get_as<ulong>(key));
+            dict->set(key, get_as<std::uint32_t>(key));
         } else if (is_long(key)) {
             dict->set(key, get_as<long>(key));
         } else if (is_float(key)) {
@@ -332,7 +332,7 @@ std::string document_view_t::to_json() const {
         } else if (is_bool(index)) {
             array->append(get_as<bool>(index));
         } else if (is_ulong(index)) {
-            array->append(get_as<ulong>(index));
+            array->append(get_as<std::uint32_t>(index));
         } else if (is_long(index)) {
             array->append(get_as<long>(index));
         } else if (is_float(index)) {

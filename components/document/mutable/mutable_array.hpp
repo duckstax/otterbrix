@@ -5,12 +5,14 @@
 #include <components/document/support/better_assert.hpp>
 #include <vector>
 
+/*
 namespace document { namespace impl {
 class mutable_array_t;
 class mutable_dict_t;
 } }
+ */
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
 class heap_array_t : public heap_collection_t {
 public:
@@ -77,4 +79,4 @@ private:
     retained_const_t<array_t> _source;
 };
 
-} } }
+}

@@ -1,11 +1,16 @@
 #include "num_conversion.hpp"
-#include <ctype.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <float.h>
+
+#include <cctype>
+#include <clocale>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <cfloat>
+
 #include <iomanip>
+#include <string>
+#include <sstream>
+
 #if !defined(_MSC_VER) && !defined(__GLIBC__)
 #include <xlocale.h>
 #endif

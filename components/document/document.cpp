@@ -1,4 +1,7 @@
 #include "document.hpp"
+
+#include <components/document/mutable/value_slot.hpp>
+#include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/core/doc.hpp>

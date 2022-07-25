@@ -1,12 +1,12 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(document)
-add_subdirectory(cursor)
 
 if(WASM_BUILD)
 
 else()
     #add_subdirectory(configuration)
+    add_subdirectory(cursor)
     add_subdirectory(log)
     add_subdirectory(oid)
     #add_subdirectory(python)
