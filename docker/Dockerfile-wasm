@@ -1,7 +1,9 @@
 FROM ubuntu:20.04
 
-RUN ln -s /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
-    apt update && \
+ENV TZ=America/US
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && \
     apt upgrade -y && \
     apt install -y \
         build-essential \
