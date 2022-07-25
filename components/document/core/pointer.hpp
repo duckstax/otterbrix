@@ -11,8 +11,6 @@ using namespace document::impl;
 class pointer_t : public value_t
 {
 public:
-    static constexpr size_t max_narrow_offset = 0x7FFE;
-
     pointer_t(size_t offset, int width, bool external = false);
 
     bool is_external() const PURE;

@@ -33,9 +33,6 @@ namespace document::impl::internal {
         special_value_true       = 0x08,
     };
 
-    static const size_t min_shared_string_size =  2;
-    static const size_t max_shared_string_size = 15;
-
     static const uint32_t long_array_count = 0x07FF;
 
     class pointer_t;

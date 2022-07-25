@@ -2,7 +2,6 @@
 #include <components/document/support/exception.hpp>
 #include <components/document/core/value.hpp>
 #include <components/document/core/array.hpp>
-#include <components/document/core/encoder.hpp>
 
 namespace document::impl {
 
@@ -93,24 +92,6 @@ bool shared_keys_t::load_from(const value_t *state) {
     return true;
 }
 
-void shared_keys_t::write_state(encoder_t &enc) const {
-    auto count = _count;
-    enc.begin_array(count);
-    for (size_t key = 0; key < count; ++key)
-        enc.write_string(_by_key[key]);
-    enc.end_array();
-}
-
-void shared_keys_t::set_max_key_length(size_t m) {
-    _max_key_length = m;
-}
-
-alloc_slice_t shared_keys_t::state_data() const {
-    encoder_t enc;
-    write_state(enc);
-    return enc.finish();
-}
-
 bool shared_keys_t::encode(slice_t str, int &key) const {
     auto entry = _table.find(std::string(str));
     if (_usually_true(entry != _table.end())) {
@@ -185,23 +166,6 @@ std::vector<slice_t> shared_keys_t::by_key() const {
     return std::vector<slice_t>(&_by_key[0], &_by_key[_count]);
 }
 
-shared_keys_t::platform_string_t shared_keys_t::platform_string_for_key(int key) const {
-    _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
-    std::lock_guard<std::mutex> lock(_mutex);
-    if (unsigned(key) >= _platform_strings_by_key.size())
-        return nullptr;
-    return _platform_strings_by_key[static_cast<std::size_t>(key)];
-}
-
-void shared_keys_t::set_platform_string_for_key(int key, shared_keys_t::platform_string_t platformKey) const {
-    std::lock_guard<std::mutex> lock(_mutex);
-    _throw_if(key < 0, error_code::invalid_data, "key must be non-negative");
-    _throw_if(unsigned(key) >= _count, error_code::invalid_data, "key is not yet known");
-    if (unsigned(key) >= _platform_strings_by_key.size())
-        _platform_strings_by_key.resize(static_cast<std::size_t>(key) + 1);
-    _platform_strings_by_key[static_cast<std::size_t>(key)] = platformKey;
-}
-
 void shared_keys_t::revert_to_count(size_t count) {
     std::lock_guard<std::mutex> lock(_mutex);
     if (count >= _count) {
@@ -213,57 +177,6 @@ void shared_keys_t::revert_to_count(size_t count) {
         _by_key[static_cast<std::size_t>(key)] = null_slice;
     }
     _count = unsigned(count);
-}
-
-persistent_shared_key_st::persistent_shared_key_st() {
-    _in_transaction = false;
-}
-
-bool persistent_shared_key_st::refresh() {
-    std::lock_guard<std::mutex> lock(_refresh_mutex);
-    return !_in_transaction && read();
-}
-
-void persistent_shared_key_st::transaction_begin() {
-    std::lock_guard<std::mutex> lock(_refresh_mutex);
-    _throw_if(_in_transaction, error_code::shared_keys_state_error, "already in transaction");
-    _in_transaction = true;
-    read();
-}
-
-void persistent_shared_key_st::transaction_end() {
-    if (_in_transaction) {
-        _committed_persisted_count = _persisted_count;
-        _in_transaction = false;
-    }
-}
-
-bool persistent_shared_key_st::changed() const {
-    return _persisted_count < count();
-}
-
-bool persistent_shared_key_st::load_from(const value_t *state) {
-    _throw_if(changed(), error_code::shared_keys_state_error, "can't load when already changed");
-    if (!shared_keys_t::load_from(state))
-        return false;
-    _committed_persisted_count = _persisted_count = count();
-    return true;
-}
-
-bool persistent_shared_key_st::load_from(slice_t state_data) {
-    return shared_keys_t::load_from(state_data);
-}
-
-void persistent_shared_key_st::save() {
-    if (changed()) {
-        write(state_data());
-        _persisted_count = count();
-    }
-}
-
-void persistent_shared_key_st::revert() {
-    revert_to_count(_committed_persisted_count);
-    _persisted_count = _committed_persisted_count;
 }
 
 }

@@ -2,7 +2,6 @@
 #include "mutable_dict.h"
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/value_slot.hpp>
-#include <components/document/core/encoder.hpp>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/support/better_assert.hpp>
 
@@ -292,30 +291,6 @@ heap_array_t* heap_dict_t::array_key_value() {
     return _iterable.get();
 }
 
-bool heap_dict_t::too_many_ancestors() const {
-    auto grampaw = _source->get_parent();
-    return grampaw && grampaw->get_parent();
-}
-
-void heap_dict_t::write_to(encoder_t &enc) {
-    if (enc.value_in_base(_source) && _map.size() + 1 < count() && !too_many_ancestors()) {
-        enc.begin_dict(_source, _map.size());
-        for (auto &i : _map) {
-            enc.write_key(i.first);
-            enc.write_value(i.second.as_value_or_undefined());
-        }
-        enc.end_dict();
-    } else {
-        iterator iter(this);
-        enc.begin_dict(iter.count());
-        for (; iter; ++iter) {
-            enc.write_key(iter.key_string());
-            enc.write_value(iter.value());
-        }
-        enc.end_dict();
-    }
-}
-
 void heap_dict_t::disconnect_from_source() {
     if (!_source)
         return;
@@ -356,16 +331,8 @@ bool mutable_dict_t::is_changed() const {
     return heap_dict()->is_changed();
 }
 
-void mutable_dict_t::set_changed(bool changed) {
-    heap_dict()->set_changed(changed);
-}
-
 const value_t *mutable_dict_t::get(slice_t key_to_find) const noexcept {
     return heap_dict()->get(key_to_find);
-}
-
-value_slot_t &mutable_dict_t::setting(slice_t key) {
-    return heap_dict()->setting(key);
 }
 
 void mutable_dict_t::remove(slice_t key) {
