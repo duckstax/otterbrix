@@ -1,4 +1,6 @@
 #include "document_view.hpp"
+
+#include <components/document/mutable/value_slot.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/doc.hpp>
