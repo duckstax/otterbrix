@@ -53,10 +53,9 @@ RUN source ./activate.sh  && \
     cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=ON -DWASM_BUILD=ON&&\
     cmake --build .
 
-
 WORKDIR /app/build
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
-RUN cmake --build .
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
+    cmake --build .  --target duck_charmer
 
 RUN ctest -V
 RUN pytest
