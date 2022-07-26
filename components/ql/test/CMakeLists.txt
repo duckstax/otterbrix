@@ -11,14 +11,9 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::protocol
+        rocketjoe::document
+        rocketjoe::ql
 )
-
-#target_include_directories(
-#        ${PROJECT_NAME}
-#        PUBLIC
-#        ..
-#)
 
 include(CTest)
 include(Catch)

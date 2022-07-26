@@ -1,10 +1,6 @@
 #pragma once
 
 #include <string>
-#include <variant>
-#include <vector>
-
-#include <components/document/document.hpp>
 
 namespace components::ql {
 
@@ -30,16 +26,13 @@ namespace components::ql {
 
     // Base struct for every QL statement
     struct ql_statement_t {
-        ql_statement_t(statement_type type, const std::string& database, const std::string& collection)
+        ql_statement_t(statement_type type, database_name_t database, collection_name_t collection)
             : type_(type)
-            , database_(database)
-            , collection_(collection) {}
+            , database_(std::move(database))
+            , collection_(std::move(collection)) {}
 
         ql_statement_t() = delete;
-
         virtual ~ql_statement_t() = default;
-
-        ///    std::vector<Expr*>* hints;
 
         statement_type type() const {
             return type_;
@@ -49,4 +42,5 @@ namespace components::ql {
         database_name_t database_;
         collection_name_t collection_;
     };
+
 } // namespace components::ql

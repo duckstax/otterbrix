@@ -1,20 +1,14 @@
 project(ql CXX)
 
-set(HEADER_${PROJECT_NAME}
-
-)
-
 set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
 )
 
-
 add_library(rocketjoe_${PROJECT_NAME}
         ${HEADER_${PROJECT_NAME}}
         ${SOURCE_${PROJECT_NAME}}
 )
-
 
 add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 
@@ -29,7 +23,6 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-
 )
 
 if (DEV_MODE)
