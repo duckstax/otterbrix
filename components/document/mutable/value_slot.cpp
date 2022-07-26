@@ -101,11 +101,11 @@ void value_slot_t::set(bool b) {
     set_inline(tag_special, b ? special_value_true : special_value_false);
 }
 
-void value_slot_t::set(int i) {
+void value_slot_t::set(int32_t i) {
     set_int(i);
 }
 
-void value_slot_t::set(unsigned i) {
+void value_slot_t::set(uint32_t i) {
     set_int(i);
 }
 
