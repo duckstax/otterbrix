@@ -155,6 +155,7 @@ TEST_CASE("wasm_manager_t log", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
     auto wasm = read_test_wasm_file(boost::filesystem::path("log_wasm") / "log_wasm.wasm");
+    REQUIRE(boost::filesystem::exists(wasm));
     string_view plugin_id = "plugin_id0";
     mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
 
@@ -167,6 +168,7 @@ TEST_CASE("wasm_manager_t log_quickjs", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
     auto wasm = read_test_wasm_file(boost::filesystem::path("log_quickjs_wasm") / "log_quickjs_wasm.wasm");
+    REQUIRE(boost::filesystem::exists(wasm));
     string_view plugin_id = "plugin_id1";
     mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
 

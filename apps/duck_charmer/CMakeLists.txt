@@ -46,7 +46,11 @@ set(ROCKETJOE_LIBS
 SET(PYTHON_EXECUTABLE python3)
 #find_package(Python COMPONENTS Interpreter Development REQUIRED)
 #find_package(pybind11 REQUIRED)
-find_package(Python3 COMPONENTS Interpreter Development.Module)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+message("Python_FOUND:${Python_FOUND}")
+message("Python_VERSION:${Python_VERSION}")
+message("Python_Development_FOUND:${Python_Development_FOUND}")
+message("Python_LIBRARIES:${Python_LIBRARIES}")
 include_directories(${Python3_INCLUDE_DIRS})
 
 include_directories(
