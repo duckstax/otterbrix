@@ -35,20 +35,20 @@ namespace components::ql {
     struct expr_t {
         using ptr = std::unique_ptr<expr_t>;
 
-        condition_type condition_;
+        condition_type type_;
         std::string key_;
         field_t field_;
         std::vector<ptr> sub_conditions_;
 
-        expr_t(condition_type condition, std::string key, field_t field)
-            : condition_(condition)
+        expr_t(condition_type type, std::string key, field_t field)
+            : type_(type)
             , key_(std::move(key))
             , field_(std::move(field))
-            , union_(is_union_condition(condition_))
+            , union_(is_union_condition(type_))
         {}
 
         explicit expr_t(bool is_union)
-            : condition_(condition_type::novalid)
+            : type_(condition_type::novalid)
             , union_(is_union)
         {}
 
@@ -115,10 +115,8 @@ namespace components::ql {
     }
 
     inline std::string to_string(const expr_ptr &expr) {
-        if (expr->condition_ == condition_type::novalid && expr->sub_conditions_.size() == 1) {
-            return to_string(expr->sub_conditions_.at(0));
-        } else if (expr->is_union()) {
-            std::string result = "{\"" + to_string(expr->condition_) + "\": [";
+        if (expr->is_union()) {
+            std::string result = "{\"" + to_string(expr->type_) + "\": [";
             for (std::size_t i = 0; i < expr->sub_conditions_.size(); ++ i) {
                 if (i > 0) {
                     result += ", ";
@@ -128,7 +126,7 @@ namespace components::ql {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_ + "\": {\"" + to_string(expr->condition_) + "\": " + expr->field_.to_string() + "}}";
+        return "{\"" + expr->key_ + "\": {\"" + to_string(expr->type_) + "\": " + expr->field_.to_string() + "}}";
     }
 
 } // namespace components::ql

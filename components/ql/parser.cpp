@@ -13,7 +13,7 @@ namespace components::ql {
     using document::document_t;
     using document::document_view_t;
 
-    condition_type get_condition_(const std::string& key) {
+    condition_type get_condition_type_(const std::string& key) {
         if (key == "$eq")
             return condition_type::eq;
         if (key == "$ne")
@@ -62,9 +62,9 @@ namespace components::ql {
 
     void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word) {
         auto real_key = prev_key;
-        auto type = get_condition_(key_word);
+        auto type = get_condition_type_(key_word);
         if (type == condition_type::novalid) {
-            type = get_condition_(prev_key);
+            type = get_condition_type_(prev_key);
             if (type != condition_type::novalid) {
                 real_key = key_word;
             }
@@ -85,10 +85,17 @@ namespace components::ql {
     void parse_find_condition_dict_(expr_t* parent_condition, const dict_t* condition, const std::string& prev_key) {
         for (auto it = condition->begin(); it; ++it) {
             auto key = std::string(it.key()->as_string());
+            auto type = get_condition_type_(key);
+            auto union_condition = parent_condition;
+            if (is_union_condition(type)) {
+                parent_condition->append_sub_condition(make_union_expr());
+                union_condition = parent_condition->sub_conditions_.at(parent_condition->sub_conditions_.size() - 1).get();
+                union_condition->type_ = type;
+            }
             if (prev_key.empty()) {
-                parse_find_condition_(parent_condition, it.value(), key, std::string());
+                parse_find_condition_(union_condition, it.value(), key, std::string());
             } else {
-                parse_find_condition_(parent_condition, it.value(), prev_key, key);
+                parse_find_condition_(union_condition, it.value(), prev_key, key);
             }
         }
     }
@@ -103,9 +110,12 @@ namespace components::ql {
         auto res_condition = make_union_expr();
         for (auto it = condition->begin(); it; ++it) {
             if (condition->count() == 1) {
-                res_condition->condition_ = get_condition_(it.key_string().as_string());
+                res_condition->type_ = get_condition_type_(it.key_string().as_string());
             }
             parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
+        }
+        if (res_condition->sub_conditions_.size() == 1) {
+            return std::move(res_condition->sub_conditions_[0]);
         }
         return res_condition;
     }

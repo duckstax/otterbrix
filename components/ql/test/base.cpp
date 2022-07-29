@@ -14,7 +14,7 @@ TEST_CASE("ql::expr") {
     REQUIRE(to_string(expr) == R"({"key2": {"$eq": "value"}})");
 
     expr = make_union_expr();
-    expr->condition_ = condition_type::union_and;
+    expr->type_ = condition_type::union_and;
     expr->append_sub_condition(make_expr(condition_type::eq, "key1", int64_t(100)));
     expr->append_sub_condition(make_expr(condition_type::eq, "key2", std::string("value")));
     REQUIRE(to_string(expr) == R"({"$and": [{"key1": {"$eq": 100}}, {"key2": {"$eq": "value"}}]})");
@@ -34,6 +34,11 @@ TEST_CASE("ql::parser") {
     value = R"({"$or": [{"count": {"$gt": 10}}, {"$and": [{"count": {"$lte": 50}}, {"value": {"$gt": 3}}]}]})";
     d = components::document::document_from_json(value);
     condition = parse_find_condition(d);
-    std::cerr << to_string(condition) << std::endl;
-    //REQUIRE(to_string(condition) == value);
+    REQUIRE(to_string(condition) == value);
+
+    value = R"({"$or": [{"count": {"$gt": 10}}, {"$and": [{"count": {"$lte": 50}}, {"value": {"$gt": 3}}, )"
+            R"({"$or": [{"count": {"$gt": 10}}, {"$and": [{"count": {"$lte": 50}}, {"value": {"$gt": 3}}]}]}]}]})";
+    d = components::document::document_from_json(value);
+    condition = parse_find_condition(d);
+    REQUIRE(to_string(condition) == value);
 }
