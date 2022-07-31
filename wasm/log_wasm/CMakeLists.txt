@@ -13,3 +13,10 @@ target_link_options( ${PROJECT_NAME}  PRIVATE "SHELL:--no-entry -s STANDALONE_WA
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC "")
+
+set_target_properties( ${PROJECT_NAME}
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+        )

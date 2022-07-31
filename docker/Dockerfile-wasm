@@ -52,17 +52,13 @@ RUN source ./activate.sh  && \
     cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
     cmake --build .
 
-RUN pwd
-RUN ls wasm/log_quickjs_wasm
-RUN  mkdir -p /app/build/components/wasm_runner/log_quickjs_wasm/
-RUN cp -p  wasm/log_quickjs_wasm/log_quickjs_wasm.wasm  /app/build/components/wasm_runner/log_quickjs_wasm/log_quickjs_wasm.wasm
-RUN ls /app/build/components/wasm_runner/log_quickjs_wasm/
-
 WORKDIR /app/build
 
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build .
 
-RUN ctest -C
+RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
+
+RUN ctest -C --output-on-failure
 
 RUN cd apps/duck_charmer/ && pytest

@@ -9,7 +9,6 @@ crc32c/1.1.2
 abseil/20211102.0
 rocksdb/6.20.3
 benchmark/1.6.1
-flatbuffers/2.0.5
 
 actor-zeta/1.0.0a7@duckstax/stable
 
