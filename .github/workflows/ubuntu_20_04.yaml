@@ -45,7 +45,7 @@ jobs:
           
           mkdir wasm_build && cd wasm_build
           ls ..
-          cp ../conan .
+          cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
           conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
