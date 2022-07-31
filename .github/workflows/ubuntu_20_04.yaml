@@ -21,7 +21,7 @@ jobs:
         run: |
           sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && \
           curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
-          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | tee /etc/apt/sources.list.d/bazel.list && \
+          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
           sudo apt update && 
           sudo apt install -y bazel bazel-4.1.0 git 
 
