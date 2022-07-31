@@ -44,12 +44,19 @@ jobs:
           cd ..
           
           mkdir wasm_build && cd wasm_build
-          ls ..
           cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
           conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
           conan install emsdk/3.1.16@_/_ -g virtualenv  -s build_type=Release --build missing
+
+      - name: build wasm target
+        run: |
+          cd wasm_build
+          source ./activate.sh  && \
+          cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+          cmake --build . && \
+          source ./deactivate.sh
           
 
       - name: build
