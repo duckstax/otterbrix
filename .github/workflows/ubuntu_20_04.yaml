@@ -41,6 +41,8 @@ jobs:
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
           
+          cd ..
+          
           mkdir wasm_build && cd wasm_build
           cp ../conan .
           cp ../conanfile-wasm.txt .
