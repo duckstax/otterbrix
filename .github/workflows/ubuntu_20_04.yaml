@@ -67,8 +67,16 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel
 
+      - name: build
+        run: |
+          cp -r ./wasm_build/bin/*.wasm  build/components/wasm_runner/tests/
+
       - name: Test
-        run: cd build && ctest -C
+        run: |
+          cd build
+          ctest -C --output-on-failure
 
       - name: PyTest
-        run: cd build/apps/duck_charmer/ && pytest
+        run: |
+          cd build/apps/duck_charmer/
+          pytest
