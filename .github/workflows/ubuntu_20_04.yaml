@@ -19,15 +19,10 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          apt install -y \
-          build-essential \
-          ninja-build \
-          python3-pip \
-          python3-venv \
-          python3-dev curl gnupg apt-transport-https && \
-          curl -fsSL https://bazel.build/bazel-release.pub.gpg | apt-key add && \
+          apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && 
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | apt-key add && 
           echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | tee /etc/apt/sources.list.d/bazel.list && \
-          apt update && \
+          apt update && 
           apt install -y bazel bazel-4.1.0 git 
 
       - name: conan installation and configuration
