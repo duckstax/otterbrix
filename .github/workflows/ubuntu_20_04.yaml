@@ -67,7 +67,7 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel
 
-      - name: build
+      - name: copy wasm target form test
         run: |
           cp -r ./wasm_build/bin/*.wasm  build/components/wasm_runner/tests/
 
