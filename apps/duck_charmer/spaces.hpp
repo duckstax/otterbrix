@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11.h>
+#include <pybind11/pybind11.h>
 
 #include <components/log/log.hpp>
 #include <components/configuration/configuration.hpp>

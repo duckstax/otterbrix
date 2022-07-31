@@ -3,7 +3,6 @@
 #include <unordered_map>
 
 #include <absl/container/btree_map.h>
-#include <pybind11/pytypes.h>
 
 #include <components/protocol/base.hpp>
 #include <components/protocol/insert_many.hpp>

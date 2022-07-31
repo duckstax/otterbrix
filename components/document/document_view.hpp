@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 #include <msgpack.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document.hpp>
@@ -79,8 +81,8 @@ public:
     object_handle get(const std::string &key) const;
     object_handle get(uint32_t index) const;
     bool get_bool(std::string &&key) const;
-    ulong get_ulong(std::string &&key) const;
-    long get_long(std::string &&key) const;
+    uint32_t get_ulong(std::string &&key) const;
+    int32_t get_long(std::string &&key) const;
     float get_float(std::string &&key) const;
     double get_double(std::string &&key) const;
     std::string get_string(std::string &&key) const;

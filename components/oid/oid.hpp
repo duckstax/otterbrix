@@ -1,7 +1,10 @@
 #pragma once
-#include <string>
+
 #include <cstring>
 #include <ctime>
+#include <cstdint>
+
+#include <string>
 #include <algorithm>
 #include <functional>
 
@@ -14,10 +17,10 @@ namespace oid {
 
     template<class T>
     class oid_t {
-        static constexpr uint size = T::size_timestamp + T::size_random + T::size_increment;
-        static constexpr uint offset_timestamp = 0;
-        static constexpr uint offset_random = offset_timestamp + T::size_timestamp;
-        static constexpr uint offset_increment = offset_random + T::size_random;
+        static constexpr std::uint32_t size = T::size_timestamp + T::size_random + T::size_increment;
+        static constexpr std::uint32_t offset_timestamp = 0;
+        static constexpr std::uint32_t offset_random = offset_timestamp + T::size_timestamp;
+        static constexpr std::uint32_t offset_increment = offset_random + T::size_random;
 
     public:
         oid_t();
@@ -53,7 +56,7 @@ namespace oid {
 
         struct timestamp_generator {
             static void write(byte_t *data, timestamp_value_t value) {
-                for (uint i = 0; i < T::size_timestamp; ++i) {
+                for (auto i = 0; i < T::size_timestamp; ++i) {
                     data[T::size_timestamp - i - 1] = byte_t(value >> 8 * i);
                 }
             }
@@ -66,7 +69,7 @@ namespace oid {
         struct random_generator {
             static void write(byte_t *data) {
                 static random_generator generator;
-                for (uint i = 0; i < T::size_random; ++i) {
+                for (auto i = 0; i < T::size_random; ++i) {
                     data[T::size_random - i - 1] = byte_t(generator.value_ >> 8 * i);
                 }
             }
@@ -76,7 +79,7 @@ namespace oid {
 
             random_generator() {
                 time_t t;
-                srandom(static_cast<uint>(std::time(&t)));
+                srandom(static_cast<std::uint32_t>(std::time(&t)));
                 value_ = random();
             }
         };
@@ -85,7 +88,7 @@ namespace oid {
             static void write(byte_t *data) {
                 static increment_generator generator;
                 ++generator.value_;
-                for (uint i = 0; i < T::size_increment; ++i) {
+                for (auto i = 0; i < T::size_increment; ++i) {
                     data[T::size_increment - i - 1] = byte_t(generator.value_ >> 8 * i);
                 }
             }
@@ -173,7 +176,7 @@ namespace oid {
 
     template<class T>
     bool oid_t<T>::is_null() const {
-        for (uint i = 0; i < size; ++i) {
+        for (auto i = 0; i < size; ++i) {
             if (data_[i] > 0) {
                 return false;
             }
@@ -189,7 +192,7 @@ namespace oid {
     template<class T>
     std::string oid_t<T>::to_string() const {
         char str[2 * size];
-        for (uint i = 0; i < size; ++i) {
+        for (auto i = 0; i < size; ++i) {
             str[2 * i] = to_char_(data_[i] / 0x10);
             str[2 * i + 1] = to_char_(data_[i] % 0x10);
         }
@@ -199,7 +202,7 @@ namespace oid {
     template<class T>
     timestamp_value_t oid_t<T>::get_timestamp() const {
         timestamp_value_t value = 0;
-        for (uint i = 0; i < T::size_timestamp; ++i) {
+        for (auto i = 0; i < T::size_timestamp; ++i) {
             value = (value << 8) + static_cast<timestamp_value_t>(*(data() + offset_timestamp + i));
         }
         return value;
@@ -242,7 +245,7 @@ namespace oid {
     template<class T>
     void oid_t<T>::init(const std::string& str) {
         if (is_valid(str)) {
-            for (uint i = 0; i < size; ++i) {
+            for (auto i = 0; i < size; ++i) {
                 data_[i] = from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]);
             }
         } else {

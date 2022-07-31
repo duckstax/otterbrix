@@ -83,5 +83,5 @@ target_include_directories(
 )
 
 if (DEV_MODE)
-    add_subdirectory(test)
+  add_subdirectory(test)
 endif()

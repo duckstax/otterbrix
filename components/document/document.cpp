@@ -1,4 +1,7 @@
 #include "document.hpp"
+
+#include <components/document/mutable/value_slot.hpp>
+#include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/core/doc.hpp>
@@ -37,8 +40,8 @@ namespace components::document {
         msgpack::pack(data, get_msgpack_object(value));
 
         index->append(get_msgpack_type(value));
-        index->append(offset);
-        index->append(data.size() - offset);
+        index->append(static_cast<uint64_t>(offset));
+        index->append(static_cast<uint64_t>(data.size() - offset));
         if (version) {
             index->append(version);
         }
@@ -177,8 +180,8 @@ namespace components::document {
                         mod_index = index_field->as_array()->as_mutable();
                         auto new_offset = data.size();
                         msgpack::pack(data, new_value);
-                        structure::set_attribute(mod_index, structure::attribute::offset, new_offset);
-                        structure::set_attribute(mod_index, structure::attribute::size, data.size() - new_offset);
+                        structure::set_attribute(mod_index, structure::attribute::offset, static_cast<uint64_t>(new_offset));
+                        structure::set_attribute(mod_index, structure::attribute::size, static_cast<uint64_t>(data.size() - new_offset));
                     } else {
                         append_field_(structure, data, key_field, it_field.value());
                     }

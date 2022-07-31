@@ -29,8 +29,8 @@ public:
 
     void set(null_value_t);
     void set(bool b);
-    void set(int i);
-    void set(unsigned i);
+    void set(int32_t i);
+    void set(uint32_t i);
     void set(int64_t i);
     void set(uint64_t i);
     void set(float f);
