@@ -44,6 +44,7 @@ jobs:
           cd ..
           
           mkdir wasm_build && cd wasm_build
+          ls ..
           cp ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
