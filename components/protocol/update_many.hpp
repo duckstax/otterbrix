@@ -3,8 +3,11 @@
 #include <boost/beast/core/span.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/serialize/serialize.hpp>
+#include <msgpack.hpp>
+#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
+
 namespace components::ql {
     struct update_many_t : ql_statement_t {
         update_many_t(const database_name_t& database, const collection_name_t& collection, components::document::document_ptr condition,

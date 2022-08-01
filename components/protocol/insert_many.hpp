@@ -4,6 +4,8 @@
 #include "components/ql/ql_statement.hpp"
 #include "components/serialize/serialize.hpp"
 #include <boost/beast/core/span.hpp>
+#include <msgpack.hpp>
+#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 
 namespace components::ql {

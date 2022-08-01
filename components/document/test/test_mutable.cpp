@@ -1,8 +1,5 @@
 #include <catch2/catch.hpp>
-<<<<<<< HEAD
 
-=======
->>>>>>> fbb3c1b0f51a889e7493bfccdf48ebc13479cea9
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/core/slice.hpp>

@@ -4,6 +4,8 @@
 #include <boost/beast/core/span.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/serialize/serialize.hpp>
+#include <msgpack.hpp>
+#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 
 namespace components::ql {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <msgpack.hpp>
+#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
 

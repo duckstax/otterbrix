@@ -1,5 +1,7 @@
 #pragma once
 
+#include <msgpack.hpp>
+#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
 
@@ -24,15 +26,15 @@ namespace msgpack {
 
             template<>
             struct convert<components::ql::create_collection_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::protocol::create_collection_t& v) const {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::create_collection_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
                     if (o.via.array.size != 2) {
                         throw msgpack::type_error();
                     }
-                    v.database_ = o.via.array.ptr[0].as<database_name_t>();
-                    v.collection_ = o.via.array.ptr[1].as<database_name_t>();
+                    v.database_ = o.via.array.ptr[0].as<components::ql::database_name_t>();
+                    v.collection_ = o.via.array.ptr[1].as<components::ql::database_name_t>();
                     return o;
                 }
             };
@@ -40,7 +42,7 @@ namespace msgpack {
             template<>
             struct pack<components::ql::create_collection_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::protocol::create_collection_t const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::create_collection_t const& v) const {
                     o.pack_array(2);
                     o.pack(v.database_);
                     o.pack(v.collection_);
