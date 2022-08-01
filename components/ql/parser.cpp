@@ -1,12 +1,11 @@
 #include "parser.hpp"
 #include "document/core/dict.hpp"
-#include "find.hpp"
+#include <iostream> //todo: delete
 
-using ::document::impl::array_t;
 using ::document::impl::value_t;
 using ::document::impl::value_type;
+using ::document::impl::array_t;
 using ::document::impl::dict_t;
-using ::document::impl::value_t;
 
 namespace components::ql {
 
@@ -14,7 +13,7 @@ namespace components::ql {
     using document::document_t;
     using document::document_view_t;
 
-    condition_type get_condition_(const std::string& key) {
+    condition_type get_condition_type_(const std::string& key) {
         if (key == "$eq")
             return condition_type::eq;
         if (key == "$ne")
@@ -42,152 +41,91 @@ namespace components::ql {
         return condition_type::novalid;
     }
 
-    void parse_find_condition_(condition_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word);
-    void parse_find_condition_dict_(condition_t* parent_condition, const dict_t* condition, const std::string& prev_key);
-    void parse_find_condition_array_(condition_t* parent_condition, const array_t* condition, const std::string& prev_key);
+    field_t smart_cast(const value_t* value) {
+        if (value->type() == value_type::boolean) {
+            return field_t(value->as_bool());
+        } else if (value->is_unsigned()) {
+            return field_t(value->as_unsigned());
+        } else if (value->is_int()) {
+            return field_t(value->as_int());
+        } else if (value->is_double()) {
+            return field_t(value->as_double());
+        } else if (value->type() == value_type::string) {
+            return field_t(std::string(value->as_string()));
+        }
+        return field_t();
+    }
 
-    void parse_find_condition_(condition_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word) {
+    void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word);
+    void parse_find_condition_dict_(expr_t* parent_condition, const dict_t* condition, const std::string& prev_key);
+    void parse_find_condition_array_(expr_t* parent_condition, const array_t* condition, const std::string& prev_key);
+
+    void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word) {
         auto real_key = prev_key;
-        auto type = get_condition_(key_word);
+        auto type = get_condition_type_(key_word);
         if (type == condition_type::novalid) {
-            type = get_condition_(prev_key);
+            type = get_condition_type_(prev_key);
             if (type != condition_type::novalid) {
                 real_key = key_word;
             }
         }
-        auto subcondition = make_find_condition(type, real_key, condition);
-        if (subcondition) {
-            if (subcondition->is_union()) {
-                parse_find_condition_(static_cast<condition_t*>(subcondition.get()), condition, real_key, std::string());
-            }
-            parent_condition->add(std::move(subcondition));
+        if (condition->type() == value_type::dict) {
+            parse_find_condition_dict_(parent_condition, condition->as_dict(), real_key);
+        } else if (condition->type() == value_type::array) {
+            parse_find_condition_array_(parent_condition, condition->as_array(), real_key);
         } else {
-            if (condition->type() == value_type::dict) {
-                parse_find_condition_dict_(parent_condition, condition->as_dict(), real_key);
-            } else if (condition->type() == value_type::array) {
-                parse_find_condition_array_(parent_condition, condition->as_array(), real_key);
+            auto sub_condition = make_expr(type, real_key, smart_cast(condition));
+            if (sub_condition->is_union()) {
+                parse_find_condition_(sub_condition.get(), condition, real_key, std::string());
             }
+            parent_condition->append_sub_condition(std::move(sub_condition));
         }
     }
 
-    void parse_find_condition_dict_(condition_t* parent_condition, const dict_t* condition, const std::string& prev_key) {
+    void parse_find_condition_dict_(expr_t* parent_condition, const dict_t* condition, const std::string& prev_key) {
         for (auto it = condition->begin(); it; ++it) {
             auto key = std::string(it.key()->as_string());
+            auto type = get_condition_type_(key);
+            auto union_condition = parent_condition;
+            if (is_union_condition(type)) {
+                parent_condition->append_sub_condition(make_union_expr());
+                union_condition = parent_condition->sub_conditions_.at(parent_condition->sub_conditions_.size() - 1).get();
+                union_condition->type_ = type;
+            }
             if (prev_key.empty()) {
-                parse_find_condition_(parent_condition, it.value(), key, std::string());
+                parse_find_condition_(union_condition, it.value(), key, std::string());
             } else {
-                parse_find_condition_(parent_condition, it.value(), prev_key, key);
+                parse_find_condition_(union_condition, it.value(), prev_key, key);
             }
         }
     }
 
-    void parse_find_condition_array_(condition_t* parent_condition, const array_t* condition, const std::string& prev_key) {
+    void parse_find_condition_array_(expr_t* parent_condition, const array_t* condition, const std::string& prev_key) {
         for (auto it = condition->begin(); it; ++it) {
             parse_find_condition_(parent_condition, it.value(), prev_key, std::string());
         }
     }
 
-    condition_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t>& condition) {
-        auto res_condition = make_condition<condition_t>();
+    expr_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t>& condition) {
+        auto res_condition = make_union_expr();
         for (auto it = condition->begin(); it; ++it) {
+            if (condition->count() == 1) {
+                res_condition->type_ = get_condition_type_(it.key_string().as_string());
+            }
             parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
+        }
+        if (res_condition->sub_conditions_.size() == 1) {
+            return std::move(res_condition->sub_conditions_[0]);
         }
         return res_condition;
     }
 
-    condition_ptr parse_find_condition(const document_view_t& condition) {
+    expr_ptr parse_find_condition(const document_view_t& condition) {
         return parse_find_condition_(condition.to_dict());
     }
 
-    condition_ptr parse_find_condition(const document_ptr& condition) {
+    expr_ptr parse_find_condition(const document_ptr& condition) {
         return parse_find_condition(document_view_t(condition));
-    }
-
-    void smart_cast(const value_t* value, Field& field) {
-        if (value->() == value_type::boolean) {
-            field(value->as_bool());
-            return;
-        }
-
-        if (value->is_unsigned()) {
-            field(value->as_unsigned());
-            return;
-        }
-
-        if (value->is_int()) {
-            field(value->as_int());
-            return;
-        }
-
-        if (value->is_double()) {
-            field(value->as_double());
-            return;
-        }
-
-        if (value->type() == value_type::string) {
-            field(value->as_string());
-            return;
-        }
-    }
-
-    expr_ptr make_find_condition(condition_type type, const std::string& key, const value_t* value) {
-        expr_ptr condition = nullptr;
-        Field field;
-        smart_cast(value, field);
-        switch (type) {
-            case condition_type::novalid:
-                if (key.empty()) {
-                    return nullptr;
-                }
-                //condition = MAKE_FIND_CONDITION(expr_ptr, key, smart_cast);
-                break;
-            case condition_type::eq:
-                condition = make_expr_eq(key, field);
-                break;
-            case condition_type::ne:
-                condition = make_expr_ne(key, field);
-                break;
-            case condition_type::gt:
-                condition = make_expr_gt(key, field);
-                break;
-            case condition_type::lt:
-                condition = make_expr_lt(key, field);
-                break;
-            case condition_type::gte:
-                condition = make_expr_gte(key, field);
-                break;
-            case condition_type::lte:
-                condition = make_expr_lte(key, field);
-                break;
-            case condition_type::regex:
-                return make_expr_regex(key, field);
-                break;
-            case condition_type::any:
-                condition = value->type() == value_type::array
-                                ? MAKE_FIND_CONDITION(expr_ptr, key, value->as_array()->get(0))
-                                : MAKE_FIND_CONDITION(expr_ptr, key, value);
-                break;
-            case condition_type::all:
-                condition = value->type() == value_type::array
-                                ? MAKE_FIND_CONDITION(expr_ptr, key, value->as_array()->get(0))
-                                : MAKE_FIND_CONDITION(expr_ptr, key, value);
-                break;
-            case condition_type::union_and:
-                return make_expr_union_or();
-                break;
-            case condition_type::union_or:
-                return make_expr_union_or();
-                break;
-            case condition_type::union_not:
-                return make_expr_union_not();
-                break;
-            default:
-                return nullptr;
-        }
-        ///   if (condition) {
-        condition->set_value(value);
-        ///    }
-        return condition;
     }
 
 } // namespace components::ql

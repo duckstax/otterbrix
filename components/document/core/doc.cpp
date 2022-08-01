@@ -11,7 +11,6 @@
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/better_assert.hpp>
-
 #include <boost/container/small_vector.hpp>
 
 namespace document::impl {

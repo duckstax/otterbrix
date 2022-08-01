@@ -1,15 +1,10 @@
 #include "find.hpp"
 
-using ::document::impl::array_t;
-using ::document::impl::value_t;
-using ::document::impl::value_type;
-
 namespace components::ql {
 
-    find_statement::find_statement(database_name_t& database, collection_name_t& collection)
-        : ql_statement_t(statement_type::find,database,collection){}
-
-    find_one_statement::find_one_statement(database_name_t& database, collection_name_t& collection)
-        : ql_statement_t(statement_type::find_one,database,collection){}
+    find_statement::find_statement(database_name_t database, collection_name_t collection, expr_ptr &&condition, bool is_find_one)
+        : ql_statement_t(is_find_one ? statement_type::find_one : statement_type::find, std::move(database), std::move(collection))
+        , condition_(std::move(condition))
+    {}
 
 } // namespace components::ql
