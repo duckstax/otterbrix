@@ -33,7 +33,6 @@ public:
     static heap_value_t* create(float f);
     static heap_value_t* create(double d);
     static heap_value_t* create(slice_t s);
-    static heap_value_t* create_data(slice_t s);
     static heap_value_t* create(const value_t *v);
 
     static const value_t* as_value(heap_value_t *v) PURE;

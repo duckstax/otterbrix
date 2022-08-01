@@ -1,9 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include <components/document/core/array.hpp>
 #include <components/document/mutable/value_slot.hpp>
 #include <components/document/support/better_assert.hpp>
-#include <vector>
 
 namespace document { namespace impl {
 class mutable_array_t;

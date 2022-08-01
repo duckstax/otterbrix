@@ -14,16 +14,16 @@
 namespace components::protocol {
 
     using variant_statement_t = std::variant<
-        components::protocol::create_database_t,
-        components::protocol::drop_database_t,
-        components::protocol::create_collection_t,
-        components::protocol::drop_collection_t,
-        insert_one_t,
-        insert_many_t,
-        delete_one_t,
-        delete_many_t,
-        update_one_t,
-        update_many_t
+        components::ql::create_database_t,
+        components::ql::drop_database_t,
+        components::ql::create_collection_t,
+        components::ql::drop_collection_t,
+        components::ql::insert_one_t,
+        components::ql::insert_many_t,
+        components::ql::delete_one_t,
+        components::ql::delete_many_t,
+        components::ql::update_one_t,
+        components::ql::update_many_t
         >;
 
 } //namespace components::protocol

@@ -1,10 +1,11 @@
 #include <catch2/catch.hpp>
+
+#include <climits>
+
 #include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
-#include <components/document/json/json_coder.hpp>
-#include <components/document/support/slice_io.hpp>
-#include <climits>
+#include <components/document/core/slice.hpp>
 
 using namespace document::impl;
 using document::retained_t;

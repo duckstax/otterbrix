@@ -3,7 +3,7 @@
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
 
-namespace components::protocol {
+namespace components::ql {
 
     struct drop_collection_t final : ql_statement_t {
         drop_collection_t(const database_name_t& database, const collection_name_t &collection);
@@ -23,24 +23,24 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<components::protocol::drop_collection_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::protocol::drop_collection_t& v) const {
+            struct convert<components::ql::drop_collection_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::drop_collection_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
                     if (o.via.array.size != 2) {
                         throw msgpack::type_error();
                     }
-                    v.database_ = o.via.array.ptr[0].as<database_name_t>();
-                    v.collection_ = o.via.array.ptr[1].as<database_name_t>();
+                    v.database_ = o.via.array.ptr[0].as<components::ql::database_name_t>();
+                    v.collection_ = o.via.array.ptr[1].as<components::ql::database_name_t>();
                     return o;
                 }
             };
 
             template<>
-            struct pack<components::protocol::drop_collection_t> final {
+            struct pack<components::ql::drop_collection_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::protocol::drop_collection_t const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::drop_collection_t const& v) const {
                     o.pack_array(2);
                     o.pack(v.database_);
                     o.pack(v.collection_);
@@ -49,8 +49,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<components::protocol::drop_collection_t> final {
-                void operator()(msgpack::object::with_zone& o, components::protocol::drop_collection_t const& v) const {
+            struct object_with_zone<components::ql::drop_collection_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::drop_collection_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));

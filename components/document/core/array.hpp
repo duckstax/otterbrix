@@ -75,12 +75,9 @@ namespace document::impl {
         array_iterator_t() = default;
 
     private:
-        const value_t* raw_value() noexcept { return _first; }
-
         const value_t* _value;
 
         friend class value_t;
-        friend class value_dumper_t;
     };
 
     inline array_iterator_t array_t::begin() const noexcept { return iterator(this); }

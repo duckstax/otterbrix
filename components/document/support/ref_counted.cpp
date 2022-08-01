@@ -1,7 +1,10 @@
 #include "ref_counted.hpp"
+
 #include <stdexcept>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+
+#include <string>
 
 #ifdef _MSC_VER
 #include "asprintf.h"

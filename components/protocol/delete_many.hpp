@@ -1,21 +1,24 @@
 #pragma once
 
+#include "components/ql/ql_statement.hpp"
 #include <boost/beast/core/span.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/serialize/serialize.hpp>
 #include <msgpack/adaptor/list.hpp>
-#include "components/ql/ql_statement.hpp"
 
-struct delete_many_t : ql_statement_t {
-    delete_many_t(const database_name_t &database, const collection_name_t &collection, components::document::document_ptr condition);
-    delete_many_t() = default;
-    delete_many_t(const delete_many_t&) = default;
-    delete_many_t& operator=(const delete_many_t&) = default;
-    delete_many_t(delete_many_t&&) = default;
-    delete_many_t& operator=(delete_many_t&&) = default;
-    ~delete_many_t();
-    components::document::document_ptr condition_;
-};
+namespace components::ql {
+
+    struct delete_many_t : ql_statement_t {
+        delete_many_t(const database_name_t& database, const collection_name_t& collection, components::document::document_ptr condition);
+        delete_many_t() = default;
+        delete_many_t(const delete_many_t&) = default;
+        delete_many_t& operator=(const delete_many_t&) = default;
+        delete_many_t(delete_many_t&&) = default;
+        delete_many_t& operator=(delete_many_t&&) = default;
+        ~delete_many_t();
+        components::document::document_ptr condition_;
+    };
+} // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
@@ -23,8 +26,8 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<delete_many_t> final {
-                msgpack::object const &operator()(msgpack::object const &o, delete_many_t &v) const {
+            struct convert<components::ql::delete_many_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::delete_many_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
@@ -36,15 +39,15 @@ namespace msgpack {
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
                     auto condition = o.via.array.ptr[2].as<components::document::document_ptr>();
-                    v = delete_many_t(database, collection, condition);
+                    v = components::ql::delete_many_t(database, collection, condition);
                     return o;
                 }
             };
 
             template<>
-            struct pack<delete_many_t> final {
+            struct pack<components::ql::delete_many_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream> &o, delete_many_t const &v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::delete_many_t const& v) const {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
@@ -54,8 +57,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<delete_many_t> final {
-                void operator()(msgpack::object::with_zone &o, delete_many_t const &v) const {
+            struct object_with_zone<components::ql::delete_many_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::delete_many_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 3;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
@@ -66,5 +69,5 @@ namespace msgpack {
             };
 
         } // namespace adaptor
-    } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack

@@ -1,10 +1,12 @@
 #include "document_view.hpp"
+
+#include <components/document/mutable/value_slot.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/doc.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/structure.hpp>
-#include <iostream>
+#include <sstream>
 
 using ::document::impl::value_type;
 
@@ -217,12 +219,12 @@ bool document_view_t::get_bool(std::string &&key) const {
     return get_as<bool>(std::move(key));
 }
 
-ulong document_view_t::get_ulong(std::string &&key) const {
-    return get_as<ulong>(std::move(key));
+uint32_t document_view_t::get_ulong(std::string &&key) const {
+    return get_as<uint32_t>(std::move(key));
 }
 
-long document_view_t::get_long(std::string &&key) const {
-    return get_as<long>(std::move(key));
+int32_t document_view_t::get_long(std::string &&key) const {
+    return get_as<int32_t>(std::move(key));
 }
 
 float document_view_t::get_float(std::string &&key) const {
@@ -283,8 +285,8 @@ compare_t document_view_t::compare(const document_view_t &other, const std::stri
     if (!is_exists(key) && other.is_exists(key))  return compare_t::more;
     if (!is_exists(key) && !other.is_exists(key)) return compare_t::equals;
     if (is_bool(key) && other.is_bool(key)) return equals_<bool>(*this, other, key);
-    if (is_ulong(key) && other.is_ulong(key)) return equals_<ulong>(*this, other, key);
-    if (is_long(key) && other.is_long(key)) return equals_<long>(*this, other, key);
+    if (is_ulong(key) && other.is_ulong(key)) return equals_<std::uint32_t>(*this, other, key);
+    if (is_long(key) && other.is_long(key)) return equals_<int32_t>(*this, other, key);
     if (is_float(key) && other.is_float(key)) return equals_<float>(*this, other, key);
     if (is_double(key) && other.is_double(key)) return equals_<double>(*this, other, key);
     if (is_string(key) && other.is_string(key)) return equals_<std::string>(*this, other, key);
@@ -298,9 +300,56 @@ std::string document_view_t::to_json() const {
 }
 
 ::document::retained_t<::document::impl::dict_t> document_view_t::to_dict() const {
-    //todo erase serialize to json
-    auto doc = ::document::impl::doc_t::from_json(to_json());
-    return ::document::impl::mutable_dict_t::new_dict(doc->root()->as_dict());
+    auto dict = ::document::impl::mutable_dict_t::new_dict();
+    for (auto it = begin(); it; ++it) {
+        auto key = it.key_string().as_string();
+        if (is_null(key)) {
+            dict->set(key, ::document::impl::value_t::null_value);
+        } else if (is_bool(key)) {
+            dict->set(key, get_as<bool>(key));
+        } else if (is_ulong(key)) {
+            dict->set(key, get_as<uint32_t>(key));
+        } else if (is_long(key)) {
+            dict->set(key, get_as<int32_t>(key));
+        } else if (is_float(key)) {
+            dict->set(key, get_as<float>(key));
+        } else if (is_double(key)) {
+            dict->set(key, get_as<double>(key));
+        } else if (is_string(key)) {
+            dict->set(key, get_as<std::string>(key));
+        } else if (is_array(key)) {
+            dict->set(key, get_array(key).to_array());
+        } else if (is_dict(key)) {
+            dict->set(key, get_dict(key).to_dict());
+        }
+    }
+    return dict;
+}
+
+::document::retained_t<::document::impl::array_t> document_view_t::to_array() const {
+    auto array = ::document::impl::mutable_array_t::new_array();
+    for (uint32_t index = 0; index < count(); ++index) {
+        if (is_null(index)) {
+            array->append(::document::impl::value_t::null_value);
+        } else if (is_bool(index)) {
+            array->append(get_as<bool>(index));
+        } else if (is_ulong(index)) {
+            array->append(get_as<uint32_t>(index));
+        } else if (is_long(index)) {
+            array->append(get_as<int32_t>(index));
+        } else if (is_float(index)) {
+            array->append(get_as<float>(index));
+        } else if (is_double(index)) {
+            array->append(get_as<double>(index));
+        } else if (is_string(index)) {
+            array->append(get_as<std::string>(index));
+        } else if (is_array(index)) {
+            array->append(get_array(index).to_array());
+        } else if (is_dict(index)) {
+            array->append(get_dict(index).to_dict());
+        }
+    }
+    return array;
 }
 
 document_view_t::document_view_t(document_view_t::array_t array, document_view_t::storage_t storage)

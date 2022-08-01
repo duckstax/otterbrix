@@ -3,7 +3,7 @@
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
 
-namespace components::protocol {
+namespace components::ql {
 
     struct create_collection_t final : ql_statement_t {
         create_collection_t(const database_name_t& database, const collection_name_t &collection);
@@ -23,7 +23,7 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<components::protocol::create_collection_t> final {
+            struct convert<components::ql::create_collection_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::protocol::create_collection_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
@@ -38,7 +38,7 @@ namespace msgpack {
             };
 
             template<>
-            struct pack<components::protocol::create_collection_t> final {
+            struct pack<components::ql::create_collection_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::protocol::create_collection_t const& v) const {
                     o.pack_array(2);
@@ -49,8 +49,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<components::protocol::create_collection_t> final {
-                void operator()(msgpack::object::with_zone& o, components::protocol::create_collection_t const& v) const {
+            struct object_with_zone<components::ql::create_collection_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::create_collection_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));

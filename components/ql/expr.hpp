@@ -5,7 +5,7 @@
 #include <variant>
 #include <vector>
 
-#include <components/field/field.hpp>
+#include <core/field/field.hpp>
 
 namespace components::ql {
 

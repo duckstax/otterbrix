@@ -5,21 +5,22 @@
 #include <components/serialize/serialize.hpp>
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
+namespace components::ql {
+    struct update_many_t : ql_statement_t {
+        update_many_t(const database_name_t& database, const collection_name_t& collection, components::document::document_ptr condition,
+                      components::document::document_ptr update, bool upsert);
+        update_many_t() = default;
+        update_many_t(const update_many_t&) = default;
+        update_many_t& operator=(const update_many_t&) = default;
+        update_many_t(update_many_t&&) = default;
+        update_many_t& operator=(update_many_t&&) = default;
+        ~update_many_t();
 
-struct update_many_t : ql_statement_t {
-    update_many_t(const database_name_t &database, const collection_name_t &collection, components::document::document_ptr condition,
-                 components::document::document_ptr update, bool upsert);
-    update_many_t() = default;
-    update_many_t(const update_many_t&) = default;
-    update_many_t& operator=(const update_many_t&) = default;
-    update_many_t(update_many_t&&) = default;
-    update_many_t& operator=(update_many_t&&) = default;
-    ~update_many_t();
-
-    components::document::document_ptr condition_;
-    components::document::document_ptr update_;
-    bool upsert_ {false};
-};
+        components::document::document_ptr condition_;
+        components::document::document_ptr update_;
+        bool upsert_{false};
+    };
+}
 
 // User defined class template specialization
 namespace msgpack {
@@ -27,8 +28,8 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<update_many_t> final {
-                msgpack::object const &operator()(msgpack::object const &o, update_many_t &v) const {
+            struct convert<components::ql::update_many_t> final {
+                msgpack::object const &operator()(msgpack::object const &o, components::ql::update_many_t &v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
@@ -42,15 +43,15 @@ namespace msgpack {
                     auto condition = o.via.array.ptr[2].as<components::document::document_ptr>();
                     auto update = o.via.array.ptr[3].as<components::document::document_ptr>();
                     auto upsert = o.via.array.ptr[4].as<bool>();
-                    v = update_many_t(database, collection, condition, update, upsert);
+                    v = components::ql::update_many_t(database, collection, condition, update, upsert);
                     return o;
                 }
             };
 
             template<>
-            struct pack<update_many_t> final {
+            struct pack<components::ql::update_many_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream> &o, update_many_t const &v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream> &o, components::ql::update_many_t const &v) const {
                     o.pack_array(5);
                     o.pack(v.database_);
                     o.pack(v.collection_);
@@ -62,8 +63,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<update_many_t> final {
-                void operator()(msgpack::object::with_zone &o, update_many_t const &v) const {
+            struct object_with_zone<components::ql::update_many_t> final {
+                void operator()(msgpack::object::with_zone &o, components::ql::update_many_t const &v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 5;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));

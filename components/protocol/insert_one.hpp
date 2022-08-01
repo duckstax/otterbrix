@@ -6,16 +6,18 @@
 #include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
 
-struct insert_one_t : ql_statement_t {
-    insert_one_t(const database_name_t &database, const collection_name_t &collection, components::document::document_ptr document);
-    insert_one_t() = default;
-    insert_one_t(const insert_one_t&) = default;
-    insert_one_t& operator=(const insert_one_t&) = default;
-    insert_one_t(insert_one_t&&) = default;
-    insert_one_t& operator=(insert_one_t&&) = default;
-    ~insert_one_t();
-    components::document::document_ptr document_;
-};
+namespace components::ql {
+    struct insert_one_t : ql_statement_t {
+        insert_one_t(const database_name_t& database, const collection_name_t& collection, components::document::document_ptr document);
+        insert_one_t() = default;
+        insert_one_t(const insert_one_t&) = default;
+        insert_one_t& operator=(const insert_one_t&) = default;
+        insert_one_t(insert_one_t&&) = default;
+        insert_one_t& operator=(insert_one_t&&) = default;
+        ~insert_one_t();
+        components::document::document_ptr document_;
+    };
+} // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
@@ -23,8 +25,8 @@ namespace msgpack {
         namespace adaptor {
 
             template<>
-            struct convert<insert_one_t> final {
-                msgpack::object const &operator()(msgpack::object const &o, insert_one_t &v) const {
+            struct convert<components::ql::insert_one_t> final {
+                msgpack::object const &operator()(msgpack::object const &o, components::ql::insert_one_t &v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
@@ -36,15 +38,15 @@ namespace msgpack {
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
                     auto document = o.via.array.ptr[2].as<components::document::document_ptr>();
-                    v = insert_one_t(database, collection, document);
+                    v = components::ql::insert_one_t(database, collection, document);
                     return o;
                 }
             };
 
             template<>
-            struct pack<insert_one_t> final {
+            struct pack<components::ql::insert_one_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream> &o, insert_one_t const &v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream> &o, components::ql::insert_one_t const &v) const {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
@@ -54,8 +56,8 @@ namespace msgpack {
             };
 
             template<>
-            struct object_with_zone<insert_one_t> final {
-                void operator()(msgpack::object::with_zone &o, insert_one_t const &v) const {
+            struct object_with_zone<components::ql::insert_one_t> final {
+                void operator()(msgpack::object::with_zone &o, components::ql::insert_one_t const &v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 3;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));

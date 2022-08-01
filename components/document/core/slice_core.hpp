@@ -44,8 +44,6 @@ private:
 };
 
 
-#define slice_null_c ((slice_t_c) {NULL, 0})
-
 bool is_equal_slice_c(slice_t_c a, slice_t_c b) noexcept PURE;
 int compare_slice_c(slice_t_c, slice_t_c) noexcept PURE;
 uint32_t hash_slice_c(slice_t_c s) noexcept PURE;

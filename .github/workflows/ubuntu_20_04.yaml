@@ -19,9 +19,11 @@ jobs:
 
       - name: Install system dependencies
         run: |
-            sudo apt-get update \
-            && sudo apt-get install -y \
-            python3-pip python3-dev
+          sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && \
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
+          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
+          sudo apt update && 
+          sudo apt install -y bazel bazel-4.1.0 git 
 
       - name: conan installation and configuration
         run: |
@@ -29,23 +31,33 @@ jobs:
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan profile new emscripten-module
-          conan profile update settings.compiler=clang emscripten-module
-          conan profile update settings.compiler.version=15 emscripten-module
-          conan profile update settings.compiler.libcxx=libc++ emscripten-module
-          conan profile update settings.arch=wasm emscripten-module
-          conan profile update settings.os=Emscripten emscripten-module
-          echo -e 'LDFLAGS=--no-entry -s STANDALONE_WASM -s PURE_WASI=1 -s ABORTING_MALLOC=0 -s EXPORTED_FUNCTIONS=['_malloc'] -s ERROR_ON_UNDEFINED_SYMBOLS=0\n[tool_requires]\nemsdk/3.1.7' >> "${HOME}/.conan/profiles/emscripten-module"
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com:9300
-          conan remote list
 
       - name: download dependencies
         run: |
           mkdir build && cd build
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
+          
+          cd ..
+          
+          mkdir wasm_build && cd wasm_build
+          cp -r ../conan .
+          cp ../conanfile-wasm.txt .
+          conan config install conan
+          conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
+          conan install emsdk/3.1.16@_/_ -g virtualenv  -s build_type=Release --build missing
+
+      - name: build wasm target
+        run: |
+          cd wasm_build
+          source ./activate.sh  && \
+          cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+          cmake --build . && \
+          source ./deactivate.sh
+          
 
       - name: build
         env:
@@ -55,8 +67,16 @@ jobs:
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
           cmake --build . --parallel
 
+      - name: copy wasm target form test
+        run: |
+          cp -r ./wasm_build/bin/*.wasm  build/components/wasm_runner/tests/
+
       - name: Test
-        run: cd build && ctest -C
+        run: |
+          cd build
+          ctest -C --output-on-failure
 
       - name: PyTest
-        run: cd build/apps/duck_charmer/ && pytest
+        run: |
+          cd build/apps/duck_charmer/
+          pytest

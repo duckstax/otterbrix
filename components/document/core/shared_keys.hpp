@@ -10,7 +10,7 @@
 
 namespace document::impl {
 
-    class value_t;
+class value_t;
 
 class key_t {
 public:
@@ -46,16 +46,9 @@ public:
     virtual bool load_from(slice_t state_data);
     virtual bool load_from(const value_t *state);
 
-
-    void set_max_key_length(size_t m);
-
     size_t count() const PURE;
     bool encode(slice_t string, int &key) const;
     bool encode_and_add(slice_t string, int &key);
-
-    inline bool could_add(slice_t str) const PURE {
-        return count() < max_count && str.size <= _max_key_length && is_eligible_to_encode(str);
-    }
 
     slice_t decode(int key) const;
 
@@ -65,15 +58,11 @@ public:
 
     virtual bool refresh();
 
-    void set_platform_string_for_key(int key, platform_string_t) const;
-    platform_string_t platform_string_for_key(int key) const;
-
 protected:
     ~shared_keys_t() override;
     virtual bool is_eligible_to_encode(slice_t str) const PURE;
 
 private:
-
     bool _add(slice_t string, int &key);
     bool _is_unknown_key(int key) const PURE;
     slice_t decode_unknown(int key) const;

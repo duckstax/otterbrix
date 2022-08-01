@@ -1,11 +1,16 @@
 #include "num_conversion.hpp"
-#include <ctype.h>
-#include <locale.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <float.h>
+
+#include <cctype>
+#include <clocale>
+#include <cstdlib>
+#include <cstring>
+#include <cmath>
+#include <cfloat>
+
 #include <iomanip>
+#include <string>
+#include <sstream>
+
 #if !defined(_MSC_VER) && !defined(__GLIBC__)
 #include <xlocale.h>
 #endif
@@ -40,16 +45,16 @@ size_t count_digit_before_dot(Tfloat value) {
 
 template <class Tfloat, class Tuint, int significand_count, int digits_count>
 size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
-    if (!isfinite(value)) {
-        if (isinf(value)) {
-            if (signbit(value)) {
+    if (!std::isfinite(value)) {
+        if (std::isinf(value)) {
+            if (std::signbit(value)) {
                 return copy_str_if_fit(dst, capacity, "-inf");
             } else {
                 return copy_str_if_fit(dst, capacity, "inf");
             }
         } else {
             auto raw = convert_to_uint<Tfloat, Tuint>(value);
-            const char *sign = signbit(value) ? "-" : "";
+            const char *sign = std::signbit(value) ? "-" : "";
             const char *signaling = ((raw >> (significand_count - 1)) & 1) ? "" : "s";
             auto payload = raw & ((Tuint(1) << (significand_count - 2)) - 1);
             char buff[32];
@@ -63,7 +68,7 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
     }
 
     if (value == 0.0) {
-        if (signbit(value)) {
+        if (std::signbit(value)) {
             return copy_str_if_fit(dst, capacity, "-0.0");
         } else {
             return copy_str_if_fit(dst, capacity, "0.0");

@@ -210,6 +210,10 @@ namespace components::wasm_runner {
         return getOrCreateThreadLocalPlugin(wasm_, plugin_, wasm_clone_factory, plugin_factory);
     }
 
+    auto wasm_manager_t::copy_data(const std::string &key, const std::vector<uint8_t> &data) -> void {
+        wasm_->wasm()->vm_context()->setSharedData(key, std::string_view(reinterpret_cast<const char*>(data.data()), data.size()), 0);
+    }
+
     auto wasm_manager_t::create_plugin(string_view plugin_name, string_view plugin_id,
                                        string_view plugin_vm_id, string_view plugin_configuration,
                                        string_view plugin_key, string_view engine,
