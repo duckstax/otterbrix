@@ -23,3 +23,58 @@ namespace components::ql {
         index_type index_type_;
     };
 } // namespace components::ql
+
+// User defined class template specialization
+namespace msgpack {
+    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
+        namespace adaptor {
+
+            template<>
+            struct convert<components::ql::create_index_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::create_index_t& v) const {
+                    if (o.type != msgpack::type::ARRAY) {
+                        throw msgpack::type_error();
+                    }
+
+                    if (o.via.array.size != 4) {
+                        throw msgpack::type_error();
+                    }
+
+                    auto database = o.via.array.ptr[0].as<std::string>();
+                    auto collection = o.via.array.ptr[1].as<std::string>();
+                    auto type = static_cast<components::ql::index_type>(o.via.array.ptr[2].as<char>());
+                    v = components::ql::create_index_t(database, collection, type);
+                    v.keys_ = o.via.array.ptr[3].as<std::vector<std::string>>(); //todo
+                    return o;
+                }
+            };
+
+            template<>
+            struct pack<components::ql::create_index_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::create_index_t const& v) const {
+                    o.pack_array(4);
+                    o.pack(v.database_);
+                    o.pack(v.collection_);
+                    o.pack(static_cast<char>(v.index_type_));
+                    o.pack(v.keys_); //todo
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<components::ql::create_index_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::create_index_t const& v) const {
+                    o.type = type::ARRAY;
+                    o.via.array.size = 4;
+                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
+                    o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
+                    o.via.array.ptr[2] = msgpack::object(static_cast<char>(v.index_type_), o.zone);
+                    o.via.array.ptr[3] = msgpack::object(v.keys_, o.zone); //todo
+                }
+            };
+
+        } // namespace adaptor
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+} // namespace msgpack

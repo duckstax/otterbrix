@@ -29,12 +29,13 @@ public:
 
 private:
     actor_zeta::address_t address_;
-    std::variant<insert_one_t,
-                 insert_many_t,
-                 delete_one_t,
-                 delete_many_t,
-                 update_one_t,
-                 update_many_t>
+    std::variant<components::ql::insert_one_t,
+                 components::ql::insert_many_t,
+                 components::ql::delete_one_t,
+                 components::ql::delete_many_t,
+                 components::ql::update_one_t,
+                 components::ql::update_many_t,
+                 components::ql::create_index_t>
         data_;
     ///components::session::session_id_t session_;
 };

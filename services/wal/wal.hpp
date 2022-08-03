@@ -34,6 +34,7 @@ namespace services::wal {
         void delete_many(session_id_t& session, address_t& sender, delete_many_t& data);
         void update_one(session_id_t& session, address_t& sender, update_one_t& data);
         void update_many(session_id_t& session, address_t& sender, update_many_t& data);
+        void create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data);
         ~wal_replicate_t() override;
 
     private:

@@ -28,7 +28,7 @@ namespace services::collection {
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
-        add_handler(handler_id(route::create_index),&collection_t::create_index);
+        add_handler(handler_id(route::create_index), &collection_t::create_index);
     }
 
     void collection_t::create_documents(components::session::session_id_t &session, std::list<document_ptr> &documents) {

@@ -112,3 +112,11 @@ const result_update::document_id_t& result_update::upserted_id() const {
 bool result_update::empty() const {
     return modified_ids().empty() && upserted_id().is_null();
 }
+
+result_create_index::result_create_index(result_create_index::result_t success)
+    : success_(success) {
+}
+
+result_create_index::result_t result_create_index::is_success() const {
+    return success_;
+}

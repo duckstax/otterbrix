@@ -44,6 +44,7 @@ namespace services::wal {
         void delete_many(session_id_t& session, delete_many_t& data);
         void update_one(session_id_t& session, update_one_t& data);
         void update_many(session_id_t& session, update_many_t& data);
+        void create_index(session_id_t& session, components::ql::create_index_t& data);
 
         /// NOTE:  sync behold non thread-safety!
         void set_manager_disk(actor_zeta::address_t disk){

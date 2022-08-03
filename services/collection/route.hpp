@@ -28,6 +28,7 @@ namespace services::collection {
         update_finish,
         size_finish,
         drop_collection_finish,
+        create_index_finish,
     };
 
     constexpr uint64_t handler_id(route type) {

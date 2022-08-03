@@ -37,6 +37,7 @@ namespace services::wal {
         add_handler(handler_id(route::delete_many), &wal_replicate_t::delete_many);
         add_handler(handler_id(route::update_one), &wal_replicate_t::update_one);
         add_handler(handler_id(route::update_many), &wal_replicate_t::update_many);
+        add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
         if (config_.sync_to_disk) {
             if (!file_exist_(config_.path)) {
                 boost::filesystem::create_directory(config_.path);
@@ -165,6 +166,12 @@ namespace services::wal {
 
     void wal_replicate_t::update_many(session_id_t& session, address_t& sender, update_many_t& data) {
         trace(log_, "wal_replicate_t::update_many {}::{}, session: {}", data.database_, data.collection_, session.data());
+        write_data_(data);
+        send_success(session, sender);
+    }
+
+    void wal_replicate_t::create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data) {
+        trace(log_, "wal_replicate_t::create_index {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
