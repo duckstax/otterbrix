@@ -48,7 +48,7 @@ namespace services::collection {
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
-        void create_index(components::ql::create_index_t&);
+        void create_index(const session_id_t& session, components::ql::create_index_t& index);
 
     private:
         document_id_t insert_(const document_ptr&document);

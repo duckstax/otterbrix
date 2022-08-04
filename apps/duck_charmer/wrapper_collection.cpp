@@ -182,4 +182,16 @@ bool wrapper_collection::drop() {
     return result.is_success();
 }
 
+bool wrapper_collection::create_index(py::list keys, index_type type) {
+    debug(log_, "wrapper_collection::create_index: {}", name_);
+    auto session_tmp = duck_charmer::session_id_t();
+    components::ql::create_index_t index(database_, name_, type);
+    for (const auto &key : keys) {
+        index.keys_.emplace(key.cast<std::string>());
+    }
+    auto result = ptr_->create_index(session_tmp, index);
+    debug(log_, "wrapper_collection::create_index {}", result.is_success());
+    return result.is_success();
+}
+
 }

@@ -2,10 +2,10 @@
 
 #include <string>
 
-namespace components::ql {
+using database_name_t = std::string;
+using collection_name_t = std::string;
 
-    using database_name_t = std::string;
-    using collection_name_t = std::string;
+namespace components::ql {
 
     enum class statement_type : char {
         unused = 0x00, // unused

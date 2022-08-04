@@ -27,6 +27,8 @@ namespace services::wal {
         add_handler(handler_id(route::update_one), &manager_wal_replicate_t::update_one);
         add_handler(handler_id(route::update_many), &manager_wal_replicate_t::update_many);
         add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_t::sync);
+        add_handler(handler_id(route::update_many), &manager_wal_replicate_t::update_many);
+        add_handler(handler_id(route::create_index), &manager_wal_replicate_t::create_index);
         trace(log_, "manager_wal_replicate_t start thread pool");
     }
 
@@ -107,6 +109,11 @@ namespace services::wal {
     void manager_wal_replicate_t::update_many(session_id_t& session, update_many_t& data) {
         trace(log_, "manager_wal_replicate_t::update_many");
         actor_zeta::send(dispathers_[0], address(), handler_id(route::update_many), session, current_message()->sender(), std::move(data));
+    }
+
+    void manager_wal_replicate_t::create_index(session_id_t& session, components::ql::create_index_t& data) {
+        trace(log_, "manager_wal_replicate_t::create_index");
+        actor_zeta::send(dispathers_[0], address(), handler_id(route::create_index), session, current_message()->sender(), std::move(data));
     }
 
 } //namespace services::wal

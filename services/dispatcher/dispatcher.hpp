@@ -11,6 +11,7 @@
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
+#include <components/ql/index.hpp>
 #include <core/excutor.hpp>
 
 #include <services/collection/result.hpp>
@@ -77,6 +78,8 @@ namespace services::dispatcher {
         void update_finish(components::session::session_id_t& session, result_update& result);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address);
         void size_finish(components::session::session_id_t&, result_size& result);
+        void create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address);
+        void create_index_finish(components::session::session_id_t &session, result_create_index& result);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         bool check_load_from_wal(components::session::session_id_t& session);
@@ -148,6 +151,7 @@ namespace services::dispatcher {
         void update_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& condition, components::document::document_ptr& update, bool upsert);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_id_t& session);
+        void create_index(components::session::session_id_t &session, components::ql::create_index_t index);
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;

@@ -10,6 +10,7 @@
 #include "delete_many.hpp"
 #include "update_one.hpp"
 #include "update_many.hpp"
+#include <components/ql/index.hpp>
 
 namespace components::protocol {
 
@@ -23,7 +24,8 @@ namespace components::protocol {
         components::ql::delete_one_t,
         components::ql::delete_many_t,
         components::ql::update_one_t,
-        components::ql::update_many_t
+        components::ql::update_many_t,
+        components::ql::create_index_t
         >;
 
 } //namespace components::protocol

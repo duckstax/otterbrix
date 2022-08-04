@@ -116,3 +116,15 @@ private:
     document_id_t upserted_id_;
     //TODO: except or error_code
 };
+
+class result_create_index {
+public:
+    using result_t = bool;
+
+    result_create_index() = default;
+    explicit result_create_index(result_t success);
+    result_t is_success() const;
+
+private:
+    result_t success_{false};
+};
