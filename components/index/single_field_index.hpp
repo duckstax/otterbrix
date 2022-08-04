@@ -19,23 +19,23 @@ namespace components::index {
 
     class single_field_index_t final : public index_t {
     public:
-        using comparator_t = std::less<key_t>;
-        //using allocator_t = std::scoped_allocator_adaptor<actor_zeta::detail::pmr::polymorphic_allocator<std::pair<const key_t, value_t>>>;
-        using storage_t = std::pmr::map<key_t, value_t, comparator_t>;
+        using comparator_t = std::less<field_t>;
+        using storage_t = std::pmr::map<value_t, document_ptr, comparator_t>;
 
         single_field_index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys)
             : index_t(resource, keys)
             , data_(resource) {}
 
-        auto insert_impl(key_t key, document_ptr value) -> void {
+        auto insert_impl(value_t key, document_ptr value) -> void override {
             data_.emplace(key, value);
         }
 
-        auto find_impl(query_t query, result_set_t* set) -> void {
-            for (auto& i : query) {
+        auto find_impl(query_t query, result_set_t* set) -> void override {
+           /* for (auto& i : query) {
                 auto it = data_.find(i);
                 set->append(it->second);
             }
+            */
         }
 
 

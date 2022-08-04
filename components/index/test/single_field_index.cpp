@@ -15,9 +15,7 @@ TEST_CASE("single_field_index") {
     auto index_engine = make_index_engine(resource);
     auto id = make_index<single_field_index_t>(index_engine, {"count"});
     insert_one(index_engine,id,gen_doc(1));
-    result_set_t set(resource);
-    query_t query(resource);
-    query.append("count");
-    find(index_engine,query,&set);
+    ///result_set_t set(resource);
+    ///find(index_engine,query,&set);
 
 }

@@ -3,6 +3,7 @@ project(ql CXX)
 set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
+        expr.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

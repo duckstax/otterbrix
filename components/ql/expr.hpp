@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
-#include <memory>
 
 #include <core/field/field.hpp>
 
@@ -26,17 +26,96 @@ namespace components::ql {
         union_not
     };
 
-    inline bool is_union_condition(condition_type type) {
-        return type == condition_type::union_and ||
-               type == condition_type::union_or ||
-               type == condition_type::union_not;
-    }
+    bool is_union_condition(condition_type type);
+
+    class key_t final {
+    public:
+        key_t()
+            : type_(type::non)
+            , storage_({}) {}
+
+        key_t(std::string_view str)
+            : type_(type::string)
+            , storage_(std::string(str.data(), str.size())) {}
+
+        key_t(const std::string& str)
+            : type_(type::string)
+            , storage_(std::string(str.data(), str.size())) {}
+
+        key_t(std::string&& str)
+            : type_(type::string)
+            , storage_(std::move(str)) {}
+
+        key_t(const char* str)
+            : type_(type::string)
+            , storage_(std::string(str)) {}
+
+        template<typename CharT>
+        key_t(const CharT* data, size_t size)
+            : type_(type::string)
+            , storage_(std::string(data, size)) {}
+
+        enum class type {
+            non,
+            string,
+            int32,
+            uint32
+        };
+
+        auto as_string() const -> const std::string& {
+            return std::get<std::string>(storage_);
+        }
+
+        explicit operator std::string() const {
+            return as_string();
+        }
+
+        type which() const {
+            return type_;
+        }
+
+        auto is_string() const -> bool {
+            return type_ == type::string;
+        }
+
+        auto is_null() const -> bool {
+            return type_ == type::non;
+        }
+
+        bool operator<(const key_t& other) const {
+            return storage_ < other.storage_;
+        }
+
+        bool operator<=(const key_t& other) const {
+            return storage_ <= other.storage_;
+        }
+
+        bool operator>(const key_t& other) const {
+            return storage_ > other.storage_;
+        }
+
+        bool operator>=(const key_t& other) const {
+            return storage_ >= other.storage_;
+        }
+
+        bool operator==(const key_t& other) const {
+            return storage_ == other.storage_;
+        }
+
+        bool operator!=(const key_t& rhs) const {
+            return !(*this == rhs);
+        }
+
+    private:
+        type type_;
+        std::variant<std::monostate, int32_t, uint32_t, std::string> storage_;
+    };
 
     struct expr_t {
         using ptr = std::unique_ptr<expr_t>;
 
         condition_type type_;
-        std::string key_;
+        key_t key_;
         field_t field_;
         std::vector<ptr> sub_conditions_;
 
@@ -44,19 +123,17 @@ namespace components::ql {
             : type_(type)
             , key_(std::move(key))
             , field_(std::move(field))
-            , union_(is_union_condition(type_))
-        {}
+            , union_(is_union_condition(type_)) {}
 
         explicit expr_t(bool is_union)
             : type_(condition_type::novalid)
-            , union_(is_union)
-        {}
+            , union_(is_union) {}
 
         bool is_union() const {
             return union_;
         }
 
-        void append_sub_condition(ptr &&sub_condition) {
+        void append_sub_condition(ptr&& sub_condition) {
             sub_conditions_.push_back(std::move(sub_condition));
         }
 
@@ -67,7 +144,7 @@ namespace components::ql {
     using expr_ptr = expr_t::ptr;
 
     template<class Value>
-    expr_ptr make_expr(condition_type condition, std::string key, Value value) {
+    inline expr_ptr make_expr(condition_type condition, std::string key, Value value) {
         return std::make_unique<expr_t>(condition, std::move(key), field_t(value));
     }
 
@@ -84,49 +161,7 @@ namespace components::ql {
         return std::make_unique<expr_t>(true);
     }
 
-    inline std::string to_string(condition_type type) {
-        switch (type) {
-            case condition_type::eq:
-                return "$eq";
-            case condition_type::ne:
-                return "$ne";
-            case condition_type::gt:
-                return "$gt";
-            case condition_type::lt:
-                return "$lt";
-            case condition_type::gte:
-                return "$gte";
-            case condition_type::lte:
-                return "$lte";
-            case condition_type::regex:
-                return "$regex";
-            case condition_type::any:
-                return "$any";
-            case condition_type::all:
-                return "$all";
-            case condition_type::union_and:
-                return "$and";
-            case condition_type::union_or:
-                return "$or";
-            case condition_type::union_not:
-                return "$not";
-        }
-        return {};
-    }
-
-    inline std::string to_string(const expr_ptr &expr) {
-        if (expr->is_union()) {
-            std::string result = "{\"" + to_string(expr->type_) + "\": [";
-            for (std::size_t i = 0; i < expr->sub_conditions_.size(); ++ i) {
-                if (i > 0) {
-                    result += ", ";
-                }
-                result += to_string(expr->sub_conditions_.at(i));
-            }
-            result += "]}";
-            return result;
-        }
-        return "{\"" + expr->key_ + "\": {\"" + to_string(expr->type_) + "\": " + expr->field_.to_string() + "}}";
-    }
+    std::string to_string(condition_type type);
+    std::string to_string(const expr_ptr& expr);
 
 } // namespace components::ql
