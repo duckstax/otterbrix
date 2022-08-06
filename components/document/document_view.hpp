@@ -93,6 +93,10 @@ public:
     document_view_t get_dict(const std::string &key) const;
     document_view_t get_dict(uint32_t index) const;
 
+    const ::document::impl::value_t *get_value() const;
+    const ::document::impl::value_t *get_value(const std::string &key) const;
+    const ::document::impl::value_t *get_value(uint32_t index) const;
+
     template <class T>
     T get_as(std::string &&key) const {
         try {

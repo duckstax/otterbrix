@@ -9,7 +9,8 @@ namespace components::document::structure {
         type = 0,
         offset = 1,
         size = 2,
-        version = 3
+        value = 3,
+        version = 4
     };
 
     uint32_t index_attribute(attribute attr);

@@ -13,13 +13,17 @@ namespace document::impl {
 
 namespace components::document {
 
+    static constexpr auto key_value_document = "___value___";
+
     using document_structure_t = ::document::retained_t<::document::impl::mutable_dict_t>;
     using document_data_t = msgpack::sbuffer;
+    using document_value_t = ::document::retained_t<::document::impl::value_t>;
 
     class document_t : public ::document::ref_counted_t {
     public:
         document_structure_t structure;
         document_data_t data;
+        document_value_t value_;
 
         document_t();
         document_t(document_structure_t structure, const document_data_t &data);

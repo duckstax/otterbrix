@@ -22,6 +22,7 @@ namespace components::document {
         if (value->type() == value_type::array) {
             auto index_array = mutable_array_t::new_array();
             auto array = value->as_array();
+            index_array->append(value);
             for (uint32_t i = 0; i < array->count(); ++i) {
                 index_array->append(insert_field_(data, array->get(i), version));
             }
@@ -30,6 +31,7 @@ namespace components::document {
         if (value->type() == value_type::dict) {
             auto dict = value->as_dict();
             auto index_dict = mutable_dict_t::new_dict();
+            index_dict->set(key_value_document, value);
             for (auto it = dict->begin(); it; ++it) {
                 index_dict->set(it.key()->to_string(), insert_field_(data, it.value(), version));
             }
@@ -42,6 +44,7 @@ namespace components::document {
         index->append(get_msgpack_type(value));
         index->append(static_cast<uint64_t>(offset));
         index->append(static_cast<uint64_t>(data.size() - offset));
+        index->append(value);
         if (version) {
             index->append(version);
         }
@@ -147,11 +150,13 @@ namespace components::document {
 
 
     document_t::document_t()
-        : structure(mutable_dict_t::new_dict()) {
+        : structure(mutable_dict_t::new_dict())
+        , value_(nullptr) {
     }
 
     document_t::document_t(document_structure_t structure, const document_data_t& data)
-        : structure(std::move(structure)) {
+        : structure(std::move(structure))
+        , value_(nullptr) {
         this->data.write(data.data(), data.size());
     }
 
@@ -243,6 +248,8 @@ namespace components::document {
 
     document_ptr make_document(const ::document::impl::dict_t *dict, int version) {
         auto document = make_document();
+        document->value_ = ::document::impl::mutable_dict_t::new_dict(dict);
+        document->structure->set(key_value_document, document->value_.get());
         for (auto it = dict->begin(); it; ++it) {
             auto key = it.key()->as_string();
             document->structure->set(key, insert_field_(document->data, it.value(), version));

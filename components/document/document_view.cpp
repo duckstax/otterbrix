@@ -267,6 +267,36 @@ document_view_t document_view_t::get_dict(uint32_t index) const {
     return document_view_t(array_->get(index)->as_dict(), storage_);
 }
 
+const ::document::impl::value_t *document_view_t::get_value() const {
+    return index_
+               ? index_->get(components::document::key_value_document)
+               : array_->get(0);
+}
+
+const ::document::impl::value_t *document_view_t::get_value(const std::string &key) const {
+    auto field = index_
+                     ? index_->get(key)
+                     : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
+    if (field && field->type() == value_type::array) {
+        return structure::get_attribute(field->as_array(), structure::attribute::value);
+    } else if (field && field->type() == value_type::dict) {
+        return field->as_dict()->get(components::document::key_value_document);
+    }
+    return nullptr;
+}
+
+const ::document::impl::value_t *document_view_t::get_value(uint32_t index) const {
+    auto field = index_
+                     ? index_->get(std::to_string(index))
+                     : array_->get(index);
+    if (field && field->type() == value_type::array) {
+        return structure::get_attribute(field->as_array(), structure::attribute::value);
+    } else if (field && field->type() == value_type::dict) {
+        return field->as_dict()->get(components::document::key_value_document);
+    }
+    return nullptr;
+}
+
 document_view_t::iterator_t document_view_t::begin() const {
     return index_->begin();
 }
