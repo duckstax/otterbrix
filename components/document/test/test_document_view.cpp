@@ -28,7 +28,7 @@ TEST_CASE("document_view::get_value") {
     REQUIRE(view.get_value("countDict")->type() == value_type::dict);
 
     REQUIRE(view.get_value("countArray.1") != nullptr);
-    REQUIRE(view.get_value("countArray.1")->is_unsigned());
+    REQUIRE(view.get_value("countArray.1")->type() == value_type::number);
     REQUIRE(view.get_value("countArray.1")->as_unsigned() == 2);
 
     REQUIRE(view.get_value("countDict.even") != nullptr);
