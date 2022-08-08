@@ -19,7 +19,7 @@ namespace components::index {
 
     class single_field_index_t final : public index_t {
     public:
-        using comparator_t = std::less<field_t>;
+        using comparator_t = std::less<value_t>;
         using storage_t = std::pmr::map<value_t, document_ptr, comparator_t>;
 
         single_field_index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys)

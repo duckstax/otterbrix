@@ -43,9 +43,9 @@ namespace components::index {
                 const std::string& key = key_tmp.as_string(); // hack
                 document::document_view_t view(doc);
                 if ((!(view.is_null(key)))) {
-                    auto data = view.get(key);
-
-                    index->insert(data , doc);
+                    auto* data = view.get_value(key);
+                    ::document::wrapper_value_t key_(data);
+                    index->insert(key_ , doc);
                 }
             }
         }

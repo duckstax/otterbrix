@@ -2,7 +2,6 @@
 
 #include <actor-zeta/detail/pmr/default_resource.hpp>
 #include <actor-zeta/detail/pmr/memory_resource.hpp>
-#include <iostream>
 
 #include "components/index/index.hpp"
 
@@ -13,7 +12,7 @@ public:
     explicit dummy(actor_zeta::detail::pmr::memory_resource* resource,const keys_base_t& keys)
         : index_t(resource,keys){
     }
-    void insert_impl(key_t key, value_t value)  {}
+    void insert_impl(value_t key, document_ptr value)  {}
     void find_impl(query_t,result_set_t*)  {}
 };
 

@@ -9,12 +9,11 @@
 
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
+#include <components/document/wrapper_value.hpp>
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
-#include <components/session/session.hpp>
-
 #include <components/ql/expr.hpp>
-#include <core/field/field.hpp>
+#include <components/session/session.hpp>
 
 #include <actor-zeta/detail/pmr/memory_resource.hpp>
 #include <actor-zeta/detail/pmr/polymorphic_allocator.hpp>
@@ -23,7 +22,7 @@ namespace components::index {
 
     using document_ptr = components::document::document_ptr;
 
-    class result_set_t {
+    class result_set_t final {
     public:
         result_set_t(actor_zeta::detail::pmr::memory_resource* resource)
             : data_(resource) {}
@@ -38,14 +37,14 @@ namespace components::index {
     using key_t = ql::key_t;
     using keys_base_t = std::pmr::vector<key_t>;
     using id_index = uint32_t;
-    using ::document::impl::value_t;
+    using value_t = ::document::wrapper_value_t;
     using query_t = ql::expr_t;
 
     class index_t {
     public:
         using doc_t = components::document::document_ptr;
         virtual ~index_t();
-        void insert(value_t value_key, doc_t);
+        void insert( value_t , doc_t);
 
         void find(query_t query, result_set_t*);
         void find(id_index, result_set_t*);
