@@ -38,10 +38,11 @@ namespace components::index {
     using keys_base_t = std::pmr::vector<key_t>;
     using id_index = uint32_t;
     using value_t = ::document::wrapper_value_t;
-    using query_t = ql::expr_t;
+    using query_t = ql::expr_t::ptr;
 
     class index_t {
     public:
+        using keys_storage = std::pmr::vector<key_t>;
         using doc_t = components::document::document_ptr;
         virtual ~index_t();
         void insert( value_t , doc_t);
@@ -49,14 +50,14 @@ namespace components::index {
         void find(query_t query, result_set_t*);
         void find(id_index, result_set_t*);
 
-        [[nodiscard]] auto keys() -> std::pair<std::pmr::vector<key_t>::iterator, std::pmr::vector<key_t>::iterator>;
+        [[nodiscard]] auto keys() -> std::pair<keys_storage::iterator, keys_storage::iterator>;
 
     protected:
         explicit index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys);
         virtual void insert_impl(value_t value_key, doc_t) = 0;
         virtual void find_impl(query_t, result_set_t*) = 0;
         actor_zeta::detail::pmr::memory_resource* resource_;
-        std::pmr::vector<key_t> keys_;
+        keys_storage keys_;
     };
 
     using index_raw_ptr = index_t*;
@@ -68,7 +69,7 @@ namespace components::index {
 
         explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
         auto find(id_index id) -> index_raw_ptr;
-        auto find(query_t query) -> index_raw_ptr;
+        auto find(const query_t& query) -> index_raw_ptr;
         auto emplace(const keys_base_t&, value_t) -> uint32_t;
         [[nodiscard]] auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
@@ -104,7 +105,7 @@ namespace components::index {
 
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr;
     auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t*;
-    auto search_index(const index_engine_ptr& ptr, query_t query) -> index_t*;
+    auto search_index(const index_engine_ptr& ptr, const query_t& query) -> index_t*;
 
     template<class Target, class... Args>
     auto make_index(index_engine_ptr& ptr, const keys_base_t& keys, Args&&... args) -> uint32_t {

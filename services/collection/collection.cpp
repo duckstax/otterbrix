@@ -101,6 +101,7 @@ namespace services::collection {
 
 
     void collection_t::find_one(const session_id_t& session, const components::ql::find_statement& cond) {
+        auto trace =  statistic_.new_trace();
         debug(log_,"collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());

@@ -112,6 +112,9 @@ namespace components::ql {
     };
 
     struct expr_t {
+        expr_t(const expr_t&) = delete;
+        expr_t(expr_t&&) /*noexcept(false)*/ = default;
+
         using ptr = std::unique_ptr<expr_t>;
 
         condition_type type_;
@@ -119,23 +122,10 @@ namespace components::ql {
         field_t field_;
         std::vector<ptr> sub_conditions_;
 
-        expr_t(condition_type type, std::string key, field_t field)
-            : type_(type)
-            , key_(std::move(key))
-            , field_(std::move(field))
-            , union_(is_union_condition(type_)) {}
-
-        explicit expr_t(bool is_union)
-            : type_(condition_type::novalid)
-            , union_(is_union) {}
-
-        bool is_union() const {
-            return union_;
-        }
-
-        void append_sub_condition(ptr&& sub_condition) {
-            sub_conditions_.push_back(std::move(sub_condition));
-        }
+        expr_t(condition_type type, std::string key, field_t field);
+        explicit expr_t(bool is_union);
+        bool is_union() const;
+        void append_sub_condition(ptr sub_condition);
 
     private:
         bool union_;

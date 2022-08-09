@@ -55,7 +55,7 @@ namespace components::index {
         return ptr->find(id);
     }
 
-    auto search_index(const index_engine_ptr& ptr, query_t query) -> index_t* {
+    auto search_index(const index_engine_ptr& ptr, const query_t& query) -> index_t* {
         return ptr->find(query);
     }
 
@@ -95,7 +95,7 @@ namespace components::index {
         return mapper_.size();
     }
 
-    auto index_engine_t::find(query_t query) -> index_raw_ptr {
+    auto index_engine_t::find(const query_t& query) -> index_raw_ptr {
         ////return mapper_.find(query.data())->second->get();
     }
 

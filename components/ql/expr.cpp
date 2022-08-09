@@ -53,4 +53,22 @@ namespace components::ql {
         return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + expr->field_.to_string() + "}}";
     }
 
+    expr_t::expr_t(condition_type type, std::string key, field_t field)
+        : type_(type)
+        , key_(std::move(key))
+        , field_(std::move(field))
+        , union_(is_union_condition(type_)) {}
+
+    expr_t::expr_t(bool is_union)
+        : type_(condition_type::novalid)
+        , union_(is_union) {}
+
+    bool expr_t::is_union() const {
+        return union_;
+    }
+
+    void expr_t::append_sub_condition(expr_t::ptr sub_condition) {
+        sub_conditions_.push_back(std::move(sub_condition));
+    }
+
 } // namespace components::ql

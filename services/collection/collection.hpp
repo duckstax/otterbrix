@@ -14,15 +14,17 @@
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
 #include <components/protocol/insert_many.hpp>
-#include <components/ql/index.hpp>
 #include <components/ql/find.hpp>
+#include <components/ql/index.hpp>
 #include <components/session/session.hpp>
+#include <components/statistic/statistic.hpp>
 
 #include <services/database/database.hpp>
 
 #include "forward.hpp"
 #include "result.hpp"
 #include "route.hpp"
+
 
 namespace services::collection {
 
@@ -40,7 +42,7 @@ namespace services::collection {
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);
         auto find(const session_id_t& session, const find_condition_ptr& cond) -> void;
-        auto find_one(const session_id_t& session,components::ql::find_statement& cond) -> void;
+        auto find_one(const session_id_t& session,const components::ql::find_statement& cond) -> void;
         auto delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
         auto delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void;
         auto update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
@@ -74,12 +76,16 @@ namespace services::collection {
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
 
+        std::pmr::memory_resource* resource_ = new std::pmr::monotonic_buffer_resource() ;
         /**
         *  index
         */
 
-        std::pmr::memory_resource* resource_ = new std::pmr::monotonic_buffer_resource() ;
         components::index::index_engine_ptr index_engine_;
+        /**
+        *  statistics
+        */
+        components::statistic::statistic_t statistic_;
         storage_t storage_;
         std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
