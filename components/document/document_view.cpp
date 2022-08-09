@@ -86,7 +86,7 @@ bool document_view_t::is_null(const std::string &key) const {
 }
 
 bool document_view_t::is_null(uint32_t index) const {
-    return get_type(index + 1) == object_type::NIL;
+    return get_type(index) == object_type::NIL;
 }
 
 bool document_view_t::is_bool(std::string &&key) const {
@@ -98,7 +98,7 @@ bool document_view_t::is_bool(const std::string &key) const {
 }
 
 bool document_view_t::is_bool(uint32_t index) const {
-    return get_type(index + 1) == object_type::BOOLEAN;
+    return get_type(index) == object_type::BOOLEAN;
 }
 
 bool document_view_t::is_ulong(std::string &&key) const {
@@ -110,7 +110,7 @@ bool document_view_t::is_ulong(const std::string &key) const {
 }
 
 bool document_view_t::is_ulong(uint32_t index) const {
-    return get_type(index + 1) == object_type::POSITIVE_INTEGER;
+    return get_type(index) == object_type::POSITIVE_INTEGER;
 }
 
 bool document_view_t::is_long(std::string &&key) const {
@@ -122,7 +122,7 @@ bool document_view_t::is_long(const std::string &key) const {
 }
 
 bool document_view_t::is_long(uint32_t index) const {
-    return get_type(index + 1) == object_type::NEGATIVE_INTEGER;
+    return get_type(index) == object_type::NEGATIVE_INTEGER;
 }
 
 bool document_view_t::is_float(std::string &&key) const {
@@ -134,7 +134,7 @@ bool document_view_t::is_float(const std::string &key) const {
 }
 
 bool document_view_t::is_float(uint32_t index) const {
-    return get_type(index + 1) == object_type::FLOAT;
+    return get_type(index) == object_type::FLOAT;
 }
 
 bool document_view_t::is_double(std::string &&key) const {
@@ -146,7 +146,7 @@ bool document_view_t::is_double(const std::string &key) const {
 }
 
 bool document_view_t::is_double(uint32_t index) const {
-    return get_type(index + 1) == object_type::FLOAT64;
+    return get_type(index) == object_type::FLOAT64;
 }
 
 bool document_view_t::is_string(std::string &&key) const {
@@ -158,7 +158,7 @@ bool document_view_t::is_string(const std::string &key) const {
 }
 
 bool document_view_t::is_string(uint32_t index) const {
-    return get_type(index + 1) == object_type::STR;
+    return get_type(index) == object_type::STR;
 }
 
 bool document_view_t::is_array(std::string &&key) const {
@@ -170,7 +170,7 @@ bool document_view_t::is_array(const std::string &key) const {
 }
 
 bool document_view_t::is_array(uint32_t index) const {
-    return get_type(index + 1) == object_type::ARRAY;
+    return get_type(index) == object_type::ARRAY;
 }
 
 bool document_view_t::is_dict(std::string &&key) const {
@@ -182,7 +182,7 @@ bool document_view_t::is_dict(const std::string &key) const {
 }
 
 bool document_view_t::is_dict(uint32_t index) const {
-    return get_type(index + 1) == object_type::MAP;
+    return get_type(index) == object_type::MAP;
 }
 
 object_handle document_view_t::get(std::string &&key) const {
@@ -370,7 +370,7 @@ std::string document_view_t::to_json() const {
 
 ::document::retained_t<::document::impl::array_t> document_view_t::to_array() const {
     auto array = ::document::impl::mutable_array_t::new_array();
-    for (uint32_t index = 1; index <= count(); ++index) {
+    for (uint32_t index = 0; index < count(); ++index) {
         if (is_null(index)) {
             array->append(::document::impl::value_t::null_value);
         } else if (is_bool(index)) {
@@ -457,7 +457,7 @@ std::string document_view_t::to_json_dict() const {
 
 std::string document_view_t::to_json_array() const {
     std::stringstream res;
-    for (uint32_t index = 1; index < array_->count(); ++index) {
+    for (uint32_t index = 0; index < count(); ++index) {
         if (!res.str().empty()) res << ",";
         if (is_dict(index)) {
             res << get_dict(index).to_json();
