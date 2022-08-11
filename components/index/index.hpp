@@ -22,17 +22,6 @@ namespace components::index {
 
     using document_ptr = components::document::document_ptr;
 
-    class result_set_t final {
-    public:
-        result_set_t(actor_zeta::detail::pmr::memory_resource* resource)
-            : data_(resource) {}
-        void append(document_ptr doc) {
-            data_.emplace_back(doc);
-        }
-
-    private:
-        std::pmr::vector<document_ptr> data_;
-    };
 
     using key_t = ql::key_t;
     using keys_base_t = std::pmr::vector<key_t>;
@@ -46,6 +35,7 @@ namespace components::index {
         using doc_t = components::document::document_ptr;
         virtual ~index_t();
         void insert( value_t , doc_t);
+        auto
 
         void find(query_t query, result_set_t*);
         void find(id_index, result_set_t*);

@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include <actor-zeta.hpp>
-#include <components/protocol/base.hpp>
 #include <components/document/document.hpp>
 #include <services/wal/base.hpp>
 

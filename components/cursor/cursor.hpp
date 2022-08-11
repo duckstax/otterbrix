@@ -18,32 +18,35 @@ namespace components::cursor {
 
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
     public:
-        sub_cursor_t(actor_zeta::address_t collection, const std::vector<data_t> &data);
+        sub_cursor_t(std::pmr::memory_resource* resource, actor_zeta::address_t collection);
         actor_zeta::address_t& address();
         std::size_t size() const;
-        std::vector<data_t> &data();
+        std::pmr::vector<data_t>& data();
+        void append(data_t);
+
     private:
         actor_zeta::address_t collection_;
-        std::vector<data_t> data_;
+        std::pmr::vector<data_t> data_;
     };
 
     class cursor_t {
     public:
-        cursor_t() = default;
+        cursor_t(std::pmr::memory_resource* resource);
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
-        std::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
-        std::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
+        std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
+        std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
         bool has_next() const;
         data_ptr next();
         data_ptr get() const;
         data_ptr get(std::size_t index) const;
         void sort(std::function<bool(data_ptr, data_ptr)> sorter);
+
     private:
         std::size_t size_{};
         index_t current_index_{start_index};
-        std::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
-        std::vector<data_ptr> sorted_;
+        std::pmr::vector<std::unique_ptr<sub_cursor_t>> sub_cursor_;
+        std::pmr::vector<data_ptr> sorted_;
 
         void create_list_by_sort();
         data_ptr get_sorted(std::size_t index) const;

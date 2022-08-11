@@ -22,22 +22,10 @@ namespace components::index {
         using comparator_t = std::less<value_t>;
         using storage_t = std::pmr::map<value_t, document_ptr, comparator_t>;
 
-        single_field_index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys)
-            : index_t(resource, keys)
-            , data_(resource) {}
-
-        auto insert_impl(value_t key, document_ptr value) -> void override {
-            data_.emplace(key, value);
-        }
-
-        auto find_impl(query_t query, result_set_t* set) -> void override {
-           /* for (auto& i : query) {
-                auto it = data_.find(i);
-                set->append(it->second);
-            }
-            */
-        }
-
+        single_field_index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys);
+        ~single_field_index_t() override;
+        auto insert_impl(value_t key, document_ptr value) -> void override;
+        auto find_impl(query_t query, result_set_t* set) -> void override;
 
     private:
         storage_t data_;

@@ -94,7 +94,8 @@ namespace services::collection {
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
-            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(address(), *search_(cond)));
+            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(resource_,address()));
+            search_(cond);
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
         }
     }
@@ -197,7 +198,7 @@ namespace services::collection {
         return true;
     }
 
-    result_find collection_t::search_(const find_condition_ptr& cond) {
+    result_find collection_t::search_(components::ql::find_one_statement&,components::cursor::sub_cursor_t*) {
         if (!cond) {
             result_find::result_t res;
             for (auto& it : storage_) {
@@ -220,14 +221,6 @@ namespace services::collection {
 
         ///}
         return result_find_one();
-    }
-
-    auto collection_t::full_scan_one_(const find_condition_ptr& cond) -> result_find_one {
-        for (auto& it : storage_) {
-            if (cond->is_fit(it.second)) {
-                return result_find_one(document_view_t(it.second));
-            }
-        }
     }
 
     result_delete collection_t::delete_one_(const find_condition_ptr& cond) {

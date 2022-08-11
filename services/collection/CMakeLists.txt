@@ -7,6 +7,7 @@ set(${PROJECT_NAME}_HEADERS
 )
 
 set(${PROJECT_NAME}_SOURCES
+        operators/full_scan.cpp
         collection.cpp
         create_index.cpp
         result.cpp

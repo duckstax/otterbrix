@@ -1,6 +1,7 @@
 #include "index.hpp"
 
 #include <utility>
+#include <iostream>
 
 #include "document/mutable/mutable_dict.hpp"
 
@@ -16,27 +17,27 @@ namespace components::index {
         index->find(id,set);
     }
     */
-/*
-    void insert(const index_engine_ptr& ptr, id_index id , std::vector<document_ptr>& docs) {
+
+    void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs) {
         auto* index = search_index(ptr, id);
         for (const auto& i : docs) {
-            auto range =  index->keys();
-            for (auto j = range.first;j!=range.second;++j) {
-                const auto& key_tmp =*j;
-                const std::string key(key_tmp); // hack
-               document::document_view_t view(i);
-                auto condishane = view.is_null(key) && (view.is_string(key) || view.is_long(key) || view.is_ulong(key));
-                if(condishane){
-                    index->insert(key_tmp,i);
+            auto range = index->keys();
+            for (auto j = range.first; j != range.second; ++j) {
+                const auto& key_tmp = *j;
+                const std::string& key = key_tmp.as_string(); // hack
+                document::document_view_t view(i);
+                if ((!(view.is_null(key)))) {
+                    auto* data = view.get_value(key);
+                    ::document::wrapper_value_t key_(data);
+                    index->insert(key_, i);
                 }
             }
         }
     }
-*/
+
     void insert_one(const index_engine_ptr& ptr, id_index id, document_ptr doc) {
         auto* index = search_index(ptr, id);
         auto range = index->keys();
-        auto size = range.second - range.first;
         for (auto j = range.first; j != range.second; ++j) {
             if (j->which() == key_t::type::string) {
                 const auto& key_tmp = *j;

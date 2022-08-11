@@ -52,15 +52,29 @@ namespace services::collection {
 
         void create_index(const session_id_t& session, components::ql::create_index_t& index);
 
+        /**
+        * get data
+        */
+
+        storage_t& storage() noexcept {
+            return storage_;
+        }
+
+        components::index::index_engine_ptr& index_engine() noexcept {
+            return index_engine_;
+        }
+
+        components::statistic::statistic_t& statistic() noexcept {
+            return statistic_;
+        }
+
     private:
         document_id_t insert_(const document_ptr&document);
         document_view_t get_(const document_id_t& id) const;
         std::size_t size_() const;
         bool drop_();
-        result_find search_(const find_condition_ptr& cond);
-        result_find_one search_one_(const find_condition_ptr& cond);
-        result_find full_scan_(const find_condition_ptr& cond);
-        result_find_one full_scan_one_(const find_condition_ptr& cond);
+        result_find search_(components::ql::find_one_statement& cond,components::cursor::sub_cursor_t*);
+        result_find_one search_one_(components::ql::find_one_statement& cond);
         result_delete delete_one_(const find_condition_ptr& cond);
         result_delete delete_many_(const find_condition_ptr& cond);
         result_update update_one_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);
