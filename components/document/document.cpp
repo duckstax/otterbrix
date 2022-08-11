@@ -234,8 +234,13 @@ namespace components::document {
         removed_data_.clear();
     }
 
-    void document_t::set_(const std::string &key, const ::document::impl::value_t *value) {
-        structure->set(key, insert_field_(data, value, 0));
+    void document_t::set_(const std::string &key, ::document::retained_const_t<::document::impl::value_t> value) {
+        if (value_ && value_->type() == value_type::dict) {
+            value_->as_dict()->as_mutable()->set(key, std::move(value));
+            structure->set(key, insert_field_(data, value_->as_dict()->get(key), 0));
+        } else {
+            structure->set(key, insert_field_(data, value, 0));
+        }
     }
 
     document_ptr make_document() {
@@ -337,7 +342,7 @@ namespace components::document {
         auto doc = make_document();
         auto tree = boost::json::parse(json);
         for (const auto &item : tree.as_object()) {
-            doc->set(std::string(item.key()), json2value(item.value()).get());
+            doc->set(std::string(item.key()), json2value(item.value()));
         }
         return doc;
     }

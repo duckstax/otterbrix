@@ -39,3 +39,30 @@ TEST_CASE("document_view::get_value") {
     REQUIRE(view.get_value("countArray.10") == nullptr);
     REQUIRE(view.get_value("countDict.other") == nullptr);
 }
+
+TEST_CASE("document_view::set") {
+    auto doc = gen_doc(1);
+
+    std::string key("newValue");
+    std::string value("new value");
+    doc->set(key, value);
+
+    REQUIRE(document_view_t(doc).get_value(key) != nullptr);
+    REQUIRE(document_view_t(doc).get_value(key)->type() == value_type::string);
+    REQUIRE(document_view_t(doc).get_value(key)->as_string().as_string() == value);
+
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key) != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->type() == value_type::string);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string().as_string() == value);
+
+    value = "super new value";
+    doc->set(key, value);
+
+    REQUIRE(document_view_t(doc).get_value(key) != nullptr);
+    REQUIRE(document_view_t(doc).get_value(key)->type() == value_type::string);
+    REQUIRE(document_view_t(doc).get_value(key)->as_string().as_string() == value);
+
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key) != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->type() == value_type::string);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string().as_string() == value);
+}

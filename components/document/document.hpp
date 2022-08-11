@@ -37,7 +37,7 @@ namespace components::document {
     private:
         data_ranges_t removed_data_;
 
-        void set_(const std::string &key, const ::document::impl::value_t *value);
+        void set_(const std::string &key, ::document::retained_const_t<::document::impl::value_t> value);
     };
 
     using document_ptr = ::document::retained_t<document_t>;
@@ -59,17 +59,17 @@ namespace components::document {
 
     template<class T>
     void document_t::set(const std::string& key, T value) {
-        set_(key, ::document::impl::new_value(value).get());
+        set_(key, ::document::impl::new_value(value));
     }
 
     template<>
     inline void document_t::set(const std::string& key, const std::string &value) {
-        set_(key, ::document::impl::new_value(::document::slice_t(value)).get());
+        set_(key, ::document::impl::new_value(::document::slice_t(value)));
     }
 
     template<>
-    inline void document_t::set(const std::string& key, const ::document::impl::value_t *value) {
-        set_(key, value);
+    inline void document_t::set(const std::string& key, ::document::retained_const_t<::document::impl::value_t> value) {
+        set_(key, std::move(value));
     }
 
     std::string serialize_document(const document_ptr &document);

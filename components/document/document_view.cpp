@@ -12,6 +12,21 @@ using ::document::impl::value_type;
 
 namespace components::document {
 
+document_view_t::iterator_t::iterator_t(::document::impl::dict_iterator_t it) noexcept
+    : super(std::move(it)) {}
+
+document_view_t::iterator_t::iterator_t(const ::document::impl::dict_t* dict) noexcept
+    : super(dict) {}
+
+document_view_t::iterator_t& document_view_t::iterator_t::operator++() {
+    ::document::impl::dict_iterator_t::operator++();
+    if (*this && key_string().as_string() == key_value_document) {
+        ::document::impl::dict_iterator_t::operator++();
+    }
+    return *this;
+}
+
+
 document_view_t::document_view_t()
     : index_(nullptr)
     , array_(nullptr)
@@ -310,7 +325,11 @@ const ::document::impl::value_t *document_view_t::get_value(uint32_t index) cons
 }
 
 document_view_t::iterator_t document_view_t::begin() const {
-    return index_->begin();
+    iterator_t it(index_->begin());
+    if (it && it.key_string().as_string() == key_value_document) {
+        ++it;
+    }
+    return it;
 }
 
 template <class T>
@@ -438,7 +457,7 @@ object_handle document_view_t::get_value(offset_t offset, std::size_t size) cons
 
 std::string document_view_t::to_json_dict() const {
     std::stringstream res;
-    for (auto it = index_->begin(); it; ++it) {
+    for (auto it = begin(); it; ++it) {
         auto key = static_cast<std::string>(it.key()->as_string());
         if (key == key_value_document) {
             continue;
