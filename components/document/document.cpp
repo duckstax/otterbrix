@@ -244,11 +244,17 @@ namespace components::document {
     }
 
     document_ptr make_document() {
-        return ::document::make_retained<document_t>();
+        auto document = ::document::make_retained<document_t>();
+        document->value_ = ::document::impl::mutable_dict_t::new_dict();
+        document->structure->set(key_value_document, document->value_.get());
+        return document;
     }
 
     document_ptr make_document(document_structure_t structure, const document_data_t &data) {
-        return ::document::make_retained<document_t>(std::move(structure), data);
+        auto document = ::document::make_retained<document_t>(std::move(structure), data);
+        document->value_ = ::document::impl::mutable_dict_t::new_dict();
+        document->structure->set(key_value_document, document->value_.get());
+        return document;
     }
 
     document_ptr make_document(const ::document::impl::dict_t *dict, int version) {
