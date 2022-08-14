@@ -5,6 +5,7 @@
 #include <msgpack.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document.hpp>
+#include <components/document/core/dict.hpp>
 
 namespace document::impl {
 class dict_t;
@@ -32,7 +33,15 @@ public:
     using index_t = const ::document::impl::dict_t*;
     using array_t = const ::document::impl::array_t*;
     using storage_t = const msgpack::sbuffer*;
-    using iterator_t = ::document::impl::dict_iterator_t;
+
+    class iterator_t : public ::document::impl::dict_iterator_t {
+        using super = ::document::impl::dict_iterator_t;
+    public:
+        iterator_t() = default;
+        explicit iterator_t(::document::impl::dict_iterator_t it) noexcept;
+        explicit iterator_t(const ::document::impl::dict_t* dict) noexcept;
+        iterator_t& operator++();
+    };
 
     document_view_t();
     document_view_t(index_t index, storage_t storage);
