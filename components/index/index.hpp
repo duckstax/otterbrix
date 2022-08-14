@@ -14,6 +14,7 @@
 #include <components/parser/conditional_expression.hpp>
 #include <components/ql/expr.hpp>
 #include <components/session/session.hpp>
+#include <components/cursor/cursor.hpp>
 
 #include <actor-zeta/detail/pmr/memory_resource.hpp>
 #include <actor-zeta/detail/pmr/polymorphic_allocator.hpp>
@@ -28,6 +29,9 @@ namespace components::index {
     using id_index = uint32_t;
     using value_t = ::document::wrapper_value_t;
     using query_t = ql::expr_t::ptr;
+    using result_set_t = cursor::sub_cursor_t;
+
+    class iterator_t;
 
     class index_t {
     public:
@@ -35,11 +39,12 @@ namespace components::index {
         using doc_t = components::document::document_ptr;
         virtual ~index_t();
         void insert( value_t , doc_t);
-        auto
 
-        void find(query_t query, result_set_t*);
-        void find(id_index, result_set_t*);
+        iterator_t* find(query_t query, result_set_t*);
+        iterator_t* find(id_index, result_set_t*);
 
+        iterator_t* begin();
+        iterator_t* end();
         [[nodiscard]] auto keys() -> std::pair<keys_storage::iterator, keys_storage::iterator>;
 
     protected:
@@ -48,6 +53,11 @@ namespace components::index {
         virtual void find_impl(query_t, result_set_t*) = 0;
         actor_zeta::detail::pmr::memory_resource* resource_;
         keys_storage keys_;
+    };
+
+    class iterator_t {
+    protected:
+        virtual ~iterator_t() = default;
     };
 
     using index_raw_ptr = index_t*;
@@ -59,7 +69,7 @@ namespace components::index {
 
         explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
         auto find(id_index id) -> index_raw_ptr;
-        auto find(const query_t& query) -> index_raw_ptr;
+        auto find(const keys_base_t& query) -> index_raw_ptr;
         auto emplace(const keys_base_t&, value_t) -> uint32_t;
         [[nodiscard]] auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;

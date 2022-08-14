@@ -13,11 +13,11 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         non_thread_scheduler
         rocketjoe::log
-        #rocketjoe::collection
-        #rocketjoe::database
-        #rocketjoe::cursor
-        #rocketjoe::session
-        #rocketjoe::parser
+        rocketjoe::collection
+        rocketjoe::database
+        rocketjoe::cursor
+        rocketjoe::session
+        rocketjoe::parser
         ${CONAN_LIBS}
 )
 

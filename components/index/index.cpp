@@ -96,8 +96,8 @@ namespace components::index {
         return mapper_.size();
     }
 
-    auto index_engine_t::find(const query_t& query) -> index_raw_ptr {
-        ////return mapper_.find(query.data())->second->get();
+    auto index_engine_t::find(const keys_base_t& query) -> index_raw_ptr {
+        return mapper_.find(query)->second->get();
     }
 
     deleter::deleter(actor_zeta::detail::pmr::memory_resource* ptr)
@@ -107,12 +107,21 @@ namespace components::index {
         : resource_(resource)
         , keys_(keys){}
 
+
     void index_t::find(query_t query,result_set_t*set)  {
         return find_impl(std::move(query),set);
     }
 
     void index_t::find(id_index,result_set_t*) {
 
+    }
+
+    iterator_t* index_t::begin(){
+        return begin_impl();
+    }
+
+    iterator_t* index_t::end(){
+        return end_impl();
     }
 
     auto index_t::insert(value_t key, doc_t value) -> void  {

@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 
 #include <chrono>
-#include <iostream>
 #include <memory>
 #include <thread>
 #include <vector>
@@ -13,7 +12,6 @@ auto thread_pool_deleter = [](actor_zeta::scheduler_abstract_t* ptr) {
     ptr->stop();
     delete ptr;
 };
-
 
 using actor_zeta::detail::pmr::memory_resource;
 
@@ -31,10 +29,8 @@ public:
              thread_pool_deleter) {
         e_->start();
         method_ = new method_t();
-        add_handler(system_command::any_method,method_,&method_t::invoke );
-
+        add_handler(system_command::any_method, method_, &method_t::invoke);
     }
-
 
     ~supervisor_lite() override = default;
 
@@ -63,5 +59,4 @@ TEST_CASE("rpc call style") {
     auto supervisor = actor_zeta::spawn_supervisor<supervisor_lite>(mr_ptr);
     actor_zeta::send(supervisor.get(), actor_zeta::address_t::empty_address(), supervisor_lite::system_command::any_method);
     std::this_thread::sleep_for(std::chrono::seconds(180));
-
 }
