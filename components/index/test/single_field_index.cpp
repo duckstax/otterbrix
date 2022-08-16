@@ -21,12 +21,12 @@ TEST_CASE("single_field_index") {
     }
 
     insert(index_engine, id, data);
-    auto address=actor_zeta::address_t::empty_address();
-    result_set_t set(resource,address);
+    auto address = actor_zeta::address_t::empty_address();
+    result_set_t set(resource, address);
 
     std::string value = R"({"count": {"$gt": 10}})";
     auto d = components::document::document_from_json(value);
     auto condition = components::ql::parse_find_condition(d);
     ///condition->type_
-   /// find(index_engine, query, &set);
+    /// find(index_engine, query, &set);
 }
