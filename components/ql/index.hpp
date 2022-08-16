@@ -5,7 +5,6 @@
 namespace components::ql {
 
     enum class index_type : char {
-        default_,
         single,
         composite,
         multikey,

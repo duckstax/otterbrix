@@ -7,10 +7,10 @@
 
 #include <absl/container/btree_map.h>
 
+#include "index/index_engine.hpp"
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
-#include <components/index/index.hpp>
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
 #include <components/protocol/insert_many.hpp>

@@ -3,7 +3,7 @@
 #include <actor-zeta/detail/pmr/default_resource.hpp>
 #include <actor-zeta/detail/pmr/memory_resource.hpp>
 
-#include "components/index/index.hpp"
+#include "components/index/index_engine.hpp"
 
 using namespace components::index;
 

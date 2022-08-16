@@ -1,6 +1,6 @@
 #pragma once
 
-#include "index.hpp"
+#include "index_engine.hpp"
 
 namespace components::index {
 

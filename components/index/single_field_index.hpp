@@ -1,18 +1,10 @@
 #pragma once
 
-#include <map>
 #include <memory>
-#include <scoped_allocator>
 
-#include <components/document/document.hpp>
-#include <components/document/document_view.hpp>
-#include <components/log/log.hpp>
-#include <components/parser/conditional_expression.hpp>
-#include <components/session/session.hpp>
+#include <core/btree/btree.hpp>
 
-#include <actor-zeta/detail/pmr/memory_resource.hpp>
-#include <actor-zeta/detail/pmr/polymorphic_allocator.hpp>
-
+#include "forward.hpp"
 #include "index.hpp"
 
 namespace components::index {
@@ -20,12 +12,23 @@ namespace components::index {
     class single_field_index_t final : public index_t {
     public:
         using comparator_t = std::less<value_t>;
-        using storage_t = std::pmr::map<value_t, document_ptr, comparator_t>;
+        using storage_t = core::btree::pmr::btree_t<value_t, document_ptr, comparator_t>;
 
-        single_field_index_t(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_t& keys);
+        class iterator final : public index_t::iterator {
+            reference value_ref() const {}
+            iterator_t& next() {}
+            bool equals(const iterator_t& other) const {}
+            bool not_equals(const iterator_t& other) const {}
+        };
+
+    private:
+        single_field_index_t(std::pmr::memory_resource* resource, const keys_base_storage_t& keys);
         ~single_field_index_t() override;
         auto insert_impl(value_t key, document_ptr value) -> void override;
-        auto find_impl(query_t query, result_set_t* set) -> void override;
+        virtual iterator_t lower_bound_impl(const query_t& values) const {}
+        virtual iterator_t upper_bound_impl(const query_t& values) const {}
+        virtual iterator_t cbegin_impl() const {}
+        virtual iterator_t cend_impl() const {}
 
     private:
         storage_t data_;

@@ -1,16 +1,11 @@
 project(index)
 
-set(${PROJECT_NAME}_HEADERS
-
-)
-
 set(${PROJECT_NAME}_SOURCES
-        index.cpp
+        index_engine.cpp
         single_field_index.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-        ${${PROJECT_NAME}_HEADERS}
         ${${PROJECT_NAME}_SOURCES}
 )
 
@@ -23,6 +18,8 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::document
+        rocketjoe::cursor
+        rocketjoe::ql
         dl
 )
 
