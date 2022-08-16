@@ -5,7 +5,7 @@
 #include <core/system_command.hpp>
 
 #include <components/document/document.hpp>
-#include <components/protocol/protocol.hpp>
+#include <components/ql/statements.hpp>
 #include <components/ql/parser.hpp>
 
 #include <services/collection/route.hpp>
@@ -235,7 +235,7 @@ namespace services::dispatcher {
             if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
                 wal_success(session, last_wal_id_);
             } else {
-                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_database), session, components::protocol::create_database_t(database_name));
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_database), session, components::ql::create_database_t(database_name));
             }
         }
         if (!check_load_from_wal(session)) {
@@ -258,7 +258,7 @@ namespace services::dispatcher {
             if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
                 wal_success(session, last_wal_id_);
             } else {
-                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_collection), session, components::protocol::create_collection_t(database_name, collection_name));
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_collection), session, components::ql::create_collection_t(database_name, collection_name));
             }
         }
         if (!check_load_from_wal(session)) {
@@ -298,7 +298,7 @@ namespace services::dispatcher {
             if (session_to_address_.at(session).address().get() == manager_wal_.get()) {
                 wal_success(session, last_wal_id_);
             } else {
-                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::drop_collection), session, components::protocol::drop_collection_t(database_name, collection_name));
+                actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::drop_collection), session, components::ql::drop_collection_t(database_name, collection_name));
             }
             trace(log_, "collection {} dropped", collection_name);
         }

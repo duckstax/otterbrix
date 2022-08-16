@@ -13,7 +13,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         non_thread_scheduler
-        rocketjoe::protocol
+        rocketjoe::ql
         rocketjoe::log
         rocketjoe::session
         rocketjoe::wal

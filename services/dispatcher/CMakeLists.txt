@@ -24,7 +24,6 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::cursor
         rocketjoe::session
-        rocketjoe::protocol
         rocketjoe::ql
 )
 

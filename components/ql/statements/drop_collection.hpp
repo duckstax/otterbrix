@@ -17,7 +17,7 @@ namespace components::ql {
         ~drop_collection_t() final = default;
     };
 
-} // namespace components::protocol
+} // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
@@ -33,8 +33,8 @@ namespace msgpack {
                     if (o.via.array.size != 2) {
                         throw msgpack::type_error();
                     }
-                    v.database_ = o.via.array.ptr[0].as<components::ql::database_name_t>();
-                    v.collection_ = o.via.array.ptr[1].as<components::ql::database_name_t>();
+                    v.database_ = o.via.array.ptr[0].as<database_name_t>();
+                    v.collection_ = o.via.array.ptr[1].as<database_name_t>();
                     return o;
                 }
             };
