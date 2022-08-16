@@ -10,6 +10,7 @@ namespace components::index {
         index_t() = delete;
         index_t(const index_t&) = delete;
         index_t& operator=(const index_t&) = delete;
+        using pointer = index_t*;
 
         class iterator_t {
         public:
@@ -26,33 +27,34 @@ namespace components::index {
             bool operator==(const iterator_t& other) const;
             bool operator!=(const iterator_t& other) const;
 
-        private:
-            virtual reference value_ref() const;
-            virtual iterator_t& next();
-            virtual bool equals(const iterator_t& other) const;
-            virtual bool not_equals(const iterator_t& other) const;
+        protected:
+            virtual reference value_ref() const = 0;
+            virtual iterator_t& next() = 0;
+            virtual bool equals(const iterator_t& other) const = 0;
+            virtual bool not_equals(const iterator_t& other) const = 0;
         };
 
         using iterator = iterator_t;
+        using range = std::pair<iterator, iterator>;
 
         void insert(value_t, doc_t);
-        iterator_t lower_bound(const query_t& values) const;
-        iterator_t upper_bound(const query_t& values) const;
-        iterator_t cbegin() const;
-        iterator_t cend() const;
+        iterator lower_bound(const query_t& values) const;
+        iterator upper_bound(const query_t& values) const;
+        iterator cbegin() const;
+        iterator cend() const;
         [[nodiscard]] auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
-        std::pmr::memory_resource* resource() const;
-        ql::index_type type() const;
+        [[nodiscard]] std::pmr::memory_resource* resource() const;
+        [[nodiscard]] ql::index_type type() const;
 
     protected:
         index_t(std::pmr::memory_resource* resource, index_type type, const keys_base_storage_t& keys);
         virtual ~index_t();
 
         virtual void insert_impl(value_t value_key, doc_t) = 0;
-        virtual iterator_t lower_bound_impl(const query_t& values) const;
-        virtual iterator_t upper_bound_impl(const query_t& values) const;
-        virtual iterator_t cbegin_impl() const;
-        virtual iterator_t cend_impl() const;
+        virtual iterator lower_bound_impl(const query_t& values) const = 0;
+        virtual iterator upper_bound_impl(const query_t& values) const = 0;
+        virtual iterator cbegin_impl() const = 0;
+        virtual iterator cend_impl() const = 0;
 
     private:
         std::pmr::memory_resource* resource_;
@@ -60,6 +62,6 @@ namespace components::index {
         keys_base_storage_t keys_;
     };
 
-    using index_raw_ptr = index_t*;
     using index_ptr = std::unique_ptr<index_t>;
+
 } // namespace components::index

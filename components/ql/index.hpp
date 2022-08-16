@@ -43,7 +43,8 @@ namespace msgpack {
                     auto collection = o.via.array.ptr[1].as<std::string>();
                     auto type = static_cast<components::ql::index_type>(o.via.array.ptr[2].as<char>());
                     v = components::ql::create_index_t(database, collection, type);
-                    v.keys_ = o.via.array.ptr[3].as<std::vector<std::string>>(); //todo
+                    auto data = o.via.array.ptr[3].as<std::vector<std::string>>();
+                    v.keys_ = std::pmr::vector<std::pmr::string>(data.begin(),data.end()); //todo
                     return o;
                 }
             };

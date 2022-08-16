@@ -7,19 +7,19 @@ namespace components::index {
         , type_(type)
         , keys_(keys) {}
 
-    iterator index_t::lower_bound(const query_t& values) const {
+    index_t::iterator index_t::lower_bound(const query_t& values) const {
         return lower_bound_impl(values);
     }
 
-    Iterator index_t::upper_bound(const query_t& values) const {
+    index_t::iterator index_t::upper_bound(const query_t& values) const {
         return upper_bound_impl(values);
     }
 
-    Iterator index_t::cbegin() const {
+    index_t::iterator index_t::cbegin() const {
         return cbegin_impl();
     }
 
-    Iterator index_t::cend() const {
+    index_t::iterator index_t::cend() const {
         return cend_impl();
     }
 

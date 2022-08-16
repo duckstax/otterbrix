@@ -3,10 +3,11 @@
 #include <utility>
 #include <iostream>
 
-#include "document/mutable/mutable_dict.hpp"
+#include "components/document/mutable/mutable_dict.hpp"
+#include "core/pmr_unique.hpp"
 
 namespace components::index {
-/*
+
     void find(const index_engine_ptr& ptr, query_t query,result_set_t* set) {
         auto* index  = search_index(ptr, query);
         index->find(std::move(query),set);
@@ -16,7 +17,6 @@ namespace components::index {
         auto* index  = search_index(ptr, id);
         index->find(id,set);
     }
-    */
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs) {
         auto* index = search_index(ptr, id);
@@ -52,11 +52,11 @@ namespace components::index {
         }
     }
 
-    auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t* {
+    auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer {
         return ptr->find(id);
     }
 
-    auto search_index(const index_engine_ptr& ptr, const query_t& query) -> index_t* {
+    auto search_index(const index_engine_ptr& ptr, const query_t& query) -> index_t::pointer {
         return ptr->find(query);
     }
 
@@ -65,7 +65,7 @@ namespace components::index {
         auto align = alignof(index_engine_t);
         auto* buffer = resource->allocate(size, align);
         auto* index_engine = new (buffer) index_engine_t(resource);
-        return {index_engine, deleter(resource)};
+        return {index_engine, core::deleter_t(resource)};
     }
 
     index_engine_t::index_engine_t(actor_zeta::detail::pmr::memory_resource* resource)
@@ -75,9 +75,9 @@ namespace components::index {
         , storage_(resource){
     }
 
-    auto index_engine_t::emplace(const keys_base_t& keys, value_t value) -> uint32_t {
+    auto index_engine_t::add_index(const keys_base_storage_t & keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
-        auto d = storage_.insert(end, std::move(value));
+        auto d = storage_.insert(end, index);
         auto result = mapper_.emplace(keys, d);
         auto new_id = index_to_mapper_.size();
         index_to_mapper_.emplace(new_id, d);
@@ -88,7 +88,7 @@ namespace components::index {
         return resource_;
     }
 
-    auto index_engine_t::find(id_index id) -> index_raw_ptr {
+    auto index_engine_t::find(id_index id) -> index_t::pointer {
         return index_to_mapper_.find(id)->second->get();
     }
 
@@ -96,7 +96,7 @@ namespace components::index {
         return mapper_.size();
     }
 
-    auto index_engine_t::find(const keys_base_t& query) -> index_raw_ptr {
+    auto index_engine_t::find(const keys_base_storage_t& query) -> index_t::pointer {
         return mapper_.find(query)->second->get();
     }
 

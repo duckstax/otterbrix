@@ -6,9 +6,9 @@
 
 namespace core {
 
-    class deleter final {
+    class deleter_t final {
     public:
-        explicit deleter(std::pmr::memory_resource* ptr)
+        explicit deleter_t(std::pmr::memory_resource* ptr)
             : ptr_(ptr) {}
 
         template<class T>
@@ -22,34 +22,35 @@ namespace core {
     };
 
     namespace pmr {
+
         template<class T>
-        using unique_ptr = std::unique_ptr<T, deleter>;
+        using unique_ptr  = std::unique_ptr<T,deleter_t>;
 
         template<class T>
         struct make_uniq_ {
-            typedef unique_ptr<T> single_object_;
+            using single_object_ = unique_ptr<T>;
         };
 
         template<class T>
         struct make_uniq_<T[]> {
-            typedef unique_ptr<T[]> array_;
+            using array_ =  unique_ptr<T[]>;
         };
 
-        template<class T, size_t _Bound>
-        struct make_uniq_<T[_Bound]> {
+        template<class T, size_t Bound>
+        struct make_uniq_<T[Bound]> {
             struct invalid_type_ {};
         };
 
         template<class T, class... Args>
         inline typename make_uniq_<T>::__single_object
         make_unique(std::pmr::memory_resource* ptr, Args&&... args) {
-            return unique_ptr<T>(new T(std::forward<Args>(args)...), deleter(ptr));
+            return unique_ptr<T>(new T(std::forward<Args>(args)...), deleter_t(ptr));
         }
 
         template<typename T>
         inline typename make_uniq_<T>::array_
         make_unique(std::pmr::memory_resource* ptr, size_t num) {
-            return unique_ptr<T>(new std::remove_extent_t<T>[num](), deleter(ptr));
+            return unique_ptr<T>(new std::remove_extent_t<T>[num](), deleter_t(ptr));
         }
 
         template<typename _Tp, typename... Args>
