@@ -1,6 +1,8 @@
 project(index)
 
 set(${PROJECT_NAME}_SOURCES
+        hash_index.cpp
+        index.cpp
         index_engine.cpp
         single_field_index.cpp
 )

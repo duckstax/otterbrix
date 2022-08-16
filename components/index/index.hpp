@@ -54,9 +54,9 @@ namespace components::index {
         iterator upper_bound(const query_t& values) const;
         iterator cbegin() const;
         iterator cend() const;
-        [[nodiscard]] auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
-        [[nodiscard]] std::pmr::memory_resource* resource() const;
-        [[nodiscard]] ql::index_type type() const;
+        auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
+        std::pmr::memory_resource* resource() const noexcept;
+        ql::index_type type() const noexcept;
 
     protected:
         index_t(std::pmr::memory_resource* resource, index_type type, const keys_base_storage_t& keys);

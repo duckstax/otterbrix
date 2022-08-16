@@ -9,13 +9,13 @@
 namespace components::index {
 
     void find(const index_engine_ptr& ptr, query_t query,result_set_t* set) {
-        auto* index  = search_index(ptr, query);
-        ///index->find(std::move(query),set);
+        /// auto* index  = search_index(ptr, query);
+        /// index->find(std::move(query),set);
     }
 
     void find(const index_engine_ptr& ptr, id_index id , result_set_t* set) {
-        auto* index  = search_index(ptr, id);
-        //index->find(id,set);
+        /// auto* index  = search_index(ptr, id);
+        /// index->find(id,set);
     }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs) {

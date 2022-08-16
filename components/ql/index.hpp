@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory_resource>
+#include <vector>
+
+
 #include "ql_statement.hpp"
 
 namespace components::ql {
@@ -71,7 +75,8 @@ namespace msgpack {
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
                     o.via.array.ptr[2] = msgpack::object(static_cast<char>(v.index_type_), o.zone);
-                    o.via.array.ptr[3] = msgpack::object(v.keys_, o.zone); //todo
+                    std::vector<std::string> tmp(v.keys_.begin(),v.keys_.end());
+                    o.via.array.ptr[3] = msgpack::object(tmp, o.zone); //todo
                 }
             };
 

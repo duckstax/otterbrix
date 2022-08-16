@@ -19,7 +19,7 @@ namespace components::index {
         auto matching(id_index id) -> index_t::pointer;
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto add_index(const keys_base_storage_t&, index_ptr) -> uint32_t;
-        [[nodiscard]] auto size() const -> std::size_t;
+        auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
     private:
@@ -39,7 +39,7 @@ namespace components::index {
 
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr;
     auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t*;
-    auto search_index(const index_engine_ptr& ptr, const query_t& query) -> index_t*;
+    auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t*;
 
     template<class Target, class... Args>
     auto make_index(index_engine_ptr& ptr, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
