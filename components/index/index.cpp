@@ -42,19 +42,19 @@ namespace components::index {
     index_t::~index_t() = default;
 
     const document_ptr& index_t::iterator_t::operator*() const {
-        return value_ref();
+        return impl_->value_ref();
     }
 
     index_t::iterator_t& index_t::iterator_t::operator++() {
-        return next();
+        return impl_->next();
     }
 
     bool index_t::iterator_t::operator==(const iterator_t& other) const {
-        return equals(other);
+        return impl_->equals(other);
     }
 
     bool index_t::iterator_t::operator!=(const iterator_t& other) const {
-        return not_equals(other);
+        return impl_->not_equals(other);
     }
 
     index_t::iterator_t::~iterator_t() = default;

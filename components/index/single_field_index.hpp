@@ -18,19 +18,19 @@ namespace components::index {
         ~single_field_index_t() override;
 
     private:
-        class iterator_t final : public index_t::iterator {
+        class impl_t final : public index_t::iterator::iterator_impl_t {
         public:
-            reference value_ref() const {}
-            iterator_t& next() {}
+            index_t::iterator::reference value_ref() const override {}
+            iterator_t& next() override {}
             bool equals(const iterator_t& other) const {}
             bool not_equals(const iterator_t& other) const {}
         };
 
         auto insert_impl(value_t key, document_ptr value) -> void override;
-        virtual index_t::iterator lower_bound_impl(const query_t& values) const {}
-        virtual index_t::iterator upper_bound_impl(const query_t& values) const {}
-        virtual index_t::iterator cbegin_impl() const {}
-        virtual index_t::iterator cend_impl() const {}
+        index_t::iterator lower_bound_impl(const query_t& values) const override;
+        index_t::iterator upper_bound_impl(const query_t& values) const override;
+        index_t::iterator cbegin_impl() const override;
+        index_t::iterator cend_impl() const override;
 
     private:
         storage_t data_;

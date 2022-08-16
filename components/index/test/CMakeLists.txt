@@ -4,7 +4,7 @@ add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
         single_field_index.cpp
-        index.cpp
+        #index.cpp
         )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
