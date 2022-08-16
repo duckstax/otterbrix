@@ -6,4 +6,4 @@ namespace components::ql {
         : ql_statement_t(statement_type::drop_database, database, collection_name_t()) {
     }
 
-} // namespace components::protocol
+} // namespace components::ql
