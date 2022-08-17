@@ -17,7 +17,6 @@ target_link_libraries(
         rocketjoe::database
         rocketjoe::cursor
         rocketjoe::session
-        rocketjoe::parser
         ${CONAN_LIBS}
 )
 

@@ -108,7 +108,7 @@ namespace components::ql {
 
     private:
         type type_;
-        std::variant<std::monostate, int32_t, uint32_t, std::string> storage_;
+        std::variant<std::monostate,bool, int32_t, uint32_t, std::string> storage_;
     };
 
     struct expr_t {

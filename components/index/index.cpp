@@ -46,7 +46,8 @@ namespace components::index {
     }
 
     index_t::iterator_t& index_t::iterator_t::operator++() {
-        return impl_->next();
+        impl_->next();
+        return *this;
     }
 
     bool index_t::iterator_t::operator==(const iterator_t& other) const {
@@ -56,6 +57,9 @@ namespace components::index {
     bool index_t::iterator_t::operator!=(const iterator_t& other) const {
         return impl_->not_equals(other);
     }
+
+    index_t::iterator_t::iterator_t(index_t::iterator_t::iterator_impl_t* ptr)
+        : impl_(ptr) {}
 
     index_t::iterator_t::~iterator_t() = default;
 

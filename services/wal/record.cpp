@@ -1,4 +1,5 @@
 #include "record.hpp"
+#include <components/ql/statements.hpp>
 
 namespace services::wal {
 

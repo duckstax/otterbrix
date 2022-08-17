@@ -1,7 +1,7 @@
 #pragma once
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
-#include <components/protocol/base.hpp>
+
 #include <core/file/file.hpp>
 #include <boost/filesystem.hpp>
 #include <wal/base.hpp>

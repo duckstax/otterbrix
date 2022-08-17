@@ -35,7 +35,6 @@ set(ROCKETJOE_LIBS
         rocketjoe::session
         rocketjoe::document
         rocketjoe::dispatcher
-        rocketjoe::parser
         rocketjoe::wal
         rocketjoe::disk
         rocketjoe::locks

@@ -24,7 +24,6 @@ target_link_libraries(
         rocketjoe::document
         rocketjoe::cursor
         rocketjoe::session
-        rocketjoe::parser
         rocketjoe::locks
 )
 

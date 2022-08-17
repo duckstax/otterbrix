@@ -1,11 +1,12 @@
 #pragma once
 
+#include <utility>
+#include <variant>
+
 #include <actor-zeta.hpp>
 
-#include <protocol/protocol.hpp>
-
+#include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
-#include <utility>
 
 class session_t {
 public:
@@ -25,7 +26,7 @@ public:
         return std::get<T>(data_);
     }
 
-    statement_type type() const;
+    components::ql::statement_type type() const;
 
 private:
     actor_zeta::address_t address_;

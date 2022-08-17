@@ -21,17 +21,3 @@ namespace components::index {
     using result_set_t = cursor::sub_cursor_t;
 
 }
-
-/*
-#include <components/document/document.hpp>
-#include <components/document/document_view.hpp>
-#include <components/document/wrapper_value.hpp>
-#include <components/log/log.hpp>
-#include <components/parser/conditional_expression.hpp>
-#include <components/ql/expr.hpp>
-#include <components/session/session.hpp>
-#include <components/cursor/cursor.hpp>
-
-#include <actor-zeta/detail/pmr/memory_resource.hpp>
-#include <actor-zeta/detail/pmr/polymorphic_allocator.hpp>
- */
