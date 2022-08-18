@@ -122,7 +122,7 @@ namespace components::document {
 
     ::document::retained_const_t<::document::impl::value_t> get_value_from_msgpack_(const msgpack::object &value) {
         if (value.type == msgpack::type::object_type::BOOLEAN) return ::document::impl::new_value(value.as<bool>());
-        if (value.type == msgpack::type::object_type::POSITIVE_INTEGER) return ::document::impl::new_value(value.as<ulong>());
+        if (value.type == msgpack::type::object_type::POSITIVE_INTEGER) return ::document::impl::new_value(value.as<uint32_t>());
         if (value.type == msgpack::type::object_type::NEGATIVE_INTEGER) return ::document::impl::new_value(value.as<long>());
         if (value.type == msgpack::type::object_type::FLOAT64) return ::document::impl::new_value(value.as<double>());
         if (value.type == msgpack::type::object_type::STR) return ::document::impl::new_value(value.as<std::string>());
