@@ -24,16 +24,17 @@ namespace components::index {
             impl_t(const_iterator iterator);
             index_t::iterator::reference value_ref() const override;
             iterator_impl_t* next() override;
-            bool equals(const iterator_t& other) const override;
-            bool not_equals(const iterator_t& other) const override;
+            bool equals(const iterator_impl_t* other) const override;
+            bool not_equals(const iterator_impl_t* other) const override;
 
         private:
             const_iterator iterator_;
         };
 
         auto insert_impl(value_t key, document_ptr value) -> void override;
-        iterator lower_bound_impl(const query_t& values) const override;
-        iterator upper_bound_impl(const query_t& values) const override;
+        range find_impl(const value_t& value) const override;
+        range lower_bound_impl(const query_t& query) const override;
+        range upper_bound_impl(const query_t& query) const override;
         iterator cbegin_impl() const override;
         iterator cend_impl() const override;
 

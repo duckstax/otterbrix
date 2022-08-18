@@ -9,12 +9,16 @@ namespace components::index {
               assert(resource!= nullptr);
     }
 
-    index_t::iterator index_t::lower_bound(const query_t& values) const {
-        return lower_bound_impl(values);
+    index_t::range index_t::find(const value_t& value) const {
+        return find_impl(value);
     }
 
-    index_t::iterator index_t::upper_bound(const query_t& values) const {
-        return upper_bound_impl(values);
+    index_t::range index_t::lower_bound(const query_t& query) const {
+        return lower_bound_impl(query);
+    }
+
+    index_t::range index_t::upper_bound(const query_t& query) const {
+        return upper_bound_impl(query);
     }
 
     index_t::iterator index_t::cbegin() const {
@@ -51,17 +55,19 @@ namespace components::index {
     }
 
     bool index_t::iterator_t::operator==(const iterator_t& other) const {
-        return impl_->equals(other);
+        return impl_->equals(other.impl_);
     }
 
     bool index_t::iterator_t::operator!=(const iterator_t& other) const {
-        return impl_->not_equals(other);
+        return impl_->not_equals(other.impl_);
     }
 
     index_t::iterator_t::iterator_t(index_t::iterator_t::iterator_impl_t* ptr)
         : impl_(ptr) {}
 
-    index_t::iterator_t::~iterator_t() = default;
+    index_t::iterator_t::~iterator_t() {
+        delete impl_; //todo
+    }
 
     index_t::~index_t() = default;
 

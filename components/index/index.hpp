@@ -38,8 +38,8 @@ namespace components::index {
                 virtual ~iterator_impl_t() = default;
                 virtual reference value_ref() const = 0;
                 virtual iterator_impl_t* next() = 0;
-                virtual bool equals(const iterator_t& other) const = 0;
-                virtual bool not_equals(const iterator_t& other) const = 0;
+                virtual bool equals(const iterator_impl_t* other) const = 0;
+                virtual bool not_equals(const iterator_impl_t* other) const = 0;
             };
 
         private:
@@ -50,8 +50,9 @@ namespace components::index {
         using range = std::pair<iterator, iterator>;
 
         void insert(value_t, doc_t);
-        iterator lower_bound(const query_t& values) const;
-        iterator upper_bound(const query_t& values) const;
+        range find(const value_t& value) const;
+        range lower_bound(const query_t& query) const;
+        range upper_bound(const query_t& query) const;
         iterator cbegin() const;
         iterator cend() const;
         auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
@@ -62,8 +63,9 @@ namespace components::index {
         index_t(std::pmr::memory_resource* resource, index_type type, const keys_base_storage_t& keys);
 
         virtual void insert_impl(value_t value_key, doc_t) = 0;
-        virtual iterator lower_bound_impl(const query_t& values) const  = 0;
-        virtual iterator upper_bound_impl(const query_t& values) const  = 0;
+        virtual range find_impl(const value_t& value) const = 0;
+        virtual range lower_bound_impl(const query_t& query) const  = 0;
+        virtual range upper_bound_impl(const query_t& query) const  = 0;
         virtual iterator cbegin_impl() const  = 0;
         virtual iterator cend_impl() const  = 0;
 

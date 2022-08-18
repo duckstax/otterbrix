@@ -15,8 +15,14 @@ namespace components::index {
         iterator_++;
         return this;
     }
-    bool single_field_index_t::impl_t::equals(const iterator_t& other) const {}
-    bool single_field_index_t::impl_t::not_equals(const iterator_t& other) const {}
+    bool single_field_index_t::impl_t::equals(const iterator_impl_t* other) const {
+        return iterator_ == dynamic_cast<const impl_t *>(other)->iterator_; //todo
+    }
+
+    bool single_field_index_t::impl_t::not_equals(const iterator_impl_t* other) const {
+        return iterator_ != dynamic_cast<const impl_t *>(other)->iterator_; //todo
+    }
+
     single_field_index_t::impl_t::impl_t(const_iterator iterator)
         : iterator_(iterator) {
     }
@@ -25,11 +31,30 @@ namespace components::index {
         storage_.emplace(key, value);
     }
 
-    index_t::iterator single_field_index_t::lower_bound_impl(const query_t& values) const {
-        auto it = storage_.lower_bound()
+    index_t::range single_field_index_t::find_impl(const value_t& value) const {
+        auto it = storage_.find(value);
+        if (it != storage_.cend()) {
+            auto first = iterator(new impl_t(it));
+            auto second = iterator(new impl_t(++it));
+            return std::make_pair(first, second);
+        }
+        return std::make_pair(cend(), cend());
     }
-    index_t::iterator single_field_index_t::upper_bound_impl(const query_t& values) const {}
-    index_t::iterator single_field_index_t::cbegin_impl() const {}
-    index_t::iterator single_field_index_t::cend_impl() const {}
+
+    index_t::range single_field_index_t::lower_bound_impl(const query_t& query) const {
+        //todo
+    }
+
+    index_t::range single_field_index_t::upper_bound_impl(const query_t& query) const {
+        //todo
+    }
+
+    index_t::iterator single_field_index_t::cbegin_impl() const {
+        return index_t::iterator(new impl_t(storage_.cbegin()));
+    }
+
+    index_t::iterator single_field_index_t::cend_impl() const {
+        return index_t::iterator(new impl_t(storage_.cend()));
+    }
 
 } // namespace components::index
