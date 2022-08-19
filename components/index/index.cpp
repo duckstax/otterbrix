@@ -13,21 +13,13 @@ namespace components::index {
         return find_impl(value);
     }
 
-    index_t::range index_t::lower_bound(const query_t& query) const {
-        return lower_bound_impl(query);
+    index_t::range index_t::lower_bound(const value_t& value) const {
+        return lower_bound_impl(value);
     }
 
-    index_t::range index_t::upper_bound(const query_t& query) const {
-        return upper_bound_impl(query);
+    index_t::range index_t::upper_bound(const value_t& value) const {
+        return upper_bound_impl(value);
     }
-
-//    index_t::iterator index_t::cbegin() const {
-//        return cbegin_impl();
-//    }
-//
-//    index_t::iterator index_t::cend() const {
-//        return cend_impl();
-//    }
 
     auto index_t::insert(value_t key, doc_t value) -> void {
         return insert_impl(key, value);
@@ -54,19 +46,11 @@ namespace components::index {
         return *this;
     }
 
-//    bool index_t::iterator_t::operator==(const iterator_t& other) const {
-//        return impl_->equals(other.impl_);
-//    }
-//
-//    bool index_t::iterator_t::operator!=(const iterator_t& other) const {
-//        return impl_->not_equals(other.impl_);
-//    }
-
     index_t::iterator_t::iterator_t(index_t::iterator_t::iterator_impl_t* ptr)
         : impl_(ptr) {}
 
     index_t::iterator_t::~iterator_t() {
-        delete impl_; //todo
+        //delete impl_; //todo
     }
 
     index_t::~index_t() = default;
