@@ -21,6 +21,14 @@ namespace components::index {
         return upper_bound_impl(value);
     }
 
+    index_t::iterator index_t::cbegin() const {
+        return cbegin_impl();
+    }
+
+    index_t::iterator index_t::cend() const {
+        return cend_impl();
+    }
+
     auto index_t::insert(value_t key, doc_t value) -> void {
         return insert_impl(key, value);
     }
@@ -44,6 +52,14 @@ namespace components::index {
     index_t::iterator_t& index_t::iterator_t::operator++() {
         impl_->next();
         return *this;
+    }
+
+    bool index_t::iterator_t::operator==(const iterator_t& other) const {
+        return impl_->equals(other.impl_);
+    }
+
+    bool index_t::iterator_t::operator!=(const iterator_t& other) const {
+        return impl_->not_equals(other.impl_);
     }
 
     index_t::iterator_t::iterator_t(index_t::iterator_t::iterator_impl_t* ptr)

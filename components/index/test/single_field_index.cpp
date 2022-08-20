@@ -21,46 +21,51 @@ TEST_CASE("single_field_index:base") {
     {
         auto value = ::document::impl::new_value(10);
         auto find_range = index.find(components::index::value_t(value));
-        REQUIRE(find_range.second == 1);
+        REQUIRE(find_range.first != index.cend());
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 10);
         REQUIRE(document_view_t(*find_range.first).get_string("countStr") == "10");
+        REQUIRE(++find_range.first == find_range.second);
     }
     {
         auto value = ::document::impl::new_value(11);
         auto find_range = index.find(components::index::value_t(value));
-        REQUIRE(find_range.second == 0);
+        REQUIRE(find_range.first == index.cend());
     }
     {
         auto value = ::document::impl::new_value(4);
         auto find_range = index.lower_bound(components::index::value_t(value));
-        REQUIRE(find_range.second == 3);
+        REQUIRE(find_range.first == index.cbegin());
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 0);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 1);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 2);
+        REQUIRE(++find_range.first == find_range.second);
     }
     {
         auto value = ::document::impl::new_value(5);
         auto find_range = index.lower_bound(components::index::value_t(value));
-        REQUIRE(find_range.second == 3);
+        REQUIRE(find_range.first == index.cbegin());
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 0);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 1);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 2);
+        REQUIRE(++find_range.first == find_range.second);
     }
     {
         auto value = ::document::impl::new_value(6);
         auto find_range = index.upper_bound(components::index::value_t(value));
-        REQUIRE(find_range.second == 3);
+        REQUIRE(find_range.second == index.cend());
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 8);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 10);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 13);
+        REQUIRE(++find_range.first == find_range.second);
     }
     {
         auto value = ::document::impl::new_value(7);
         auto find_range = index.upper_bound(components::index::value_t(value));
-        REQUIRE(find_range.second == 3);
+        REQUIRE(find_range.second == index.cend());
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 8);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 10);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 13);
+        REQUIRE(++find_range.first == find_range.second);
     }
 }
 
