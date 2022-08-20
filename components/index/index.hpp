@@ -30,12 +30,16 @@ namespace components::index {
 
             reference operator*() const;
             iterator_t& operator++();
+            bool operator==(const iterator_t& other) const;
+            bool operator!=(const iterator_t& other) const;
 
             class iterator_impl_t {
             public:
                 virtual ~iterator_impl_t() = default;
                 virtual reference value_ref() const = 0;
                 virtual iterator_impl_t* next() = 0;
+                virtual bool equals(const iterator_impl_t* other) const = 0;
+                virtual bool not_equals(const iterator_impl_t* other) const = 0;
             };
 
         private:
@@ -43,12 +47,14 @@ namespace components::index {
         };
 
         using iterator = iterator_t;
-        using range = std::pair<iterator, uint>;
+        using range = std::pair<iterator, iterator>;
 
         void insert(value_t, doc_t);
         range find(const value_t& value) const;
         range lower_bound(const value_t& value) const;
         range upper_bound(const value_t& value) const;
+        iterator cbegin() const;
+        iterator cend() const;
         auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
         std::pmr::memory_resource* resource() const noexcept;
         ql::index_type type() const noexcept;
@@ -60,6 +66,8 @@ namespace components::index {
         virtual range find_impl(const value_t& value) const = 0;
         virtual range lower_bound_impl(const value_t& value) const = 0;
         virtual range upper_bound_impl(const value_t& value) const = 0;
+        virtual iterator cbegin_impl() const  = 0;
+        virtual iterator cend_impl() const  = 0;
 
     private:
         std::pmr::memory_resource* resource_;
