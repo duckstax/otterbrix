@@ -15,7 +15,11 @@ namespace services::collection {
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk)
-        , index_engine_(new components::index::index_engine_t(resource_),components::index::deleter(resource_)){
+        , resource_(new std::pmr::monotonic_buffer_resource())
+        , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
+        , statistic_(resource_)
+        , storage_(resource_)
+        , cursor_storage_(resource_) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
         add_handler(handler_id(route::insert_many), &collection_t::insert_many);
@@ -31,7 +35,7 @@ namespace services::collection {
         add_handler(handler_id(route::create_index), &collection_t::create_index);
     }
 
-    void collection_t::create_documents(components::session::session_id_t &session, std::list<document_ptr> &documents) {
+    void collection_t::create_documents(components::session::session_id_t& session, std::list<document_ptr>& documents) {
         debug(log_, "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
         for (const auto& document : documents) {
             insert_(document);
@@ -40,23 +44,22 @@ namespace services::collection {
     }
 
     auto collection_t::size(session_id_t& session) -> void {
-        debug(log_,"collection {}::size", name_);
+        debug(log_, "collection {}::size", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher->id());
         auto result = dropped_
-                      ? result_size()
-                      : result_size(size_());
+                          ? result_size()
+                          : result_size(size_());
         actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session, result);
     }
 
-
     void collection_t::insert_one(session_id_t& session, document_ptr& document) {
-        debug(log_,"collection_t::insert_one : {}", name_);
-        auto dispatcher =  current_message()->sender();
+        debug(log_, "collection_t::insert_one : {}", name_);
+        auto dispatcher = current_message()->sender();
         //todo: debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_insert_one()
-                      : result_insert_one(insert_(document));
+                          ? result_insert_one()
+                          : result_insert_one(insert_(document));
         if (!result.empty()) {
             std::vector<document_ptr> new_documents = {document};
             actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), new_documents);
@@ -64,8 +67,8 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result);
     }
 
-    void collection_t::insert_many(session_id_t& session, std::list<document_ptr> &documents) {
-        debug(log_,"collection_t::insert_many : {}", name_);
+    void collection_t::insert_many(session_id_t& session, std::list<document_ptr>& documents) {
+        debug(log_, "collection_t::insert_many : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         if (dropped_) {
@@ -88,83 +91,81 @@ namespace services::collection {
     }
 
     auto collection_t::find(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        debug(log_,"collection::find : {}", name_);
+        debug(log_, "collection::find : {}", name_);
         auto dispatcher = current_message()->sender();
         //debug(log_,"dispatcher : {}", dispatcher->id());
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
-            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(resource_,address()));
+            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(resource_, address()));
             search_(cond);
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
         }
     }
 
-
     void collection_t::find_one(const session_id_t& session, const components::ql::find_statement& cond) {
-        auto trace =  statistic_.new_trace();
-        debug(log_,"collection::find_one : {}", name_);
+        auto trace = statistic_.new_trace();
+        debug(log_, "collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_find_one()
-                      : search_one_(cond);
+                          ? result_find_one()
+                          : search_one_(cond);
         actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result);
     }
 
     auto collection_t::delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        debug(log_,"collection::delete_one : {}", name_);
+        debug(log_, "collection::delete_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_delete()
-                      : delete_one_(cond);
+                          ? result_delete()
+                          : delete_one_(cond);
         send_delete_to_disk_(session, result);
         actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
     auto collection_t::delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void {
-        debug(log_,"collection::delete_many : {}", name_);
-        auto dispatcher =current_message()->sender();
+        debug(log_, "collection::delete_many : {}", name_);
+        auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_delete()
-                      : delete_many_(cond);
+                          ? result_delete()
+                          : delete_many_(cond);
         send_delete_to_disk_(session, result);
         actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
-
     auto collection_t::update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
-        debug(log_,"collection::update_one : {}", name_);
+        debug(log_, "collection::update_one : {}", name_);
         auto dispatcher = current_message()->sender();
         ///todo debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_update()
-                      : update_one_(cond, update, upsert);
+                          ? result_update()
+                          : update_one_(cond, update, upsert);
         send_update_to_disk_(session, result);
         actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
     }
 
     auto collection_t::update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
-        debug(log_,"collection::update_many : {}", name_);
+        debug(log_, "collection::update_many : {}", name_);
         auto dispatcher = current_message()->sender();
         ///todo :debug(log_,"dispatcher : {}", dispatcher.type());
         auto result = dropped_
-                      ? result_update()
-                      : update_many_(cond, update, upsert);
+                          ? result_update()
+                          : update_many_(cond, update, upsert);
         send_update_to_disk_(session, result);
         actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
     }
 
     void collection_t::drop(const session_id_t& session) {
-        debug(log_,"collection::drop : {}", name_);
+        debug(log_, "collection::drop : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: debug(log_,"dispatcher : {}", dispatcher.type());
         actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(name_));
     }
 
-    document_id_t collection_t::insert_(const document_ptr&document) {
+    document_id_t collection_t::insert_(const document_ptr& document) {
         document_view_t view(document);
         auto id = document_id_t(view.get_string("_id"));
         if (storage_.contains(id)) {
@@ -178,7 +179,7 @@ namespace services::collection {
 
     document_view_t collection_t::get_(const document_id_t& id) const {
         if (storage_.contains(id)) {
-            const auto &doc = storage_.at(id);
+            const auto& doc = storage_.at(id);
             return document_view_t(doc);
         } else {
             //todo error not valid id
@@ -198,7 +199,7 @@ namespace services::collection {
         return true;
     }
 
-    result_find collection_t::search_(components::ql::find_one_statement&,components::cursor::sub_cursor_t*) {
+    result_find collection_t::search_(components::ql::find_one_statement&, components::cursor::sub_cursor_t*) {
         if (!cond) {
             result_find::result_t res;
             for (auto& it : storage_) {
@@ -211,16 +212,14 @@ namespace services::collection {
         return result_find();
     }
 
-
-
     result_find_one collection_t::search_one_(components::ql::find_one_statement& cond) {
-       /// if (!cond) {
-            auto* result_set = new components::index::result_set_t(resource_);
-            auto* index = index_engine_->find(cond.condition_->key_);
-            index->
+        /// if (!cond) {
+        auto* result_set = new components::index::result_set_t(resource_);
+        auto* index = index_engine_->find(cond.condition_->key_);
+        index->
 
-        ///}
-        return result_find_one();
+            ///}
+            return result_find_one();
     }
 
     result_delete collection_t::delete_one_(const find_condition_ptr& cond) {
@@ -251,8 +250,8 @@ namespace services::collection {
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
             auto res = update_(id, update, true)
-                       ? result_update({id}, {})
-                       : result_update({}, {id});
+                           ? result_update({id}, {})
+                           : result_update({}, {id});
             return res;
         }
         if (upsert) {
@@ -284,7 +283,7 @@ namespace services::collection {
     }
 
     bool collection_t::update_(const document_id_t& id, const document_ptr& update, bool is_commit) {
-        auto &document = storage_.at(id);
+        auto& document = storage_.at(id);
         if (document) {
             if (document->update(*update) && is_commit) {
                 document->commit();
@@ -294,9 +293,9 @@ namespace services::collection {
         return false;
     }
 
-    void collection_t::send_update_to_disk_(const session_id_t& session, const result_update &result) {
+    void collection_t::send_update_to_disk_(const session_id_t& session, const result_update& result) {
         std::vector<document_ptr> update_documents;
-        for (const auto &id : result.modified_ids()) {
+        for (const auto& id : result.modified_ids()) {
             update_documents.push_back(storage_.at(id));
         }
         if (!result.upserted_id().is_null()) {
@@ -307,19 +306,18 @@ namespace services::collection {
         }
     }
 
-    void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete &result) {
+    void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete& result) {
         if (!result.empty()) {
             actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents), session, std::string(database_name_), std::string(name_), result.deleted_ids());
         }
     }
-
 
     void collection_t::close_cursor(session_id_t& session) {
         cursor_storage_.erase(session);
     }
 
 #ifdef DEV_MODE
-    void collection_t::insert_test(const document_ptr &doc) {
+    void collection_t::insert_test(const document_ptr& doc) {
         insert_(doc);
     }
 
@@ -353,4 +351,4 @@ namespace services::collection {
 
 #endif
 
-} // namespace services::storage
+} // namespace services::collection

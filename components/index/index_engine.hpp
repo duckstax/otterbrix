@@ -43,13 +43,13 @@ namespace components::index {
 
     template<class Target, class... Args>
     auto make_index(index_engine_ptr& ptr, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
-
-        auto size = sizeof(Target);
-        auto align = alignof(Target);
-        auto* buffer = ptr->resource()->allocate(size, align);
-        auto* target_ptr = new (buffer) Target(ptr->resource(),keys, std::forward<Args>(args)...);
-
-        return ptr->add_index(keys, core::pmr::unique_ptr<Target>(target_ptr, core::pmr::deleter_t(ptr->resource())));
+        return ptr->add_index(
+            keys,
+            core::pmr::make_unique<Target>(
+                ptr->resource(),
+                keys,
+                std::forward<Args>(args)...,
+                core::pmr::deleter_t(ptr->resource())));
     }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);

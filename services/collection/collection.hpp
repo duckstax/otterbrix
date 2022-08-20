@@ -7,7 +7,10 @@
 
 #include <absl/container/btree_map.h>
 
-#include "index/index_engine.hpp"
+#include <core/pmr_unique.hpp>
+#include <core/btree/btree.hpp>
+
+#include <components/index/index_engine.hpp>
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
@@ -29,7 +32,7 @@ namespace services::collection {
 
     using document_id_t = components::document::document_id_t;
     using document_ptr = components::document::document_ptr;
-    using storage_t = absl::btree_map<document_id_t, document_ptr>;
+    using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
     using document_view_t = components::document::document_view_t;
     using components::parser::find_condition_ptr;
 
@@ -89,7 +92,7 @@ namespace services::collection {
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
 
-        std::pmr::memory_resource* resource_ = new std::pmr::monotonic_buffer_resource() ;
+        std::pmr::memory_resource* resource_;
         /**
         *  index
         */
@@ -100,7 +103,7 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
-        std::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
+        std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
 
 #ifdef DEV_MODE

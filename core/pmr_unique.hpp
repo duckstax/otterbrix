@@ -24,4 +24,13 @@ namespace core::pmr {
     template<class T>
     using unique_ptr = std::unique_ptr<T, deleter_t>;
 
+    template<class Target,class ...Args>
+    unique_ptr<Target> make_unique(std::pmr::memory_resource* ptr,Args&&... args){
+        auto size = sizeof(Target);
+        auto align = alignof(Target);
+        auto* buffer = ptr->allocate(size, align);
+        auto* target_ptr = new (buffer) Target(ptr,std::forward<Args>(args)...);
+        return {target_ptr,deleter_t(ptr)};
+    }
+
 } // namespace pmr
