@@ -6,7 +6,8 @@ namespace document {
 
     class wrapper_value_t {
     public:
-        wrapper_value_t(const impl::value_t* value):value_(value){}
+        explicit wrapper_value_t(const impl::value_t* value)
+            : value_(value) {}
 
         bool operator<(const wrapper_value_t& rhs) const {
            return value_->is_lt(rhs.value_);
@@ -32,7 +33,21 @@ namespace document {
             return !(*this == rhs);
         }
 
+        const impl::value_t* operator*() const {
+            return value_;
+        }
+
+        const impl::value_t* operator->() const {
+            return value_;
+        }
+
     private:
         const impl::value_t* value_;
     };
+
+
+    std::string to_string(const wrapper_value_t &doc) {
+        return doc->to_string().as_string();
+    }
+
 }

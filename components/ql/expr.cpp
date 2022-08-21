@@ -50,18 +50,19 @@ namespace components::ql {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + expr->field_.to_string() + "}}";
+        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + to_string(expr) + "}}";
     }
 
-    expr_t::expr_t(condition_type type, std::string key, field_t field)
+    expr_t::expr_t(condition_type type, std::string key, expr_value_t value)
         : type_(type)
         , key_(std::move(key))
-        , field_(std::move(field))
+        , value_(value)
         , union_(is_union_condition(type_)) {}
 
     expr_t::expr_t(bool is_union)
         : type_(condition_type::novalid)
-        , union_(is_union) {}
+        , value_(nullptr)
+        , union_(is_union){}
 
     bool expr_t::is_union() const {
         return union_;

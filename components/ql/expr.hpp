@@ -5,8 +5,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
-
-#include <core/field/field.hpp>
+#include <components/document/wrapper_value.hpp>
 
 namespace components::ql {
 
@@ -111,6 +110,8 @@ namespace components::ql {
         std::variant<std::monostate,bool, int32_t, uint32_t, std::string> storage_;
     };
 
+    using expr_value_t = ::document::wrapper_value_t;
+
     struct expr_t {
         expr_t(const expr_t&) = delete;
         expr_t(expr_t&&) /*noexcept(false)*/ = default;
@@ -119,10 +120,10 @@ namespace components::ql {
 
         condition_type type_;
         key_t key_;
-        field_t field_;
+        expr_value_t value_;
         std::vector<ptr> sub_conditions_;
 
-        expr_t(condition_type type, std::string key, field_t field);
+        expr_t(condition_type type, std::string key, expr_value_t value);
         explicit expr_t(bool is_union);
         bool is_union() const;
         void append_sub_condition(ptr sub_condition);
@@ -135,12 +136,22 @@ namespace components::ql {
 
     template<class Value>
     inline expr_ptr make_expr(condition_type condition, std::string key, Value value) {
-        return std::make_unique<expr_t>(condition, std::move(key), field_t(value));
+        return make_expr(condition, std::move(key), ::document::impl::new_value(value));
     }
 
     template<>
-    inline expr_ptr make_expr(condition_type condition, std::string key, field_t value) {
-        return std::make_unique<expr_t>(condition, std::move(key), std::move(value));
+    inline expr_ptr make_expr(condition_type condition, std::string key, expr_value_t value) {
+        return std::make_unique<expr_t>(condition, std::move(key), value);
+    }
+
+    template<>
+    inline expr_ptr make_expr(condition_type condition, std::string key, const ::document::impl::value_t* value) {
+        return make_expr(condition, std::move(key), expr_value_t(value));
+    }
+
+    template<>
+    inline expr_ptr make_expr(condition_type condition, std::string key, const std::string &value) {
+        return make_expr(condition, std::move(key), ::document::impl::new_value(::document::slice_t(value)));
     }
 
     inline expr_ptr make_expr() {
