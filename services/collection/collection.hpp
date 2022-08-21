@@ -7,8 +7,8 @@
 
 #include <absl/container/btree_map.h>
 
-#include <core/pmr_unique.hpp>
 #include <core/btree/btree.hpp>
+#include <core/pmr.hpp>
 
 #include <components/index/index_engine.hpp>
 #include <components/cursor/cursor.hpp>

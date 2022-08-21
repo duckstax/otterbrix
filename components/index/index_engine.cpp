@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include "components/document/mutable/mutable_dict.hpp"
-#include "core/pmr_unique.hpp"
+#include "core/pmr.hpp"
 
 namespace components::index {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/pmr_unique.hpp"
+#include "core/pmr.hpp"
 #include "forward.hpp"
 #include <components/ql/index.hpp>
 

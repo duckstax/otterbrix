@@ -12,7 +12,7 @@ namespace components::index {
     class single_field_index_t final : public index_t {
     public:
         using comparator_t = std::less<value_t>;
-        using storage_t = core::btree::pmr::btree_t<value_t, document_ptr, comparator_t>;
+        using storage_t = core::pmr::btree::btree_t<value_t, document_ptr, comparator_t>;
         using const_iterator = storage_t::const_iterator;
 
         single_field_index_t(std::pmr::memory_resource*, const keys_base_storage_t&);

@@ -7,7 +7,7 @@
 
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
-#include <core/pmr_unique.hpp>
+#include <core/pmr.hpp>
 
 namespace components::statistic {
 
