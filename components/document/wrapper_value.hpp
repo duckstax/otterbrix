@@ -46,7 +46,10 @@ namespace document {
     };
 
 
-    std::string to_string(const wrapper_value_t &doc) {
+    inline std::string to_string(const wrapper_value_t &doc) {
+        if (doc->type() == impl::value_type::string) {
+            return "\"" + doc->to_string().as_string() + "\"";
+        }
         return doc->to_string().as_string();
     }
 
