@@ -1,6 +1,5 @@
 #pragma once
 
-
-class query_plan {
+class logical {
 
 };

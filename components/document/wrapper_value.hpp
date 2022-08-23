@@ -10,7 +10,7 @@ namespace document {
             : value_(value) {}
 
         bool operator<(const wrapper_value_t& rhs) const {
-           return value_->is_lt(rhs.value_);
+            return value_->is_lt(rhs.value_);
         }
 
         bool operator>(const wrapper_value_t& rhs) const {
@@ -18,7 +18,7 @@ namespace document {
         }
 
         bool operator<=(const wrapper_value_t& rhs) const {
-           return value_->is_lte(rhs.value_);
+            return value_->is_lte(rhs.value_);
         }
 
         bool operator>=(const wrapper_value_t& rhs) const {
@@ -45,9 +45,6 @@ namespace document {
         const impl::value_t* value_;
     };
 
+    std::string to_string(const wrapper_value_t& doc);
 
-    std::string to_string(const wrapper_value_t &doc) {
-        return doc->to_string().as_string();
-    }
-
-}
+} // namespace document

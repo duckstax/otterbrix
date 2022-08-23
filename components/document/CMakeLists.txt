@@ -1,10 +1,6 @@
 project(document)
 
 set(${PROJECT_NAME}_SOURCES
-        document.cpp
-        document_view.cpp
-        range.cpp
-        structure.cpp
         core/array.cpp
         core/dict.cpp
         core/doc.cpp
@@ -22,7 +18,13 @@ set(${PROJECT_NAME}_SOURCES
         support/num_conversion.cpp
         support/ref_counted.cpp
         support/varint.cpp
-        )
+
+        document.cpp
+        document_view.cpp
+        range.cpp
+        structure.cpp
+        wrapper_value.cpp
+)
 
 
 add_library(rocketjoe_${PROJECT_NAME}
