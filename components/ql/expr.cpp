@@ -50,7 +50,7 @@ namespace components::ql {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + to_string(expr) + "}}";
+        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + to_string(expr->value_) + "}}";
     }
 
     expr_t::expr_t(condition_type type, std::string key, expr_value_t value)

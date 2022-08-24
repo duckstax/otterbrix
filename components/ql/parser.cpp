@@ -58,7 +58,7 @@ namespace components::ql {
         } else if (condition->type() == value_type::array) {
             parse_find_condition_array_(parent_condition, condition->as_array(), real_key);
         } else {
-            auto sub_condition = make_expr(type, real_key, condition);
+            auto sub_condition = make_expr(type, real_key, ::document::impl::new_value(condition).detach());
             if (sub_condition->is_union()) {
                 parse_find_condition_(sub_condition.get(), condition, real_key, std::string());
             }

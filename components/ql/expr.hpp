@@ -6,6 +6,7 @@
 #include <variant>
 #include <vector>
 #include <components/document/wrapper_value.hpp>
+#include <components/document/mutable/mutable_value.hpp>
 
 namespace components::ql {
 
@@ -136,7 +137,7 @@ namespace components::ql {
 
     template<class Value>
     inline expr_ptr make_expr(condition_type condition, std::string key, Value value) {
-        return make_expr(condition, std::move(key), ::document::impl::new_value(value));
+        return make_expr(condition, std::move(key), ::document::impl::new_value(value).detach());
     }
 
     template<>
@@ -151,7 +152,7 @@ namespace components::ql {
 
     template<>
     inline expr_ptr make_expr(condition_type condition, std::string key, const std::string &value) {
-        return make_expr(condition, std::move(key), ::document::impl::new_value(::document::slice_t(value)));
+        return make_expr(condition, std::move(key), ::document::impl::new_value(::document::slice_t(value)).detach());
     }
 
     inline expr_ptr make_expr() {
