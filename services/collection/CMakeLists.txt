@@ -9,6 +9,8 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
         operators/aggregation.cpp
         operators/full_scan.cpp
+        operators/predicate.cpp
+        operators/gt.cpp
 
         collection.cpp
         create_index.cpp

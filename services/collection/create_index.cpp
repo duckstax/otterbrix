@@ -22,19 +22,17 @@ namespace services::collection {
                 return "hashed";
             case index_type::wildcard:
                 return "wildcard";
-            case index_type::default_:
-                return "default";
         }
         return "default";
     }
 
-    std::string keys_index(const std::pmr::vector<std::pmr::string> &keys) {
+    std::string keys_index(const components::ql::keys_base_storage_t &keys) {
         std::string result;
         for (const auto &key : keys) {
             if (!result.empty()) {
                 result += ",";
             }
-            result += key;
+            result += key.as_string();
         }
         return result;
     }
@@ -64,11 +62,6 @@ namespace services::collection {
                 }
 
                 case index_type::wildcard: {
-                    break;
-                }
-
-                case index_type::default_:
-                default: {
                     break;
                 }
             }

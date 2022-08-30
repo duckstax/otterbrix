@@ -8,6 +8,8 @@
 
 namespace components::ql {
 
+    using keys_base_storage_t = std::pmr::vector<key_t>;
+
     enum class index_type : char {
         single,
         composite,
@@ -22,7 +24,7 @@ namespace components::ql {
             : ql_statement_t(statement_type::create_index, database, collection)
             , index_type_(type) {
         }
-        std::pmr::vector<std::pmr::string> keys_;
+        keys_base_storage_t keys_;
         index_type index_type_;
     };
 } // namespace components::ql
@@ -48,7 +50,7 @@ namespace msgpack {
                     auto type = static_cast<components::ql::index_type>(o.via.array.ptr[2].as<char>());
                     v = components::ql::create_index_t(database, collection, type);
                     auto data = o.via.array.ptr[3].as<std::vector<std::string>>();
-                    v.keys_ = std::pmr::vector<std::pmr::string>(data.begin(),data.end()); //todo
+                    v.keys_ = components::ql::keys_base_storage_t(data.begin(),data.end()); //todo
                     return o;
                 }
             };

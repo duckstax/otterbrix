@@ -8,7 +8,7 @@ namespace services::collection::operators {
     public:
         full_scan(collection_t* collection);
 
-        void on_execute(components::ql::find_one_statement& cond, components::cursor::sub_cursor_t* sub_cursor);
+        void on_execute(components::ql::find_statement& cond, components::cursor::sub_cursor_t* sub_cursor);
 
         collection_t* collection_;
     };

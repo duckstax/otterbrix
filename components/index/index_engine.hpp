@@ -48,8 +48,8 @@ namespace components::index {
             core::pmr::make_unique<Target>(
                 ptr->resource(),
                 keys,
-                std::forward<Args>(args)...,
-                core::pmr::deleter_t(ptr->resource())));
+                std::forward<Args>(args).../*,
+                core::pmr::deleter_t(ptr->resource())*/));
     }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);

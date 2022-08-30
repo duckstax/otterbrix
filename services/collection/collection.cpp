@@ -90,7 +90,7 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::find(const session_id_t& session, const find_condition_ptr& cond) -> void {
+    auto collection_t::find(const session_id_t& session, components::ql::find_statement& cond) -> void {
         debug(log_, "collection::find : {}", name_);
         auto dispatcher = current_message()->sender();
         //debug(log_,"dispatcher : {}", dispatcher->id());
@@ -103,7 +103,7 @@ namespace services::collection {
         }
     }
 
-    void collection_t::find_one(const session_id_t& session, const components::ql::find_statement& cond) {
+    void collection_t::find_one(const session_id_t& session, components::ql::find_statement& cond) {
         auto trace = statistic_.new_trace();
         debug(log_, "collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
@@ -114,7 +114,7 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result);
     }
 
-    auto collection_t::delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void {
+    auto collection_t::delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void {
         debug(log_, "collection::delete_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
@@ -125,7 +125,7 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
-    auto collection_t::delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void {
+    auto collection_t::delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void {
         debug(log_, "collection::delete_many : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
@@ -136,7 +136,7 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
     }
 
-    auto collection_t::update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_one : {}", name_);
         auto dispatcher = current_message()->sender();
         ///todo debug(log_,"dispatcher : {}", dispatcher.type());
@@ -147,7 +147,7 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
     }
 
-    auto collection_t::update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_many : {}", name_);
         auto dispatcher = current_message()->sender();
         ///todo :debug(log_,"dispatcher : {}", dispatcher.type());
@@ -199,7 +199,7 @@ namespace services::collection {
         return true;
     }
 
-    result_find collection_t::search_(components::ql::find_one_statement&, components::cursor::sub_cursor_t*) {
+    result_find collection_t::search_(components::ql::find_statement& cond) {
         if (!cond) {
             result_find::result_t res;
             for (auto& it : storage_) {
@@ -212,7 +212,7 @@ namespace services::collection {
         return result_find();
     }
 
-    result_find_one collection_t::search_one_(components::ql::find_one_statement& cond) {
+    result_find_one collection_t::search_one_(components::ql::find_statement& cond) {
         /// if (!cond) {
         auto* result_set = new components::index::result_set_t(resource_);
         auto* index = index_engine_->find(cond.condition_->key_);
@@ -222,7 +222,7 @@ namespace services::collection {
             return result_find_one();
     }
 
-    result_delete collection_t::delete_one_(const find_condition_ptr& cond) {
+    result_delete collection_t::delete_one_(components::ql::find_statement& cond) {
         auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
@@ -232,7 +232,7 @@ namespace services::collection {
         return result_delete();
     }
 
-    result_delete collection_t::delete_many_(const find_condition_ptr& cond) {
+    result_delete collection_t::delete_many_(components::ql::find_statement& cond) {
         result_delete::result_t deleted;
         auto finded_docs = search_(cond);
         for (auto finded_doc : *finded_docs) {
@@ -245,7 +245,7 @@ namespace services::collection {
         return result_delete(std::move(deleted));
     }
 
-    result_update collection_t::update_one_(const find_condition_ptr& cond, const document_ptr& update, bool upsert) {
+    result_update collection_t::update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
         auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
@@ -260,7 +260,7 @@ namespace services::collection {
         return result_update();
     }
 
-    result_update collection_t::update_many_(const find_condition_ptr& cond, const document_ptr& update, bool upsert) {
+    result_update collection_t::update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
         result_update::result_t modified;
         result_update::result_t nomodified;
         auto finded_docs = search_(cond);
@@ -321,7 +321,7 @@ namespace services::collection {
         insert_(doc);
     }
 
-    result_find collection_t::find_test(find_condition_ptr cond) {
+    result_find collection_t::find_test(components::ql::find_statement& cond) {
         return search_(cond);
     }
 
@@ -333,19 +333,19 @@ namespace services::collection {
         return get_(document_id_t(id));
     }
 
-    result_delete collection_t::delete_one_test(find_condition_ptr cond) {
+    result_delete collection_t::delete_one_test(components::ql::find_statement& cond) {
         return delete_one_(cond);
     }
 
-    result_delete collection_t::delete_many_test(find_condition_ptr cond) {
+    result_delete collection_t::delete_many_test(components::ql::find_statement& cond) {
         return delete_many_(cond);
     }
 
-    result_update collection_t::update_one_test(find_condition_ptr cond, const document_ptr& update, bool upsert) {
+    result_update collection_t::update_one_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
         return update_one_(cond, update, upsert);
     }
 
-    result_update collection_t::update_many_test(find_condition_ptr cond, const document_ptr& update, bool upsert) {
+    result_update collection_t::update_many_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
         return update_many_(cond, update, upsert);
     }
 

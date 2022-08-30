@@ -43,12 +43,12 @@ namespace services::collection {
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::list<document_ptr> &documents);
-        auto find(const session_id_t& session, const find_condition_ptr& cond) -> void;
-        auto find_one(const session_id_t& session,const components::ql::find_statement& cond) -> void;
-        auto delete_one(const session_id_t& session, const find_condition_ptr& cond) -> void;
-        auto delete_many(const session_id_t& session, const find_condition_ptr& cond) -> void;
-        auto update_one(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
-        auto update_many(const session_id_t& session, const find_condition_ptr& cond, const document_ptr& update, bool upsert) -> void;
+        auto find(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto find_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
+        auto update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
@@ -75,12 +75,12 @@ namespace services::collection {
         document_view_t get_(const document_id_t& id) const;
         std::size_t size_() const;
         bool drop_();
-        result_find search_(components::ql::find_one_statement& cond,components::cursor::sub_cursor_t*);
-        result_find_one search_one_(components::ql::find_one_statement& cond);
-        result_delete delete_one_(const find_condition_ptr& cond);
-        result_delete delete_many_(const find_condition_ptr& cond);
-        result_update update_one_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);
-        result_update update_many_(const find_condition_ptr& cond, const document_ptr& update, bool upsert);
+        result_find search_(components::ql::find_statement& cond);
+        result_find_one search_one_(components::ql::find_statement& cond);
+        result_delete delete_one_(components::ql::find_statement& cond);
+        result_delete delete_many_(components::ql::find_statement& cond);
+        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
+        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
         void remove_(const document_id_t& id);
         bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
         void send_update_to_disk_(const session_id_t& session, const result_update &result);
@@ -109,13 +109,13 @@ namespace services::collection {
 #ifdef DEV_MODE
     public:
         void insert_test(const document_ptr &doc);
-        result_find find_test(find_condition_ptr cond);
+        result_find find_test(components::ql::find_statement& cond);
         std::size_t size_test() const;
         document_view_t get_test(const std::string& id) const;
-        result_delete delete_one_test(find_condition_ptr cond);
-        result_delete delete_many_test(find_condition_ptr cond);
-        result_update update_one_test(find_condition_ptr cond, const document_ptr& update, bool upsert);
-        result_update update_many_test(find_condition_ptr cond, const document_ptr& update, bool upsert);
+        result_delete delete_one_test(components::ql::find_statement& cond);
+        result_delete delete_many_test(components::ql::find_statement& cond);
+        result_update update_one_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
+        result_update update_many_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
 #endif
     };
 
