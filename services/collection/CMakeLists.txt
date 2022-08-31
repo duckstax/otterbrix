@@ -7,10 +7,11 @@ set(${PROJECT_NAME}_HEADERS
 )
 
 set(${PROJECT_NAME}_SOURCES
-        operators/aggregation.cpp
-        operators/full_scan.cpp
-        operators/predicate.cpp
-        operators/gt.cpp
+#        operators/aggregation.cpp
+        operators/scanner.cpp
+        operators/full_scanner.cpp
+        operators/predicates/predicate.cpp
+        operators/predicates/gt.cpp
 
         collection.cpp
         create_index.cpp

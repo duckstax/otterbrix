@@ -4,6 +4,8 @@
 
 #include <services/disk/route.hpp>
 
+#include <services/collection/operators/full_scanner.hpp>
+
 using namespace services::collection;
 
 namespace services::collection {
@@ -199,27 +201,23 @@ namespace services::collection {
         return true;
     }
 
+    operators::scanner_ptr create_scanner(collection_t* collection, components::ql::find_statement& cond) {
+        return std::make_unique<operators::full_scanner>(context_t(), collection);
+        //todo
+    }
+
     result_find collection_t::search_(components::ql::find_statement& cond) {
-        if (!cond) {
-            result_find::result_t res;
-            for (auto& it : storage_) {
-                if (cond->is_fit(it.second)) {
-                    res.push_back(document_view_t(it.second));
-                }
-            }
-            return result_find(std::move(res));
-        }
-        return result_find();
+        auto scanner = create_scanner(this, cond);
+        return scanner->scan(cond);
     }
 
     result_find_one collection_t::search_one_(components::ql::find_statement& cond) {
-        /// if (!cond) {
-        auto* result_set = new components::index::result_set_t(resource_);
-        auto* index = index_engine_->find(cond.condition_->key_);
-        index->
-
-            ///}
-            return result_find_one();
+        auto scanner = create_scanner(this, cond);
+        auto result = scanner->scan(cond);
+        if (!result->empty()) {
+            return result_find_one(result->at(0));
+        }
+        return result_find_one();
     }
 
     result_delete collection_t::delete_one_(components::ql::find_statement& cond) {
