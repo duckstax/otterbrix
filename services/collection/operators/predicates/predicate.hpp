@@ -3,6 +3,7 @@
 #include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
 #include <components/ql/expr.hpp>
+#include <components/ql/find.hpp>
 #include <services/collection/context.hpp>
 
 namespace services::collection::operators {
@@ -28,5 +29,7 @@ namespace services::collection::operators {
     using predicate_ptr = std::unique_ptr<predicate>;
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
+
+    predicate_ptr create_predicate(const context_t& context, components::ql::find_statement& cond);
 
 } // namespace services::operators

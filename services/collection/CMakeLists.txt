@@ -36,6 +36,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::serialize
+        rocketjoe::index
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

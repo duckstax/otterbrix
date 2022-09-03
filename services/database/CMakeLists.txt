@@ -25,6 +25,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::locks
+        rocketjoe::collection
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
