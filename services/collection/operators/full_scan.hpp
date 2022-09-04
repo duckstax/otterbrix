@@ -10,8 +10,7 @@ namespace services::collection::operators {
         full_scan(collection_t* collection);
 
     private:
-        result_find scan_impl(components::ql::find_statement& cond) final;
-        result_find scan_one_impl(components::ql::find_statement& cond) final;
+        void on_execute_impl(predicate_ptr predicate,limit_t limit,components::cursor::sub_cursor_t* cursor);
     };
 
 } // namespace services::operators

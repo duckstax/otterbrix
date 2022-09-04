@@ -6,11 +6,8 @@ namespace services::collection::operators {
         : collection_(collection->view()) {
     }
 
-    result_find operator_t::scan(components::ql::find_statement& cond) {
-        if (cond.type() == components::ql::statement_type::find_one) {
-            return scan_one_impl(cond);
-        }
-        return scan_impl(cond);
+    void operator_t::on_execute(predicate_ptr predicate,limit_t limit,components::cursor::sub_cursor_t* cursor){
+        return on_execute_impl(predicate,limit,cursor);
     }
 
 } // namespace services::operators
