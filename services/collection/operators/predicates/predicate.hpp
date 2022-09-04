@@ -1,18 +1,18 @@
 #pragma once
 
+#include <services/collection/collection.hpp>
 #include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
 #include <components/ql/expr.hpp>
 #include <components/ql/find.hpp>
-#include <services/collection/context.hpp>
 
 namespace services::collection::operators {
 
-    using services::collection::context_t;
+    using services::collection::context_collection_t;
 
     class predicate {
     public:
-        explicit predicate(const context_t& context);
+        explicit predicate(context_collection_t* context);
         predicate(const predicate&) = delete;
         predicate& operator=(const predicate&) = delete;
         virtual ~predicate() = default;
@@ -20,7 +20,7 @@ namespace services::collection::operators {
         bool check(const components::document::document_ptr& document);
 
     protected:
-        context_t context_;
+        context_collection_t* context_;
 
     private:
         virtual bool check_impl(const components::document::document_ptr& document) = 0;
@@ -30,6 +30,6 @@ namespace services::collection::operators {
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
 
-    predicate_ptr create_predicate(const context_t& context, components::ql::find_statement& cond);
+    predicate_ptr create_predicate(components::ql::find_statement& cond);
 
 } // namespace services::operators

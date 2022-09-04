@@ -6,7 +6,7 @@ namespace services::collection::operators {
 
     class gt : public predicate {
     public:
-        gt(const context_t& context, components::ql::key_t key, components::ql::expr_value_t value);
+        gt(context_collection_t* context, components::ql::key_t key, components::ql::expr_value_t value);
 
         bool check_impl(const components::document::document_ptr& document) final;
 

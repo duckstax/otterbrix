@@ -9,10 +9,10 @@
 #include <core/btree/btree.hpp>
 #include <core/pmr.hpp>
 
-#include <components/index/index_engine.hpp>
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
+#include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
 #include <components/parser/conditional_expression.hpp>
 #include <components/ql/find.hpp>
@@ -26,7 +26,6 @@
 #include "result.hpp"
 #include "route.hpp"
 
-
 namespace services::collection {
 
     using document_id_t = components::document::document_id_t;
@@ -35,27 +34,15 @@ namespace services::collection {
     using document_view_t = components::document::document_view_t;
     using components::parser::find_condition_ptr;
 
-    class collection_t final : public actor_zeta::basic_async_actor {
+    class context_collection_t final {
     public:
-        collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
-        auto create_documents(session_id_t& session, std::list<document_ptr> &documents) -> void;
-        auto size(session_id_t& session) -> void;
-        void insert_one(session_id_t& session_t, document_ptr& document);
-        void insert_many(session_id_t& session, std::list<document_ptr> &documents);
-        auto find(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto find_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
-        auto update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
-        void drop(const session_id_t& session);
-        void close_cursor(session_id_t& session);
-
-        void create_index(const session_id_t& session, components::ql::create_index_t& index);
-
-        /**
-        * get data
-        */
+        context_collection_t(std::pmr::memory_resource* resource)
+            : resource_(resource)
+            , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
+            , statistic_(resource_)
+            , storage_(resource_) {
+            assert(resource != nullptr);
+        }
 
         storage_t& storage() noexcept {
             return storage_;
@@ -69,28 +56,11 @@ namespace services::collection {
             return statistic_;
         }
 
+        std::pmr::memory_resource* resource() const noexcept {
+            return resource_;
+        }
+
     private:
-        document_id_t insert_(const document_ptr&document);
-        document_view_t get_(const document_id_t& id) const;
-        std::size_t size_() const;
-        bool drop_();
-        result_find search_(components::ql::find_statement& cond);
-        result_find_one search_one_(components::ql::find_statement& cond);
-        result_delete delete_one_(components::ql::find_statement& cond);
-        result_delete delete_many_(components::ql::find_statement& cond);
-        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
-        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
-        void remove_(const document_id_t& id);
-        bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
-        void send_update_to_disk_(const session_id_t& session, const result_update &result);
-        void send_delete_to_disk_(const session_id_t& session, const result_delete &result);
-
-        const std::string name_;
-        const std::string database_name_;
-        log_t log_;
-        actor_zeta::address_t database_;
-        actor_zeta::address_t mdisk_;
-
         std::pmr::memory_resource* resource_;
         /**
         *  index
@@ -102,12 +72,66 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
+    };
+
+    class collection_t final : public actor_zeta::basic_async_actor {
+    public:
+        collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
+        auto create_documents(session_id_t& session, std::list<document_ptr>& documents) -> void;
+        auto size(session_id_t& session) -> void;
+        void insert_one(session_id_t& session_t, document_ptr& document);
+        void insert_many(session_id_t& session, std::list<document_ptr>& documents);
+        auto find(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto find_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void;
+        auto update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
+        auto update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
+        void drop(const session_id_t& session);
+        void close_cursor(session_id_t& session);
+
+        void create_index(const session_id_t& session, components::ql::create_index_t& index);
+
+        const context_collection_t* view() const {
+            return context_;
+        }
+
+        context_collection_t* extract() {
+            auto* ptr = context_;
+            dropped_ = true;
+            context_ = nullptr;
+            return ptr;
+        }
+
+    private:
+        document_id_t insert_(const document_ptr& document);
+        document_view_t get_(const document_id_t& id) const;
+        std::size_t size_() const;
+        bool drop_();
+        result_find search_(components::ql::find_statement& cond);
+        result_find_one search_one_(components::ql::find_statement& cond);
+        result_delete delete_one_(components::ql::find_statement& cond);
+        result_delete delete_many_(components::ql::find_statement& cond);
+        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
+        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
+        void remove_(const document_id_t& id);
+        bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
+        void send_update_to_disk_(const session_id_t& session, const result_update& result);
+        void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
+
+        const std::string name_;
+        const std::string database_name_;
+        log_t log_;
+        actor_zeta::address_t database_;
+        actor_zeta::address_t mdisk_;
+
+        context_collection_t* context_;
         std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
         bool dropped_{false};
 
 #ifdef DEV_MODE
     public:
-        void insert_test(const document_ptr &doc);
+        void insert_test(const document_ptr& doc);
         result_find find_test(components::ql::find_statement& cond);
         std::size_t size_test() const;
         document_view_t get_test(const std::string& id) const;
@@ -118,4 +142,4 @@ namespace services::collection {
 #endif
     };
 
-} // namespace services::storage
+} // namespace services::collection

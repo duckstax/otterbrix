@@ -1,13 +1,13 @@
 #pragma once
 
-#include "scanner.hpp"
+#include "operator.hpp"
 #include <services/collection/operators/predicates/predicate.hpp>
 
 namespace services::collection::operators {
 
-    class full_scanner final : public scanner {
+    class full_scan final : public operator_t {
     public:
-        full_scanner(const context_t &context, collection_t* collection);
+        full_scan(collection_t* collection);
 
     private:
         result_find scan_impl(components::ql::find_statement& cond) final;

@@ -2,7 +2,7 @@
 
 namespace services::collection::operators {
 
-    gt::gt(const context_t& context, components::ql::key_t key, components::ql::expr_value_t value)
+    gt::gt(context_collection_t* context, components::ql::key_t key, components::ql::expr_value_t value)
         : predicate(context)
         , key_(std::move(key))
         , value_(value) {}

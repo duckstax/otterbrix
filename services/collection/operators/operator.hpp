@@ -1,20 +1,20 @@
 #pragma once
 
 #include <services/collection/collection.hpp>
-#include <services/collection/context.hpp>
+
 
 namespace services::collection::operators {
 
-    class scanner {
+    class operator_t  {
     public:
-        scanner(const context_t &context, collection_t* collection);
-        virtual ~scanner() = default;
+
+        operator_t(collection_t* collection);
+        virtual ~operator_t() = default;
 
         result_find scan(components::ql::find_statement& cond);
 
     protected:
-        context_t context_;
-        collection_t* collection_;
+        const context_collection_t* collection_;
 
     private:
         virtual result_find scan_impl(components::ql::find_statement& cond) = 0;

@@ -4,7 +4,7 @@
 
 #include <services/disk/route.hpp>
 
-#include <services/collection/operators/full_scanner.hpp>
+#include <services/collection/operators/full_scan.hpp>
 
 using namespace services::collection;
 
@@ -17,10 +17,7 @@ namespace services::collection {
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk)
-        , resource_(new std::pmr::monotonic_buffer_resource())
-        , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
-        , statistic_(resource_)
-        , storage_(resource_)
+        , context_(new std::pmr::monotonic_buffer_resource())
         , cursor_storage_(resource_) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
@@ -202,7 +199,7 @@ namespace services::collection {
     }
 
     operators::scanner_ptr create_scanner(collection_t* collection, components::ql::find_statement& cond) {
-        return std::make_unique<operators::full_scanner>(context_t(), collection);
+        return std::make_unique<operators::full_scan>(context_t(), collection);
         //todo
     }
 

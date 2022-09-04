@@ -6,7 +6,7 @@ namespace services::collection::operators {
 
     using components::ql::condition_type;
 
-    predicate::predicate(const context_t& context)
+    predicate::predicate(context_collection_t* context)
         : context_(context) {}
 
     bool predicate::check(const components::document::document_ptr& document) {
@@ -17,7 +17,7 @@ namespace services::collection::operators {
         return document::wrapper_value_t(components::document::document_view_t(document).get_value(key.as_string()));
     }
 
-    predicate_ptr create_predicate(const context_t& context, components::ql::find_statement& cond) {
+    predicate_ptr create_predicate(context_collection_t* context, components::ql::find_statement& cond) {
         switch (cond.condition_->type_) {
             case condition_type::gt:
                 return std::make_unique<gt>(context, cond.condition_->key_, cond.condition_->value_);
