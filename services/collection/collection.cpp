@@ -17,8 +17,8 @@ namespace services::collection {
         , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(mdisk)
-        , context_(new std::pmr::monotonic_buffer_resource())
-        , cursor_storage_(resource_) {
+        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource()))
+        , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
         add_handler(handler_id(route::insert_many), &collection_t::insert_many);
@@ -96,21 +96,22 @@ namespace services::collection {
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
-            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(resource_, address()));
-            search_(cond);
+            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+            ///search_(cond);
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
         }
     }
 
     void collection_t::find_one(const session_id_t& session, components::ql::find_statement& cond) {
-        auto trace = statistic_.new_trace();
+        auto trace = context_->statistic().new_trace();
         debug(log_, "collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         /// todo: log_.debug("dispatcher : {}", dispatcher.type());
-        auto result = dropped_
+       /* auto result = dropped_
                           ? result_find_one()
                           : search_one_(cond);
-        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result);
+                          */
+        ///actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result);
     }
 
     auto collection_t::delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void {
@@ -167,18 +168,18 @@ namespace services::collection {
     document_id_t collection_t::insert_(const document_ptr& document) {
         document_view_t view(document);
         auto id = document_id_t(view.get_string("_id"));
-        if (storage_.contains(id)) {
+        if (context_->storage().contains(id)) {
             //todo error primary key
         } else {
-            storage_.insert_or_assign(id, document);
+            context_->storage().insert_or_assign(id, document);
             return id;
         }
         return document_id_t::null();
     }
 
     document_view_t collection_t::get_(const document_id_t& id) const {
-        if (storage_.contains(id)) {
-            const auto& doc = storage_.at(id);
+        if (context_->storage().contains(id)) {
+            const auto& doc = context_->storage().at(id);
             return document_view_t(doc);
         } else {
             //todo error not valid id
@@ -187,7 +188,7 @@ namespace services::collection {
     }
 
     std::size_t collection_t::size_() const {
-        return static_cast<size_t>(storage_.size());
+        return static_cast<size_t>(context_->storage().size());
     }
 
     bool collection_t::drop_() {
@@ -198,36 +199,19 @@ namespace services::collection {
         return true;
     }
 
-    operators::scanner_ptr create_scanner(collection_t* collection, components::ql::find_statement& cond) {
-        return std::make_unique<operators::full_scan>(context_t(), collection);
-        //todo
-    }
-
-    result_find collection_t::search_(components::ql::find_statement& cond) {
-        auto scanner = create_scanner(this, cond);
-        return scanner->scan(cond);
-    }
-
-    result_find_one collection_t::search_one_(components::ql::find_statement& cond) {
-        auto scanner = create_scanner(this, cond);
-        auto result = scanner->scan(cond);
-        if (!result->empty()) {
-            return result_find_one(result->at(0));
-        }
-        return result_find_one();
-    }
-
     result_delete collection_t::delete_one_(components::ql::find_statement& cond) {
-        auto finded_doc = search_one_(cond);
+      /*  auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
             remove_(id);
             return result_delete({id});
         }
         return result_delete();
+        */
     }
 
     result_delete collection_t::delete_many_(components::ql::find_statement& cond) {
+        /*
         result_delete::result_t deleted;
         auto finded_docs = search_(cond);
         for (auto finded_doc : *finded_docs) {
@@ -238,10 +222,11 @@ namespace services::collection {
             remove_(id);
         }
         return result_delete(std::move(deleted));
+         */
     }
 
     result_update collection_t::update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
-        auto finded_doc = search_one_(cond);
+        /*auto finded_doc = search_one_(cond);
         if (finded_doc.is_find()) {
             auto id = document_id_t(finded_doc->get_string("_id"));
             auto res = update_(id, update, true)
@@ -253,10 +238,11 @@ namespace services::collection {
             return result_update(insert_(components::document::make_upsert_document(update)));
         }
         return result_update();
+         */
     }
 
     result_update collection_t::update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert) {
-        result_update::result_t modified;
+        /*result_update::result_t modified;
         result_update::result_t nomodified;
         auto finded_docs = search_(cond);
         for (const auto& finded_doc : *finded_docs) {
@@ -271,14 +257,15 @@ namespace services::collection {
             return result_update(insert_(components::document::make_upsert_document(update)));
         }
         return result_update(std::move(modified), std::move(nomodified));
+         */
     }
 
     void collection_t::remove_(const document_id_t& id) {
-        storage_.erase(storage_.find(id));
+        context_->storage().erase(context_->storage().find(id));
     }
 
     bool collection_t::update_(const document_id_t& id, const document_ptr& update, bool is_commit) {
-        auto& document = storage_.at(id);
+        auto& document = context_->storage().at(id);
         if (document) {
             if (document->update(*update) && is_commit) {
                 document->commit();
@@ -291,10 +278,10 @@ namespace services::collection {
     void collection_t::send_update_to_disk_(const session_id_t& session, const result_update& result) {
         std::vector<document_ptr> update_documents;
         for (const auto& id : result.modified_ids()) {
-            update_documents.push_back(storage_.at(id));
+            update_documents.push_back(context_->storage().at(id));
         }
         if (!result.upserted_id().is_null()) {
-            update_documents.push_back(storage_.at(result.upserted_id()));
+            update_documents.push_back(context_->storage().at(result.upserted_id()));
         }
         if (!update_documents.empty()) {
             actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), update_documents);
@@ -311,15 +298,26 @@ namespace services::collection {
         cursor_storage_.erase(session);
     }
 
+    context_collection_t* collection_t::view() const {
+        return context_.get();
+    }
+
+    context_collection_t* collection_t::extract() {
+        auto* ptr = context_.release();
+        dropped_ = true;
+        context_ = nullptr;
+        return ptr;
+    }
+
 #ifdef DEV_MODE
     void collection_t::insert_test(const document_ptr& doc) {
         insert_(doc);
     }
-
+/*
     result_find collection_t::find_test(components::ql::find_statement& cond) {
         return search_(cond);
     }
-
+*/
     std::size_t collection_t::size_test() const {
         return size_();
     }

@@ -2,12 +2,12 @@
 
 namespace services::collection::operators {
 
-    operator_t::operator_t(services::collection::collection_t* collection)
-        : collection_(collection->view()) {
+    operator_t::operator_t(context_collection_t* context)
+        : context_(context) {
     }
 
-    void operator_t::on_execute(predicate_ptr predicate,limit_t limit,components::cursor::sub_cursor_t* cursor){
-        return on_execute_impl(predicate,limit,cursor);
+    void operator_t::on_execute(const predicate_ptr& predicate, predicates::limit_t limit, components::cursor::sub_cursor_t* cursor) {
+        return on_execute_impl(predicate, limit, cursor);
     }
 
-} // namespace services::operators
+} // namespace services::collection::operators
