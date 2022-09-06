@@ -122,7 +122,7 @@ namespace services::collection {
 
 #ifdef DEV_MODE
     public:
-        void insert_test(const document_ptr& doc);
+    ///    void insert_test(const document_ptr& doc);
        /// result_find find_test(components::ql::find_statement& cond);
         std::size_t size_test() const;
         document_view_t get_test(const std::string& id) const;

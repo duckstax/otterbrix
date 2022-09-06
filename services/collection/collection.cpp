@@ -310,10 +310,11 @@ namespace services::collection {
     }
 
 #ifdef DEV_MODE
+    /*
     void collection_t::insert_test(const document_ptr& doc) {
         insert_(doc);
     }
-/*
+
     result_find collection_t::find_test(components::ql::find_statement& cond) {
         return search_(cond);
     }
