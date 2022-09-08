@@ -6,7 +6,7 @@
 namespace services::collection::operators {
 
     insert::insert(context_collection_t* context)
-        : operator_t(context) {
+        : operator_t(context, operator_type::insert) {
     }
 
     void insert::on_execute_impl(const predicate_ptr& predicate, predicates::limit_t limit, components::cursor::sub_cursor_t* cursor) {

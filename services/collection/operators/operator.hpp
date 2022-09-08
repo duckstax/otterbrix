@@ -8,14 +8,21 @@
 
 namespace services::collection::operators {
 
-    using operator_type = components::ql::ql_statement_t;
+    enum class operator_type {
+        unused = 0x0,
+        full_scan,
+        search_by_index,
+        insert,
+        remove,
+        update
+    };
 
     class operator_t {
     public:
         operator_t() = delete;
         operator_t(const operator_t&) = delete;
         operator_t& operator=(const operator_t&) = delete;
-        operator_t(context_collection_t* collection);
+        operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
         void on_execute(const predicate_ptr&, predicates::limit_t, components::cursor::sub_cursor_t*);
@@ -27,8 +34,8 @@ namespace services::collection::operators {
         virtual void on_execute_impl(const predicate_ptr&, predicates::limit_t, components::cursor::sub_cursor_t*) = 0;
 
         const operator_type operator_type_;
-        operator_t* left_input_;
-        operator_t* right_input_;
+        operator_t* left_input_  {nullptr};
+        operator_t* right_input_ {nullptr};
     };
 
     class read_operator_t : public operator_t {
