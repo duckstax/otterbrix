@@ -1,24 +1,27 @@
 #include "insert.hpp"
-#include <services/collection/operators/predicates/gt.hpp>
-
-#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 
-    insert::insert(context_collection_t* context)
-        : operator_t(context, operator_type::insert) {
+    insert::insert(context_collection_t* context, std::list<document_ptr>&& documents)
+        : operator_t(context, operator_type::insert)
+        , documents_(std::move(documents)) {
     }
 
-    void insert::on_execute_impl(const predicate_ptr& predicate, predicates::limit_t limit, components::cursor::sub_cursor_t* cursor) {
-        document_view_t view(document);
-        auto id = document_id_t(view.get_string("_id"));
-        if (context_->storage().contains(id)) {
-            //todo error primary key
-        } else {
-            context_->storage().insert_or_assign(id, document);
-            return id;
+    insert::insert(context_collection_t* context, const std::list<document_ptr>& documents)
+        : operator_t(context, operator_type::insert)
+        , documents_(documents) {
+    }
+
+    void insert::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
+        if (cursor && cursor->size() > 0) {
+            //todo: error not unique keys
+            return;
         }
-        return document_id_t::null();
+        for (const auto &document : documents_) {
+            auto id = get_document_id(document);
+            context_->storage().insert_or_assign(id, document);
+        }
+        //todo: remake indexes
     }
 
 } // namespace services::collection::operators

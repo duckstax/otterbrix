@@ -12,8 +12,8 @@ namespace services::collection::operators {
         if (cond.type() == components::ql::statement_type::find_one) {
             limit = predicates::limit_t(1);
         }
-        auto predicate = create_predicate(cond);
-        auto* ptr = new full_scan(context_);
-        ptr->on_execute(predicate, limit, sub_cursor);
+        //auto predicate = create_predicate(cond);
+        //auto* ptr = new full_scan(context_);
+        //ptr->on_execute(predicate, limit, sub_cursor);
     }
 } // namespace services::collection::operators

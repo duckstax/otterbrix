@@ -2,7 +2,7 @@
 
 #include "predicate.hpp"
 
-namespace services::collection::operators {
+namespace services::collection::operators::predicates {
 
     class gt : public predicate {
     public:
@@ -15,4 +15,4 @@ namespace services::collection::operators {
         const components::ql::expr_value_t value_;
     };
 
-} // namespace services::operators
+} // namespace services::operators::predicates

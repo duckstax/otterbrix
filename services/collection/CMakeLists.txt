@@ -9,7 +9,9 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
         operators/aggregation.cpp
         operators/operator.cpp
+        operators/insert.cpp
         operators/full_scan.cpp
+        operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/gt.cpp
 

@@ -1,6 +1,6 @@
 #include "gt.hpp"
 
-namespace services::collection::operators {
+namespace services::collection::operators::predicates {
 
     gt::gt(context_collection_t* context, components::ql::key_t key, components::ql::expr_value_t value)
         : predicate(context)
@@ -11,4 +11,4 @@ namespace services::collection::operators {
         return get_value_from_document(document, key_) > value_;
     }
 
-} // namespace services::operators
+} // namespace services::operators::predicates

@@ -1,12 +1,20 @@
 #pragma once
 
 namespace services::collection::operators::predicates {
-    class limit_t {
-    public:
-        limit_t() {}
-        limit_t(int data)
-            : limit_(data) {}
 
-        int limit_ = 0;
+    class limit_t {
+        static constexpr int unlimit_ = -1;
+
+    public:
+        limit_t() = default;
+        explicit limit_t(int data);
+
+        static limit_t unlimit();
+
+        bool check(int count) const;
+
+    private:
+        int limit_ = unlimit_;
     };
-}
+
+} // namespace services::collection::operators::predicates

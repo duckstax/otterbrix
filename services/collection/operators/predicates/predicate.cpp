@@ -2,7 +2,7 @@
 #include <components/document/document_view.hpp>
 #include "gt.hpp"
 
-namespace services::collection::operators {
+namespace services::collection::operators::predicates {
 
     using components::ql::condition_type;
 
@@ -28,4 +28,4 @@ namespace services::collection::operators {
         return nullptr;
     }
 
-} // namespace services::operators
+} // namespace services::collection::operators::predicates

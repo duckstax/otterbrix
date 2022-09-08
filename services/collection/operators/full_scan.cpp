@@ -5,16 +5,24 @@
 
 namespace services::collection::operators {
 
-    full_scan::full_scan(context_collection_t* context)
-        : operator_t(context, operator_type::full_scan) {
+    full_scan::full_scan(context_collection_t* context, predicates::predicate_ptr predicate, predicates::limit_t limit)
+        : operator_t(context, operator_type::full_scan)
+        , predicate_(std::move(predicate))
+        , limit_(limit) {
     }
 
-    void full_scan::on_execute_impl(const predicate_ptr& predicate, predicates::limit_t limit, components::cursor::sub_cursor_t* cursor) {
+    void full_scan::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
         int count = 0;
+        if (!limit_.check(count)) {
+            return; //limit = 0
+        }
         for (auto& it : context_->storage()) {
-            if (predicate->check(it.second) && limit.limit_ <= count) {
+            if (predicate_->check(it.second)) {
                 cursor->append({document_view_t(it.second)});
                 ++count;
+                if (!limit_.check(count)) {
+                    return;
+                }
             }
         }
     }

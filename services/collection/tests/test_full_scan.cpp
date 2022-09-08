@@ -1,9 +1,12 @@
 #include <catch2/catch.hpp>
 #include <components/ql/parser.hpp>
 #include <components/tests/generaty.hpp>
+#include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/database/database.hpp>
 #include <services/collection/collection.hpp>
-#include <core/non_thread_scheduler/scheduler_test.hpp>
+#include <services/collection/operators/insert.hpp>
+#include <services/collection/operators/full_scan.hpp>
+#include <services/collection/operators/predicates/predicate.hpp>
 
 using namespace services::collection;
 using namespace services::database;
@@ -60,13 +63,32 @@ TEST_CASE("full_scan") {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto collection = make_context(log);
+
+    std::list<document_ptr> documents;
     for (int i = 1; i <= 100; ++i) {
-        d(collection)->insert_test(gen_doc(i));
+        documents.push_back(gen_doc(i));
+    }
+    services::collection::operators::insert insert(d(collection)->view(), std::move(documents));
+    insert.on_execute(nullptr);
+    REQUIRE(d(collection)->size_test() == 100);
+
+    SECTION("find::gt") {
+        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 10);
     }
 
-    SECTION("gt") {
+    SECTION("find_one::gt") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        auto find = d(collection)->find_test(cond);
-        REQUIRE(find->size() == 10);
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t(1));
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 1);
     }
 }

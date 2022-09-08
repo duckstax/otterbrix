@@ -6,7 +6,7 @@
 #include <components/ql/expr.hpp>
 #include <components/ql/find.hpp>
 
-namespace services::collection::operators {
+namespace services::collection::operators::predicates {
 
     using services::collection::context_collection_t;
 
@@ -30,6 +30,6 @@ namespace services::collection::operators {
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
 
-    predicate_ptr create_predicate(components::ql::find_statement& cond);
+    predicate_ptr create_predicate(context_collection_t* context, components::ql::find_statement& cond);
 
-} // namespace services::operators
+} // namespace services::collection::operators::predicates

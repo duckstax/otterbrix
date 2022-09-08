@@ -25,13 +25,13 @@ namespace services::collection::operators {
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
-        void on_execute(const predicate_ptr&, predicates::limit_t, components::cursor::sub_cursor_t*);
+        void on_execute(components::cursor::sub_cursor_t*);
 
     protected:
         context_collection_t* context_;
 
     private:
-        virtual void on_execute_impl(const predicate_ptr&, predicates::limit_t, components::cursor::sub_cursor_t*) = 0;
+        virtual void on_execute_impl(components::cursor::sub_cursor_t*) = 0;
 
         const operator_type operator_type_;
         operator_t* left_input_  {nullptr};
