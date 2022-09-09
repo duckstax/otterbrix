@@ -2,10 +2,10 @@
 
 #include "wrapper_client.hpp"
 #include "wrapper_collection.hpp"
-#include "wrapper_database.hpp"
 #include "wrapper_cursor.hpp"
-#include "wrapper_document_id.hpp"
+#include "wrapper_database.hpp"
 #include "wrapper_document.hpp"
+#include "wrapper_document_id.hpp"
 #include "wrapper_result.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
@@ -22,13 +22,13 @@ using namespace duck_charmer;
 
 PYBIND11_MODULE(duck_charmer, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init([](){
-            auto* spaces =  spaces::get_instance();
-            auto dispatcher =  spaces->dispatcher();
+        .def(
+            py::init([]() {
+            auto* spaces = spaces::get_instance();
+            auto dispatcher = spaces->dispatcher();
             dispatcher->load();
             auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log,dispatcher);
-        }))
+            return new wrapper_client(log, dispatcher); }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)
         ;
@@ -53,16 +53,17 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
+        .def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence())
         ;
 
     py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")
-        .def(py::init([](){
+        .def(py::init([]() {
             return wrapper_document_id();
         }))
-        .def(py::init([](const py::str& s){
+        .def(py::init([](const py::str& s) {
             return wrapper_document_id(s);
         }))
-        .def(py::init([](const py::int_& time){
+        .def(py::init([](const py::int_& time) {
             return wrapper_document_id(time);
         }))
         .def("__repr__", &wrapper_document_id::to_string)
