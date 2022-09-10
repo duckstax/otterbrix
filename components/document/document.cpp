@@ -337,7 +337,7 @@ namespace components::document {
     }
 
     document_id_t get_document_id(const document_ptr &document) {
-        return document_id_t(components::document::document_view_t(document).get_string("_id"));
+        return components::document::document_view_t(document).id();
     }
 
     ::document::retained_const_t<::document::impl::value_t> json2value(const boost::json::value &item) {

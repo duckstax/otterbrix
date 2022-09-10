@@ -1,18 +1,18 @@
-#include "insert.hpp"
+#include "operator_insert.hpp"
 
 namespace services::collection::operators {
 
-    insert::insert(context_collection_t* context, std::list<document_ptr>&& documents)
+    operator_insert::operator_insert(context_collection_t* context, std::list<document_ptr>&& documents)
         : operator_t(context, operator_type::insert)
         , documents_(std::move(documents)) {
     }
 
-    insert::insert(context_collection_t* context, const std::list<document_ptr>& documents)
+    operator_insert::operator_insert(context_collection_t* context, const std::list<document_ptr>& documents)
         : operator_t(context, operator_type::insert)
         , documents_(documents) {
     }
 
-    void insert::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
+    void operator_insert::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
         if (cursor && cursor->size() > 0) {
             //todo: error not unique keys
             return;

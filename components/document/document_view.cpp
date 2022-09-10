@@ -64,6 +64,10 @@ document_view_t &document_view_t::operator=(const document_view_t &src) {
     return *this;
 }
 
+document_id_t document_view_t::id() const {
+    return document_id_t(get_string("_id"));
+}
+
 bool document_view_t::is_valid() const {
     return index_ != nullptr;
 }

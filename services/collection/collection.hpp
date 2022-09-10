@@ -97,16 +97,16 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        document_id_t insert_(const document_ptr& document);
+        document_id_t insert_(const document_ptr& document); //todo: delete
         document_view_t get_(const document_id_t& id) const;
         std::size_t size_() const;
         bool drop_();
-        result_delete delete_one_(components::ql::find_statement& cond);
-        result_delete delete_many_(components::ql::find_statement& cond);
-        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
-        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
-        void remove_(const document_id_t& id);
-        bool update_(const document_id_t& id, const document_ptr& update, bool is_commit);
+        result_delete delete_one_(components::ql::find_statement& cond); //todo: delete
+        result_delete delete_many_(components::ql::find_statement& cond); //todo: delete
+        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
+        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
+        void remove_(const document_id_t& id); //todo: delete
+        bool update_(const document_id_t& id, const document_ptr& update, bool is_commit); //todo: delete
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 
@@ -126,10 +126,10 @@ namespace services::collection {
        /// result_find find_test(components::ql::find_statement& cond);
         std::size_t size_test() const;
         document_view_t get_test(const std::string& id) const;
-        result_delete delete_one_test(components::ql::find_statement& cond);
-        result_delete delete_many_test(components::ql::find_statement& cond);
-        result_update update_one_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
-        result_update update_many_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert);
+        result_delete delete_one_test(components::ql::find_statement& cond); //todo: delete
+        result_delete delete_many_test(components::ql::find_statement& cond); //todo: delete
+        result_update update_one_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
+        result_update update_many_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
 #endif
     };
 

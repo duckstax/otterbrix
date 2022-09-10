@@ -50,6 +50,8 @@ public:
     document_view_t(const document_view_t &src);
     document_view_t &operator=(const document_view_t &src);
 
+    document_id_t id() const;
+
     bool is_valid() const;
     bool is_dict() const;
     bool is_array() const;

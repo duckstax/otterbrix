@@ -4,7 +4,7 @@
 #include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/database/database.hpp>
 #include <services/collection/collection.hpp>
-#include <services/collection/operators/insert.hpp>
+#include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/full_scan.hpp>
 #include <services/collection/operators/predicates/predicate.hpp>
 
@@ -68,7 +68,7 @@ TEST_CASE("full_scan") {
     for (int i = 1; i <= 100; ++i) {
         documents.push_back(gen_doc(i));
     }
-    services::collection::operators::insert insert(d(collection)->view(), std::move(documents));
+    services::collection::operators::operator_insert insert(d(collection)->view(), std::move(documents));
     insert.on_execute(nullptr);
     REQUIRE(d(collection)->size_test() == 100);
 
