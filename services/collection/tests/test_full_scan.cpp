@@ -72,6 +72,26 @@ TEST_CASE("full_scan") {
     insert.on_execute(nullptr);
     REQUIRE(d(collection)->size_test() == 100);
 
+    SECTION("find::eq") {
+        auto cond = parse_find_condition(R"({"count": {"$eq": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 1);
+    }
+
+    SECTION("find::ne") {
+        auto cond = parse_find_condition(R"({"count": {"$ne": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 99);
+    }
+
     SECTION("find::gt") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
         services::collection::operators::full_scan scan(d(collection)->view(),
@@ -82,7 +102,37 @@ TEST_CASE("full_scan") {
         REQUIRE(cursor->size() == 10);
     }
 
-    SECTION("find_one::gt") {
+    SECTION("find::gte") {
+        auto cond = parse_find_condition(R"({"count": {"$gte": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 11);
+    }
+
+    SECTION("find::lt") {
+        auto cond = parse_find_condition(R"({"count": {"$lt": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 89);
+    }
+
+    SECTION("find::lte") {
+        auto cond = parse_find_condition(R"({"count": {"$lte": 90}})");
+        services::collection::operators::full_scan scan(d(collection)->view(),
+                                                        services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),
+                                                        services::collection::operators::predicates::limit_t::unlimit());
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 90);
+    }
+
+    SECTION("find_one") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
         services::collection::operators::full_scan scan(d(collection)->view(),
                                                         services::collection::operators::predicates::create_predicate(d(collection)->view(), cond),

@@ -1,5 +1,4 @@
 #include "full_scan.hpp"
-#include <services/collection/operators/predicates/gt.hpp>
 
 #include <services/collection/collection.hpp>
 

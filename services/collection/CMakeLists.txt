@@ -14,7 +14,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/full_scan.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
-        operators/predicates/gt.cpp
+        operators/predicates/simple_predicate.cpp
 
         collection.cpp
         create_index.cpp

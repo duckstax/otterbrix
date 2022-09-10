@@ -1,6 +1,6 @@
 #include "predicate.hpp"
 #include <components/document/document_view.hpp>
-#include "gt.hpp"
+#include "simple_predicate.hpp"
 
 namespace services::collection::operators::predicates {
 
@@ -18,12 +18,11 @@ namespace services::collection::operators::predicates {
     }
 
     predicate_ptr create_predicate(context_collection_t* context, components::ql::find_statement& cond) {
-        switch (cond.condition_->type_) {
-            case condition_type::gt:
-                return std::make_unique<gt>(context, cond.condition_->key_, cond.condition_->value_);
-            default:
-                break;
+        auto result = create_simple_predicate(context, cond);
+        if (result) {
+            return result;
         }
+        //todo: other predicates
         static_assert(true, "not valid condition type");
         return nullptr;
     }
