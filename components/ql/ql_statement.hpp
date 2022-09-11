@@ -21,7 +21,8 @@ namespace components::ql {
         delete_many,
         update_one,
         update_many,
-        create_index
+        create_index,
+        aggregate
     };
 
     // Base struct for every QL statement

@@ -4,6 +4,7 @@ set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
         expr.cpp
+        aggregate.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp
@@ -14,7 +15,7 @@ set(SOURCE_${PROJECT_NAME}
         statements/insert_one.cpp
         statements/update_many.cpp
         statements/update_one.cpp
-        )
+)
 
 add_library(rocketjoe_${PROJECT_NAME}
         ${HEADER_${PROJECT_NAME}}

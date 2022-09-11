@@ -185,23 +185,10 @@ namespace duck_charmer {
         return result.is_success();
     }
 
-    enum class aggregate_statment:char {
-        match,
-        group,
-        project,
-        sort,
-        limit,
-        sum,
-        lookup,
-        out,
-        merge,
-        unionWith
-
-    };
-
     auto wrapper_collection::aggregate(const py::sequence& it) -> wrapper_cursor_ptr {
         trace(log_, "wrapper_collection::aggregate");
         if (py::isinstance<py::sequence>(it)) {
+
             auto condition = to_document(cond);
             auto session_tmp = duck_charmer::session_id_t();
             auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
