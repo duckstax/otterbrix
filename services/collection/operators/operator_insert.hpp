@@ -1,7 +1,6 @@
 #pragma once
 
 #include <services/collection/operators/operator.hpp>
-#include <services/collection/operators/predicates/predicate.hpp>
 
 namespace services::collection::operators {
 

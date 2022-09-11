@@ -7,6 +7,7 @@
 #include <services/collection/operators/full_scan.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_delete.hpp>
+#include <services/collection/operators/operator_update.hpp>
 #include <services/collection/operators/predicates/predicate.hpp>
 
 using namespace services::collection;
@@ -205,5 +206,82 @@ TEST_CASE("operator::delete") {
         scan.on_execute(cursor.get());
         delete_.on_execute(cursor.get());
         REQUIRE(d(collection)->size_test() == 95);
+    }
+}
+
+
+TEST_CASE("operator::update") {
+    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    log.set_level(log_t::level::trace);
+    auto collection = make_context(log);
+
+    std::list<document_ptr> documents;
+    for (int i = 1; i <= 100; ++i) {
+        documents.push_back(gen_doc(i));
+    }
+    operator_insert insert(d(collection)->view(), std::move(documents));
+    insert.on_execute(nullptr);
+
+    SECTION("find::update") {
+        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        full_scan scan_check(d(collection)->view(),
+                             predicates::create_predicate(d(collection)->view(), cond_check),
+                             predicates::limit_t::unlimit());
+        full_scan scan(d(collection)->view(),
+                       predicates::create_predicate(d(collection)->view(), cond),
+                       predicates::limit_t::unlimit());
+        operator_update update_(d(collection)->view(), std::move(script_update));
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 0);
+        scan.on_execute(cursor.get());
+        update_.on_execute(cursor.get());
+        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 10);
+    }
+
+    SECTION("find::update_one") {
+        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        full_scan scan_check(d(collection)->view(),
+                             predicates::create_predicate(d(collection)->view(), cond_check),
+                             predicates::limit_t::unlimit());
+        full_scan scan(d(collection)->view(),
+                       predicates::create_predicate(d(collection)->view(), cond),
+                       predicates::limit_t(1));
+        operator_update update_(d(collection)->view(), std::move(script_update));
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 0);
+        scan.on_execute(cursor.get());
+        update_.on_execute(cursor.get());
+        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 1);
+    }
+
+    SECTION("find::update_limit") {
+        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        full_scan scan_check(d(collection)->view(),
+                             predicates::create_predicate(d(collection)->view(), cond_check),
+                             predicates::limit_t::unlimit());
+        full_scan scan(d(collection)->view(),
+                       predicates::create_predicate(d(collection)->view(), cond),
+                       predicates::limit_t(5));
+        operator_update update_(d(collection)->view(), std::move(script_update));
+        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 0);
+        scan.on_execute(cursor.get());
+        update_.on_execute(cursor.get());
+        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        scan_check.on_execute(cursor.get());
+        REQUIRE(cursor->size() == 5);
     }
 }

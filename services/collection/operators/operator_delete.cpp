@@ -7,8 +7,10 @@ namespace services::collection::operators {
     }
 
     void operator_delete::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
-        for (const auto &document : cursor->data()) {
-            context_->storage().erase(context_->storage().find(document.id()));
+        if (cursor) {
+            for (const auto& document : cursor->data()) {
+                context_->storage().erase(context_->storage().find(document.id()));
+            }
         }
     }
 
