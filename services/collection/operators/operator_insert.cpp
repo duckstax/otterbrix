@@ -2,12 +2,12 @@
 
 namespace services::collection::operators {
 
-    operator_insert::operator_insert(context_collection_t* context, std::list<document_ptr>&& documents)
+    operator_insert::operator_insert(context_collection_t* context, std::pmr::vector<document_ptr>&& documents)
         : operator_t(context, operator_type::insert)
         , documents_(std::move(documents)) {
     }
 
-    operator_insert::operator_insert(context_collection_t* context, const std::list<document_ptr>& documents)
+    operator_insert::operator_insert(context_collection_t* context, const std::pmr::vector<document_ptr>& documents)
         : operator_t(context, operator_type::insert)
         , documents_(documents) {
     }

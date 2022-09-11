@@ -60,31 +60,28 @@ components::ql::find_statement parse_find_condition(const std::string& cond, boo
     return components::ql::find_statement(database_name_t(), collection_name_t(), std::move(expr), find_one);
 }
 
-TEST_CASE("operator::insert") {
+context_ptr init_collection() {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     auto collection = make_context(log);
 
-    std::list<document_ptr> documents;
+    std::pmr::vector<document_ptr> documents(collection->resource);
+    documents.reserve(100);
     for (int i = 1; i <= 100; ++i) {
-        documents.push_back(gen_doc(i));
+        documents.emplace_back(gen_doc(i));
     }
     operator_insert insert(d(collection)->view(), std::move(documents));
     insert.on_execute(nullptr);
+    return collection;
+}
+
+TEST_CASE("operator::insert") {
+    auto collection = init_collection();
     REQUIRE(d(collection)->size_test() == 100);
 }
 
 TEST_CASE("operator::full_scan") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto collection = make_context(log);
-
-    std::list<document_ptr> documents;
-    for (int i = 1; i <= 100; ++i) {
-        documents.push_back(gen_doc(i));
-    }
-    operator_insert insert(d(collection)->view(), std::move(documents));
-    insert.on_execute(nullptr);
+    auto collection = init_collection();
 
     SECTION("find::eq") {
         auto cond = parse_find_condition(R"({"count": {"$eq": 90}})");
@@ -158,16 +155,7 @@ TEST_CASE("operator::full_scan") {
 }
 
 TEST_CASE("operator::delete") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto collection = make_context(log);
-
-    std::list<document_ptr> documents;
-    for (int i = 1; i <= 100; ++i) {
-        documents.push_back(gen_doc(i));
-    }
-    operator_insert insert(d(collection)->view(), std::move(documents));
-    insert.on_execute(nullptr);
+    auto collection = init_collection();
 
     SECTION("find::delete") {
         REQUIRE(d(collection)->size_test() == 100);
@@ -211,16 +199,7 @@ TEST_CASE("operator::delete") {
 
 
 TEST_CASE("operator::update") {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    auto collection = make_context(log);
-
-    std::list<document_ptr> documents;
-    for (int i = 1; i <= 100; ++i) {
-        documents.push_back(gen_doc(i));
-    }
-    operator_insert insert(d(collection)->view(), std::move(documents));
-    insert.on_execute(nullptr);
+    auto collection = init_collection();
 
     SECTION("find::update") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
