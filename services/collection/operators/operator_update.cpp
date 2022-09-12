@@ -3,7 +3,7 @@
 namespace services::collection::operators {
 
     operator_update::operator_update(context_collection_t* context, document_ptr update)
-        : operator_t(context, operator_type::update)
+        : read_write_operator_t(context, operator_type::update)
         , update_(std::move(update)) {
     }
 

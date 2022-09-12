@@ -28,4 +28,15 @@ namespace services::collection::operators {
         return on_execute_impl(data);
     }
 
+
+    read_only_operator_t::read_only_operator_t(context_collection_t* collection, operator_type type)
+        : operator_t(collection, type) {
+    }
+
+
+    read_write_operator_t::read_write_operator_t(context_collection_t* collection, operator_type type)
+        : operator_t(collection, type)
+        , state_(read_write_operator_state::pending) {
+    }
+
 } // namespace services::collection::operators

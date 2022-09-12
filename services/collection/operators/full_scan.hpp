@@ -5,7 +5,7 @@
 
 namespace services::collection::operators {
 
-    class full_scan final : public operator_t {
+    class full_scan final : public read_only_operator_t {
     public:
         full_scan(context_collection_t* collection, predicates::predicate_ptr predicate, predicates::limit_t limit);
 

@@ -5,7 +5,7 @@
 namespace services::collection::operators {
 
     full_scan::full_scan(context_collection_t* context, predicates::predicate_ptr predicate, predicates::limit_t limit)
-        : operator_t(context, operator_type::full_scan)
+        : read_only_operator_t(context, operator_type::full_scan)
         , predicate_(std::move(predicate))
         , limit_(limit) {
     }

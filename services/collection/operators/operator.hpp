@@ -52,7 +52,9 @@ namespace services::collection::operators {
         operator_t* right_input_ {nullptr};
     };
 
-    class read_operator_t : public operator_t {
+    class read_only_operator_t : public operator_t {
+    public:
+        read_only_operator_t(context_collection_t* collection, operator_type type);
     };
 
     enum class read_write_operator_state {
@@ -64,7 +66,13 @@ namespace services::collection::operators {
     };
 
     class read_write_operator_t : public operator_t {
+    public:
+        read_write_operator_t(context_collection_t* collection, operator_type type);
+        //todo:
+        //void commit();
+        //void rollback();
 
+    private:
         read_write_operator_state state_;
     };
 
