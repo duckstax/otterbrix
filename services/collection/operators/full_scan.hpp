@@ -10,7 +10,7 @@ namespace services::collection::operators {
         full_scan(context_collection_t* collection, predicates::predicate_ptr predicate, predicates::limit_t limit);
 
     private:
-        void on_execute_impl(components::cursor::sub_cursor_t* cursor) final;
+        void on_execute_impl(operator_data_t* data) final;
 
         const predicates::predicate_ptr predicate_;
         const predicates::limit_t limit_;

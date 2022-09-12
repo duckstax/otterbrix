@@ -88,7 +88,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 1);
     }
@@ -98,7 +98,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 99);
     }
@@ -108,7 +108,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 10);
     }
@@ -118,7 +118,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 11);
     }
@@ -128,7 +128,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 89);
     }
@@ -138,7 +138,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 90);
     }
@@ -148,7 +148,7 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(1));
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         REQUIRE(cursor->size() == 1);
     }
@@ -164,7 +164,7 @@ TEST_CASE("operator::delete") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         delete_.on_execute(cursor.get());
         REQUIRE(d(collection)->size_test() == 90);
@@ -177,7 +177,7 @@ TEST_CASE("operator::delete") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(1));
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         delete_.on_execute(cursor.get());
         REQUIRE(d(collection)->size_test() == 99);
@@ -190,7 +190,7 @@ TEST_CASE("operator::delete") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(5));
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan.on_execute(cursor.get());
         delete_.on_execute(cursor.get());
         REQUIRE(d(collection)->size_test() == 95);
@@ -212,12 +212,12 @@ TEST_CASE("operator::update") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 0);
         scan.on_execute(cursor.get());
         update_.on_execute(cursor.get());
-        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 10);
     }
@@ -233,12 +233,12 @@ TEST_CASE("operator::update") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(1));
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 0);
         scan.on_execute(cursor.get());
         update_.on_execute(cursor.get());
-        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 1);
     }
@@ -254,12 +254,12 @@ TEST_CASE("operator::update") {
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(5));
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 0);
         scan.on_execute(cursor.get());
         update_.on_execute(cursor.get());
-        cursor = std::make_unique<components::cursor::sub_cursor_t>(d(collection)->view()->resource(), d(collection)->address());
+        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
         scan_check.on_execute(cursor.get());
         REQUIRE(cursor->size() == 5);
     }

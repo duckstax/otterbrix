@@ -17,6 +17,20 @@ namespace services::collection::operators {
         update
     };
 
+    class operator_data_t : public boost::intrusive::list_base_hook<> {
+        using document_ptr = components::document::document_ptr;
+
+    public:
+        explicit operator_data_t(std::pmr::memory_resource* resource);
+
+        std::size_t size() const;
+        std::pmr::vector<document_ptr>& documents();
+        void append(document_ptr document);
+
+    private:
+        std::pmr::vector<document_ptr> documents_;
+    };
+
     class operator_t {
     public:
         operator_t() = delete;
@@ -25,13 +39,13 @@ namespace services::collection::operators {
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
-        void on_execute(components::cursor::sub_cursor_t*);
+        void on_execute(operator_data_t* data);
 
     protected:
         context_collection_t* context_;
 
     private:
-        virtual void on_execute_impl(components::cursor::sub_cursor_t*) = 0;
+        virtual void on_execute_impl(operator_data_t*) = 0;
 
         const operator_type operator_type_;
         operator_t* left_input_  {nullptr};

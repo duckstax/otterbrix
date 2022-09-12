@@ -7,12 +7,11 @@ namespace services::collection::operators {
         , update_(std::move(update)) {
     }
 
-    void operator_update::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
-        if (cursor) {
-            for (const auto& document_view : cursor->data()) {
-                auto document = context_->storage().find(document_view.id());
-                if (document != context_->storage().end() && document->second->update(*update_)) {
-                    document->second->commit();
+    void operator_update::on_execute_impl(operator_data_t* data) {
+        if (data) {
+            for (auto& document : data->documents()) {
+                if (document->update(*update_)) {
+                    document->commit();
                 }
             }
         }

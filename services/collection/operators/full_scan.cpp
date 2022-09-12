@@ -10,14 +10,14 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void full_scan::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
+    void full_scan::on_execute_impl(operator_data_t* data) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0
         }
         for (auto& it : context_->storage()) {
             if (predicate_->check(it.second)) {
-                cursor->append({document_view_t(it.second)});
+                data->append(it.second);
                 ++count;
                 if (!limit_.check(count)) {
                     return;

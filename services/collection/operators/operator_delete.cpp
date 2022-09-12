@@ -6,10 +6,10 @@ namespace services::collection::operators {
         : operator_t(context, operator_type::remove) {
     }
 
-    void operator_delete::on_execute_impl(components::cursor::sub_cursor_t* cursor) {
-        if (cursor) {
-            for (const auto& document : cursor->data()) {
-                context_->storage().erase(context_->storage().find(document.id()));
+    void operator_delete::on_execute_impl(operator_data_t* data) {
+        if (data) {
+            for (const auto& document : data->documents()) {
+                context_->storage().erase(context_->storage().find(get_document_id(document)));
             }
         }
     }
