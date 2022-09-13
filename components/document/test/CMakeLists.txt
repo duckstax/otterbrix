@@ -8,6 +8,7 @@ set( ${PROJECT_NAME}_SOURCES
 		test_pack_msgpack.cpp
 		test_document_id.cpp
 		test_document_json.cpp
+		test_document_view.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})

@@ -50,6 +50,8 @@ namespace document { namespace impl {
         static const value_t* from_trusted_data(slice_t s) noexcept;
         value_type type() const noexcept PURE;
         bool is_equal(const value_t*) const PURE;
+        bool is_lt(const value_t*) const PURE;
+        bool is_lte(const value_t*) const PURE;
 
         bool as_bool() const noexcept PURE;
         int64_t as_int() const noexcept PURE;

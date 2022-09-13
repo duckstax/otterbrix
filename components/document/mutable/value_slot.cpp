@@ -1,10 +1,14 @@
 #include "value_slot.hpp"
+
+#include <cmath>
+#include <cfloat>
+
+#include <algorithm>
+
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
-#include <algorithm>
-#include <cfloat>
-#include <cmath>
+#include "components/document/support/platform_compat.hpp"
 
 namespace document { namespace impl {
 
@@ -141,8 +145,13 @@ void value_slot_t::set(float f) {
     assert_postcondition(as_value()->as_float() == f);
 }
 
+
+bool is_float_representable(double n) noexcept {
+    return (std::fabs(n) <= FLT_MAX && n == static_cast<float>(n));
+}
+
 void value_slot_t::set(double d) {
-    if (fabs(d) <= FLT_MAX && d == static_cast<float>(d)) {
+    if (is_float_representable(d)) {
         set((float)d);
     } else {
         set_pointer(heap_value_t::create(d)->as_value());

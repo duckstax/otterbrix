@@ -22,6 +22,7 @@ namespace components::document {
         if (value->type() == value_type::array) {
             auto index_array = mutable_array_t::new_array();
             auto array = value->as_array();
+            index_array->append(value);
             for (uint32_t i = 0; i < array->count(); ++i) {
                 index_array->append(insert_field_(data, array->get(i), version));
             }
@@ -30,6 +31,7 @@ namespace components::document {
         if (value->type() == value_type::dict) {
             auto dict = value->as_dict();
             auto index_dict = mutable_dict_t::new_dict();
+            index_dict->set(key_value_document, value);
             for (auto it = dict->begin(); it; ++it) {
                 index_dict->set(it.key()->to_string(), insert_field_(data, it.value(), version));
             }
@@ -42,6 +44,7 @@ namespace components::document {
         index->append(get_msgpack_type(value));
         index->append(static_cast<uint64_t>(offset));
         index->append(static_cast<uint64_t>(data.size() - offset));
+        index->append(value);
         if (version) {
             index->append(version);
         }
@@ -76,7 +79,7 @@ namespace components::document {
         return msgpack::object_handle();
     }
 
-    void append_field_(field_value_t index_doc, document_data_t &data, const std::string& field_name, field_value_t value) {
+    void append_field_(field_value_t index_doc, document_data_t &data, const std::string& field_name, field_value_t value, ::document::impl::value_t *doc_value) {
         std::size_t dot_pos = field_name.find('.');
         if (dot_pos != std::string::npos) {
             auto parent = field_name.substr(0, dot_pos);
@@ -99,12 +102,31 @@ namespace components::document {
                     index_doc->as_array()->as_mutable()->append(index_parent);
                 }
             }
-            append_field_(index_parent, data, field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1), value);
+            ::document::impl::value_t *sub_doc_value = nullptr;
+            if (doc_value && doc_value->type() == value_type::dict) {
+                sub_doc_value = doc_value->as_dict()->as_mutable()->get_mutable_dict(parent);
+            }
+            append_field_(index_parent, data, field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1), value, sub_doc_value);
         } else if (index_doc->type() == value_type::dict) {
             index_doc->as_dict()->as_mutable()->set(field_name, insert_field_(data, value, 0));
+            if (doc_value && doc_value->type() == value_type::dict) {
+                doc_value->as_dict()->as_mutable()->set(field_name, value);
+            }
         } else if (index_doc->type() == value_type::array) {
             index_doc->as_array()->as_mutable()->append(insert_field_(data, value, 0));
+            if (doc_value && doc_value->type() == value_type::dict) {
+                doc_value->as_dict()->as_mutable()->set(field_name, value);
+            }
         }
+    }
+
+    ::document::retained_const_t<::document::impl::value_t> get_value_from_msgpack_(const msgpack::object &value) {
+        if (value.type == msgpack::type::object_type::BOOLEAN) return ::document::impl::new_value(value.as<bool>());
+        if (value.type == msgpack::type::object_type::POSITIVE_INTEGER) return ::document::impl::new_value(value.as<uint32_t>());
+        if (value.type == msgpack::type::object_type::NEGATIVE_INTEGER) return ::document::impl::new_value(value.as<long>());
+        if (value.type == msgpack::type::object_type::FLOAT64) return ::document::impl::new_value(value.as<double>());
+        if (value.type == msgpack::type::object_type::STR) return ::document::impl::new_value(value.as<std::string>());
+        return ::document::impl::value_t::null_value;
     }
 
     //todo move into ...
@@ -147,11 +169,13 @@ namespace components::document {
 
 
     document_t::document_t()
-        : structure(mutable_dict_t::new_dict()) {
+        : structure(mutable_dict_t::new_dict())
+        , value_(nullptr) {
     }
 
     document_t::document_t(document_structure_t structure, const document_data_t& data)
-        : structure(std::move(structure)) {
+        : structure(std::move(structure))
+        , value_(nullptr) {
         this->data.write(data.data(), data.size());
     }
 
@@ -182,8 +206,12 @@ namespace components::document {
                         msgpack::pack(data, new_value);
                         structure::set_attribute(mod_index, structure::attribute::offset, static_cast<uint64_t>(new_offset));
                         structure::set_attribute(mod_index, structure::attribute::size, static_cast<uint64_t>(data.size() - new_offset));
+                        if (value_) {
+                            value_->as_dict()->as_mutable()->set(key_field, get_value_from_msgpack_(new_value));
+                            structure::set_attribute(mod_index, structure::attribute::value, value_->as_dict()->get(key_field));
+                        }
                     } else {
-                        append_field_(structure, data, key_field, it_field.value());
+                        append_field_(structure, data, key_field, it_field.value(), value_);
                     }
                     return true;
                 }
@@ -229,20 +257,33 @@ namespace components::document {
         removed_data_.clear();
     }
 
-    void document_t::set_(const std::string &key, const ::document::impl::value_t *value) {
-        structure->set(key, insert_field_(data, value, 0));
+    void document_t::set_(const std::string &key, ::document::retained_const_t<::document::impl::value_t> value) {
+        if (value_ && value_->type() == value_type::dict) {
+            value_->as_dict()->as_mutable()->set(key, std::move(value));
+            structure->set(key, insert_field_(data, value_->as_dict()->get(key), 0));
+        } else {
+            structure->set(key, insert_field_(data, value, 0));
+        }
     }
 
     document_ptr make_document() {
-        return ::document::make_retained<document_t>();
+        auto document = ::document::make_retained<document_t>();
+        document->value_ = ::document::impl::mutable_dict_t::new_dict();
+        document->structure->set(key_value_document, document->value_.get());
+        return document;
     }
 
     document_ptr make_document(document_structure_t structure, const document_data_t &data) {
-        return ::document::make_retained<document_t>(std::move(structure), data);
+        auto document = ::document::make_retained<document_t>(std::move(structure), data);
+        document->value_ = ::document::impl::mutable_dict_t::new_dict();
+        document->structure->set(key_value_document, document->value_.get());
+        return document;
     }
 
     document_ptr make_document(const ::document::impl::dict_t *dict, int version) {
         auto document = make_document();
+        document->value_ = ::document::impl::mutable_dict_t::new_dict(dict);
+        document->structure->set(key_value_document, document->value_.get());
         for (auto it = dict->begin(); it; ++it) {
             auto key = it.key()->as_string();
             document->structure->set(key, insert_field_(document->data, it.value(), version));
@@ -330,7 +371,7 @@ namespace components::document {
         auto doc = make_document();
         auto tree = boost::json::parse(json);
         for (const auto &item : tree.as_object()) {
-            doc->set(std::string(item.key()), json2value(item.value()).get());
+            doc->set(std::string(item.key()), json2value(item.value()));
         }
         return doc;
     }
