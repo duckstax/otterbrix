@@ -54,6 +54,7 @@ jobs:
         run: |
           cd wasm_build
           source ./activate.sh  && \
+          ls && \
           cat $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake && \
           cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
           cmake --build . && \
