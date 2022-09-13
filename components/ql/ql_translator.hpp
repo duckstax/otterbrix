@@ -2,12 +2,16 @@
 
 #include <memory>
 
-class result_translator {
+#include "ql_statement.hpp"
 
-};
+namespace components::ql {
 
-using result_translator_ptr = std::unique_ptr<result_translator>;
+    class result_translator {
 
-auto ql_translator() -> result_translator_ptr {
+    };
 
-};
+    using result_translator_ptr = std::unique_ptr<result_translator>;
+
+    auto ql_translator(const ql_statement_t&) -> result_translator_ptr;
+
+}

@@ -1,25 +1,10 @@
-project(ql CXX)
+project(logical_plan CXX)
 
 set(SOURCE_${PROJECT_NAME}
-        parser.cpp
-        find.cpp
-        expr.cpp
-        aggregate.cpp
-        ql_translator.cpp
-        statements/create_collection.cpp
-        statements/create_database.cpp
-        statements/delete_many.cpp
-        statements/delete_one.cpp
-        statements/drop_collection.cpp
-        statements/drop_database.cpp
-        statements/insert_many.cpp
-        statements/insert_one.cpp
-        statements/update_many.cpp
-        statements/update_one.cpp
+        logical_plan.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
-        ${HEADER_${PROJECT_NAME}}
         ${SOURCE_${PROJECT_NAME}}
 )
 
