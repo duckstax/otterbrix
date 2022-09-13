@@ -16,8 +16,9 @@ RUN apt update && \
         apt update && \
         apt install -y bazel bazel-4.1.0 git && \
     apt clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip3 install --no-cache-dir conan==1.48.0 pytest==6.2.5 cmake && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN    pip3 install --no-cache-dir conan==1.52.0 pytest==6.2.5 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -47,10 +48,10 @@ COPY ./services ./services
 COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
-WORKDIR /app/wasm_build
-RUN source ./activate.sh  && \
-    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
-    cmake --build .
+#WORKDIR /app/wasm_build
+#RUN source ./activate.sh  && \
+#    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+#    cmake --build .
 
 WORKDIR /app/build
 
