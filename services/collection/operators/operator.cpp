@@ -2,38 +2,36 @@
 
 namespace services::collection::operators {
 
-    operator_data_t::operator_data_t(std::pmr::memory_resource* resource)
-        : documents_(resource) {
-    }
-
-    std::size_t operator_data_t::size() const {
-        return documents_.size();
-    }
-
-    std::pmr::vector<operator_data_t::document_ptr>& operator_data_t::documents() {
-        return documents_;
-    }
-
-    void operator_data_t::append(document_ptr document) {
-        documents_.push_back(std::move(document));
-    }
-
-
     operator_t::operator_t(context_collection_t* context, operator_type type)
         : context_(context)
         , type_(type) {
     }
 
-    void operator_t::on_execute(operator_data_t* data) {
-        if (state_ == operator_state::created || state_ == operator_state::executed) { //todo: delete second operand
+    void operator_t::on_execute(planner::transaction_context_t* transaction_context) {
+        if (state_ == operator_state::created) {
             state_ = operator_state::running;
-            on_execute_impl(data);
+            if (left_) {
+                left_->on_execute(transaction_context);
+            }
+            if (right_) {
+                right_->on_execute(transaction_context);
+            }
+            on_execute_impl(transaction_context);
             state_ = operator_state::executed;
         }
     }
 
     operator_state operator_t::state() const {
         return state_;
+    }
+
+    const operator_data_ptr& operator_t::output() const {
+        return output_;
+    }
+
+    void operator_t::set_children(ptr left, ptr right) {
+        left_ = std::move(left);
+        right_ = std::move(right);
     }
 
 

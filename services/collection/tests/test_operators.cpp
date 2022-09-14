@@ -88,9 +88,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 1);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 1);
     }
 
     SECTION("find::ne") {
@@ -98,9 +97,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 99);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 99);
     }
 
     SECTION("find::gt") {
@@ -108,9 +106,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 10);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 10);
     }
 
     SECTION("find::gte") {
@@ -118,9 +115,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 11);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 11);
     }
 
     SECTION("find::lt") {
@@ -128,9 +124,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 89);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 89);
     }
 
     SECTION("find::lte") {
@@ -138,9 +133,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 90);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 90);
     }
 
     SECTION("find_one") {
@@ -148,9 +142,8 @@ TEST_CASE("operator::full_scan") {
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t(1));
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 1);
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 1);
     }
 }
 
@@ -160,39 +153,33 @@ TEST_CASE("operator::delete") {
     SECTION("find::delete") {
         REQUIRE(d(collection)->size_test() == 100);
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        delete_.on_execute(cursor.get());
+        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t::unlimit()));
+        delete_.on_execute(nullptr);
         REQUIRE(d(collection)->size_test() == 90);
     }
 
     SECTION("find::delete_one") {
         REQUIRE(d(collection)->size_test() == 100);
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t(1));
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        delete_.on_execute(cursor.get());
+        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t(1)));
+        delete_.on_execute(nullptr);
         REQUIRE(d(collection)->size_test() == 99);
     }
 
     SECTION("find::delete_limit") {
         REQUIRE(d(collection)->size_test() == 100);
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t(5));
         operator_delete delete_(d(collection)->view());
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan.on_execute(cursor.get());
-        delete_.on_execute(cursor.get());
+        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t(5)));
+        delete_.on_execute(nullptr);
         REQUIRE(d(collection)->size_test() == 95);
     }
 }
@@ -205,62 +192,77 @@ TEST_CASE("operator::update") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
         auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
-        full_scan scan_check(d(collection)->view(),
-                             predicates::create_predicate(d(collection)->view(), cond_check),
-                             predicates::limit_t::unlimit());
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 0);
+        }
+
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 0);
-        scan.on_execute(cursor.get());
-        update_.on_execute(cursor.get());
-        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 10);
+        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t::unlimit()));
+        update_.on_execute(nullptr);
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 10);
+        }
     }
 
     SECTION("find::update_one") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
         auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
-        full_scan scan_check(d(collection)->view(),
-                             predicates::create_predicate(d(collection)->view(), cond_check),
-                             predicates::limit_t::unlimit());
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t(1));
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 0);
+        }
+
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 0);
-        scan.on_execute(cursor.get());
-        update_.on_execute(cursor.get());
-        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 1);
+        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t(1)));
+        update_.on_execute(nullptr);
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 1);
+        }
     }
 
     SECTION("find::update_limit") {
         auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
         auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
-        full_scan scan_check(d(collection)->view(),
-                             predicates::create_predicate(d(collection)->view(), cond_check),
-                             predicates::limit_t::unlimit());
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t(5));
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 0);
+        }
+
         operator_update update_(d(collection)->view(), std::move(script_update));
-        auto cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 0);
-        scan.on_execute(cursor.get());
-        update_.on_execute(cursor.get());
-        cursor = std::make_unique<operator_data_t>(d(collection)->view()->resource());
-        scan_check.on_execute(cursor.get());
-        REQUIRE(cursor->size() == 5);
+        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                         predicates::create_predicate(d(collection)->view(), cond),
+                                                         predicates::limit_t(5)));
+        update_.on_execute(nullptr);
+        {
+            full_scan scan(d(collection)->view(),
+                           predicates::create_predicate(d(collection)->view(), cond_check),
+                           predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 5);
+        }
     }
 }

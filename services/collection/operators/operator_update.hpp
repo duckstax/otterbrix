@@ -9,7 +9,7 @@ namespace services::collection::operators {
         operator_update(context_collection_t* context, document_ptr update);
 
     private:
-        void on_execute_impl(operator_data_t* data) final;
+        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
 
         document_ptr update_;
     };

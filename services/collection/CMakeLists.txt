@@ -7,12 +7,15 @@ set(${PROJECT_NAME}_HEADERS
 )
 
 set(${PROJECT_NAME}_SOURCES
-        operators/aggregation.cpp
+        planner/transaction_context.cpp
+
+        operators/operator_data.cpp
         operators/operator.cpp
         operators/operator_insert.cpp
         operators/operator_delete.cpp
         operators/operator_update.cpp
         operators/full_scan.cpp
+        operators/aggregation.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/simple_predicate.cpp

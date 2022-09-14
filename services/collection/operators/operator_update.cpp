@@ -7,9 +7,9 @@ namespace services::collection::operators {
         , update_(std::move(update)) {
     }
 
-    void operator_update::on_execute_impl(operator_data_t* data) {
-        if (data) {
-            for (auto& document : data->documents()) {
+    void operator_update::on_execute_impl(planner::transaction_context_t* transaction_context) {
+        if (left_ && left_->output()) {
+            for (auto& document : left_->output()->documents()) {
                 if (document->update(*update_)) {
                     document->commit();
                 }

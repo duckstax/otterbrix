@@ -1,10 +1,8 @@
 #pragma once
 
-#include <collection/operators/predicates/predicate.hpp>
-
-#include <collection/operators/predicates/limit.hpp>
-#include <components/ql/ql_statement.hpp>
 #include <services/collection/collection.hpp>
+#include <services/collection/operators/operator_data.hpp>
+#include <services/collection/planner/transaction_context.hpp>
 
 namespace services::collection::operators {
 
@@ -24,42 +22,33 @@ namespace services::collection::operators {
         cleared
     };
 
-    class operator_data_t : public boost::intrusive::list_base_hook<> {
-        using document_ptr = components::document::document_ptr;
-
-    public:
-        explicit operator_data_t(std::pmr::memory_resource* resource);
-
-        std::size_t size() const;
-        std::pmr::vector<document_ptr>& documents();
-        void append(document_ptr document);
-
-    private:
-        std::pmr::vector<document_ptr> documents_;
-    };
-
     class operator_t {
     public:
+        using ptr = std::unique_ptr<operator_t>;
+
         operator_t() = delete;
         operator_t(const operator_t&) = delete;
         operator_t& operator=(const operator_t&) = delete;
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
-        void on_execute(operator_data_t* data);
+        void on_execute(planner::transaction_context_t* transaction_context);
+
+        operator_state state() const;
+        const operator_data_ptr& output() const;
+        void set_children(ptr left, ptr right = nullptr);
 
     protected:
         context_collection_t* context_;
-
-        operator_state state() const;
+        ptr left_  {nullptr};
+        ptr right_ {nullptr};
+        operator_data_ptr output_ {nullptr};
 
     private:
-        virtual void on_execute_impl(operator_data_t*) = 0;
+        virtual void on_execute_impl(planner::transaction_context_t* transaction_context) = 0;
 
         const operator_type type_;
         operator_state state_ {operator_state::created};
-        operator_t* left_  {nullptr};
-        operator_t* right_ {nullptr};
     };
 
     class read_only_operator_t : public operator_t {
@@ -86,6 +75,6 @@ namespace services::collection::operators {
         read_write_operator_state state_;
     };
 
-    using operator_ptr = std::unique_ptr<operator_t>;
+    using operator_ptr = operator_t::ptr;
 
 } // namespace services::collection::operators
