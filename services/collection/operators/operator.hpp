@@ -17,6 +17,13 @@ namespace services::collection::operators {
         update
     };
 
+    enum class operator_state {
+        created,
+        running,
+        executed,
+        cleared
+    };
+
     class operator_data_t : public boost::intrusive::list_base_hook<> {
         using document_ptr = components::document::document_ptr;
 
@@ -44,12 +51,15 @@ namespace services::collection::operators {
     protected:
         context_collection_t* context_;
 
+        operator_state state() const;
+
     private:
         virtual void on_execute_impl(operator_data_t*) = 0;
 
-        const operator_type operator_type_;
-        operator_t* left_input_  {nullptr};
-        operator_t* right_input_ {nullptr};
+        const operator_type type_;
+        operator_state state_ {operator_state::created};
+        operator_t* left_  {nullptr};
+        operator_t* right_ {nullptr};
     };
 
     class read_only_operator_t : public operator_t {

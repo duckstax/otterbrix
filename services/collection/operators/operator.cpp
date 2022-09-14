@@ -21,11 +21,19 @@ namespace services::collection::operators {
 
     operator_t::operator_t(context_collection_t* context, operator_type type)
         : context_(context)
-        , operator_type_(type) {
+        , type_(type) {
     }
 
     void operator_t::on_execute(operator_data_t* data) {
-        return on_execute_impl(data);
+        if (state_ == operator_state::created || state_ == operator_state::executed) { //todo: delete second operand
+            state_ = operator_state::running;
+            on_execute_impl(data);
+            state_ = operator_state::executed;
+        }
+    }
+
+    operator_state operator_t::state() const {
+        return state_;
     }
 
 
