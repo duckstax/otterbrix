@@ -15,6 +15,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_delete.cpp
         operators/operator_update.cpp
         operators/full_scan.cpp
+        operators/index_scan.cpp
         operators/aggregation.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
