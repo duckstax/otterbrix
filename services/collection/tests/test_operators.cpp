@@ -1,10 +1,12 @@
 #include <catch2/catch.hpp>
 #include <components/ql/parser.hpp>
 #include <components/tests/generaty.hpp>
+#include <components/index/single_field_index.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/database/database.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/operators/full_scan.hpp>
+#include <services/collection/operators/index_scan.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_delete.hpp>
 #include <services/collection/operators/operator_update.hpp>
@@ -55,16 +57,21 @@ collection_t* d(context_ptr& ptr) {
     return ptr->collection_.get();
 }
 
-components::ql::find_statement parse_find_condition(const std::string& cond, bool find_one = false) {
-    auto expr = components::ql::parse_find_condition(components::document::document_from_json(cond));
-    return components::ql::find_statement(database_name_t(), collection_name_t(), std::move(expr), find_one);
+components::ql::expr_ptr parse_expr(const std::string& cond) {
+    return components::ql::parse_find_condition(components::document::document_from_json(cond));
 }
 
-context_ptr init_collection() {
+components::ql::find_statement parse_find_condition(const std::string& cond, bool find_one = false) {
+    return components::ql::find_statement(database_name_t(), collection_name_t(), parse_expr(cond), find_one);
+}
+
+context_ptr create_collection() {
     static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    auto collection = make_context(log);
+    return make_context(log);
+}
 
+void fill_collection(context_ptr &collection) {
     std::pmr::vector<document_ptr> documents(collection->resource);
     documents.reserve(100);
     for (int i = 1; i <= 100; ++i) {
@@ -72,6 +79,11 @@ context_ptr init_collection() {
     }
     operator_insert insert(d(collection)->view(), std::move(documents));
     insert.on_execute(nullptr);
+}
+
+context_ptr init_collection() {
+    auto collection = create_collection();
+    fill_collection(collection);
     return collection;
 }
 
@@ -264,5 +276,61 @@ TEST_CASE("operator::update") {
             scan.on_execute(nullptr);
             REQUIRE(scan.output()->size() == 5);
         }
+    }
+}
+
+TEST_CASE("operator::index_scan") {
+    auto collection = create_collection();
+    components::index::keys_base_storage_t keys(collection->resource);
+    keys.push_back(components::index::key_t("count"));
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    fill_collection(collection);
+
+    SECTION("find::eq") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$eq": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 1);
+    }
+
+    SECTION("find::ne") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$ne": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 99);
+    }
+
+    SECTION("find::gt") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 10);
+    }
+
+    SECTION("find::gte") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gte": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 11);
+    }
+
+    SECTION("find::lt") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$lt": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 89);
+    }
+
+    SECTION("find::lte") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$lte": 90}})"), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 90);
+    }
+
+    SECTION("find_one") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 90}})"), predicates::limit_t(1));
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 1);
+    }
+
+    SECTION("find_limit") {
+        index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 90}})"), predicates::limit_t(3));
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 3);
     }
 }

@@ -20,8 +20,8 @@ namespace services::collection::operators {
         for (const auto &document : documents_) {
             auto id = get_document_id(document);
             context_->storage().insert_or_assign(id, document);
+            context_->index_engine()->insert_document(document);
         }
-        //todo: remake indexes
     }
 
 } // namespace services::collection::operators
