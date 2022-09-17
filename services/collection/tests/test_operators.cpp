@@ -342,7 +342,7 @@ TEST_CASE("operator::index::delete_and_update") {
     components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
     fill_collection(collection);
 
-    SECTION("find::delete") {
+    SECTION("index_scan after delete") {
         {
             index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 50}})"), predicates::limit_t::unlimit());
             scan.on_execute(nullptr);
@@ -353,9 +353,29 @@ TEST_CASE("operator::index::delete_and_update") {
             delete_.set_children(std::make_unique<index_scan>(d(collection)->view(),
                                                               parse_expr(R"({"count": {"$gt": 60}})"), predicates::limit_t::unlimit()));
             delete_.on_execute(nullptr);
+
             index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 50}})"), predicates::limit_t::unlimit());
             scan.on_execute(nullptr);
             REQUIRE(scan.output()->size() == 10);
+        }
+    }
+
+    SECTION("index_scan after update") {
+        {
+            index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$eq": 50}})"), predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 1);
+        }
+        {
+            auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
+            operator_update update(d(collection)->view(), script_update);
+            update.set_children(std::make_unique<index_scan>(d(collection)->view(),
+                                                             parse_expr(R"({"count": {"$eq": 50}})"), predicates::limit_t::unlimit()));
+            update.on_execute(nullptr);
+
+            index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$eq": 50}})"), predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 0);
         }
     }
 }
