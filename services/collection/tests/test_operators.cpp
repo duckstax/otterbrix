@@ -334,3 +334,28 @@ TEST_CASE("operator::index_scan") {
         REQUIRE(scan.output()->size() == 3);
     }
 }
+
+TEST_CASE("operator::index::delete_and_update") {
+    auto collection = create_collection();
+    components::index::keys_base_storage_t keys(collection->resource);
+    keys.push_back(components::index::key_t("count"));
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    fill_collection(collection);
+
+    SECTION("find::delete") {
+        {
+            index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 50}})"), predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 50);
+        }
+        {
+            operator_delete delete_(d(collection)->view());
+            delete_.set_children(std::make_unique<index_scan>(d(collection)->view(),
+                                                              parse_expr(R"({"count": {"$gt": 60}})"), predicates::limit_t::unlimit()));
+            delete_.on_execute(nullptr);
+            index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 50}})"), predicates::limit_t::unlimit());
+            scan.on_execute(nullptr);
+            REQUIRE(scan.output()->size() == 10);
+        }
+    }
+}

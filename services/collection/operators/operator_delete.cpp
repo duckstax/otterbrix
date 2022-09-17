@@ -10,6 +10,7 @@ namespace services::collection::operators {
         if (left_ && left_->output()) {
             for (const auto& document : left_->output()->documents()) {
                 context_->storage().erase(context_->storage().find(get_document_id(document)));
+                context_->index_engine()->delete_document(document);
             }
         }
     }

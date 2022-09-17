@@ -50,6 +50,7 @@ namespace components::index {
         using range = std::pair<iterator, iterator>;
 
         void insert(value_t, doc_t);
+        void remove(value_t);
         range find(const value_t& value) const;
         range lower_bound(const value_t& value) const;
         range upper_bound(const value_t& value) const;
@@ -63,6 +64,7 @@ namespace components::index {
         index_t(std::pmr::memory_resource* resource, index_type type, const keys_base_storage_t& keys);
 
         virtual void insert_impl(value_t value_key, doc_t) = 0;
+        virtual void remove_impl(value_t value_key) = 0;
         virtual range find_impl(const value_t& value) const = 0;
         virtual range lower_bound_impl(const value_t& value) const = 0;
         virtual range upper_bound_impl(const value_t& value) const = 0;

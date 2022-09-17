@@ -23,6 +23,7 @@ namespace components::index {
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
         void insert_document(const document_ptr& document);
+        void delete_document(const document_ptr& document);
 
     private:
         using comparator_t = std::less<keys_base_storage_t>;

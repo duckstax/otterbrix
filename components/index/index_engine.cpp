@@ -130,4 +130,12 @@ namespace components::index {
         }
     }
 
+    void index_engine_t::delete_document(const document_ptr& document) {
+        for (auto &index : storage_) {
+            if (is_match_document(index, document)) {
+                index->remove(get_value_by_index(index, document));
+            }
+        }
+    }
+
 } // namespace components::index
