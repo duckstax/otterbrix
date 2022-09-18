@@ -1,6 +1,6 @@
 #pragma once
 
-enum class aggregate_statement : char {
+enum class aggregate_t : char {
     match = 0,
     group,
     project,
@@ -26,7 +26,7 @@ class out_t {};
 class merge_t {};
 class unionWith_t {};
 */
-class aggregate_t {
+class aggregate_statement {
     /*
     math_t* math_ ;
 

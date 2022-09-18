@@ -1,7 +1,7 @@
 project(logical_plan CXX)
 
 set(SOURCE_${PROJECT_NAME}
-        logical_plan.cpp
+        node.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -15,13 +15,11 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::document
 )
 
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        statements.hpp
 )
 
 if (DEV_MODE)

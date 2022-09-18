@@ -1,70 +1,77 @@
 #include "ql_translator.hpp"
 
+#include "components/logical_plan/logical_plan.hpp"
+
+
 #include "aggregate.hpp"
-/*
- * abstract_lqp_node.cpp
-abstract_lqp_node.hpp
-abstract_non_query_node.cpp
-abstract_non_query_node.hpp
-aggregate_node.cpp
-aggregate_node.hpp
-
-
-create_prepared_plan_node.cpp
-create_prepared_plan_node.hpp
-create_table_node.cpp
-create_table_node.hpp
-create_view_node.cpp
-create_view_node.hpp
-enable_make_for_lqp_node.hpp
-
-functional_dependency.cpp
-functional_dependency.hpp
-import_node.cpp
-import_node.hpp
-insert_node.cpp
-insert_node.hpp
-intersect_node.cpp
-intersect_node.hpp
-join_node.cpp
-join_node.hpp
-limit_node.cpp
-limit_node.hpp
-logical_plan_root_node.cpp
-logical_plan_root_node.hpp
-lqp_translator.cpp
-lqp_translator.hpp
-lqp_unique_constraint.cpp
-lqp_unique_constraint.hpp
-lqp_utils.cpp
-lqp_utils.hpp
-mock_node.cpp
-mock_node.hpp
-predicate_node.cpp
-predicate_node.hpp
-projection_node.cpp
-projection_node.hpp
-sort_node.cpp
-sort_node.hpp
-static_table_node.cpp
-static_table_node.hpp
-stored_table_node.cpp
-stored_table_node.hpp
-union_node.cpp
-union_node.hpp
-update_node.cpp
-update_node.hpp
-validate_node.cpp
-validate_node.hpp
- */
+#include "find.hpp"
 
 namespace components::ql {
-    auto ql_translator(const ql_statement_t&) -> result_translator_ptr {
+
+    auto translator_aggregate(const aggregate_statement& aggregate) -> logical_plan::node_ptr {
+
+    }
+
+    auto translator_find(const find_statement& aggregate) -> logical_plan::node_ptr {
+
+    }
+
+    auto ql_translator(const ql_statement_t& statement) -> result_translator_ptr {
         auto* result = new result_translator;
+        switch (statement.type_) {
+            case statement_type::unused: {
+                throw std::logic_error("");
+                break;
+            }
+            case statement_type::create_database: {
+                break;
+            }
+            case statement_type::drop_database: {
+                break;
+            }
+            case statement_type::create_collection: {
+                break;
+            }
+            case statement_type::drop_collection: {
+                break;
+            }
+            case statement_type::find: {
+                translator_find();
+                break;
+            }
+            case statement_type::find_one: {
+                translator_find();
+                break;
+            }
+            case statement_type::insert_one: {
+                break;
+            }
+            case statement_type::insert_many: {
+                break;
+            }
+            case statement_type::delete_one: {
+                break;
+            }
+            case statement_type::delete_many: {
+                break;
+            }
+            case statement_type::update_one: {
+                break;
+            }
+            case statement_type::update_many: {
+                break;
+            }
+            case statement_type::create_index: {
+                break;
+            }
+            case statement_type::aggregate: {
+                translator_aggregate(static_cast<aggregate_t*>(statement));
+                break;
+            }
+            default:
+                throw std::logic_error("");
+        }
         return {result};
     }
 
-    auto translator_aggregate(const aggregate_t&aggregate) -> {
-
-    }
 } // namespace components::ql
