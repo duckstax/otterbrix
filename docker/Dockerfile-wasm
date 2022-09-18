@@ -36,8 +36,7 @@ WORKDIR /app/wasm_build
 COPY conan/profiles/wasm ./conan/profiles/wasm
 RUN conan config install conan
 COPY conanfile-wasm.txt ./
-RUN conan install -pr wasm --profile:build=default --profile:host=wasm --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
-RUN conan install emsdk/3.1.20@_/_ -g=virtualenv  -s build_type=Release --build missing
+RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
 
 WORKDIR /app
 COPY ./apps ./apps
@@ -49,7 +48,7 @@ COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/wasm_build
-RUN source ./activate.sh  && \
+RUN source ./wasm/activate.sh  && \
     cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
     cmake --build .
 

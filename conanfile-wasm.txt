@@ -1,5 +1,5 @@
 [requires]
-boost/1.78.0
+boost/1.80.0
 msgpack-cxx/4.1.1
 #actor-zeta/1.0.0a7@duckstax/stable
 proxy-wasm-cpp-sdk/c32d380ca6c9b1afac38a3841be99c37af2698bf@duckstax/stable
