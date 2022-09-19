@@ -57,14 +57,14 @@ namespace components::document {
             auto parent = field_name.substr(0, dot_pos);
             auto sub_index = index_doc->type() == value_type::dict
                                  ? index_doc->as_dict()->get(parent)
-                                 : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())));
+                                 : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())) + 1);
             if (sub_index) {
                 return get_index_field_(sub_index, field_name.substr(dot_pos + 1, field_name.size() - dot_pos));
             }
         } else if (index_doc->as_dict()) {
             return index_doc->as_dict()->get(field_name);
         } else if (index_doc->as_array()) {
-            return index_doc->as_array()->get(static_cast<uint32_t>(std::atol(field_name.c_str())));
+            return index_doc->as_array()->get(static_cast<uint32_t>(std::atol(field_name.c_str())) + 1);
         }
         return nullptr;
     }
@@ -85,7 +85,7 @@ namespace components::document {
             auto parent = field_name.substr(0, dot_pos);
             auto index_parent = index_doc->type() == value_type::dict
                                     ? index_doc->as_dict()->get(parent)
-                                    : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())));
+                                    : index_doc->as_array()->get(static_cast<uint32_t>(std::atol(parent.c_str())) + 1);
             if (!index_parent) {
                 std::size_t dot_pos_next = field_name.find('.', dot_pos + 1);
                 auto next_key = dot_pos_next != std::string::npos
@@ -93,8 +93,10 @@ namespace components::document {
                                     : field_name.substr(dot_pos + 1, field_name.size() - dot_pos - 1);
                 if (next_key.find_first_not_of("0123456789") == std::string::npos) {
                     index_parent = mutable_array_t::new_array().detach();
+                    index_parent->as_array()->as_mutable()->append(value);
                 } else {
                     index_parent = mutable_dict_t::new_dict().detach();
+                    index_parent->as_dict()->as_mutable()->set(key_value_document, value);
                 }
                 if (index_doc->type() == value_type::dict) {
                     index_doc->as_dict()->as_mutable()->set(parent, index_parent);
@@ -197,7 +199,7 @@ namespace components::document {
                 //todo impl others methods
                 if (new_value != old_value.get()) {
                     ::document::impl::mutable_array_t* mod_index = nullptr;
-                    if (index_field) {
+                    if (index_field && index_field->type() == value_type::array) {
                         auto offset = structure::get_attribute(index_field, structure::attribute::offset)->as_unsigned();
                         auto size = structure::get_attribute(index_field, structure::attribute::size)->as_unsigned();
                         removed_data_.add_range({offset, offset + size - 1});
