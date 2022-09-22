@@ -1,67 +1,15 @@
 #include "document_view.hpp"
 
-#include <components/document/mutable/value_slot.hpp>
-#include <components/document/core/dict.hpp>
-#include <components/document/core/array.hpp>
-#include <components/document/core/doc.hpp>
-#include <components/document/mutable/mutable_dict.h>
-#include <components/document/structure.hpp>
 #include <sstream>
+#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_dict.h>
 
 using ::document::impl::value_type;
 
 namespace components::document {
 
-document_view_t::iterator_t::iterator_t(::document::impl::dict_iterator_t it) noexcept
-    : super(std::move(it)) {}
-
-document_view_t::iterator_t::iterator_t(const ::document::impl::dict_t* dict) noexcept
-    : super(dict) {}
-
-document_view_t::iterator_t& document_view_t::iterator_t::operator++() {
-    ::document::impl::dict_iterator_t::operator++();
-    if (*this && key_string().as_string() == key_value_document) {
-        ::document::impl::dict_iterator_t::operator++();
-    }
-    return *this;
-}
-
-
-document_view_t::document_view_t()
-    : index_(nullptr)
-    , array_(nullptr)
-    , storage_(nullptr) {
-}
-
-document_view_t::document_view_t(document_view_t::index_t index, document_view_t::storage_t storage)
-    : index_(index)
-    , array_(nullptr)
-    , storage_(storage) {
-}
-
-document_view_t::document_view_t(const document_t &src)
-    : index_(src.structure)
-    , array_(nullptr)
-    , storage_(&src.data) {
-}
-
-document_view_t::document_view_t(const document_ptr &src)
-    : index_(src->structure)
-    , array_(nullptr)
-    , storage_(&src->data) {
-}
-
-document_view_t::document_view_t(const document_view_t &src)
-    : index_(src.index_)
-    , array_(src.array_)
-    , storage_(src.storage_) {
-}
-
-document_view_t &document_view_t::operator=(const document_view_t &src) {
-    index_ = src.index_;
-    array_ = src.array_;
-    storage_ = src.storage_;
-    return *this;
+document_view_t::document_view_t(document_ptr document)
+    : document_(std::move(document)) {
 }
 
 document_id_t document_view_t::id() const {
@@ -69,271 +17,170 @@ document_id_t document_view_t::id() const {
 }
 
 bool document_view_t::is_valid() const {
-    return index_ != nullptr;
+    return document_ != nullptr;
 }
 
 bool document_view_t::is_dict() const {
-    return index_ != nullptr;
+    return document_->value_->type() == value_type::dict;
 }
 
 bool document_view_t::is_array() const {
-    return array_ != nullptr;
+    return document_->value_->type() == value_type::array;
 }
 
 std::size_t document_view_t::count() const {
-    return is_dict() ? index_->count() - 1 : array_->count() - 1;
+    return is_dict() ? as_dict()->count() : as_array()->count();
 }
 
-bool document_view_t::is_exists(std::string &&key) const {
-    return index_->get(std::move(key)) != nullptr;
-}
-
-bool document_view_t::is_exists(const std::string &key) const {
-    return index_->get(key) != nullptr;
+bool document_view_t::is_exists(const std::string& key) const {
+    return get(key) != nullptr;
 }
 
 bool document_view_t::is_exists(uint32_t index) const {
-    return array_->get(index + 1) != nullptr;
-}
-
-bool document_view_t::is_null(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::NIL;
+    return get(index) != nullptr;
 }
 
 bool document_view_t::is_null(const std::string &key) const {
-    return get_type(key) == object_type::NIL;
+    return get(key)->type() == value_type::null;
 }
 
 bool document_view_t::is_null(uint32_t index) const {
-    return get_type(index) == object_type::NIL;
-}
-
-bool document_view_t::is_bool(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::BOOLEAN;
+    return get(index)->type() == value_type::null;
 }
 
 bool document_view_t::is_bool(const std::string &key) const {
-    return get_type(key) == object_type::BOOLEAN;
+    return get(key)->type() == value_type::boolean;
 }
 
 bool document_view_t::is_bool(uint32_t index) const {
-    return get_type(index) == object_type::BOOLEAN;
-}
-
-bool document_view_t::is_ulong(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::POSITIVE_INTEGER;
+    return get(index)->type() == value_type::boolean;
 }
 
 bool document_view_t::is_ulong(const std::string &key) const {
-    return get_type(key) == object_type::POSITIVE_INTEGER;
+    return get(key)->is_unsigned();
 }
 
 bool document_view_t::is_ulong(uint32_t index) const {
-    return get_type(index) == object_type::POSITIVE_INTEGER;
-}
-
-bool document_view_t::is_long(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::NEGATIVE_INTEGER;
+    return get(index)->is_unsigned();
 }
 
 bool document_view_t::is_long(const std::string &key) const {
-    return get_type(key) == object_type::NEGATIVE_INTEGER;
+    return get(key)->is_int();
 }
 
 bool document_view_t::is_long(uint32_t index) const {
-    return get_type(index) == object_type::NEGATIVE_INTEGER;
-}
-
-bool document_view_t::is_float(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::FLOAT;
-}
-
-bool document_view_t::is_float(const std::string &key) const {
-    return get_type(key) == object_type::FLOAT;
-}
-
-bool document_view_t::is_float(uint32_t index) const {
-    return get_type(index) == object_type::FLOAT;
-}
-
-bool document_view_t::is_double(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::FLOAT64;
+    return get(index)->is_int();
 }
 
 bool document_view_t::is_double(const std::string &key) const {
-    return get_type(key) == object_type::FLOAT64;
+    return get(key)->is_double();
 }
 
 bool document_view_t::is_double(uint32_t index) const {
-    return get_type(index) == object_type::FLOAT64;
-}
-
-bool document_view_t::is_string(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::STR;
+    return get(index)->is_double();
 }
 
 bool document_view_t::is_string(const std::string &key) const {
-    return get_type(key) == object_type::STR;
+    return get(key)->type() == value_type::string;
 }
 
 bool document_view_t::is_string(uint32_t index) const {
-    return get_type(index) == object_type::STR;
-}
-
-bool document_view_t::is_array(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::ARRAY;
+    return get(index)->type() == value_type::string;
 }
 
 bool document_view_t::is_array(const std::string &key) const {
-    return get_type(key) == object_type::ARRAY;
+    return get(key)->type() == value_type::array;
 }
 
 bool document_view_t::is_array(uint32_t index) const {
-    return get_type(index) == object_type::ARRAY;
-}
-
-bool document_view_t::is_dict(std::string &&key) const {
-    return get_type(std::move(key)) == object_type::MAP;
+    return get(index)->type() == value_type::array;
 }
 
 bool document_view_t::is_dict(const std::string &key) const {
-    return get_type(key) == object_type::MAP;
+    return get(key)->type() == value_type::dict;
 }
 
 bool document_view_t::is_dict(uint32_t index) const {
-    return get_type(index) == object_type::MAP;
+    return get(index)->type() == value_type::dict;
 }
 
-object_handle document_view_t::get(std::string &&key) const {
-    auto field = index_ ? index_->get(std::move(key)) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
-    if (field && field->type() == value_type::array) {
-        auto field_array = field->as_array();
-        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
-                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
+document_view_t::const_value_ptr document_view_t::get(const std::string &key) const {
+    if (is_array()) {
+        try {
+            return get(uint32_t(atol(key.c_str())));
+        } catch (...) {
+            return nullptr;
+        }
     }
-    return object_handle();
+    return as_dict()->get(key);
 }
 
-object_handle document_view_t::get(const std::string &key) const {
-    auto field = index_ ? index_->get(key) : array_->get(static_cast<uint32_t>(std::atol(key.c_str())));
-    if (field && field->type() == value_type::array) {
-        auto field_array = field->as_array();
-        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
-                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
-    }
-    return object_handle();
+document_view_t::const_value_ptr document_view_t::get(uint32_t index) const {
+    return as_array()->get(index);
 }
 
-object_handle document_view_t::get(uint32_t index) const {
-    auto field = array_->get(index + 1);
-    if (field && field->type() == value_type::array) {
-        auto field_array = field->as_array();
-        return get_value(structure::get_attribute(field_array, structure::attribute::offset)->as_unsigned(),
-                         structure::get_attribute(field_array, structure::attribute::size)->as_unsigned());
-    }
-    return object_handle();
+bool document_view_t::get_bool(const std::string &key) const {
+    return get_as<bool>(key);
 }
 
-bool document_view_t::get_bool(std::string &&key) const {
-    return get_as<bool>(std::move(key));
+uint32_t document_view_t::get_ulong(const std::string &key) const {
+    return get_as<uint32_t>(key);
 }
 
-uint32_t document_view_t::get_ulong(std::string &&key) const {
-    return get_as<uint32_t>(std::move(key));
+int32_t document_view_t::get_long(const std::string &key) const {
+    return get_as<int32_t>(key);
 }
 
-int32_t document_view_t::get_long(std::string &&key) const {
-    return get_as<int32_t>(std::move(key));
+double document_view_t::get_double(const std::string &key) const {
+    return get_as<double>(key);
 }
 
-float document_view_t::get_float(std::string &&key) const {
-    return get_as<float>(std::move(key));
-}
-
-double document_view_t::get_double(std::string &&key) const {
-    return get_as<double>(std::move(key));
-}
-
-std::string document_view_t::get_string(std::string &&key) const {
-    return get_as<std::string>(std::move(key));
-}
-
-document_view_t document_view_t::get_array(std::string &&key) const {
-    if (index_) return document_view_t(index_->get(std::move(key))->as_array(), storage_);
-    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1)->as_array(), storage_);
+std::string document_view_t::get_string(const std::string &key) const {
+    return get_as<std::string>(key);
 }
 
 document_view_t document_view_t::get_array(const std::string &key) const {
-    if (index_) return document_view_t(index_->get(key)->as_array(), storage_);
-    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1)->as_array(), storage_);
+    return document_view_t(make_document(get(key)->as_array()));
 }
 
 document_view_t document_view_t::get_array(uint32_t index) const {
-    return document_view_t(array_->get(index + 1)->as_array(), storage_);
-}
-
-document_view_t document_view_t::get_dict(std::string &&key) const {
-    if (index_) return document_view_t(index_->get(std::move(key))->as_dict(), storage_);
-    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1)->as_dict(), storage_);
+    return document_view_t(make_document(get(index)->as_array()));
 }
 
 document_view_t document_view_t::get_dict(const std::string &key) const {
-    if (index_) return document_view_t(index_->get(key)->as_dict(), storage_);
-    return document_view_t(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1)->as_dict(), storage_);
+    return document_view_t(make_document(get(key)->as_dict()));
 }
 
 document_view_t document_view_t::get_dict(uint32_t index) const {
-    return document_view_t(array_->get(index + 1)->as_dict(), storage_);
+    return document_view_t(make_document(get(index)->as_dict()));
 }
 
 const ::document::impl::value_t *document_view_t::get_value() const {
-    return index_
-               ? index_->get(components::document::key_value_document)
-               : array_->get(0);
+    return document_->value_.get();
 }
 
-const ::document::impl::value_t *document_view_t::get_value(const std::string &key) const {
+document_view_t::const_value_ptr document_view_t::get_value(const std::string &key) const {
     auto dot_pos = key.find('.');
     if (dot_pos != std::string::npos) {
-        auto key_child = key.substr(0, dot_pos);
-        if (is_dict(key_child)) {
-            return get_dict(key_child).get_value(key.substr(dot_pos + 1, key.size() - dot_pos));
-        } else if (is_array(key_child)) {
-            return get_array(key_child).get_value(key.substr(dot_pos + 1, key.size() - dot_pos));
-        } else {
-            return nullptr;
-        }
-    } else {
-        auto field = index_
-                         ? index_->get(key)
-                         : array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1);
-        if (field && field->type() == value_type::array) {
-            return structure::get_attribute(field->as_array(), structure::attribute::value);
-        } else if (field && field->type() == value_type::dict) {
-            return field->as_dict()->get(components::document::key_value_document);
+        auto key_parent = key.substr(0, dot_pos);
+        if (is_exists(key_parent)) {
+            auto doc_parent = make_document(get(key_parent));
+            if (doc_parent) {
+                return document_view_t(doc_parent).get_value(key.substr(dot_pos + 1, key.size() - dot_pos));
+            } else {
+                return nullptr;
+            }
         }
     }
-    return nullptr;
+    return get(key);
 }
 
-const ::document::impl::value_t *document_view_t::get_value(uint32_t index) const {
-    auto field = index_
-                     ? index_->get(std::to_string(index))
-                     : array_->get(index + 1);
-    if (field && field->type() == value_type::array) {
-        return structure::get_attribute(field->as_array(), structure::attribute::value);
-    } else if (field && field->type() == value_type::dict) {
-        return field->as_dict()->get(components::document::key_value_document);
-    }
-    return nullptr;
+document_view_t::const_value_ptr document_view_t::get_value(uint32_t index) const {
+    return get(index);
 }
 
-document_view_t::iterator_t document_view_t::begin() const {
-    iterator_t it(index_->begin());
-    if (it && it.key_string().as_string() == key_value_document) {
-        ++it;
-    }
-    return it;
+::document::impl::dict_iterator_t document_view_t::begin() const {
+    return as_dict()->begin();
 }
 
 template <class T>
@@ -347,132 +194,65 @@ compare_t equals_(const document_view_t &doc1, const document_view_t &doc2, cons
 
 compare_t document_view_t::compare(const document_view_t &other, const std::string &key) const {
     if (is_exists(key) && !other.is_exists(key)) return compare_t::less;
-    if (!is_exists(key) && other.is_exists(key))  return compare_t::more;
+    if (!is_exists(key) && other.is_exists(key)) return compare_t::more;
     if (!is_exists(key) && !other.is_exists(key)) return compare_t::equals;
     if (is_bool(key) && other.is_bool(key)) return equals_<bool>(*this, other, key);
     if (is_ulong(key) && other.is_ulong(key)) return equals_<std::uint32_t>(*this, other, key);
     if (is_long(key) && other.is_long(key)) return equals_<int32_t>(*this, other, key);
-    if (is_float(key) && other.is_float(key)) return equals_<float>(*this, other, key);
     if (is_double(key) && other.is_double(key)) return equals_<double>(*this, other, key);
     if (is_string(key) && other.is_string(key)) return equals_<std::string>(*this, other, key);
     return compare_t::equals;
 }
 
 std::string document_view_t::to_json() const {
-    if (index_) return to_json_dict();
-    if (array_) return to_json_array();
+    if (is_dict())  return to_json_dict();
+    if (is_array()) return to_json_array();
     return std::string();
+}
+const ::document::impl::dict_t* document_view_t::as_dict() const {
+    return document_->value_->as_dict();
+}
+
+const ::document::impl::array_t* document_view_t::as_array() const {
+    return document_->value_->as_array();
 }
 
 ::document::retained_t<::document::impl::dict_t> document_view_t::to_dict() const {
-    auto dict = ::document::impl::mutable_dict_t::new_dict();
-    for (auto it = begin(); it; ++it) {
-        auto key = it.key_string().as_string();
-        if (is_null(key)) {
-            dict->set(key, ::document::impl::value_t::null_value);
-        } else if (is_bool(key)) {
-            dict->set(key, get_as<bool>(key));
-        } else if (is_ulong(key)) {
-            dict->set(key, get_as<uint32_t>(key));
-        } else if (is_long(key)) {
-            dict->set(key, get_as<int32_t>(key));
-        } else if (is_float(key)) {
-            dict->set(key, get_as<float>(key));
-        } else if (is_double(key)) {
-            dict->set(key, get_as<double>(key));
-        } else if (is_string(key)) {
-            dict->set(key, get_as<std::string>(key));
-        } else if (is_array(key)) {
-            dict->set(key, get_array(key).to_array());
-        } else if (is_dict(key)) {
-            dict->set(key, get_dict(key).to_dict());
-        }
-    }
-    return dict;
+    return ::document::impl::mutable_dict_t::new_dict(as_dict());
 }
 
 ::document::retained_t<::document::impl::array_t> document_view_t::to_array() const {
-    auto array = ::document::impl::mutable_array_t::new_array();
-    for (uint32_t index = 0; index < count(); ++index) {
-        if (is_null(index)) {
-            array->append(::document::impl::value_t::null_value);
-        } else if (is_bool(index)) {
-            array->append(get_as<bool>(index));
-        } else if (is_ulong(index)) {
-            array->append(get_as<uint32_t>(index));
-        } else if (is_long(index)) {
-            array->append(get_as<int32_t>(index));
-        } else if (is_float(index)) {
-            array->append(get_as<float>(index));
-        } else if (is_double(index)) {
-            array->append(get_as<double>(index));
-        } else if (is_string(index)) {
-            array->append(get_as<std::string>(index));
-        } else if (is_array(index)) {
-            array->append(get_array(index).to_array());
-        } else if (is_dict(index)) {
-            array->append(get_dict(index).to_dict());
-        }
+    return ::document::impl::mutable_array_t::new_array(as_array());
+}
+
+std::string value_to_string(document_view_t::const_value_ptr value) {
+    if (value->type() == value_type::boolean) {
+        return value->as_bool() ? "true" : "false";
+    } else if (value->is_unsigned()) {
+        return std::to_string(value->as_unsigned());
+    } else if (value->is_int()) {
+        return std::to_string(value->as_int());
+    } else if (value->is_double()) {
+        std::stringstream res;
+        res << value->as_double();
+        return res.str();
+    } else if (value->type() == value_type::string) {
+        return "\"" + value->as_string().as_string() + "\"";
     }
-    return array;
-}
-
-document_view_t::document_view_t(document_view_t::array_t array, document_view_t::storage_t storage)
-    : index_(nullptr)
-    , array_(array)
-    , storage_(storage) {
-}
-
-object_type document_view_t::get_type(const ::document::impl::value_t *field) const {
-    if (field != nullptr) {
-        if (field->type() == value_type::dict) {
-            return object_type::MAP;
-        } else if (field->type() == value_type::array) {
-            auto array = field->as_array();
-            if (array->count() > 0 && (array->get(0)->type() == value_type::array || array->get(0)->type() == value_type::dict)) {
-                return object_type::ARRAY;
-            } else {
-                return static_cast<object_type>(structure::get_attribute(field, structure::attribute::type)->as_int());
-            }
-        }
-    }
-    return object_type::NIL;
-}
-
-object_type document_view_t::get_type(std::string &&key) const {
-    if (index_) return get_type(index_->get(std::move(key)));
-    return get_type(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1));
-}
-
-object_type document_view_t::get_type(const std::string &key) const {
-    if (index_) return get_type(index_->get(key));
-    return get_type(array_->get(static_cast<uint32_t>(std::atol(key.c_str())) + 1));
-}
-
-object_type document_view_t::get_type(uint32_t index) const {
-    return get_type(array_->get(index + 1));
-}
-
-object_handle document_view_t::get_value(offset_t offset, std::size_t size) const {
-    assert(offset + size <= storage_->size());
-    auto data = storage_->data() + offset;
-    return msgpack::unpack(data, size);
+    return std::string();
 }
 
 std::string document_view_t::to_json_dict() const {
     std::stringstream res;
-    for (auto it = begin(); it; ++it) {
+    for (auto it = as_dict()->begin(); it; ++it) {
         auto key = static_cast<std::string>(it.key()->as_string());
-        if (key == key_value_document) {
-            continue;
-        }
         if (!res.str().empty()) res << ",";
         if (is_dict(key)) {
-            res << "\"" << key << "\"" << ":" << get_dict(std::move(key)).to_json();
+            res << "\"" << key << "\"" << ":" << get_dict(key).to_json();
         } else if (is_array(key)) {
-            res << "\"" << key << "\"" << ":" << get_array(std::move(key)).to_json();
+            res << "\"" << key << "\"" << ":" << get_array(key).to_json();
         } else {
-            res << "\"" << key << "\"" << ":" << *get(std::move(key));
+            res << "\"" << key << "\"" << ":" << value_to_string(get(key));
         }
     }
     return "{" + res.str() + "}";
@@ -480,14 +260,14 @@ std::string document_view_t::to_json_dict() const {
 
 std::string document_view_t::to_json_array() const {
     std::stringstream res;
-    for (uint32_t index = 0; index < count(); ++index) {
+    for (uint32_t index = 0; index < as_array()->count(); ++index) {
         if (!res.str().empty()) res << ",";
         if (is_dict(index)) {
             res << get_dict(index).to_json();
         } else if (is_array(index)) {
             res << get_array(index).to_json();
         } else {
-            res << *get(index);
+            res << value_to_string(get(index));
         }
     }
     return "[" + res.str() + "]";
