@@ -111,6 +111,14 @@ TEST_CASE("document_view::update") {
     REQUIRE(document_view_t(doc).get_value("count2")->as_int() == 100);
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count2") != nullptr);
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count2")->as_int() == 100);
+
+    REQUIRE(document_view_t(doc).get_value("countArray.1")->as_int() == 2);
+    doc->update(document_from_json(R"({"$set": {"countArray.1": 100}})"));
+    REQUIRE(document_view_t(doc).get_value("countArray.1")->as_int() == 100);
+
+    REQUIRE(document_view_t(doc).get_value("countDict.even")->as_int() == false);
+    doc->update(document_from_json(R"({"$set": {"countDict.even": true}})"));
+    REQUIRE(document_view_t(doc).get_value("countDict.even")->as_int() == true);
 }
 
 TEST_CASE("document_view::value from json") {
