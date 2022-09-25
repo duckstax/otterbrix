@@ -31,10 +31,6 @@ document_view_t conditional_expression::prepare_document_(const document_view_t 
     return res;
 }
 
-document_view_t conditional_expression::prepare_document_(const document_t &doc) {
-    return prepare_document_(document_view_t(doc));
-}
-
 document_view_t conditional_expression::prepare_document_(const document_ptr &doc) {
     return prepare_document_(document_view_t(doc));
 }

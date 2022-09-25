@@ -8,6 +8,10 @@ using ::document::impl::value_type;
 
 namespace components::document {
 
+document_view_t::document_view_t()
+    : document_(nullptr) {
+}
+
 document_view_t::document_view_t(document_ptr document)
     : document_(std::move(document)) {
 }

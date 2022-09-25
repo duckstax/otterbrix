@@ -15,6 +15,7 @@ class document_view_t final {
 public:
     using const_value_ptr = const ::document::impl::value_t*;
 
+    document_view_t();
     explicit document_view_t(document_ptr document);
 
     document_id_t id() const;
