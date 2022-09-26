@@ -127,12 +127,12 @@ bool document_view_t::get_bool(const std::string &key) const {
     return get_as<bool>(key);
 }
 
-uint32_t document_view_t::get_ulong(const std::string &key) const {
-    return get_as<uint32_t>(key);
+uint64_t document_view_t::get_ulong(const std::string &key) const {
+    return get_as<uint64_t>(key);
 }
 
-int32_t document_view_t::get_long(const std::string &key) const {
-    return get_as<int32_t>(key);
+int64_t document_view_t::get_long(const std::string &key) const {
+    return get_as<int64_t>(key);
 }
 
 double document_view_t::get_double(const std::string &key) const {

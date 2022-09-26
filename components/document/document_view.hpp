@@ -48,8 +48,8 @@ public:
     const_value_ptr get(uint32_t index) const;
 
     bool get_bool(const std::string &key) const;
-    uint32_t get_ulong(const std::string &key) const;
-    int32_t get_long(const std::string &key) const;
+    uint64_t get_ulong(const std::string &key) const;
+    int64_t get_long(const std::string &key) const;
     double get_double(const std::string &key) const;
     std::string get_string(const std::string &key) const;
     document_view_t get_array(const std::string &key) const;
