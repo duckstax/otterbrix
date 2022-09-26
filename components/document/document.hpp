@@ -47,7 +47,7 @@ namespace components::document {
     document_ptr make_document(const ::document::impl::array_t *array);
     document_ptr make_document(const ::document::impl::value_t *value);
 
-//    document_ptr make_upsert_document(const document_ptr& source);
+    document_ptr make_upsert_document(const document_ptr& source);
 
     document_id_t get_document_id(const document_ptr &document);
 

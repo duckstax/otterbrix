@@ -25,17 +25,34 @@ namespace components::document {
         return src;
     }
 
+    document_const_value_t get_value_by_key_(document_const_value_t object, const std::string &key) {
+        if (object->type() == value_type::dict) {
+            return object->as_dict()->as_mutable()->get(key);
+        } else if (object->type() == value_type::array) {
+            try {
+                return object->as_array()->as_mutable()->get(std::atol(key.c_str()));
+            } catch (...) {
+            }
+        }
+        return nullptr;
+    }
+
     void set_new_value_(document_const_value_t object, const std::string &key, document_const_value_t value) {
         auto dot_pos = key.find('.');
         if (dot_pos != std::string::npos) {
             auto key_parent = key.substr(0, dot_pos);
-            document_const_value_t object_parent = nullptr;
-            if (object->type() == value_type::dict) {
-                object_parent = object->as_dict()->as_mutable()->get(key_parent);
-            } else if (object->type() == value_type::array) {
-                try {
-                    object_parent = object->as_array()->as_mutable()->get(std::atol(key_parent.c_str()));
-                } catch (...) {
+            document_const_value_t object_parent = get_value_by_key_(object, key_parent);
+            if (!object_parent) {
+                auto dot_pos_next = key.find('.', dot_pos + 1);
+                auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
+                if (key_next.find_first_not_of("0123456789") == std::string::npos) {
+                    set_new_value_(object, key_parent, mutable_array_t::new_array().detach());
+                } else {
+                    set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
+                }
+                object_parent = get_value_by_key_(object, key_parent);
+                if (!object_parent && object->type() == value_type::array) {
+                    object_parent = object->as_array()->get(object->as_array()->count() - 1);
                 }
             }
             if (object_parent) {
@@ -117,50 +134,23 @@ namespace components::document {
         return nullptr;
     }
 
-//    document_ptr make_upsert_document(const document_ptr& source) {
-//        ::document::impl::value_t* doc = mutable_dict_t::new_dict().detach();
-//        document_view_t view(source);
-//        auto update_dict = view.to_dict();
-//        for (auto it = update_dict->begin(); it; ++it) {
-//            auto cmd = static_cast<std::string_view>(it.key()->as_string());
-//            if (cmd == "$set" || cmd == "$inc") {
-//                auto values = it.value()->as_dict();
-//                for (auto it_field = values->begin(); it_field; ++it_field) {
-//                    auto key = static_cast<std::string>(it_field.key()->as_string());
-//                    std::size_t dot_pos = key.find('.');
-//                    auto sub_doc = doc;
-//                    while (dot_pos != std::string::npos) {
-//                        auto key_parent = key.substr(0, dot_pos);
-//                        key = key.substr(dot_pos + 1, key.size() - dot_pos);
-//                        auto dot_pos_next = key.find('.');
-//                        auto next_key = dot_pos_next != std::string::npos
-//                                        ? key.substr(0, dot_pos_next - 1)
-//                                        : key;
-//                        ::document::impl::value_t* next_sub_doc = nullptr;
-//                        if (next_key.find_first_not_of("0123456789") == std::string::npos) {
-//                            next_sub_doc = mutable_array_t::new_array().detach();
-//                        } else {
-//                            next_sub_doc = mutable_dict_t::new_dict().detach();
-//                        }
-//                        if (sub_doc->type() == value_type::dict) {
-//                            sub_doc->as_dict()->as_mutable()->set(key_parent, next_sub_doc);
-//                        } else if (sub_doc->type() == value_type::array) {
-//                            sub_doc->as_array()->as_mutable()->append(next_sub_doc);
-//                        }
-//                        sub_doc = next_sub_doc;
-//                        dot_pos = dot_pos_next;
-//                    }
-//                    if (sub_doc->type() == value_type::dict) {
-//                        sub_doc->as_dict()->as_mutable()->set(key, it_field.value());
-//                    } else if (sub_doc->type() == value_type::array) {
-//                        sub_doc->as_array()->as_mutable()->append(it_field.value());
-//                    }
-//                }
-//            }
-//        }
-//        doc->as_dict()->as_mutable()->set("_id", view.get_string("_id"));
-//        return components::document::make_document(doc->as_dict());
-//    }
+    document_ptr make_upsert_document(const document_ptr& source) {
+        auto doc = make_document();
+        document_view_t view(source);
+        const auto *update_dict = view.as_dict();
+        for (auto it = update_dict->begin(); it; ++it) {
+            auto cmd = static_cast<std::string_view>(it.key()->as_string());
+            if (cmd == "$set" || cmd == "$inc") {
+                auto values = it.value()->as_dict();
+                for (auto it_field = values->begin(); it_field; ++it_field) {
+                    auto key = static_cast<std::string>(it_field.key()->as_string());
+                    doc->set(key, it_field.value());
+                }
+            }
+        }
+        doc->set("_id", view.get_string("_id"));
+        return doc;
+    }
 
     document_id_t get_document_id(const document_ptr &document) {
         return components::document::document_view_t(document).id();

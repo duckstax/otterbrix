@@ -63,17 +63,19 @@ public:
 
     template <class T>
     T get_as(const std::string &key) const {
-        try {
-            return get(key)->as<T>();
-        } catch (...) {}
+        const auto *value = get(key);
+        if (value) {
+            return value->as<T>();
+        }
         return T();
     }
 
     template <class T>
     T get_as(uint32_t index) const {
-        try {
-            return get(index)->as<T>();
-        } catch (...) {}
+        const auto *value = get(index);
+        if (value) {
+            return value->as<T>();
+        }
         return T();
     }
 
