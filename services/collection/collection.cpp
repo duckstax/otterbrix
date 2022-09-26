@@ -276,10 +276,7 @@ namespace services::collection {
     bool collection_t::update_(const document_id_t& id, const document_ptr& update, bool is_commit) {
         auto &document = storage_.at(id);
         if (document) {
-            if (document->update(*update) && is_commit) {
-                document->commit();
-                return true;
-            }
+            return document->update(update);
         }
         return false;
     }
