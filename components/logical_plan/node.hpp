@@ -9,6 +9,8 @@
 
 #include "forward.hpp"
 
+#include <core/make_intrusive_ptr.hpp>
+
 namespace components::logical_plan {
 
     class node_t;
