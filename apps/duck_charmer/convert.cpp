@@ -81,8 +81,6 @@ auto from_object_(const document_view_t &document, const TKey &key) -> py::objec
         return py::int_(document.get_as<ulong>(key));
     } else if (document.is_long(key)) {
         return py::int_(document.get_as<long>(key));
-    } else if (document.is_float(key)) {
-        return py::float_(document.get_as<float>(key));
     } else if (document.is_double(key)) {
         return py::float_(document.get_as<double>(key));
     } else if (document.is_string(key)) {
