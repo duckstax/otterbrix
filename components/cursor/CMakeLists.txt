@@ -29,5 +29,5 @@ target_include_directories(rocketjoe_${PROJECT_NAME}
 )
 
 if (DEV_MODE)
-    #add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()
