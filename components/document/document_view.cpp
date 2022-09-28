@@ -197,12 +197,15 @@ compare_t equals_(const document_view_t &doc1, const document_view_t &doc2, cons
 }
 
 compare_t document_view_t::compare(const document_view_t &other, const std::string &key) const {
+    if (is_valid() && !other.is_valid()) return compare_t::less;
+    if (!is_valid() && other.is_valid()) return compare_t::more;
+    if (!is_valid() && !other.is_valid()) return compare_t::equals;
     if (is_exists(key) && !other.is_exists(key)) return compare_t::less;
     if (!is_exists(key) && other.is_exists(key)) return compare_t::more;
     if (!is_exists(key) && !other.is_exists(key)) return compare_t::equals;
     if (is_bool(key) && other.is_bool(key)) return equals_<bool>(*this, other, key);
-    if (is_ulong(key) && other.is_ulong(key)) return equals_<std::uint32_t>(*this, other, key);
-    if (is_long(key) && other.is_long(key)) return equals_<int32_t>(*this, other, key);
+    if (is_ulong(key) && other.is_ulong(key)) return equals_<std::uint64_t>(*this, other, key);
+    if (is_long(key) && other.is_long(key)) return equals_<int64_t>(*this, other, key);
     if (is_double(key) && other.is_double(key)) return equals_<double>(*this, other, key);
     if (is_string(key) && other.is_string(key)) return equals_<std::string>(*this, other, key);
     return compare_t::equals;
