@@ -101,7 +101,7 @@ namespace services::disk {
         auto load(session_id_t& session) -> void;
 
         template<class ...Args>
-        auto nothing(Args&&...args) -> void {}
+        auto nothing(Args&&...) -> void {}
     };
 
 } //namespace services::disk

@@ -1,9 +1,11 @@
 #include <catch2/catch.hpp>
+
+#include <climits>
+
 #include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/core/slice.hpp>
-#include <climits>
 
 using namespace document::impl;
 using document::retained_t;

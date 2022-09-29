@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/core/slice.hpp>
@@ -182,7 +183,6 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE_FALSE(copy->get(0) == mc->get(0));
         REQUIRE_FALSE(copy->get(0)->as_array()->get(0) == ma);
     }
-
 }
 
 

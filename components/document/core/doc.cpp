@@ -1,14 +1,16 @@
 #include "doc.hpp"
+
+#include <functional>
+#include <mutex>
+#include <utility>
+#include <vector>
+
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/core/pointer.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/better_assert.hpp>
-#include <functional>
-#include <mutex>
-#include <utility>
-#include <vector>
 #include <boost/container/small_vector.hpp>
 
 namespace document::impl {

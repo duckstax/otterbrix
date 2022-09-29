@@ -23,7 +23,6 @@ TEST_CASE("natyve pack document") {
     document_view_t view1(doc1);
     document_view_t view2(doc2);
 
-    REQUIRE(doc1->data.size() == doc2->data.size());
     REQUIRE(view1.count() == view2.count());
     REQUIRE(view1.get_string("_id") == view2.get_string("_id"));
     REQUIRE(view1.get_long("count") == view2.get_long("count"));
@@ -48,7 +47,6 @@ TEST_CASE("natyve pack document  and zone") {
     document_view_t view1(doc1);
     document_view_t view2(doc2);
 
-    REQUIRE(doc1->data.size() == doc2->data.size());
     REQUIRE(view1.count() == view2.count());
     REQUIRE(view1.get_string("_id") == view2.get_string("_id"));
     REQUIRE(view1.get_long("count") == view2.get_long("count"));

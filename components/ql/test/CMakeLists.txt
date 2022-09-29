@@ -1,18 +1,18 @@
-project(test_serialize)
+project(test_ql)
+
+add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
-        main.cpp
-        test_serialize.cpp
-)
+        base.cpp
+        )
 
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
+add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::document
-        rocketjoe::serialize
-        rocketjoe::test_generaty
+        rocketjoe::ql
 )
 
 include(CTest)

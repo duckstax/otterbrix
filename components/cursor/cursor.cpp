@@ -39,7 +39,7 @@ namespace components::cursor {
 
     void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
         create_list_by_sort();
-        std::sort(sorted_.begin(), sorted_.end(), sorter);
+        std::sort(sorted_.begin(), sorted_.end(), std::move(sorter));
         current_index_ = start_index;
     }
 
