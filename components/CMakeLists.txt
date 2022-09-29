@@ -15,7 +15,6 @@ else()
     add_subdirectory(ql)
     add_subdirectory(session)
     add_subdirectory(parser)
-    add_subdirectory(serialize)
     add_subdirectory(wasm_runner)
 endif()
 

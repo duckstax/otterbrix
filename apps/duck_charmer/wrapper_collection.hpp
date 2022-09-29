@@ -1,7 +1,6 @@
 #pragma once
 
 #include <condition_variable>
-#include <iostream>
 #include <memory>
 #include <mutex>
 

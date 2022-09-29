@@ -1,6 +1,6 @@
 #pragma once
 
-#include <msgpack/adaptor/list.hpp>
+#include <msgpack.hpp>
 #include "base.hpp"
 
 namespace components::protocol {

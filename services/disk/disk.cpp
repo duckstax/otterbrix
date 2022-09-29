@@ -1,13 +1,11 @@
 #include "disk.hpp"
 #include <rocksdb/db.h>
-#include <components/serialize/serialize.hpp>
+#include <components/document/msgpack/msgpack_encoder.hpp>
 #include "metadata.hpp"
 
 namespace services::disk {
 
     const std::string key_separator = "::";
-    const std::string key_structure = "structure";
-    const std::string key_data = "data";
 
     std::string gen_key(const std::string &key, const std::string &sub_key) {
         return key + key_separator + sub_key;
@@ -23,15 +21,6 @@ namespace services::disk {
 
     std::string_view to_string_view(const msgpack::sbuffer &buffer) {
         return std::string_view(buffer.data(), buffer.size());
-    }
-
-    bool statuses_ok(const std::vector<rocksdb::Status> &statuses) {
-        for (const auto &status : statuses) {
-            if (!status.ok()) {
-                return false;
-            }
-        }
-        return true;
     }
 
 
@@ -57,22 +46,19 @@ namespace services::disk {
     disk_t::~disk_t() = default;
 
     void disk_t::save_document(const database_name_t &database, const collection_name_t &collection, const document_id_t& id, const document_ptr &document) {
-        auto key = gen_key(database, collection, id);
-        auto serialized_document = components::serialize::serialize(document);
-        rocksdb::WriteBatch batch;
-        batch.Put(gen_key(key_structure, key), to_string_view(serialized_document.structure));
-        batch.Put(gen_key(key_data, key), to_string_view(serialized_document.data));
-        db_->Write(rocksdb::WriteOptions(), &batch);
+        msgpack::sbuffer sbuf;
+        msgpack::pack(sbuf, document);
+        db_->Put(rocksdb::WriteOptions(), gen_key(database, collection, id), to_string_view(sbuf));
     }
 
     document_ptr disk_t::load_document(const rocks_id& id_rocks) const {
-        std::vector<std::string> read_document(2);
-        auto statuses = db_->MultiGet(rocksdb::ReadOptions(), {gen_key(key_structure, id_rocks), gen_key(key_data, id_rocks)}, &read_document);
-        if (statuses_ok(statuses)) {
-            components::serialize::serialized_document_t serialized_document;
-            serialized_document.structure.write(read_document.at(0).data(), read_document.at(0).size());
-            serialized_document.data.write(read_document.at(1).data(), read_document.at(1).size());
-            return components::serialize::deserialize(serialized_document);
+        std::string sbuf;
+        auto status = db_->Get(rocksdb::ReadOptions(), id_rocks, &sbuf);
+        if (status.ok()) {
+            msgpack::unpacked msg;
+            msgpack::unpack(msg, sbuf.data(), sbuf.size());
+            msgpack::object obj = msg.get();
+            return obj.as<document_ptr>();
         }
         return nullptr;
     }
@@ -82,19 +68,15 @@ namespace services::disk {
     }
 
     void disk_t::remove_document(const database_name_t &database, const collection_name_t &collection, const document_id_t &id) {
-        auto key = gen_key(database, collection, id);
-        rocksdb::WriteBatch batch;
-        batch.Delete(gen_key(key_structure, key));
-        batch.Delete(gen_key(key_data, key));
-        db_->Write(rocksdb::WriteOptions(), &batch);
+        db_->Delete(rocksdb::WriteOptions(), gen_key(database, collection, id));
     }
 
     std::vector<rocks_id> disk_t::load_list_documents(const database_name_t &database, const collection_name_t &collection) const {
         std::vector<rocks_id> id_documents;
         rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        auto find_key = gen_key(key_structure, gen_key(database, collection)) + key_separator;
+        auto find_key = gen_key(database, collection) + key_separator;
         for (it->Seek(find_key); it->Valid() && it->key().starts_with(find_key); it->Next()) {
-            id_documents.push_back(remove_prefix(it->key().ToString(), key_structure));
+            id_documents.push_back(it->key().ToString());
         }
         delete it;
         return id_documents;
