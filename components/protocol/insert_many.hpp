@@ -3,7 +3,6 @@
 #include <boost/beast/core/span.hpp>
 #include "base.hpp"
 #include "components/document/msgpack/msgpack_encoder.hpp"
-#include "components/serialize/serialize.hpp"
 #include <msgpack/adaptor/list.hpp>
 
 struct insert_many_t : statement_t {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <variant>
-
 #include "statements/create_database.hpp"
 #include "statements/drop_database.hpp"
 #include "statements/create_collection.hpp"

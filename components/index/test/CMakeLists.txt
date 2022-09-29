@@ -1,17 +1,20 @@
-project(test_serialize)
+project(test_index)
+
+add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
-        main.cpp
-        test_serialize.cpp
+        single_field_index.cpp
+        #create_index.cpp #todo
 )
 
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
+add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        rocketjoe::log
         rocketjoe::document
-        rocketjoe::serialize
+        rocketjoe::index
         rocketjoe::test_generaty
 )
 
