@@ -18,7 +18,6 @@ namespace components::ql {
     };
 
     class math_t {};
-
     class group_t {};
     class project_t {};
     class sort_t {};
