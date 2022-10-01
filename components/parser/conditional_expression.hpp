@@ -40,7 +40,6 @@ private:
     virtual bool check_document(const document_view_t &) const = 0;
 
     document_view_t prepare_document_(const document_view_t &doc);
-    document_view_t prepare_document_(const document_t &doc);
     document_view_t prepare_document_(const document_ptr &doc);
 };
 using conditional_expression_ptr = std::shared_ptr<conditional_expression>;

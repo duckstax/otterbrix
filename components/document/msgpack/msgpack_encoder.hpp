@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/document/document.hpp>
+#include <components/document/document_view.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <msgpack.hpp>
@@ -11,51 +12,39 @@ using ::document::impl::value_t;
 using ::document::impl::value_type;
 
 template<typename Stream>
-void to_bin(msgpack::packer<Stream>& o, const components::document::document_ptr& doc) {
-    auto data = std::make_unique<char[]>(doc->data.size());
-    std::memcpy(data.get(), doc->data.data(), doc->data.size());
-    o.pack_bin(doc->data.size());
-    o.pack_bin_body(data.release(), doc->data.size());
-}
-
-msgpack::object to_bin(const components::document::document_ptr& doc,msgpack::zone& zone);
-
-template<typename Stream>
-void to_msgpack_(msgpack::packer<Stream>& o, const value_t* structure) {
-    if (structure->type() == value_type::dict) {
-        auto* dict = structure->as_dict();
+void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
+    if (value->type() == value_type::dict) {
+        auto* dict = value->as_dict();
         o.pack_map(dict->count());
-        int i = 0;
         for (auto it = dict->begin(); it; ++it) {
             //todo kick memory leak
-            //msg_dict.ptr[i].key = msgpack::object(std::string_view(it.key()->to_string()));
             auto* s = new std::string(it.key()->to_string());
             o.pack(s->data());
             to_msgpack_(o, it.value());
-            ++i;
         }
-        return;
-    } else if (structure->type() == value_type::array) {
-        auto* array = structure->as_array();
+    } else if (value->type() == value_type::array) {
+        auto* array = value->as_array();
         o.pack_array(array->count());
-        int i = 0;
         for (auto it = array->begin(); it; ++it) {
             to_msgpack_(o, it.value());
-            ++i;
         }
-        return;
-    } else if (structure->is_unsigned()) {
-        o.pack(structure->as_unsigned());
-        return;
-    } else if (structure->is_int()) {
-        o.pack(structure->as_int());
-        return;
+    } else if (value->type() == value_type::boolean) {
+        o.pack(value->as_bool());
+    } else if (value->is_unsigned()) {
+        o.pack(value->as_unsigned());
+    } else if (value->is_int()) {
+        o.pack(value->as_int());
+    } else if (value->is_double()) {
+        o.pack(value->as_double());
+    } else if (value->type() == value_type::string) {
+        //todo kick memory leak
+        auto* s = new std::string(value->to_string());
+        o.pack(s->data());
     }
-    return;
 }
 
-const value_t *to_structure(const msgpack::object &msg_object);
-msgpack::object to_msgpack_(const value_t *structure,msgpack::zone& zone);
+const value_t *to_structure_(const msgpack::object &msg_object);
+void to_msgpack_(const value_t* value, msgpack::object& o);
 
 // User defined class template specialization
 namespace msgpack {
@@ -65,13 +54,10 @@ namespace msgpack {
             template<>
             struct convert<components::document::document_ptr> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::document::document_ptr& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
+                    if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
-
-                    msgpack::sbuffer tmp;
-                    tmp.write(o.via.array.ptr[1].via.bin.ptr, o.via.array.ptr[1].via.bin.size);
-                    v = components::document::make_document(to_structure(o.via.array.ptr[0])->as_dict()->as_mutable(), tmp);
+                    v = components::document::make_document(to_structure_(o)->as_dict());
                     return o;
                 }
             };
@@ -80,9 +66,7 @@ namespace msgpack {
             struct pack<components::document::document_ptr> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::document::document_ptr const& v) const {
-                    o.pack_array(2);
-                    to_msgpack_(o, v->structure);
-                    to_bin(o, v);
+                    to_msgpack_(o, components::document::document_view_t(v).get_value());
                     return o;
                 }
             };
@@ -90,11 +74,7 @@ namespace msgpack {
             template<>
             struct object_with_zone<components::document::document_ptr> final {
                 void operator()(msgpack::object::with_zone& o, components::document::document_ptr const& v) const {
-                    o.type = type::ARRAY;
-                    o.via.array.size = 2;
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
-                    o.via.array.ptr[0] = to_msgpack_(v->structure, o.zone);
-                    o.via.array.ptr[1] = to_bin(v, o.zone);
+                    to_msgpack_(components::document::document_view_t(v).get_value(), o);
                 }
             };
 
