@@ -11,9 +11,7 @@ namespace services::collection::operators {
         if (left_ && left_->output()) {
             for (auto& document : left_->output()->documents()) {
                 context_->index_engine()->delete_document(document); //todo: can optimized
-                if (document->update(*update_)) {
-                    document->commit();
-                }
+                document->update(update_);
                 context_->index_engine()->insert_document(document);
             }
         }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <variant>
+#include <components/document/document.hpp>
+#include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
 
 namespace services::disk {
