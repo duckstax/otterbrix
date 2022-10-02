@@ -22,6 +22,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/predicates/simple_predicate.cpp
         operators/aggregate/operator_aggregate.cpp
         operators/aggregate/operator_count.cpp
+        operators/aggregate/operator_min.cpp
 
         collection.cpp
         create_index.cpp

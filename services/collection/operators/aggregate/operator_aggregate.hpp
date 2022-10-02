@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/ql/expr.hpp>
 #include <services/collection/operators/operator.hpp>
 
 namespace services::collection::operators::aggregate {
@@ -16,5 +17,7 @@ namespace services::collection::operators::aggregate {
         virtual document_ptr aggregate_impl() = 0;
         virtual std::string key_impl() const = 0;
     };
+
+    document::wrapper_value_t get_value(const document_ptr &doc, const components::ql::key_t &key);
 
 } // namespace services::operators::aggregate

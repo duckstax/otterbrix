@@ -15,4 +15,9 @@ namespace services::collection::operators::aggregate {
         return document::wrapper_value_t(document_view_t(output_->documents().at(0)).get_value(key_impl()));
     }
 
+
+    document::wrapper_value_t get_value(const document_ptr &doc, const components::ql::key_t &key) {
+        return document::wrapper_value_t(components::document::document_view_t(doc).get_value(key.as_string()));
+    }
+
 } // namespace services::collection::operators::aggregate

@@ -4,11 +4,13 @@
 
 namespace services::collection::operators::aggregate {
 
-    class operator_count_t final : public operator_aggregate_t {
+    class operator_min_t final : public operator_aggregate_t {
     public:
-        explicit operator_count_t(context_collection_t *collection);
+        explicit operator_min_t(context_collection_t *collection, components::index::key_t key);
 
     private:
+        components::index::key_t key_;
+
         document_ptr aggregate_impl() final;
         std::string key_impl() const final;
     };
