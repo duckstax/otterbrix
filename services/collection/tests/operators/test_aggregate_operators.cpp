@@ -3,6 +3,7 @@
 #include <services/collection/operators/aggregate/operator_count.hpp>
 #include <services/collection/operators/aggregate/operator_min.hpp>
 #include <services/collection/operators/aggregate/operator_max.hpp>
+#include <services/collection/operators/aggregate/operator_sum.hpp>
 #include "test_operator_generaty.hpp"
 
 using namespace services::collection::operators;
@@ -77,5 +78,29 @@ TEST_CASE("operator::aggregate::max") {
                                                       predicates::limit_t::unlimit()));
         max_.on_execute(nullptr);
         REQUIRE(max_.value()->as_unsigned() == 19);
+    }
+}
+
+TEST_CASE("operator::aggregate::sum") {
+    auto collection = init_collection();
+
+    SECTION("sum::all") {
+        auto cond = parse_find_condition("{}");
+        operator_sum_t sum_(d(collection)->view(), "count");
+        sum_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                      predicates::create_predicate(d(collection)->view(), cond),
+                                                      predicates::limit_t::unlimit()));
+        sum_.on_execute(nullptr);
+        REQUIRE(sum_.value()->as_unsigned() == 5050);
+    }
+
+    SECTION("sum::match") {
+        auto cond = parse_find_condition(R"({"count": {"$lt": 10}})");
+        operator_sum_t sum_(d(collection)->view(), "count");
+        sum_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                      predicates::create_predicate(d(collection)->view(), cond),
+                                                      predicates::limit_t::unlimit()));
+        sum_.on_execute(nullptr);
+        REQUIRE(sum_.value()->as_unsigned() == 45);
     }
 }
