@@ -2,6 +2,7 @@
 #include <services/collection/operators/full_scan.hpp>
 #include <services/collection/operators/aggregate/operator_count.hpp>
 #include <services/collection/operators/aggregate/operator_min.hpp>
+#include <services/collection/operators/aggregate/operator_max.hpp>
 #include "test_operator_generaty.hpp"
 
 using namespace services::collection::operators;
@@ -52,5 +53,29 @@ TEST_CASE("operator::aggregate::min") {
                                                       predicates::limit_t::unlimit()));
         min_.on_execute(nullptr);
         REQUIRE(min_.value()->as_unsigned() == 81);
+    }
+}
+
+TEST_CASE("operator::aggregate::max") {
+    auto collection = init_collection();
+
+    SECTION("max::all") {
+        auto cond = parse_find_condition("{}");
+        operator_max_t max_(d(collection)->view(), "count");
+        max_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                      predicates::create_predicate(d(collection)->view(), cond),
+                                                      predicates::limit_t::unlimit()));
+        max_.on_execute(nullptr);
+        REQUIRE(max_.value()->as_unsigned() == 100);
+    }
+
+    SECTION("max::match") {
+        auto cond = parse_find_condition(R"({"count": {"$lt": 20}})");
+        operator_max_t max_(d(collection)->view(), "count");
+        max_.set_children(std::make_unique<full_scan>(d(collection)->view(),
+                                                      predicates::create_predicate(d(collection)->view(), cond),
+                                                      predicates::limit_t::unlimit()));
+        max_.on_execute(nullptr);
+        REQUIRE(max_.value()->as_unsigned() == 19);
     }
 }
