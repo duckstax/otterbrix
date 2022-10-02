@@ -25,6 +25,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/aggregate/operator_min.cpp
         operators/aggregate/operator_max.cpp
         operators/aggregate/operator_sum.cpp
+        operators/aggregate/operator_avg.cpp
 
         collection.cpp
         create_index.cpp
