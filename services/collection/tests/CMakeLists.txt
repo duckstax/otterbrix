@@ -5,7 +5,8 @@ add_definitions(-DDEV_MODE)
 set(${PROJECT_NAME}_SOURCES
         #test_collection.cpp
         #rpc_style.cpp
-        test_operators.cpp
+        operators/test_aggregate_operators.cpp
+        operators/test_operators.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

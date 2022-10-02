@@ -12,7 +12,8 @@ namespace services::collection::operators {
         search_by_index,
         insert,
         remove,
-        update
+        update,
+        aggregate
     };
 
     enum class operator_state {

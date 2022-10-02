@@ -47,6 +47,9 @@ namespace components::document {
     document_ptr make_document(const ::document::impl::array_t *array);
     document_ptr make_document(const ::document::impl::value_t *value);
 
+    template <class T>
+    document_ptr make_document(const std::string &key, T value);
+
     document_ptr make_upsert_document(const document_ptr& source);
 
     document_id_t get_document_id(const document_ptr &document);
@@ -68,6 +71,13 @@ namespace components::document {
     template<>
     inline void document_t::set(const std::string& key, ::document::retained_const_t<::document::impl::value_t> value) {
         set_(key, std::move(value));
+    }
+
+    template <class T>
+    document_ptr make_document(const std::string &key, T value) {
+        auto document = make_document();
+        document->set(key, value);
+        return document;
     }
 
     std::string serialize_document(const document_ptr &document);

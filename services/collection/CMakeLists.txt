@@ -20,6 +20,8 @@ set(${PROJECT_NAME}_SOURCES
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/simple_predicate.cpp
+        operators/aggregate/operator_aggregate.cpp
+        operators/aggregate/operator_count.cpp
 
         collection.cpp
         create_index.cpp

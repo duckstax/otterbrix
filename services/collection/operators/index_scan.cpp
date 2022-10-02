@@ -42,7 +42,7 @@ namespace services::collection::operators {
 
 
     index_scan::index_scan(context_collection_t* context, components::ql::expr_ptr expr, predicates::limit_t limit)
-        : read_only_operator_t(context, operator_type::full_scan)
+        : read_only_operator_t(context, operator_type::search_by_index)
         , expr_(std::move(expr))
         , limit_(limit) {
     }
