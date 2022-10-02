@@ -41,7 +41,9 @@ namespace services::collection::operators::predicates {
             default:
                 break;
         }
-        return nullptr;
+        return std::make_unique<simple_predicate>(context, [](const components::document::document_ptr&) {
+            return true;
+        });
     }
 
 } // namespace services::operators::predicates
