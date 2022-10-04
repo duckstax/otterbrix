@@ -13,11 +13,11 @@ namespace services::collection::operators::aggregate {
         if (left_ && left_->output()) {
             const auto &documents = left_->output()->documents();
             if (!documents.empty()) {
-                document::wrapper_value_t sum(nullptr);
+                document::wrapper_value_t sum_(nullptr);
                 std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                    sum = sum + get_value(doc, key_);
+                    sum_ = sum(sum_, get_value(doc, key_));
                 });
-                return components::document::make_document(key_result_, sum->as_double() / double(documents.size()));
+                return components::document::make_document(key_result_, sum_->as_double() / double(documents.size()));
             }
         }
         return components::document::make_document(key_result_, 0);

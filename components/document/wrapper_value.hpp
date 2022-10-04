@@ -43,12 +43,10 @@ namespace document {
 
     private:
         const impl::value_t* value_;
-
-        friend wrapper_value_t operator+(const wrapper_value_t& value1, const wrapper_value_t& value2);
     };
 
     std::string to_string(const wrapper_value_t& doc);
 
-    wrapper_value_t operator+(const wrapper_value_t& value1, const wrapper_value_t& value2);
+    wrapper_value_t sum(const wrapper_value_t& value1, const wrapper_value_t& value2);
 
 } // namespace document
