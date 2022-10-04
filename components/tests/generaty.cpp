@@ -51,5 +51,5 @@ document_ptr gen_doc(int num) {
         dict->set(std::to_string(num + i), gen_dict(num + i));
     }
     doc->set("mixedDict", dict);
-    return make_document(doc);;
+    return make_document(doc);
 }

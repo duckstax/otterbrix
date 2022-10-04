@@ -2,10 +2,7 @@
 
 #include <components/ql/statements.hpp>
 
-using components::ql;
-
-session_t::session_t(actor_zeta::address_t address)
-    :address_(std::move(address)){}
+using namespace components::ql;
 
 statement_type session_t::type() const {
     return std::visit([](const auto &c) {
@@ -22,6 +19,8 @@ statement_type session_t::type() const {
             return statement_type::update_one;
         } else if constexpr (std::is_same_v<type, update_many_t>) {
             return statement_type::update_many;
+        } else if constexpr (std::is_same_v<type, create_index_t>) {
+            return statement_type::create_index;
         }
         static_assert(true, "Not valid command type");
     }, data_);

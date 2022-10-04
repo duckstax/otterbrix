@@ -10,11 +10,9 @@
 
 class session_t {
 public:
-    explicit session_t(actor_zeta::address_t address);
-
     template<class T>
     session_t(actor_zeta::address_t address, T statement)
-        : address_(address)
+        : address_(std::move(address))
         , data_(std::forward<T>(statement)) {}
 
     actor_zeta::address_t address() {

@@ -1,15 +1,13 @@
 #include <catch2/catch.hpp>
 
-#include <log/log.hpp>
 #include <wal/wal.hpp>
 
 #include <msgpack.hpp>
 #include <string>
 
-#include <crc32c/crc32c.h>
-
 using namespace services;
 using namespace services::wal;
+using namespace components::ql;
 
 TEST_CASE("pack and unpack") {
 

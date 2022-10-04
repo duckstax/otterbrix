@@ -1,16 +1,9 @@
 #include "dto.hpp"
 
-#include <fcntl.h>
 #include <unistd.h>
-#include <ctime>
-
-#include <utility>
 #include <chrono>
-
 #include <crc32c/crc32c.h>
-
 #include <msgpack.hpp>
-#include <msgpack/adaptor/vector.hpp>
 
 namespace services::wal {
 

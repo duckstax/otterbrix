@@ -14,7 +14,6 @@
 #include <components/document/document_view.hpp>
 #include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
-#include <components/parser/conditional_expression.hpp>
 #include <components/ql/find.hpp>
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
@@ -32,7 +31,6 @@ namespace services::collection {
     using document_ptr = components::document::document_ptr;
     using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
     using document_view_t = components::document::document_view_t;
-    using components::parser::find_condition_ptr;
 
     class context_collection_t final {
     public:

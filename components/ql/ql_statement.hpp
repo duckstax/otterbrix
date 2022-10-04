@@ -31,14 +31,14 @@ namespace components::ql {
             , database_(std::move(database))
             , collection_(std::move(collection)) {}
 
-        ql_statement_t() = delete;
+        ql_statement_t() = default;
         virtual ~ql_statement_t() = default;
 
         statement_type type() const {
             return type_;
         }
 
-        statement_type type_;
+        statement_type type_ {statement_type::unused};
         database_name_t database_;
         collection_name_t collection_;
     };

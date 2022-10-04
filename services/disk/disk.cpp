@@ -15,10 +15,6 @@ namespace services::disk {
         return gen_key(gen_key(database, collection), id.to_string());
     }
 
-    std::string remove_prefix(const std::string &key, const std::string &prefix) {
-        return key.substr(prefix.size() + key_separator.size());
-    }
-
     std::string_view to_string_view(const msgpack::sbuffer &buffer) {
         return std::string_view(buffer.data(), buffer.size());
     }

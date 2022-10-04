@@ -40,7 +40,7 @@ namespace services::disk {
 
     private:
         result_t databases_;
-        wal::id_t wal_id_;
+        wal::id_t wal_id_ {0};
     };
 
 } // namespace services::disk
