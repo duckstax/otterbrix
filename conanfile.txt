@@ -1,6 +1,7 @@
 [requires]
 boost/1.80.0
-spdlog/1.9.2
+spdlog/1.10.0
+zlib/1.2.12
 pybind11/2.4.3
 msgpack-cxx/4.1.1
 date/3.0.1
@@ -9,6 +10,7 @@ crc32c/1.1.2
 abseil/20211102.0
 rocksdb/6.20.3
 benchmark/1.6.1
+magic_enum/0.8.1
 
 actor-zeta/1.0.0a7@duckstax/stable
 
@@ -18,7 +20,6 @@ proxy-wasm-cpp-host/3c703dcc44e7fc24062215e4f3c5c16d616362e8@duckstax/stable
 [options]
 actor-zeta:cxx_standard=17
 actor-zeta:fPIC=True
-#OpenSSL:shared = True
 
 [generators]
 cmake
