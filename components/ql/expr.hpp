@@ -7,6 +7,7 @@
 #include <vector>
 #include <components/document/wrapper_value.hpp>
 #include <components/document/mutable/mutable_value.hpp>
+#include <components/document/document.hpp>
 
 namespace components::ql {
 
@@ -165,5 +166,7 @@ namespace components::ql {
 
     std::string to_string(condition_type type);
     std::string to_string(const expr_ptr& expr);
+
+    ::document::wrapper_value_t get_value(const components::document::document_ptr &doc, const key_t &key);
 
 } // namespace components::ql

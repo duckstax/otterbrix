@@ -18,6 +18,4 @@ namespace services::collection::operators::aggregate {
         virtual std::string key_impl() const = 0;
     };
 
-    document::wrapper_value_t get_value(const document_ptr &doc, const components::ql::key_t &key);
-
 } // namespace services::operators::aggregate
