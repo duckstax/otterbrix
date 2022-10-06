@@ -7,6 +7,7 @@ set(${PROJECT_NAME}_SOURCES
         #rpc_style.cpp
         operators/test_aggregate_operators.cpp
         operators/test_operators.cpp
+        operators/test_get_operators.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

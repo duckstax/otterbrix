@@ -41,6 +41,10 @@ namespace document {
             return value_;
         }
 
+        explicit operator bool() const {
+            return value_ != nullptr;
+        }
+
     private:
         const impl::value_t* value_;
     };
