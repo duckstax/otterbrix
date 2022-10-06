@@ -4,8 +4,6 @@
 
 #include <services/disk/route.hpp>
 
-#include <services/collection/operators/full_scan.hpp>
-
 using namespace services::collection;
 
 namespace services::collection {

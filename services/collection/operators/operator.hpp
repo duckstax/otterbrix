@@ -8,8 +8,7 @@ namespace services::collection::operators {
 
     enum class operator_type {
         unused = 0x0,
-        full_scan,
-        search_by_index,
+        match,
         insert,
         remove,
         update,

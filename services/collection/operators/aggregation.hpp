@@ -1,6 +1,5 @@
 #pragma once
 
-#include <collection/operators/full_scan.hpp>
 #include <collection/operators/operator.hpp>
 #include <services/collection/collection.hpp>
 

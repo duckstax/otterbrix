@@ -1,7 +1,8 @@
 #include <catch2/catch.hpp>
 #include <components/index/single_field_index.hpp>
-#include <services/collection/operators/full_scan.hpp>
-#include <services/collection/operators/index_scan.hpp>
+#include <services/collection/operators/scan/full_scan.hpp>
+#include <services/collection/operators/scan/index_scan.hpp>
+#include <services/collection/operators/scan/transfer_scan.hpp>
 #include <services/collection/operators/operator_delete.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_update.hpp>
@@ -255,6 +256,28 @@ TEST_CASE("operator::index_scan") {
         index_scan scan(d(collection)->view(), parse_expr(R"({"count": {"$gt": 90}})"), predicates::limit_t(3));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 3);
+    }
+}
+
+TEST_CASE("operator::transfer_scan") {
+    auto collection = init_collection();
+
+    SECTION("all") {
+        transfer_scan scan(d(collection)->view(), predicates::limit_t::unlimit());
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 100);
+    }
+
+    SECTION("limit") {
+        transfer_scan scan(d(collection)->view(), predicates::limit_t(50));
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 50);
+    }
+
+    SECTION("one") {
+        transfer_scan scan(d(collection)->view(), predicates::limit_t(1));
+        scan.on_execute(nullptr);
+        REQUIRE(scan.output()->size() == 1);
     }
 }
 

@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <services/collection/operators/full_scan.hpp>
+#include <services/collection/operators/scan/full_scan.hpp>
 #include <services/collection/operators/aggregate/operator_count.hpp>
 #include <services/collection/operators/aggregate/operator_min.hpp>
 #include <services/collection/operators/aggregate/operator_max.hpp>
