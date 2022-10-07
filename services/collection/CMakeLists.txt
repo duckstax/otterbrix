@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_SOURCES
 
         operators/operator_data.cpp
         operators/operator.cpp
+        operators/operator_empty.cpp
         operators/operator_insert.cpp
         operators/operator_delete.cpp
         operators/operator_update.cpp

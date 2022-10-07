@@ -1,6 +1,5 @@
 #pragma once
 
-#include <services/collection/collection.hpp>
 #include <services/collection/operators/operator.hpp>
 #include <services/collection/operators/get/operator_get.hpp>
 
