@@ -204,4 +204,8 @@ namespace components::document {
         return document_from_json(text);
     }
 
+    bool is_equals_documents(const document_ptr& doc1, const document_ptr& doc2) {
+        return document_view_t(doc1).get_value()->is_equal(document_view_t(doc2).get_value());
+    }
+
 }

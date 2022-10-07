@@ -14,10 +14,11 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_insert.cpp
         operators/operator_delete.cpp
         operators/operator_update.cpp
+        operators/operator_group.cpp
+        operators/aggregation.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp
         operators/scan/transfer_scan.cpp
-        operators/aggregation.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/simple_predicate.cpp

@@ -83,4 +83,6 @@ namespace components::document {
     std::string serialize_document(const document_ptr &document);
     document_ptr deserialize_document(const std::string &text);
 
+    bool is_equals_documents(const document_ptr &doc1, const document_ptr &doc2);
+
 }

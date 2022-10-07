@@ -1,0 +1,53 @@
+#include "operator_group.hpp"
+
+namespace services::collection::operators {
+
+    operator_group_t::operator_group_t(context_collection_t* context)
+        : read_write_operator_t(context, operator_type::aggregate)
+        , keys_(context->resource())
+        , input_documents_(context->resource()) {}
+
+    void operator_group_t::add_key(const std::string &name, get::operator_get_ptr &&getter) {
+        keys_.push_back({name, std::move(getter)});
+    }
+
+    void operator_group_t::on_execute_impl(planner::transaction_context_t* transaction_context) {
+        if (left_ && left_->output()) {
+            output_ = make_operator_data(context_->resource());
+            create_list_documents();
+        }
+    }
+
+    void operator_group_t::create_list_documents() {
+        for (const auto& doc : left_->output()->documents()) {
+            auto new_doc = components::document::make_document();
+            bool is_valid = true;
+            for (const auto& key : keys_) {
+                auto value = key.getter->value(doc);
+                if (value) {
+                    new_doc->set(key.name, *value);
+                } else {
+                    is_valid = false;
+                    break;
+                }
+            }
+            if (is_valid) {
+                bool is_new = true;
+                for (std::size_t i = 0; i < output_->documents().size(); ++i) {
+                    if (is_equals_documents(new_doc, output_->documents().at(i))) {
+                        input_documents_.at(i)->append(doc);
+                        is_new = false;
+                        break;
+                    }
+                }
+                if (is_new) {
+                    output_->append(new_doc);
+                    auto input_doc = make_operator_data(context_->resource());
+                    input_doc->append(doc);
+                    input_documents_.push_back(std::move(input_doc));
+                }
+            }
+        }
+    }
+
+} // namespace services::collection::operators
