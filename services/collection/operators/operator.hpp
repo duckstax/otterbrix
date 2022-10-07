@@ -13,6 +13,7 @@ namespace services::collection::operators {
         insert,
         remove,
         update,
+        sort,
         aggregate
     };
 
