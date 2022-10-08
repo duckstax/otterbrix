@@ -1,20 +1,27 @@
 #include "operator_group.hpp"
+#include <services/collection/operators/operator_empty.hpp>
 
 namespace services::collection::operators {
 
     operator_group_t::operator_group_t(context_collection_t* context)
         : read_write_operator_t(context, operator_type::aggregate)
         , keys_(context->resource())
+        , values_(context->resource())
         , input_documents_(context->resource()) {}
 
     void operator_group_t::add_key(const std::string &name, get::operator_get_ptr &&getter) {
         keys_.push_back({name, std::move(getter)});
     }
 
+    void operator_group_t::add_value(const std::string &name, aggregate::operator_aggregate_ptr &&aggregator) {
+        values_.push_back({name, std::move(aggregator)});
+    }
+
     void operator_group_t::on_execute_impl(planner::transaction_context_t* transaction_context) {
         if (left_ && left_->output()) {
             output_ = make_operator_data(context_->resource());
             create_list_documents();
+            calc_aggregate_values(transaction_context);
         }
     }
 
@@ -46,6 +53,19 @@ namespace services::collection::operators {
                     input_doc->append(doc);
                     input_documents_.push_back(std::move(input_doc));
                 }
+            }
+        }
+    }
+
+    void operator_group_t::calc_aggregate_values(planner::transaction_context_t* transaction_context) {
+        for (const auto &value : values_) {
+            auto &aggregator = value.aggregator;
+            for (std::size_t i = 0; i < output_->documents().size(); ++i) {
+                auto &document = output_->documents().at(i);
+                aggregator->clear(); //todo: need copy aggregator
+                aggregator->set_children(std::make_unique<operator_empty_t>(context_, input_documents_.at(i)->copy()));
+                aggregator->on_execute(transaction_context);
+                document->set(value.name, *aggregator->value());
             }
         }
     }

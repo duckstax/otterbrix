@@ -39,6 +39,7 @@ namespace services::collection::operators {
         operator_state state() const;
         const operator_data_ptr& output() const;
         void set_children(ptr left, ptr right = nullptr);
+        void clear(); //todo: replace by copy
 
     protected:
         context_collection_t* context_;

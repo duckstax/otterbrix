@@ -34,6 +34,13 @@ namespace services::collection::operators {
         right_ = std::move(right);
     }
 
+    void operator_t::clear() {
+        state_ = operator_state::created;
+        left_ = nullptr;
+        right_ = nullptr;
+        output_ = nullptr;
+    }
+
 
     read_only_operator_t::read_only_operator_t(context_collection_t* collection, operator_type type)
         : operator_t(collection, type) {
