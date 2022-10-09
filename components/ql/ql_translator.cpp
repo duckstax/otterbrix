@@ -1,13 +1,12 @@
 #include "ql_translator.hpp"
 
-#include "components/logical_plan/logical_plan.hpp"
-
+///#include "components/logical_plan/logical_plan.hpp"
 
 #include "aggregate.hpp"
 #include "find.hpp"
 
 namespace components::ql {
-
+/*
     auto translator_aggregate(const aggregate_statement& aggregate) -> logical_plan::node_ptr {
 
     }
@@ -15,7 +14,7 @@ namespace components::ql {
     auto translator_find(const find_statement& aggregate) -> logical_plan::node_ptr {
 
     }
-
+*/
     auto ql_translator(const ql_statement_t& statement) -> result_translator_ptr {
         auto* result = new result_translator;
         switch (statement.type_) {
@@ -36,11 +35,11 @@ namespace components::ql {
                 break;
             }
             case statement_type::find: {
-                translator_find();
+     //////           translator_find();
                 break;
             }
             case statement_type::find_one: {
-                translator_find();
+     ////           translator_find();
                 break;
             }
             case statement_type::insert_one: {
@@ -65,13 +64,13 @@ namespace components::ql {
                 break;
             }
             case statement_type::aggregate: {
-                translator_aggregate(static_cast<aggregate_t*>(statement));
+            ////    translator_aggregate(static_cast<aggregate_t*>(statement));
                 break;
             }
             default:
                 throw std::logic_error("");
         }
-        return {result};
+       /// return {result};
     }
 
 } // namespace components::ql

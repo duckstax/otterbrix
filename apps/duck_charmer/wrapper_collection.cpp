@@ -184,18 +184,19 @@ namespace duck_charmer {
         debug(log_, "wrapper_collection::drop {}", result.is_success());
         return result.is_success();
     }
-
+/*
     auto wrapper_collection::aggregate(const py::sequence& it) -> wrapper_cursor_ptr {
         trace(log_, "wrapper_collection::aggregate");
         if (py::isinstance<py::sequence>(it)) {
 
-            auto condition = to_document(cond);
-            auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
-            trace(log_, "wrapper_collection::find {} records", result->size());
-            return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result));
+           /// auto condition = experimental::to_statement(it);
+            //auto session_tmp = duck_charmer::session_id_t();
+            //auto result = ptr_->find(session_tmp, database_, name_, std::move(condition));
+            ///trace(log_, "wrapper_collection::find {} records", result->size());
+            ///return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result));
         }
         throw std::runtime_error("wrapper_collection::find");
     }
+    */
 
 } // namespace duck_charmer

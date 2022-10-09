@@ -41,6 +41,7 @@ set(ROCKETJOE_LIBS
         rocketjoe::wal
         rocketjoe::disk
         rocketjoe::locks
+        rocketjoe::ql
 )
 
 SET(PYTHON_EXECUTABLE python3)

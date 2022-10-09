@@ -1,9 +1,11 @@
 project(ql CXX)
 
 set(SOURCE_${PROJECT_NAME}
+        aggregate/operator.cpp
         parser.cpp
         find.cpp
         expr.cpp
+        expr2.cpp
         aggregate.cpp
         ql_translator.cpp
         statements/create_collection.cpp

@@ -52,7 +52,8 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
-        .def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence());
+        ///.def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence())
+        ;
 
     py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")
         .def(py::init([]() {
@@ -100,7 +101,6 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
 
-#ifdef DEV_MODE
-    m.def("to_statement", &experimental::to_statement, py::arg("pipeline") = py::sequence());
-#endif
+    m.def("foo", &experimental::test_to_statement);
+
 }

@@ -1,6 +1,6 @@
-#include "expr.hpp"
+#include "expr2.hpp"
 
-namespace components::ql {
+namespace components::ql::experiment {
 
     bool is_union_condition(condition_type type) {
         return type == condition_type::union_and ||
@@ -50,10 +50,10 @@ namespace components::ql {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + to_string(expr->value_) + "}}";
+        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + std::to_string(expr->value_.t) + "}}";
     }
 
-    expr_t::expr_t(condition_type type, std::string key, expr_value_t value)
+    expr_t::expr_t(condition_type type, std::string key, core::parameter_id_t value)
         : type_(type)
         , key_(std::move(key))
         , value_(value)
@@ -61,7 +61,7 @@ namespace components::ql {
 
     expr_t::expr_t(bool is_union)
         : type_(condition_type::novalid)
-        , value_(nullptr)
+        , value_(0)
         , union_(is_union) {}
 
     bool expr_t::is_union() const {
@@ -72,4 +72,16 @@ namespace components::ql {
         sub_conditions_.push_back(std::move(sub_condition));
     }
 
-} // namespace components::ql
+    expr_ptr make_expr(condition_type condition, const std::string& key, core::parameter_id_t id) {
+        return std::make_unique<expr_t>(condition, key, id);
+    }
+
+    expr_ptr make_expr() {
+        return std::make_unique<expr_t>(false);
+    }
+
+    expr_ptr make_union_expr() {
+        return std::make_unique<expr_t>(true);
+    }
+
+} // namespace components::ql::experiment

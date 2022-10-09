@@ -131,16 +131,15 @@ auto to_order(const py::object& order) -> services::storage::sort::order {
 }
 
 namespace experimental {
+
     using components::ql::aggregate_statement;
+    using components::ql::condition_type;
     using components::ql::expr_ptr;
     using components::ql::expr_t;
-    using components::ql::make_aggregate_operator;
+    using components::ql::get_condition_type_;
+    using components::ql::make_expr;
     using components::ql::make_union_expr;
     using components::ql::to_string;
-    using components::ql::from_string;
-    using components::ql::aggregate_op_steps;
-    using components::ql::make_expr;
-    using components::ql::get_condition_type_;
 
     auto to_v2_(const py::handle& obj) -> ::document::retained_const_t<::document::impl::value_t> {
         if (py::isinstance<py::bool_>(obj)) {
@@ -166,13 +165,12 @@ namespace experimental {
     void parse_condition_array_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key);
 
     void parse_condition_(components::ql::expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, const std::string& key_word) {
-
         auto real_key = prev_key;
-        auto type = from_string(key_word);
+        auto type = get_condition_type_(key_word);
 
-        if (type == aggregate_op_steps::novalid) {
-            type = from_string(prev_key);
-            if (type != aggregate_op_steps::novalid) {
+        if (type == condition_type::novalid) {
+            type = get_condition_type_(prev_key);
+            if (type != condition_type::novalid) {
                 real_key = key_word;
             }
         }
@@ -191,7 +189,7 @@ namespace experimental {
     }
 
     void parse_condition_dict_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key) {
-        for (const py::handle i :condition) {
+        for (const py::handle i : condition) {
             auto key = py::str(i).cast<std::string>();
             auto type = get_condition_type_(key);
             auto union_condition = parent_condition;
@@ -201,22 +199,23 @@ namespace experimental {
                 union_condition->type_ = type;
             }
             if (prev_key.empty()) {
-                parse_condition_(union_condition,i[key], key, std::string());
+                parse_condition_(union_condition, condition[key.c_str()], key, std::string());
             } else {
-                parse_condition_(union_condition, i[key], prev_key, key);
+                parse_condition_(union_condition, condition[key.c_str()], prev_key, key);
             }
         }
     }
 
     void parse_condition_array_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key) {
-        for (const py::handle it :condition) {
+        for (const py::handle it : condition) {
             parse_condition_(parent_condition, it, prev_key, std::string());
         }
     }
 
     expr_ptr parse_condition_(const py::handle& condition) {
         auto res_condition = make_union_expr();
-        for (const py::handle it :condition) {
+        for (const py::handle it : condition) {
+            std::cerr << py::str(it).cast<std::string>() << std::endl;
             if (py::len(condition) == 1) {
                 res_condition->type_ = get_condition_type_(py::str(it).cast<std::string>());
             }
@@ -244,11 +243,25 @@ namespace experimental {
             }
 
             for (const py::handle key : obj) {
-                auto name = py::str(key).cast<std::string>();
+                std::cerr << 0 << std::endl;
+                auto name = py::str(key).cast<std::string_view>();
+                std::cerr << 1 << std::endl;
+                std::cerr << name << std::endl;
+                aggregate_op_steps op_type = from_string({name.begin() + 1, name.end()});
+                std::cerr << (int) op_type << std::endl;
+                std::cerr << 2 << std::endl;
+                std::cerr << "len : " << py::len(obj) << std::endl;
+                std::cerr << 3 << std::endl;
                 auto op = parse_condition_(obj[key]);
-                aggregate->append(make_aggregate_operator(name, std::move(op)));
+                std::cerr << 4 << std::endl;
+                aggregate->append(make_aggregate_operator(name, op_type, std::move(op)));
             }
         }
+    }
+
+    auto test_to_statement(const py::handle& source) -> void {
+        auto* aggregate = new aggregate_statement("database", "collection");
+        to_statement(source, aggregate);
     }
 
 } // namespace experimental

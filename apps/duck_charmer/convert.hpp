@@ -6,7 +6,7 @@
 #include "components/document/document.hpp"
 #include <services/collection/sort.hpp>
 
-#include <components/ql/aggregate.hpp>
+#include "ql/aggregate.hpp"
 
 namespace py = pybind11;
 
@@ -24,6 +24,7 @@ auto to_order(const py::object &order) -> services::storage::sort::order;
 
 namespace experimental {
 
-    auto to_statement(const py::handle& source) -> components::ql::aggregate_statement ;
+    auto to_statement(const py::handle& source,components::ql::aggregate_statement*) -> void ;
+    auto test_to_statement(const py::handle& source) -> void;
 
 }

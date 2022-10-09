@@ -1,16 +1,7 @@
 #include "aggregate.hpp"
 
-#include <magic_enum.hpp>
-
 namespace components::ql {
 
-    std::string to_string(aggregate_steps_statement statement) {
-        auto result = magic_enum::enum_name(statement); //memory leak
-        return {result.data(), result.size()};
-    }
-
-    aggregate_steps_statement from_string(std::string statement) {
-        return magic_enum::enum_cast<aggregate_steps_statement>(statement).value();
-    }
-
+    aggregate_statement::aggregate_statement(database_name_t database, collection_name_t collection)
+        : ql_statement_t(statement_type::aggregate, std::move(database), std::move(collection)) {}
 } // namespace components::ql
