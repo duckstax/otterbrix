@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory_resource>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
@@ -16,8 +17,8 @@ auto from_document(const components::document::document_view_t& document) -> py:
 auto from_object(const components::document::document_view_t& document, const std::string& key) -> py::object;
 auto from_object(const components::document::document_view_t& document, uint32_t index) -> py::object;
 
-auto to_pylist(const std::vector<std::string> &src) -> py::list;
-auto to_pylist(const std::vector<components::document::document_id_t> &src) -> py::list;
+auto to_pylist(const std::pmr::vector<std::string> &src) -> py::list;
+auto to_pylist(const std::pmr::vector<components::document::document_id_t> &src) -> py::list;
 
 auto to_sorter(const py::handle &sort_dict) -> services::storage::sort::sorter_t;
 auto to_order(const py::object &order) -> services::storage::sort::order;

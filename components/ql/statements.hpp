@@ -5,7 +5,6 @@
 #include "statements/drop_database.hpp"
 #include "statements/create_collection.hpp"
 #include "statements/drop_collection.hpp"
-#include "statements/load_collection.hpp"
 #include "statements/insert_one.hpp"
 #include "statements/insert_many.hpp"
 #include "statements/delete_one.hpp"

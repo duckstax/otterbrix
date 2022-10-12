@@ -1,5 +1,4 @@
 #include <catch2/catch.hpp>
-#include <components/protocol/base.hpp>
 #include "test_config.hpp"
 
 static const database_name_t database_name = "TestDatabase";

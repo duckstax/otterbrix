@@ -5,6 +5,6 @@
 
 namespace services::collection::operators {
 
-    operator_ptr create_searcher(context_collection_t* context, components::ql::find_statement &statement, predicates::limit_t limit);
+    operator_ptr create_searcher(context_collection_t* context, const components::ql::find_statement_ptr& statement, predicates::limit_t limit);
 
 } // namespace services::collection::operators

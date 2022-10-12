@@ -85,7 +85,7 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::find(const session_id_t& session, components::ql::find_statement& cond) -> void {
+    auto collection_t::find(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
         debug(log_, "collection::find : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
@@ -103,7 +103,7 @@ namespace services::collection {
         }
     }
 
-    void collection_t::find_one(const session_id_t& session, components::ql::find_statement& cond) {
+    void collection_t::find_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) {
         debug(log_, "collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
@@ -119,22 +119,22 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void {
+    auto collection_t::delete_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
         debug(log_, "collection::delete_one : {}", name_);
         delete_(session, cond, operators::predicates::limit_t::limit_one());
     }
 
-    auto collection_t::delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void {
+    auto collection_t::delete_many(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
         debug(log_, "collection::delete_many : {}", name_);
         delete_(session, cond, operators::predicates::limit_t::unlimit());
     }
 
-    auto collection_t::update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_one(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_one : {}", name_);
         update_(session, cond, update, upsert, operators::predicates::limit_t::limit_one());
     }
 
-    auto collection_t::update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_many(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_many : {}", name_);
         update_(session, cond, update, upsert, operators::predicates::limit_t::unlimit());
     }
@@ -168,7 +168,7 @@ namespace services::collection {
         return true;
     }
 
-    void collection_t::delete_(const session_id_t& session, components::ql::find_statement& cond, const operators::predicates::limit_t &limit) {
+    void collection_t::delete_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit) {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
@@ -184,7 +184,7 @@ namespace services::collection {
         }
     }
 
-    void collection_t::update_(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update,
+    void collection_t::update_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update,
                                bool upsert, const operators::predicates::limit_t &limit) {
         auto dispatcher = current_message()->sender();
         if (dropped_) {

@@ -97,21 +97,21 @@ TEST_CASE("duck_charmer::test_save_load::disk+wal") {
                 doc->set("number", gen_doc_number(n_db, n_col, n_doc));
                 auto session = duck_charmer::session_id_t();
                 auto address = actor_zeta::address_t::empty_address();
-                insert_one_t insert_one(db_name, col_name, doc);
+                components::ql::insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
 
-                delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
+                components::ql::delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
                 wal.delete_one(session, address, delete_one);
 
-                delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
+                components::ql::delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
                 wal.delete_many(session, address, delete_many);
 
-                update_one_t update_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 5}})"),
-                                        components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
+                components::ql::update_one_t update_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 5}})"),
+                                                        components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
                 wal.update_one(session, address, update_one);
 
-                update_many_t update_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$gt": 5}})"),
-                                          components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
+                components::ql::update_many_t update_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$gt": 5}})"),
+                                                          components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
                 wal.update_many(session, address, update_many);
             }
         }

@@ -55,8 +55,8 @@ inline components::ql::expr_ptr parse_expr(const std::string& cond) {
     return components::ql::parse_find_condition(components::document::document_from_json(cond));
 }
 
-inline components::ql::find_statement parse_find_condition(const std::string& cond, bool find_one = false) {
-    return components::ql::find_statement(database_name_t(), collection_name_t(), parse_expr(cond), find_one);
+inline components::ql::find_statement_ptr parse_find_condition(const std::string& cond, bool find_one = false) {
+    return components::ql::make_find_statement(database_name_t(), collection_name_t(), parse_expr(cond), find_one);
 }
 
 inline context_ptr create_collection() {

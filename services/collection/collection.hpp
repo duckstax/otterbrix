@@ -80,12 +80,12 @@ namespace services::collection {
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
         void insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents);
-        auto find(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto find_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto delete_many(const session_id_t& session, components::ql::find_statement& cond) -> void;
-        auto update_one(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
-        auto update_many(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert) -> void;
+        auto find(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void;
+        auto find_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void;
+        auto delete_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void;
+        auto delete_many(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void;
+        auto update_one(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void;
+        auto update_many(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void;
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
@@ -99,8 +99,8 @@ namespace services::collection {
         std::pmr::vector<document_id_t> insert_(planner::transaction_context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
-        void delete_(const session_id_t& session, components::ql::find_statement& cond, const operators::predicates::limit_t &limit);
-        void update_(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
+        void delete_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit);
+        void update_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 

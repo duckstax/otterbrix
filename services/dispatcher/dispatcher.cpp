@@ -367,7 +367,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, components::parser::parse_find_condition(condition));
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), false);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, statement);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_finish), session, result_find(resource_));
         }
@@ -389,7 +390,7 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
-            find_statement statement(database_name, collection, components::ql::parse_find_condition(condition), true);
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), true);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, statement);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_one_finish), session, result_find_one());
@@ -408,7 +409,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, delete_one_t(database_name, collection, condition)));
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, components::parser::parse_find_condition(condition));
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), true);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, statement);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
         }
@@ -420,7 +422,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, delete_many_t(database_name, collection, condition)));
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, components::parser::parse_find_condition(condition));
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), false);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, statement);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
         }
@@ -450,7 +453,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, update_one_t(database_name, collection, condition, update, upsert)));
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, components::parser::parse_find_condition(condition), std::move(update), upsert);
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), true);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, statement, std::move(update), upsert);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
         }
@@ -462,7 +466,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             make_session(session_to_address_, session, session_t(address, update_many_t(database_name, collection, condition, update, upsert)));
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, components::parser::parse_find_condition(condition), std::move(update), upsert);
+            auto statement = make_find_statement(database_name, collection, components::ql::parse_find_condition(condition), true);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, statement, std::move(update), upsert);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
         }

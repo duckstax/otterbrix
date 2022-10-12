@@ -10,33 +10,33 @@ namespace services::collection::operators::predicates {
         return func_(document);
     }
 
-    predicate_ptr create_simple_predicate(context_collection_t* context, components::ql::find_statement& cond) {
+    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
         using components::ql::condition_type;
 
-        switch (cond.condition_->type_) {
+        switch (cond->condition_->type_) {
             case condition_type::eq:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) == cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) == cond->condition_->value_;
                 });
             case condition_type::ne:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) != cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) != cond->condition_->value_;
                 });
             case condition_type::gt:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) > cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) > cond->condition_->value_;
                 });
             case condition_type::gte:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) >= cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) >= cond->condition_->value_;
                 });
             case condition_type::lt:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) < cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) < cond->condition_->value_;
                 });
             case condition_type::lte:
                 return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond.condition_->key_) <= cond.condition_->value_;
+                    return get_value_from_document(document, cond->condition_->key_) <= cond->condition_->value_;
                 });
             default:
                 break;

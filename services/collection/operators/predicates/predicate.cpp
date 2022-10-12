@@ -17,7 +17,7 @@ namespace services::collection::operators::predicates {
         return document::wrapper_value_t(components::document::document_view_t(document).get_value(key.as_string()));
     }
 
-    predicate_ptr create_predicate(context_collection_t* context, components::ql::find_statement& cond) {
+    predicate_ptr create_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
         auto result = create_simple_predicate(context, cond);
         if (result) {
             return result;
