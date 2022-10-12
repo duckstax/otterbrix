@@ -2,7 +2,6 @@
 
 #include <memory>
 #include <unordered_map>
-#include <utility>
 
 #include <absl/container/btree_map.h>
 
@@ -19,6 +18,8 @@
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
 
+#include <services/collection/planner/transaction_context.hpp>
+#include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
 
 #include "forward.hpp"
@@ -34,7 +35,7 @@ namespace services::collection {
 
     class context_collection_t final {
     public:
-        context_collection_t(std::pmr::memory_resource* resource)
+        explicit context_collection_t(std::pmr::memory_resource* resource)
             : resource_(resource)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
@@ -75,10 +76,10 @@ namespace services::collection {
     class collection_t final : public actor_zeta::basic_async_actor {
     public:
         collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
-        auto create_documents(session_id_t& session, std::list<document_ptr>& documents) -> void;
+        auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
         void insert_one(session_id_t& session_t, document_ptr& document);
-        void insert_many(session_id_t& session, std::list<document_ptr>& documents);
+        void insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents);
         auto find(const session_id_t& session, components::ql::find_statement& cond) -> void;
         auto find_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
         auto delete_one(const session_id_t& session, components::ql::find_statement& cond) -> void;
@@ -95,16 +96,11 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        document_id_t insert_(const document_ptr& document); //todo: delete
-        document_view_t get_(const document_id_t& id) const;
+        std::pmr::vector<document_id_t> insert_(planner::transaction_context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
-        result_delete delete_one_(components::ql::find_statement& cond); //todo: delete
-        result_delete delete_many_(components::ql::find_statement& cond); //todo: delete
-        result_update update_one_(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
-        result_update update_many_(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
-        void remove_(const document_id_t& id); //todo: delete
-        bool update_(const document_id_t& id, const document_ptr& update, bool is_commit); //todo: delete
+        void delete_(const session_id_t& session, components::ql::find_statement& cond, const operators::predicates::limit_t &limit);
+        void update_(const session_id_t& session, components::ql::find_statement& cond, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 
@@ -120,14 +116,7 @@ namespace services::collection {
 
 #ifdef DEV_MODE
     public:
-    ///    void insert_test(const document_ptr& doc);
-       /// result_find find_test(components::ql::find_statement& cond);
         std::size_t size_test() const;
-        document_view_t get_test(const std::string& id) const;
-        result_delete delete_one_test(components::ql::find_statement& cond); //todo: delete
-        result_delete delete_many_test(components::ql::find_statement& cond); //todo: delete
-        result_update update_one_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
-        result_update update_many_test(components::ql::find_statement& cond, const document_ptr& update, bool upsert); //todo: delete
 #endif
     };
 

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <utility>
 #include <variant>
 
 #include <actor-zeta.hpp>
@@ -10,6 +9,8 @@
 
 class session_t {
 public:
+    explicit session_t(actor_zeta::address_t address);
+
     template<class T>
     session_t(actor_zeta::address_t address, T statement)
         : address_(std::move(address))
@@ -28,14 +29,7 @@ public:
 
 private:
     actor_zeta::address_t address_;
-    std::variant<components::ql::insert_one_t,
-                 components::ql::insert_many_t,
-                 components::ql::delete_one_t,
-                 components::ql::delete_many_t,
-                 components::ql::update_one_t,
-                 components::ql::update_many_t,
-                 components::ql::create_index_t>
-        data_;
+    components::ql::variant_statement_t data_;
     ///components::session::session_id_t session_;
 };
 

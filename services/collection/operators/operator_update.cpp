@@ -9,13 +9,18 @@ namespace services::collection::operators {
 
     void operator_update::on_execute_impl(planner::transaction_context_t* transaction_context) {
         if (left_ && left_->output()) {
+            modified_ = make_operator_write_data(context_->resource());
+            no_modified_ = make_operator_write_data(context_->resource());
             for (auto& document : left_->output()->documents()) {
                 context_->index_engine()->delete_document(document); //todo: can optimized
-                document->update(update_);
+                if (document->update(update_)) {
+                    modified_->append(get_document_id(document));
+                } else {
+                    no_modified_->append(get_document_id(document));
+                }
                 context_->index_engine()->insert_document(document);
             }
         }
-        //todo: remake indexes
     }
 
 } // namespace services::collection::operators

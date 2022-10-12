@@ -5,6 +5,7 @@
 #include "statements/drop_database.hpp"
 #include "statements/create_collection.hpp"
 #include "statements/drop_collection.hpp"
+#include "statements/load_collection.hpp"
 #include "statements/insert_one.hpp"
 #include "statements/insert_many.hpp"
 #include "statements/delete_one.hpp"
@@ -16,6 +17,7 @@
 namespace components::ql {
 
     using variant_statement_t = std::variant<
+        unused_statement_t,
         create_database_t,
         drop_database_t,
         create_collection_t,

@@ -11,7 +11,7 @@ namespace services::disk {
 
     struct result_collection_t {
         collection_name_t name;
-        std::list<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents;
     };
 
     struct result_database_t {

@@ -2,6 +2,7 @@
 
 #include <services/collection/collection.hpp>
 #include <services/collection/operators/operator_data.hpp>
+#include <services/collection/operators/operator_write_data.hpp>
 #include <services/collection/planner/transaction_context.hpp>
 
 namespace services::collection::operators {
@@ -38,6 +39,8 @@ namespace services::collection::operators {
 
         operator_state state() const;
         const operator_data_ptr& output() const;
+        const operator_write_data_ptr& modified() const;
+        const operator_write_data_ptr& no_modified() const;
         void set_children(ptr left, ptr right = nullptr);
         void clear(); //todo: replace by copy
 
@@ -46,6 +49,8 @@ namespace services::collection::operators {
         ptr left_  {nullptr};
         ptr right_ {nullptr};
         operator_data_ptr output_ {nullptr};
+        operator_write_data_ptr modified_ {nullptr};
+        operator_write_data_ptr no_modified_ {nullptr};
 
     private:
         virtual void on_execute_impl(planner::transaction_context_t* transaction_context) = 0;

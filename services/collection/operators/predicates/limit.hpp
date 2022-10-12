@@ -10,6 +10,7 @@ namespace services::collection::operators::predicates {
         explicit limit_t(int data);
 
         static limit_t unlimit();
+        static limit_t limit_one();
 
         bool check(int count) const;
 

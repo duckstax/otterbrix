@@ -29,6 +29,14 @@ namespace services::collection::operators {
         return output_;
     }
 
+    const operator_write_data_ptr& operator_t::modified() const {
+        return modified_;
+    }
+
+    const operator_write_data_ptr& operator_t::no_modified() const {
+        return no_modified_;
+    }
+
     void operator_t::set_children(ptr left, ptr right) {
         left_ = std::move(left);
         right_ = std::move(right);

@@ -43,4 +43,10 @@ namespace components::ql {
         collection_name_t collection_;
     };
 
+
+    struct unused_statement_t : public ql_statement_t {
+        unused_statement_t()
+            : ql_statement_t(statement_type::unused, "", "") {}
+    };
+
 } // namespace components::ql

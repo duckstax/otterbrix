@@ -17,10 +17,12 @@ namespace services::collection::operators {
             //todo: error not unique keys
             return;
         }
+        modified_ = make_operator_write_data(context_->resource());
         for (const auto &document : documents_) {
             auto id = get_document_id(document);
             context_->storage().insert_or_assign(id, document);
             context_->index_engine()->insert_document(document);
+            modified_->append(id);
         }
     }
 

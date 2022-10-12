@@ -10,6 +10,7 @@ set(${PROJECT_NAME}_SOURCES
         planner/transaction_context.cpp
 
         operators/operator_data.cpp
+        operators/operator_write_data.cpp
         operators/operator.cpp
         operators/operator_empty.cpp
         operators/operator_insert.cpp
@@ -18,8 +19,10 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_group.cpp
         operators/operator_sort.cpp
         operators/aggregation.cpp
+        operators/scan/scan.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp
+        operators/scan/primary_key_scan.cpp
         operators/scan/transfer_scan.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp

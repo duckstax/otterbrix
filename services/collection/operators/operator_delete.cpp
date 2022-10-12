@@ -8,9 +8,13 @@ namespace services::collection::operators {
 
     void operator_delete::on_execute_impl(planner::transaction_context_t* transaction_context) {
         if (left_ && left_->output()) {
+            modified_ = make_operator_write_data(context_->resource());
             for (const auto& document : left_->output()->documents()) {
-                context_->storage().erase(context_->storage().find(get_document_id(document)));
-                context_->index_engine()->delete_document(document);
+                const auto id = get_document_id(document);
+                if (context_->storage().erase(context_->storage().find(id)) != context_->storage().end()) {
+                    modified_->append(id);
+                    context_->index_engine()->delete_document(document);
+                }
             }
         }
     }
