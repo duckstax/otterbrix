@@ -320,7 +320,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::list<components::document::document_ptr>& documents, actor_zeta::address_t address) {
+    void dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::pmr::vector<components::document::document_ptr>& documents, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::insert_many: session:{}, database: {}, collection: {}", session.data(), database_name, collection);
         key_collection_t key(database_name, collection);
         auto it_collection = collection_address_book_.find(key);
@@ -644,7 +644,7 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::insert_one), session, std::move(database_name), std::move(collection_name), std::move(document), current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, std::list<components::document::document_ptr>& documents) {
+    void manager_dispatcher_t::insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, std::pmr::vector<components::document::document_ptr>& documents) {
         trace(log_, "manager_dispatcher_t::insert_many session: {}, database: {}, collection name: {} ", session.data(), database_name, collection_name);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::insert_many), session, std::move(database_name), std::move(collection_name), std::move(documents), current_message()->sender());
     }

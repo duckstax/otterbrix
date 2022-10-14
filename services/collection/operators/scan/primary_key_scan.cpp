@@ -17,7 +17,7 @@ namespace services::collection::operators {
         output_ = make_operator_data(context_->resource());
         for (const auto &id : ids_) {
             auto it = context_->storage().find(id);
-            if (it == context_->storage().end()) {
+            if (it != context_->storage().end()) {
                 output_->append(it->second);
             }
         }

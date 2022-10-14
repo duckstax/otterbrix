@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include <memory_resource>
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
@@ -28,13 +29,13 @@ namespace services::disk {
     struct command_write_documents_t {
         database_name_t database;
         collection_name_t collection;
-        std::vector<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents;
     };
 
     struct command_remove_documents_t {
         database_name_t database;
         collection_name_t collection;
-        std::vector<components::document::document_id_t> documents;
+        std::pmr::vector<components::document::document_id_t> documents;
     };
 
     class command_t {

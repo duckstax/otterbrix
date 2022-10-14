@@ -30,6 +30,7 @@ namespace services::collection::operators::predicates {
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
 
+    predicate_ptr create_predicate(context_collection_t* context, const components::ql::expr_ptr& expr);
     predicate_ptr create_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond);
 
 } // namespace services::collection::operators::predicates

@@ -43,7 +43,7 @@ TEST_CASE("duck_charmer::test_collection") {
     }
 
     INFO("many_insert") {
-        std::list<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
         for (int num = 50; num < 100; ++num) {
             documents.push_back(gen_doc(num));
         }

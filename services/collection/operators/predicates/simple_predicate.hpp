@@ -15,6 +15,7 @@ namespace services::collection::operators::predicates {
         std::function<bool(const components::document::document_ptr&)> func_;
     };
 
+    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::expr_ptr& expr);
     predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond);
 
 } // namespace services::operators::predicates

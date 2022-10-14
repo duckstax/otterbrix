@@ -1,4 +1,5 @@
 #include "simple_predicate.hpp"
+#include <regex>
 
 namespace services::collection::operators::predicates {
 
@@ -10,33 +11,38 @@ namespace services::collection::operators::predicates {
         return func_(document);
     }
 
-    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
+    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::expr_ptr& expr) {
         using components::ql::condition_type;
 
-        switch (cond->condition_->type_) {
+        switch (expr->type_) {
             case condition_type::eq:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) == cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) == expr->value_;
                 });
             case condition_type::ne:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) != cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) != expr->value_;
                 });
             case condition_type::gt:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) > cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) > expr->value_;
                 });
             case condition_type::gte:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) >= cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) >= expr->value_;
                 });
             case condition_type::lt:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) < cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) < expr->value_;
                 });
             case condition_type::lte:
-                return std::make_unique<simple_predicate>(context, [&cond](const components::document::document_ptr& document) {
-                    return get_value_from_document(document, cond->condition_->key_) <= cond->condition_->value_;
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return get_value_from_document(document, expr->key_) <= expr->value_;
+                });
+            case condition_type::regex:
+                return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
+                    return std::regex_match(get_value_from_document(document, expr->key_)->to_string().as_string(),
+                                            std::regex(".*" + expr->value_->to_string().as_string() + ".*"));
                 });
             default:
                 break;
@@ -44,6 +50,10 @@ namespace services::collection::operators::predicates {
         return std::make_unique<simple_predicate>(context, [](const components::document::document_ptr&) {
             return true;
         });
+    }
+
+    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
+        return create_simple_predicate(context, cond->condition_);
     }
 
 } // namespace services::operators::predicates

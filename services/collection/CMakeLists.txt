@@ -24,6 +24,10 @@ set(${PROJECT_NAME}_SOURCES
         operators/scan/index_scan.cpp
         operators/scan/primary_key_scan.cpp
         operators/scan/transfer_scan.cpp
+        operators/merge/operator_merge.cpp
+        operators/merge/operator_and.cpp
+        operators/merge/operator_or.cpp
+        operators/merge/operator_not.cpp
         operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/simple_predicate.cpp
