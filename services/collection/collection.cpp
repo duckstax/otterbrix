@@ -91,7 +91,7 @@ namespace services::collection {
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
         } else {
-            auto searcher = operators::create_searcher(view(), cond, operators::predicates::limit_t::unlimit());
+            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::unlimit());
             searcher->on_execute(no_transaction_context);
             auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
             if (searcher->output()) {
@@ -109,7 +109,7 @@ namespace services::collection {
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
         } else {
-            auto searcher = operators::create_searcher(view(), cond, operators::predicates::limit_t::limit_one());
+            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::limit_one());
             searcher->on_execute(no_transaction_context);
             if (searcher->output() && !searcher->output()->documents().empty()) {
                 actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(searcher->output()->documents().at(0))));
@@ -174,7 +174,7 @@ namespace services::collection {
             actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
         } else {
             operators::operator_delete deleter(view());
-            deleter.set_children(operators::create_searcher(view(), cond, limit));
+            deleter.set_children(operators::create_searcher(view(), cond->condition_, limit));
             deleter.on_execute(no_transaction_context);
             if (deleter.modified()) {
                 result_delete result(std::move(deleter.modified()->documents()));
@@ -191,7 +191,7 @@ namespace services::collection {
             actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
         } else {
             operators::operator_update updater(view(), update);
-            updater.set_children(operators::create_searcher(view(), cond, limit));
+            updater.set_children(operators::create_searcher(view(), cond->condition_, limit));
             updater.on_execute(no_transaction_context);
             if (updater.modified()) {
                 result_update result(std::move(updater.modified()->documents()), std::move(updater.no_modified()->documents()));

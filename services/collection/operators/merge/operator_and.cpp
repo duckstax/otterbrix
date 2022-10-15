@@ -2,12 +2,16 @@
 
 namespace services::collection::operators::merge {
 
-    operator_and_t::operator_and_t(context_collection_t* context)
-        : operator_merge_t(context) {
+    operator_and_t::operator_and_t(context_collection_t* context, predicates::limit_t limit)
+        : operator_merge_t(context, limit) {
     }
 
     void operator_and_t::on_merge_impl(planner::transaction_context_t* transaction_context) {
         //todo: optimize merge
+        int count = 0;
+        if (!limit_.check(count)) {
+            return; //limit = 0
+        }
         if (left_ && right_ && left_->output() && right_->output()) {
             output_ = make_operator_data(context_->resource());
             const auto &right_documents = right_->output()->documents();
@@ -17,6 +21,10 @@ namespace services::collection::operators::merge {
                 });
                 if (it != right_documents.cend()) {
                     output_->append(left_document);
+                    ++count;
+                    if (!limit_.check(count)) {
+                        return;
+                    }
                 }
             }
         }

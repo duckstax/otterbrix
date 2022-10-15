@@ -89,7 +89,7 @@ TEST_CASE("insert one test") {
 TEST_CASE("insert many empty test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many_empty");
 
-    std::list<components::document::document_ptr> documents;
+    std::pmr::vector<components::document::document_ptr> documents;
     insert_many_t data(database_name, collection_name, std::move(documents));
 
     auto session = components::session::session_id_t();
@@ -117,7 +117,7 @@ TEST_CASE("insert many test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many");
 
     for (int i = 0; i <= 3; ++i) {
-        std::list<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents;
         for (int num = 1; num <= 5; ++num) {
             documents.push_back(gen_doc(num));
         }

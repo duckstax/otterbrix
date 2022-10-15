@@ -76,7 +76,7 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
 pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     trace(log_,"wrapper_collection::insert_many");
     if (py::isinstance<py::list>(documents)) {
-        std::list<components::document::document_ptr> docs;
+        std::pmr::vector<components::document::document_ptr> docs;
         for (const auto document : documents) {
             auto doc = to_document(document);
             generate_document_id_if_not_exists(doc);
