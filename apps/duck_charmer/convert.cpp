@@ -1,5 +1,7 @@
 #include "convert.hpp"
 
+#include <string>
+
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
@@ -140,6 +142,7 @@ namespace experimental {
     using components::ql::make_expr;
     using components::ql::make_union_expr;
     using components::ql::to_string;
+    using components::ql::aggregate::operator_type;
 
     auto to_v2_(const py::handle& obj) -> ::document::retained_const_t<::document::impl::value_t> {
         if (py::isinstance<py::bool_>(obj)) {
@@ -236,6 +239,12 @@ namespace experimental {
 
         auto size = py::len(source);
 
+        if(size == 0){
+            throw py::value_error(" len == 0");
+        }
+
+        aggregate->reserve(size);
+
         for (const py::handle obj : source) {
             auto is_mapping = py::isinstance<py::dict>(obj);
             if (!is_mapping) {
@@ -243,18 +252,52 @@ namespace experimental {
             }
 
             for (const py::handle key : obj) {
-                std::cerr << 0 << std::endl;
-                auto name = py::str(key).cast<std::string_view>();
-                std::cerr << 1 << std::endl;
-                std::cerr << name << std::endl;
-                aggregate_op_steps op_type = from_string({name.begin() + 1, name.end()});
-                std::cerr << (int) op_type << std::endl;
-                std::cerr << 2 << std::endl;
-                std::cerr << "len : " << py::len(obj) << std::endl;
-                std::cerr << 3 << std::endl;
-                auto op = parse_condition_(obj[key]);
-                std::cerr << 4 << std::endl;
-                aggregate->append(make_aggregate_operator(name, op_type, std::move(op)));
+                auto name = py::str(key).cast<std::string>();
+                constexpr static std::string_view prefix = "$";
+                std::string result = name.substr(prefix.length());
+                operator_type op_type = components::ql::get_aggregate_type(result);
+                switch (op_type) {
+                    case operator_type::invalid:
+                        break;
+                    case operator_type::count: {
+                        break;
+                    }
+                    case operator_type::group: {
+                        auto op = parse_condition_(obj[key]);
+                        aggregate->append(make_aggregate_operator(name, op_type, std::move(op)));
+                        break;
+                    }
+                    case operator_type::limit: {
+                        break;
+                    }
+                    case operator_type::match: {
+                        break;
+                    }
+                    case operator_type::merge: {
+                        break;
+                    }
+                    case operator_type::out: {
+                        break;
+                    }
+                    case operator_type::project: {
+                        break;
+                    }
+                    case operator_type::skip: {
+                        break;
+                    }
+                    case operator_type::sort: {
+                        break;
+                    }
+                    case operator_type::unset: {
+                        break;
+                    }
+                    case operator_type::unwind: {
+                        break;
+                    }
+                    case operator_type::finish: {
+                        break;
+                    }
+                }
             }
         }
     }

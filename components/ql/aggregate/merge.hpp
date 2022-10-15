@@ -6,7 +6,7 @@
 
 namespace components::ql::aggregate {
     struct merge_t final {
-        aggregate_types statement = aggregate_types::merge;
+        operator_type statement = operator_type::merge;
         std::string into;
     };
 } // namespace components::ql::aggregate

@@ -6,7 +6,7 @@
 
 namespace components::ql::aggregate {
     struct match_t final {
-        aggregate_types statement = aggregate_types::match;
+        operator_type statement = operator_type::match;
         expr_ptr query_;
     };
 } // namespace components::ql::aggregate

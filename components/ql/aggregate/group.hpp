@@ -10,7 +10,7 @@ namespace components::ql::aggregate {
             : expression_(expression)
             , fieldl_(std::move(ptr)) {
         }
-        aggregate_types statement = aggregate_types::group;
+        operator_type statement = operator_type::group;
         expression_t expression_;
         expr_ptr fieldl_;
     };
