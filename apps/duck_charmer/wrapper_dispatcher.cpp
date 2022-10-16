@@ -91,7 +91,7 @@ namespace duck_charmer {
         return std::get<result_insert_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many &{
+    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many &{
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         actor_zeta::send(

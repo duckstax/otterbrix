@@ -22,6 +22,9 @@ namespace components::index {
         auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
+        void insert_document(const document_ptr& document);
+        void delete_document(const document_ptr& document);
+
     private:
         using comparator_t = std::less<keys_base_storage_t>;
         using base_storgae = std::pmr::list<index_ptr>;
@@ -48,8 +51,8 @@ namespace components::index {
             core::pmr::make_unique<Target>(
                 ptr->resource(),
                 keys,
-                std::forward<Args>(args)...,
-                core::pmr::deleter_t(ptr->resource())));
+                std::forward<Args>(args).../*,
+                core::pmr::deleter_t(ptr->resource())*/));
     }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);

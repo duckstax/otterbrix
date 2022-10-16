@@ -1,23 +1,21 @@
 #pragma once
 
-#include "components/document/msgpack/msgpack_encoder.hpp"
-#include "components/ql/ql_statement.hpp"
-#include "components/serialize/serialize.hpp"
+#include <memory_resource>
+#include <components/document/msgpack/msgpack_encoder.hpp>
+#include <components/ql/ql_statement.hpp>
 #include <boost/beast/core/span.hpp>
 #include <msgpack.hpp>
-#include <msgpack/zone.hpp>
-#include <msgpack/adaptor/list.hpp>
 
 namespace components::ql {
     struct insert_many_t : ql_statement_t {
-        insert_many_t(const database_name_t& database, const collection_name_t& collection, std::list<components::document::document_ptr> documents);
+        insert_many_t(const database_name_t& database, const collection_name_t& collection, const std::pmr::vector<components::document::document_ptr>& documents);
         insert_many_t() = default;
         insert_many_t(const insert_many_t&) = default;
         insert_many_t& operator=(const insert_many_t&) = default;
         insert_many_t(insert_many_t&&) = default;
         insert_many_t& operator=(insert_many_t&&) = default;
         ~insert_many_t();
-        std::list<components::document::document_ptr> documents_;
+        std::pmr::vector<components::document::document_ptr> documents_;
     };
 } // namespace components::ql
 
@@ -39,8 +37,8 @@ namespace msgpack {
 
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto documents = o.via.array.ptr[2].as<std::list<components::document::document_ptr>>();
-                    v = std::move(components::ql::insert_many_t(database, collection, documents));
+                    auto documents = o.via.array.ptr[2].as<std::pmr::vector<components::document::document_ptr>>();
+                    v = components::ql::insert_many_t(database, collection, documents);
                     return o;
                 }
             };

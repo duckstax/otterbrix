@@ -31,7 +31,6 @@ target_link_libraries(
     ${CONAN_LIBS}
     rocketjoe::file
     rocketjoe::document
-    rocketjoe::serialize
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

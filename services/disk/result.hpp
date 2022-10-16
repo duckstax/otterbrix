@@ -4,13 +4,14 @@
 #include <list>
 #include <actor-zeta.hpp>
 #include <components/document/document.hpp>
+#include <components/ql/ql_statement.hpp>
 #include <services/wal/base.hpp>
 
 namespace services::disk {
 
     struct result_collection_t {
         collection_name_t name;
-        std::list<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents;
     };
 
     struct result_database_t {
@@ -39,7 +40,7 @@ namespace services::disk {
 
     private:
         result_t databases_;
-        wal::id_t wal_id_;
+        wal::id_t wal_id_ {0};
     };
 
 } // namespace services::disk

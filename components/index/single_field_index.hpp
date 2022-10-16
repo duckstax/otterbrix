@@ -32,6 +32,7 @@ namespace components::index {
         };
 
         auto insert_impl(value_t key, document_ptr value) -> void override;
+        auto remove_impl(value_t key) -> void final;
         range find_impl(const value_t& value) const override;
         range lower_bound_impl(const value_t& value) const override;
         range upper_bound_impl(const value_t& value) const override;

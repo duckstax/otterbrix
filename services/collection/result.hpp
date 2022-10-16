@@ -2,6 +2,7 @@
 #include "components/document/document_view.hpp"
 #include "components/document/document_id.hpp"
 #include <vector>
+#include <memory_resource>
 
 class result_insert_one {
 public:
@@ -17,11 +18,12 @@ private:
     //TODO: except or error_code
 };
 
+
 class result_insert_many {
 public:
-    using result_t = std::vector<components::document::document_id_t>;
+    using result_t = std::pmr::vector<components::document::document_id_t>;
 
-    result_insert_many() = default;
+    explicit result_insert_many(std::pmr::memory_resource *resource);
     explicit result_insert_many(result_t&& inserted_ids);
     const result_t& inserted_ids() const;
     bool empty() const;
@@ -31,11 +33,12 @@ private:
     //TODO: except or error_code
 };
 
+
 class result_find {
 public:
-    using result_t = std::vector<components::document::document_view_t>;
+    using result_t = std::pmr::vector<components::document::document_view_t>;
 
-    result_find() = default;
+    explicit result_find(std::pmr::memory_resource *resource);
     explicit result_find(result_t&& finded_docs);
     const result_t& operator*() const;
     result_t* operator->();
@@ -44,12 +47,13 @@ private:
     result_t finded_docs_;
 };
 
+
 class result_find_one {
 public:
     using result_t = components::document::document_view_t;
 
     result_find_one() = default;
-    explicit result_find_one(const result_t& finded_doc);
+    explicit result_find_one(result_t&& finded_doc);
     bool is_find() const;
     const result_t& operator*() const;
     result_t* operator->();
@@ -58,6 +62,7 @@ private:
     result_t finded_doc_;
     bool is_find_{false};
 };
+
 
 class result_size {
 public:
@@ -71,6 +76,7 @@ private:
     result_t size_{0};
 };
 
+
 class result_drop_collection {
 public:
     using result_t = bool;
@@ -83,11 +89,12 @@ private:
     result_t success_{false};
 };
 
+
 class result_delete {
 public:
-    using result_t = std::vector<components::document::document_id_t>;
+    using result_t = std::pmr::vector<components::document::document_id_t>;
 
-    result_delete() = default;
+    explicit result_delete(std::pmr::memory_resource *resource);
     explicit result_delete(result_t&& deleted_ids);
     const result_t& deleted_ids() const;
     bool empty() const;
@@ -97,14 +104,15 @@ private:
     //TODO: except or error_code
 };
 
+
 class result_update {
 public:
     using document_id_t = components::document::document_id_t;
-    using result_t = std::vector<document_id_t>;
+    using result_t = std::pmr::vector<document_id_t>;
 
-    result_update();
+    explicit result_update(std::pmr::memory_resource *resource);
     result_update(result_t&& modified_ids, result_t&& nomodified_ids);
-    explicit result_update(document_id_t&& upserted_id);
+    result_update(const document_id_t& upserted_id, std::pmr::memory_resource *resource);
     const result_t& modified_ids() const;
     const result_t& nomodified_ids() const;
     const document_id_t& upserted_id() const;
@@ -116,6 +124,7 @@ private:
     document_id_t upserted_id_;
     //TODO: except or error_code
 };
+
 
 class result_create_index {
 public:

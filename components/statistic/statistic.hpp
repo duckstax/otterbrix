@@ -14,22 +14,7 @@ namespace components::statistic {
     using clock_t = std::chrono::steady_clock;
     using time_point = clock_t ::time_point;
     using duration_t = clock_t::duration;
-    enum class trace_steps : char {
-        unused = 0x00, // unused
-        create_database,
-        drop_database,
-        create_collection,
-        drop_collection,
-        find,
-        find_one,
-        insert_one,
-        insert_many,
-        delete_one,
-        delete_many,
-        update_one,
-        update_many,
-        create_index
-    };
+    using trace_steps = ql::ql_statement_t;
 
     class trace_entry_t {
     public:

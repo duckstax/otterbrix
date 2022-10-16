@@ -1,22 +1,20 @@
 #include <catch2/catch.hpp>
 
-#include <log/log.hpp>
 #include <wal/wal.hpp>
 
 #include <msgpack.hpp>
 #include <string>
 
-#include <crc32c/crc32c.h>
-
 using namespace services;
 using namespace services::wal;
+using namespace components::ql;
 
 TEST_CASE("pack and unpack") {
 
     const std::string database = "test_database";
     const std::string collection = "test_collection";
 
-    std::list<components::document::document_ptr> documents ;
+    std::pmr::vector<components::document::document_ptr> documents ;
     insert_many_t data(database,collection,std::move(documents));
 
     const crc32_t  last_crc32 = 42;

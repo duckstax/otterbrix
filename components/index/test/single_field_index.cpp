@@ -81,7 +81,7 @@ TEST_CASE("single_field_index:engine") {
 
     insert(index_engine, id, data);
     auto address = actor_zeta::address_t::empty_address();
-    result_set_t set(resource, address);
+    ///result_set_t set(resource, address);
 
     std::string value = R"({"count": {"$gt": 10}})";
     auto d = components::document::document_from_json(value);

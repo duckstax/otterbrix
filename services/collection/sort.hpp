@@ -4,6 +4,7 @@
 #include <memory>
 
 using ::components::document::document_view_t;
+using ::components::document::document_ptr;
 
 namespace services::storage::sort {
 
@@ -23,7 +24,7 @@ namespace services::storage::sort {
 
         void add(const std::string& key, order order_ = order::ascending);
         bool operator()(const document_view_t* doc1, const document_view_t* doc2) const {
-            for (auto f : functions_) {
+            for (const auto &f : functions_) {
                 auto res = f(doc1, doc2);
                 if (res < compare_t::equals) {
                     return true;
@@ -32,6 +33,11 @@ namespace services::storage::sort {
                 }
             }
             return true;
+        }
+        bool operator()(const document_ptr &doc1, const document_ptr &doc2) const {
+            const document_view_t view1(doc1);
+            const document_view_t view2(doc2);
+            return operator()(&view1, &view2);
         }
 
     private:

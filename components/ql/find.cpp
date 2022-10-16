@@ -7,4 +7,8 @@ namespace components::ql {
         , condition_(std::move(condition))
     {}
 
+    find_statement_ptr make_find_statement(database_name_t database, collection_name_t collection, expr_ptr &&condition, bool is_find_one) {
+        return new find_statement(std::move(database), std::move(collection), std::move(condition), is_find_one);
+    }
+
 } // namespace components::ql

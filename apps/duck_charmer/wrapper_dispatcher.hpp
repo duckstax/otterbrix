@@ -33,7 +33,7 @@ namespace duck_charmer {
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
         auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one&;
-        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many&;
+        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many&;
         auto find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t*;
         auto find_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one&;
         auto delete_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
