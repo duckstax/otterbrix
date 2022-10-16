@@ -99,8 +99,8 @@ namespace services::collection {
         std::pmr::vector<document_id_t> insert_(planner::transaction_context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
-        void delete_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit);
-        void update_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
+        void delete_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit);
+        void update_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 

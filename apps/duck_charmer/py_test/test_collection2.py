@@ -331,8 +331,8 @@ def test_update_with_upsert(gen_collection):
     assert result.upserted_id == '000000000000000000000000'
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
 
-    #result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
-    #assert result.modified_count == 0
-    #assert result.matched_count == 0
-    #assert result.upserted_id != '000000000000000000000000'
-    #assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1
+    result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
+    assert result.modified_count == 0
+    assert result.matched_count == 0
+    assert result.upserted_id != '000000000000000000000000'
+    assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1

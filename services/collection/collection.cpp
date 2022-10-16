@@ -121,22 +121,22 @@ namespace services::collection {
 
     auto collection_t::delete_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
         debug(log_, "collection::delete_one : {}", name_);
-        delete_(session, cond, operators::predicates::limit_t::limit_one());
+        delete_(no_transaction_context, session, cond, operators::predicates::limit_t::limit_one());
     }
 
     auto collection_t::delete_many(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
         debug(log_, "collection::delete_many : {}", name_);
-        delete_(session, cond, operators::predicates::limit_t::unlimit());
+        delete_(no_transaction_context, session, cond, operators::predicates::limit_t::unlimit());
     }
 
     auto collection_t::update_one(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_one : {}", name_);
-        update_(session, cond, update, upsert, operators::predicates::limit_t::limit_one());
+        update_(no_transaction_context, session, cond, update, upsert, operators::predicates::limit_t::limit_one());
     }
 
     auto collection_t::update_many(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update, bool upsert) -> void {
         debug(log_, "collection::update_many : {}", name_);
-        update_(session, cond, update, upsert, operators::predicates::limit_t::unlimit());
+        update_(no_transaction_context, session, cond, update, upsert, operators::predicates::limit_t::unlimit());
     }
 
     void collection_t::drop(const session_id_t& session) {
@@ -168,23 +168,25 @@ namespace services::collection {
         return true;
     }
 
-    void collection_t::delete_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit) {
+    void collection_t::delete_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit) {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
         } else {
             operators::operator_delete deleter(view());
             deleter.set_children(operators::create_searcher(view(), cond->condition_, limit));
-            deleter.on_execute(no_transaction_context);
+            deleter.on_execute(transaction_context);
             if (deleter.modified()) {
                 result_delete result(std::move(deleter.modified()->documents()));
                 send_delete_to_disk_(session, result);
                 actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
+            } else {
+                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
             }
         }
     }
 
-    void collection_t::update_(const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update,
+    void collection_t::update_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update,
                                bool upsert, const operators::predicates::limit_t &limit) {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
@@ -192,14 +194,16 @@ namespace services::collection {
         } else {
             operators::operator_update updater(view(), update);
             updater.set_children(operators::create_searcher(view(), cond->condition_, limit));
-            updater.on_execute(no_transaction_context);
+            updater.on_execute(transaction_context);
             if (updater.modified()) {
                 result_update result(std::move(updater.modified()->documents()), std::move(updater.no_modified()->documents()));
                 send_update_to_disk_(session, result);
                 actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
             } else if (upsert) {
                 result_update result(get_document_id(update), view()->resource());
-//                insert_(upsert); //todo: upsert
+                std::pmr::vector<document_ptr> documents(context_->resource());
+                documents.push_back(make_upsert_document(update));
+                insert_(transaction_context, documents);
                 actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
             } else {
                 actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
