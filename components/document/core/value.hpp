@@ -55,7 +55,7 @@ namespace document { namespace impl {
 
         bool as_bool() const noexcept PURE;
         int64_t as_int() const noexcept PURE;
-        uint64_t as_unsigned() const noexcept PURE             {return (uint64_t)as_int();}
+        uint64_t as_unsigned() const noexcept PURE             {return static_cast<uint64_t>(as_int());}
         float as_float() const noexcept PURE      {return as_float_of_type<float>();}
         double as_double() const noexcept PURE    {return as_float_of_type<double>();}
         bool is_int() const noexcept PURE         {return tag() <= internal::tag_int;}

@@ -41,24 +41,24 @@ struct pure_slice_t
     const void* const buf;
     size_t const size;
 
-    bool empty() const noexcept PURE                          { return size == 0; }
+    [[nodiscard]] bool empty() const noexcept PURE                          { return size == 0; }
     explicit operator bool() const noexcept PURE              { return buf != nullptr; }
 
-    constexpr const uint8_t* begin() const noexcept PURE      { return (uint8_t*)buf; }
-    constexpr const uint8_t* end() const noexcept PURE        { return begin() + size; }
+    [[nodiscard]] constexpr const uint8_t* begin() const noexcept PURE      { return static_cast<uint8_t*>(const_cast<void*>(buf)); }
+    [[nodiscard]] constexpr const uint8_t* end() const noexcept PURE        { return begin() + size; }
 
     inline bool is_valid_address(const void *addr) const noexcept PURE;
     inline bool is_contains_address(const void *addr) const noexcept PURE;
     inline bool is_contains_address_range(pure_slice_t s) const noexcept PURE;
 
-    const void* offset(size_t o) const noexcept PURE;
+    [[nodiscard]] const void* offset(size_t o) const noexcept PURE;
 
     inline const uint8_t& operator[](size_t i) const noexcept PURE;
     inline slice_t operator()(size_t off, size_t sz) const noexcept PURE;
 
-    inline slice_t find(pure_slice_t target) const noexcept PURE;
+    [[nodiscard]] inline slice_t find(pure_slice_t target) const noexcept PURE;
 
-    inline int compare(pure_slice_t s) const noexcept PURE    { return compare_slice_c(*this, s); }
+    [[nodiscard]] inline int compare(pure_slice_t s) const noexcept PURE    { return compare_slice_c(*this, s); }
 
     bool operator==(const pure_slice_t &s) const noexcept PURE  { return is_equal_slice_c(*this, s); }
     bool operator!=(const pure_slice_t &s) const noexcept PURE  { return !(*this == s); }
@@ -67,17 +67,17 @@ struct pure_slice_t
     bool operator<=(pure_slice_t s) const noexcept PURE         { return compare(s) <= 0; }
     bool operator>=(pure_slice_t s) const noexcept PURE         { return compare(s) >= 0; }
 
-    uint32_t hash() const noexcept PURE         { return hash_slice_c(*this); }
+    [[nodiscard]] uint32_t hash() const noexcept PURE         { return hash_slice_c(*this); }
 
     void copy_to(void *dst) const noexcept      { if (size > 0) ::memcpy(dst, buf, size); }
 
-    explicit operator std::string() const       { return std::string((const char*)buf, size); }
-    std::string as_string() const               { return (std::string)*this; }
+    explicit operator std::string() const       { return std::string(static_cast<const char*>(buf), size); }
+    [[nodiscard]] std::string as_string() const               { return std::string(static_cast<const char*>(buf), size); }
 
     operator slice_t_c () const noexcept        { return {buf, size}; }
 
     constexpr pure_slice_t(std::string_view str) noexcept : pure_slice_t(str.data(), str.length()) {}
-    operator std::string_view() const noexcept STEPOVER { return std::string_view((const char*)buf, size); }
+    operator std::string_view() const noexcept STEPOVER { return std::string_view(static_cast<const char*>(buf), size); }
     constexpr pure_slice_t(std::nullptr_t) noexcept   : pure_slice_t() {}
     constexpr pure_slice_t(const char* str) noexcept  : buf(str), size(_strlen(str)) {}
     pure_slice_t(const std::string& str) noexcept     : buf(&str[0]), size(str.size()) {}
@@ -94,7 +94,7 @@ protected:
     static inline constexpr size_t _strlen(const char *str) noexcept PURE;
     [[noreturn]] static void fail_bad_alloc();
     inline constexpr void check_valid_slice() const;
-    inline size_t check(size_t offset) const;
+    [[nodiscard]] inline size_t check(size_t offset) const;
 };
 
 
@@ -138,7 +138,7 @@ inline constexpr slice_t operator "" _sl (const char *str NONNULL, size_t length
 
 struct alloc_slice_t : public pure_slice_t
 {
-    constexpr alloc_slice_t() noexcept STEPOVER                {}
+    constexpr alloc_slice_t() noexcept STEPOVER                = default;
     constexpr alloc_slice_t(std::nullptr_t) noexcept STEPOVER  {}
     constexpr alloc_slice_t(null_slice_t) noexcept STEPOVER    {}
 
@@ -162,8 +162,8 @@ struct alloc_slice_t : public pure_slice_t
     alloc_slice_t& operator= (pure_slice_t s)           { return *this = alloc_slice_t(s); }
     alloc_slice_t& operator= (slice_t_c s)              { return operator=(slice_t(s.buf, s.size)); }
     alloc_slice_t& operator= (std::nullptr_t) noexcept  { reset(); return *this; }
-    alloc_slice_t& operator= (const char *str NONNULL)  { *this = (slice_t)str; return *this; }
-    alloc_slice_t& operator= (const std::string &str)   { *this = (slice_t)str; return *this; }
+    alloc_slice_t& operator= (const char *str NONNULL)  { *this = slice_t(str); return *this; }
+    alloc_slice_t& operator= (const std::string &str)   { *this = slice_t(str); return *this; }
     void reset() noexcept                               { release(); assign_from(null_slice); }
     void reset(size_t sz)                          { *this = alloc_slice_t(sz); }
     inline void resize(size_t new_size);
@@ -171,15 +171,15 @@ struct alloc_slice_t : public pure_slice_t
 
     explicit alloc_slice_t(const slice_result_t_c &s) noexcept STEPOVER : pure_slice_t(s.buf, s.size) { retain(); }
     alloc_slice_t(slice_result_t_c &&sr) noexcept STEPOVER              : pure_slice_t(sr.buf, sr.size) {}
-    explicit operator slice_result_t_c () & noexcept                    { retain(); return {(void*)buf, size}; }
-    explicit operator slice_result_t_c () && noexcept                   { slice_result_t_c r {(void*)buf, size}; set(nullptr, 0); return r; }
+    explicit operator slice_result_t_c () & noexcept                    { retain(); return { const_cast<void*>(buf), size}; }
+    explicit operator slice_result_t_c () && noexcept                   { slice_result_t_c r {const_cast<void*>(buf), size}; set(nullptr, 0); return r; }
     alloc_slice_t& operator= (slice_result_t_c &&sr) noexcept           { release(); set(sr.buf, sr.size); return *this; }
     alloc_slice_t(heap_slice_t_c s) noexcept STEPOVER                   : pure_slice_t(s.buf, s.size) { retain(); }
     alloc_slice_t& operator= (heap_slice_t_c) noexcept;
     operator heap_slice_t_c () const noexcept                           { return {buf, size}; }
 
     explicit alloc_slice_t(std::string_view str) STEPOVER               : alloc_slice_t(slice_t(str)) {}
-    alloc_slice_t& operator=(std::string_view str)                      { *this = (slice_t)str; return *this; }
+    alloc_slice_t& operator=(std::string_view str)                      { *this = slice_t(str); return *this; }
 
     alloc_slice_t& retain() noexcept         { retain_buf_c(buf); return *this; }
     inline void release() noexcept           { release_buf_c(buf); }
@@ -243,12 +243,12 @@ inline size_t pure_slice_t::check(size_t offset) const {
 }
 
 inline const void* pure_slice_t::offset(size_t o) const noexcept {
-    return (uint8_t*)buf + check(o);
+    return static_cast<uint8_t*>(const_cast<void*>(buf)) + check(o);
 }
 
 inline const uint8_t& pure_slice_t::operator[](size_t off) const noexcept {
     assert_precondition(off < size);
-    return ((const uint8_t*)buf)[off];
+    return (static_cast<const uint8_t*>(buf))[off];
 }
 
 inline slice_t pure_slice_t::operator()(size_t off, size_t sz) const noexcept  {
@@ -257,8 +257,8 @@ inline slice_t pure_slice_t::operator()(size_t off, size_t sz) const noexcept  {
 }
 
 inline slice_t pure_slice_t::find(pure_slice_t target) const noexcept {
-    char* src = (char *)buf;
-    char* search = (char *)target.buf;
+    char* src = static_cast<char *>(const_cast<void*>(buf));
+    char* search = static_cast<char *>(const_cast<void*>(target.buf));
     char* found = std::search(src, src + size, search, search + target.size);
     if(found == src + size) {
         return null_slice;
@@ -285,7 +285,7 @@ inline constexpr slice_t::slice_t(const alloc_slice_t &s) noexcept
 {}
 
 inline constexpr slice_t::slice_t(const void* start NONNULL, const void* end NONNULL) noexcept
-    : slice_t(start, diff_pointer(end, start))
+    : slice_t(start, static_cast<size_t>(diff_pointer(end, start)))
 {
     assert_precondition(end >= start);
 }
@@ -329,7 +329,8 @@ inline alloc_slice_t& alloc_slice_t::operator=(const alloc_slice_t& s) noexcept 
 }
 
 inline alloc_slice_t &alloc_slice_t::operator=(alloc_slice_t &&s) noexcept {
-    std::swap((slice_t&)*this, (slice_t&)s);
+    using std::swap;
+    std::swap(reinterpret_cast<slice_t&> (*this), reinterpret_cast<slice_t&> (s));
     return *this;
 }
 
@@ -349,7 +350,7 @@ inline void alloc_slice_t::resize(size_t new_size) {
         reset(new_size);
     } else {
         alloc_slice_t new_slice(new_size);
-        ::memcpy((void*)new_slice.buf, buf, std::min(size, new_size));
+        ::memcpy(const_cast<void*>(new_slice.buf), buf, std::min(size, new_size));
         *this = std::move(new_slice);
     }
 }
@@ -369,7 +370,7 @@ inline void alloc_slice_t::append(pure_slice_t source) {
         src = source.buf;
     }
 
-    ::memcpy((void*)offset(dst_off), src, source.size);
+    ::memcpy(const_cast<void*>(offset(dst_off)), src, source.size);
 }
 
 }
