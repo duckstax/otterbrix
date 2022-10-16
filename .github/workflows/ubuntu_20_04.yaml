@@ -63,7 +63,7 @@ jobs:
         run: |
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
-          cmake --build . --parallel
+          cmake --build .
 
       - name: copy wasm target form test
         run: |
