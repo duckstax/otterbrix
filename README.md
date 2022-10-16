@@ -4,7 +4,8 @@
 Ottergon is a combined storage/engine/development platform for building high-performance analytical systems and data warehouses. 
 It is designed to be fast, reliable and easy to use.
 
-Ottergon contains a set of technologies across different storage types, driving low-latency access to large datasets and enabling big data systems to process and move data fast. It also offers rich NoSQL/SQL dialects.
+Ottergon contains a set of technologies across different storage types, driving low-latency access to large datasets and enabling big data systems to process and move data fast. 
+It also offers rich NoSQL/SQL dialects.
 
 Ottergon combines transactions and analytics in a unified data engine, powering fast analytics and simplifying the development of state-of-the-art, high-performance applications.
 
@@ -19,6 +20,6 @@ collection = database["MyCollection"]
 
 collection.insert_one({"object_name": "object value", "count": 1000})
 
-collection.find({"object_name": "object value"})["count"] == 1000
+collection.find({"object_name": "object value"})["count"] # 1000
 
 ```
