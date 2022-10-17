@@ -11,20 +11,25 @@ It contains a set of technologies across different storage types, driving low-la
 Python example:
 
 ```python
-from duck_charmer import Client
+    from ottergon import Client
 
-client = Client()
-database = client["MyDatabase"]
-collection = database["MyCollection"]
-
-collection.insert_one({"object_name": "object value", "count": 1000})
-
-collection.find({"object_name": "object value"})["count"] # 1000
+    client = Client()
+    database = client["MyDatabase"]
+    collection = database["MyCollection"]
+    collection.insert_one({"object_name": "object value", "count": 1000})
+    collection.find({"object_name": "object value"})["count"] # 1000
 ```
 
 C++ example:
 
 ```cpp
+    static const auto database = "MyDatabase";
+    static const auto collection = "MyCollection";
+    auto config = create_config("/tmp/my_collection");
+    spaces_t space(config);
+    auto* dispatcher = space.dispatcher();
+    dispatcher->insert_one(database_name, collection_name, {"object_name": "object value", "count": 1000});
+    auto value = dispatcher->find(database_name, collection_name, {"object_name": "object value"});
 ```
 
 # Major components of the project
@@ -42,5 +47,5 @@ C++ example:
 * Parallel query processing
 * Transactions
 * SQL support
-* Parquet/CSVjson
+* Parquet / CSV / ORC
 * Column storage
