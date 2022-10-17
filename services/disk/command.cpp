@@ -1,6 +1,5 @@
 #include "command.hpp"
 #include "route.hpp"
-#include <actor-zeta.hpp>
 
 namespace services::disk {
 

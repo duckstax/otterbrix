@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
 project(duck_charmer)
 
 set(${PROJECT_NAME}_headers
@@ -37,7 +35,6 @@ set(ROCKETJOE_LIBS
         rocketjoe::session
         rocketjoe::document
         rocketjoe::dispatcher
-        rocketjoe::parser
         rocketjoe::wal
         rocketjoe::disk
         rocketjoe::locks

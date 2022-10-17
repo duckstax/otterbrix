@@ -39,6 +39,9 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("__getitem__", &wrapper_database::create)
         ;
 
+    py::enum_<index_type>(m, "TypeIndex")
+        .export_values();
+
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
         .def("__repr__", &wrapper_collection::print)
         .def("__len__", &wrapper_collection::size)
@@ -53,6 +56,7 @@ PYBIND11_MODULE(duck_charmer, m) {
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
+        .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"))
         ;
 
     py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")

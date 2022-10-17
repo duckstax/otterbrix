@@ -6,7 +6,7 @@
 #include <log/log.hpp>
 
 #include <components/session/session.hpp>
-#include <components/protocol/protocol.hpp>
+#include <components/ql/statements.hpp>
 #include <core/file/file.hpp>
 #include <configuration/configuration.hpp>
 
@@ -24,16 +24,17 @@ namespace services::wal {
     public:
         wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
         virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
-        void create_database(session_id_t& session, address_t& sender, components::protocol::create_database_t& data);
-        void drop_database(session_id_t& session, address_t& sender, components::protocol::drop_database_t& data);
-        void create_collection(session_id_t& session, address_t& sender, components::protocol::create_collection_t& data);
-        void drop_collection(session_id_t& session, address_t& sender, components::protocol::drop_collection_t& data);
-        void insert_one(session_id_t& session, address_t& sender, insert_one_t& data);
-        void insert_many(session_id_t& session, address_t& sender, insert_many_t& data);
-        void delete_one(session_id_t& session, address_t& sender, delete_one_t& data);
-        void delete_many(session_id_t& session, address_t& sender, delete_many_t& data);
-        void update_one(session_id_t& session, address_t& sender, update_one_t& data);
-        void update_many(session_id_t& session, address_t& sender, update_many_t& data);
+        void create_database(session_id_t& session, address_t& sender, components::ql::create_database_t& data);
+        void drop_database(session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
+        void create_collection(session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
+        void drop_collection(session_id_t& session, address_t& sender, components::ql::drop_collection_t& data);
+        void insert_one(session_id_t& session, address_t& sender, components::ql::insert_one_t& data);
+        void insert_many(session_id_t& session, address_t& sender, components::ql::insert_many_t& data);
+        void delete_one(session_id_t& session, address_t& sender, components::ql::delete_one_t& data);
+        void delete_many(session_id_t& session, address_t& sender, components::ql::delete_many_t& data);
+        void update_one(session_id_t& session, address_t& sender, components::ql::update_one_t& data);
+        void update_many(session_id_t& session, address_t& sender, components::ql::update_many_t& data);
+        void create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data);
         ~wal_replicate_t() override;
 
     private:

@@ -11,14 +11,10 @@ else()
     add_subdirectory(log)
     add_subdirectory(oid)
     #add_subdirectory(python)
-    add_subdirectory(protocol)
     add_subdirectory(ql)
     add_subdirectory(session)
-    add_subdirectory(parser)
     add_subdirectory(wasm_runner)
 endif()
-
-
 
 if (DEV_MODE)
     add_subdirectory(tests)

@@ -40,4 +40,19 @@ TEST_CASE("ql::parser") {
     d = components::document::document_from_json(value);
     condition = parse_find_condition(d);
     REQUIRE(to_string(condition) == value);
+
+    value = R"({"count": 10})";
+    d = components::document::document_from_json(value);
+    condition = parse_find_condition(d);
+    REQUIRE(to_string(condition) == R"({"count": {"$eq": 10}})");
+
+    value = R"({"count": {"$gt": 40, "$lte": 60}})";
+    d = components::document::document_from_json(value);
+    condition = parse_find_condition(d);
+    REQUIRE(to_string(condition) == R"({"$and": [{"count": {"$gt": 40}}, {"count": {"$lte": 60}}]})");
+
+//    value = R"({"count": {"$not": {"$gte": 90, "$lt": 10}}})";
+//    d = components::document::document_from_json(value);
+//    condition = parse_find_condition(d);
+//    REQUIRE(to_string(condition) == R"({"$not": [{"$and": [{"count": {"$gte": 90}}], {"count": {"$lt": 10}}]}]})");
 }

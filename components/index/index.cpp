@@ -33,6 +33,10 @@ namespace components::index {
         return insert_impl(key, value);
     }
 
+    auto index_t::remove(value_t key) -> void {
+        remove_impl(key);
+    }
+
     auto index_t::keys() -> std::pair<std::pmr::vector<key_t>::iterator, std::pmr::vector<key_t>::iterator> {
         return std::make_pair(keys_.begin(), keys_.end());
     }

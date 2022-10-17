@@ -352,7 +352,7 @@ const value_t* value_t::find_root(slice_t s) noexcept {
     } else {
         if (_usually_false(s.size != size_narrow))
             return nullptr;
-    };
+    }
     return root;
 }
 

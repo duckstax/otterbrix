@@ -78,8 +78,8 @@ namespace services::disk {
         auto append_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void;
         auto remove_collection(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> void;
 
-        auto write_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_ptr>& documents) -> void;
-        auto remove_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::vector<document_id_t>& documents) -> void;
+        auto write_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::pmr::vector<document_ptr>& documents) -> void;
+        auto remove_documents(session_id_t& session, const database_name_t& database, const collection_name_t& collection, const std::pmr::vector<document_id_t>& documents) -> void;
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
