@@ -14,7 +14,7 @@
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
 #include <components/session/session.hpp>
-#include <components/protocol/base.hpp>
+#include <components/ql/index.hpp>
 
 #include <services/collection/result.hpp>
 #include <services/database/result_database.hpp>
@@ -33,7 +33,7 @@ namespace duck_charmer {
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
         auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one&;
-        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many&;
+        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many&;
         auto find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t*;
         auto find_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one&;
         auto delete_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
@@ -41,6 +41,7 @@ namespace duck_charmer {
         auto update_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
         auto update_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
         auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
+        auto create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index;
 
     protected:
 
@@ -60,6 +61,7 @@ namespace duck_charmer {
         auto delete_finish(session_id_t &session, result_delete result) -> void;
         auto update_finish(session_id_t &session, result_update result) -> void;
         auto size_finish(session_id_t &session, result_size result) -> void;
+        auto create_index_finish(session_id_t &session, result_create_index result) -> void;
 
         void init();
         void wait();
@@ -81,6 +83,7 @@ namespace duck_charmer {
             result_delete,
             result_update,
             result_drop_collection,
+            result_create_index,
             services::database::database_create_result,
             services::database::collection_create_result>
             intermediate_store_;

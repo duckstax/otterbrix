@@ -41,10 +41,16 @@ namespace document {
             return value_;
         }
 
+        explicit operator bool() const {
+            return value_ != nullptr;
+        }
+
     private:
         const impl::value_t* value_;
     };
 
     std::string to_string(const wrapper_value_t& doc);
+
+    wrapper_value_t sum(const wrapper_value_t& value1, const wrapper_value_t& value2);
 
 } // namespace document

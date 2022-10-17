@@ -90,6 +90,18 @@ namespace components::ql {
         }
     }
 
+    void normalize(expr_ptr &expr) {
+        if (expr->type_ == condition_type::novalid && !expr->key_.is_null()) {
+            expr->type_ = condition_type::eq;
+        }
+    }
+
+    void normalize_union(expr_ptr &expr) {
+        if (expr->type_ == condition_type::novalid && expr->is_union()) {
+            expr->type_ = condition_type::union_and;
+        }
+    }
+
     expr_ptr parse_find_condition_(const ::document::retained_t<::document::impl::dict_t>& condition) {
         auto res_condition = make_union_expr();
         for (auto it = condition->begin(); it; ++it) {
@@ -99,8 +111,10 @@ namespace components::ql {
             parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
         }
         if (res_condition->sub_conditions_.size() == 1) {
+            normalize(res_condition->sub_conditions_[0]);
             return std::move(res_condition->sub_conditions_[0]);
         }
+        normalize_union(res_condition);
         return res_condition;
     }
 

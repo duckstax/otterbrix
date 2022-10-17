@@ -1,6 +1,6 @@
 #pragma once
 
-#include <components/protocol/protocol.hpp>
+#include <components/ql/statements.hpp>
 #include "dto.hpp"
 
 namespace services::wal {
@@ -10,8 +10,8 @@ namespace services::wal {
         crc32_t crc32;
         crc32_t last_crc32;
         id_t id;
-        statement_type type;
-        components::protocol::variant_statement_t data;
+        components::ql::statement_type type;
+        components::ql::variant_statement_t data;
 
         bool is_valid() const;
         void set_data(msgpack::object& object);

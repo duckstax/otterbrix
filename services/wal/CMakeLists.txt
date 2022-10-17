@@ -25,7 +25,7 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::log
-        rocketjoe::protocol
+        rocketjoe::ql
         rocketjoe::locks
         rocketjoe::file
 )

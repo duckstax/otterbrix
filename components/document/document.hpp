@@ -47,6 +47,9 @@ namespace components::document {
     document_ptr make_document(const ::document::impl::array_t *array);
     document_ptr make_document(const ::document::impl::value_t *value);
 
+    template <class T>
+    document_ptr make_document(const std::string &key, T value);
+
     document_ptr make_upsert_document(const document_ptr& source);
 
     document_id_t get_document_id(const document_ptr &document);
@@ -70,7 +73,16 @@ namespace components::document {
         set_(key, std::move(value));
     }
 
+    template <class T>
+    document_ptr make_document(const std::string &key, T value) {
+        auto document = make_document();
+        document->set(key, value);
+        return document;
+    }
+
     std::string serialize_document(const document_ptr &document);
     document_ptr deserialize_document(const std::string &text);
+
+    bool is_equals_documents(const document_ptr &doc1, const document_ptr &doc2);
 
 }

@@ -96,7 +96,7 @@ auto from_object(const document_view_t &document, uint32_t index) -> py::object 
     return from_(document.get(index));
 }
 
-auto to_pylist(const std::vector<std::string> &src) -> py::list {
+auto to_pylist(const std::pmr::vector<std::string> &src) -> py::list {
     py::list res;
     for (const auto &str : src) {
         res.append(str);
@@ -104,7 +104,7 @@ auto to_pylist(const std::vector<std::string> &src) -> py::list {
     return res;
 }
 
-auto to_pylist(const std::vector<components::document::document_id_t>& src) -> py::list {
+auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src) -> py::list {
     py::list res;
     for (const auto &str : src) {
         res.append(str.to_string());

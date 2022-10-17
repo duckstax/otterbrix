@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
 using database_name_t = std::string;
 using collection_name_t = std::string;
@@ -25,22 +26,28 @@ namespace components::ql {
     };
 
     // Base struct for every QL statement
-    struct ql_statement_t {
+    struct ql_statement_t : public boost::intrusive_ref_counter<ql_statement_t> {
         ql_statement_t(statement_type type, database_name_t database, collection_name_t collection)
             : type_(type)
             , database_(std::move(database))
             , collection_(std::move(collection)) {}
 
-        ql_statement_t() = delete;
+        ql_statement_t() = default;
         virtual ~ql_statement_t() = default;
 
         statement_type type() const {
             return type_;
         }
 
-        statement_type type_;
+        statement_type type_ {statement_type::unused};
         database_name_t database_;
         collection_name_t collection_;
+    };
+
+
+    struct unused_statement_t : public ql_statement_t {
+        unused_statement_t()
+            : ql_statement_t(statement_type::unused, "", "") {}
     };
 
 } // namespace components::ql

@@ -20,6 +20,7 @@ namespace duck_charmer {
         add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
         add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
+        add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
     }
 
     auto wrapper_dispatcher_t::load() -> void {
@@ -90,7 +91,7 @@ namespace duck_charmer {
         return std::get<result_insert_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::list<document_ptr> &documents) -> result_insert_many &{
+    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many &{
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         actor_zeta::send(
@@ -213,6 +214,18 @@ namespace duck_charmer {
         return std::get<result_size>(intermediate_store_);
     }
 
+    auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index {
+        trace(log_, "wrapper_dispatcher_t::create_index session: {}, database: {} collection: {} ", session.data(), index.database_, index.collection_);
+        init();
+        actor_zeta::send(
+            manager_dispatcher_,
+            address(),
+            collection::handler_id(collection::route::create_index),
+            session,
+            std::move(index));
+        wait();
+        return std::get<result_create_index>(intermediate_store_);
+    }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         throw std::runtime_error("wrapper_dispatcher_t::executor_impl");
@@ -289,6 +302,12 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::size_finish(session_id_t &session, result_size result) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
+    }
+
+    auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, result_create_index result) -> void {
         intermediate_store_ = result;
         input_session_ = session;
         notify();

@@ -20,6 +20,7 @@ namespace services::wal {
         delete_many,
         update_one,
         update_many,
+        create_index,
 
         success,
     };

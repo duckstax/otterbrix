@@ -74,7 +74,7 @@ context_ptr make_context(log_t& log) {
     auto* collection = new (buffer) collection_t(context->database_.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
     context->collection_.reset(collection);
     return context;
-};
+}
 
 collection_t* d(context_ptr&ptr){
     return ptr->collection_.get();

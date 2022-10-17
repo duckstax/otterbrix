@@ -3,14 +3,13 @@
 #include <components/cursor/cursor.hpp>
 
 TEST_CASE("cursor::sort") {
-    components::cursor::cursor_t cursor;
+    components::cursor::cursor_t cursor(actor_zeta::detail::pmr::get_default_resource());
     for (int i = 0; i < 10; ++i) {
-        std::vector<components::cursor::data_t> documents;
-        documents.reserve(10);
+        auto *sub_cursor = new components::cursor::sub_cursor_t(actor_zeta::detail::pmr::get_default_resource(), actor_zeta::address_t::empty_address());
         for (int j = 0; j < 10; ++j) {
-            documents.emplace_back(gen_doc(10 * i + j + 1));
+            sub_cursor->append(document_view_t(gen_doc(10 * i + j + 1)));
         }
-        cursor.push(new components::cursor::sub_cursor_t(actor_zeta::address_t::empty_address(), documents));
+        cursor.push(sub_cursor);
     }
     REQUIRE(cursor.size() == 100);
     cursor.sort([](components::cursor::data_ptr doc1, components::cursor::data_ptr doc2) {

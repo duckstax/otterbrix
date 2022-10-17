@@ -76,7 +76,7 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
 pybind11::list wrapper_collection::insert_many(const py::handle &documents) {
     trace(log_,"wrapper_collection::insert_many");
     if (py::isinstance<py::list>(documents)) {
-        std::list<components::document::document_ptr> docs;
+        std::pmr::vector<components::document::document_ptr> docs;
         for (const auto document : documents) {
             auto doc = to_document(document);
             generate_document_id_if_not_exists(doc);
@@ -106,7 +106,7 @@ wrapper_result_update wrapper_collection::update_one(py::object cond, py::object
         debug(log_,"wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
-    return wrapper_result_update();
+    return wrapper_result_update(result_update(ptr_->resource()));
 }
 
 wrapper_result_update wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
@@ -120,7 +120,7 @@ wrapper_result_update wrapper_collection::update_many(py::object cond, py::objec
         debug(log_,"wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
         return wrapper_result_update(result);
     }
-    return wrapper_result_update();
+    return wrapper_result_update(result_update(ptr_->resource()));
 }
 
 auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
@@ -158,7 +158,7 @@ wrapper_result_delete wrapper_collection::delete_one(py::object cond) {
         debug(log_,"wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
         return wrapper_result_delete(result);
     }
-    return wrapper_result_delete();
+    return wrapper_result_delete(result_delete(ptr_->resource()));
 }
 
 wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
@@ -170,7 +170,7 @@ wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
         debug(log_,"wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
         return wrapper_result_delete(result);
     }
-    return wrapper_result_delete();
+    return wrapper_result_delete(result_delete(ptr_->resource()));
 }
 
 bool wrapper_collection::drop() {
@@ -179,6 +179,18 @@ bool wrapper_collection::drop() {
     auto session_tmp = duck_charmer::session_id_t();
     result = ptr_->drop_collection(session_tmp, database_, name_);
     debug(log_,"wrapper_collection::drop {}", result.is_success());
+    return result.is_success();
+}
+
+bool wrapper_collection::create_index(py::list keys, index_type type) {
+    debug(log_, "wrapper_collection::create_index: {}", name_);
+    auto session_tmp = duck_charmer::session_id_t();
+    components::ql::create_index_t index(database_, name_, type);
+//    for (const auto &key : keys) {
+//        index.keys_.emplace(key.cast<std::string>());
+//    }
+    auto result = ptr_->create_index(session_tmp, index);
+    debug(log_, "wrapper_collection::create_index {}", result.is_success());
     return result.is_success();
 }
 
