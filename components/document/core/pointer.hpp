@@ -3,7 +3,7 @@
 #include <components/document/core/value.hpp>
 #include <components/document/support/better_assert.hpp>
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
 using namespace document::impl;
 
@@ -11,8 +11,6 @@ using namespace document::impl;
 class pointer_t : public value_t
 {
 public:
-    static constexpr size_t max_narrow_offset = 0x7FFE;
-
     pointer_t(size_t offset, int width, bool external = false);
 
     bool is_external() const PURE;
@@ -39,7 +37,7 @@ PURE uint32_t pointer_t::offset() const noexcept {
     if (WIDE)
         return (endian::dec32(wide_bytes()) & ~0xC0000000) << 1;
     else
-        return (endian::dec16(narrow_bytes()) & ~0xC000) << 1;
+        return static_cast<uint32_t>((endian::dec16(narrow_bytes()) & ~0xC000) << 1);
 }
 
 template <bool WIDE>
@@ -57,7 +55,7 @@ PURE uint32_t pointer_t::legacy_offset() const noexcept {
     if (WIDE)
         return (endian::dec32(wide_bytes()) & ~0x80000000) << 1;
     else
-        return (endian::dec16(narrow_bytes()) & ~0x8000) << 1;
+        return static_cast<uint32_t>((endian::dec16(narrow_bytes()) & ~0x8000) << 1);
 }
 
-} } }
+}

@@ -19,26 +19,43 @@ jobs:
 
       - name: Install system dependencies
         run: |
-            sudo apt-get update \
-            && sudo apt-get install -y \
-            python3-pip python3-dev
+          sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && \
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
+          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
+          sudo apt update && 
+          sudo apt install -y bazel bazel-4.1.0 git 
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.48.0 pytest==6.2.5
+          pip install conan==1.52.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com:9300
-          conan remote list
 
       - name: download dependencies
         run: |
           mkdir build && cd build
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
+          
+          cd ..
+          
+          mkdir wasm_build && cd wasm_build
+          cp -r ../conan .
+          cp ../conanfile-wasm.txt .
+          conan config install conan
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
+
+      - name: build wasm target
+        run: |
+          cd wasm_build
+          source ./wasm/activate.sh  && \
+          cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+          cmake --build . && \
+          source ./wasm/deactivate.sh
 
       - name: build
         env:
@@ -46,10 +63,18 @@ jobs:
         run: |
           cd build
           cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
-          cmake --build . --parallel
+          cmake --build .
+
+      - name: copy wasm target form test
+        run: |
+          cp -r ./wasm_build/bin/*.wasm  build/components/wasm_runner/tests/
 
       - name: Test
-        run: cd build && ctest -C
+        run: |
+          cd build
+          ctest -C --output-on-failure
 
       - name: PyTest
-        run: cd build/apps/duck_charmer/ && pytest
+        run: |
+          cd build/apps/duck_charmer/
+          pytest

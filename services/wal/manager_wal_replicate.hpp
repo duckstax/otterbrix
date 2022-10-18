@@ -7,9 +7,9 @@
 
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
-
+#include <configuration/configuration.hpp>
 #include <components/session/session.hpp>
-#include <components/protocol/protocol.hpp>
+#include <components/ql/statements.hpp>
 
 #include "base.hpp"
 
@@ -31,19 +31,20 @@ namespace services::wal {
             manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
         }
 
-        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,boost::filesystem::path, log_t& log);
-        void creat_wal_worker();
+        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_wal, log_t&);
+        void create_wal_worker();
         void load(session_id_t& session, services::wal::id_t wal_id);
-        void create_database(session_id_t& session, components::protocol::create_database_t& data);
-        void drop_database(session_id_t& session, components::protocol::drop_database_t& data);
-        void create_collection(session_id_t& session, components::protocol::create_collection_t& data);
-        void drop_collection(session_id_t& session, components::protocol::drop_collection_t& data);
-        void insert_one(session_id_t& session, insert_one_t& data);
-        void insert_many(session_id_t& session, insert_many_t& data);
-        void delete_one(session_id_t& session, delete_one_t& data);
-        void delete_many(session_id_t& session, delete_many_t& data);
-        void update_one(session_id_t& session, update_one_t& data);
-        void update_many(session_id_t& session, update_many_t& data);
+        void create_database(session_id_t& session, components::ql::create_database_t& data);
+        void drop_database(session_id_t& session, components::ql::drop_database_t& data);
+        void create_collection(session_id_t& session, components::ql::create_collection_t& data);
+        void drop_collection(session_id_t& session, components::ql::drop_collection_t& data);
+        void insert_one(session_id_t& session, components::ql::insert_one_t& data);
+        void insert_many(session_id_t& session, components::ql::insert_many_t& data);
+        void delete_one(session_id_t& session, components::ql::delete_one_t& data);
+        void delete_many(session_id_t& session, components::ql::delete_many_t& data);
+        void update_one(session_id_t& session, components::ql::update_one_t& data);
+        void update_many(session_id_t& session, components::ql::update_many_t& data);
+        void create_index(session_id_t& session, components::ql::create_index_t& data);
 
         /// NOTE:  sync behold non thread-safety!
         void set_manager_disk(actor_zeta::address_t disk){
@@ -63,7 +64,7 @@ namespace services::wal {
         spin_lock lock_;
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_dispatcher_ = actor_zeta::address_t::empty_address();
-        boost::filesystem::path path_;
+        configuration::config_wal config_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         std::unordered_map<std::string, actor_zeta::address_t> dispatcher_to_address_book_;

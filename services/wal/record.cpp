@@ -1,4 +1,5 @@
 #include "record.hpp"
+#include <components/ql/statements.hpp>
 
 namespace services::wal {
 
@@ -7,7 +8,7 @@ namespace services::wal {
     }
 
     void record_t::set_data(msgpack::object& object) {
-        using namespace components::protocol;
+        using namespace components::ql;
         switch (type) {
             case statement_type::create_database:
                 data = object.as<create_database_t>();

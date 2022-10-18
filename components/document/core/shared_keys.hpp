@@ -8,17 +8,16 @@
 #include <components/document/support/better_assert.hpp>
 #include <components/document/core/slice.hpp>
 
-namespace document { namespace impl {
+namespace document::impl {
 
-class encoder_t;
 class value_t;
 
 class key_t {
 public:
     key_t() = default;
-    key_t(slice_t key);
-    key_t(int key);
-    key_t(const value_t *v) noexcept;
+    explicit key_t(slice_t key);
+    explicit key_t(int key);
+    explicit key_t(const value_t *v) noexcept;
 
     bool shared() const PURE;
     int as_int() const PURE;
@@ -40,25 +39,16 @@ public:
 
     using platform_string_t = const void*;
 
-    shared_keys_t();
+    shared_keys_t() = default;
     explicit shared_keys_t(slice_t state_data);
     explicit shared_keys_t(const value_t *state);
 
-    bool load_from(slice_t state_data);
+    virtual bool load_from(slice_t state_data);
     virtual bool load_from(const value_t *state);
-
-    alloc_slice_t state_data() const;
-    void write_state(encoder_t &enc) const;
-
-    void set_max_key_length(size_t m);
 
     size_t count() const PURE;
     bool encode(slice_t string, int &key) const;
     bool encode_and_add(slice_t string, int &key);
-
-    inline bool could_add(slice_t str) const PURE {
-        return count() < max_count && str.size <= _max_key_length && is_eligible_to_encode(str);
-    }
 
     slice_t decode(int key) const;
 
@@ -68,17 +58,11 @@ public:
 
     virtual bool refresh();
 
-    void set_platform_string_for_key(int key, platform_string_t) const;
-    platform_string_t platform_string_for_key(int key) const;
-
 protected:
-    virtual ~shared_keys_t();
+    ~shared_keys_t() override;
     virtual bool is_eligible_to_encode(slice_t str) const PURE;
 
 private:
-    friend class persistent_shared_key_st;
-
-    bool _encode_and_add(slice_t string, int &key);
     bool _add(slice_t string, int &key);
     bool _is_unknown_key(int key) const PURE;
     slice_t decode_unknown(int key) const;
@@ -92,30 +76,4 @@ private:
     std::array<slice_t, max_count> _by_key;
 };
 
-
-class persistent_shared_key_st : public shared_keys_t {
-public:
-    persistent_shared_key_st();
-
-    bool load_from(const value_t *state) override;
-    bool load_from(slice_t state_data);
-
-    virtual bool refresh() override;
-    void transaction_begin();
-    void save();
-    void revert();
-    void transaction_end();
-    bool changed() const PURE;
-
-protected:
-    virtual bool read() = 0;
-    virtual void write(slice_t) = 0;
-
-    std::mutex _refresh_mutex;
-
-private:
-    size_t _persisted_count {0};
-    size_t _committed_persisted_count {0};
-};
-
-} }
+}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pybind11.h>
+#include <pybind11/pybind11.h>
 
 #include <components/log/log.hpp>
 #include <components/configuration/configuration.hpp>
@@ -27,7 +27,7 @@ namespace duck_charmer {
         ~base_spaces();
 
     protected:
-        base_spaces(const components::config& config);
+        explicit base_spaces(const configuration::config& config);
 
         log_t log_;
         actor_zeta::scheduler_ptr  scheduler_;

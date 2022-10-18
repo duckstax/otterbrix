@@ -1,7 +1,6 @@
 #pragma once
 
 #include <condition_variable>
-#include <iostream>
 #include <memory>
 #include <mutex>
 
@@ -14,6 +13,8 @@
 
 #include <log/log.hpp>
 
+#include <components/ql/index.hpp>
+
 #include "forward.hpp"
 #include "wrapper_cursor.hpp"
 #include "wrapper_dispatcher.hpp"
@@ -21,6 +22,9 @@
 
 namespace py = pybind11;
 namespace duck_charmer {
+
+    using components::ql::index_type;
+
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
     public:
         wrapper_collection(const std::string& name, const std::string &database, wrapper_dispatcher_t*, log_t& log);
@@ -37,6 +41,7 @@ namespace duck_charmer {
         wrapper_result_delete delete_one(py::object cond);
         wrapper_result_delete delete_many(py::object cond);
         bool drop();
+        bool create_index(py::list keys, index_type type);
 
     private:
         const std::string name_;

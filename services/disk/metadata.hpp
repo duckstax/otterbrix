@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <memory>
 #include <boost/filesystem.hpp>
-#include <components/protocol/base.hpp>
+#include <components/ql/ql_statement.hpp>
 #include <core/file/file.hpp>
 
 namespace services::disk {

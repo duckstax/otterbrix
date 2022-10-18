@@ -18,10 +18,8 @@ public:
 
     const dict_t* source() const;
     bool is_changed() const;
-    void set_changed(bool changed);
 
     const value_t* get(slice_t key_to_find) const noexcept;
-    value_slot_t& setting(slice_t key);
 
     template <typename T>
     void set(slice_t key, T value)   { heap_dict()->set(key, value); }

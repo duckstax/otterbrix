@@ -26,7 +26,7 @@ py::list wrapper_result_update::raw_result() const {
 }
 
 std::size_t wrapper_result_update::matched_count() const {
-    return result.modified_ids().size() + result.nomodified_ids().size();;
+    return result.modified_ids().size() + result.nomodified_ids().size();
 }
 
 std::size_t wrapper_result_update::modified_count() const {

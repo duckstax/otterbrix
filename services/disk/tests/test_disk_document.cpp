@@ -23,7 +23,7 @@ TEST_CASE("sync documents from disk") {
         for (int num = 1; num <= 100; ++num) {
             auto doc = disk.load_document(database_name, collection_name, document_id_t(gen_id(num)));
             REQUIRE(doc != nullptr);
-            components::document::document_view_t doc_view(doc->structure, &doc->data);
+            components::document::document_view_t doc_view(doc);
             REQUIRE(doc_view.get_string("_id") == gen_id(num));
             REQUIRE(doc_view.get_long("count") == num);
             REQUIRE(doc_view.get_string("countStr") == std::to_string(num));
@@ -43,7 +43,7 @@ TEST_CASE("sync documents from disk") {
             auto doc = disk.load_document(database_name, collection_name, document_id_t(gen_id(num)));
             if (num % 2 == 0) {
                 REQUIRE(doc != nullptr);
-                components::document::document_view_t doc_view(doc->structure, &doc->data);
+                components::document::document_view_t doc_view(doc);
                 REQUIRE(doc_view.get_string("_id") == gen_id(num));
                 REQUIRE(doc_view.get_long("count") == num);
                 REQUIRE(doc_view.get_string("countStr") == std::to_string(num));

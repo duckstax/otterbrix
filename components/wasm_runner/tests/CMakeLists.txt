@@ -1,6 +1,6 @@
 project(test_wasm_runner)
 
-set(${PROJECT_NAME}_SOURCES
+list(APPEND ${PROJECT_NAME}_SOURCES
         main.cpp
         test_log.cpp
 )
@@ -13,8 +13,6 @@ target_link_libraries(
         rocketjoe::wasm_runner
         ${CONAN_LIBS}
 )
-
-file(COPY test_files/log_wasm.wasm DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)
 
 include(CTest)
 include(Catch)

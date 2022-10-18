@@ -1,20 +1,19 @@
 [requires]
-boost/1.75.0
-#openssl/1.1.1c
-#yaml-cpp/0.7.0
+boost/1.80.0
 spdlog/1.9.2
 pybind11/2.4.3
-msgpack/3.3.0
-#nlohmann_json/3.10.2
+msgpack-cxx/4.1.1
 date/3.0.1
 catch2/2.13.7
 crc32c/1.1.2
 abseil/20211102.0
 rocksdb/6.20.3
+benchmark/1.6.1
 
 actor-zeta/1.0.0a7@duckstax/stable
 
 proxy-wasm-cpp-host/3c703dcc44e7fc24062215e4f3c5c16d616362e8@duckstax/stable
+
 
 [options]
 actor-zeta:cxx_standard=17
@@ -23,3 +22,6 @@ actor-zeta:fPIC=True
 
 [generators]
 cmake
+
+
+[imports]

@@ -3,20 +3,17 @@
 #include <crc32c/crc32c.h>
 #include <actor-zeta.hpp>
 #include <log/log.hpp>
-#include <wal/wal.hpp>
-
-#include <msgpack.hpp>
 #include <string>
 
-#include "manager_wal_replicate.hpp"
-#include "wal.hpp"
-#include <components/protocol/insert_many.hpp>
-
-#include <components/tests/generaty.hpp>
-#include <components/document/document_view.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
+#include <components/document/document_view.hpp>
+#include <components/ql/statements.hpp>
+#include <components/tests/generaty.hpp>
+#include <services/wal/wal.hpp>
+#include <services/wal/manager_wal_replicate.hpp>
 
 using namespace services::wal;
+using namespace components::ql;
 
 constexpr auto database_name = "test_database";
 constexpr auto collection_name = "test_collection";
@@ -46,11 +43,13 @@ test_wal create_test_wal(const boost::filesystem::path &path) {
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
     boost::filesystem::remove_all(path);
     boost::filesystem::create_directories(path);
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource,result.scheduler,path, log);
+    configuration::config_wal config;
+    config.path = path;
+    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource, result.scheduler, config, log);
     auto allocate_byte = sizeof(wal_replicate_t);
     auto allocate_byte_alignof = alignof(wal_replicate_t);
     void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    result.wal = new (buffer) wal_replicate_t(manager.get(), log, path);
+    result.wal = new (buffer) wal_replicate_t(manager.get(), log, config);
     return result;
 }
 
@@ -90,7 +89,7 @@ TEST_CASE("insert one test") {
 TEST_CASE("insert many empty test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many_empty");
 
-    std::list<components::document::document_ptr> documents;
+    std::pmr::vector<components::document::document_ptr> documents;
     insert_many_t data(database_name, collection_name, std::move(documents));
 
     auto session = components::session::session_id_t();
@@ -118,7 +117,7 @@ TEST_CASE("insert many test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many");
 
     for (int i = 0; i <= 3; ++i) {
-        std::list<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents;
         for (int num = 1; num <= 5; ++num) {
             documents.push_back(gen_doc(num));
         }

@@ -20,7 +20,7 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_head
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::protocol
+        rocketjoe::ql
         rocketjoe::log
         rocketjoe::storage
         network_service

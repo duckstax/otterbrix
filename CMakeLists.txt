@@ -1,38 +1,42 @@
-#############################################################################################
-# configuration
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
-cmake_minimum_required(VERSION 3.12)
-
-cmake_policy(SET CMP0048 NEW)
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-PROJECT(RocketJoe VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
+PROJECT(ottergon VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
-else()
-    # stack track
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
-endif()
-
 option(DEV_MODE "developer mode" OFF)
-
+option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 if (DEV_MODE)
     add_definitions(-DDEV_MODE)
     enable_testing()
+endif()
+
+if (ALLOW_BENCHMARK)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+endif()
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+    set(WASM_BUILD ON)
+else()
+    # stack track
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 endif()
 
 if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") OR (CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
@@ -77,7 +81,12 @@ include(cmake/clang-format.cmake)
 #############################################################################################
 #conan
 
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+if(WASM_BUILD)
+    include(${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake)
+else()
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+endif()
+
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
 conan_basic_setup(NO_OUTPUT_DIRS)
 
@@ -95,20 +104,26 @@ endif(CCACHE_FOUND)
 
 # ccahe
 #############################################################################################
-
-SET(PYTHON_EXECUTABLE python3)
-#find_package(Python COMPONENTS Interpreter Development REQUIRED)
-#find_package(pybind11 REQUIRED)
-find_package(Python3 COMPONENTS Interpreter Development.Module)
-include_directories(${Python3_INCLUDE_DIRS})
+# wasm
+if(WASM_BUILD)
+    set(WASM_OBJECT ON)
+endif()
+# wasm
+#############################################################################################
 
 include_directories(components)
-include_directories(services)
-
 add_subdirectory(core)
 add_subdirectory(components)
-add_subdirectory(services)
-add_subdirectory(apps)
+
+if (WASM_BUILD)
+    add_subdirectory(wasm)
+else()
+    include_directories(services)
+    add_subdirectory(services)
+    add_subdirectory(apps)
+endif ()
+
+
 
 #set(CPACK_GENERATOR "DEB")
 #set(CPACK_SET_DESTDIR true)

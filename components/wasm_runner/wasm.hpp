@@ -37,8 +37,13 @@ namespace components::wasm_runner {
 
         auto getLogLevel() -> uint32_t override;
 
+        auto getProperty(std::string_view path, std::string* result) -> proxy_wasm::WasmResult override;
+
+        auto getCurrentTimeNanoseconds() -> uint64_t override;
+
     private:
         log_t log_;
+        std::unordered_map<std::string, std::string> proporties;
     };
 
     class wasm_t : public proxy_wasm::WasmBase {
@@ -86,6 +91,7 @@ namespace components::wasm_runner {
                         bool allow_precompiled) -> void;
 
         auto get_or_create_thread_local_plugin() const -> std::shared_ptr<proxy_wasm::PluginHandleBase>;
+        auto copy_data(const std::string &key, const std::vector<uint8_t> &data) -> void;
 
     protected:
         virtual auto create_plugin(std::string_view plugin_name, std::string_view plugin_id,

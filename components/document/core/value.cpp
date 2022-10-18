@@ -5,12 +5,10 @@
 #include <components/document/core/internal.hpp>
 #include <components/document/core/doc.hpp>
 #include <components/document/mutable/mutable_value.hpp>
-#include <components/document/json/json_coder.hpp>
 #include <components/document/support/endian.hpp>
-#include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
-#include <components/document/support/parse_date.hpp>
 #include <components/document/support/better_assert.hpp>
+#include <components/document/support/num_conversion.hpp>
 
 
 namespace document { namespace impl {
@@ -197,19 +195,6 @@ slice_t value_t::as_data() const noexcept {
     return _usually_true(tag() == tag_binary) ? get_string_bytes() : slice_t();
 }
 
-int64_t value_t::as_time_stamp() const noexcept {
-    switch (tag()) {
-    case tag_string:
-        return parse_iso8601_date(as_string());
-    case tag_short:
-    case tag_int:
-    case tag_float:
-        return as_int();
-    default:
-        return invalid_date;
-    }
-}
-
 const array_t* value_t::as_array() const noexcept {
     if (_usually_false(tag() != tag_array))
         return nullptr;
@@ -224,17 +209,6 @@ const dict_t* value_t::as_dict() const noexcept {
 
 shared_keys_t* value_t::shared_keys() const noexcept {
     return doc_t::shared_keys(this);
-}
-
-alloc_slice_t value_t::to_json(bool canonical) const {
-    json_encoder_t encoder;
-    encoder.set_canonical(canonical);
-    encoder.write_value(this);
-    return encoder.finish();
-}
-
-std::string value_t::to_json_string() const {
-    return to_json().as_string();
 }
 
 bool value_t::is_equal(const value_t *v) const {
@@ -273,6 +247,84 @@ bool value_t::is_equal(const value_t *v) const {
     }
 }
 
+bool value_t::is_lt(const value_t* rhs) const {
+    if (tag() < rhs->tag())
+        return true;
+    if (tag() > rhs->tag())
+        return false;
+
+    switch (tag()) {
+        case tag_short:
+        case tag_int:
+            return as_int() < rhs->as_int();
+        case tag_float:
+            if (is_double())
+                return as_double() < rhs->as_double();
+            else
+                return as_float() < rhs->as_float();
+        case tag_special:
+            return _byte[1] < rhs->_byte[1];
+        case tag_string:
+        case tag_binary:
+            return get_string_bytes() < rhs->get_string_bytes();
+        case tag_array: {
+            array_t::iterator i((const array_t*) this);
+            array_t::iterator j((const array_t*) rhs);
+            if (i.count() != j.count())
+                return false;
+            for (; i; ++i, ++j)
+                if (!i.value()->is_lt(j.value()))
+                    return false;
+            return true;
+        }
+        case tag_dict:
+            return ((const dict_t*) this)->is_lt((const dict_t*) rhs);
+        default:
+            return false;
+    }
+}
+
+bool value_t::is_lte(const document::impl::value_t* rhs) const {
+    if (tag() < rhs->tag())
+        return true;
+    if (tag() > rhs->tag())
+        return false;
+
+    if (!rhs || _byte[0] != rhs->_byte[0])
+        return false;
+    if (_usually_false(this == rhs))
+        return true;
+    switch (tag()) {
+        case tag_short:
+        case tag_int:
+            return as_int() <= rhs->as_int();
+        case tag_float:
+            if (is_double())
+                return as_double() <= rhs->as_double();
+            else
+                return as_float() <= rhs->as_float();
+        case tag_special:
+            return _byte[1] <= rhs->_byte[1];
+        case tag_string:
+        case tag_binary:
+            return get_string_bytes() <= rhs->get_string_bytes();
+        case tag_array: {
+            array_t::iterator i((const array_t*) this);
+            array_t::iterator j((const array_t*) rhs);
+            if (i.count() != j.count())
+                return false;
+            for (; i; ++i, ++j)
+                if (!i.value()->is_lte(j.value()))
+                    return false;
+            return true;
+        }
+        case tag_dict:
+            return ((const dict_t*) this)->is_lte((const dict_t*) rhs);
+        default:
+            return false;
+    }
+}
+
 const value_t* value_t::from_trusted_data(slice_t s) noexcept {
 #ifndef NDEBUG
     assert_precondition(from_data(s) != nullptr);
@@ -300,7 +352,7 @@ const value_t* value_t::find_root(slice_t s) noexcept {
     } else {
         if (_usually_false(s.size != size_narrow))
             return nullptr;
-    };
+    }
     return root;
 }
 
@@ -396,15 +448,6 @@ template<> std::string value_t::as<std::string>() const {
 
 void release(const value_t *val) noexcept {
     heap_value_t::release(val);
-}
-
-void assign_ref(const value_t* &holder, const value_t *new_value) noexcept {
-    const value_t *old_value = holder;
-    if (_usually_true(new_value != old_value)) {
-        heap_value_t::retain(new_value);
-        holder = new_value;
-        heap_value_t::release(old_value);
-    }
 }
 
 } }

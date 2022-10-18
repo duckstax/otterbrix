@@ -1,6 +1,5 @@
 #include "session.hpp"
 #include <atomic>
-#include <iostream>
 #include <memory>
 
 namespace components::session {

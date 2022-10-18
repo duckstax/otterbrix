@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.15)
-
 project(duck_charmer)
 
 set(${PROJECT_NAME}_headers
@@ -37,11 +35,16 @@ set(ROCKETJOE_LIBS
         rocketjoe::session
         rocketjoe::document
         rocketjoe::dispatcher
-        rocketjoe::parser
         rocketjoe::wal
         rocketjoe::disk
         rocketjoe::locks
 )
+
+SET(PYTHON_EXECUTABLE python3)
+#find_package(Python COMPONENTS Interpreter Development REQUIRED)
+#find_package(pybind11 REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
+include_directories(${Python3_INCLUDE_DIRS})
 
 include_directories(
         ${PROJECT_SOURCE_DIR}
@@ -64,7 +67,7 @@ if (DEV_MODE)
     file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-if (DEV_MODE)
+if (DEV_MODE OR ALLOW_BENCHMARK)
     set(${PROJECT_NAME}_headers
             spaces.hpp
             wrapper_dispatcher.hpp
@@ -89,6 +92,12 @@ if (DEV_MODE)
             ${CONAN_LIBS}
             ${ROCKETJOE_LIBS}
     )
+endif()
 
+if (DEV_MODE)
     add_subdirectory(test)
+endif()
+
+if (ALLOW_BENCHMARK)
+    add_subdirectory(benchmark)
 endif()

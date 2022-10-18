@@ -1,13 +1,14 @@
 #include "dict.hpp"
 #include <components/document/mutable/mutable_dict.h>
+#include <memory>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/core/doc.hpp>
 #include <components/document/core/internal.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <atomic>
-#include <string>
+#include <utility>
 
-namespace document { namespace impl {
+namespace document::impl {
 
 using namespace internal;
 
@@ -23,7 +24,7 @@ static inline void count_comparison() {}
 
 
 dict_t::key_t::key_t(slice_t raw_str)
-    : _raw_str(raw_str)
+    : _raw_str(std::move(raw_str))
 {}
 
 slice_t dict_t::key_t::string() const noexcept {
@@ -47,7 +48,7 @@ void dict_t::key_t::set_shared_keys(shared_keys_t *sk) {
 template <bool WIDE>
 struct dict_impl_t : public array_t::impl
 {
-    dict_impl_t(const dict_t *d) noexcept
+    explicit dict_impl_t(const dict_t *d) noexcept
         : impl(d)
     {}
 
@@ -130,7 +131,7 @@ struct dict_impl_t : public array_t::impl
     }
 
     const dict_t* get_parent() const {
-        return has_parent() ? (const dict_t*)deref(second()) : nullptr;
+        return has_parent() ? static_cast<const dict_t*>(deref(second())) : nullptr;
     }
 
     static int compare_keys(slice_t key_to_find, const value_t *key) {
@@ -146,7 +147,7 @@ struct dict_impl_t : public array_t::impl
         if (_usually_true(byte0 <= 0x07))
             return key_to_find - ((byte0 << 8) | key->_byte[1]);
         else if (_usually_false(byte0 <= 0x0F))
-            return key_to_find - (int16_t)(0xF0 | (byte0 << 8) | key->_byte[1]);
+            return key_to_find - static_cast<int16_t>(0xF0 | (byte0 << 8) | key->_byte[1]);
         else
             return -1;
     }
@@ -155,7 +156,7 @@ struct dict_impl_t : public array_t::impl
         if (key_to_find->tag() == tag_string)
             return compare_keys(key_bytes(key_to_find), key);
         else
-            return compare_keys((int)key_to_find->as_int(), key);
+            return compare_keys(static_cast<int>(key_to_find->as_int()), key);
     }
 
 private:
@@ -165,7 +166,7 @@ private:
         size_t n = _count;
         while (n > 0) {
             size_t mid = n >> 1;
-            const value_t *mid_value = offsetby(begin, mid * 2*width);
+            const value_t *mid_value = offsetby(begin, static_cast<ptrdiff_t>(mid * 2 * width));
             int cmp = comparator(target, mid_value);
             if (_usually_false(cmp == 0))
                 return mid_value;
@@ -194,7 +195,7 @@ private:
         });
         if (!key)
             return nullptr;
-        key_to_find._hint = (uint32_t)index_of(key) / 2;
+        key_to_find._hint = static_cast<uint32_t>(index_of(key)) / 2;
         return key;
     }
 
@@ -206,7 +207,7 @@ private:
         const value_t *v = offsetby(_first, (_count-1)*2*width);
         do {
             if (v->is_int()) {
-                if (shared_keys->is_unknown_key((int)v->as_int())) {
+                if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
                     shared_keys->refresh();
                     return shared_keys->encode(key_to_find, encoded);
                 }
@@ -243,12 +244,6 @@ static int compare_keys(const value_t *key_to_find, const value_t *key, bool wid
 constexpr dict_t::dict_t()
     : value_t(internal::tag_dict, 0, 0)
 {}
-
-uint32_t dict_t::raw_count() const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->count();
-    return array_t::impl(this)._count;
-}
 
 uint32_t dict_t::count() const noexcept {
     if (_usually_false(is_mutable()))
@@ -307,11 +302,11 @@ const value_t* dict_t::get(const document::impl::key_t &key) const noexcept {
 }
 
 mutable_dict_t* dict_t::as_mutable() const noexcept {
-    return is_mutable() ? (mutable_dict_t*)this : nullptr;
+    return is_mutable() ? reinterpret_cast<mutable_dict_t*>(const_cast<dict_t*>(this)) : nullptr;
 }
 
 heap_dict_t* dict_t::heap_dict() const noexcept {
-    return (heap_dict_t*)internal::heap_collection_t::as_heap_value(this);
+    return dynamic_cast<heap_dict_t*>(internal::heap_collection_t::as_heap_value(this));
 }
 
 const dict_t* dict_t::get_parent() const noexcept {
@@ -363,7 +358,7 @@ dict_iterator_t::dict_iterator_t(const dict_t* d, const shared_keys_t *sk) noexc
 {
     read();
     if (_usually_false(_key && dict_t::is_magic_parent_key(_key))) {
-        _parent.reset( new dict_iterator_t(_value->as_dict()) );
+        _parent = std::make_unique<dict_iterator_t>(_value->as_dict());
         ++(*this);
     }
 }
@@ -387,16 +382,16 @@ slice_t dict_iterator_t::key_string() const noexcept {
         auto sk = _shared_keys ? _shared_keys : find_shared_keys();
         if (!sk)
             return null_slice;
-        key_str = sk->decode((int)_key->as_int());
+        key_str = sk->decode(static_cast<int>(_key->as_int()));
     }
     return key_str;
 }
 
 key_t dict_iterator_t::keyt() const noexcept {
     if (_key->is_int())
-        return (int)_key->as_int();
+        return key_t(static_cast<int>(_key->as_int()));
     else
-        return _key->as_string();
+        return key_t(_key->as_string());
 }
 
 dict_iterator_t& dict_iterator_t::operator++() {
@@ -443,4 +438,4 @@ void dict_iterator_t::read() noexcept {
     }
 }
 
-} }
+}

@@ -1,20 +1,18 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 
 #ifndef NDEBUG
 #include <atomic>
 #endif
 
-namespace document { namespace impl { namespace internal {
+namespace document::impl::internal {
 
     enum {
         size_narrow = 2,
         size_wide   = 4
     };
-
-    static inline int width(bool wide) { return wide ? size_wide : size_narrow; }
 
     enum tags : uint8_t {
         tag_short,
@@ -34,9 +32,6 @@ namespace document { namespace impl { namespace internal {
         special_value_false      = 0x04,
         special_value_true       = 0x08,
     };
-
-    static const size_t min_shared_string_size =  2;
-    static const size_t max_shared_string_size = 15;
 
     static const uint32_t long_array_count = 0x07FF;
 
@@ -60,4 +55,4 @@ namespace document { namespace impl { namespace internal {
 #endif
 
 
-} } }
+}

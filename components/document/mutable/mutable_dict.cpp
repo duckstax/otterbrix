@@ -2,7 +2,6 @@
 #include "mutable_dict.h"
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/value_slot.hpp>
-#include <components/document/core/encoder.hpp>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/support/better_assert.hpp>
 
@@ -45,7 +44,7 @@ heap_dict_t::iterator::operator bool() const noexcept {
 void heap_dict_t::iterator::get_source() {
     _source_active = (bool)_source_iter;
     if (_usually_true(_source_active))
-        _source_key = _source_iter.key();
+        _source_key = key_t(_source_iter.key());
 }
 
 void heap_dict_t::iterator::get_new() {
@@ -139,8 +138,8 @@ void heap_dict_t::mark_changed() {
 key_t heap_dict_t::encode_key(slice_t key) const noexcept {
     int int_key;
     if (_shared_keys && _shared_keys->encode(key, int_key))
-        return int_key;
-    return key;
+        return key_t(int_key);
+    return key_t(key);
 }
 
 value_slot_t* heap_dict_t::_find_value_for(slice_t key) const noexcept {
@@ -180,7 +179,7 @@ value_slot_t& heap_dict_t::setting(slice_t str_key) {
     key_t key;
     value_slot_t *slotp = _find_value_for(str_key);
     if (slotp) {
-        key = str_key;
+        key = key_t(str_key);
     } else {
         key = encode_key(str_key);
         slotp = &_make_value_for(key);
@@ -200,7 +199,7 @@ const value_t* heap_dict_t::get(slice_t key) const noexcept {
 }
 
 const value_t* heap_dict_t::get(int key) const noexcept {
-    auto it = _map.find(key);
+    auto it = _map.find(key_t(key));
     if (it != _map.end())
         return it->second.as_value();
     else
@@ -292,36 +291,12 @@ heap_array_t* heap_dict_t::array_key_value() {
     return _iterable.get();
 }
 
-bool heap_dict_t::too_many_ancestors() const {
-    auto grampaw = _source->get_parent();
-    return grampaw && grampaw->get_parent();
-}
-
-void heap_dict_t::write_to(encoder_t &enc) {
-    if (enc.value_in_base(_source) && _map.size() + 1 < count() && !too_many_ancestors()) {
-        enc.begin_dict(_source, _map.size());
-        for (auto &i : _map) {
-            enc.write_key(i.first);
-            enc.write_value(i.second.as_value_or_undefined());
-        }
-        enc.end_dict();
-    } else {
-        iterator iter(this);
-        enc.begin_dict(iter.count());
-        for (; iter; ++iter) {
-            enc.write_key(iter.key_string());
-            enc.write_value(iter.value());
-        }
-        enc.end_dict();
-    }
-}
-
 void heap_dict_t::disconnect_from_source() {
     if (!_source)
         return;
     for (dict_t::iterator i(_source); i; ++i) {
         slice_t key = i.key_string();
-        if (_map.find(key) == _map.end())
+        if (_map.find(key_t(key)) == _map.end())
             set(key, i.value());
     }
     _source = nullptr;
@@ -356,16 +331,8 @@ bool mutable_dict_t::is_changed() const {
     return heap_dict()->is_changed();
 }
 
-void mutable_dict_t::set_changed(bool changed) {
-    heap_dict()->set_changed(changed);
-}
-
 const value_t *mutable_dict_t::get(slice_t key_to_find) const noexcept {
     return heap_dict()->get(key_to_find);
-}
-
-value_slot_t &mutable_dict_t::setting(slice_t key) {
-    return heap_dict()->setting(key);
 }
 
 void mutable_dict_t::remove(slice_t key) {
