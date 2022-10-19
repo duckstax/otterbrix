@@ -76,12 +76,12 @@ jobs:
       
     - name: Run pytest 
       run: pytest
-      working-directory: build/apps/duck_charmer
+      working-directory: build/integration/duck_charmer
         
     - name: Save library
       uses: actions/upload-artifact@v3
       with: 
-        path: build/apps/duck_charmer/duck_charmer*.so
+        path: build/integration/duck_charmer/duck_charmer*.so
         name: duck-charmer-lib-${{ matrix.PYTHON_VERSION }}
   
   build-wheel:

@@ -120,7 +120,7 @@ if (WASM_BUILD)
 else()
     include_directories(services)
     add_subdirectory(services)
-    add_subdirectory(apps)
+    add_subdirectory(integration)
 endif ()
 
 

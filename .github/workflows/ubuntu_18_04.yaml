@@ -59,4 +59,4 @@ jobs:
         run: cd build && ctest -C
 
       - name: PyTest
-        run: cd build/apps/duck_charmer/ && pytest
+        run: cd build/integration/duck_charmer/ && pytest
