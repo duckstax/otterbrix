@@ -14,7 +14,7 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES} ${${PROJECT_NAME}_HEAD
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
-        rocketjoe::duck_charmer
+        rocketjoe::ottergon
         rocketjoe::test_generaty
 )
 
