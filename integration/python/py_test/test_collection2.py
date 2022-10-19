@@ -1,6 +1,6 @@
 import copy
 import pytest
-from duck_charmer import Client, DataBase, Collection
+from ottergon import Client, DataBase, Collection
 
 database_name = "TestDatabase"
 collection_name = "TestCollection"

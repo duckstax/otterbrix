@@ -1,6 +1,6 @@
 import pytest
 import time
-from duck_charmer import ObjectId
+from ottergon import ObjectId
 
 
 def test_generate():
