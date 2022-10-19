@@ -33,4 +33,4 @@ namespace duck_charmer {
         using services::wal::handler_id;
     }
 
-} // namespace duck_charmer
+} // namespace python

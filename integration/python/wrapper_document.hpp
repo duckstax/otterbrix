@@ -29,4 +29,4 @@ private:
 };
 
 using wrapper_document_ptr = boost::intrusive_ptr<wrapper_document>;
-} // namespace duck_charmer
+} // namespace python

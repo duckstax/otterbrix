@@ -25,4 +25,4 @@ namespace duck_charmer {
         document_id_t id_;
     };
 
-} // namespace duck_charmer
+} // namespace python

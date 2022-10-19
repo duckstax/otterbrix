@@ -52,4 +52,4 @@ namespace duck_charmer {
         static spaces* instance_;
     };
 
-} // namespace duck_charmer
+} // namespace python

@@ -88,4 +88,4 @@ namespace duck_charmer {
             services::database::collection_create_result>
             intermediate_store_;
     };
-} // namespace duck_charmer
+} // namespace python

@@ -76,12 +76,12 @@ jobs:
       
     - name: Run pytest 
       run: pytest
-      working-directory: build/integration/duck_charmer
+      working-directory: build/integration/python
         
     - name: Save library
       uses: actions/upload-artifact@v3
       with: 
-        path: build/integration/duck_charmer/duck_charmer*.so
+        path: build/integration/python/python*.so
         name: duck-charmer-lib-${{ matrix.PYTHON_VERSION }}
   
   build-wheel:
@@ -117,7 +117,7 @@ jobs:
     - uses: actions/download-artifact@v2
       with: 
         name: duck-charmer-lib-${{ matrix.PYTHON_VERSION }}
-        path: duck_charmer
+        path: python
         
     - name: Install system packages 
       run: yum install -y python3-pip 
@@ -132,8 +132,8 @@ jobs:
     - name: Save wheel
       uses: actions/upload-artifact@v3
       with: 
-        path: wheelhouse/duck_charmer*.whl
-        name: duck_charmer-whl-${{ matrix.PYTHON_VERSION }}
+        path: wheelhouse/python*.whl
+        name: python-whl-${{ matrix.PYTHON_VERSION }}
         
   test-wheel:
     runs-on: ubuntu-latest
@@ -162,7 +162,7 @@ jobs:
       
     - uses: actions/download-artifact@v2
       with: 
-        name: duck_charmer-whl-${{ matrix.PYTHON_VERSION }}
+        name: python-whl-${{ matrix.PYTHON_VERSION }}
         path: /tests
       
     - name: Install system packages 
@@ -172,7 +172,7 @@ jobs:
       run: pip3 install --no-cache-dir pytest wheel-inspect
     
     - name: Get wheel info
-      run: wheel2json duck_charmer-*.whl
+      run: wheel2json python-*.whl
       working-directory: /tests
 
     - name: Install wheel 
@@ -197,7 +197,7 @@ jobs:
       
     - uses: actions/download-artifact@v2
       with: 
-        name: duck_charmer-whl-${{ matrix.PYTHON_VERSION }}
+        name: python-whl-${{ matrix.PYTHON_VERSION }}
         path: /app
 
     - name: Publish wheels
@@ -234,7 +234,7 @@ jobs:
         curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
 
     - name: Download package 
-      run: python${{ matrix.PYTHON_VERSION }} -m pip install duck_charmer
+      run: python${{ matrix.PYTHON_VERSION }} -m pip install python
           
           
         

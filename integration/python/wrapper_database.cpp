@@ -40,4 +40,4 @@ namespace duck_charmer {
         debug(log_,"wrapper_database");
     }
 
-} // namespace duck_charmer
+} // namespace python

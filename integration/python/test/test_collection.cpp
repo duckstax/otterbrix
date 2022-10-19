@@ -4,7 +4,7 @@
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
-TEST_CASE("duck_charmer::test_collection") {
+TEST_CASE("python::test_collection") {
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
     test_spaces space(config);

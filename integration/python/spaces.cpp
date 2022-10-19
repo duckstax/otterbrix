@@ -16,7 +16,7 @@ namespace duck_charmer {
 
     base_spaces::base_spaces(const configuration::config& config)
         : scheduler_(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter()) {
-        log_ = initialization_logger("duck_charmer", config.log.path.c_str());
+        log_ = initialization_logger("python", config.log.path.c_str());
         log_.set_level(config.log.level);
         trace(log_, "spaces::spaces()");
 
@@ -103,4 +103,4 @@ namespace duck_charmer {
         : base_spaces(configuration::config::default_config()) {
     }
 
-} // namespace duck_charmer
+} // namespace python

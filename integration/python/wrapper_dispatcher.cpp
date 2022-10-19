@@ -327,4 +327,4 @@ namespace duck_charmer {
         cv_.notify_all();
     }
 
-} // namespace duck_charmer
+} // namespace python

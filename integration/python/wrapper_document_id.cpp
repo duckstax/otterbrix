@@ -27,4 +27,4 @@ namespace duck_charmer {
         return id_.get_timestamp();
     }
 
-} // namespace duck_charmer
+} // namespace python

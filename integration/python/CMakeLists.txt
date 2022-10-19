@@ -1,4 +1,4 @@
-project(duck_charmer)
+project(ottergon)
 
 set(${PROJECT_NAME}_headers
         convert.hpp

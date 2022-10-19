@@ -14,7 +14,7 @@ uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
     return 10000 * n_db + 100 * n_col + n_doc;
 }
 
-TEST_CASE("duck_charmer::test_save_load::disk") {
+TEST_CASE("python::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
 
     SECTION("initialization") {
@@ -58,7 +58,7 @@ TEST_CASE("duck_charmer::test_save_load::disk") {
 }
 
 
-TEST_CASE("duck_charmer::test_save_load::disk+wal") {
+TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
 
     SECTION("initialization") {
@@ -85,7 +85,7 @@ TEST_CASE("duck_charmer::test_save_load::disk+wal") {
     }
 
     SECTION("extending wal") {
-        auto log = initialization_logger("duck_charmer", config.log.path.c_str());
+        auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
         services::wal::wal_replicate_t wal(nullptr, log, config.wal);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
