@@ -81,7 +81,7 @@ jobs:
     - name: Save library
       uses: actions/upload-artifact@v3
       with: 
-        path: build/integration/python/python*.so
+        path: build/integration/python/ottergon*.so
         name: duck-charmer-lib-${{ matrix.PYTHON_VERSION }}
   
   build-wheel:
@@ -132,8 +132,8 @@ jobs:
     - name: Save wheel
       uses: actions/upload-artifact@v3
       with: 
-        path: wheelhouse/python*.whl
-        name: python-whl-${{ matrix.PYTHON_VERSION }}
+        path: wheelhouse/ottergon*.whl
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
         
   test-wheel:
     runs-on: ubuntu-latest
@@ -162,7 +162,7 @@ jobs:
       
     - uses: actions/download-artifact@v2
       with: 
-        name: python-whl-${{ matrix.PYTHON_VERSION }}
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
         path: /tests
       
     - name: Install system packages 
@@ -172,7 +172,7 @@ jobs:
       run: pip3 install --no-cache-dir pytest wheel-inspect
     
     - name: Get wheel info
-      run: wheel2json python-*.whl
+      run: wheel2json ottergon-*.whl
       working-directory: /tests
 
     - name: Install wheel 
@@ -197,7 +197,7 @@ jobs:
       
     - uses: actions/download-artifact@v2
       with: 
-        name: python-whl-${{ matrix.PYTHON_VERSION }}
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
         path: /app
 
     - name: Publish wheels
@@ -234,7 +234,7 @@ jobs:
         curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
 
     - name: Download package 
-      run: python${{ matrix.PYTHON_VERSION }} -m pip install python
+      run: python${{ matrix.PYTHON_VERSION }} -m pip install ottergon
           
           
         
