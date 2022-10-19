@@ -17,7 +17,7 @@ Python example:
     database = client["MyDatabase"]
     collection = database["MyCollection"]
     collection.insert_one({"object_name": "object value", "count": 1000})
-    collection.find({"object_name": "object value"})["count"] # 1000
+    collection.find_one({"object_name": "object value"})["count"] # 1000
 ```
 
 C++ example:
@@ -29,7 +29,7 @@ C++ example:
     spaces_t space(config);
     auto* dispatcher = space.dispatcher();
     dispatcher->insert_one(database_name, collection_name, {"object_name": "object value", "count": 1000});
-    auto value = dispatcher->find(database_name, collection_name, {"object_name": "object value"});
+    auto value = dispatcher->find_one(database_name, collection_name, {"object_name": "object value"});
 ```
 
 # Major components of the project

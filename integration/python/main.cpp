@@ -20,7 +20,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 using namespace duck_charmer;
 
-PYBIND11_MODULE(duck_charmer, m) {
+PYBIND11_MODULE(ottergon, m) {
     py::class_<wrapper_client>(m, "Client")
         .def(py::init([](){
             auto* spaces =  spaces::get_instance();
