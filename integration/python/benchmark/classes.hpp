@@ -1,6 +1,6 @@
 #pragma once
 
-#include <apps/duck_charmer/spaces.hpp>
+#include <integration/python/spaces.hpp>
 #include <benchmark/benchmark.h>
 #include <components/document/document.hpp>
 #include <components/document/mutable/mutable_array.h>

@@ -1,3 +1,5 @@
+include_directories()
+
 add_subdirectory(full_benchmark)
 add_subdirectory(init)
 add_subdirectory(insert_one)

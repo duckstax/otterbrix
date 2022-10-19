@@ -4,7 +4,7 @@
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/tests/generaty.hpp>
-#include <apps/duck_charmer/spaces.hpp>
+#include <integration/python/spaces.hpp>
 
 inline configuration::config test_create_config(const boost::filesystem::path &path) {
     auto config = configuration::config::default_config();
