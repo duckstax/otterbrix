@@ -116,8 +116,8 @@ jobs:
     
     - uses: actions/download-artifact@v2
       with: 
-        name: duck-charmer-lib-${{ matrix.PYTHON_VERSION }}
-        path: python
+        name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
+        path: ottergon
         
     - name: Install system packages 
       run: yum install -y python3-pip 
