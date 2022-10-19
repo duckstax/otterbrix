@@ -6,7 +6,7 @@ set(${PROJECT_NAME}_SOURCES
         core/doc.cpp
         core/pointer.cpp
         core/shared_keys.cpp
-        core/slice_core.cpp
+        core/slice.cpp
         core/value.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
