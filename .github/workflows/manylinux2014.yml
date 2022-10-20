@@ -81,7 +81,7 @@ jobs:
         conan remote add duckstax http://conan.duckstax.com:9300
         #conan install -if build . --build -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
 
-    - name: Download and Install conan dependencies
+    - name: make build dir
       run: |
         pwd
         ls
@@ -107,6 +107,7 @@ jobs:
       run: |
         pwd
         ls
+        cmake --version
         source ./wasm/activate.sh  && \
         cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}  \
         cmake --build . && \
