@@ -83,6 +83,8 @@ jobs:
 
     - name: Download and Install conan dependencies
       run: |
+        pwd
+        ls
         cp ../conanfile.txt .
         conan install . --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
       working-directory: build/
