@@ -61,8 +61,11 @@ jobs:
         ln -sf /usr/local/bin/python3.9 /usr/bin/python &&\
         
         cd bazel &&\
+        pwd && \
         ls &&\
         ./compile.sh  && \
+        pwd && \
+        ls output && \
         cp  /output/bazel /usr/bin && \
         bazel --version 
 
