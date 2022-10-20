@@ -63,6 +63,7 @@ jobs:
         cd bazel &&\
         ls &&\
         ./compile.sh  && \
+        cp  /build/bazel/output/bazel /usr/bin && \
         bazel --version 
 
     - name: Set env conan dependencies
