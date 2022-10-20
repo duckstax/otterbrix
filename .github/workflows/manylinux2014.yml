@@ -83,24 +83,23 @@ jobs:
 
     - name: Download and Install conan dependencies
       run: |
-        mkdir build && cd build
         cp ../conanfile.txt .
         conan install . --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
+      working-directory: build/
         
-        cd ..
-        
-        mkdir wasm_build && cd wasm_build
-        cp -r ../conan .
+
+    - name: Download and Install conan Wasm dependencies
+      run: |
         cp ../conanfile-wasm.txt .
-        conan config install conan
         conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} conanfile-wasm.txt -if=./wasm  -of=./wasm
+      working-directory: wasm_build/
 
     - name: Wasm target
       run: |
         pwd
         ls
         source ./wasm/activate.sh  && \
-        cmake .. -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=${{ fromJson(needs.prepare.outputs.params).DEV_MODE }} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPython3_EXECUTABLE=${PYTHON_PATH}/bin/python \
+        cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}  \
         cmake --build . && \
         source ./wasm/deactivate.sh
       working-directory: wasm_build/
