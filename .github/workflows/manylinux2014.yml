@@ -62,8 +62,8 @@ jobs:
         
         cd bazel &&\
         ls &&\
-        bazel --version &&\
-        ./compile.sh 
+        ./compile.sh  && \
+        bazel --version 
 
     - name: Set env conan dependencies
       run: |
