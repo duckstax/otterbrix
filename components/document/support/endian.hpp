@@ -40,15 +40,15 @@ CONST static inline uint16_t little_dec16(uint16_t v) noexcept { return bswap16(
 
 namespace internal {
 
-CONST inline uint16_t swap_little(uint16_t n) noexcept { return (uint16_t)little_enc16(n); }
-CONST inline uint16_t swap_big(uint16_t n)    noexcept { return (uint16_t)enc16(n); }
+CONST inline uint16_t swap_little(uint16_t n) noexcept { return uint16_t(little_enc16(n)); }
+CONST inline uint16_t swap_big(uint16_t n)    noexcept { return uint16_t(enc16(n)); }
 CONST inline uint32_t swap_little(uint32_t n) noexcept { return little_enc32(n); }
 CONST inline uint32_t swap_big(uint32_t n)    noexcept { return enc32(n); }
 CONST inline uint64_t swap_little(uint64_t n) noexcept { return little_enc64(n); }
 CONST inline uint64_t swap_big(uint64_t n)    noexcept { return enc64(n); }
 
 inline void swap_little(uint16_t &n) noexcept { n = little_enc16(n); }
-inline void swap_big(uint16_t &n)    noexcept { n = (uint16_t)enc16(n); }
+inline void swap_big(uint16_t &n)    noexcept { n = uint16_t(enc16(n)); }
 inline void swap_little(uint32_t &n) noexcept { n = little_enc32(n); }
 inline void swap_big(uint32_t &n)    noexcept { n = enc32(n); }
 inline void swap_little(uint64_t &n) noexcept { n = little_enc64(n); }

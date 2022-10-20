@@ -64,14 +64,14 @@ namespace document {
 
         slice_t find(pure_slice_t target) const noexcept PURE;
 
-        int compare(pure_slice_t s) const noexcept PURE;
+        int compare(const pure_slice_t &s) const noexcept PURE;
 
         bool operator==(const pure_slice_t& s) const noexcept PURE;
         bool operator!=(const pure_slice_t& s) const noexcept PURE;
-        bool operator<(pure_slice_t s) const noexcept PURE;
-        bool operator>(pure_slice_t s) const noexcept PURE;
-        bool operator<=(pure_slice_t s) const noexcept PURE;
-        bool operator>=(pure_slice_t s) const noexcept PURE;
+        bool operator<(const pure_slice_t &s) const noexcept PURE;
+        bool operator>(const pure_slice_t &s) const noexcept PURE;
+        bool operator<=(const pure_slice_t &s) const noexcept PURE;
+        bool operator>=(const pure_slice_t &s) const noexcept PURE;
 
         uint32_t hash() const noexcept PURE;
 

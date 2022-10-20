@@ -175,7 +175,7 @@ namespace document {
         return {found, target.size};
     }
 
-    int pure_slice_t::compare(pure_slice_t s) const noexcept {
+    int pure_slice_t::compare(const pure_slice_t &s) const noexcept {
         if (size == s.size) {
             if (size == 0)
                 return 0;
@@ -201,19 +201,19 @@ namespace document {
         return !(*this == s);
     }
 
-    bool pure_slice_t::operator<(pure_slice_t s) const noexcept {
+    bool pure_slice_t::operator<(const pure_slice_t& s) const noexcept {
         return compare(s) < 0;
     }
 
-    bool pure_slice_t::operator>(pure_slice_t s) const noexcept {
+    bool pure_slice_t::operator>(const pure_slice_t& s) const noexcept {
         return compare(s) > 0;
     }
 
-    bool pure_slice_t::operator<=(pure_slice_t s) const noexcept {
+    bool pure_slice_t::operator<=(const pure_slice_t& s) const noexcept {
         return compare(s) <= 0;
     }
 
-    bool pure_slice_t::operator>=(pure_slice_t s) const noexcept {
+    bool pure_slice_t::operator>=(const pure_slice_t& s) const noexcept {
         return compare(s) >= 0;
     }
 
@@ -231,12 +231,12 @@ namespace document {
         return std::string(to_const_char(buf), size);
     }
 
-    pure_slice_t::operator std::string_view() const noexcept STEPOVER {
+    pure_slice_t::operator std::string_view() const noexcept {
         return std::string_view(to_const_char(buf), size);
     }
 
     std::string pure_slice_t::as_string() const {
-        return (std::string) * this;
+        return static_cast<std::string>(*this);
     }
 
     void pure_slice_t::set_buf(const void *b NONNULL) noexcept {
@@ -280,28 +280,28 @@ namespace document {
     }
 
 
-    constexpr slice_t::slice_t(std::nullptr_t) noexcept STEPOVER
+    constexpr slice_t::slice_t(std::nullptr_t) noexcept
         : pure_slice_t() {}
 
-    constexpr slice_t::slice_t(null_slice_t) noexcept STEPOVER
+    constexpr slice_t::slice_t(null_slice_t) noexcept
         : pure_slice_t()
     {}
 
-    constexpr slice_t::slice_t(const void* b, size_t s) noexcept STEPOVER
+    constexpr slice_t::slice_t(const void* b, size_t s) noexcept
         : pure_slice_t(b, s) {}
 
-    slice_t::slice_t(const void* start NONNULL, const void* end NONNULL) noexcept STEPOVER
+    slice_t::slice_t(const void* start NONNULL, const void* end NONNULL) noexcept
         : slice_t(start, size_t(diff_pointer(end, start))) {
         assert_precondition(end >= start);
     }
 
-    constexpr slice_t::slice_t(const alloc_slice_t &s) noexcept STEPOVER
+    constexpr slice_t::slice_t(const alloc_slice_t &s) noexcept
         : pure_slice_t(s) {}
 
-    slice_t::slice_t(const std::string& str) noexcept STEPOVER
+    slice_t::slice_t(const std::string& str) noexcept
         : pure_slice_t(str) {}
 
-    constexpr slice_t::slice_t(const char* str) noexcept STEPOVER
+    constexpr slice_t::slice_t(const char* str) noexcept
         : pure_slice_t(str) {}
 
     slice_t& slice_t::operator=(const alloc_slice_t& s) noexcept {
@@ -318,7 +318,7 @@ namespace document {
         return *this;
     }
 
-    constexpr slice_t::slice_t(std::string_view str) noexcept STEPOVER
+    constexpr slice_t::slice_t(std::string_view str) noexcept
         : pure_slice_t(str) {}
 
     void slice_t::release() {
@@ -327,13 +327,13 @@ namespace document {
     }
 
 
-    constexpr alloc_slice_t::alloc_slice_t(std::nullptr_t) noexcept STEPOVER
+    constexpr alloc_slice_t::alloc_slice_t(std::nullptr_t) noexcept
     {}
 
-    constexpr alloc_slice_t::alloc_slice_t(null_slice_t) noexcept STEPOVER
+    constexpr alloc_slice_t::alloc_slice_t(null_slice_t) noexcept
     {}
 
-    alloc_slice_t::alloc_slice_t(size_t sz) STEPOVER
+    alloc_slice_t::alloc_slice_t(size_t sz)
         : alloc_slice_t(create_slice_result(sz)) {
         if (_usually_false(!buf))
             fail_bad_alloc();
@@ -351,26 +351,26 @@ namespace document {
     alloc_slice_t::alloc_slice_t(const std::string& str)
         : alloc_slice_t(slice_t(str)) {}
 
-    alloc_slice_t::alloc_slice_t(pure_slice_t s) STEPOVER
+    alloc_slice_t::alloc_slice_t(pure_slice_t s)
         : alloc_slice_t(copy_slice(s)) {
         if (_usually_false(!buf) && s.buf)
             fail_bad_alloc();
     }
 
-    alloc_slice_t::alloc_slice_t(const alloc_slice_t& s) noexcept STEPOVER
+    alloc_slice_t::alloc_slice_t(const alloc_slice_t& s) noexcept
         : pure_slice_t(s) {
         retain();
     }
 
-    alloc_slice_t::alloc_slice_t(alloc_slice_t&& s) noexcept STEPOVER
+    alloc_slice_t::alloc_slice_t(alloc_slice_t&& s) noexcept
         : pure_slice_t(s) {
         s.set(nullptr, 0);
     }
 
-    alloc_slice_t::alloc_slice_t(std::string_view str) STEPOVER
+    alloc_slice_t::alloc_slice_t(std::string_view str)
         : alloc_slice_t(slice_t(str)) {}
 
-    alloc_slice_t::~alloc_slice_t() STEPOVER {
+    alloc_slice_t::~alloc_slice_t() {
         release_buf(buf);
     }
 
