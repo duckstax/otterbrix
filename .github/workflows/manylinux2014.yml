@@ -103,16 +103,16 @@ jobs:
         conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} conanfile-wasm.txt -if=./wasm  -of=./wasm
       working-directory: wasm_build/
 
-    - name: Wasm target
-      run: |
-        pwd
-        ls
-        cmake --version
-        source ./wasm/activate.sh  && \
-        cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=OFF  &&\
-        cmake --build . --target all  && \
-        source ./wasm/deactivate.sh
-      working-directory: wasm_build/
+    #- name: Wasm target
+    #  run: |
+    #    pwd
+    #    ls
+    #    cmake --version
+    #    source ./wasm/activate.sh  && \
+    #    cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=OFF  &&\
+    #    cmake --build . --target all  && \
+    #    source ./wasm/deactivate.sh
+    #  working-directory: wasm_build/
 
     - name: Build library 
       run: |
