@@ -11,14 +11,16 @@ set( ${PROJECT_NAME}_SOURCES
 		test_document_view.cpp
 )
 
+find_package( Threads )
+
 add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
+		${CONAN_LIBS}
         rocketjoe::document
 		rocketjoe::test_generaty
-        pthread
-        ${CONAN_LIBS}
+		${CMAKE_THREAD_LIBS_INIT}
 )
 
 include(CTest)
