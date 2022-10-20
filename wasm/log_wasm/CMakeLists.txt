@@ -20,3 +20,8 @@ set_target_properties( ${PROJECT_NAME}
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
         )
+
+set_target_properties( ${PROJECT_NAME} PROPERTIES LINK_SEARCH_START_STATIC ON)
+set_target_properties( ${PROJECT_NAME} PROPERTIES LINK_SEARCH_END_STATIC ON)
+
+target_link_options( ${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++ -static)
