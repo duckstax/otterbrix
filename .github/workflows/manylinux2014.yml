@@ -48,8 +48,7 @@ jobs:
         
     - name: Install system packages 
       run: |
-        yum install -y ninja-build python3-pip python3-devel 
-        yum install -y wget unzip zip gcc-c++ java-11-openjdk-devel
+        yum install -y ninja-build python3-pip python3-devel wget unzip zip gcc-c++ java-11-openjdk-devel
         wget https://releases.bazel.build/4.1.0/release/bazel-4.1.0-dist.zip &&  \
         unzip bazel-4.1.0-dist.zip -d bazel
   
@@ -60,7 +59,10 @@ jobs:
   
         PATH=$PYTHON_PATH:$PATH:$JAVA_HOME/bin \
         ln -sf /usr/local/bin/python3.9 /usr/bin/python \
-        cd bazel &&  ./compile.sh \
+        
+        cd bazel \
+        ls \
+        ./compile.sh 
 
     - name: Set env conan dependencies
       run: |
