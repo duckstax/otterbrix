@@ -62,6 +62,7 @@ jobs:
         
         cd bazel \
         ls \
+        bazel --version \
         ./compile.sh 
 
     - name: Set env conan dependencies
