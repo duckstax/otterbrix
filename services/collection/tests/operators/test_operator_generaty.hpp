@@ -60,7 +60,7 @@ inline components::ql::find_statement_ptr parse_find_condition(const std::string
 }
 
 inline context_ptr create_collection() {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     return make_context(log);
 }

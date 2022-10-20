@@ -22,16 +22,16 @@ class BinaryDistribution(Distribution):
 from setuptools import setup
 
 setup(
-    name="duck_charmer",
+    name="python",
     version="1.0.0",
-    description='A wheel for duck_charmer',
+    description='A wheel for python',
     long_description=readme(),
     license='',
     python_requires=">=3.9",
-    packages=["duck_charmer"],
+    packages=["python"],
     include_package_data=True,
     package_data={
-      'duck_charmer': ['duck_charmer*'],
+      'python': ['python*'],
     },
     cmdclass={'install': InstallPlatlib},
     distclass=BinaryDistribution

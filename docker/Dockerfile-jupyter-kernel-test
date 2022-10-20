@@ -23,7 +23,7 @@ RUN conan remote add bincrafters https://api.bintray.com/conan/bincrafters/publi
 
 COPY apps/rocketjoe_kernel/test/requirements.txt ./apps/rocketjoe_kernel/test/
 
-RUN pip3 install --no-cache-dir -r apps/rocketjoe_kernel/test/requirements.txt
+RUN pip3 install --no-cache-dir -r integration/rocketjoe_kernel/test/requirements.txt
 
 COPY . ./
 

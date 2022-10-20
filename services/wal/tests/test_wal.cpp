@@ -37,7 +37,7 @@ struct test_wal {
 
 test_wal create_test_wal(const boost::filesystem::path &path) {
     test_wal result;
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();

@@ -76,5 +76,5 @@ jobs:
 
       - name: PyTest
         run: |
-          cd build/apps/duck_charmer/
+          cd build/integration/python/
           pytest

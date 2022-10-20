@@ -81,7 +81,7 @@ collection_t* d(context_ptr&ptr){
 }
 
 context_ptr gen_collection() {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
 
     auto collection = make_context(log);
