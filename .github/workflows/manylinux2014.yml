@@ -108,8 +108,9 @@ jobs:
         pwd
         ls
         cmake --version
+#${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}
         source ./wasm/activate.sh  && \
-        cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}  &&\
+        cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=OFF  &&\
         cmake --build . --target all  && \
         source ./wasm/deactivate.sh
       working-directory: wasm_build/
