@@ -1,7 +1,7 @@
 [requires]
 boost/1.80.0
 spdlog/1.9.2
-pybind11/2.4.3
+pybind11/2.10.0
 msgpack-cxx/4.1.1
 date/3.0.1
 catch2/2.13.7
@@ -9,6 +9,7 @@ crc32c/1.1.2
 abseil/20211102.0
 rocksdb/6.20.3
 benchmark/1.6.1
+zlib/1.2.12
 
 actor-zeta/1.0.0a7@duckstax/stable
 
@@ -22,6 +23,9 @@ actor-zeta:fPIC=True
 
 [generators]
 cmake
+cmake_find_package
+CMakeDeps
+#cmake_paths
 
 
 [imports]

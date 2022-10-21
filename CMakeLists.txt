@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
@@ -86,6 +86,9 @@ if(WASM_BUILD)
 else()
     include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 endif()
+
+include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
 conan_basic_setup(NO_OUTPUT_DIRS)

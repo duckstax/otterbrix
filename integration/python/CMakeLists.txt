@@ -44,6 +44,7 @@ set(ROCKETJOE_LIBS
 #find_package(Python COMPONENTS Interpreter Development REQUIRED)
 #find_package(pybind11 REQUIRED)
 #find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 find_package(pybind11 CONFIG REQUIRED)
 #include_directories(${Python3_INCLUDE_DIRS})
 
