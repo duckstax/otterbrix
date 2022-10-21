@@ -58,7 +58,7 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=OFF && \
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build .
 
 #RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
