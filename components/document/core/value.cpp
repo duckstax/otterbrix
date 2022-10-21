@@ -1,6 +1,4 @@
 #include "value.hpp"
-#include <cmath>
-#include <limits>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/doc.hpp>
@@ -27,11 +25,6 @@ namespace document::impl {
         value_type::dict,
         value_type::null
     };
-
-
-    inline bool is_equals(double x, double y) {
-        return std::fabs(x - y) < std::numeric_limits<double>::epsilon();
-    }
 
 
     class const_value_t : public value_t {

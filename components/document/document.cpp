@@ -30,7 +30,7 @@ namespace components::document {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
             try {
-                return object->as_array()->as_mutable()->get(std::atol(key.c_str()));
+                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.c_str())));
             } catch (...) {
             }
         }

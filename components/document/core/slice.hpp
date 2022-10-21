@@ -39,12 +39,33 @@ namespace document {
 
 
     struct pure_slice_t {
+    private:
+        inline constexpr size_t _strlen(const char *str) noexcept {
+            if (!str)
+                return 0;
+            auto c = str;
+            while (*c) ++c;
+            return size_t(c - str);
+        }
+
+    public:
         const void* const buf;
         size_t const size;
 
-        constexpr pure_slice_t(std::string_view str) noexcept;
-        constexpr pure_slice_t(std::nullptr_t) noexcept;
-        constexpr pure_slice_t(const char* str) noexcept;
+        constexpr pure_slice_t(std::string_view str) noexcept
+            : pure_slice_t(str.data(), str.length()) {}
+
+        constexpr pure_slice_t(const pure_slice_t &other) noexcept
+            : buf(other.buf)
+            , size(other.size) {}
+
+        constexpr pure_slice_t(std::nullptr_t) noexcept
+            : pure_slice_t() {}
+
+        constexpr pure_slice_t(const char* str) noexcept
+            : buf(str)
+            , size(_strlen(str)) {}
+
         pure_slice_t(const std::string& str) noexcept;
 
         bool empty() const noexcept PURE;
@@ -86,7 +107,10 @@ namespace document {
             : buf(nullptr)
             , size(0) {}
 
-        constexpr pure_slice_t(const void* b, size_t s) noexcept;
+        constexpr pure_slice_t(const void* b, size_t s) noexcept
+            : buf(b), size(s) {
+            check_valid_slice();
+        }
 
         void set_buf(const void* b NONNULL) noexcept;
         void set_size(size_t s) noexcept;
@@ -95,28 +119,44 @@ namespace document {
         pure_slice_t& operator=(const pure_slice_t& s) noexcept;
 
         [[noreturn]] static void fail_bad_alloc();
-        constexpr void check_valid_slice() const;
+
+        constexpr void check_valid_slice() const {
+            assert_precondition(buf != nullptr || size == 0);
+            assert_precondition(size < (1ull << (8*sizeof(void*)-1)));
+        }
+
         size_t check(size_t offset) const;
     };
 
 
     struct slice_t : public pure_slice_t {
         constexpr slice_t() noexcept STEPOVER = default;
-        constexpr slice_t(std::nullptr_t) noexcept STEPOVER;
-        constexpr slice_t(null_slice_t) noexcept STEPOVER;
-        constexpr slice_t(const void* b, size_t s) noexcept STEPOVER;
+
+        constexpr slice_t(std::nullptr_t) noexcept STEPOVER
+            : pure_slice_t() {}
+
+        slice_t(null_slice_t) noexcept;
+
+        constexpr slice_t(const void* b, size_t s) noexcept STEPOVER
+            : pure_slice_t(b, s) {}
+
         slice_t(const void* start NONNULL, const void* end NONNULL) noexcept STEPOVER;
-        constexpr slice_t(const alloc_slice_t& s) noexcept STEPOVER;
+
+        slice_t(const alloc_slice_t& s) noexcept;
 
         slice_t(const std::string& str) noexcept STEPOVER;
-        constexpr slice_t(const char* str) noexcept STEPOVER;
+
+        constexpr slice_t(const char* str) noexcept STEPOVER
+            : pure_slice_t(str) {}
 
         slice_t& operator=(alloc_slice_t&&) = delete;
         slice_t& operator=(const alloc_slice_t& s) noexcept;
         slice_t& operator=(std::nullptr_t) noexcept;
         slice_t& operator=(null_slice_t) noexcept;
 
-        constexpr slice_t(std::string_view str) noexcept STEPOVER;
+        constexpr slice_t(std::string_view str) noexcept STEPOVER
+            : pure_slice_t(str) {}
+
         void release();
     };
 
@@ -130,8 +170,8 @@ namespace document {
 
     struct alloc_slice_t : public pure_slice_t {
         constexpr alloc_slice_t() noexcept STEPOVER = default;
-        constexpr alloc_slice_t(std::nullptr_t) noexcept STEPOVER;
-        constexpr alloc_slice_t(null_slice_t) noexcept STEPOVER;
+        constexpr alloc_slice_t(std::nullptr_t) noexcept STEPOVER {}
+        constexpr alloc_slice_t(null_slice_t) noexcept STEPOVER {}
         explicit alloc_slice_t(size_t sz) STEPOVER;
         alloc_slice_t(const void* b, size_t s);
         alloc_slice_t(const void* start NONNULL, const void* end NONNULL);

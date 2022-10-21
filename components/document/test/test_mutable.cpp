@@ -3,6 +3,7 @@
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/core/slice.hpp>
+#include <components/document/support/varint.hpp>
 
 using namespace document;
 using namespace document::impl;
@@ -22,8 +23,8 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->as_bool() == true);
         REQUIRE(ma->as_int() == 0);
         REQUIRE(ma->as_unsigned() == 0);
-        REQUIRE(ma->as_float() == 0.0);
-        REQUIRE(ma->as_double() == 0.0);
+        REQUIRE(is_equals(ma->as_float(), 0.0));
+        REQUIRE(is_equals(ma->as_double(), 0.0));
         REQUIRE(ma->as_string() == null_slice);
         REQUIRE(ma->as_data() == null_slice);
         REQUIRE(ma->to_string() == null_slice);
@@ -201,8 +202,8 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->as_bool() == true);
         REQUIRE(md->as_int() == 0);
         REQUIRE(md->as_unsigned() == 0);
-        REQUIRE(md->as_float() == 0.0);
-        REQUIRE(md->as_double() == 0.0);
+        REQUIRE(is_equals(md->as_float(), 0.0));
+        REQUIRE(is_equals(md->as_double(), 0.0));
         REQUIRE(md->as_string() == null_slice);
         REQUIRE(md->as_data() == null_slice);
         REQUIRE(md->to_string() == null_slice);

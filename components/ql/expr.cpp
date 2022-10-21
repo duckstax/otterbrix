@@ -35,6 +35,8 @@ namespace components::ql {
                 return "$or";
             case condition_type::union_not:
                 return "$not";
+        default:
+            break;
         }
         return {};
     }

@@ -95,33 +95,11 @@ namespace document {
             to_shared_buffer(buf)->release();
     }
 
-    inline constexpr size_t _strlen(const char *str) noexcept {
-        if (!str)
-            return 0;
-        auto c = str;
-        while (*c) ++c;
-        return size_t(c - str);
-    }
-
-
-    constexpr pure_slice_t::pure_slice_t(std::string_view str) noexcept
-        : pure_slice_t(str.data(), str.length()) {}
-
-    constexpr pure_slice_t::pure_slice_t(std::nullptr_t) noexcept
-        : pure_slice_t() {}
-
-    constexpr pure_slice_t::pure_slice_t(const char* str) noexcept
-        : buf(str)
-        , size(_strlen(str)) {}
 
     pure_slice_t::pure_slice_t(const std::string& str) noexcept
         : buf(&str[0])
         , size(str.size()) {}
 
-    constexpr pure_slice_t::pure_slice_t(const void* b, size_t s) noexcept
-        : buf(b), size(s) {
-        check_valid_slice();
-    }
 
     bool pure_slice_t::empty() const noexcept {
         return size == 0;
@@ -269,39 +247,25 @@ namespace document {
 #endif
     }
 
-    constexpr void pure_slice_t::check_valid_slice() const {
-        assert_precondition(buf != nullptr || size == 0);
-        assert_precondition(size < (1ull << (8*sizeof(void*)-1)));
-    }
-
     size_t pure_slice_t::check(size_t offset) const {
         assert_precondition(offset <= size);
         return offset;
     }
 
 
-    constexpr slice_t::slice_t(std::nullptr_t) noexcept
-        : pure_slice_t() {}
-
-    constexpr slice_t::slice_t(null_slice_t) noexcept
-        : pure_slice_t()
-    {}
-
-    constexpr slice_t::slice_t(const void* b, size_t s) noexcept
-        : pure_slice_t(b, s) {}
-
     slice_t::slice_t(const void* start NONNULL, const void* end NONNULL) noexcept
         : slice_t(start, size_t(diff_pointer(end, start))) {
         assert_precondition(end >= start);
     }
 
-    constexpr slice_t::slice_t(const alloc_slice_t &s) noexcept
+    slice_t::slice_t(const alloc_slice_t &s) noexcept
         : pure_slice_t(s) {}
 
-    slice_t::slice_t(const std::string& str) noexcept
-        : pure_slice_t(str) {}
+    slice_t::slice_t(null_slice_t) noexcept
+        : pure_slice_t()
+    {}
 
-    constexpr slice_t::slice_t(const char* str) noexcept
+    slice_t::slice_t(const std::string& str) noexcept
         : pure_slice_t(str) {}
 
     slice_t& slice_t::operator=(const alloc_slice_t& s) noexcept {
@@ -318,20 +282,11 @@ namespace document {
         return *this;
     }
 
-    constexpr slice_t::slice_t(std::string_view str) noexcept
-        : pure_slice_t(str) {}
-
     void slice_t::release() {
         char *c = const_cast<char *>(static_cast<const char *>(buf));
         delete[] c;
     }
 
-
-    constexpr alloc_slice_t::alloc_slice_t(std::nullptr_t) noexcept
-    {}
-
-    constexpr alloc_slice_t::alloc_slice_t(null_slice_t) noexcept
-    {}
 
     alloc_slice_t::alloc_slice_t(size_t sz)
         : alloc_slice_t(create_slice_result(sz)) {
