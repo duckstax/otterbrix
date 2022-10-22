@@ -7,7 +7,7 @@ namespace services::collection::operators {
     aggregation::aggregation(context_collection_t* ptr)
         : context_(ptr) {}
 
-    void aggregation::on_execute(components::ql::find_statement& cond, components::cursor::sub_cursor_t* sub_cursor) {
+    void aggregation::on_execute(components::ql::find_statement& cond, components::cursor::sub_cursor_t*) {
         predicates::limit_t limit;
         if (cond.type() == components::ql::statement_type::find_one) {
             limit = predicates::limit_t(1);

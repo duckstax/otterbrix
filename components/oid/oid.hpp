@@ -176,7 +176,7 @@ namespace oid {
 
     template<class T>
     bool oid_t<T>::is_null() const {
-        for (auto i = 0; i < size; ++i) {
+        for (uint32_t i = 0; i < size; ++i) {
             if (data_[i] > 0) {
                 return false;
             }
