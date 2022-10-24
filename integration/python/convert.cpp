@@ -47,6 +47,7 @@ using components::document::document_view_t;
         }
         return out->as_dict();
     }
+    return nullptr;
 }
 
 py::object from_(const ::document::impl::value_t* value) {

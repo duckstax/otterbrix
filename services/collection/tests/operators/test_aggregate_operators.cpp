@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <components/document/support/varint.hpp>
 #include <services/collection/operators/scan/full_scan.hpp>
 #include <services/collection/operators/aggregate/operator_count.hpp>
 #include <services/collection/operators/aggregate/operator_min.hpp>
@@ -116,7 +117,7 @@ TEST_CASE("operator::aggregate::avg") {
                                                       predicates::create_predicate(d(collection)->view(), cond),
                                                       predicates::limit_t::unlimit()));
         avg_.on_execute(nullptr);
-        REQUIRE(avg_.value()->as_double() == 50.5);
+        REQUIRE(document::is_equals(avg_.value()->as_double(), 50.5));
     }
 
     SECTION("avg::match") {
@@ -126,6 +127,6 @@ TEST_CASE("operator::aggregate::avg") {
                                                       predicates::create_predicate(d(collection)->view(), cond),
                                                       predicates::limit_t::unlimit()));
         avg_.on_execute(nullptr);
-        REQUIRE(avg_.value()->as_double() == 5.0);
+        REQUIRE(document::is_equals(avg_.value()->as_double(), 5.0));
     }
 }

@@ -10,7 +10,7 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void full_scan::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void full_scan::on_execute_impl(planner::transaction_context_t*) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0

@@ -66,7 +66,7 @@ namespace services::database {
             std::string(name), log_, 1, 1000);
     }
 
-    database_t::database_t(manager_database_t* supervisor, database_name_t name, log_t& log, size_t num_workers, size_t max_throughput)
+    database_t::database_t(manager_database_t* supervisor, database_name_t name, log_t& log, size_t, size_t)
         : actor_zeta::cooperative_supervisor<database_t>(supervisor, std::string(name))
         , name_(name)
         , log_(log.clone())

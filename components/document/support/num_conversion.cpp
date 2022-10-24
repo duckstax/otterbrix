@@ -67,7 +67,7 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
         }
     }
 
-    if (value == 0.0) {
+    if (std::fabs(value) < std::numeric_limits<double>::epsilon()) {
         if (std::signbit(value)) {
             return copy_str_if_fit(dst, capacity, "-0.0");
         } else {
@@ -75,7 +75,7 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
         }
     }
     std::stringstream stream;
-    stream << std::setprecision(digits_count - count_digit_before_dot(value) + 1) << value;
+    stream << std::setprecision(digits_count - int(count_digit_before_dot(value)) + 1) << value;
     auto str = stream.str();
     copy_str_if_fit(dst, str.size(), str.c_str());
     return copy_str_if_fit(dst, str.size(), str.c_str());
@@ -84,89 +84,89 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
 
 namespace document {
 
-static bool _parse_uint(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
-    uint64_t n = 0;
-    if (!isdigit(*str))
-        return false;
-    while (isdigit(*str)) {
-        int digit = (*str++ - '0');
-        if (_usually_false(n > UINT64_MAX / 10))
+    static bool _parse_uint(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
+        uint64_t n = 0;
+        if (!isdigit(*str))
             return false;
-        n *= 10;
-        if (_usually_false(n > UINT64_MAX - uint64_t(digit)))
-            return false;
-        n += uint64_t(digit);
+        while (isdigit(*str)) {
+            int digit = (*str++ - '0');
+            if (_usually_false(n > UINT64_MAX / 10))
+                return false;
+            n *= 10;
+            if (_usually_false(n > UINT64_MAX - uint64_t(digit)))
+                return false;
+            n += uint64_t(digit);
+        }
+        if (!allow_trailing) {
+            while (isspace(*str))
+                ++str;
+            if (_usually_false(*str != '\0'))
+                return false;
+        }
+        result = n;
+        return true;
     }
-    if (!allow_trailing) {
+
+    bool parse_integer(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
         while (isspace(*str))
             ++str;
-        if (_usually_false(*str != '\0'))
-            return false;
+        if (*str == '+')
+            ++str;
+        return _parse_uint(str, result, allow_trailing);
     }
-    result = n;
-    return true;
-}
 
-bool parse_integer(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
-    while (isspace(*str))
-        ++str;
-    if (*str == '+')
-        ++str;
-    return _parse_uint(str, result, allow_trailing);
-}
-
-bool parse_integer(const char *str NONNULL, int64_t &result, bool allow_trailing) {
-    while (isspace(*str))
-        ++str;
-    bool negative = (*str == '-');
-    if (negative || *str == '+')
-        ++str;
-    uint64_t uresult;
-    if (!_parse_uint(str, uresult, allow_trailing))
-        return false;
-    if (negative) {
-        if (_usually_true(uresult <= uint64_t(INT64_MAX))) {
-            result = -int64_t(uresult);
-        } else if (uresult == uint64_t(INT64_MAX) + 1) {
-            result = INT64_MIN;
+    bool parse_integer(const char *str NONNULL, int64_t &result, bool allow_trailing) {
+        while (isspace(*str))
+            ++str;
+        bool negative = (*str == '-');
+        if (negative || *str == '+')
+            ++str;
+        uint64_t uresult;
+        if (!_parse_uint(str, uresult, allow_trailing))
+            return false;
+        if (negative) {
+            if (_usually_true(uresult <= uint64_t(INT64_MAX))) {
+                result = -int64_t(uresult);
+            } else if (uresult == uint64_t(INT64_MAX) + 1) {
+                result = INT64_MIN;
+            } else {
+                return false;
+            }
         } else {
-            return false;
+            if (_usually_false(uresult > uint64_t(INT64_MAX)))
+                return false;
+            result = int64_t(uresult);
         }
-    } else {
-        if (_usually_false(uresult > uint64_t(INT64_MAX)))
-            return false;
-        result = int64_t(uresult);
+        return true;
     }
-    return true;
-}
 
-double parse_double(const char *str) noexcept {
+    double parse_double(const char *str) noexcept {
 #if defined(_MSC_VER)
-    static _locale_t locale = _create_locale(LC_ALL, "C");
-    return _strtod_l(str, nullptr, locale);
+        static _locale_t locale = _create_locale(LC_ALL, "C");
+        return _strtod_l(str, nullptr, locale);
 #else
-    static locale_t locale = newlocale(LC_ALL_MASK, "C", nullptr);
-    return strtod_l(str, nullptr, locale);
+        static locale_t locale = newlocale(LC_ALL_MASK, "C", nullptr);
+        return strtod_l(str, nullptr, locale);
 #endif
-}
-
-template <class T>
-size_t get_precision(T value, size_t capacity) {
-    size_t count_dec = 0;
-    auto v = value;
-    while (v > 1) {
-        ++count_dec;
-        v /= 10;
     }
-    return capacity - 2 - (count_dec > 0 ? count_dec : 1);
-}
 
-size_t write_float(float f, char *dst, size_t capacity) {
-    return write_float_to_str<float, uint32_t, 23, 7>(f, dst, capacity);
-}
+    template <class T>
+    size_t get_precision(T value, size_t capacity) {
+        size_t count_dec = 0;
+        auto v = value;
+        while (v > 1) {
+            ++count_dec;
+            v /= 10;
+        }
+        return capacity - 2 - (count_dec > 0 ? count_dec : 1);
+    }
 
-size_t write_float(double d, char *dst, size_t capacity) {
-    return write_float_to_str<double, uint64_t, 52, 16>(d, dst, capacity);
-}
+    size_t write_float(float f, char *dst, size_t capacity) {
+        return write_float_to_str<float, uint32_t, 23, 7>(f, dst, capacity);
+    }
+
+    size_t write_float(double d, char *dst, size_t capacity) {
+        return write_float_to_str<double, uint64_t, 52, 16>(d, dst, capacity);
+    }
 
 }

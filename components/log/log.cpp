@@ -39,7 +39,7 @@ auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     if (prefix.back() != '/') {
         prefix += '/';
     }
-    bool result = boost::filesystem::create_directory(prefix);
+    boost::filesystem::create_directory(prefix);
 
     using namespace std::chrono;
     system_clock::time_point tp = system_clock::now();
