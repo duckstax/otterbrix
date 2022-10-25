@@ -18,7 +18,8 @@ add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PRIVATE
+        rocketjoe_${PROJECT_NAME} PUBLIC
+        ${COMMON_COMPONENTS}
         rocketjoe::log
         CONAN_PKG::spdlog
 )
