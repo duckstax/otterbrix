@@ -228,8 +228,8 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        ///throw py::runtime_error("wrapper_dispatcher_t::executor_impl");
-        assert(true);
+        assert("wrapper_dispatcher_t::executor_impl");
+        return nullptr;
     }
 
     auto wrapper_dispatcher_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {

@@ -67,15 +67,15 @@ namespace services::wal {
 
     size_tt read_size_impl(buffer_t& input, int index_start) {
         size_tt size_tmp = 0;
-        size_tmp = 0xff00 & size_tt(input[index_start] << 8);
-        size_tmp |= 0x00ff & size_tt(input[index_start + 1]);
+        size_tmp = size_tt(0xff00 & input[size_t(index_start)] << 8);
+        size_tmp |= size_tt(0x00ff & input[size_t(index_start) + 1]);
         return size_tmp;
     }
 
     static size_tt read_size_impl(const char* input, int index_start) {
         size_tt size_tmp = 0;
-        size_tmp = 0xff00 & (size_tt(input[index_start] << 8));
-        size_tmp |= 0x00ff & (size_tt(input[index_start + 1]));
+        size_tmp = size_tt(0xff00 & (input[index_start] << 8));
+        size_tmp |= size_tt(0x00ff & (input[index_start + 1]));
         return size_tmp;
     }
 
@@ -280,7 +280,7 @@ namespace services::wal {
         : wal_replicate_t(manager, log, std::move(config)) {
     }
 
-    void wal_replicate_without_disk_t::load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) {
+    void wal_replicate_without_disk_t::load(session_id_t& session, address_t& sender, services::wal::id_t) {
         std::vector<record_t> records;
         actor_zeta::send(sender, address(), handler_id(route::load_finish), session, std::move(records));
     }
@@ -288,7 +288,7 @@ namespace services::wal {
     void wal_replicate_without_disk_t::write_buffer(buffer_t&) {
     }
 
-    void wal_replicate_without_disk_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
+    void wal_replicate_without_disk_t::read_buffer(buffer_t& buffer, size_t, size_t size) const {
         buffer.resize(size);
         std::fill(buffer.begin(), buffer.end(), '\0');
     }

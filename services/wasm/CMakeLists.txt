@@ -21,7 +21,7 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::wasm_runner
-        ${CONAN_LIBS}
+        CONAN_PKG::spdlog
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")

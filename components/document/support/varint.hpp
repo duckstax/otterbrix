@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cmath>
+#include <limits>
 #include <components/document/core/slice.hpp>
 
 namespace document {
@@ -36,6 +38,10 @@ static inline size_t get_uvar_int32(slice_t buf, uint32_t *n NONNULL) {
         return 1;
     }
     return _get_uvar_int32(buf, n);
+}
+
+static inline bool is_equals(double x, double y) {
+    return std::fabs(x - y) < std::numeric_limits<double>::epsilon();
 }
 
 }

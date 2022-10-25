@@ -86,8 +86,8 @@ public:
     std::string to_json() const;
     const ::document::impl::dict_t* as_dict() const;
     const ::document::impl::array_t* as_array() const;
-    [[deprecated("used as_dict")]] ::document::retained_t<::document::impl::dict_t> to_dict() const;
-    [[deprecated("used as_array")]] ::document::retained_t<::document::impl::array_t> to_array() const;
+    ::document::retained_t<::document::impl::dict_t> to_dict() const;
+    ::document::retained_t<::document::impl::array_t> to_array() const;
 
 private:
     document_ptr document_;

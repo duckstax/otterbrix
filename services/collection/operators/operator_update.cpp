@@ -7,7 +7,7 @@ namespace services::collection::operators {
         , update_(std::move(update)) {
     }
 
-    void operator_update::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void operator_update::on_execute_impl(planner::transaction_context_t*) {
         if (left_ && left_->output() && !left_->output()->documents().empty()) {
             modified_ = make_operator_write_data(context_->resource());
             no_modified_ = make_operator_write_data(context_->resource());

@@ -25,7 +25,7 @@ target_link_libraries(
         ${CONAN_LIBS}
 )
 
-target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC session.hpp)
+target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC)
 
 if (DEV_MODE)
     #add_subdirectory(tests)
