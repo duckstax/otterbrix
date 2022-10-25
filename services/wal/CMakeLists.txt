@@ -23,11 +23,11 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
         rocketjoe::log
         rocketjoe::ql
         rocketjoe::locks
         rocketjoe::file
+        CONAN_PKG::spdlog
 )
 
 target_include_directories(

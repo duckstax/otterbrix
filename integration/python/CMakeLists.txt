@@ -56,8 +56,8 @@ pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
         ${ROCKETJOE_LIBS}
+        CONAN_PKG::spdlog
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
@@ -91,8 +91,8 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
 
     target_link_libraries(
             rocketjoe_${PROJECT_NAME} PRIVATE
-            ${CONAN_LIBS}
             ${ROCKETJOE_LIBS}
+            CONAN_PKG::spdlog CONAN_PKG::pybind11 CONAN_PKG::msgpack-cxx CONAN_PKG::date CONAN_PKG::catch2 CONAN_PKG::crc32c CONAN_PKG::abseil CONAN_PKG::rocksdb CONAN_PKG::benchmark CONAN_PKG::actor-zeta CONAN_PKG::proxy-wasm-cpp-host CONAN_PKG::boost CONAN_PKG::fmt CONAN_PKG::libcurl CONAN_PKG::zlib CONAN_PKG::bzip2 CONAN_PKG::libbacktrace CONAN_PKG::openssl
     )
 endif()
 

@@ -13,7 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
 option(DEV_MODE "developer mode" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
@@ -91,7 +91,7 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
-conan_basic_setup(NO_OUTPUT_DIRS)
+conan_basic_setup(NO_OUTPUT_DIRS TARGETS)
 
 # conan
 #############################################################################################
