@@ -100,11 +100,11 @@ conan_basic_setup(NO_OUTPUT_DIRS TARGETS)
 # Since we are in Conan TARGETS mode,
 # use a list of CONAN_PKG targets instead of CONAN_LIBS
 set(COMMON_COMPONENTS
+  CONAN_PKG::actor-zeta CONAN_PKG::proxy-wasm-cpp-host
   CONAN_PKG::msgpack-cxx CONAN_PKG::date CONAN_PKG::crc32c
   CONAN_PKG::abseil CONAN_PKG::rocksdb CONAN_PKG::benchmark
   CONAN_PKG::boost CONAN_PKG::fmt CONAN_PKG::libcurl CONAN_PKG::zlib
   CONAN_PKG::bzip2 CONAN_PKG::libbacktrace CONAN_PKG::openssl
-  CONAN_PKG::actor-zeta CONAN_PKG::proxy-wasm-cpp-host
 )
 
 
