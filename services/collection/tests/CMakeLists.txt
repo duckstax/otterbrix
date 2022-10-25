@@ -23,7 +23,6 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::test_generaty
-        ${CONAN_LIBS}
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
