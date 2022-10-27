@@ -8,12 +8,12 @@
 
 namespace components::index {
 
-    void find(const index_engine_ptr& ptr, query_t query,result_set_t* set) {
+    void find(const index_engine_ptr&, query_t,result_set_t*) {
         /// auto* index  = search_index(ptr, query);
         /// index->find(std::move(query),set);
     }
 
-    void find(const index_engine_ptr& ptr, id_index id , result_set_t* set) {
+    void find(const index_engine_ptr&, id_index, result_set_t*) {
         /// auto* index  = search_index(ptr, id);
         /// index->find(id,set);
     }
@@ -100,10 +100,10 @@ namespace components::index {
     auto index_engine_t::add_index(const keys_base_storage_t & keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
         auto d = storage_.insert(end, std::move(index));
-        auto result = mapper_.emplace(keys, d);
+        mapper_.emplace(keys, d);
         auto new_id = index_to_mapper_.size();
         index_to_mapper_.emplace(new_id, d);
-        return new_id;
+        return uint32_t(new_id);
     }
 
     actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {

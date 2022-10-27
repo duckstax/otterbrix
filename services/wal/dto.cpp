@@ -25,10 +25,10 @@ namespace services::wal {
 
     crc32_t read_crc32(buffer_t& input, int index_start) {
         crc32_t crc32_tmp = 0;
-        crc32_tmp = 0xff000000 & (uint32_t(input[index_start]) << 24);
-        crc32_tmp |= 0x00ff0000 & (uint32_t(input[index_start + 1]) << 16);
-        crc32_tmp |= 0x0000ff00 & (uint32_t(input[index_start + 2]) << 8);
-        crc32_tmp |= 0x000000ff & (uint32_t(input[index_start + 3]));
+        crc32_tmp = 0xff000000 & (uint32_t(input[size_t(index_start)]) << 24);
+        crc32_tmp |= 0x00ff0000 & (uint32_t(input[size_t(index_start) + 1]) << 16);
+        crc32_tmp |= 0x0000ff00 & (uint32_t(input[size_t(index_start) + 2]) << 8);
+        crc32_tmp |= 0x000000ff & (uint32_t(input[size_t(index_start) + 3]));
         return crc32_tmp;
     }
 
@@ -46,7 +46,7 @@ namespace services::wal {
 
     crc32_t pack(buffer_t& storage, char* input, size_t data_size) {
         auto last_crc32_ = crc32c::Crc32c(input, data_size);
-        append_size(storage, data_size);
+        append_size(storage, size_tt(data_size));
         append_payload(storage, input, data_size);
         append_crc32(storage, last_crc32_);
         return last_crc32_;

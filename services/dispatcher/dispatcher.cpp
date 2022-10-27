@@ -684,7 +684,7 @@ namespace services::dispatcher {
         actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::size), session, std::move(database_name), std::move(collection), current_message()->sender());
     }
 
-    void manager_dispatcher_t::close_cursor(components::session::session_id_t& session) {
+    void manager_dispatcher_t::close_cursor(components::session::session_id_t&) {
     }
 
     void manager_dispatcher_t::create_index(components::session::session_id_t &session, components::ql::create_index_t index) {

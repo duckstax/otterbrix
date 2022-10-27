@@ -31,7 +31,7 @@ namespace services::database {
         }
 
         manager_database_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,log_t& log);
-        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* ;
+        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* override;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~manager_database_t();
         void create_databases(session_id_t& session, std::vector<database_name_t>& databases);

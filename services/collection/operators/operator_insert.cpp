@@ -12,7 +12,7 @@ namespace services::collection::operators {
         , documents_(documents) {
     }
 
-    void operator_insert::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void operator_insert::on_execute_impl(planner::transaction_context_t*) {
         if (left_ && left_->output() && left_->output()->size() > 0) {
             //todo: error not unique keys
             return;

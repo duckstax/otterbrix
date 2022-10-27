@@ -25,7 +25,6 @@ target_link_libraries(
 
 target_include_directories(rocketjoe_${PROJECT_NAME}
         PUBLIC
-        cursor.hpp
 )
 
 if (DEV_MODE)
