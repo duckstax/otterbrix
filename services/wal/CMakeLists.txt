@@ -27,7 +27,11 @@ target_link_libraries(
         rocketjoe::ql
         rocketjoe::locks
         rocketjoe::file
+
         CONAN_PKG::spdlog
+        CONAN_PKG::actor-zeta
+        CONAN_PKG::boost
+
 )
 
 target_include_directories(

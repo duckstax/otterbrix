@@ -17,6 +17,10 @@ target_link_libraries(
         rocketjoe::session
         rocketjoe::wal
         rocketjoe::test_generaty
+
+        CONAN_PKG::catch2
+        CONAN_PKG::actor-zeta
+        CONAN_PKG::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
