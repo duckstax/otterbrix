@@ -12,7 +12,7 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
 
-        rocketjoe_cppottergon
+        cpp_ottergon
 
         rocketjoe::test_generaty
         rocketjoe::log
@@ -36,7 +36,8 @@ target_link_libraries(
         CONAN_PKG::benchmark
         CONAN_PKG::actor-zeta
         CONAN_PKG::proxy-wasm-cpp-host
-        CONAN_PKG::boost CONAN_PKG::fmt
+        CONAN_PKG::boost
+        CONAN_PKG::fmt
         CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2

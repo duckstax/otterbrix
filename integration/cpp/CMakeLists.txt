@@ -38,16 +38,16 @@ set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")
 if (DEV_MODE OR ALLOW_BENCHMARK)
     set(${PROJECT_NAME}_headers
             wrapper_dispatcher.hpp
-            )
+    )
 
     set(${PROJECT_NAME}_sources
             wrapper_dispatcher.cpp
-            )
+    )
 
     add_library(rocketjoe_${PROJECT_NAME}
             ${${PROJECT_NAME}_headers}
             ${${PROJECT_NAME}_sources}
-            )
+    )
 
     add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 
