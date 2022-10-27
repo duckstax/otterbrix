@@ -23,6 +23,7 @@ target_link_libraries(
         rocketjoe::wasm_runner
         CONAN_PKG::spdlog
         CONAN_PKG::actor-zeta
+        CONAN_PKG::openssl
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")

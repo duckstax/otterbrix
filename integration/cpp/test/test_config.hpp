@@ -6,7 +6,7 @@
 #include <components/tests/generaty.hpp>
 #include <integration/cpp/base_spaces.hpp>
 
-inline configuration::config test_create_config(const boost::filesystem::path &path) {
+inline configuration::config test_create_config(const std::filesystem::path &path) {
     auto config = configuration::config::default_config();
     config.log.path = path;
     config.disk.path = path;
@@ -15,8 +15,8 @@ inline configuration::config test_create_config(const boost::filesystem::path &p
 }
 
 inline void test_clear_directory(const configuration::config &config) {
-    boost::filesystem::remove_all(config.disk.path);
-    boost::filesystem::create_directories(config.disk.path);
+    std::filesystem::remove_all(config.disk.path);
+    std::filesystem::create_directories(config.disk.path);
 }
 
 class test_spaces final : public duck_charmer::base_spaces {

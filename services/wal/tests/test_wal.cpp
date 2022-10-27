@@ -35,14 +35,14 @@ struct test_wal {
 };
 
 
-test_wal create_test_wal(const boost::filesystem::path &path) {
+test_wal create_test_wal(const std::filesystem::path &path) {
     test_wal result;
     static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
     actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
-    boost::filesystem::remove_all(path);
-    boost::filesystem::create_directories(path);
+    std::filesystem::remove_all(path);
+    std::filesystem::create_directories(path);
     configuration::config_wal config;
     config.path = path;
     auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource, result.scheduler, config, log);

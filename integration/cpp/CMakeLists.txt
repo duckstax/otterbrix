@@ -55,7 +55,9 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
 
     target_link_libraries(
             rocketjoe_${PROJECT_NAME} PUBLIC
-          ${ROCKETJOE_LIBS}
+
+            ${ROCKETJOE_LIBS}
+
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx
             CONAN_PKG::date

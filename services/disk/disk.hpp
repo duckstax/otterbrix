@@ -4,7 +4,7 @@
 #include <components/ql/ql_statement.hpp>
 
 #include <core/file/file.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <wal/base.hpp>
 
 namespace rocksdb {
@@ -15,7 +15,7 @@ namespace services::disk {
 
     class metadata_t;
 
-    using path_t = boost::filesystem::path;
+    using path_t = std::filesystem::path;
     using rocks_id = std::string;
     using metadata_ptr = std::unique_ptr<metadata_t>;
     using db_ptr = std::unique_ptr<rocksdb::DB>;
