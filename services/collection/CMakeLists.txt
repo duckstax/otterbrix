@@ -63,6 +63,8 @@ target_link_libraries(
         rocketjoe::session
         rocketjoe::index
         CONAN_PKG::spdlog
+        CONAN_PKG::abseil
+        CONAN_PKG::boost
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
