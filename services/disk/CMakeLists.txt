@@ -31,6 +31,8 @@ target_link_libraries(
     rocketjoe::file
     rocketjoe::document
     CONAN_PKG::spdlog
+    CONAN_PKG::rocksdb
+    CONAN_PKG::boost
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
