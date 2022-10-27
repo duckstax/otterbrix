@@ -1,5 +1,4 @@
 #include "wrapper_dispatcher.hpp"
-#include "forward.hpp"
 #include "route.hpp"
 #include <core/system_command.hpp>
 

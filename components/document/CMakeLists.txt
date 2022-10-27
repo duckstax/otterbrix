@@ -37,9 +37,9 @@ add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
-        boost_json
+        rocketjoe_${PROJECT_NAME} PUBLIC
+        CONAN_PKG::msgpack-cxx
+        CONAN_PKG::boost
         dl
 )
 

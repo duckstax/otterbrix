@@ -11,7 +11,6 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::wasm
-        ${CONAN_LIBS}
 )
 
 file(COPY test_files/log_wasm.wasm DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/tests)

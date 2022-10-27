@@ -97,11 +97,11 @@ jobs:
       working-directory: build/
         
 
-    - name: Download and Install conan Wasm dependencies
-      run: |
-        cp ../conanfile-wasm.txt .
-        conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} conanfile-wasm.txt -if=./wasm  -of=./wasm
-      working-directory: wasm_build/
+    #- name: Download and Install conan Wasm dependencies
+    #  run: |
+    #    cp ../conanfile-wasm.txt .
+    #    conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} conanfile-wasm.txt -if=./wasm  -of=./wasm
+    #  working-directory: wasm_build/
 
     #- name: Wasm target
     #  run: |

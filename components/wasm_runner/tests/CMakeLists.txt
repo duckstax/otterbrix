@@ -11,7 +11,6 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         rocketjoe::log
         rocketjoe::wasm_runner
-        ${CONAN_LIBS}
 )
 
 include(CTest)

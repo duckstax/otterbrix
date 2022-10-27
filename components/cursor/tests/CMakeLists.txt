@@ -14,7 +14,6 @@ target_link_libraries(
         rocketjoe::document
         rocketjoe::test_generaty
         rocketjoe::cursor
-        ${CONAN_LIBS}
 )
 
 include(CTest)

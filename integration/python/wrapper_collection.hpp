@@ -17,7 +17,7 @@
 
 #include "forward.hpp"
 #include "wrapper_cursor.hpp"
-#include "wrapper_dispatcher.hpp"
+#include "integration/cpp/wrapper_dispatcher.hpp"
 #include "wrapper_result.hpp"
 
 namespace py = pybind11;
