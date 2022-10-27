@@ -3,11 +3,6 @@ set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
 
 add_executable("${PROJECT_NAME}" main.cpp)
 
-target_link_libraries(
-        ${PROJECT_NAME} PRIVATE
-
-        ${CONAN_LIBS}
-)
 target_link_options( ${PROJECT_NAME}  PRIVATE "SHELL:--no-entry -s STANDALONE_WASM -s PURE_WASI=1 -s ABORTING_MALLOC=0 -s EXPORTED_FUNCTIONS=['_malloc'] -s ERROR_ON_UNDEFINED_SYMBOLS=0" )
 
 target_include_directories(${PROJECT_NAME} PUBLIC "")

@@ -53,7 +53,7 @@ include_directories(
 pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
 
 target_link_libraries(
-        ${PROJECT_NAME} PRIVATE
+        ${PROJECT_NAME} PUBLIC
         ${ROCKETJOE_LIBS}
         cpp_ottergon
         CONAN_PKG::spdlog

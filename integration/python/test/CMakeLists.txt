@@ -1,26 +1,18 @@
-project(test_wal)
+project(test_duck_charmer)
 
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        test_base_wal.cpp
-        test_wal.cpp
-)
+        test_collection.cpp
+        test_save_load.cpp
+        )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        non_thread_scheduler
-        rocketjoe::ql
-        rocketjoe::log
-        rocketjoe::session
-        rocketjoe::wal
+        rocketjoe::ottergon
         rocketjoe::test_generaty
-)
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-    ..
 )
 
 include(CTest)
