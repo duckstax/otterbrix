@@ -35,7 +35,10 @@ RUN  conan remote add duckstax http://conan.duckstax.com:9300
 WORKDIR /app/build
 COPY ./conanfile.txt ./conanfile.txt
 #RUN conan install . --build missing --build rocksdb --build libbacktrace/cci.20210118 -o fmt:header_only=True -o boost:header_only=True -o boost:system_no_deprecated=True -o boost:filesystem_no_deprecated=True   -o boost:error_code_header_only=True --build spdlog -o spdlog:header_only=True --build boost -s build_type=Release
-RUN conan install . --build missing --build rocksdb -o fmt:header_only=True --build spdlog -o spdlog:header_only=True -s build_type=Release
+RUN conan install . --build missing --build rocksdb -s build_type=Release
+RUN conan install . --build missing --build spdlog  -s build_type=Release
+RUN conan install . --build missing --build fmt  -s build_type=Release
+#RUN conan install . --build missing --build spdlog  -o fmt:header_only=True  -o spdlog:header_only=True -s build_type=Release
 #RUN conan install . --build boost -s build_type=Release
 #RUN conan install . --build missing --build openssl  -s build_type=Release
 

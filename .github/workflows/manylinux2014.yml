@@ -94,6 +94,9 @@ jobs:
         ls
         cp ../conanfile.txt .
         conan install . --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
+        conan install . --build missing --build rocksdb -s build_type=Release
+        conan install . --build missing --build spdlog  -s build_type=Release
+        conan install . --build missing --build fmt  -s build_type=Release
       working-directory: build/
         
 
