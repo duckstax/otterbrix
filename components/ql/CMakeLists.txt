@@ -27,8 +27,8 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PUBLIC
-        ${COMMON_COMPONENTS}
         rocketjoe::document
+        CONAN_PKG::boost
 )
 
 target_include_directories(

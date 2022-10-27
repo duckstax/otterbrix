@@ -19,9 +19,12 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PUBLIC
-        ${COMMON_COMPONENTS}
         rocketjoe::log
         CONAN_PKG::spdlog
+        CONAN_PKG::proxy-wasm-cpp-host
+        CONAN_PKG::boost
+        CONAN_PKG::fmt
+        CONAN_PKG::openssl
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC "")

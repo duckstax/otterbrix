@@ -1,5 +1,6 @@
 #include "document.hpp"
 
+#include <boost/json/src.hpp>
 #include <boost/json.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>

@@ -15,6 +15,7 @@ target_link_libraries(
         rocketjoe::document
         rocketjoe::index
         rocketjoe::test_generaty
+        CONAN_PKG::boost
 )
 
 include(CTest)

@@ -41,7 +41,7 @@ target_link_libraries(
         CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
-        CONAN_PKG::libbacktrace
+        #CONAN_PKG::libbacktrace
         CONAN_PKG::openssl
 
 )

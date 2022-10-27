@@ -53,18 +53,16 @@ include_directories(
 pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
 
 target_link_libraries(
-        ${PROJECT_NAME} PUBLIC
+        ${PROJECT_NAME} PRIVATE
         ${ROCKETJOE_LIBS}
         cpp_ottergon
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
         CONAN_PKG::date
-        CONAN_PKG::catch2
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
-        CONAN_PKG::benchmark
         CONAN_PKG::actor-zeta
         CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
@@ -72,7 +70,7 @@ target_link_libraries(
         CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
-        CONAN_PKG::libbacktrace
+        #CONAN_PKG::libbacktrace
         CONAN_PKG::openssl
 
 )

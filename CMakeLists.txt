@@ -104,7 +104,7 @@ set(COMMON_COMPONENTS
   CONAN_PKG::msgpack-cxx CONAN_PKG::date CONAN_PKG::crc32c
   CONAN_PKG::abseil CONAN_PKG::rocksdb CONAN_PKG::benchmark
   CONAN_PKG::boost CONAN_PKG::fmt CONAN_PKG::libcurl CONAN_PKG::zlib
-  CONAN_PKG::bzip2 CONAN_PKG::libbacktrace CONAN_PKG::openssl
+   CONAN_PKG::libbacktrace CONAN_PKG::openssl
 )
 
 
