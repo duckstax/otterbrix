@@ -29,6 +29,7 @@ target_link_libraries(
         rocketjoe::file
 
         CONAN_PKG::spdlog
+        CONAN_PKG::crc32c
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
 
