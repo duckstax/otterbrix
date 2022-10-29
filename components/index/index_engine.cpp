@@ -8,12 +8,12 @@
 
 namespace components::index {
 
-    void find(const index_engine_ptr& ptr, query_t query,result_set_t* set) {
+    void find(const index_engine_ptr&, query_t,result_set_t*) {
         /// auto* index  = search_index(ptr, query);
         /// index->find(std::move(query),set);
     }
 
-    void find(const index_engine_ptr& ptr, id_index id , result_set_t* set) {
+    void find(const index_engine_ptr&, id_index, result_set_t*) {
         /// auto* index  = search_index(ptr, id);
         /// index->find(id,set);
     }
@@ -68,6 +68,28 @@ namespace components::index {
         return {index_engine, core::pmr::deleter_t(resource)};
     }
 
+    bool is_match_document(const index_ptr& index, const document_ptr& document) {
+        auto keys = index->keys();
+        components::document::document_view_t view(document);
+        for (auto key = keys.first; key != keys.second; ++key) {
+            if (!view.is_exists(key->as_string())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    components::index::value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
+        auto keys = index->keys();
+        components::document::document_view_t view(document);
+        if (keys.first != keys.second) {
+            return components::index::value_t(view.get_value(keys.first->as_string()));
+            //todo: multi values index
+        }
+        return components::index::value_t(nullptr);
+    }
+
+
     index_engine_t::index_engine_t(actor_zeta::detail::pmr::memory_resource* resource)
         : resource_(resource)
         , mapper_(resource)
@@ -78,10 +100,10 @@ namespace components::index {
     auto index_engine_t::add_index(const keys_base_storage_t & keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
         auto d = storage_.insert(end, std::move(index));
-        auto result = mapper_.emplace(keys, d);
+        mapper_.emplace(keys, d);
         auto new_id = index_to_mapper_.size();
         index_to_mapper_.emplace(new_id, d);
-        return new_id;
+        return uint32_t(new_id);
     }
 
     actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {
@@ -98,6 +120,22 @@ namespace components::index {
 
     auto index_engine_t::matching(const keys_base_storage_t& query) -> index_t::pointer {
         return mapper_.find(query)->second->get();
+    }
+
+    void index_engine_t::insert_document(const document_ptr& document) {
+        for (auto &index : storage_) {
+            if (is_match_document(index, document)) {
+                index->insert(get_value_by_index(index, document), document);
+            }
+        }
+    }
+
+    void index_engine_t::delete_document(const document_ptr& document) {
+        for (auto &index : storage_) {
+            if (is_match_document(index, document)) {
+                index->remove(get_value_by_index(index, document));
+            }
+        }
     }
 
 } // namespace components::index

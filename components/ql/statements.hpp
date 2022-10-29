@@ -16,6 +16,7 @@
 namespace components::ql {
 
     using variant_statement_t = std::variant<
+        unused_statement_t,
         create_database_t,
         drop_database_t,
         create_collection_t,

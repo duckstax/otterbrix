@@ -7,7 +7,7 @@ set(SOURCE_${PROJECT_NAME}
         expr.cpp
         expr2.cpp
         aggregate.cpp
-        ql_translator.cpp
+        #ql_translator.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp
@@ -38,7 +38,6 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
-        statements.hpp
 )
 
 if (DEV_MODE)

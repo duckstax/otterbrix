@@ -61,4 +61,4 @@ RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
 
 RUN ctest -C --output-on-failure
 
-RUN cd apps/duck_charmer/ && pytest
+RUN cd integration/python/ && pytest

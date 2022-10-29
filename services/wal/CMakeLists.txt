@@ -25,7 +25,7 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
         rocketjoe::log
-        rocketjoe::protocol
+        rocketjoe::ql
         rocketjoe::locks
         rocketjoe::file
 )
@@ -33,11 +33,7 @@ target_link_libraries(
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PRIVATE
-        dto.hpp
         PUBLIC
-        record.hpp
-        wal.hpp
-        manager_wal_replicate.hpp
 )
 
 if (DEV_MODE)

@@ -74,14 +74,14 @@ context_ptr make_context(log_t& log) {
     auto* collection = new (buffer) collection_t(context->database_.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
     context->collection_.reset(collection);
     return context;
-};
+}
 
 collection_t* d(context_ptr&ptr){
     return ptr->collection_.get();
 }
 
 context_ptr gen_collection() {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
 
     auto collection = make_context(log);

@@ -5,6 +5,8 @@
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
 
+#include <components/ql/ql_statement.hpp>
+
 #include <services/disk/result.hpp>
 
 #include "log/log.hpp"
@@ -29,11 +31,11 @@ namespace services::database {
         }
 
         manager_database_t(actor_zeta::detail::pmr::memory_resource*,actor_zeta::scheduler_raw,log_t& log);
-        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* ;
+        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* override;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~manager_database_t();
         void create_databases(session_id_t& session, std::vector<database_name_t>& databases);
-        void create(session_id_t& session, std::string& name);
+        void create(session_id_t& session, database_name_t& name);
 
     private:
         spin_lock lock_;
@@ -47,21 +49,21 @@ namespace services::database {
 
     class database_t final : public actor_zeta::cooperative_supervisor<database_t> {
     public:
-        database_t(manager_database_t*, std::string name, log_t& log, size_t num_workers, size_t max_throughput);
+        database_t(manager_database_t*, database_name_t name, log_t& log, size_t num_workers, size_t max_throughput);
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final override;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~database_t();
         void create_collections(session_id_t& session, std::vector<collection_name_t>& collections,
                                 actor_zeta::address_t manager_disk);
-        void create(session_id_t& session, std::string& name, actor_zeta::address_t mdisk);
-        void drop(session_id_t& session, std::string& name);
-        const std::string& name();
+        void create(session_id_t& session, collection_name_t& name, actor_zeta::address_t mdisk);
+        void drop(session_id_t& session, collection_name_t& name);
+        const database_name_t& name();
     private:
         spin_lock lock_;
-        const std::string name_;
+        const database_name_t name_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         std::unordered_map<std::string, actor_zeta::actor> collections_;
     };
 
-} // namespace services::storage
+} // namespace services::database

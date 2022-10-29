@@ -56,7 +56,7 @@ NOINLINE void assign_ref(ref_counted_t* &dst, ref_counted_t *src) noexcept;
 
 template <typename T>
 static inline void assign_ref(T* &dst, ref_counted_t *src) noexcept {
-    assign_ref((ref_counted_t*&)dst, src);
+    assign_ref(reinterpret_cast<ref_counted_t*&>(dst), src);
 }
 
 

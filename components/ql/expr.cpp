@@ -1,4 +1,5 @@
 #include "expr.hpp"
+#include <components/document/document_view.hpp>
 
 namespace components::ql {
 
@@ -34,6 +35,8 @@ namespace components::ql {
                 return "$or";
             case condition_type::union_not:
                 return "$not";
+        default:
+            break;
         }
         return {};
     }
@@ -70,6 +73,11 @@ namespace components::ql {
 
     void expr_t::append_sub_condition(expr_t::ptr sub_condition) {
         sub_conditions_.push_back(std::move(sub_condition));
+    }
+
+
+    ::document::wrapper_value_t get_value(const components::document::document_ptr &doc, const key_t &key) {
+        return ::document::wrapper_value_t(components::document::document_view_t(doc).get_value(key.as_string()));
     }
 
 } // namespace components::ql

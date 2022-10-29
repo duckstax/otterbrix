@@ -30,7 +30,7 @@ namespace components::document {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
             try {
-                return object->as_array()->as_mutable()->get(std::atol(key.c_str()));
+                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.c_str())));
             } catch (...) {
             }
         }
@@ -202,6 +202,10 @@ namespace components::document {
 
     document_ptr deserialize_document(const std::string &text) {
         return document_from_json(text);
+    }
+
+    bool is_equals_documents(const document_ptr& doc1, const document_ptr& doc2) {
+        return document_view_t(doc1).get_value()->is_equal(document_view_t(doc2).get_value());
     }
 
 }

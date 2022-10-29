@@ -3,13 +3,14 @@
 #include <cstdint>
 #include <msgpack.hpp>
 #include <vector>
-#include "components/protocol/base.hpp"
+#include "components/ql/statements.hpp"
 #include "base.hpp"
 
 namespace services::wal {
 
     using buffer_element_t = char;
     using buffer_t = std::vector<buffer_element_t>;
+    using components::ql::statement_type;
 
     using size_tt = std::uint16_t;
     using crc32_t = std::uint32_t;

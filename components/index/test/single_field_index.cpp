@@ -12,7 +12,7 @@ using namespace components::index;
 
 TEST_CASE("single_field_index:base") {
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    single_field_index_t index(resource, {"count"});
+    single_field_index_t index(resource, {components::ql::key_t("count")});
     for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
         auto doc = gen_doc(i);
         document_view_t view(doc);
@@ -72,7 +72,7 @@ TEST_CASE("single_field_index:base") {
 TEST_CASE("single_field_index:engine") {
     actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
     auto index_engine = make_index_engine(resource);
-    auto id = make_index<single_field_index_t>(index_engine, {"count"});
+    auto id = make_index<single_field_index_t>(index_engine, {components::ql::key_t("count")});
     insert_one(index_engine, id, gen_doc(0));
     std::pmr::vector<document_ptr> data;
     for (int i = 10; i >= 1; --i) {
