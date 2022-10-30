@@ -18,10 +18,12 @@ namespace components::ql {
     public:
         aggregate_statement(database_name_t database, collection_name_t collection);
 
-        template<class... Args>
-        void append(Args&&... args) {
-            aggregate_operator_.append(std::forward<Args>(args)...);
-        }
+        void append(aggregate::operator_type type, aggregate::operator_storage_t storage);
+
+//        template<class... Args>
+//        void append(Args&&... args) {
+//            aggregate_operator_.append(std::forward<Args>(args)...);
+//        }
 
         void reserve(std::size_t size) {
             aggregate_operator_.reserve(size);
@@ -33,25 +35,10 @@ namespace components::ql {
             return core::parameter_id_t(tmp);
         }
 
-//        template<class Value>
-//        void add_parameter(core::parameter_id_t id, Value value) {
-//            values_.emplace(id, ::document::impl::new_value(value).detach());
-//        }
-//
-//        template<>
-//        void add_parameter(core::parameter_id_t id, expr_value_t value) {
-//            values_.emplace(id, value);
-//        }
-//
-//        template<>
-//        void add_parameter(core::parameter_id_t id, const ::document::impl::value_t* value) {
-//            values_.emplace(id, expr_value_t(value));
-//        }
-//
-//        template<>
-//        void add_parameter(core::parameter_id_t id, const std::string& value) {
-//            values_.emplace(id, ::document::impl::new_value(::document::slice_t(value)).detach());
-//        }
+        template<class Value>
+        void add_parameter(core::parameter_id_t id, Value value) {
+            values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
+        }
 
     private:
         aggregate::operators_t aggregate_operator_;
