@@ -1,3 +1,4 @@
+'''
 import os
 import pathlib
 
@@ -6,8 +7,9 @@ from setuptools.dist import Distribution
 from setuptools.command.install import install
 
 def readme():
-    with open('README.md') as f:
-        return f.read()
+    pass
+    #with open('../../README.md') as f:
+    #    return f.read()
 
 class InstallPlatlib(install):
     def finalize_options(self):
@@ -37,3 +39,18 @@ setup(
     distclass=BinaryDistribution
 )
 
+'''
+
+from skbuild import setup
+
+setup(
+    name="ottergon",
+    version="1.0.0a",
+    description=" ",
+    author=" ",
+    license=" ",
+    packages=['ottergon'],
+    package_dir={'': 'src'},
+    cmake_install_dir='build',
+    python_requires='>=3.7',
+)

@@ -75,7 +75,19 @@ target_link_libraries(
 
 )
 
+pybind11_extension(${PROJECT_NAME})
+
+if(NOT MSVC AND NOT ${CMAKE_BUILD_TYPE} MATCHES Debug|RelWithDebInfo)
+    # Strip unnecessary sections of the binary on Linux/macOS
+    pybind11_strip(${PROJECT_NAME})
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
+
+#target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
+
+install(TARGETS ${PROJECT_NAME} DESTINATION .)
+
 
 if (DEV_MODE)
     file(GLOB PY_TESTS
