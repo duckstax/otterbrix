@@ -9,14 +9,14 @@
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/wrapper_value.hpp>
 
-#include "key.hpp"
-#include "predicate.hpp"
+#include <components/ql/key.hpp>
+#include <components/ql/predicate.hpp>
 
-#include "core/strong_typedef.hpp"
+#include <core/strong_typedef.hpp>
 
 STRONG_TYPEDEF(uint16_t, parameter_id_t);
 
-namespace components::ql::experiment {
+namespace components::ql::experimental {
 
     bool is_union_condition(condition_type type);
 

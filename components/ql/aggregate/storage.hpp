@@ -12,7 +12,7 @@ namespace components::ql::aggregate {
 
     class operator_storage_t final {
     public:
-        operator_storage_t() = default;
+        operator_storage_t() = delete;
 
         template<class Target>
         operator_storage_t(Target&& target)
@@ -31,4 +31,5 @@ namespace components::ql::aggregate {
             aggregate::merge_t>
             storage_;
     };
+
 } // namespace components::ql::aggregate

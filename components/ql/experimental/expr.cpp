@@ -1,6 +1,6 @@
-#include "expr2.hpp"
+#include "expr.hpp"
 
-namespace components::ql::experiment {
+namespace components::ql::experimental {
 
     bool is_union_condition(condition_type type) {
         return type == condition_type::union_and ||

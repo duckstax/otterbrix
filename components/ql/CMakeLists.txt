@@ -5,7 +5,7 @@ set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
         expr.cpp
-        expr2.cpp
+        experimental/expr.cpp
         aggregate.cpp
         #ql_translator.cpp
         statements/create_collection.cpp
