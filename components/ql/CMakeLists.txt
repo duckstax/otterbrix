@@ -7,6 +7,7 @@ set(SOURCE_${PROJECT_NAME}
         expr.cpp
         experimental/expr.cpp
         aggregate.cpp
+        aggregate/match.cpp
         #ql_translator.cpp
         statements/create_collection.cpp
         statements/create_database.cpp

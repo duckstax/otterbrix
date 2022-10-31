@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "aggregate/operator.hpp"
-#include "ql/expr2.hpp"
+#include "ql/experimental/expr.hpp"
 #include "ql/ql_statement.hpp"
 
 namespace components::ql {
@@ -25,15 +25,9 @@ namespace components::ql {
 //            aggregate_operator_.append(std::forward<Args>(args)...);
 //        }
 
-        void reserve(std::size_t size) {
-            aggregate_operator_.reserve(size);
-        }
+        void reserve(std::size_t size);
 
-        auto next_id() -> core::parameter_id_t { ///change return core::parameter_id_t(counter_ ++);
-            auto tmp = counter_;
-            counter_ += 1;
-            return core::parameter_id_t(tmp);
-        }
+        auto next_id() -> core::parameter_id_t; ///change return core::parameter_id_t(counter_ ++);
 
         template<class Value>
         void add_parameter(core::parameter_id_t id, Value value) {

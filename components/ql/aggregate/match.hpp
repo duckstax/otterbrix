@@ -10,10 +10,10 @@ namespace components::ql::aggregate {
         expr_ptr query;
     };
 
-    match_t create_match(expr_ptr &&query) {
-        match_t match;
-        match.query = std::move(query);
-        return match;
-    }
+    match_t make_match(expr_ptr &&query);
+
+#ifdef DEV_MODE
+    std::string debug(const match_t &match);
+#endif
 
 } // namespace components::ql::aggregate

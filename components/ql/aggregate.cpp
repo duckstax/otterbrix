@@ -11,6 +11,16 @@ namespace components::ql {
         aggregate_operator_.append(type, std::move(storage));
     }
 
+    void aggregate_statement::reserve(std::size_t size) {
+        aggregate_operator_.reserve(size);
+    }
+
+    auto aggregate_statement::next_id() -> core::parameter_id_t {
+        auto tmp = counter_;
+        counter_ += 1;
+        return core::parameter_id_t(tmp);
+    }
+
     aggregate::operator_type get_aggregate_type(const std::string& key) {
         auto type = magic_enum::enum_cast<aggregate::operator_type>(key);
 

@@ -50,7 +50,7 @@ namespace components::ql::experimental {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": " + std::to_string(expr->value_.t) + "}}";
+        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": #" + std::to_string(expr->value_.t) + "}}";
     }
 
     expr_t::expr_t(condition_type type, std::string key, core::parameter_id_t value)

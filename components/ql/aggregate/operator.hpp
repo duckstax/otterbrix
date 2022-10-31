@@ -21,16 +21,4 @@ namespace components::ql::aggregate {
         std::vector<operator_t> operators;
     };
 
-//    using operators_ptr = std::unique_ptr<operators_t>;
-//
-//    template<class... Args>
-//    operators_ptr make_operators(Args&&... args) {
-//        return std::make_unique<operators_t>(std::forward<Args>(args)...);
-//    }
-//
-//    template<class... Args>
-//    void group(const operators_ptr& ptr, Args&&... args) {
-//        ptr->append(operator_type::group, group_t(std::forward<Args>(args)...));
-//    }
-
 } // namespace components::ql::aggregate
