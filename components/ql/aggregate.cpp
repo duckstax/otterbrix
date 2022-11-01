@@ -46,4 +46,40 @@ namespace components::ql {
         values_.emplace(id, expr_value_t(::document::impl::new_value(::document::slice_t(value)).detach()));
     }
 
+    auto aggregate_statement::parameter(core::parameter_id_t id) const -> const expr_value_t& {
+        auto it = values_.find(id);
+        if (it != values_.end()) {
+            return it->second;
+        }
+        static expr_value_t null_(nullptr);
+        return null_;
+    }
+
+    auto aggregate_statement::count_operators() const -> std::size_t {
+        return aggregate_operator_.size();
+    }
+
+    auto aggregate_statement::type_operator(std::size_t index) const -> aggregate::operator_type {
+        return aggregate_operator_.type(index);
+    }
+
+#ifdef DEV_MODE
+    std::string debug(const aggregate_statement &aggregate) {
+        std::string operators;
+        for (std::size_t i = 0; i < aggregate.count_operators(); ++i) {
+            if (!operators.empty()) {
+                operators.append(", ");
+            }
+            switch (aggregate.type_operator(i)) {
+                case aggregate::operator_type::match:
+                    operators.append(debug(aggregate.get_operator<aggregate::match_t>(i)));
+                    break;
+                default:
+                    break;
+            }
+        }
+        return std::string("$aggregate: {" + operators + "}");
+    }
+#endif
+
 } // namespace components::ql
