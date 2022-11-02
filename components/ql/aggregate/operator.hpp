@@ -15,7 +15,7 @@ namespace components::ql::aggregate {
 
         template <class T>
         const T &get(std::size_t index) const {
-            //assert(type(index) != T::type); //todo: not work field type
+            assert(type(index) != T::type);
             return operators_.at(index).operator_.template get<T>();
         }
 

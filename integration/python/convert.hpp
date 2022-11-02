@@ -25,7 +25,7 @@ auto to_order(const py::object &order) -> services::storage::sort::order;
 
 namespace experimental {
 
-    auto to_statement(const py::handle& source,components::ql::aggregate_statement*) -> void ;
-    auto test_to_statement(const py::handle& source) -> void;
+    auto to_statement(const py::handle& source, components::ql::aggregate_statement*) -> void;
+    auto test_to_statement(const py::handle& source) -> py::str;
 
 }

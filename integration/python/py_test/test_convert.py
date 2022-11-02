@@ -1,23 +1,29 @@
-#import pytest
-import time
-from duck_charmer import to_statement
+import pytest
+from ottergon import to_aggregate
 
 
 def test_convector():
-    dir(duck_charmer)
-    help(duck_charmer)
     example = [
-
         {
             "$match": {
                 "size": "medium"
             }
-        },
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$match: {"size": {$eq: "medium"}}}'
+
+    example = [
         {
-            "$group": {
-                "_id": "$name",
-                "totalQuantity": {"$sum": "$quantity"}
+            "$match": {
+                "size": "medium",
+                "count": {
+                    "$lt": 10
+                },
+                "name": {
+                    "$regex": "N*"
+                }
             }
         }
     ]
-    to_statement(example)
+    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: "medium"}}, {"count": {$lt: 10}}, ' \
+                                    '{"name": {$regex: "N*"}}]}} '

@@ -1,13 +1,14 @@
 #pragma once
 
-#include "components/ql/experimental/expr.hpp"
+#include <components/ql/aggregate/forward.hpp>
+#include <components/ql/experimental/expr.hpp>
 
 namespace components::ql::aggregate {
 
     using expr_ptr = experimental::expr_ptr;
 
     struct match_t final {
-        //static constexpr operator_type type = operator_type::match;
+        static constexpr operator_type type = operator_type::match;
         expr_ptr query;
     };
 

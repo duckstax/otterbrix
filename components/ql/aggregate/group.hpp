@@ -10,7 +10,7 @@ namespace components::ql::aggregate {
             : expression_(expression)
             , fieldl_(std::move(ptr)) {
         }
-        static constexpr operator_type type = operator_type::group;
+        //static constexpr operator_type type = operator_type::group;
         expression_t expression_;
         expr_ptr fieldl_;
     };

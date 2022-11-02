@@ -240,7 +240,7 @@ namespace experimental {
 
         auto size = py::len(source);
 
-        if(size == 0){
+        if (size == 0){
             throw py::value_error(" len == 0");
         }
 
@@ -303,9 +303,10 @@ namespace experimental {
         }
     }
 
-    auto test_to_statement(const py::handle& source) -> void {
-        auto* aggregate = new aggregate_statement("database", "collection");
-        to_statement(source, aggregate);
+    auto test_to_statement(const py::handle& source) -> py::str {
+        aggregate_statement aggregate("database", "collection");
+        to_statement(source, &aggregate);
+        return debug(aggregate);
     }
 
 } // namespace experimental

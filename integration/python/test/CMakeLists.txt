@@ -3,8 +3,7 @@ project(test_duck_charmer)
 set( ${PROJECT_NAME}_SOURCES
         test_collection.cpp
         test_save_load.cpp
-        test_convert.cpp
-)
+        )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
