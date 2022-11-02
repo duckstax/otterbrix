@@ -91,7 +91,7 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
-conan_basic_setup(NO_OUTPUT_DIRS TARGETS)
+conan_basic_setup(NO_OUTPUT_DIRS TARGETS KEEP_RPATHS)
 
 # conan
 #############################################################################################
@@ -99,13 +99,13 @@ conan_basic_setup(NO_OUTPUT_DIRS TARGETS)
 
 # Since we are in Conan TARGETS mode,
 # use a list of CONAN_PKG targets instead of CONAN_LIBS
-set(COMMON_COMPONENTS
-  CONAN_PKG::actor-zeta CONAN_PKG::proxy-wasm-cpp-host
-  CONAN_PKG::msgpack-cxx CONAN_PKG::date CONAN_PKG::crc32c
-  CONAN_PKG::abseil CONAN_PKG::rocksdb CONAN_PKG::benchmark
-  CONAN_PKG::boost CONAN_PKG::fmt CONAN_PKG::libcurl CONAN_PKG::zlib
-   CONAN_PKG::libbacktrace CONAN_PKG::openssl
-)
+#set(COMMON_COMPONENTS
+#  CONAN_PKG::actor-zeta CONAN_PKG::proxy-wasm-cpp-host
+#  CONAN_PKG::msgpack-cxx CONAN_PKG::date CONAN_PKG::crc32c
+#  CONAN_PKG::abseil CONAN_PKG::rocksdb CONAN_PKG::benchmark
+#  CONAN_PKG::boost CONAN_PKG::fmt CONAN_PKG::libcurl CONAN_PKG::zlib
+#   CONAN_PKG::libbacktrace CONAN_PKG::openssl
+#)
 
 
 find_program(CCACHE_FOUND ccache)
@@ -124,6 +124,20 @@ if(WASM_BUILD)
 endif()
 # wasm
 #############################################################################################
+
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+#set( CMAKE_SKIP_RPATH ON)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+#set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include_directories(components)
 add_subdirectory(core)

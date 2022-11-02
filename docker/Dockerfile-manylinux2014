@@ -44,9 +44,9 @@ COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/wasm_build
-RUN source ./wasm/activate.sh  && \
-    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
-    cmake --build .
+#RUN source ./wasm/activate.sh  && \
+#    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+#    cmake --build .
 
 FROM quay.io/pypa/manylinux2014_x86_64 as build
 
@@ -81,9 +81,10 @@ RUN  conan remote add duckstax http://conan.duckstax.com:9300
 WORKDIR /app/build
 COPY ./conanfile.txt ./conanfile.txt
 
-RUN conan install . --build missing --build rocksdb -s build_type=Release
-RUN conan install . --build missing --build spdlog  -s build_type=Release
-RUN conan install . --build missing --build fmt  -s build_type=Release
+RUN conan install . --build missing  \
+    --build fmt  \
+    --build spdlog  \
+    --build rocksdb -s build_type=Release
 
 WORKDIR /app
 COPY ./integration ./integration
@@ -96,17 +97,69 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  && \
-    cmake --build .
+#RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  && \
+#    cmake --build .
 
 
-COPY --from=build_wasm /app/wasm_build/bin/*.wasm /app/build/components/wasm_runner/tests/
+#COPY --from=build_wasm /app/wasm_build/bin/*.wasm /app/build/components/wasm_runner/tests/
 
 #RUN ctest -C --output-on-failure
 
 WORKDIR /app/build/integration/python
-RUN pytest
+#RUN pytest
 
+FROM quay.io/pypa/manylinux2014_x86_64 as build_wheel
+
+RUN yum install -y ninja-build python3-pip wget unzip zip gcc-c++ java-11-openjdk-devel
+RUN wget https://releases.bazel.build/4.1.0/release/bazel-4.1.0-dist.zip
+RUN unzip bazel-4.1.0-dist.zip -d bazel
+RUN ls -l /usr/lib/jvm/
+RUN        PYTHON_PATH=/opt/python/cp39-cp39 &&\
+        JAVA_HOME="/usr/lib/jvm/java-11-openjdk-11.0.15.0.9-2.el7_9.x86_64" &&\
+
+        PATH=$PYTHON_PATH:$PATH:$JAVA_HOME/bin &&\
+        ln -sf /usr/local/bin/python3.9 /usr/bin/python &&\
+
+        cd bazel &&\
+        pwd && \
+        ls &&\
+        ./compile.sh  && \
+        pwd && \
+        ls output && \
+        cp  ./output/bazel /usr/bin && \
+        bazel --version
+
+RUN  pip3 install --no-cache-dir conan==1.52.0 pytest==6.2.5
+RUN  conan user
+RUN  conan profile new default --detect --force
+RUN  conan profile update settings.compiler.libcxx=libstdc++11 default
+RUN  conan config set general.parallel_download=$(nproc)
+RUN  conan config set general.cpu_count=$(nproc)
+RUN  conan remote add duckstax http://conan.duckstax.com:9300
+
+RUN /opt/python/cp38-cp38/bin/python -m pip install --no-cache-dir  wheel setuptools scikit-build
+
+WORKDIR /app
+
+COPY ./conanfile.txt ./conanfile.txt
+RUN conan install . --build missing  \
+    --build fmt \
+    --build spdlog  \
+    --build rocksdb  \
+    -s build_type=Release -if=/app/_skbuild/linux-x86_64-3.8/cmake-build
+#RUN pwd
+#RUN ls
+#RUN ls _skbuild/linux-x86_64-3.6/cmake-build/build_tools
+
+COPY ./integration ./integration
+COPY ./cmake ./cmake
+COPY ./components ./components
+COPY ./core ./core
+COPY ./services ./services
+COPY ./wasm ./wasm
+COPY ./CMakeLists.txt ./CMakeLists.txt
+
+#RUN /opt/python/cp38-cp38/bin/python -m pip install wheel setuptools scikit-build
 
 #WORKDIR /app/build/integration/python/wheelhouse_dirty
 #RUN mkdir ottergon
@@ -122,24 +175,47 @@ RUN pytest
 #RUN python3 -m pip wheel --verbose . -w wheelhouse_dirty
 #RUN auditwheel repair wheelhouse_dirty/ottergon*.whl --plat manylinux2014_x86_64 -w wheelhouse
 
-WORKDIR /app/
-COPY ./python ./python
-RUN cp ./python/pyproject.toml ./pyproject.toml
-RUN cp ./python/setup.py ./setup.py
+#COPY ./python ./python
+#RUN cp ./python/pyproject.toml ./pyproject.toml
+#RUN cp ./python/setup.py ./setup.py
 
-RUN pip3 install wheel setuptools scikit-build cibuildwheel pipx
-RUN ls
-COPY ./conanfile.txt ./conanfile.txt
-RUN conan install . --build missing -if=/app/_skbuild/linux-x86_64-3.6/cmake-build
-#RUN pipx run build --sdist
-#RUN file /usr/include/python3.6m/pyconfig-64.h
-#RUN cat /usr/include/python3.6m/pyconfig-64.h
-#RUN ls /app/_skbuild/linux-x86_64-3.6/cmake-build
-
-#RUN cat  /usr/include/python3.6m/pyconfig-64.h
 #RUN ls /opt/python/cp36-cp36m/include/python3.6m
-
-RUN python3 setup.py  --verbose bdist_wheel
-
+#RUN python3 setup.py  --verbose bdist_wheel  -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+    #$(python3-config --includes) $(python3 -m pybind11 --includes)
 #RUN python3 -m cibuildwheel   --platform linux --output-dir wheelhouse
+#RUN cp integration/python/ottergon/setup.py .
+#RUN cp integration/python/ottergon/MANIFEST.in .
+
+#RUN ls /opt/python/cp38-cp38/bin/
+
+RUN /opt/python/cp38-cp38/bin/python3 integration/python/ottergon/setup.py  --verbose bdist_wheel \
+     -DPython3_INCLUDE_DIRS=/opt/python/cp38-cp38m/include/python3.8m \
+     -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
+#RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/
+#RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/integration/python
+#RUN wheel unpack dist/ottergon-1.0.0-cp36-cp36m-linux_x86_64.whl
+#RUN ls -R ottergon-1.0.0
+RUN ls dist
+RUN  auditwheel repair dist/ottergon-1.0.0-cp38-cp38-linux_x86_64.whl  -w  ./work/dist/
+RUN ls -R
+RUN pwd
+RUN ls
+
+
+FROM ubuntu:20.04
+
+RUN apt update && \
+    apt upgrade -y && \
+    apt install -y \
+        python3-pip \
+        python3-venv
+
+WORKDIR /app
+
+COPY --from=build_wheel /app/work/dist/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /app/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+
+RUN python3 --version
+RUN pip3 install ./ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+RUN python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
+RUN python3 -c "from ottergon import Client, DataBase, Collection"
 

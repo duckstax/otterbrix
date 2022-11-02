@@ -30,3 +30,4 @@ CMakeDeps
 
 
 [imports]
+lib, *.so* -> ./build_tools
