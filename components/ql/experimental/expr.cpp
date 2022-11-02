@@ -40,7 +40,7 @@ namespace components::ql::experimental {
 
     std::string to_string(const expr_ptr& expr) {
         if (expr->is_union()) {
-            std::string result = "{\"" + to_string(expr->type_) + "\": [";
+            std::string result = "{" + to_string(expr->type_) + ": [";
             for (std::size_t i = 0; i < expr->sub_conditions_.size(); ++i) {
                 if (i > 0) {
                     result += ", ";
@@ -50,7 +50,7 @@ namespace components::ql::experimental {
             result += "]}";
             return result;
         }
-        return "{\"" + expr->key_.as_string() + "\": {\"" + to_string(expr->type_) + "\": #" + std::to_string(expr->value_.t) + "}}";
+        return "{\"" + expr->key_.as_string() + "\": {" + to_string(expr->type_) + ": #" + std::to_string(uint(expr->value_.t)) + "}}";
     }
 
     expr_t::expr_t(condition_type type, std::string key, core::parameter_id_t value)

@@ -10,7 +10,7 @@ def test_convector():
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$match: {"size": {$eq: "medium"}}}'
+    assert to_aggregate(example) == '$aggregate: {$match: {"size": {$eq: #0}}}'
 
     example = [
         {
@@ -25,5 +25,5 @@ def test_convector():
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: "medium"}}, {"count": {$lt: 10}}, ' \
-                                    '{"name": {$regex: "N*"}}]}} '
+    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, ' \
+                                    '{"name": {$regex: #2}}]}}'

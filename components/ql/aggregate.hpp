@@ -36,6 +36,13 @@ namespace components::ql {
             values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
         }
 
+        template<class Value>
+        core::parameter_id_t add_parameter(Value value) {
+            auto id = next_id();
+            add_parameter(id, value);
+            return id;
+        }
+
         auto parameter(core::parameter_id_t id) const -> const expr_value_t&;
 
         auto count_operators() const -> std::size_t;
