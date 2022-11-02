@@ -1,1 +1,1 @@
-from ottergon import ObjectId, Client, DataBase, Collection
+from .ottergon import ObjectId, Client, DataBase, Collection
