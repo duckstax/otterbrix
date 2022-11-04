@@ -115,7 +115,6 @@ RUN   PYBIN=(/opt/python/*/bin) && \
 #RUN pytest
 
 WORKDIR /app
-#RUN  auditwheel repair dist/ottergon-1.0.0-cp38-cp38-linux_x86_64.whl  -w  ./work/dist/
 RUN for whl in dist/ottergon*.whl; do \
         auditwheel repair ${whl} -w ./work/dist/  &&\
         rm ${whl}; \
