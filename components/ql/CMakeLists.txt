@@ -6,6 +6,7 @@ set(SOURCE_${PROJECT_NAME}
         find.cpp
         expr.cpp
         experimental/expr.cpp
+        experimental/project_expr.cpp
         aggregate.cpp
         aggregate/match.cpp
         #ql_translator.cpp
