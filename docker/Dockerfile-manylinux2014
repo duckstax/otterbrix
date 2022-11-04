@@ -77,8 +77,6 @@ RUN  conan config set general.parallel_download=$(nproc)
 RUN  conan config set general.cpu_count=$(nproc)
 RUN  conan remote add duckstax http://conan.duckstax.com:9300
 
-RUN /opt/python/cp38-cp38/bin/python -m pip install --no-cache-dir  wheel setuptools scikit-build
-
 WORKDIR /app
 
 COPY ./conanfile.txt ./conanfile.txt
@@ -86,10 +84,7 @@ RUN conan install . --build missing  \
     --build fmt \
     --build spdlog  \
     --build rocksdb  \
-    -s build_type=Release -if=/app/_skbuild/linux-x86_64-3.8/cmake-build
-#RUN pwd
-#RUN ls
-#RUN ls _skbuild/linux-x86_64-3.6/cmake-build/build_tools
+    -s build_type=Release
 
 COPY ./integration ./integration
 COPY ./cmake ./cmake
@@ -99,64 +94,33 @@ COPY ./services ./services
 COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
-#RUN /opt/python/cp38-cp38/bin/python -m pip install wheel setuptools scikit-build
-
-#WORKDIR /app/build/integration/python/wheelhouse_dirty
-#RUN mkdir ottergon
-#RUN touch ottergon/__init__.py
-#RUN touch README.md
-#RUN cp /app/build/integration/python/ottergon.cpython-36m-x86_64-linux-gnu.so ./ottergon
-#RUN ls
-#RUN ls ottergon
-
-#WORKDIR /app/build/integration/python/
-#RUN pip3 install wheel setuptools scikit-build
-#RUN cp /app/integration/python/setup.py .
-#RUN python3 -m pip wheel --verbose . -w wheelhouse_dirty
-#RUN auditwheel repair wheelhouse_dirty/ottergon*.whl --plat manylinux2014_x86_64 -w wheelhouse
-
-#COPY ./python ./python
-#RUN cp ./python/pyproject.toml ./pyproject.toml
-#RUN cp ./python/setup.py ./setup.py
-
-#RUN ls /opt/python/cp36-cp36m/include/python3.6m
-#RUN python3 setup.py  --verbose bdist_wheel  -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))")
-    #$(python3-config --includes) $(python3 -m pybind11 --includes)
-#RUN python3 -m cibuildwheel   --platform linux --output-dir wheelhouse
-#RUN cp integration/python/ottergon/setup.py .
-#RUN cp integration/python/ottergon/MANIFEST.in .
-
-#RUN ls /opt/python/cp38-cp38/bin/
-
-
 RUN cp integration/python/ottergon/setup.py .
 RUN cp integration/python/ottergon/MANIFEST.in .
 RUN cp integration/python/ottergon/pyproject.toml .
-RUN /opt/python/cp38-cp38/bin/python3 setup.py bdist_wheel  --verbose  \
-  #   -DPython3_INCLUDE_DIRS=/opt/python/cp38-cp38m/include/python3.8m \
-  #   -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") \
-    -DDEV_MODE=ON
 
-#RUN /opt/python/cp38-cp38/bin/python3 integration/python/ottergon/setup.py test
-#RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/
-#RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/integration/python
-#RUN wheel unpack dist/ottergon-1.0.0-cp36-cp36m-linux_x86_64.whl
-#RUN ls -R ottergon-1.0.0
-#RUN ls dist
+RUN   PYBIN=(/opt/python/*/bin) && \
+      for BIN in "${PYBIN[@]}";  do  \
+      if [[  ${BIN} == *"cp38"* ]]; then \
+          ${BIN}/python3 -m pip install --no-cache-dir  wheel setuptools scikit-build && \
+          ${BIN}/python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON ; \
+      fi \
+      done
 #WORKDIR /app/_skbuild/linux-x86_64-3.8/cmake-build
 
 #COPY --from=build_wasm /app/wasm_build/bin/*.wasm ./components/wasm_runner/tests/
 
 #RUN ctest -C --output-on-failure
 
-WORKDIR ./integration/python
+#WORKDIR ./integration/python
 #RUN pytest
 
 WORKDIR /app
-RUN  auditwheel repair dist/ottergon-1.0.0-cp38-cp38-linux_x86_64.whl  -w  ./work/dist/
-#RUN ls -R
-#RUN pwd
-#RUN ls
+#RUN  auditwheel repair dist/ottergon-1.0.0-cp38-cp38-linux_x86_64.whl  -w  ./work/dist/
+RUN for whl in dist/ottergon*.whl; do \
+        auditwheel repair ${whl} -w ./work/dist/  &&\
+        rm ${whl}; \
+    done
+
 
 
 FROM ubuntu:20.04
@@ -175,4 +139,3 @@ RUN python3 --version
 RUN pip3 install ./ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 RUN python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
 RUN python3 -c "from ottergon import Client, DataBase, Collection"
-
