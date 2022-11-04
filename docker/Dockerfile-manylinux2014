@@ -32,7 +32,7 @@ WORKDIR /app/wasm_build
 COPY conan/profiles/wasm ./conan/profiles/wasm
 RUN conan config install conan
 COPY conanfile-wasm.txt ./
-RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
+#RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt
 
 WORKDIR /app
 COPY ./integration ./integration
@@ -44,7 +44,7 @@ COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/wasm_build
-#RUN source ./wasm/activate.sh  && \
+#RUN source ./activate.sh  && \
 #    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
 #    cmake --build .
 
@@ -128,16 +128,22 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 #RUN ls /opt/python/cp38-cp38/bin/
 
-RUN /opt/python/cp38-cp38/bin/python3 integration/python/ottergon/setup.py  --verbose bdist_wheel \
-     -DPython3_INCLUDE_DIRS=/opt/python/cp38-cp38m/include/python3.8m \
-     -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") \
+
+RUN cp integration/python/ottergon/setup.py .
+RUN cp integration/python/ottergon/MANIFEST.in .
+RUN cp integration/python/ottergon/pyproject.toml .
+RUN /opt/python/cp38-cp38/bin/python3 setup.py bdist_wheel  --verbose  \
+  #   -DPython3_INCLUDE_DIRS=/opt/python/cp38-cp38m/include/python3.8m \
+  #   -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") \
     -DDEV_MODE=ON
+
+#RUN /opt/python/cp38-cp38/bin/python3 integration/python/ottergon/setup.py test
 #RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/
 #RUN ls -R  /app/_skbuild/linux-x86_64-3.6/cmake-build/integration/python
 #RUN wheel unpack dist/ottergon-1.0.0-cp36-cp36m-linux_x86_64.whl
 #RUN ls -R ottergon-1.0.0
 #RUN ls dist
-WORKDIR /app/_skbuild/linux-x86_64-3.8/cmake-build
+#WORKDIR /app/_skbuild/linux-x86_64-3.8/cmake-build
 
 #COPY --from=build_wasm /app/wasm_build/bin/*.wasm ./components/wasm_runner/tests/
 

@@ -45,11 +45,9 @@ set(ROCKETJOE_LIBS
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_BINARY_DIR}")
 #find_package(Python3 COMPONENTS Development)
 find_package(pybind11 CONFIG REQUIRED)
-include_directories(${Python3_INCLUDE_DIRS})
+#include_directories(${Python3_INCLUDE_DIRS})
 
-include_directories(
-        ${PROJECT_SOURCE_DIR}
-)
+#include_directories(${PROJECT_SOURCE_DIR})
 
 pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
 
@@ -87,35 +85,11 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 
 #target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
-#file(COPY ottergon DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#file(COPY ${CMAKE_BINARY_DIR}/build_tools/libiwasm.so DESTINATION ottergon)
-#file(COPY ${PROJECT_NAME} DESTINATION ottergon)
-
-#file(COPY ${CMAKE_BINARY_DIR}/build_tools/libiwasm.so DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#install(TARGETS  ${CMAKE_BINARY_DIR}/build_tools/libiwasm.so DESTINATION  ${CMAKE_CURRENT_BINARY_DIR})
-
-#file(COPY ottergon/__init__.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#file(COPY ottergon/MANIFEST.in DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#file(COPY ottergon/pyproject.toml DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-#install(TARGETS ${PROJECT_NAME} DESTINATION  ${SKBUILD} )
-install(TARGETS ${PROJECT_NAME} DESTINATION  . )
-#message("CMAKE_CURRENT_LIST_DIR is ${CMAKE_CURRENT_LIST_DIR}")
-#message("CMAKE_CURRENT_LIST_DIR is ${CMAKE_BINARY_DIR}")
-#message( ${CMAKE_BINARY_DIR}/build_tools/libiwasm.so)
-
-#if(EXISTS ${CMAKE_BINARY_DIR}/build_tools/libiwasm.so)
-#message("YES")
-#else()
-#    message("NO")
-#endif()
-install(DIRECTORY ottergon DESTINATION  . )
-install(TARGETS ${PROJECT_NAME} DESTINATION  ./ottergon )
-install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
-#install(DIRECTORY ottergon DESTINATION  . )
-#install(FILES ottergon/__init__.py DESTINATION .)
-#install(FILES ottergon/MANIFEST.in DESTINATION . )
-#install(FILES ottergon/pyproject.toml DESTINATION .)
-
+if(SKBUILD)
+    install(DIRECTORY ottergon DESTINATION  . )
+    install(TARGETS ${PROJECT_NAME} DESTINATION  ./ottergon )
+    install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
+endif()
 
 if (DEV_MODE)
     file(GLOB PY_TESTS
