@@ -1,11 +1,5 @@
-import subprocess
 from skbuild import setup
 
-import skbuild.constants
-
-build_dir = skbuild.constants.CMAKE_BUILD_DIR()
-
-subprocess.run([f"conan install . -s build_type=Release -if={build_dir}"], shell=True, check=True)
 
 setup(
     name="ottergon",

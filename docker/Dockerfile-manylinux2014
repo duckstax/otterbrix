@@ -158,11 +158,14 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 RUN cp integration/python/ottergon/setup.py .
 RUN cp integration/python/ottergon/MANIFEST.in .
 RUN cp integration/python/ottergon/pyproject.toml .
+RUN cp integration/python/ottergon/get_path.py .
 
 RUN   PYBIN=(/opt/python/*/bin) && \
       for BIN in "${PYBIN[@]}";  do  \
       if [[  ${BIN} == *"cp38"* ]]; then \
           ${BIN}/python3 -m pip install --no-cache-dir  wheel setuptools scikit-build && \
+          mkdir -p $(echo "./$(${BIN}/python3 get_path.py )") && \
+          conan install . -s build_type=Release -if=$(echo "./$(${BIN}/python3 get_path.py )") && \
           ${BIN}/python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON ; \
       fi \
       done
