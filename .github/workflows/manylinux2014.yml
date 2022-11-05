@@ -117,28 +117,28 @@ jobs:
     #    source ./wasm/deactivate.sh
     #  working-directory: wasm_build/
     #${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}
-    - name: Build library 
-      run: |
-        cmake .. -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=ON -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPython3_EXECUTABLE=${PYTHON_PATH}/bin/python
-        cmake --build . --target all
-      working-directory: build/
+    #- name: Build library
+    #  run: |
+    #    cmake .. -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=ON -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPython3_EXECUTABLE=${PYTHON_PATH}/bin/python
+    #    cmake --build . --target all
+    #  working-directory: build/
       
-    - name: Install test packages
-      run: pip3 install --no-cache-dir pytest
+    #- name: Install test packages
+    #  run: pip3 install --no-cache-dir pytest
 
-    - name: Run cmake tests
-      run: ctest -V -C
-      working-directory: build/
+    #- name: Run cmake tests
+    #  run: ctest -V -C
+    #  working-directory: build/
       
-    - name: Run pytest 
-      run: pytest
-      working-directory: build/integration/python
+    #- name: Run pytest
+    #  run: pytest
+    #  working-directory: build/integration/python
         
-    - name: Save library
-      uses: actions/upload-artifact@v3
-      with: 
-        path: build/integration/python/ottergon*.so
-        name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
+    #- name: Save library
+    #  uses: actions/upload-artifact@v3
+    #  with:
+    #    path: build/integration/python/ottergon*.so
+    #    name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
   
   build-wheel:
     runs-on: ubuntu-latest
@@ -164,12 +164,7 @@ jobs:
         echo "PATH=${PATH}" >> $GITHUB_ENV 
         
     - uses: actions/checkout@v2
-    
-    - name: Create package dir
-      run: |
-        mkdir duck_charmer
-        touch duck_charmer/__init__.py    
-    
+
     - uses: actions/download-artifact@v2
       with: 
         name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
@@ -181,9 +176,8 @@ jobs:
     - name: Build wheel
       run: |
         echo $PATH
-        pip3 install wheel setuptools cmake ninja
-        python3 -m pip wheel --verbose . -w wheelhouse_dirty
-        auditwheel repair wheelhouse_dirty/duck_charmer*.whl --plat manylinux2014_x86_64 -w wheelhouse
+        pip3 install wheel setuptools cmake ninja wheel setuptools scikit-build
+        python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON 
 
     - name: Save wheel
       uses: actions/upload-artifact@v3
