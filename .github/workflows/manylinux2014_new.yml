@@ -1,4 +1,4 @@
-name: manylinux2014_new_build
+name: manylinux2014_build_wheel
 
 on: [pull_request]
         
@@ -79,6 +79,10 @@ jobs:
 
     steps:    
     - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ["3.9", "3.10"]
+        cache: 'pip'
 
     - name: Set env
       run: |
@@ -142,6 +146,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ["3.9", "3.10"]
+          cache: 'pip'
 
       - name: Set env
         run: |

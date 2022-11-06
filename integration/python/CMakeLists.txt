@@ -93,7 +93,7 @@ endif()
 
 if (DEV_MODE)
     file(GLOB PY_TESTS
-        "py_test/*.py"
+        "tests/*.py"
     )
     file(COPY ${PY_TESTS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
