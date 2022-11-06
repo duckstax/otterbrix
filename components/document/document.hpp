@@ -35,7 +35,7 @@ namespace components::document {
     private:
         document_value_t value_;
 
-        void set_(const std::string &key, document_const_value_t value);
+        void set_(const std::string &key, const document_const_value_t& value);
 
         friend class document_view_t;
     };
@@ -69,8 +69,8 @@ namespace components::document {
     }
 
     template<>
-    inline void document_t::set(const std::string& key, ::document::retained_const_t<::document::impl::value_t> value) {
-        set_(key, std::move(value));
+    inline void document_t::set(const std::string& key, document_const_value_t value) {
+        set_(key, value);
     }
 
     template <class T>
