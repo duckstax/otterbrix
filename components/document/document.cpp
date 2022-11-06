@@ -12,21 +12,21 @@ namespace components::document {
     using ::document::impl::mutable_dict_t;
     using ::document::impl::value_type;
 
-    document_view_t::const_value_ptr inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
+    document_const_value_t inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
         if (value->type() == ::document::impl::value_type::number) {
             if (src->is_unsigned()) {
-                return ::document::impl::new_value(src->as_unsigned() + value->as_unsigned()).detach();
+                return ::document::impl::new_value(src->as_unsigned() + value->as_unsigned());
             } else if (src->is_int()) {
-                return ::document::impl::new_value(src->as_int() + value->as_int()).detach();
+                return ::document::impl::new_value(src->as_int() + value->as_int());
             } else if (src->is_double()) {
-                return ::document::impl::new_value(src->as_double() + value->as_double()).detach();
+                return ::document::impl::new_value(src->as_double() + value->as_double());
             }
         }
         //todo error not valid type
-        return src;
+        return nullptr;
     }
 
-    document_const_value_t get_value_by_key_(document_const_value_t object, const std::string &key) {
+    document_const_value_t get_value_by_key_(const document_const_value_t& object, const std::string &key) {
         if (object->type() == value_type::dict) {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
@@ -38,11 +38,11 @@ namespace components::document {
         return nullptr;
     }
 
-    void set_new_value_(document_const_value_t object, const std::string &key, document_const_value_t value) {
+    void set_new_value_(const document_const_value_t& object, const std::string &key, const document_const_value_t& value) {
         auto dot_pos = key.find('.');
         if (dot_pos != std::string::npos) {
             auto key_parent = key.substr(0, dot_pos);
-            document_const_value_t object_parent = get_value_by_key_(object, key_parent);
+            auto object_parent = get_value_by_key_(object, key_parent);
             if (!object_parent) {
                 auto dot_pos_next = key.find('.', dot_pos + 1);
                 auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
@@ -61,7 +61,7 @@ namespace components::document {
             }
         } else {
             if (object->type() == value_type::dict) {
-                object->as_dict()->as_mutable()->set(key, std::move(value));
+                object->as_dict()->as_mutable()->set(key, value);
             } else if (object->type() == value_type::array) {
                 try {
                     auto index = uint32_t(std::atol(key.c_str()));
@@ -94,14 +94,14 @@ namespace components::document {
             for (auto it_field = fields->begin(); it_field; ++it_field) {
                 auto key_field = it_field.key()->as_string().as_string();
                 auto old_value = view.get_value(key_field);
-                auto new_value = old_value;
+                document_const_value_t new_value = nullptr;
                 if (key_update == "$set") {
-                    new_value = it_field.value();
+                    new_value = ::document::impl::new_value(it_field.value());
                 } else if (key_update == "$inc") {
-                    new_value = inc_(new_value, it_field.value());
+                    new_value = inc_(old_value, it_field.value());
                 }
                 //todo impl others methods
-                if (!new_value->is_equal(old_value)) {
+                if (new_value && !new_value->is_equal(old_value)) {
                     set_(key_field, new_value);
                     result = true;
                 }
@@ -110,8 +110,8 @@ namespace components::document {
         return result;
     }
 
-    void document_t::set_(const std::string &key, document_const_value_t value) {
-        set_new_value_(value_, key, std::move(value));
+    void document_t::set_(const std::string &key, const document_const_value_t& value) {
+        set_new_value_(value_, key, value);
     }
 
     document_ptr make_document() {
