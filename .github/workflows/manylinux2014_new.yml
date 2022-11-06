@@ -1,0 +1,108 @@
+name: manylinux2014
+
+#on:
+#  push:
+#    branches:
+#    - master
+
+on: [push, pull_request]
+        
+env:
+  BUILD_TYPE: Release
+  DEV_MODE: ON   
+  
+jobs:
+  prepare:
+    name: Make environment variables available to the rest of the workflow
+    runs-on: ubuntu-latest
+    outputs:
+        params: ${{ steps.env-vars.outputs.params }}
+    steps:
+    - name: install jq
+      run: pip install jq
+    - id: env-vars
+      name: Output environment variables
+      run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
+
+  build-library:
+    runs-on: ubuntu-latest
+    needs: [ prepare ]
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+
+    container: quay.io/pypa/manylinux2014_x86_64
+
+    steps:    
+    - uses: actions/checkout@v3
+
+    - name: Set env
+      run: |
+        export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+        echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
+        export PYTHON_PATH=/opt/python/cp${PYTHON_SHORT_VERSION}-cp$(if [[ $PYTHON_SHORT_VERSION =~ ^3[67]$ ]]; then echo $PYTHON_SHORT_VERSION'm';else echo $PYTHON_SHORT_VERSION; fi )
+        export PATH=$PYTHON_PATH:$PYTHON_PATH/bin:$PATH
+        echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV 
+        echo "PATH=${PATH}" >> $GITHUB_ENV 
+        
+    - name: Install system packages 
+      run: |
+        yum install -y ninja-build python3-pip python3-devel wget unzip zip gcc-c++ java-11-openjdk-devel
+        wget https://releases.bazel.build/4.1.0/release/bazel-4.1.0-dist.zip &&  \
+        unzip bazel-4.1.0-dist.zip -d bazel
+  
+        ls -l /usr/lib/jvm/
+  
+        PYTHON_PATH=/opt/python/cp39-cp39 &&\
+        JAVA_HOME="/usr/lib/jvm/java-11-openjdk-11.0.15.0.9-2.el7_9.x86_64" &&\
+  
+        PATH=$PYTHON_PATH:$PATH:$JAVA_HOME/bin &&\
+        ln -sf /usr/local/bin/python3.9 /usr/bin/python &&\
+        
+        cd bazel &&\
+        pwd && \
+        ls &&\
+        ./compile.sh  && \
+        pwd && \
+        ls output && \
+        cp  ./output/bazel /usr/bin && \
+        bazel --version 
+
+    - name: Set env conan dependencies
+      run: |
+        pip3 install --no-cache-dir conan==1.52.0
+        conan user
+        conan profile new default --detect --force
+        conan profile update settings.compiler.libcxx=libstdc++11 default
+        conan config set general.parallel_download=$(nproc)
+        conan config set general.cpu_count=$(nproc)
+        conan config install conan
+        conan remote add duckstax http://conan.duckstax.com:9300
+
+    - name: make build dir
+      run: |
+        pwd
+        ls
+        mkdir build
+        mkdir wasm_build
+
+    - name: Download and Install conan dependencies
+      run: |
+        pwd
+        ls
+        cp ../conanfile.txt .
+        conan install . --build missing  \
+        --build fmt \
+        --build spdlog  \
+        --build rocksdb  \
+        -s build_type=Release
+      working-directory: build/
+
+    - name: Build
+      run: |
+        pwd
+        ls
+        cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+        cmake --build .
+      working-directory: build/
