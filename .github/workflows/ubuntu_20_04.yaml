@@ -53,7 +53,7 @@ jobs:
         run: |
           cd wasm_build
           source ./activate.sh  && \
-          cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON .. &&\
           cmake --build . && \
           source ./deactivate.sh
 
@@ -62,7 +62,7 @@ jobs:
           CC: gcc
         run: |
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
           cmake --build .
 
       - name: copy wasm target form test
