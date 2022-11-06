@@ -13,11 +13,59 @@ jobs:
     outputs:
         params: ${{ steps.env-vars.outputs.params }}
     steps:
-    - name: install jq
-      run: pip install jq
-    - id: env-vars
-      name: Output environment variables
-      run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && \
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
+          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
+          sudo apt update && 
+          sudo apt install -y bazel bazel-4.1.0 git 
+
+      - name: conan installation and configuration
+        run: |
+          pip install conan==1.52.0 pytest==6.2.5
+          conan user
+          conan profile new default --detect --force
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan config set general.parallel_download=$(nproc)
+          conan config set general.cpu_count=$(nproc)
+          conan remote add duckstax http://conan.duckstax.com:9300
+
+      - name: download dependencies
+        run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
+          conan install . --build missing -s build_type=Release
+          
+          cd ..
+          
+          mkdir wasm_build && cd wasm_build
+          cp -r ../conan .
+          cp ../conanfile-wasm.txt .
+          conan config install conan
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
+
+      - name: build wasm target
+        run: |
+          cd wasm_build
+          source ./activate.sh  && \
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON .. &&\
+          cmake --build . && \
+          source ./deactivate.sh
+
+      - name: install jq
+        run: pip install jq
+      - id: env-vars
+        name: Output environment variables
+        run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
 
   build-library:
     runs-on: ubuntu-latest
@@ -84,7 +132,7 @@ jobs:
 
   build-wheel:
     runs-on: ubuntu-latest
-    needs: [ prepare ]
+    needs: [ prepare,build-library ]
     strategy:
       fail-fast: false
       matrix:
