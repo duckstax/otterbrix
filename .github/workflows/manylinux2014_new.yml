@@ -143,3 +143,8 @@ jobs:
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
+          
+          for whl in dist/ottergon*.whl; do
+            auditwheel repair ${whl} -w ./work/dist/ 
+            rm ${whl};
+          done
