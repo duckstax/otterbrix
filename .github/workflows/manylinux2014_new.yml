@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
+          name: ottergon-wheel-${{ matrix.python-version }}
           path: .
 
       - name: install wheel and test
