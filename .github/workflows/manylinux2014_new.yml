@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -137,9 +137,9 @@ jobs:
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
-          cp ./wasm_bin/*.wasm $(echo "./$(${BIN}/python3 get_path.py )/components/wasm_runner/tests/") && \
-          cd $(echo "./$(${BIN}/python3 get_path.py )") && \
-          ctest  -C --output-on-failure && \
+          cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
+          cd $(echo "./$(python3 get_path.py )") 
+          ctest  -C --output-on-failure 
           
           for whl in dist/ottergon*.whl; do
             auditwheel repair ${whl} -w ./work/dist/ 
