@@ -152,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: ottergon-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-*.whl
+          name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
 
   test-wheel:
     runs-on: ${{ matrix.operating-system }}
@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: ottergon-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-*.whl
+          name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
           path: .
 
       - name: install wheel and test
