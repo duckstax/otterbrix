@@ -156,6 +156,7 @@ jobs:
 
   test-wheel:
     runs-on: ${{ matrix.operating-system }}
+    needs: [ build-wheel ]
     strategy:
       fail-fast: false
       matrix:
@@ -167,7 +168,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
