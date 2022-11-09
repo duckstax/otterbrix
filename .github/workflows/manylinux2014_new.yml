@@ -123,7 +123,7 @@ jobs:
           name: wasm-file
           path: wasm_bin
 
-      - name: Build
+      - name: Build wheel
         run: |
           pwd
           ls
@@ -140,7 +140,8 @@ jobs:
           cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
           cd $(echo "./$(python3 get_path.py )") 
           ctest  -C --output-on-failure 
-          
+
+      - name: repair wheel
           for whl in dist/ottergon*.whl; do
             auditwheel repair ${whl} -w ./work/dist/ 
             rm ${whl};
