@@ -152,7 +152,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: wheels
+          name: ottergon-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-*.whl
 
   test-wheel:
     runs-on: ${{ matrix.operating-system }}
@@ -161,7 +161,7 @@ jobs:
       fail-fast: false
       matrix:
         operating-system: [ ubuntu-20.04 ]
-        python-version: [ 3.9, 3.10 ]
+        python-version: [ "3.9", "3.10" ]
 
     steps:
       - name: Checkout
@@ -181,7 +181,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: wheels
+          name: ottergon-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-*.whl
           path: .
 
       - name: install wheel and test
