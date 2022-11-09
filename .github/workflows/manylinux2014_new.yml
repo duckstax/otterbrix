@@ -182,12 +182,12 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: ottergon-wheel-${{ matrix.python-version }}
-          path: /app
+          path: ./app
 
       - name: install wheel and test
         run: |
           python3 --version
-          pip3 install ./ottergon-*.whl
+          pip3 install ./app/ottergon-*.whl
           python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
           python3 -c "from ottergon import Client, DataBase, Collection"
           pytest
