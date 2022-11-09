@@ -142,6 +142,7 @@ jobs:
           ctest  -C --output-on-failure 
 
       - name: repair wheel
+        run: |
           for whl in dist/ottergon*.whl; do
             auditwheel repair ${whl} -w ./work/dist/ 
             rm ${whl};
