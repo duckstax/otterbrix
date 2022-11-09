@@ -115,8 +115,7 @@ jobs:
           --build fmt \
           --build spdlog  \
           --build rocksdb  \
-          -s build_type=Release \
-          -if=$(echo "./$(python3 get_path.py )")
+          -s build_type=Release
 
       #- run: mkdir -p ./wasm_bin/
       - uses: actions/download-artifact@v3
@@ -136,6 +135,7 @@ jobs:
           
           python3 -m pip install --no-cache-dir  wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
+          conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
           cp ./wasm_bin/*.wasm $(echo "./$(${BIN}/python3 get_path.py )/components/wasm_runner/tests/") && \
           cd $(echo "./$(${BIN}/python3 get_path.py )") && \
