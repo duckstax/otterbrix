@@ -31,7 +31,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.52.0 pytest==6.2.5
+          pip install conan==1.52.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -40,14 +40,8 @@ jobs:
           conan remote add duckstax http://conan.duckstax.com:9300
 
       - name: download dependencies
-        run: |
+        run: | 
           mkdir build && cd build
-          cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release
-          
-          cd ..
-          
-          mkdir wasm_build && cd wasm_build
           cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
@@ -55,12 +49,15 @@ jobs:
 
       - name: build wasm target
         run: |
-          cd wasm_build
+          cd build
           source ./activate.sh  && \
           cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON .. &&\
           cmake --build . && \
           source ./deactivate.sh
 
+      - run: |
+          pwd
+          ls
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
