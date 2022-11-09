@@ -81,7 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        PYTHON_VERSION: [ "3.6","3.7","3.8","3.9", "3.10", "3.11" ]
+        PYTHON_VERSION: [ "3.6"] #,"3.7","3.8","3.9", "3.10", "3.11" ]
 
     container: k0tb9g9m0t/manylinux-bazel-2014
 
@@ -166,7 +166,7 @@ jobs:
       fail-fast: false
       matrix:
         operating-system: [ ubuntu-20.04 ]
-        python-version: [ "3.6","3.7","3.8","3.9", "3.10", "3.11" ]
+        python-version: [ "3.6"] #,"3.7","3.8","3.9", "3.10", "3.11" ]
 
     steps:
       - name: Checkout
@@ -201,7 +201,10 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload --skip-existing *
+        run: | 
+          pwd
+          ls
+          twine upload --skip-existing *
         working-directory: ./app
 
   install-and-test-package:
@@ -211,7 +214,7 @@ jobs:
       fail-fast: false
       matrix:
         operating-system: [ ubuntu-20.04 ]
-        python-version: [ "3.6","3.7","3.8","3.9", "3.10", "3.11" ]
+        python-version: [ "3.6"] #,"3.7","3.8","3.9", "3.10", "3.11" ]
 
     steps:
       - name: Install system packages
