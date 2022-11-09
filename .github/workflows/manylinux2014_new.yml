@@ -176,9 +176,9 @@ jobs:
 
       - name: install packege
         run: |
-          apt update 
-          apt upgrade -y 
-          apt install -y  python3-pip python3-venv
+          sudo apt update 
+          sudo apt upgrade -y 
+          sudo apt install -y  python3-pip python3-venv
           pip3 install --no-cache-dir pytest==6.2.5
 
       - name: Checkout
