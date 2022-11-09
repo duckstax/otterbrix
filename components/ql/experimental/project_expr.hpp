@@ -1,7 +1,35 @@
 #pragma once
+
 #include "expr.hpp"
 
 namespace components::ql::experimental {
+
+    enum class project_expr_type : std::uint8_t {
+        novalid,
+
+        get_field,
+
+        count,
+        sum,
+        min,
+        max,
+        avg,
+
+        add,
+        subtract,
+        multiply,
+        divide,
+
+        round,
+        ceil,
+        floor,
+
+        abs,
+        mod,
+        pow,
+        sqrt
+    };
+
 
     struct project_expr_t {
         project_expr_t(const expr_t&) = delete;
@@ -13,19 +41,18 @@ namespace components::ql::experimental {
             key_t,
             ptr>;
 
-        //project_expr_type type_;
-        key_t key_;
-        std::vector<param_storage> params_;
+        project_expr_type type;
+        key_t key;
+        std::vector<param_storage> params;
 
-//        expr_t(project_expr_type type, key_t key);
-//        void append_param(const param_storage& param);
+        project_expr_t(project_expr_type type, key_t key);
+        void append_param(param_storage param);
     };
 
-//    using project_expr_ptr = project_expr_t::ptr;
+    using project_expr_ptr = project_expr_t::ptr;
 
-//    project_expr_ptr make_expr(project_expr_type type, const key_t& key);
+    project_expr_ptr make_project_expr(project_expr_type type, const key_t& key);
 
-//    std::string to_string(project_expr_type type);
-//    std::string to_string(const project_expr_t& expr);
+    std::string to_string(const project_expr_ptr& expr);
 
 } // namespace components::ql::experiment
