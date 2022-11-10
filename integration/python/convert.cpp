@@ -5,6 +5,8 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
+#include <magic_enum.hpp>
+
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 
@@ -133,6 +135,7 @@ auto to_order(const py::object& order) -> services::storage::sort::order {
 
 namespace experimental {
 
+    using components::ql::key_t;
     using components::ql::aggregate_statement;
     using components::ql::condition_type;
     using components::ql::get_condition_type_;
@@ -144,6 +147,11 @@ namespace experimental {
     using expr_ns::make_expr;
     using expr_ns::make_union_expr;
     using expr_ns::to_string;
+    using expr_ns::project_expr_t;
+    using expr_ns::project_expr_ptr;
+    using expr_ns::project_expr_type;
+    using expr_ns::get_project_type;
+    using expr_ns::make_project_expr;
 
     void normalize(expr_ptr &expr) {
         if (expr->type_ == condition_type::novalid && !expr->key_.is_null()) {
@@ -224,6 +232,59 @@ namespace experimental {
         return res_condition;
     }
 
+    project_expr_ptr parse_project_expr(const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
+        if (py::isinstance<py::dict>(condition)) {
+            for (const auto &it : condition) {
+                auto type = get_project_type(py::str(it).cast<std::string>().substr(1));
+                auto expr = make_project_expr(type, key.empty() ? key_t() : key_t(key));
+                if (py::isinstance<py::dict>(condition[it])) {
+                    expr->append_param(parse_project_expr({}, condition[it], aggregate));
+                } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
+                    for (const auto &py_value : condition[it]) {
+                        auto value = to_(py_value);
+                        if (value->type() == document::impl::value_type::string
+                            && !value->as_string().as_string().empty()
+                            && value->as_string().as_string().at(0) == '$') {
+                            expr->append_param(key_t(value->as_string().as_string().substr(1)));
+                        } else {
+                            expr->append_param(aggregate->add_parameter(value));
+                        }
+                    }
+                } else {
+                    auto value = to_(condition[it]);
+                    if (value->type() == document::impl::value_type::string
+                        && !value->as_string().as_string().empty()
+                        && value->as_string().as_string().at(0) == '$') {
+                        expr->append_param(key_t(value->as_string().as_string().substr(1)));
+                    } else {
+                        expr->append_param(aggregate->add_parameter(value));
+                    }
+                }
+                return expr;
+            }
+        } else {
+            auto expr = make_project_expr(project_expr_type::get_field, key.empty() ? key_t() : key_t(key));
+            auto value = to_(condition);
+            if (value->type() == document::impl::value_type::string
+                && !value->as_string().as_string().empty()
+                && value->as_string().as_string().at(0) == '$') {
+                expr->append_param(key_t(value->as_string().as_string().substr(1)));
+            } else {
+                expr->append_param(aggregate->add_parameter(value));
+            }
+            return expr;
+        }
+        return nullptr;
+    }
+
+    components::ql::aggregate::group_t parse_group(const py::handle& condition, aggregate_statement* aggregate) {
+        components::ql::aggregate::group_t group;
+        for (const auto &it : condition) {
+            components::ql::aggregate::append_expr(group, parse_project_expr(py::str(it).cast<std::string>(), condition[it], aggregate));
+        }
+        return group;
+    }
+
     auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
         auto is_sequence = py::isinstance<py::sequence>(source);
 
@@ -257,8 +318,7 @@ namespace experimental {
                         break;
                     }
                     case operator_type::group: {
-                        auto op = parse_find_condition_(obj[key], aggregate);
-                        ///aggregate->append(make_aggregate_operator(name, op_type, std::move(op)));
+                        aggregate->append(operator_type::group, parse_group(obj[key], aggregate));
                         break;
                     }
                     case operator_type::limit: {

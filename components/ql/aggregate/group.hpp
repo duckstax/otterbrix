@@ -12,6 +12,8 @@ namespace components::ql::aggregate {
         std::vector<project_expr_ptr> fields;
     };
 
+    void append_expr(group_t& group, project_expr_ptr&& expr);
+
 #ifdef DEV_MODE
     std::string debug(const group_t &group);
 #endif

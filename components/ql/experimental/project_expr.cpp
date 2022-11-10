@@ -16,6 +16,18 @@ namespace components::ql::experimental {
         return std::make_unique<project_expr_t>(type, key);
     }
 
+    project_expr_ptr make_project_expr(project_expr_type type) {
+        return make_project_expr(type, key_t());
+    }
+
+    project_expr_type get_project_type(const std::string& key) {
+        auto type = magic_enum::enum_cast<project_expr_type>(key);
+        if (type.has_value()) {
+            return type.value();
+        }
+        return project_expr_type::invalid;
+    }
+
     std::string to_string(project_expr_type type) {
         return "$" + static_cast<std::string>(magic_enum::enum_name(type));
     }

@@ -74,6 +74,9 @@ namespace components::ql {
                 case aggregate::operator_type::match:
                     operators.append(debug(aggregate.get_operator<aggregate::match_t>(i)));
                     break;
+                case aggregate::operator_type::group:
+                    operators.append(debug(aggregate.get_operator<aggregate::group_t>(i)));
+                    break;
                 default:
                     break;
             }

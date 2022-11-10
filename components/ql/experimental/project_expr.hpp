@@ -5,7 +5,7 @@
 namespace components::ql::experimental {
 
     enum class project_expr_type : std::uint8_t {
-        novalid,
+        invalid,
 
         get_field,
 
@@ -52,6 +52,9 @@ namespace components::ql::experimental {
     using project_expr_ptr = project_expr_t::ptr;
 
     project_expr_ptr make_project_expr(project_expr_type type, const key_t& key);
+    project_expr_ptr make_project_expr(project_expr_type type);
+
+    project_expr_type get_project_type(const std::string& key);
 
     std::string to_string(const project_expr_ptr& expr);
 

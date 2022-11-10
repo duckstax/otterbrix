@@ -37,73 +37,83 @@ def test_convert_aggregate_group():
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"_id": @name}}'
+    assert to_aggregate(example) == '$aggregate: {$group: {_id: #0}}'
+
+    example = [
+        {
+            "$group": {
+                "_id": "$name"
+            }
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$group: {_id: "$name"}}'
 
     example = [
         {
             "$group": {
                 "sum": {
-                    "$sum": "count"
+                    "$sum": "$count"
                 }
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"sum": {$sum: @count}}}'
+    assert to_aggregate(example) == '$aggregate: {$group: {sum: {$sum: "$count"}}}'
 
     example = [
         {
             "$group": {
                 "total": {
                     "$multiply": [
-                        "price",
-                        "count"
+                        "$price",
+                        "$count"
                     ]
                 }
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"total": {$multiply: [@price, @count]}}}'
+    assert to_aggregate(example) == '$aggregate: {$group: {total: {$multiply: ["$price", "$count"]}}}'
 
     example = [
         {
             "$group": {
                 "total": {
                     "$multiply": [
-                        "price",
+                        "$price",
                         10
                     ]
                 }
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"total": {$multiply: [@price, #0]}}}'
+    assert to_aggregate(example) == '$aggregate: {$group: {total: {$multiply: ["$price", #0]}}}'
 
     example = [
         {
             "$group": {
-                "_id": "name",
+                "_id": "$name",
                 "sum": {
-                    "$sum": "count"
+                    "$sum": "$count"
                 }
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"_id": @name, "sum": {$sum: @count}}}'
+    assert to_aggregate(example) == '$aggregate: {$group: {_id: "$name", sum: {$sum: "$count"}}}'
 
     example = [
         {
             "$group": {
-                "_id": "name",
+                "_id": "$name",
+                "type": "type",
                 "total": {
                     "$sum": {
                         "$multiply": [
-                            "price",
-                            "count"
+                            "$price",
+                            "$count"
                         ]
                     }
                 }
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$group: {"_id": @name, "total": {$sum: {$multiply: [@price, ' \
-                                    '@count]}}}} '
+    assert to_aggregate(example) == '$aggregate: {$group: {_id: "$name", type: #0, total: {$sum: {$multiply: '\
+                                    '["$price", "$count"]}}}}'
