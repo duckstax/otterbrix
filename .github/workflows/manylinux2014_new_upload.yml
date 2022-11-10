@@ -144,6 +144,7 @@ jobs:
           python3 setup.py bdist_wheel  --verbose 
           pwd
           ls
+          ls wasm_bin
           cp wasm_bin/*.wasm $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
 
       - name: repair wheel
