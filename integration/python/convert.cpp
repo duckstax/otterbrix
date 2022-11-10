@@ -232,6 +232,18 @@ namespace experimental {
         return res_condition;
     }
 
+    project_expr_t::param_storage parse_project_param(const py::handle& condition, aggregate_statement* aggregate) {
+        auto value = to_(condition);
+        if (value->type() == document::impl::value_type::string
+            && !value->as_string().as_string().empty()
+            && value->as_string().as_string().at(0) == '$') {
+            return key_t(value->as_string().as_string().substr(1));
+        } else {
+            return aggregate->add_parameter(value);
+        }
+        return key_t();
+    }
+
     project_expr_ptr parse_project_expr(const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
         if (py::isinstance<py::dict>(condition)) {
             for (const auto &it : condition) {
@@ -240,38 +252,17 @@ namespace experimental {
                 if (py::isinstance<py::dict>(condition[it])) {
                     expr->append_param(parse_project_expr({}, condition[it], aggregate));
                 } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
-                    for (const auto &py_value : condition[it]) {
-                        auto value = to_(py_value);
-                        if (value->type() == document::impl::value_type::string
-                            && !value->as_string().as_string().empty()
-                            && value->as_string().as_string().at(0) == '$') {
-                            expr->append_param(key_t(value->as_string().as_string().substr(1)));
-                        } else {
-                            expr->append_param(aggregate->add_parameter(value));
-                        }
+                    for (const auto &value : condition[it]) {
+                        expr->append_param(parse_project_param(value, aggregate));
                     }
                 } else {
-                    auto value = to_(condition[it]);
-                    if (value->type() == document::impl::value_type::string
-                        && !value->as_string().as_string().empty()
-                        && value->as_string().as_string().at(0) == '$') {
-                        expr->append_param(key_t(value->as_string().as_string().substr(1)));
-                    } else {
-                        expr->append_param(aggregate->add_parameter(value));
-                    }
+                    expr->append_param(parse_project_param(condition[it], aggregate));
                 }
                 return expr;
             }
         } else {
             auto expr = make_project_expr(project_expr_type::get_field, key.empty() ? key_t() : key_t(key));
-            auto value = to_(condition);
-            if (value->type() == document::impl::value_type::string
-                && !value->as_string().as_string().empty()
-                && value->as_string().as_string().at(0) == '$') {
-                expr->append_param(key_t(value->as_string().as_string().substr(1)));
-            } else {
-                expr->append_param(aggregate->add_parameter(value));
-            }
+            expr->append_param(parse_project_param(condition, aggregate));
             return expr;
         }
         return nullptr;
