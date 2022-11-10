@@ -117,3 +117,57 @@ def test_convert_aggregate_group():
     ]
     assert to_aggregate(example) == '$aggregate: {$group: {_id: "$name", type: #0, total: {$sum: {$multiply: '\
                                     '["$price", "$count"]}}}}'
+
+
+def test_convert_aggregate():
+    example = [
+        {
+            "$match": {
+                "size": "medium"
+            }
+        },
+        {
+            "$group": {
+                "total": {
+                    "$multiply": [
+                        "$price",
+                        10
+                    ]
+                }
+            }
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$match: {"size": {$eq: #0}}, '\
+                                    '$group: {total: {$multiply: ["$price", #1]}}}'
+
+    example = [
+        {
+            "$match": {
+                "size": "medium",
+                "count": {
+                    "$lt": 10
+                },
+                "name": {
+                    "$regex": "N*"
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": "$name",
+                "type": "type",
+                "total": {
+                    "$sum": {
+                        "$multiply": [
+                            "$price",
+                            "$count"
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, '\
+                                    '{"name": {$regex: #2}}]}, '\
+                                    '$group: {_id: "$name", type: #3, total: {$sum: {$multiply: '\
+                                    '["$price", "$count"]}}}}'

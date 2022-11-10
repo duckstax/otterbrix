@@ -46,7 +46,36 @@ TEST_CASE("aggregate::group") {
 }
 
 TEST_CASE("aggregate") {
-    aggregate_statement aggregate("database", "collection");
-    aggregate.append(operator_type::match, make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1))));
-    REQUIRE(debug(aggregate) == R"_($aggregate: {$match: {"key": {$eq: #1}}})_");
+    {
+        aggregate_statement aggregate("database", "collection");
+        aggregate.append(operator_type::match, make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1))));
+        REQUIRE(debug(aggregate) == R"_($aggregate: {$match: {"key": {$eq: #1}}})_");
+    }
+    {
+        aggregate_statement aggregate("database", "collection");
+        group_t group;
+        auto expr = make_project_expr(project_expr_type::get_field, ql::key_t("_id"));
+        expr->append_param(ql::key_t("date"));
+        append_expr(group, std::move(expr));
+        expr = make_project_expr(project_expr_type::multiply, ql::key_t("count_4"));
+        expr->append_param(parameter_id_t(1));
+        expr->append_param(ql::key_t("count"));
+        append_expr(group, std::move(expr));
+        aggregate.append(operator_type::group, std::move(group));
+        REQUIRE(debug(aggregate) == R"_($aggregate: {$group: {_id: "$date", count_4: {$multiply: [#1, "$count"]}}})_");
+    }
+    {
+        aggregate_statement aggregate("database", "collection");
+        aggregate.append(operator_type::match, make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1))));
+        group_t group;
+        auto expr = make_project_expr(project_expr_type::get_field, ql::key_t("_id"));
+        expr->append_param(ql::key_t("date"));
+        append_expr(group, std::move(expr));
+        expr = make_project_expr(project_expr_type::multiply, ql::key_t("count_4"));
+        expr->append_param(parameter_id_t(1));
+        expr->append_param(ql::key_t("count"));
+        append_expr(group, std::move(expr));
+        aggregate.append(operator_type::group, std::move(group));
+        REQUIRE(debug(aggregate) == R"_($aggregate: {$match: {"key": {$eq: #1}}, $group: {_id: "$date", count_4: {$multiply: [#1, "$count"]}}})_");
+    }
 }
