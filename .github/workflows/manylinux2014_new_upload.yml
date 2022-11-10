@@ -141,10 +141,8 @@ jobs:
           python3 -m pip install --no-cache-dir  wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel  --verbose
+          python3 setup.py bdist_wheel  --verbose 
           cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
-          cd $(echo "./$(python3 get_path.py )") 
-          ctest  -C --output-on-failure 
 
       - name: repair wheel
         run: |
@@ -227,17 +225,6 @@ jobs:
           sudo apt update 
           sudo apt upgrade -y 
           sudo apt install -y  python3-pip
-      #- name: Install system packages
-      #  run: |
-      #    sudo apt update -y
-      #    sudo apt install -y software-properties-common
-
-      #- name: Install python
-      #  run: |
-      #    sudo add-apt-repository ppa:deadsnakes/ppa -y
-      #    sudo apt update -y
-      #    sudo apt install -y curl python${{ matrix.PYTHON_VERSION }} python${{ matrix.PYTHON_VERSION }}-distutils
-      #    curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
 
       - name: Download package
         run: |
