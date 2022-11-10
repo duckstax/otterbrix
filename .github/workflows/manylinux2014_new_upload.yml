@@ -141,7 +141,7 @@ jobs:
           python3 -m pip install --no-cache-dir  wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
+          python3 setup.py bdist_wheel  --verbose
           cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
           cd $(echo "./$(python3 get_path.py )") 
           ctest  -C --output-on-failure 
@@ -217,17 +217,30 @@ jobs:
         python-version: [ "3.6"] #,"3.7","3.8","3.9", "3.10", "3.11" ]
 
     steps:
-      - name: Install system packages
-        run: |
-          apt update -y
-          apt install -y software-properties-common        
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install python
+      - name: install packege
         run: |
-          add-apt-repository ppa:deadsnakes/ppa -y
-          apt update -y
-          apt install -y curl python${{ matrix.PYTHON_VERSION }} python${{ matrix.PYTHON_VERSION }}-distutils
-          curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
+          sudo apt update 
+          sudo apt upgrade -y 
+          sudo apt install -y  python3-pip
+      #- name: Install system packages
+      #  run: |
+      #    sudo apt update -y
+      #    sudo apt install -y software-properties-common
+
+      #- name: Install python
+      #  run: |
+      #    sudo add-apt-repository ppa:deadsnakes/ppa -y
+      #    sudo apt update -y
+      #    sudo apt install -y curl python${{ matrix.PYTHON_VERSION }} python${{ matrix.PYTHON_VERSION }}-distutils
+      #    curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
 
       - name: Download package
-        run: python${{ matrix.PYTHON_VERSION }} -m pip install ottergon
+        run: |
+          python3 --version
+          pip install ottergon
+          python3 -c "from ottergon import Client, DataBase, Collection"
