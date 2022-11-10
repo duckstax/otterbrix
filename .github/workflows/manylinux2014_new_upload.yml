@@ -142,6 +142,8 @@ jobs:
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel  --verbose 
+          pwd
+          ls
           cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
 
       - name: repair wheel
