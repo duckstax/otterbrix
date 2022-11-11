@@ -145,6 +145,7 @@ jobs:
           pwd
           ls
           ls wasm_bin
+          mkdir -p $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
           cp wasm_bin/*.wasm $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
 
       - name: repair wheel
