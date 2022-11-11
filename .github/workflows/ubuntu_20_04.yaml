@@ -1,5 +1,5 @@
 name: ubuntu 20.04
-on: [push, pull_request]
+on: [push]
 jobs:
   run:
     name: Run
@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -27,7 +27,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.52.0 pytest==6.2.5
+          pip install conan==1.53.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -47,22 +47,22 @@ jobs:
           cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
-          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
 
       - name: build wasm target
         run: |
           cd wasm_build
-          source ./wasm/activate.sh  && \
-          cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
+          source ./activate.sh  && \
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON .. &&\
           cmake --build . && \
-          source ./wasm/deactivate.sh
+          source ./deactivate.sh
 
       - name: build
         env:
           CC: gcc
         run: |
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
           cmake --build .
 
       - name: copy wasm target form test
@@ -72,7 +72,7 @@ jobs:
       - name: Test
         run: |
           cd build
-          ctest -C --output-on-failure
+          ctest -C -V --output-on-failure
 
       - name: PyTest
         run: |

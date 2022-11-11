@@ -11,7 +11,7 @@ namespace services::disk {
 
     class metadata_t {
 
-        using path_t = boost::filesystem::path;
+        using path_t = std::filesystem::path;
         using collections_t = std::vector<collection_name_t>;
         using databases_t = std::vector<database_name_t>;
         using data_t = std::unordered_map<database_name_t, collections_t>;

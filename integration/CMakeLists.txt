@@ -4,7 +4,5 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
 
 endif()
 
-#add_subdirectory(rocketjoe_engine)
-#add_subdirectory(rocketjoe_kernel)
+add_subdirectory(cpp)
 add_subdirectory(python)
-#add_subdirectory(medusa_cascade)

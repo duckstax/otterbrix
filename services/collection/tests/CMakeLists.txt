@@ -23,7 +23,9 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::test_generaty
-        ${CONAN_LIBS}
+        CONAN_PKG::spdlog
+        CONAN_PKG::abseil
+        CONAN_PKG::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

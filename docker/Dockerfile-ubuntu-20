@@ -18,7 +18,7 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN    pip3 install --no-cache-dir conan==1.52.0 pytest==6.2.5 cmake && \
+RUN    pip3 install --no-cache-dir conan==1.53.0 pytest==6.2.5 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -39,7 +39,7 @@ COPY conanfile-wasm.txt ./
 RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
 
 WORKDIR /app
-COPY ./apps ./apps
+COPY ./integration ./integration
 COPY ./cmake ./cmake
 COPY ./components ./components
 COPY ./core ./core
@@ -59,6 +59,6 @@ RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
 
 RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
 
-RUN ctest -C --output-on-failure
+RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest

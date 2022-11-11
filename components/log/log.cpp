@@ -6,7 +6,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/process/environment.hpp>
 #include <spdlog/async.h>
 #include <utility>
@@ -39,7 +39,7 @@ auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     if (prefix.back() != '/') {
         prefix += '/';
     }
-    boost::filesystem::create_directory(prefix);
+    std::filesystem::create_directory(prefix);
 
     using namespace std::chrono;
     system_clock::time_point tp = system_clock::now();
