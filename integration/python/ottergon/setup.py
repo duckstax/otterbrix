@@ -3,7 +3,7 @@ from skbuild import setup
 
 setup(
     name="ottergon",
-    version="0.0.0",
+    version="0.4.0",
     description=" ",
     author=" ",
     license=" ",

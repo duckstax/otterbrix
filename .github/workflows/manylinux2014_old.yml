@@ -1,0 +1,291 @@
+name: build_wheel
+
+on:
+  push:
+    branches:
+    - master
+
+#on: [push, pull_request]
+        
+env:
+  BUILD_TYPE: Release
+  DEV_MODE: ON   
+  
+jobs:
+  prepare:
+    name: Make environment variables available to the rest of the workflow
+    runs-on: ubuntu-latest
+    outputs:
+        params: ${{ steps.env-vars.outputs.params }}
+    steps:
+    - name: install jq
+      run: pip install jq
+    - id: env-vars
+      name: Output environment variables
+      run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
+
+  build-library:
+    runs-on: ubuntu-latest
+    needs: [ prepare ]
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+
+    container: quay.io/pypa/manylinux2014_x86_64
+
+    steps:    
+    - uses: actions/checkout@v2
+
+    - name: Set env
+      run: |
+        export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+        echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
+        export PYTHON_PATH=/opt/python/cp${PYTHON_SHORT_VERSION}-cp$(if [[ $PYTHON_SHORT_VERSION =~ ^3[67]$ ]]; then echo $PYTHON_SHORT_VERSION'm';else echo $PYTHON_SHORT_VERSION; fi )
+        export PATH=$PYTHON_PATH:$PYTHON_PATH/bin:$PATH
+        echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV 
+        echo "PATH=${PATH}" >> $GITHUB_ENV 
+        
+    - name: Install system packages 
+      run: |
+        yum install -y ninja-build python3-pip python3-devel wget unzip zip gcc-c++ java-11-openjdk-devel
+        wget https://releases.bazel.build/4.1.0/release/bazel-4.1.0-dist.zip &&  \
+        unzip bazel-4.1.0-dist.zip -d bazel
+  
+        ls -l /usr/lib/jvm/
+  
+        PYTHON_PATH=/opt/python/cp39-cp39 &&\
+        JAVA_HOME="/usr/lib/jvm/java-11-openjdk-11.0.15.0.9-2.el7_9.x86_64" &&\
+  
+        PATH=$PYTHON_PATH:$PATH:$JAVA_HOME/bin &&\
+        ln -sf /usr/local/bin/python3.9 /usr/bin/python &&\
+        
+        cd bazel &&\
+        pwd && \
+        ls &&\
+        ./compile.sh  && \
+        pwd && \
+        ls output && \
+        cp  ./output/bazel /usr/bin && \
+        bazel --version 
+
+    - name: Set env conan dependencies
+      run: |
+        pip3 install --no-cache-dir conan==1.52.0
+        conan user
+        conan profile new default --detect --force
+        conan profile update settings.compiler.libcxx=libstdc++11 default
+        conan config set general.parallel_download=$(nproc)
+        conan config set general.cpu_count=$(nproc)
+        conan config install conan
+        conan remote add duckstax http://conan.duckstax.com:9300
+        #conan install -if build . --build -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
+
+    - name: make build dir
+      run: |
+        pwd
+        ls
+        mkdir build
+        mkdir wasm_build
+
+    - name: Download and Install conan dependencies
+      run: |
+        pwd
+        ls
+        cp ../conanfile.txt .
+        conan install . --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }}
+        conan install . --build missing --build rocksdb -s build_type=Release
+        conan install . --build missing --build spdlog  -s build_type=Release
+        conan install . --build missing --build fmt  -s build_type=Release
+      working-directory: build/
+        
+
+    #- name: Download and Install conan Wasm dependencies
+    #  run: |
+    #    cp ../conanfile-wasm.txt .
+    #    conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} conanfile-wasm.txt -if=./wasm  -of=./wasm
+    #  working-directory: wasm_build/
+
+    #- name: Wasm target
+    #  run: |
+    #    pwd
+    #    ls
+    #    cmake --version
+    #    source ./wasm/activate.sh  && \
+    #    cmake ..  -G Ninja -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DWASM_BUILD=ON -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=OFF  &&\
+    #    cmake --build . --target all  && \
+    #    source ./wasm/deactivate.sh
+    #  working-directory: wasm_build/
+    #${{ fromJson(needs.prepare.outputs.params).DEV_MODE }}
+    #- name: Build library
+    #  run: |
+    #    cmake .. -DCMAKE_BUILD_TYPE=${{ fromJson(needs.prepare.outputs.params).BUILD_TYPE }} -DDEV_MODE=ON -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON -DPython3_INCLUDE_DIRS=$(python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") -DPython3_LIBRARIES=$(python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))") -DPython3_EXECUTABLE=${PYTHON_PATH}/bin/python
+    #    cmake --build . --target all
+    #  working-directory: build/
+      
+    #- name: Install test packages
+    #  run: pip3 install --no-cache-dir pytest
+
+    #- name: Run cmake tests
+    #  run: ctest -V -C
+    #  working-directory: build/
+      
+    #- name: Run pytest
+    #  run: pytest
+    #  working-directory: build/integration/python
+        
+    #- name: Save library
+    #  uses: actions/upload-artifact@v3
+    #  with:
+    #    path: build/integration/python/ottergon*.so
+    #    name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
+  
+  build-wheel:
+    runs-on: ubuntu-latest
+ 
+    needs: [build-library]
+ 
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+
+    container: quay.io/pypa/manylinux2014_x86_64
+    
+    steps: 
+    
+    - name: Set env
+      run: |
+        export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+        echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
+        export PYTHON_PATH=/opt/python/cp${PYTHON_SHORT_VERSION}-cp$(if [[ $PYTHON_SHORT_VERSION =~ ^3[67]$ ]]; then echo $PYTHON_SHORT_VERSION'm';else echo $PYTHON_SHORT_VERSION; fi )
+        export PATH=$PYTHON_PATH:$PYTHON_PATH/bin:$PATH
+        echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV 
+        echo "PATH=${PATH}" >> $GITHUB_ENV 
+        
+    - uses: actions/checkout@v2
+
+    - uses: actions/download-artifact@v2
+      with: 
+        name: ottergon-lib-${{ matrix.PYTHON_VERSION }}
+        path: ottergon
+        
+    - name: Install system packages 
+      run: yum install -y python3-pip 
+      
+    - name: Build wheel
+      run: |
+        echo $PATH
+        pip3 install wheel setuptools cmake ninja wheel setuptools scikit-build
+        python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON 
+
+    - name: Save wheel
+      uses: actions/upload-artifact@v3
+      with: 
+        path: wheelhouse/ottergon*.whl
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
+        
+  test-wheel:
+    runs-on: ubuntu-latest
+    
+    needs: [build-wheel]
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+
+    container: quay.io/pypa/manylinux2014_x86_64
+
+    steps: 
+    - name: Set env
+      run: |
+        export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+        echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
+        export PYTHON_PATH=/opt/python/cp${PYTHON_SHORT_VERSION}-cp$(if [[ $PYTHON_SHORT_VERSION =~ ^3[67]$ ]]; then echo $PYTHON_SHORT_VERSION'm';else echo $PYTHON_SHORT_VERSION; fi )
+        export PATH=$PYTHON_PATH:$PYTHON_PATH/bin:$PATH
+        echo "PYTHON_PATH=${PYTHON_PATH}" >> $GITHUB_ENV 
+        echo "PATH=${PATH}" >> $GITHUB_ENV 
+        
+    - name: Create test folder
+      run: mkdir -p /tests
+      
+    - uses: actions/download-artifact@v2
+      with: 
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
+        path: /tests
+      
+    - name: Install system packages 
+      run: yum install -y python3-pip 
+      
+    - name: Install python packages
+      run: pip3 install --no-cache-dir pytest wheel-inspect
+    
+    - name: Get wheel info
+      run: wheel2json ottergon-*.whl
+      working-directory: /tests
+
+    - name: Install wheel 
+      run: |
+        python3 -m pip install --no-index --find-links . duck_charmer-*.whl    
+      working-directory: /tests
+      
+  publish-wheel:
+    runs-on: ubuntu-latest
+    needs: [test-wheel]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+    
+    container: apihackers/twine
+    
+    steps:
+    - name: Create app folder
+      run: mkdir -p /app
+      
+    - uses: actions/download-artifact@v2
+      with: 
+        name: ottergon-whl-${{ matrix.PYTHON_VERSION }}
+        path: /app
+
+    - name: Publish wheels
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: twine upload --skip-existing *
+      working-directory: /app
+      
+  install-package:
+    runs-on: ubuntu-latest
+    needs: [publish-wheel]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        PYTHON_VERSION: ["3.9", "3.10"]
+
+    container: ubuntu:20.04
+    env: 
+      DEBIAN_FRONTEND: NONINTERACTIVE
+    steps:
+    
+    - name: Install system packages 
+      run: |
+        apt update -y
+        apt install -y software-properties-common        
+        
+    - name: Install python
+      run: |
+        add-apt-repository ppa:deadsnakes/ppa -y
+        apt update -y
+        apt install -y curl python${{ matrix.PYTHON_VERSION }} python${{ matrix.PYTHON_VERSION }}-distutils
+        curl -sS https://bootstrap.pypa.io/get-pip.py | python${{ matrix.PYTHON_VERSION }}
+
+    - name: Download package 
+      run: python${{ matrix.PYTHON_VERSION }} -m pip install ottergon
+          
+          
+        
+

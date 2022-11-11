@@ -1,11 +1,9 @@
 name: manylinux2014_upload
 
-on: [pull_request]
-
-#on:
-#  push:
-#    branches:
-#      - master
+on:
+  push:
+    branches:
+      - master
         
 env:
   BUILD_TYPE: Release
