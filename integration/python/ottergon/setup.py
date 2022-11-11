@@ -3,7 +3,7 @@ from skbuild import setup
 
 setup(
     name="ottergon",
-    version="1.0.0",
+    version="0.0.0",
     description=" ",
     author=" ",
     license=" ",
@@ -13,5 +13,6 @@ setup(
     # cmake_install_dir='integration/python',
     python_requires='>=3.6',
     # cmake_source_dir=".",
-    include_package_data=True
+    include_package_data=True,
+    extras_require={"test": ["pytest"]}
 )
