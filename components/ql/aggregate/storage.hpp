@@ -6,6 +6,7 @@
 
 #include "group.hpp"
 #include "match.hpp"
+#include "sort.hpp"
 #include "merge.hpp"
 
 namespace components::ql::aggregate {
@@ -28,6 +29,7 @@ namespace components::ql::aggregate {
         std::variant<
             aggregate::group_t,
             aggregate::match_t,
+            aggregate::sort_t,
             aggregate::merge_t>
             storage_;
     };

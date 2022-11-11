@@ -119,6 +119,27 @@ def test_convert_aggregate_group():
                                     '["$price", "$count"]}}}}'
 
 
+def test_convert_aggregate_sort():
+    example = [
+        {
+            "$sort": {
+                "name": 1
+            }
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$sort: {name: 1}}'
+
+    example = [
+        {
+            "$sort": {
+                "name": 1,
+                "count": -1
+            }
+        }
+    ]
+    assert to_aggregate(example) == '$aggregate: {$sort: {name: 1, count: -1}}'
+
+
 def test_convert_aggregate():
     example = [
         {
@@ -135,10 +156,18 @@ def test_convert_aggregate():
                     ]
                 }
             }
+        },
+        {
+            "$sort": {
+                "name": 1
+            }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$match: {"size": {$eq: #0}}, '\
-                                    '$group: {total: {$multiply: ["$price", #1]}}}'
+    assert to_aggregate(example) == '$aggregate: {'\
+                                    '$match: {"size": {$eq: #0}}, '\
+                                    '$group: {total: {$multiply: ["$price", #1]}}, '\
+                                    '$sort: {name: 1}'\
+                                    '}'
 
     example = [
         {
@@ -165,9 +194,18 @@ def test_convert_aggregate():
                     }
                 }
             }
+        },
+        {
+            "$sort": {
+                "name": 1,
+                "count": -1
+            }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, '\
+    assert to_aggregate(example) == '$aggregate: {'\
+                                    '$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, '\
                                     '{"name": {$regex: #2}}]}, '\
                                     '$group: {_id: "$name", type: #3, total: {$sum: {$multiply: '\
-                                    '["$price", "$count"]}}}}'
+                                    '["$price", "$count"]}}}, '\
+                                    '$sort: {name: 1, count: -1}'\
+                                    '}'

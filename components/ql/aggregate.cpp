@@ -77,6 +77,9 @@ namespace components::ql {
                 case aggregate::operator_type::group:
                     operators.append(debug(aggregate.get_operator<aggregate::group_t>(i)));
                     break;
+                case aggregate::operator_type::sort:
+                    operators.append(debug(aggregate.get_operator<aggregate::sort_t>(i)));
+                    break;
                 default:
                     break;
             }

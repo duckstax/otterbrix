@@ -140,6 +140,7 @@ namespace experimental {
     using components::ql::condition_type;
     using components::ql::get_condition_type_;
     using components::ql::aggregate::operator_type;
+    using components::ql::aggregate::sort_order;
 
     namespace expr_ns = components::ql::experimental;
     using expr_ns::expr_ptr;
@@ -276,6 +277,14 @@ namespace experimental {
         return group;
     }
 
+    components::ql::aggregate::sort_t parse_sort(const py::handle& condition) {
+        components::ql::aggregate::sort_t sort;
+        for (const auto &it : condition) {
+            components::ql::aggregate::append_sort(sort, key_t(py::str(it).cast<std::string>()), sort_order(condition[it].cast<int>()));
+        }
+        return sort;
+    }
+
     auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
         auto is_sequence = py::isinstance<py::sequence>(source);
 
@@ -332,6 +341,7 @@ namespace experimental {
                         break;
                     }
                     case operator_type::sort: {
+                        aggregate->append(operator_type::sort, parse_sort(obj[key]));
                         break;
                     }
                     case operator_type::unset: {
