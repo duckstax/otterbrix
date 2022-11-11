@@ -139,7 +139,7 @@ jobs:
           python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
           cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
           cd $(echo "./$(python3 get_path.py )") 
-          ctest  -C --output-on-failure 
+          ctest -C -V --output-on-failure
 
       - name: repair wheel
         run: |
