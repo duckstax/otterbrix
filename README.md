@@ -10,13 +10,11 @@ It contains a set of technologies across different storage types, driving low-la
 
 ## Installation
 
-### python:
+### Python example:
 
 ```bash
     pip install ottergon==0.4.0 
 ```
-
-Python example:
 
 ```python
     from ottergon import Client
@@ -40,11 +38,12 @@ C++ example:
     auto value = dispatcher->find_one(database_name, collection_name, {"object_name": "object value"});
 ```
 
-## Major components of the project
+## Major futures of the project
 
 * In-process
 * serverless
-* Persistence index and storage
+* Persistence index
+* Persistence storage
 * Write-ahead log
 
 ## Coming soon
@@ -57,3 +56,6 @@ C++ example:
 * SQL support
 * Parquet / CSV / ORC
 * Column storage
+ 
+## Troubleshooting
+In case you've encountered any issues, please feel free to create them right here on GitHub!
