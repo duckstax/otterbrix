@@ -1,6 +1,7 @@
 Ottergon is a development platform for building analytical systems and applications.
 
 [![ubuntu 20.04](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml)
+[![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
 
 The platform is designed to combine supporting analytics and processing transactions. It is a unified data engine to power fast analytics and fast applications.
 
