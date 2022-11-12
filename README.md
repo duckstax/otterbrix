@@ -6,7 +6,7 @@ The platform is designed to combine supporting analytics and processing transact
 
 It contains a set of technologies across different storage types, driving low-latency access to large datasets and enabling big data systems to process and move data fast. It also offers rich NoSQL/SQL dialects. It is designed to be fast, reliable and easy to use.
 
-# Enjoy easy programming with Ottergon!
+## Enjoy easy programming with Ottergon!
 
 Python example:
 
@@ -32,14 +32,14 @@ C++ example:
     auto value = dispatcher->find_one(database_name, collection_name, {"object_name": "object value"});
 ```
 
-# Major components of the project
+## Major components of the project
 
 * In-process
 * serverless
 * Persistence index and storage
 * Write-ahead log
 
-# Coming soon
+## Coming soon
 
 * APIs for Rust, Go, R, Java, etc.
 * Vectorized engine
@@ -49,3 +49,11 @@ C++ example:
 * SQL support
 * Parquet / CSV / ORC
 * Column storage
+
+## Installation
+
+### python:
+
+```bash
+    pip install ottergon==0.4.0 
+```
