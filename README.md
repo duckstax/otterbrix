@@ -8,6 +8,14 @@ It contains a set of technologies across different storage types, driving low-la
 
 ## Enjoy easy programming with Ottergon!
 
+## Installation
+
+### python:
+
+```bash
+    pip install ottergon==0.4.0 
+```
+
 Python example:
 
 ```python
@@ -49,11 +57,3 @@ C++ example:
 * SQL support
 * Parquet / CSV / ORC
 * Column storage
-
-## Installation
-
-### python:
-
-```bash
-    pip install ottergon==0.4.0 
-```
