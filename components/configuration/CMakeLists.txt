@@ -23,7 +23,6 @@ target_link_libraries(
         INTERFACE
         #PRIVATE
         #${Boost_LIBRARIES}
-        #${CONAN_LIBS}
 )
 
 target_include_directories(

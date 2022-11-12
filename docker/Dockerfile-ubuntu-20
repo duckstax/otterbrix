@@ -18,7 +18,7 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN    pip3 install --no-cache-dir conan==1.52.0 pytest==6.2.5 cmake && \
+RUN    pip3 install --no-cache-dir conan==1.53.0 pytest==6.2.5 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -36,10 +36,10 @@ WORKDIR /app/wasm_build
 COPY conan/profiles/wasm ./conan/profiles/wasm
 RUN conan config install conan
 COPY conanfile-wasm.txt ./
-RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt -if=./wasm  -of=./wasm
+RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt
 
 WORKDIR /app
-COPY ./apps ./apps
+COPY ./integration ./integration
 COPY ./cmake ./cmake
 COPY ./components ./components
 COPY ./core ./core
@@ -48,7 +48,7 @@ COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/wasm_build
-RUN source ./wasm/activate.sh  && \
+RUN source ./activate.sh  && \
     cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
     cmake --build .
 
@@ -59,6 +59,6 @@ RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
 
 RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
 
-RUN ctest -C --output-on-failure
+RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
@@ -13,7 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message (STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
 option(DEV_MODE "developer mode" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
@@ -81,14 +81,13 @@ include(cmake/clang-format.cmake)
 #############################################################################################
 #conan
 
-if(WASM_BUILD)
-    include(${CMAKE_BINARY_DIR}/wasm/conanbuildinfo.cmake)
-else()
-    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-endif()
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+
+#include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 
 include_directories(SYSTEM ${CONAN_INCLUDE_DIRS})
-conan_basic_setup(NO_OUTPUT_DIRS)
+conan_basic_setup(NO_OUTPUT_DIRS TARGETS KEEP_RPATHS)
 
 # conan
 #############################################################################################
@@ -110,6 +109,20 @@ if(WASM_BUILD)
 endif()
 # wasm
 #############################################################################################
+
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+#set( CMAKE_SKIP_RPATH ON)
+set(CMAKE_SKIP_BUILD_RPATH FALSE)
+
+# when building, don't use the install RPATH already
+# (but later on when installing)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+
+#set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+# add the automatically determined parts of the RPATH
+# which point to directories outside the build tree to the install RPATH
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include_directories(components)
 add_subdirectory(core)

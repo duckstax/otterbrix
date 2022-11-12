@@ -1,6 +1,7 @@
 #include "file.hpp"
 #include <fcntl.h>
 #include <sys/uio.h>
+#include <unistd.h>
 
 namespace core::file {
 

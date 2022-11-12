@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <components/wasm_runner/wasm.hpp>
 
@@ -30,7 +30,7 @@ namespace services::wasm {
         }
 
     private:
-        auto load_code(const boost::filesystem::path& path) -> void;
+        auto load_code(const std::filesystem::path& path) -> void;
 
         components::wasm_runner::wasm_manager_t wasm_manager_;
         std::shared_ptr<proxy_wasm::PluginHandleBase> wasm_;

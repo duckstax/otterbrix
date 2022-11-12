@@ -10,11 +10,11 @@ namespace services::wal {
 
     constexpr static auto wal_name = ".wal";
 
-    bool file_exist_(const boost::filesystem::path &path) {
-        boost::filesystem::file_status s = boost::filesystem::file_status{};
-        return boost::filesystem::status_known(s)
-                   ? boost::filesystem::exists(s)
-                   : boost::filesystem::exists(path);
+    bool file_exist_(const std::filesystem::path &path) {
+        std::filesystem::file_status s = std::filesystem::file_status{};
+        return std::filesystem::status_known(s)
+                   ? std::filesystem::exists(s)
+                   : std::filesystem::exists(path);
     }
 
     std::size_t next_index(std::size_t index, size_tt size) {
@@ -40,7 +40,7 @@ namespace services::wal {
         add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
         if (config_.sync_to_disk) {
             if (!file_exist_(config_.path)) {
-                boost::filesystem::create_directory(config_.path);
+                std::filesystem::create_directory(config_.path);
             }
             file_ = std::make_unique<core::file::file_t>(config_.path / wal_name);
             file_->seek_eof();

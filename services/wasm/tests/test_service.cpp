@@ -25,7 +25,7 @@ public:
     auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
 
 private:
-    auto start(const boost::filesystem::path& wasm_path) -> void;
+    auto start(const std::filesystem::path& wasm_path) -> void;
     actor_zeta::scheduler_ptr coordinator_;
     std::vector<actor_zeta::actor> actors_;
 };
@@ -46,7 +46,7 @@ auto test_wasm_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::executio
     execute(this, current_message());
 }
 
-auto test_wasm_t::start(const boost::filesystem::path& wasm_path) -> void {
+auto test_wasm_t::start(const std::filesystem::path& wasm_path) -> void {
     auto wasm = spawn_actor<wasm::wasm_runner_t>([this](wasm::wasm_runner_t* ptr) {
         actors_.emplace_back(ptr);
     });
@@ -60,7 +60,7 @@ TEST_CASE("wasm_runner_t load and execute", "[API]") {
     actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
     auto services_manager = actor_zeta::spawn_supervisor<test_wasm_t>(resource);
 
-    actor_zeta::send(services_manager, actor_zeta::address_t::empty_address(), test_handler_id(route::start), boost::filesystem::path("tests") / "log_wasm.wasm");
+    actor_zeta::send(services_manager, actor_zeta::address_t::empty_address(), test_handler_id(route::start), std::filesystem::path("tests") / "log_wasm.wasm");
 
     // Temporary hack
     std::this_thread::sleep_for(std::chrono::seconds(1));

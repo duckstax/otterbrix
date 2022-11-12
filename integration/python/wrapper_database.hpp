@@ -12,7 +12,7 @@
 #include <log/log.hpp>
 
 #include "wrapper_collection.hpp"
-#include "wrapper_dispatcher.hpp"
+#include "integration/cpp/wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
 

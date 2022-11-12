@@ -15,7 +15,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "forward.hpp"
-#include "wrapper_dispatcher.hpp"
+#include "integration/cpp/wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
 namespace duck_charmer {
