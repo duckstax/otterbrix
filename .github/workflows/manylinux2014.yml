@@ -1,4 +1,4 @@
-name: manylinux2014_build_wheel
+name: manylinux2014
 
 on: [pull_request]
         
