@@ -11,6 +11,7 @@ rocksdb/6.20.3
 benchmark/1.6.1
 zlib/1.2.12
 bzip2/1.0.8
+magic_enum/0.8.1
 
 actor-zeta/1.0.0a7@duckstax/stable
 
