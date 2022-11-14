@@ -45,7 +45,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.53.0
+          pip3 install --retries=30 conan==1.53.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -111,7 +111,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --no-cache-dir conan==1.53.0
+          pip3 install --retries=30 --no-cache-dir conan==1.53.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -194,7 +194,7 @@ jobs:
       - name: Install package
         run: |
           python3 --version
-          pip install ottergon
+          pip3 install --retries=30 ottergon
           python3 -c "from ottergon import Client, DataBase, Collection"
 
 
@@ -222,7 +222,7 @@ jobs:
           sudo apt update 
           sudo apt upgrade -y 
           sudo apt install -y python3-pip python3-venv
-          pip3 install --no-cache-dir pytest==6.2.5
+          pip3 install --retries=30 --no-cache-dir pytest==6.2.5
 
       - uses: actions/download-artifact@v3
         with:
@@ -232,7 +232,7 @@ jobs:
       - name: Run tests
         run: |
           python3 --version
-          pip3 install ./app/ottergon-*.whl
+          pip3 install --retries=30 ./app/ottergon-*.whl
           python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
           python3 -c "from ottergon import Client, DataBase, Collection"
           pytest
@@ -271,7 +271,7 @@ jobs:
 
       - name: Install twine
         run: |
-          pip3 install --no-cache-dir twine
+          pip3 install --retries=30 --no-cache-dir twine
 
       - name: Publish wheels
         env:
