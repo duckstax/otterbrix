@@ -169,10 +169,10 @@ jobs:
           path: ./work/dist/
           name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
 
-  install-and-test-package:
+  test-package:
     name: Install and test
     runs-on: ${{ matrix.operating-system }}
-    needs: [test-and-upload-wheel, build-info]
+    needs: [test-wheel, build-info]
     strategy:
       fail-fast: false
       matrix:
@@ -240,7 +240,7 @@ jobs:
   upload-wheel:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
-    needs: [ build-wheel, build-info ]
+    needs: [ test-wheel, test-package, build-info ]
     # TODO remove second branch condition later
     if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
     strategy:
