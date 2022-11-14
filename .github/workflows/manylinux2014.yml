@@ -1,4 +1,4 @@
-name: manylinux2014_upload
+name: manylinux2014
 
 on:
   push:
@@ -15,11 +15,11 @@ jobs:
     name: Build info
     runs-on: ubuntu-latest
     outputs:
-      python_versions: ${{ steps.setVariables.outputs.matrix }}
+      python-versions: ${{ steps.setVariables.outputs.matrix }}
     steps:
       - id: setVariables
         run: |
-          echo "::set-output name=matrix::\"[ "3.6", "3.7", "3.8", "3.9", "3.10", "3.11" ]\""
+          echo 'matrix=[ "3.6", "3.7", "3.8", "3.9", "3.10", "3.11" ]' >> $GITHUB_OUTPUT
 
   build-wasm:
     name: Build WASM library
