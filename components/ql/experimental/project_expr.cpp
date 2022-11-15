@@ -1,5 +1,5 @@
 #include "project_expr.hpp"
-#include <magic_enum.hpp>
+#include <sstream>
 
 namespace components::ql::experimental {
 
@@ -28,53 +28,10 @@ namespace components::ql::experimental {
         return project_expr_type::invalid;
     }
 
-    std::string to_string(project_expr_type type) {
-        return "$" + static_cast<std::string>(magic_enum::enum_name(type));
-    }
-
-    std::string to_string(const project_expr_t::param_storage &param) {
-        return std::visit([](const auto &p) {
-            using type = std::decay_t<decltype(p)>;
-            if constexpr (std::is_same_v<type, core::parameter_id_t>) {
-                return std::string("#" + std::to_string(p));
-            } else if constexpr (std::is_same_v<type, key_t>) {
-                return std::string("\"$" + p.as_string() + "\"");
-            } else if constexpr (std::is_same_v<type, project_expr_ptr>) {
-                return to_string(p);
-            }
-        }, param);
-    }
-
     std::string to_string(const project_expr_ptr& expr) {
-        if (expr->params.empty()) {
-            return expr->key.as_string();
-        }
-        std::string value;
-        if (!expr->key.is_null()) {
-            value += expr->key.as_string() + ": ";
-        }
-        if (expr->type != project_expr_type::get_field) {
-            value += "{" + to_string(expr->type) + ": ";
-        }
-        if (expr->params.size() > 1) {
-            value += "[";
-            bool is_first = true;
-            for (const auto& param : expr->params) {
-                if (is_first) {
-                    is_first = false;
-                } else {
-                    value += ", ";
-                }
-                value += to_string(param);
-            }
-            value += "]";
-        } else {
-            value += to_string(expr->params.at(0));
-        }
-        if (expr->type != project_expr_type::get_field) {
-            value += "}";
-        }
-        return value;
+        std::stringstream stream;
+        stream << expr;
+        return stream.str();
     }
 
 } // namespace components::ql::experiment

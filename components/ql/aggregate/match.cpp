@@ -1,4 +1,5 @@
 #include "match.hpp"
+#include <sstream>
 
 namespace components::ql::aggregate {
 
@@ -10,7 +11,9 @@ namespace components::ql::aggregate {
 
 #ifdef DEV_MODE
     std::string debug(const match_t &match) {
-        return std::string("$match: " + to_string(match.query));
+        std::stringstream stream;
+        stream << match;
+        return stream.str();
     }
 #endif
 

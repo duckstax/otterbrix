@@ -14,6 +14,13 @@ namespace components::ql::aggregate {
 
     match_t make_match(expr_ptr &&query);
 
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const match_t &match) {
+        stream << "$match: " << match.query;
+        return stream;
+    }
+
 #ifdef DEV_MODE
     std::string debug(const match_t &match);
 #endif

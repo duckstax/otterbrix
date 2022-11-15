@@ -14,6 +14,23 @@ namespace components::ql::aggregate {
 
     void append_expr(group_t& group, project_expr_ptr&& expr);
 
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const group_t &group) {
+        stream << "$group: {";
+        bool is_first = true;
+        for (const auto &field : group.fields) {
+            if (is_first) {
+                is_first = false;
+            } else {
+                stream << ", ";
+            }
+            stream << field;
+        }
+        stream << "}";
+        return stream;
+    }
+
 #ifdef DEV_MODE
     std::string debug(const group_t &group);
 #endif

@@ -86,4 +86,14 @@ namespace components::ql {
         type type_;
         std::variant<std::monostate, bool, int32_t, uint32_t, std::string> storage_;
     };
+
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const key_t &key) {
+        if (key.is_string()) {
+            stream << key.as_string();
+        }
+        return stream;
+    }
+
 } // namespace components::ql

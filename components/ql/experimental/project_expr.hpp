@@ -58,4 +58,54 @@ namespace components::ql::experimental {
 
     std::string to_string(const project_expr_ptr& expr);
 
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const project_expr_t::param_storage &param) {
+        std::visit([&stream](const auto &p) {
+            using type = std::decay_t<decltype(p)>;
+            if constexpr (std::is_same_v<type, core::parameter_id_t>) {
+                stream << "#" << p;
+            } else if constexpr (std::is_same_v<type, key_t>) {
+                stream << "\"$" << p << "\"";
+            } else if constexpr (std::is_same_v<type, project_expr_ptr>) {
+                stream << p;
+            }
+        }, param);
+        return stream;
+    }
+
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const project_expr_ptr &expr) {
+        if (expr->params.empty()) {
+            stream << expr->key;
+        } else {
+            if (!expr->key.is_null()) {
+                stream << expr->key << ": ";
+            }
+            if (expr->type != project_expr_type::get_field) {
+                stream << "{$" << magic_enum::enum_name(expr->type) << ": ";
+            }
+            if (expr->params.size() > 1) {
+                stream << "[";
+                bool is_first = true;
+                for (const auto& param : expr->params) {
+                    if (is_first) {
+                        is_first = false;
+                    } else {
+                        stream << ", ";
+                    }
+                    stream << param;
+                }
+                stream << "]";
+            } else {
+                stream << expr->params.at(0);
+            }
+            if (expr->type != project_expr_type::get_field) {
+                stream << "}";
+            }
+        }
+        return stream;
+    }
+
 } // namespace components::ql::experiment

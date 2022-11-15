@@ -5,6 +5,7 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include <magic_enum.hpp>
 
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/wrapper_value.hpp>
@@ -48,7 +49,24 @@ namespace components::ql::experimental {
     expr_ptr make_expr();
     expr_ptr make_union_expr();
 
-    std::string to_string(condition_type type);
     std::string to_string(const expr_ptr& expr);
+
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const expr_ptr &expr) {
+        if (expr->is_union()) {
+            stream << "{$"  << magic_enum::enum_name(expr->type_) << ": [";
+            for (std::size_t i = 0; i < expr->sub_conditions_.size(); ++i) {
+                if (i > 0) {
+                    stream << ", ";
+                }
+                stream << expr->sub_conditions_.at(i);
+            }
+            stream << "]}";
+        } else {
+            stream << "{\"" << expr->key_ << "\": {$" << magic_enum::enum_name(expr->type_) << ": #" << expr->value_.t << "}}";
+        }
+        return stream;
+    }
 
 } // namespace components::ql::experiment
