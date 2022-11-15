@@ -193,9 +193,11 @@ jobs:
         run: |
           python3 --version
           pip3 install --retries=30 ./app/ottergon-*.whl
+
+      - name: Test package imports
+        run: |
           python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
           python3 -c "from ottergon import Client, DataBase, Collection"
-          pytest
 
       - name: Run pytest
         run: |
