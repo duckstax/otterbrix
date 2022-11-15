@@ -181,7 +181,6 @@ jobs:
       - name: Install pytest
         run: |
           sudo apt update 
-          sudo apt upgrade -y 
           sudo apt install -y python3-pip python3-venv
           pip3 install --retries=30 --no-cache-dir pytest==6.2.5
 
@@ -226,7 +225,6 @@ jobs:
       - name: Install pip3
         run: |
           sudo apt update 
-          sudo apt upgrade -y 
           sudo apt install -y python3-pip
 
       - uses: actions/download-artifact@v3
