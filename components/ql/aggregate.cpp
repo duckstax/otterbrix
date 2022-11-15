@@ -1,5 +1,5 @@
 #include "aggregate.hpp"
-
+#include <sstream>
 #include <magic_enum.hpp>
 
 namespace components::ql {
@@ -65,26 +65,9 @@ namespace components::ql {
 
 #ifdef DEV_MODE
     std::string debug(const aggregate_statement &aggregate) {
-        std::string operators;
-        for (std::size_t i = 0; i < aggregate.count_operators(); ++i) {
-            if (!operators.empty()) {
-                operators.append(", ");
-            }
-            switch (aggregate.type_operator(i)) {
-                case aggregate::operator_type::match:
-                    operators.append(debug(aggregate.get_operator<aggregate::match_t>(i)));
-                    break;
-                case aggregate::operator_type::group:
-                    operators.append(debug(aggregate.get_operator<aggregate::group_t>(i)));
-                    break;
-                case aggregate::operator_type::sort:
-                    operators.append(debug(aggregate.get_operator<aggregate::sort_t>(i)));
-                    break;
-                default:
-                    break;
-            }
-        }
-        return std::string("$aggregate: {" + operators + "}");
+        std::stringstream stream;
+        stream << aggregate;
+        return stream.str();
     }
 #endif
 

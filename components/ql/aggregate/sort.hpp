@@ -23,6 +23,23 @@ namespace components::ql::aggregate {
 
     void append_sort(sort_t& sort, const ql::key_t& key, sort_order order);
 
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const sort_t &sort) {
+        stream << "$sort: {";
+        bool is_first = true;
+        for (const auto &v : sort.values) {
+            if (is_first) {
+                is_first = false;
+            } else {
+                stream << ", ";
+            }
+            stream << v.key << ": " << int(v.order);
+        }
+        stream << "}";
+        return stream;
+    }
+
 #ifdef DEV_MODE
     std::string debug(const sort_t &sort);
 #endif

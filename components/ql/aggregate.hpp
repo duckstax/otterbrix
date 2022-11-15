@@ -59,6 +59,35 @@ namespace components::ql {
         storage_parameters values_;
     };
 
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const aggregate_statement &aggregate) {
+        stream << "$aggregate: {";
+        bool is_first = true;
+        for (std::size_t i = 0; i < aggregate.count_operators(); ++i) {
+            if (is_first) {
+                is_first = false;
+            } else {
+                stream << ", ";
+            }
+            switch (aggregate.type_operator(i)) {
+                case aggregate::operator_type::match:
+                    stream << aggregate.get_operator<aggregate::match_t>(i);
+                    break;
+                case aggregate::operator_type::group:
+                    stream << aggregate.get_operator<aggregate::group_t>(i);
+                    break;
+                case aggregate::operator_type::sort:
+                    stream << aggregate.get_operator<aggregate::sort_t>(i);
+                    break;
+                default:
+                    break;
+            }
+        }
+        stream << "}";
+        return stream;
+    }
+
 #ifdef DEV_MODE
     std::string debug(const aggregate_statement &aggregate);
 #endif

@@ -53,9 +53,24 @@ namespace components::ql::experimental {
 
 
     template <class OStream>
+    OStream &operator<<(OStream &stream, const condition_type &type) {
+        if (type == condition_type::union_and) {
+            stream << "$and";
+        } else if (type == condition_type::union_or) {
+            stream << "$or";
+        } else if (type == condition_type::union_not) {
+            stream << "$not";
+        } else {
+            stream << "$" << magic_enum::enum_name(type);
+        }
+        return stream;
+    }
+
+
+    template <class OStream>
     OStream &operator<<(OStream &stream, const expr_ptr &expr) {
         if (expr->is_union()) {
-            stream << "{$"  << magic_enum::enum_name(expr->type_) << ": [";
+            stream << "{"  << expr->type_ << ": [";
             for (std::size_t i = 0; i < expr->sub_conditions_.size(); ++i) {
                 if (i > 0) {
                     stream << ", ";
