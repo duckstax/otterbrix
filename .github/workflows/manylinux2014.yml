@@ -159,35 +159,6 @@ jobs:
           path: ./work/dist/
           name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
 
-  test-package:
-    name: Install and test
-    runs-on: ${{ matrix.operating-system }}
-    needs: [test-wheel, build-info]
-    strategy:
-      fail-fast: false
-      matrix:
-        operating-system: [ ubuntu-20.04 ]
-        python-version: ${{ fromJson(needs.build-info.outputs.python-versions) }}
-
-    steps:
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install pip3
-        run: |
-          sudo apt update 
-          sudo apt upgrade -y 
-          sudo apt install -y python3-pip
-
-      - name: Install package
-        run: |
-          python3 --version
-          pip3 install --retries=30 ottergon
-          python3 -c "from ottergon import Client, DataBase, Collection"
-
-
   test-wheel:
     name: Test wheel
     runs-on: ${{ matrix.operating-system }}
@@ -234,7 +205,7 @@ jobs:
   upload-wheel:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
-    needs: [ test-wheel, test-package, build-info ]
+    needs: [ test-wheel, build-info ]
     # TODO remove second branch condition later
     if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
     strategy:
