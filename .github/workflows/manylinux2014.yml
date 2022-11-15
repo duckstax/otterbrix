@@ -101,7 +101,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 --no-cache-dir conan==1.53.0
+          pip3 install --retries=30 conan==1.53.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -136,7 +136,7 @@ jobs:
           cp integration/python/ottergon/pyproject.toml .
           cp integration/python/ottergon/get_path.py .
           
-          python3 -m pip install --no-cache-dir  wheel setuptools scikit-build pytest==6.2.5
+          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel --verbose
@@ -182,7 +182,7 @@ jobs:
         run: |
           sudo apt update 
           sudo apt install -y python3-pip python3-venv
-          pip3 install --retries=30 --no-cache-dir pytest==6.2.5
+          pip3 install --retries=30 pytest==6.2.5
 
       - uses: actions/download-artifact@v3
         with:
@@ -236,7 +236,7 @@ jobs:
 
       - name: Install twine
         run: |
-          pip3 install --retries=30 --no-cache-dir twine
+          pip3 install --retries=30 twine
 
       - name: Publish wheels
         env:
