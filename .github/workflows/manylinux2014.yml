@@ -24,8 +24,6 @@ jobs:
   build-wasm:
     name: Build WASM library
     runs-on: ubuntu-latest
-    outputs:
-        params: ${{ steps.env-vars.outputs.params }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -67,15 +65,12 @@ jobs:
       - run: |
           pwd
           ls
+
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: build/bin/*.wasm
           name: wasm-file
-
-      - id: env-vars
-        name: Output environment variables
-        run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
 
   build-wheel:
     name: Build native wheel
