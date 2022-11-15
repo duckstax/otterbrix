@@ -88,8 +88,4 @@ namespace components::ql {
         return stream;
     }
 
-#ifdef DEV_MODE
-    std::string debug(const aggregate_statement &aggregate);
-#endif
-
 } // namespace components::ql

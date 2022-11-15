@@ -56,8 +56,6 @@ namespace components::ql::experimental {
 
     project_expr_type get_project_type(const std::string& key);
 
-    std::string to_string(const project_expr_ptr& expr);
-
 
     template <class OStream>
     OStream &operator<<(OStream &stream, const project_expr_t::param_storage &param) {

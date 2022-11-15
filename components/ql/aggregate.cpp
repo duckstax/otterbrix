@@ -1,5 +1,4 @@
 #include "aggregate.hpp"
-#include <sstream>
 #include <magic_enum.hpp>
 
 namespace components::ql {
@@ -62,13 +61,5 @@ namespace components::ql {
     auto aggregate_statement::type_operator(std::size_t index) const -> aggregate::operator_type {
         return aggregate_operator_.type(index);
     }
-
-#ifdef DEV_MODE
-    std::string debug(const aggregate_statement &aggregate) {
-        std::stringstream stream;
-        stream << aggregate;
-        return stream.str();
-    }
-#endif
 
 } // namespace components::ql

@@ -1,6 +1,7 @@
 #include "convert.hpp"
 
 #include <string>
+#include <sstream>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -147,7 +148,6 @@ namespace experimental {
     using expr_ns::expr_t;
     using expr_ns::make_expr;
     using expr_ns::make_union_expr;
-    using expr_ns::to_string;
     using expr_ns::project_expr_t;
     using expr_ns::project_expr_ptr;
     using expr_ns::project_expr_type;
@@ -361,7 +361,9 @@ namespace experimental {
     auto test_to_statement(const py::handle& source) -> py::str {
         aggregate_statement aggregate("database", "collection");
         to_statement(source, &aggregate);
-        return debug(aggregate);
+        std::stringstream stream;
+        stream << aggregate;
+        return stream.str();
     }
 
 } // namespace experimental

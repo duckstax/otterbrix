@@ -31,8 +31,4 @@ namespace components::ql::aggregate {
         return stream;
     }
 
-#ifdef DEV_MODE
-    std::string debug(const group_t &group);
-#endif
-
 } // namespace components::ql::aggregate

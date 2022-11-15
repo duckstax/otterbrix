@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <sstream>
 #include <components/ql/aggregate.hpp>
 #include <components/ql/aggregate/match.hpp>
 #include <components/ql/aggregate/group.hpp>
@@ -10,6 +11,13 @@ using namespace components::ql::aggregate;
 using components::ql::experimental::make_project_expr;
 using components::ql::experimental::project_expr_type;
 using core::parameter_id_t;
+
+template <class T>
+std::string debug(const T& value) {
+    std::stringstream stream;
+    stream << value;
+    return stream.str();
+}
 
 TEST_CASE("aggregate::match") {
     auto match = make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1)));

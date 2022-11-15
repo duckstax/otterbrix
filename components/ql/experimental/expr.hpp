@@ -49,8 +49,6 @@ namespace components::ql::experimental {
     expr_ptr make_expr();
     expr_ptr make_union_expr();
 
-    std::string to_string(const expr_ptr& expr);
-
 
     template <class OStream>
     OStream &operator<<(OStream &stream, const condition_type &type) {

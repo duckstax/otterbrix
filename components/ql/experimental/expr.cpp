@@ -1,5 +1,4 @@
 #include "expr.hpp"
-#include <sstream>
 
 namespace components::ql::experimental {
 
@@ -7,12 +6,6 @@ namespace components::ql::experimental {
         return type == condition_type::union_and ||
                type == condition_type::union_or ||
                type == condition_type::union_not;
-    }
-
-    std::string to_string(const expr_ptr& expr) {
-        std::stringstream stream;
-        stream << expr;
-        return stream.str();
     }
 
     expr_t::expr_t(condition_type type, std::string key, core::parameter_id_t value)

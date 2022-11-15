@@ -40,8 +40,4 @@ namespace components::ql::aggregate {
         return stream;
     }
 
-#ifdef DEV_MODE
-    std::string debug(const sort_t &sort);
-#endif
-
 } // namespace components::ql::aggregate

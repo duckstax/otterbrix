@@ -1,5 +1,4 @@
 #include "project_expr.hpp"
-#include <sstream>
 
 namespace components::ql::experimental {
 
@@ -26,12 +25,6 @@ namespace components::ql::experimental {
             return type.value();
         }
         return project_expr_type::invalid;
-    }
-
-    std::string to_string(const project_expr_ptr& expr) {
-        std::stringstream stream;
-        stream << expr;
-        return stream.str();
     }
 
 } // namespace components::ql::experiment

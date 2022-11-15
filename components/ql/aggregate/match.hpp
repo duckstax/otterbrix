@@ -21,8 +21,4 @@ namespace components::ql::aggregate {
         return stream;
     }
 
-#ifdef DEV_MODE
-    std::string debug(const match_t &match);
-#endif
-
 } // namespace components::ql::aggregate
