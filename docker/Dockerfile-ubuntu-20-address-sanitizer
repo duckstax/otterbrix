@@ -48,13 +48,15 @@ COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/wasm_build
+RUN ls
+RUN pwd
 RUN source ./activate.sh  && \
     cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
     cmake --build .
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DADDRESS_SANITIZER=ON && \
     cmake --build .
 
 RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
