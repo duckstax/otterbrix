@@ -167,7 +167,7 @@ namespace components::document {
         } else if (item.is_double()) {
             return ::document::impl::new_value(item.get_double());
         } else if (item.is_string()) {
-            return ::document::impl::new_value(::document::slice_t(item.get_string().c_str()));
+            return ::document::impl::new_value(std::string(item.get_string().c_str()));
         } else if (item.is_array()) {
             auto array = ::document::impl::mutable_array_t::new_array();
             for (const auto &child : item.get_array()) {

@@ -56,21 +56,21 @@ namespace document::impl::internal {
         uint32_t count() const;
         bool empty() const;
 
-        const value_t* get(slice_t key_to_find) const noexcept;
+        const value_t* get(const std::string& key_to_find) const noexcept;
         const value_t* get(int key_to_find) const noexcept;
         const value_t* get(dict_t::key_t &key_to_find) const noexcept;
         const value_t* get(const key_t &key_to_find) const noexcept;
 
         template <typename T>
-        void set(slice_t key, T value)  { setting(key).set(value); }
+        void set(const std::string&key, T value)  { setting(key).set(value); }
 
-        value_slot_t& setting(slice_t str_key);
+        value_slot_t& setting(const std::string&key);
 
-        void remove(slice_t str_key);
+        void remove(const std::string& str_key);
         void remove_all();
 
-        mutable_array_t* get_mutable_array(slice_t key);
-        mutable_dict_t* get_mutable_dict(slice_t key);
+        mutable_array_t* get_mutable_array(const std::string& key);
+        mutable_dict_t* get_mutable_dict(const std::string& key);
 
         void disconnect_from_source();
         void copy_children(copy_flags flags);
@@ -83,19 +83,19 @@ namespace document::impl::internal {
         heap_array_t* array_key_value();
 
     private:
-        key_t encode_key(slice_t) const noexcept;
+        key_t encode_key(const std::string&) const noexcept;
         void mark_changed();
         key_t _allocate_key(key_t key);
-        value_slot_t* _find_value_for(slice_t key_to_find) const noexcept;
+        value_slot_t* _find_value_for(const std::string& key_to_find) const noexcept;
         value_slot_t* _find_value_for(key_t key_to_find) const noexcept;
         value_slot_t& _make_value_for(key_t key);
-        heap_collection_t* get_mutable(slice_t str_key, tags if_type);
+        heap_collection_t* get_mutable(const std::string& str_key, tags if_type);
 
         uint32_t _count {0};
         retained_const_t<dict_t> _source;
         retained_t<shared_keys_t> _shared_keys;
         key_map_t _map;
-        std::deque<alloc_slice_t> _backing_slices;
+        std::deque<std::string> _backing_slices;
         retained_t<heap_array_t> _iterable;
     };
 

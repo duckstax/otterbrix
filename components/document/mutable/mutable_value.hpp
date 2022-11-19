@@ -32,7 +32,7 @@ namespace document::impl {
             static heap_value_t* create(uint64_t i);
             static heap_value_t* create(float f);
             static heap_value_t* create(double d);
-            static heap_value_t* create(slice_t s);
+            static heap_value_t* create(const std::string& s);
             static heap_value_t* create(const value_t *v);
 
             static const value_t* as_value(heap_value_t *v) PURE;
@@ -59,7 +59,7 @@ namespace document::impl {
 
             static void* operator new(size_t size, size_t extra_size);
             heap_value_t() = default;
-            static heap_value_t* create_str(internal::tags tag, slice_t s);
+            static heap_value_t* create_str(internal::tags tag, const std::string& s);
 
             template <class INT>
             static heap_value_t* create_int(INT i, bool is_unsigned);
@@ -84,9 +84,49 @@ namespace document::impl {
     }
 
 
-    template <class T>
-    retained_const_t<value_t> new_value(T t) {
-        return internal::heap_value_t::create(t)->as_value();
+    inline retained_const_t<value_t> new_value(null_value_t data) {
+        return internal::heap_value_t::create(data)->as_value();
     }
 
+
+    inline retained_const_t<value_t> new_value(bool data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(int data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(unsigned data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+
+    inline retained_const_t<value_t> new_value(int64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(uint64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(float data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(double data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(const std::string& data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(std::string& data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    inline retained_const_t<value_t> new_value(const value_t * data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
 }

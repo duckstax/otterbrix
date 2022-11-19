@@ -61,6 +61,7 @@ RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DADDRESS_SANITIZ
 
 RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
 
-RUN ctest -C -V --output-on-failure
+RUN export LSAN_OPTIONS=verbosity=1:log_threads=1 && \
+    ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest
