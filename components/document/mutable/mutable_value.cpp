@@ -112,7 +112,7 @@ namespace document::impl::internal {
         auto hv = new (size_byte_count + s.length()) heap_value_t(tag, tiny);
         uint8_t *str_data = &hv->_header + 1;
         memcpy(str_data, size_buf, size_byte_count);
-        memcpy(str_data + size_byte_count, s.c_str(), s.length());
+        memcpy(str_data + size_byte_count, s.data(), s.length());
         return hv;
     }
 

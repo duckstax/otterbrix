@@ -26,7 +26,7 @@ key_t::key_t(const value_t *v) noexcept {
 }
 
 bool key_t::shared() const {
-    return !_string.empty();
+    return !(_string.empty());
 }
 
 int key_t::as_int() const {
@@ -106,7 +106,7 @@ bool shared_keys_t::encode(const std::string& str, int &key) const {
 bool shared_keys_t::encode_and_add(const std::string& str, int &key) {
     if (encode(str, key))
         return true;
-    if (str.size() > _max_key_length || !is_eligible_to_encode(str))
+    if (str.length() > _max_key_length || !is_eligible_to_encode(str))
         return false;
     std::lock_guard<std::mutex> lock(_mutex);
     if (_count >= max_count)
@@ -132,7 +132,7 @@ bool shared_keys_t::_is_unknown_key(int key) const {
 }
 
 bool shared_keys_t::is_eligible_to_encode(const std::string& str) const {
-    for (size_t i = 0; i < str.size(); ++i)
+    for (size_t i = 0; i < str.length(); ++i)
         if (_usually_false(!isalnum(str[i]) && str[i] != '_' && str[i] != '-'))
             return false;
     return true;
@@ -176,7 +176,7 @@ void shared_keys_t::revert_to_count(size_t count) {
     }
     for (int key = int(_count - 1); key >= int(count); --key) {
         _table.erase(std::string(_by_key[static_cast<std::size_t>(key)]));
-        _by_key[static_cast<std::size_t>(key)] = null_string;
+        _by_key[static_cast<std::size_t>(key)] = {};
     }
     _count = unsigned(count);
 }

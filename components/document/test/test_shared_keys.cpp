@@ -5,12 +5,9 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
-#include <components/document/core/slice.hpp>
 
 using namespace document::impl;
 using document::retained_t;
-using document::slice_t;
-using document::alloc_slice_t;
 
 TEST_CASE("shared_keys_t") {
 

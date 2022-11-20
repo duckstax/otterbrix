@@ -172,17 +172,18 @@ namespace document::impl::internal {
         return _map[key_t(_allocate_key(key))];
     }
 
-    value_slot_t& heap_dict_t::setting(const std::string&key_string) {
+    value_slot_t& heap_dict_t::setting(const std::string& key_string) {
         key_t key;
-        value_slot_t *slotp = _find_value_for(key_string);
+        value_slot_t* slotp = _find_value_for(key_string);
         if (slotp) {
             key = key_t(key_string);
         } else {
             key = encode_key(key_string);
             slotp = &_make_value_for(key);
         }
-        if (slotp->empty() && !(_source && _source->get(key)))
+        if (slotp->empty() && !(_source && _source->get(key))) {
             ++_count;
+        }
         mark_changed();
         return *slotp;
     }

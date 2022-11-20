@@ -190,7 +190,7 @@ namespace document::impl {
         if (s.length() + 1 <= inline_capacity) {
             set_inline(tag, int(s.length()));
             if (s.length() > 0) {
-                ::memcpy(&_inline._value[1], s.data(), s.size());
+                ::memcpy(&_inline._value[1], s.data(), s.length());
             }
         } else {
             set_pointer(heap_value_t::create_str(tag, s)->as_value());

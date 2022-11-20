@@ -31,8 +31,6 @@ private:
     int16_t _int {-1};
 };
 
-constexpr static std::string_view null_string{};
-
 class shared_keys_t : public ref_counted_t {
 public:
     static const size_t max_count = 2048;
