@@ -134,7 +134,7 @@ namespace document::impl::internal {
     }
 
     key_t heap_dict_t::encode_key(const std::string& key) const noexcept {
-        int int_key;
+        int int_key = 0;
         if (_shared_keys && _shared_keys->encode(key, int_key))
             return key_t(int_key);
         return key_t(key);

@@ -26,7 +26,7 @@ key_t::key_t(const value_t *v) noexcept {
 }
 
 bool key_t::shared() const {
-    return !(_string.empty());
+    return _string.empty();
 }
 
 int key_t::as_int() const {

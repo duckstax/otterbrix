@@ -73,7 +73,7 @@ public:
 
     uint32_t count() const noexcept PURE          { return _a._count; }
 
-    const std::string& key_string() const noexcept;
+    std::string key_string() const noexcept; /// todo: detail view
     const value_t* key() const noexcept PURE      { return _key; }
     const value_t* value() const noexcept PURE    { return _value; }
 

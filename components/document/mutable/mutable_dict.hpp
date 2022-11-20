@@ -35,7 +35,7 @@ namespace document::impl::internal {
             void get_new();
             void decode_key(key_t key);
 
-            slice_t _key;
+            std::string _key;
             const value_t* _value;
             dict_t::iterator _source_iter;
             key_map_t::const_iterator _new_iter, _new_end;

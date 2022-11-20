@@ -376,7 +376,7 @@ shared_keys_t* dict_iterator_t::find_shared_keys() const {
     return sk;
 }
 
-const std::string& dict_iterator_t::key_string() const noexcept {
+std::string dict_iterator_t::key_string() const noexcept {
     slice_t key_str = _key->as_string();
     if (!key_str && _key->is_int()) {
         auto sk = _shared_keys ? _shared_keys : find_shared_keys();
