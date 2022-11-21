@@ -83,50 +83,15 @@ namespace document::impl {
 
     }
 
-
-    inline retained_const_t<value_t> new_value(null_value_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-
-    inline retained_const_t<value_t> new_value(bool data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(int data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(unsigned data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-
-    inline retained_const_t<value_t> new_value(int64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(uint64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(float data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(double data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(const std::string& data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(std::string& data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    inline retained_const_t<value_t> new_value(const value_t * data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(null_value_t data);
+    retained_const_t<value_t> new_value(bool data);
+    retained_const_t<value_t> new_value(int data);
+    retained_const_t<value_t> new_value(unsigned data);
+    retained_const_t<value_t> new_value(int64_t data);
+    retained_const_t<value_t> new_value(uint64_t data);
+    retained_const_t<value_t> new_value(float data);
+    retained_const_t<value_t> new_value(double data);
+    retained_const_t<value_t> new_value(const std::string& data);
+    retained_const_t<value_t> new_value(std::string& data);
+    retained_const_t<value_t> new_value(const value_t* data);
 }
