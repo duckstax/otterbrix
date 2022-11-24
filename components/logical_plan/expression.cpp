@@ -34,6 +34,10 @@ namespace components::logical_plan {
         return !operator==(rhs);
     }
 
+    std::string expression_i::to_string() const {
+        return to_string_impl();
+    }
+
     expression_i::expression_i(expression_type type)
         : type_(type) {
     }

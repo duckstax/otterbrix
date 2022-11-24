@@ -14,7 +14,6 @@ namespace components::logical_plan {
 
     class node_t : public boost::intrusive_ref_counter<node_t> {
     public:
-        explicit node_t(node_type type);
         virtual ~node_t() = default;
 
         node_type type() const;
@@ -27,10 +26,18 @@ namespace components::logical_plan {
 
         hash_t hash() const;
 
+        std::string to_string() const;
+
     protected:
         const node_type type_;
         std::vector<node_ptr> children_;
         std::vector<expression_ptr> expressions_;
+
+        explicit node_t(node_type type);
+
+    private:
+        virtual hash_t hash_impl() const = 0;
+        virtual std::string to_string_impl() const = 0;
     };
 
     struct node_hash final {
@@ -44,5 +51,11 @@ namespace components::logical_plan {
             return lhs == rhs || *lhs == *rhs;
         }
     };
+
+    template <class OStream>
+    OStream &operator<<(OStream &stream, const node_ptr& node) {
+        stream << node->to_string();
+        return stream;
+    }
 
 } // namespace components::logical_plan

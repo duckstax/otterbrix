@@ -3,9 +3,6 @@
 
 namespace components::logical_plan {
 
-    node_t::node_t(node_type type)
-        : type_(type) {}
-
     node_type node_t::type() const {
         return type_;
     }
@@ -21,6 +18,7 @@ namespace components::logical_plan {
     hash_t node_t::hash() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, type_);
+        boost::hash_combine(hash_, hash_impl());
         std::for_each(expressions_.cbegin(), expressions_.cend(), [&hash_](const expression_ptr& expression) {
             boost::hash_combine(hash_, expression->hash());
         });
@@ -28,6 +26,10 @@ namespace components::logical_plan {
             boost::hash_combine(hash_, child->hash());
         });
         return hash_;
+    }
+
+    std::string node_t::to_string() const {
+        return to_string_impl();
     }
 
     bool node_t::operator==(const node_t& rhs) const {
@@ -52,5 +54,8 @@ namespace components::logical_plan {
     bool node_t::operator!=(const node_t& rhs) const {
         return !operator==(rhs);
     }
+
+    node_t::node_t(node_type type)
+        : type_(type) {}
 
 } // namespace components::logical_plan
