@@ -1,6 +1,7 @@
 project(logical_plan CXX)
 
 set(SOURCE_${PROJECT_NAME}
+        expression.cpp
         node.cpp
 )
 
@@ -15,6 +16,8 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         ${CONAN_LIBS}
+        CONAN_PKG::boost
+        #rocketjoe::ql
 )
 
 target_include_directories(
@@ -23,5 +26,5 @@ target_include_directories(
 )
 
 if (DEV_MODE)
-    add_subdirectory(test)
+#    add_subdirectory(test)
 endif ()
