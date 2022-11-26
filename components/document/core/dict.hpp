@@ -16,14 +16,14 @@ public:
 
     class key_t {
     public:
-        explicit key_t(slice_t raw_str);
+        explicit key_t(const std::string&);
         key_t(const key_t&) = delete;
         ~key_t();
-        slice_t string() const noexcept;
+        const std::string& string() const noexcept;
         int compare(const key_t &k) const noexcept;
 
     private:
-        slice_t const _raw_str;
+        std::string const _raw_str;
         shared_keys_t* _shared_keys { nullptr };
         uint32_t _hint { 0xffffffff };
         int32_t _numeric_key { 0 };
@@ -39,7 +39,7 @@ public:
 
     uint32_t count() const noexcept PURE;
     bool empty() const noexcept PURE;
-    const value_t* get(slice_t key) const noexcept PURE;
+    const value_t* get(const std::string& key) const noexcept PURE;
     const value_t* get(int key) const noexcept PURE;
     mutable_dict_t* as_mutable() const noexcept PURE;
     bool is_equals(const dict_t* NONNULL) const noexcept PURE;
@@ -73,7 +73,7 @@ public:
 
     uint32_t count() const noexcept PURE          { return _a._count; }
 
-    slice_t key_string() const noexcept;
+    std::string key_string() const noexcept; /// todo: detail view
     const value_t* key() const noexcept PURE      { return _key; }
     const value_t* value() const noexcept PURE    { return _value; }
 

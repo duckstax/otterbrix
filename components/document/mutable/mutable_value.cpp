@@ -95,24 +95,24 @@ namespace document::impl::internal {
         return create(tag_float, 8, {reinterpret_cast<char*>(&data.le) - 1, sizeof(data.le) + 1});
     }
 
-    heap_value_t *heap_value_t::create(slice_t s) {
+    heap_value_t *heap_value_t::create(const std::string& s) {
         return create_str(internal::tag_string, s);
     }
 
-    heap_value_t* heap_value_t::create_str(tags tag, slice_t s) {
+    heap_value_t* heap_value_t::create_str(tags tag, const std::string& s) {
         uint8_t size_buf[max_varint_len32];
         size_t size_byte_count = 0;
         int tiny;
-        if (s.size < 0x0F) {
-            tiny = int(s.size);
+        if (s.length() < 0x0F) {
+            tiny = int(s.length());
         } else {
             tiny = 0x0F;
-            size_byte_count = put_uvar_int(&size_buf, s.size);
+            size_byte_count = put_uvar_int(&size_buf, s.length());
         }
-        auto hv = new (size_byte_count + s.size) heap_value_t(tag, tiny);
+        auto hv = new (size_byte_count + s.length()) heap_value_t(tag, tiny);
         uint8_t *str_data = &hv->_header + 1;
         memcpy(str_data, size_buf, size_byte_count);
-        memcpy(str_data + size_byte_count, s.buf, s.size);
+        memcpy(str_data + size_byte_count, s.data(), s.length());
         return hv;
     }
 
@@ -217,4 +217,50 @@ namespace document::impl::internal {
         _changed = c;
     }
 
+}
+
+namespace document::impl {
+    retained_const_t<value_t> new_value(null_value_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(bool data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(int data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(unsigned data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(int64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(uint64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(float data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(double data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(const std::string& data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(std::string& data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(const value_t* data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
 }

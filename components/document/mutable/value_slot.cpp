@@ -160,7 +160,7 @@ namespace document::impl {
         assert_postcondition(is_equals(as_value()->as_double(), d));
     }
 
-    void value_slot_t::set(slice_t s) {
+    void value_slot_t::set(const std::string& s) {
         set_string_or_data(tag_string, s);
     }
 
@@ -186,10 +186,12 @@ namespace document::impl {
         }
     }
 
-    void value_slot_t::set_string_or_data(tags tag, slice_t s) {
-        if (s.size + 1 <= inline_capacity) {
-            set_inline(tag, int(s.size));
-            s.copy_to(&_inline._value[1]);
+    void value_slot_t::set_string_or_data(tags tag, const std::string& s) {
+        if (s.length() + 1 <= inline_capacity) {
+            set_inline(tag, int(s.length()));
+            if (s.length() > 0) {
+                ::memcpy(&_inline._value[1], s.data(), s.length());
+            }
         } else {
             set_pointer(heap_value_t::create_str(tag, s)->as_value());
         }
@@ -250,7 +252,7 @@ namespace document::impl {
                 set(copy->as_value());
                 break;
             case tag_string:
-                set(value->as_string());
+                set(value->as_string().as_string());
                 break;
             case tag_float:
                 set(value->as_double());

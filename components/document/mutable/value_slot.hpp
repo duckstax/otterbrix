@@ -2,7 +2,7 @@
 
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/endian.hpp>
-#include <limits.h>
+#include <climits>
 
 namespace document::impl {
 
@@ -35,7 +35,7 @@ namespace document::impl {
         void set(uint64_t i);
         void set(float f);
         void set(double d);
-        void set(slice_t s);
+        void set(const std::string& s);
         void set_value(const value_t* v);
 
         template <class T> void set(const T* t)                    { set_value(t); }
@@ -63,7 +63,7 @@ namespace document::impl {
         void release_value();
         void set_value(internal::tags ag, int tiny, slice_t bytes);
         template <class INT> void set_int(INT);
-        void set_string_or_data(internal::tags tag, slice_t s);
+        void set_string_or_data(internal::tags tag, const std::string& s);
 
         static constexpr uint8_t inline_capacity = 7;
         static constexpr uint8_t inline_tag = 0xFF;
