@@ -2,42 +2,6 @@
 
 namespace components::logical_plan {
 
-    enum class expression_type : uint8_t {
-        novalid,
-
-        compare_eq,
-        compare_ne,
-        compare_gt,
-        compare_lt,
-        compare_gte,
-        compare_lte,
-        compare_regex,
-        compare_any,
-        compare_all,
-        compare_and,
-        compare_or,
-        compare_not,
-
-        aggregate_count,
-        aggregate_sum,
-        aggregate_min,
-        aggregate_max,
-        aggregate_avg,
-
-        scalar_get_field,
-        scalar_add,
-        scalar_subtract,
-        scalar_multiply,
-        scalar_divide,
-        scalar_round,
-        scalar_ceil,
-        scalar_floor,
-        scalar_abs,
-        scalar_mod,
-        scalar_pow,
-        scalar_sqrt
-    };
-
     enum class node_type : uint8_t {
         aggregate_t,
         alias_t,
