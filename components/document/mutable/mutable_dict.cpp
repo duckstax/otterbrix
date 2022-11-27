@@ -133,14 +133,14 @@ namespace document::impl::internal {
         _iterable = nullptr;
     }
 
-    key_t heap_dict_t::encode_key(slice_t key) const noexcept {
-        int int_key;
+    key_t heap_dict_t::encode_key(const std::string& key) const noexcept {
+        int int_key = 0;
         if (_shared_keys && _shared_keys->encode(key, int_key))
             return key_t(int_key);
         return key_t(key);
     }
 
-    value_slot_t* heap_dict_t::_find_value_for(slice_t key) const noexcept {
+    value_slot_t* heap_dict_t::_find_value_for(const std::string& key) const noexcept {
         if (_map.empty())
             return nullptr;
         key_t encoded = encode_key(key);
@@ -161,9 +161,8 @@ namespace document::impl::internal {
     key_t heap_dict_t::_allocate_key(key_t key) {
         if (key.shared())
             return key;
-        alloc_slice_t alloced_key(key.as_string().as_string());
-        _backing_slices.push_back(alloced_key);
-        return key_t(alloced_key);
+        _backing_slices.push_back(key.as_string());
+        return key_t(key.as_string());
     }
 
     value_slot_t& heap_dict_t::_make_value_for(key_t key) {
@@ -173,22 +172,23 @@ namespace document::impl::internal {
         return _map[key_t(_allocate_key(key))];
     }
 
-    value_slot_t& heap_dict_t::setting(slice_t str_key) {
+    value_slot_t& heap_dict_t::setting(const std::string& key_string) {
         key_t key;
-        value_slot_t *slotp = _find_value_for(str_key);
+        value_slot_t* slotp = _find_value_for(key_string);
         if (slotp) {
-            key = key_t(str_key);
+            key = key_t(key_string);
         } else {
-            key = encode_key(str_key);
+            key = encode_key(key_string);
             slotp = &_make_value_for(key);
         }
-        if (slotp->empty() && !(_source && _source->get(key)))
+        if (slotp->empty() && !(_source && _source->get(key))) {
             ++_count;
+        }
         mark_changed();
         return *slotp;
     }
 
-    const value_t* heap_dict_t::get(slice_t key) const noexcept {
+    const value_t* heap_dict_t::get(const std::string& key) const noexcept {
         value_slot_t* val = _find_value_for(key);
         if (val)
             return val->as_value();
@@ -220,7 +220,7 @@ namespace document::impl::internal {
             return _source ? _source->get(key) : nullptr;
     }
 
-    heap_collection_t* heap_dict_t::get_mutable(slice_t str_key, tags if_type) {
+    heap_collection_t* heap_dict_t::get_mutable(const std::string& str_key, tags if_type) {
         key_t key = encode_key(str_key);
         retained_t<heap_collection_t> result;
         value_slot_t* mval = _find_value_for(key);
@@ -236,7 +236,7 @@ namespace document::impl::internal {
         return result;
     }
 
-    void heap_dict_t::remove(slice_t str_key) {
+    void heap_dict_t::remove(const std::string& str_key) {
         key_t key = encode_key(str_key);
         if (_source && _source->get(key)) {
             auto it = _map.find(key);
@@ -268,11 +268,11 @@ namespace document::impl::internal {
         mark_changed();
     }
 
-    mutable_array_t *heap_dict_t::get_mutable_array(slice_t key) {
+    mutable_array_t *heap_dict_t::get_mutable_array(const std::string& key) {
         return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value(get_mutable(key, tag_array))));
     }
 
-    mutable_dict_t *heap_dict_t::get_mutable_dict(slice_t key) {
+    mutable_dict_t *heap_dict_t::get_mutable_dict(const std::string& key) {
         return static_cast<mutable_dict_t*>(const_cast<value_t*>(as_value(get_mutable(key, tag_dict))));
     }
 
@@ -281,7 +281,7 @@ namespace document::impl::internal {
             _iterable = new heap_array_t(2*count());
             uint32_t n = 0;
             for (iterator i(this); i; ++i) {
-                _iterable->set(n++, i.key_string());
+                _iterable->set(n++, i.key_string().as_string());
                 _iterable->set(n++, i.value());
             }
             assert(n == 2*_count);
@@ -293,7 +293,7 @@ namespace document::impl::internal {
         if (!_source)
             return;
         for (dict_t::iterator i(_source); i; ++i) {
-            slice_t key = i.key_string();
+            auto key = i.key_string();
             if (_map.find(key_t(key)) == _map.end())
                 set(key, i.value());
         }
@@ -330,11 +330,11 @@ namespace document::impl {
         return heap_dict()->is_changed();
     }
 
-    const value_t *mutable_dict_t::get(slice_t key_to_find) const noexcept {
+    const value_t *mutable_dict_t::get(const std::string& key_to_find) const noexcept {
         return heap_dict()->get(key_to_find);
     }
 
-    void mutable_dict_t::remove(slice_t key) {
+    void mutable_dict_t::remove(const std::string& key) {
         heap_dict()->remove(key);
     }
 
@@ -342,11 +342,11 @@ namespace document::impl {
         heap_dict()->remove_all();
     }
 
-    mutable_array_t *mutable_dict_t::get_mutable_array(slice_t key) {
+    mutable_array_t *mutable_dict_t::get_mutable_array(const std::string& key) {
         return heap_dict()->get_mutable_array(key);
     }
 
-    mutable_dict_t *mutable_dict_t::get_mutable_dict(slice_t key) {
+    mutable_dict_t *mutable_dict_t::get_mutable_dict(const std::string& key) {
         return heap_dict()->get_mutable_dict(key);
     }
 

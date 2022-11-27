@@ -5,12 +5,9 @@
 #include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
-#include <components/document/core/slice.hpp>
 
 using namespace document::impl;
 using document::retained_t;
-using document::slice_t;
-using document::alloc_slice_t;
 
 TEST_CASE("shared_keys_t") {
 
@@ -61,7 +58,7 @@ TEST_CASE("shared_keys_t") {
         REQUIRE(sk->encode_and_add("zero", key));
         REQUIRE(key == 0);
         REQUIRE(sk->count() == 5);
-        REQUIRE(sk->by_key() == (std::vector<slice_t>{"zero", "one", "two", "three", "four"}));
+        REQUIRE(sk->by_key() == (std::vector<std::string>{"zero", "one", "two", "three", "four"}));
     }
 
     SECTION("decode") {
@@ -79,9 +76,9 @@ TEST_CASE("shared_keys_t") {
         REQUIRE(sk->decode(1) == "one");
         REQUIRE(sk->decode(4) == "four");
 
-        REQUIRE_FALSE(sk->decode(5));
-        REQUIRE_FALSE(sk->decode(2047));
-        REQUIRE_FALSE(sk->decode(INT_MAX));
+        REQUIRE_FALSE(!sk->decode(5).empty());
+        REQUIRE_FALSE(!sk->decode(2047).empty());
+        REQUIRE_FALSE(!sk->decode(INT_MAX).empty());
     }
 
     SECTION("revert_to_count") {
@@ -96,9 +93,9 @@ TEST_CASE("shared_keys_t") {
         sk->revert_to_count(3);
 
         REQUIRE(sk->count() == 3);
-        REQUIRE_FALSE(sk->decode(3));
-        REQUIRE_FALSE(sk->decode(4));
-        REQUIRE(sk->by_key() == std::vector<slice_t>{"zero", "one", "two"});
+        REQUIRE_FALSE(!sk->decode(3).empty());
+        REQUIRE_FALSE(!sk->decode(4).empty());
+        REQUIRE(sk->by_key() == std::vector<std::string>{"zero", "one", "two"});
         REQUIRE(sk->encode_and_add("zero", key));
         REQUIRE(key == 0);
         REQUIRE(sk->encode_and_add("three", key));
@@ -106,11 +103,11 @@ TEST_CASE("shared_keys_t") {
 
         sk->revert_to_count(3);
         REQUIRE(sk->count() == 3);
-        REQUIRE(sk->by_key() == std::vector<slice_t>{"zero", "one", "two"});
+        REQUIRE(sk->by_key() == std::vector<std::string>{"zero", "one", "two"});
 
         sk->revert_to_count(0);
         REQUIRE(sk->count() == 0);
-        REQUIRE(sk->by_key() == std::vector<slice_t>{});
+        REQUIRE(sk->by_key() == std::vector<std::string>{});
         REQUIRE(sk->encode_and_add("three", key));
         REQUIRE(sk->count() == 1);
         REQUIRE(key == 0);
@@ -123,7 +120,7 @@ TEST_CASE("shared_keys_t") {
             char str[10];
             sprintf(str, "K%zu", i);
             int key;
-            sk->encode_and_add(slice_t(str), key);
+            sk->encode_and_add(std::string(str), key);
             REQUIRE(static_cast<size_t>(key) == i);
         }
 
@@ -133,7 +130,7 @@ TEST_CASE("shared_keys_t") {
         for (size_t i = 0; i < shared_keys_t::max_count; i++) {
             char str[10];
             sprintf(str, "K%zu", i);
-            REQUIRE(sk->decode(static_cast<int>(i)) == slice_t(str));
+            REQUIRE(sk->decode(static_cast<int>(i)) == std::string(str));
         }
     }
 

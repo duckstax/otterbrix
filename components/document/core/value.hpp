@@ -29,8 +29,7 @@ namespace document::impl {
         deep_copy_immutables = (deep_copy | copy_immutables),
     };
 
-    class null_value_t {
-    };
+    class null_value_t {};
 
     constexpr null_value_t null_value;
 
@@ -68,7 +67,7 @@ namespace document::impl {
         static const array_t* as_array(const value_t* v) PURE;
         static const dict_t* as_dict(const value_t* v) PURE;
 
-        alloc_slice_t to_string() const;
+        std::string to_string() const;
 
         bool is_mutable() const PURE;
 

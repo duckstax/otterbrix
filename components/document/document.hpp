@@ -2,7 +2,6 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <components/document/core/slice.hpp>
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document_id.hpp>
@@ -65,7 +64,7 @@ namespace components::document {
 
     template<>
     inline void document_t::set(const std::string& key, const std::string &value) {
-        set_(key, ::document::impl::new_value(::document::slice_t(value)));
+        set_(key, ::document::impl::new_value(value));
     }
 
     template<>

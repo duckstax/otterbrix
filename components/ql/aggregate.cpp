@@ -42,7 +42,7 @@ namespace components::ql {
 
     template<>
     void aggregate_statement::add_parameter(core::parameter_id_t id, const std::string& value) {
-        values_.emplace(id, expr_value_t(::document::impl::new_value(::document::slice_t(value)).detach()));
+        values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
     }
 
     auto aggregate_statement::parameter(core::parameter_id_t id) const -> const expr_value_t& {

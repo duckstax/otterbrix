@@ -1,25 +1,32 @@
 name: manylinux2014
 
-on: [pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request:
         
 env:
   BUILD_TYPE: Release
   DEV_MODE: ON   
   
 jobs:
-  prepare:
-    name: Make environment variables available to the rest of the workflow
+  build-info:
+    name: Build info
     runs-on: ubuntu-latest
     outputs:
-        params: ${{ steps.env-vars.outputs.params }}
+      python-versions: ${{ steps.setVariables.outputs.matrix }}
+    steps:
+      - id: setVariables
+        run: |
+          echo 'matrix=[ "3.6", "3.7", "3.8", "3.9", "3.10", "3.11" ]' >> $GITHUB_OUTPUT
+
+  build-wasm:
+    name: Build WASM library
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
+        uses: actions/checkout@v3
 
       - name: Install system dependencies
         run: |
@@ -27,11 +34,11 @@ jobs:
           curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
           echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
           sudo apt update && 
-          sudo apt install -y bazel bazel-4.1.0 git 
+          sudo apt install -y bazel bazel-4.1.0 git jq
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.53.0
+          pip3 install --retries=30 conan==1.53.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -58,25 +65,21 @@ jobs:
       - run: |
           pwd
           ls
+
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: build/bin/*.wasm
           name: wasm-file
 
-      - name: install jq
-        run: pip install jq
-      - id: env-vars
-        name: Output environment variables
-        run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
-
   build-wheel:
+    name: Build native wheel
     runs-on: ubuntu-latest
-    needs: [ prepare ]
+    needs: [ build-wasm, build-info ]
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        PYTHON_VERSION: [ "3.6","3.7","3.8","3.9", "3.10", "3.11" ]
+        PYTHON_VERSION: ${{ fromJson(needs.build-info.outputs.python-versions) }}
 
     container: k0tb9g9m0t/manylinux-bazel-2014
 
@@ -98,7 +101,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --no-cache-dir conan==1.53.0
+          pip3 install --retries=30 conan==1.53.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -133,15 +136,17 @@ jobs:
           cp integration/python/ottergon/pyproject.toml .
           cp integration/python/ottergon/get_path.py .
           
-          python3 -m pip install --no-cache-dir  wheel setuptools scikit-build pytest==6.2.5
+          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON
-          cp ./wasm_bin/*.wasm $(echo "./$(python3 get_path.py )/components/wasm_runner/tests/") 
-          cd $(echo "./$(python3 get_path.py )") 
-          ctest -C -V --output-on-failure
+          python3 setup.py bdist_wheel --verbose
+          pwd
+          ls
+          ls wasm_bin
+          mkdir -p $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
+          cp wasm_bin/*.wasm $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
 
-      - name: repair wheel
+      - name: Repair wheel
         run: |
           for whl in dist/ottergon*.whl; do
             auditwheel repair ${whl} -w ./work/dist/ 
@@ -155,39 +160,91 @@ jobs:
           name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
 
   test-wheel:
+    name: Test wheel
     runs-on: ${{ matrix.operating-system }}
-    needs: [ build-wheel ]
+    needs: [ build-wheel, build-info ]
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         operating-system: [ ubuntu-20.04 ]
-        python-version: [ "3.6","3.7","3.8","3.9", "3.10", "3.11" ]
+        python-version: ${{ fromJson(needs.build-info.outputs.python-versions) }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: install packege
+      - name: Install pytest
         run: |
           sudo apt update 
-          sudo apt upgrade -y 
-          sudo apt install -y  python3-pip python3-venv
-          pip3 install --no-cache-dir pytest==6.2.5
+          sudo apt install -y python3-pip python3-venv
+          pip3 install --retries=30 pytest==6.2.5
 
       - uses: actions/download-artifact@v3
         with:
           name: ottergon-wheel-${{ matrix.python-version }}
           path: ./app
 
-      - name: install wheel and test
+      - name: Install package from wheel
         run: |
           python3 --version
-          pip3 install ./app/ottergon-*.whl
+          pip3 install --retries=30 ./app/ottergon-*.whl
+
+      - name: Test package imports
+        run: |
           python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
           python3 -c "from ottergon import Client, DataBase, Collection"
+
+      - name: Run pytest
+        run: |
           pytest
+
+  upload-wheel:
+    name: Upload wheel
+    runs-on: ${{ matrix.operating-system }}
+    needs: [ test-wheel, build-info ]
+    # TODO remove second branch condition later
+    if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [ ubuntu-20.04 ]
+        python-version: ${{ fromJson(needs.build-info.outputs.python-versions) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pip3
+        run: |
+          sudo apt update 
+          sudo apt install -y python3-pip
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: ottergon-wheel-${{ matrix.python-version }}
+          path: ./app
+
+      - name: Install twine
+        run: |
+          pip3 install --retries=30 twine
+
+      - name: Publish wheels
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+        run: | 
+          pwd
+          ls
+          echo "Pretend to upload"
+          #twine upload --skip-existing *
+        working-directory: ./app

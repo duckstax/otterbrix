@@ -177,7 +177,7 @@ namespace document::impl {
         return s;
     }
 
-    alloc_slice_t value_t::to_string() const {
+    std::string value_t::to_string() const {
         char buf[32], *str = buf;
         switch (tag()) {
             case tag_short:
@@ -217,9 +217,9 @@ namespace document::impl {
                 break;
             }
             default:
-                return alloc_slice_t(as_string().as_string());
+                return as_string().as_string();
         }
-        return alloc_slice_t(str);
+        return std::string(str);
     }
 
     bool value_t::is_mutable() const {

@@ -27,7 +27,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(is_equals(ma->as_double(), 0.0));
         REQUIRE(ma->as_string() == null_slice);
         REQUIRE(ma->as_data() == null_slice);
-        REQUIRE(ma->to_string() == null_slice);
+        REQUIRE(ma->to_string().empty());
         REQUIRE(ma->as_dict() == nullptr);
         REQUIRE(ma->as_array() == ma);
     }
@@ -61,7 +61,7 @@ TEST_CASE("mutable::mutable_array_t") {
         ma->set(5, 2021);
         ma->set(6, 123456789);
         ma->set(7, -123456789);
-        ma->set(8, slice_t("dog"));
+        ma->set(8, std::string("dog"));
         ma->set(9, static_cast<float>(M_PI));
         ma->set(10, M_PI);
         ma->set(11, std::numeric_limits<uint64_t>::max());
@@ -86,7 +86,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(5)->as_int() == 2021);
         REQUIRE(ma->get(6)->as_int() == 123456789);
         REQUIRE(ma->get(7)->as_int() == -123456789);
-        REQUIRE(ma->get(8)->as_string() == slice_t("dog"));
+        REQUIRE(ma->get(8)->as_string() == std::string("dog"));
         REQUIRE(ma->get(9)->as_float() == Approx(static_cast<float>(M_PI)));
         REQUIRE(ma->get(10)->as_double() == Approx(M_PI));
         REQUIRE(ma->get(11)->as_unsigned() == std::numeric_limits<uint64_t>::max());
@@ -110,7 +110,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(2)->type() == value_type::boolean);
         REQUIRE(ma->get(2)->as_bool() == true);
         REQUIRE(ma->get(3)->type() == value_type::string);
-        REQUIRE(ma->get(3)->as_string() == slice_t("dog"));
+        REQUIRE(ma->get(3)->as_string().as_string() == std::string("dog"));
 
         ma->insert(1, 2);
         REQUIRE(ma->count() == 14);
@@ -163,7 +163,7 @@ TEST_CASE("mutable::mutable_array_t") {
     SECTION("copy") {
         auto ma = mutable_array_t::new_array(2);
         ma->set(0, 100);
-        ma->set(1, slice_t("dog"));
+        ma->set(1, std::string("dog"));
 
         auto mb = mutable_array_t::new_array(1);
         mb->set(0, ma);
@@ -206,7 +206,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(is_equals(md->as_double(), 0.0));
         REQUIRE(md->as_string() == null_slice);
         REQUIRE(md->as_data() == null_slice);
-        REQUIRE(md->to_string() == null_slice);
+        REQUIRE(md->to_string().empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
         REQUIRE(md->as_mutable() == md);
@@ -229,11 +229,11 @@ TEST_CASE("mutable::mutable_dict_t") {
         md->set("+", 2021);
         md->set("hi", 123456789);
         md->set("lo", -123456789);
-        md->set("str", slice_t("dog"));
+        md->set("str", std::string("dog"));
         REQUIRE(md->is_changed());
         REQUIRE(md->count() == 9);
 
-        static const slice_t keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
+        static const std::string keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
         static const value_type types[9] = {
             value_type::number, value_type::number, value_type::boolean, value_type::number, value_type::number,
             value_type::null, value_type::string, value_type::boolean, value_type::number
@@ -249,14 +249,14 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->get("+")->as_int() == 2021);
         REQUIRE(md->get("hi")->as_int() == 123456789);
         REQUIRE(md->get("lo")->as_int() == -123456789);
-        REQUIRE(md->get("str")->as_string() == slice_t("dog"));
+        REQUIRE(md->get("str")->as_string() == std::string("dog"));
         REQUIRE(md->get("foo") == nullptr);
 
         bool found[9] = { };
         mutable_dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
-            auto key = i1.key_string();
+            auto key = i1.key_string().as_string();
             auto j = std::find(&keys[0], &keys[9], key) - &keys[0];
             REQUIRE(j < 9);
             REQUIRE_FALSE(found[j]);
@@ -296,9 +296,9 @@ TEST_CASE("mutable::mutable_dict_t") {
         md->set("+", 2021);
         md->set("hi", 123456789);
         md->set("lo", -123456789);
-        md->set("str", slice_t("dog"));
+        md->set("str", std::string("dog"));
 
-        static const slice_t keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
+        static const std::string keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
         static const value_type types[9] = {
             value_type::number, value_type::number, value_type::boolean, value_type::number, value_type::number,
             value_type::null, value_type::string, value_type::boolean, value_type::number
@@ -334,7 +334,7 @@ TEST_CASE("mutable::mutable_dict_t") {
     SECTION("copy") {
         auto ma = mutable_dict_t::new_dict();
         ma->set("a", 100);
-        ma->set("b", slice_t("dog"));
+        ma->set("b", std::string("dog"));
 
         auto mb = mutable_dict_t::new_dict();
         mb->set("a", ma);
@@ -364,9 +364,9 @@ TEST_CASE("mutable long string") {
     const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     auto ma = mutable_array_t::new_array(50);
     for (uint32_t i = 0; i < size; ++i) {
-        ma->set(i, slice_t(chars, i));
+        ma->set(i, std::string(chars, i));
     }
     for (uint32_t i = 0; i < size; ++i) {
-        REQUIRE(ma->get(i)->as_string() == slice_t(chars, i));
+        REQUIRE(ma->get(i)->as_string().as_string() == std::string(chars, i));
     }
 }
