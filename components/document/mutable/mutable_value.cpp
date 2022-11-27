@@ -1,11 +1,15 @@
 #include "mutable_value.hpp"
+
+#include <cstring>
+
+#include <algorithm>
+
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
-#include <components/document/core/doc.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
-#include <components/document/support/better_assert.hpp>
-#include <algorithm>
+
 
 namespace document::impl::internal {
 
@@ -30,9 +34,9 @@ namespace document::impl::internal {
         return tags(_header >> 4);
     }
 
-    heap_value_t* heap_value_t::create(tags tag, int tiny, slice_t extra_data) {
-        auto hv = new (extra_data.size) heap_value_t(tag, tiny);
-        extra_data.copy_to(&hv->_header + 1);
+    heap_value_t* heap_value_t::create(tags tag, int tiny, storage_view extra_data) {
+        auto hv = new (extra_data.size()) heap_value_t(tag, tiny);
+        copy_to(extra_data,&hv->_header + 1);
         return hv;
     }
 
@@ -99,7 +103,7 @@ namespace document::impl::internal {
         return create_str(internal::tag_string, s);
     }
 
-    heap_value_t* heap_value_t::create_str(tags tag, const std::string& s) {
+    heap_value_t* heap_value_t::create_str(tags tag, std::string_view s) {
         uint8_t size_buf[max_varint_len32];
         size_t size_byte_count = 0;
         int tiny;
@@ -120,7 +124,7 @@ namespace document::impl::internal {
         assert_precondition(v->tag() < tag_array);
         size_t size = v->data_size();
         auto hv = new (size - 1) heap_value_t();
-        memcpy(&hv->_header, v, size);
+        ::memcpy(&hv->_header, v, size);
         return hv;
     }
 

@@ -35,6 +35,7 @@ namespace components::document {
         document_value_t value_;
 
         void set_(const std::string &key, const document_const_value_t& value);
+        void set_(std::string_view key, const document_const_value_t& value);
 
         friend class document_view_t;
     };

@@ -1,8 +1,10 @@
 #include "pointer.hpp"
-#include <components/document/core/doc.hpp>
-#include <components/document/support/better_assert.hpp>
-#include <tuple>
+
 #include <cstdio>
+
+#include <tuple>
+
+#include <components/document/support/better_assert.hpp>
 
 namespace document::impl::internal {
 

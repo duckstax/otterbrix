@@ -11,6 +11,12 @@ key_t::key_t(const std::string& key)
     assert_precondition(!key.empty());
 }
 
+key_t::key_t(std::string_view key)
+    : _string(key)
+{
+    assert_precondition(!key.empty());
+}
+
 key_t::key_t(int key)
     : _int(static_cast<int16_t>(key))
 {
@@ -21,7 +27,7 @@ key_t::key_t(const value_t *v) noexcept {
     if (v->is_int()) {
         _int = static_cast<int16_t>(v->as_int());
     } else {
-        _string = v->as_string().as_string();
+        _string = v->as_string();
     }
 }
 
@@ -50,11 +56,7 @@ bool key_t::operator<(const key_t& k) const noexcept {
     }
 }
 
-shared_keys_t::shared_keys_t(slice_t state_data)
-    : shared_keys_t()
-{
-    load_from(state_data);
-}
+
 
 shared_keys_t::shared_keys_t(const value_t *state)
     : shared_keys_t()
@@ -69,9 +71,6 @@ size_t shared_keys_t::count() const {
     return _count;
 }
 
-bool shared_keys_t::load_from(slice_t state_data) {
-    return load_from(value_t::from_data(state_data));
-}
 
 bool shared_keys_t::load_from(const value_t *state) {
     if (!state)
@@ -83,8 +82,8 @@ bool shared_keys_t::load_from(const value_t *state) {
 
     i += _count;
     for (; i; ++i) {
-        slice_t tmp = i.value()->as_string();
-        auto str = tmp.as_string();//todo: string_view;
+        auto tmp =  i.value()->as_string();
+        std::string str ( tmp.data(),tmp.size()); //todo: string_view;
         if (!str.empty())
             return false;
         int key;
@@ -96,6 +95,16 @@ bool shared_keys_t::load_from(const value_t *state) {
 
 bool shared_keys_t::encode(const std::string& str, int &key) const {
     auto entry = _table.find(str);
+    if (_usually_true(entry != _table.end())) {
+        key = entry->second;
+        return true;
+    }
+    return false;
+}
+
+bool shared_keys_t::encode(std::string_view str, int &key) const {
+    std::string tmp(str.data(),str.size()); /// todo refatorimg;
+    auto entry = _table.find(tmp);
     if (_usually_true(entry != _table.end())) {
         key = entry->second;
         return true;

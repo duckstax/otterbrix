@@ -24,7 +24,7 @@ namespace document::impl::internal {
             iterator(const mutable_dict_t *dict NONNULL) noexcept;
 
             uint32_t count() const noexcept;
-            slice_t key_string() const noexcept;
+            std::string key_string() const noexcept;
             const value_t* value() const noexcept;
 
             explicit operator bool() const noexcept;
@@ -57,6 +57,7 @@ namespace document::impl::internal {
         bool empty() const;
 
         const value_t* get(const std::string& key_to_find) const noexcept;
+        const value_t* get(std::string_view key_to_find) const noexcept;
         const value_t* get(int key_to_find) const noexcept;
         const value_t* get(dict_t::key_t &key_to_find) const noexcept;
         const value_t* get(const key_t &key_to_find) const noexcept;
@@ -64,7 +65,11 @@ namespace document::impl::internal {
         template <typename T>
         void set(const std::string&key, T value)  { setting(key).set(value); }
 
+        template <typename T>
+        void set(std::string_view key, T value)  { setting(key).set(value); }
+
         value_slot_t& setting(const std::string&key);
+        value_slot_t& setting(std::string_view key);
 
         void remove(const std::string& str_key);
         void remove_all();
@@ -84,9 +89,11 @@ namespace document::impl::internal {
 
     private:
         key_t encode_key(const std::string&) const noexcept;
+        key_t encode_key(std::string_view) const noexcept;
         void mark_changed();
         key_t _allocate_key(key_t key);
         value_slot_t* _find_value_for(const std::string& key_to_find) const noexcept;
+        value_slot_t* _find_value_for(std::string_view key_to_find) const noexcept;
         value_slot_t* _find_value_for(key_t key_to_find) const noexcept;
         value_slot_t& _make_value_for(key_t key);
         heap_collection_t* get_mutable(const std::string& str_key, tags if_type);

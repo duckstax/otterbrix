@@ -1,7 +1,5 @@
 #include <catch2/catch.hpp>
-#include <components/document/core/slice.hpp>
 
-using namespace document;
 
 TEST_CASE("hash") {
     constexpr int size = 4096;
@@ -10,7 +8,7 @@ TEST_CASE("hash") {
     for (int i = 0; i < count_keys; ++i) {
         char keybuf[10];
         sprintf(keybuf, "k-%04d", i);
-        auto hash = slice_t(keybuf).hash();
+        auto hash =  std::hash<std::string> {}(keybuf);
         auto index = hash & (size-1);
         ++bucket[index];
     }

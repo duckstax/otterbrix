@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cassert>
+
 #include <components/document/core/internal.hpp>
-#include <components/document/core/slice.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/exception.hpp>
-#include <iosfwd>
 
 namespace document::impl {
     class array_t;
@@ -40,8 +40,8 @@ namespace document::impl {
         static const value_t* const null_value;
         static const value_t* const undefined_value;
 
-        static const value_t* from_data(slice_t) noexcept;
-        static const value_t* from_trusted_data(slice_t s) noexcept;
+        static const value_t* from_data(const std::string&) noexcept;
+        static const value_t* from_trusted_data(const std::string& ) noexcept;
         value_type type() const noexcept PURE;
         bool is_equal(const value_t*) const PURE;
         bool is_lt(const value_t*) const PURE;
@@ -58,8 +58,8 @@ namespace document::impl {
         bool is_undefined() const noexcept PURE;
         bool is_pointer() const noexcept PURE;
         const internal::pointer_t* as_pointer() const PURE;
-        slice_t as_string() const noexcept PURE;
-        slice_t as_data() const noexcept PURE;
+        std::string_view as_string() const noexcept PURE;
+        std::string_view as_data() const noexcept PURE;
 
         const array_t* as_array() const noexcept PURE;
         const dict_t* as_dict() const noexcept PURE;
@@ -83,8 +83,6 @@ namespace document::impl {
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
             : _byte{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
 
-        static const value_t* find_root(slice_t) noexcept PURE;
-        bool validate(const void* data_start, const void* data_end) const noexcept PURE;
 
         internal::tags tag() const noexcept PURE;
         unsigned tiny_value() const noexcept PURE;
@@ -92,7 +90,7 @@ namespace document::impl {
         template<typename T>
         T as_float_of_type() const noexcept PURE;
 
-        slice_t get_string_bytes() const noexcept PURE;
+        std::string_view get_string_bytes() const noexcept PURE;
 
         bool is_wide_array() const noexcept PURE;
         uint32_t count_value() const noexcept PURE;

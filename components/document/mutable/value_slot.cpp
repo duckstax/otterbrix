@@ -2,13 +2,14 @@
 
 #include <cmath>
 #include <cfloat>
+#include <cstring>
 
 #include <algorithm>
 
+#include "components/document/support/platform_compat.hpp"
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
-#include "components/document/support/platform_compat.hpp"
 
 namespace document::impl {
 
@@ -121,22 +122,6 @@ namespace document::impl {
         set_int(i);
     }
 
-    template <class INT>
-    void value_slot_t::set_int(INT i) {
-        if (i < 2048 && (!std::numeric_limits<INT>::is_signed || int64_t(i) > -2048)) {
-            set_inline(tag_short, (i >> 8) & 0x0F);
-            _inline._value[1] = uint8_t(i & 0xFF);
-        } else {
-            uint8_t buf[8];
-            auto size = put_int_of_length(buf, int64_t(i), !std::numeric_limits<INT>::is_signed);
-            set_value(tag_int,
-                      int(size-1) | (std::numeric_limits<INT>::is_signed ? 0 : 0x08),
-                      {buf, size});
-        }
-    }
-
-
-
     void value_slot_t::set(float f) {
         struct {
             uint8_t filler = 0;
@@ -160,7 +145,7 @@ namespace document::impl {
         assert_postcondition(is_equals(as_value()->as_double(), d));
     }
 
-    void value_slot_t::set(const std::string& s) {
+    void value_slot_t::set(std::string_view s) {
         set_string_or_data(tag_string, s);
     }
 
@@ -170,28 +155,26 @@ namespace document::impl {
             if (size <= inline_capacity) {
                 release_value();
                 _inline._tag = inline_tag;
-                memcpy(&_inline._value, v, size);
+                ::memcpy(&_inline._value, v, size);
                 return;
             }
         }
         set_pointer(v);
     }
 
-    void value_slot_t::set_value(tags ag, int tiny, slice_t bytes) {
-        if (1 + bytes.size <= inline_capacity) {
+    void value_slot_t::set_value(tags ag, int tiny, storage_view bytes) {
+        if (1 + bytes.size() <= inline_capacity) {
             set_inline(ag, tiny);
-            bytes.copy_to(&_inline._value[1]);
+            copy_to(bytes,&_inline._value[1]);
         } else {
             set_pointer(heap_value_t::create(ag, tiny, bytes)->as_value());
         }
     }
 
-    void value_slot_t::set_string_or_data(tags tag, const std::string& s) {
+    void value_slot_t::set_string_or_data(tags tag, std::string_view s) {
         if (s.length() + 1 <= inline_capacity) {
             set_inline(tag, int(s.length()));
-            if (s.length() > 0) {
-                ::memcpy(&_inline._value[1], s.data(), s.length());
-            }
+            copy_to(s,&_inline._value[1]);
         } else {
             set_pointer(heap_value_t::create_str(tag, s)->as_value());
         }
@@ -252,8 +235,20 @@ namespace document::impl {
                 set(copy->as_value());
                 break;
             case tag_string:
-                set(value->as_string().as_string());
+                set(value->as_string());
                 break;
+            case tag_binary: {
+                set(value->as_data());
+                break;
+            }
+            case tag_int: {
+                if (value->is_unsigned()) {
+                    set(value->as_unsigned());
+                } else {
+                    set(value->as_int());
+                }
+                break;
+            }
             case tag_float:
                 set(value->as_double());
                 break;

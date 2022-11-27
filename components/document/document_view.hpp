@@ -26,6 +26,7 @@ public:
     std::size_t count() const;
 
     bool is_exists(const std::string& key) const;
+    bool is_exists(std::string_view key) const;
     bool is_exists(uint32_t index) const;
     bool is_null(const std::string &key) const;
     bool is_null(uint32_t index) const;
@@ -45,6 +46,7 @@ public:
     bool is_dict(uint32_t index) const;
 
     const_value_ptr get(const std::string &key) const;
+    const_value_ptr get(std::string_view key) const;
     const_value_ptr get(uint32_t index) const;
 
     bool get_bool(const std::string &key) const;
@@ -59,6 +61,7 @@ public:
 
     const_value_ptr get_value() const;
     const_value_ptr get_value(const std::string &key) const;
+    const_value_ptr get_value(std::string_view key) const;
     const_value_ptr get_value(uint32_t index) const;
 
     template <class T>

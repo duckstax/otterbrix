@@ -40,6 +40,10 @@ bool document_view_t::is_exists(const std::string& key) const {
     return get(key) != nullptr;
 }
 
+bool document_view_t::is_exists(std::string_view key) const {
+    return get(key) != nullptr;
+}
+
 bool document_view_t::is_exists(uint32_t index) const {
     return get(index) != nullptr;
 }
@@ -119,6 +123,17 @@ document_view_t::const_value_ptr document_view_t::get(const std::string &key) co
     return as_dict()->get(key);
 }
 
+document_view_t::const_value_ptr document_view_t::get(std::string_view key) const {
+    if (is_array()) {
+        try {
+            return get(uint32_t(atol(key.data())));
+        } catch (...) {
+            return nullptr;
+        }
+    }
+    return as_dict()->get(key);
+}
+
 document_view_t::const_value_ptr document_view_t::get(uint32_t index) const {
     return as_array()->get(index);
 }
@@ -164,6 +179,22 @@ const ::document::impl::value_t *document_view_t::get_value() const {
 }
 
 document_view_t::const_value_ptr document_view_t::get_value(const std::string &key) const {
+    auto dot_pos = key.find('.');
+    if (dot_pos != std::string::npos) {
+        auto key_parent = key.substr(0, dot_pos);
+        if (is_exists(key_parent)) {
+            auto doc_parent = make_document(get(key_parent)).detach(); //todo: memory leak
+            if (doc_parent) {
+                return document_view_t(doc_parent).get_value(key.substr(dot_pos + 1, key.size() - dot_pos));
+            } else {
+                return nullptr;
+            }
+        }
+    }
+    return get(key);
+}
+
+document_view_t::const_value_ptr document_view_t::get_value(std::string_view key) const {
     auto dot_pos = key.find('.');
     if (dot_pos != std::string::npos) {
         auto key_parent = key.substr(0, dot_pos);
@@ -244,7 +275,7 @@ std::string value_to_string(document_view_t::const_value_ptr value) {
         res << value->as_double();
         return res.str();
     } else if (value->type() == value_type::string) {
-        return "\"" + value->as_string().as_string() + "\"";
+        return "\"" + value->to_string() + "\"";
     }
     return std::string();
 }

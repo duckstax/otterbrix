@@ -2,7 +2,6 @@
 
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
-#include <components/document/core/slice.hpp>
 #include <components/document/support/varint.hpp>
 
 using namespace document;
@@ -25,8 +24,8 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->as_unsigned() == 0);
         REQUIRE(is_equals(ma->as_float(), 0.0));
         REQUIRE(is_equals(ma->as_double(), 0.0));
-        REQUIRE(ma->as_string() == null_slice);
-        REQUIRE(ma->as_data() == null_slice);
+        REQUIRE(ma->as_string().empty());
+        REQUIRE(ma->as_data().empty());
         REQUIRE(ma->to_string().empty());
         REQUIRE(ma->as_dict() == nullptr);
         REQUIRE(ma->as_array() == ma);
@@ -110,7 +109,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(2)->type() == value_type::boolean);
         REQUIRE(ma->get(2)->as_bool() == true);
         REQUIRE(ma->get(3)->type() == value_type::string);
-        REQUIRE(ma->get(3)->as_string().as_string() == std::string("dog"));
+        REQUIRE(ma->get(3)->as_string() == std::string("dog"));
 
         ma->insert(1, 2);
         REQUIRE(ma->count() == 14);
@@ -204,8 +203,8 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->as_unsigned() == 0);
         REQUIRE(is_equals(md->as_float(), 0.0));
         REQUIRE(is_equals(md->as_double(), 0.0));
-        REQUIRE(md->as_string() == null_slice);
-        REQUIRE(md->as_data() == null_slice);
+        REQUIRE(md->as_string().empty());
+        REQUIRE(md->as_data().empty());
         REQUIRE(md->to_string().empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
@@ -215,21 +214,21 @@ TEST_CASE("mutable::mutable_dict_t") {
     SECTION("set value") {
         auto md = mutable_dict_t::new_dict();
         REQUIRE(md->count() == 0);
-        REQUIRE(md->get("key") == nullptr);
+        REQUIRE(md->get(std::string_view {"key"}) == nullptr);
 
         mutable_dict_t::iterator i0(md);
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(md->is_changed());
-        md->set("null", null_value);
-        md->set("f", false);
-        md->set("t", true);
-        md->set("z", 0);
-        md->set("-", -123);
-        md->set("+", 2021);
-        md->set("hi", 123456789);
-        md->set("lo", -123456789);
-        md->set("str", std::string("dog"));
+        md->set(std::string_view {"null"}, null_value);
+        md->set(std::string_view {"f"}, false);
+        md->set(std::string_view {"t"}, true);
+        md->set(std::string_view {"z"}, 0);
+        md->set(std::string_view {"-"}, -123);
+        md->set(std::string_view {"+"}, 2021);
+        md->set(std::string_view {"hi"}, 123456789);
+        md->set(std::string_view {"lo"}, -123456789);
+        md->set(std::string_view {"str"}, std::string("dog"));
         REQUIRE(md->is_changed());
         REQUIRE(md->count() == 9);
 
@@ -242,21 +241,21 @@ TEST_CASE("mutable::mutable_dict_t") {
             REQUIRE(md->get(keys[i])->type() == types[i]);
         }
 
-        REQUIRE(md->get("f")->as_bool() == false);
-        REQUIRE(md->get("t")->as_bool() == true);
-        REQUIRE(md->get("z")->as_int() == 0);
-        REQUIRE(md->get("-")->as_int() == -123);
-        REQUIRE(md->get("+")->as_int() == 2021);
-        REQUIRE(md->get("hi")->as_int() == 123456789);
-        REQUIRE(md->get("lo")->as_int() == -123456789);
-        REQUIRE(md->get("str")->as_string() == std::string("dog"));
-        REQUIRE(md->get("foo") == nullptr);
+        REQUIRE(md->get(std::string_view {"f"})->as_bool() == false);
+        REQUIRE(md->get(std::string_view {"t"})->as_bool() == true);
+        REQUIRE(md->get(std::string_view {"z"})->as_int() == 0);
+        REQUIRE(md->get(std::string_view {"-"})->as_int() == -123);
+        REQUIRE(md->get(std::string_view {"+"})->as_int() == 2021);
+        REQUIRE(md->get(std::string_view {"hi"})->as_int() == 123456789);
+        REQUIRE(md->get(std::string_view {"lo"})->as_int() == -123456789);
+        REQUIRE(md->get(std::string_view {"str"})->as_string() == std::string("dog"));
+        REQUIRE(md->get(std::string_view {"foo"}) == nullptr);
 
         bool found[9] = { };
         mutable_dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
-            auto key = i1.key_string().as_string();
+            auto key = i1.key_string();
             auto j = std::find(&keys[0], &keys[9], key) - &keys[0];
             REQUIRE(j < 9);
             REQUIRE_FALSE(found[j]);
@@ -268,7 +267,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(i1);
 
         md->remove("lo");
-        REQUIRE_FALSE(md->get("lo"));
+        REQUIRE_FALSE(md->get(std::string_view {"lo"}));
         REQUIRE(md->count() == 8);
 
         md->remove_all();
@@ -283,20 +282,20 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(d->type() == value_type::dict);
         REQUIRE(d->count() == 0);
         REQUIRE(d->empty());
-        REQUIRE_FALSE(d->get("key"));
+        REQUIRE_FALSE(d->get(std::string_view {"key"}));
 
         dict_t::iterator i0(d);
         REQUIRE_FALSE(i0);
 
-        md->set("null", null_value);
-        md->set("f", false);
-        md->set("t", true);
-        md->set("z", 0);
-        md->set("-", -123);
-        md->set("+", 2021);
-        md->set("hi", 123456789);
-        md->set("lo", -123456789);
-        md->set("str", std::string("dog"));
+        md->set(std::string_view {"null"}, null_value);
+        md->set(std::string_view {"f"}, false);
+        md->set(std::string_view {"t"}, true);
+        md->set(std::string_view {"z"}, 0);
+        md->set(std::string_view {"-"}, -123);
+        md->set(std::string_view {"+"}, 2021);
+        md->set(std::string_view {"hi"}, 123456789);
+        md->set(std::string_view {"lo"}, -123456789);
+        md->set(std::string_view {"str"}, std::string("dog"));
 
         static const std::string keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
         static const value_type types[9] = {
@@ -323,7 +322,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(i1);
 
         md->remove("lo");
-        REQUIRE_FALSE(d->get("lo"));
+        REQUIRE_FALSE(d->get(std::string_view {"lo"}));
 
         md->remove_all();
         REQUIRE(d->count() == 0);
@@ -333,27 +332,27 @@ TEST_CASE("mutable::mutable_dict_t") {
 
     SECTION("copy") {
         auto ma = mutable_dict_t::new_dict();
-        ma->set("a", 100);
-        ma->set("b", std::string("dog"));
+        ma->set(std::string_view {"a"}, 100);
+        ma->set(std::string_view {"b"}, std::string("dog"));
 
         auto mb = mutable_dict_t::new_dict();
-        mb->set("a", ma);
-        REQUIRE(mb->get("a") == ma);
+        mb->set(std::string_view {"a"}, ma);
+        REQUIRE(mb->get(std::string_view {"a"}) == ma);
 
         auto mc = mutable_dict_t::new_dict();
-        mc->set("a", mb);
-        REQUIRE(mc->get("a") == mb);
+        mc->set(std::string_view {"a"}, mb);
+        REQUIRE(mc->get(std::string_view {"a"}) == mb);
 
         auto copy = mc->copy();
         REQUIRE_FALSE(copy == mc);
         REQUIRE(copy->is_equal(mc));
-        REQUIRE(copy->get("a") == mc->get("a"));
+        REQUIRE(copy->get(std::string_view {"a"}) == mc->get(std::string_view {"a"}));
 
         copy = mc->copy(deep_copy);
         REQUIRE_FALSE(copy == mc);
         REQUIRE(copy->is_equal(mc));
-        REQUIRE_FALSE(copy->get("a") == mc->get("a"));
-        REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == ma);
+        REQUIRE_FALSE(copy->get(std::string_view {"a"}) == mc->get(std::string_view {"a"}));
+        REQUIRE_FALSE(copy->get(std::string_view {"a"})->as_dict()->get(std::string_view {"a"}) == ma);
     }
 
 }
@@ -367,6 +366,6 @@ TEST_CASE("mutable long string") {
         ma->set(i, std::string(chars, i));
     }
     for (uint32_t i = 0; i < size; ++i) {
-        REQUIRE(ma->get(i)->as_string().as_string() == std::string(chars, i));
+        REQUIRE(ma->get(i)->as_string() == std::string_view(chars, i));
     }
 }

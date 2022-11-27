@@ -1,7 +1,8 @@
 #pragma once
 
-#include <components/document/core/value.hpp>
-#include <components/document/support/better_assert.hpp>
+#include "document/core/value.hpp"
+#include "document/support/better_assert.hpp"
+#include "utils.hpp"
 
 namespace document::impl::internal {
 

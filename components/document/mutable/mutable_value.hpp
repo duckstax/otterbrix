@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils.hpp"
 #include <components/document/core/value.hpp>
 #include <components/document/support/ref_counted.hpp>
 
@@ -50,7 +51,7 @@ namespace document::impl {
 
         protected:
             ~heap_value_t() = default;
-            static heap_value_t* create(tags tag, int tiny, slice_t extra_data);
+            static heap_value_t* create(tags tag, int tiny, storage_view extra_data);
             heap_value_t(tags tag, int tiny);
             tags tag() const;
 
@@ -59,7 +60,7 @@ namespace document::impl {
 
             static void* operator new(size_t size, size_t extra_size);
             heap_value_t() = default;
-            static heap_value_t* create_str(internal::tags tag, const std::string& s);
+            static heap_value_t* create_str(internal::tags tag,std::string_view s);
 
             template <class INT>
             static heap_value_t* create_int(INT i, bool is_unsigned);

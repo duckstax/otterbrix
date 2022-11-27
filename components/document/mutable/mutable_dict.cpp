@@ -27,7 +27,7 @@ namespace document::impl::internal {
         return _count;
     }
 
-    slice_t heap_dict_t::iterator::key_string() const noexcept {
+    std::string heap_dict_t::iterator::key_string() const noexcept {
         return _key;
     }
 
@@ -140,7 +140,25 @@ namespace document::impl::internal {
         return key_t(key);
     }
 
+    key_t heap_dict_t::encode_key(std::string_view key) const noexcept {
+        int int_key = 0;
+        if (_shared_keys && _shared_keys->encode(key, int_key))
+            return key_t(int_key);
+        return key_t(key);
+    }
+
     value_slot_t* heap_dict_t::_find_value_for(const std::string& key) const noexcept {
+        if (_map.empty())
+            return nullptr;
+        key_t encoded = encode_key(key);
+        auto slot = _find_value_for(encoded);
+        if (!slot && encoded.shared()) {
+            slot = _find_value_for(key_t(key));
+        }
+        return slot;
+    }
+
+    value_slot_t* heap_dict_t::_find_value_for(std::string_view key) const noexcept {
         if (_map.empty())
             return nullptr;
         key_t encoded = encode_key(key);
@@ -188,7 +206,31 @@ namespace document::impl::internal {
         return *slotp;
     }
 
+    value_slot_t& heap_dict_t::setting(std::string_view key_string) {
+        key_t key;
+        value_slot_t* slotp = _find_value_for(key_string);
+        if (slotp) {
+            key = key_t(key_string);
+        } else {
+            key = encode_key(key_string);
+            slotp = &_make_value_for(key);
+        }
+        if (slotp->empty() && !(_source && _source->get(key))) {
+            ++_count;
+        }
+        mark_changed();
+        return *slotp;
+    }
+
     const value_t* heap_dict_t::get(const std::string& key) const noexcept {
+        value_slot_t* val = _find_value_for(key);
+        if (val)
+            return val->as_value();
+        else
+            return _source ? _source->get(key) : nullptr;
+    }
+
+    const value_t* heap_dict_t::get(std::string_view key) const noexcept {
         value_slot_t* val = _find_value_for(key);
         if (val)
             return val->as_value();
@@ -281,7 +323,7 @@ namespace document::impl::internal {
             _iterable = new heap_array_t(2*count());
             uint32_t n = 0;
             for (iterator i(this); i; ++i) {
-                _iterable->set(n++, i.key_string().as_string());
+                _iterable->set(n++, i.key_string());
                 _iterable->set(n++, i.value());
             }
             assert(n == 2*_count);
@@ -331,6 +373,10 @@ namespace document::impl {
     }
 
     const value_t *mutable_dict_t::get(const std::string& key_to_find) const noexcept {
+        return heap_dict()->get(key_to_find);
+    }
+
+    const value_t *mutable_dict_t::get(std::string_view key_to_find) const noexcept {
         return heap_dict()->get(key_to_find);
     }
 
