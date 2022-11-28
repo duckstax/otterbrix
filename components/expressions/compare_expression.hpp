@@ -15,7 +15,7 @@ namespace components::expressions {
         compare_expression_t(compare_expression_t&&) = default;
         ~compare_expression_t() final = default;
 
-        compare_expression_t(compare_type type, key_t key, core::parameter_id_t);
+        compare_expression_t(compare_type type, const key_t& key, core::parameter_id_t);
         explicit compare_expression_t(compare_type condition);
 
         compare_type type() const;

@@ -1,51 +1,55 @@
 #include <catch2/catch.hpp>
-#include <components/expressions/compare_expression.hpp>
+#include <components/expressions/aggregate_expression.hpp>
 
 using namespace components::expressions;
 using key = components::expressions::key_t;
 
-TEST_CASE("expression::compare") {
-    auto expr1 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(1));
-    auto expr2 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(1));
-    auto expr3 = make_compare_expression(compare_type::ne, key("name"), core::parameter_id_t(1));
-    auto expr4 = make_compare_expression(compare_type::eq, key("count"), core::parameter_id_t(1));
-    auto expr5 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(2));
-    auto expr_union1 = make_compare_union_expression(compare_type::union_and);
-    expr_union1->append_child(expr1);
-    expr_union1->append_child(expr3);
-    auto expr_union2 = make_compare_union_expression(compare_type::union_and);
-    expr_union2->append_child(expr1);
-    expr_union2->append_child(expr3);
-    auto expr_union3 = make_compare_union_expression(compare_type::union_and);
-    expr_union3->append_child(expr1);
-    expr_union3->append_child(expr4);
-    auto expr_union4 = make_compare_union_expression(compare_type::union_or);
-    expr_union4->append_child(expr1);
-    expr_union4->append_child(expr3);
+TEST_CASE("expression::aggregate::equals") {
+    auto expr1 = make_aggregate_expression(aggregate_type::sum, key("name"));
+    auto expr2 = make_aggregate_expression(aggregate_type::sum, key("name"));
+    auto expr3 = make_aggregate_expression(aggregate_type::avg, key("name"));
+    auto expr4 = make_aggregate_expression(aggregate_type::sum, key("count"));
+    auto expr_union1 = make_aggregate_expression(aggregate_type::count);
+    expr_union1->append_param(core::parameter_id_t(0));
+    expr_union1->append_param(key("name"));
+    expr_union1->append_param(expr1);
+    auto expr_union2 = make_aggregate_expression(aggregate_type::count);
+    expr_union2->append_param(core::parameter_id_t(0));
+    expr_union2->append_param(key("name"));
+    expr_union2->append_param(expr1);
+    auto expr_union3 = make_aggregate_expression(aggregate_type::count);
+    expr_union3->append_param(core::parameter_id_t(1));
+    expr_union3->append_param(key("name"));
+    expr_union3->append_param(expr1);
+    auto expr_union4 = make_aggregate_expression(aggregate_type::count);
+    expr_union4->append_param(core::parameter_id_t(0));
+    expr_union4->append_param(key("count"));
+    expr_union4->append_param(expr1);
+    auto expr_union5 = make_aggregate_expression(aggregate_type::count);
+    expr_union5->append_param(core::parameter_id_t(0));
+    expr_union5->append_param(key("name"));
+    expr_union5->append_param(expr3);
     REQUIRE(expression_equal()(expr1, expr2));
     REQUIRE_FALSE(expression_equal()(expr1, expr3));
     REQUIRE_FALSE(expression_equal()(expr1, expr4));
-    REQUIRE_FALSE(expression_equal()(expr1, expr5));
     REQUIRE(expression_equal()(expr_union1, expr_union2));
     REQUIRE_FALSE(expression_equal()(expr_union1, expr_union3));
     REQUIRE_FALSE(expression_equal()(expr_union1, expr_union4));
+    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union5));
 }
 
-//TEST_CASE("ql::parser") {
-//    auto expr = make_expr(condition_type::eq, "key1", int64_t(100));
-//    REQUIRE(to_string(expr) == R"({"key1": {"$eq": 100}})");
-//
-//    expr = make_expr(condition_type::eq, "key2", std::string("value"));
-//    REQUIRE(to_string(expr) == R"({"key2": {"$eq": "value"}})");
-//
-//    expr = make_union_expr();
-//    expr->type_ = condition_type::union_and;
-//    expr->append_sub_condition(make_expr(condition_type::eq, "key1", int64_t(100)));
-//    expr->append_sub_condition(make_expr(condition_type::eq, "key2", std::string("value")));
-//    REQUIRE(to_string(expr) == R"({"$and": [{"key1": {"$eq": 100}}, {"key2": {"$eq": "value"}}]})");
-//}
-//
-//TEST_CASE("ql::parser") {
+TEST_CASE("expression::aggregate::to_string") {
+    auto expr = make_aggregate_expression(aggregate_type::sum, key("sum"), key("count"));
+    REQUIRE(expr->to_string() == R"({sum: {$sum: "$count"}})");
+
+    expr = make_aggregate_expression(aggregate_type::sum, key("sum"));
+    expr->append_param(core::parameter_id_t(1));
+    expr->append_param(key("key"));
+    expr->append_param(make_aggregate_expression(aggregate_type::count, key("key"), key("count")));
+    REQUIRE(expr->to_string() == R"({sum: {$sum: [#1, "$key", {key: {$count: "$count"}}]}})");
+}
+
+TEST_CASE("expression::aggregate::parser") {
 //    std::string value = R"({"count": {"$gt": 10}})";
 //    auto d = components::document::document_from_json(value);
 //    auto condition = parse_find_condition(d);
@@ -81,4 +85,4 @@ TEST_CASE("expression::compare") {
 //    //    d = components::document::document_from_json(value);
 //    //    condition = parse_find_condition(d);
 //    //    REQUIRE(to_string(condition) == R"({"$not": [{"$and": [{"count": {"$gte": 90}}], {"count": {"$lt": 10}}]}]})");
-//}
+}

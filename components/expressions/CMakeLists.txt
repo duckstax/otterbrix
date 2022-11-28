@@ -3,6 +3,8 @@ project(expressions CXX)
 set(SOURCE_${PROJECT_NAME}
         expression.cpp
         compare_expression.cpp
+        aggregate_expression.cpp
+        scalar_expression.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

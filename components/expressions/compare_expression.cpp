@@ -1,4 +1,5 @@
 #include "compare_expression.hpp"
+#include <boost/container_hash/hash.hpp>
 #include <sstream>
 
 namespace components::expressions {
@@ -9,10 +10,10 @@ namespace components::expressions {
                type == compare_type::union_not;
     }
 
-    compare_expression_t::compare_expression_t(compare_type type, key_t key, core::parameter_id_t value)
+    compare_expression_t::compare_expression_t(compare_type type, const key_t& key, core::parameter_id_t value)
         : expression_i(expression_group::compare)
         , type_(type)
-        , key_(std::move(key))
+        , key_(key)
         , value_(value)
         , union_(is_union_condition(type_)) {}
 
@@ -47,7 +48,14 @@ namespace components::expressions {
     }
 
     hash_t compare_expression_t::hash_impl() const {
-        return 0;
+        hash_t hash_{0};
+        boost::hash_combine(hash_, type_);
+        boost::hash_combine(hash_, key_.hash());
+        boost::hash_combine(hash_, std::hash<uint64_t>()(value_));
+        for (const auto &child : children_) {
+            boost::hash_combine(hash_, child->hash_impl());
+        }
+        return hash_;
     }
 
     std::string compare_expression_t::to_string_impl() const {

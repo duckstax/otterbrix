@@ -16,9 +16,7 @@ namespace components::expressions {
     }
 
     std::string expression_i::to_string() const {
-        std::stringstream stream;
-        stream << "$" << magic_enum::enum_name(group_) << ": " << to_string_impl();
-        return stream.str();
+        return to_string_impl();
     }
 
     bool expression_i::operator==(const expression_i& rhs) const {

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <variant>
+#include "forward.hpp"
 
 namespace components::expressions {
 
@@ -81,6 +82,17 @@ namespace components::expressions {
 
         bool operator!=(const key_t& rhs) const {
             return !(*this == rhs);
+        }
+
+        hash_t hash() const {
+            if (type_ == type::string) {
+                return std::hash<std::string>()(as_string());
+            } else if (type_ == type::int32) {
+                return std::hash<int32_t>()(std::get<int32_t>(storage_));
+            } else if (type_ == type::uint32) {
+                return std::hash<uint32_t>()(std::get<uint32_t>(storage_));
+            }
+            return 0;
         }
 
     private:
