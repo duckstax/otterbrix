@@ -65,7 +65,7 @@ namespace components::ql {
     expr_t::expr_t(bool is_union)
         : type_(condition_type::novalid)
         , value_(nullptr)
-        , union_(is_union){}
+        , union_(is_union) {}
 
     bool expr_t::is_union() const {
         return union_;

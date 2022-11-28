@@ -2,6 +2,7 @@
 
 #include <memory_resource>
 #include <vector>
+
 #include <msgpack.hpp>
 
 #include "ql_statement.hpp"

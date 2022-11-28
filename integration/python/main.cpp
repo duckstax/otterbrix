@@ -2,16 +2,17 @@
 
 #include "wrapper_client.hpp"
 #include "wrapper_collection.hpp"
-#include "wrapper_database.hpp"
 #include "wrapper_cursor.hpp"
-#include "wrapper_document_id.hpp"
+#include "wrapper_database.hpp"
 #include "wrapper_document.hpp"
+#include "wrapper_document_id.hpp"
 #include "wrapper_result.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
+#include "convert.hpp"
 #include "spaces.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -22,22 +23,20 @@ using namespace duck_charmer;
 
 PYBIND11_MODULE(ottergon, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init([](){
-            auto* spaces =  spaces::get_instance();
-            auto dispatcher =  spaces->dispatcher();
+        .def(
+            py::init([]() {
+            auto* spaces = spaces::get_instance();
+            auto dispatcher = spaces->dispatcher();
             dispatcher->load();
             auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log,dispatcher);
-        }))
+            return new wrapper_client(log, dispatcher); }))
         .def("__getitem__", &wrapper_client::get_or_create)
-        .def("database_names", &wrapper_client::database_names)
-        ;
+        .def("database_names", &wrapper_client::database_names);
 
     py::class_<wrapper_database, boost::intrusive_ptr<wrapper_database>>(m, "DataBase")
         .def("collection_names", &wrapper_database::collection_names)
         .def("drop_collection", &wrapper_database::drop_collection)
-        .def("__getitem__", &wrapper_database::create)
-        ;
+        .def("__getitem__", &wrapper_database::create);
 
     py::enum_<index_type>(m, "TypeIndex")
         .export_values();
@@ -57,30 +56,29 @@ PYBIND11_MODULE(ottergon, m) {
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
         .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"))
+        ///.def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence())
         ;
 
     py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")
-        .def(py::init([](){
+        .def(py::init([]() {
             return wrapper_document_id();
         }))
-        .def(py::init([](const py::str& s){
+        .def(py::init([](const py::str& s) {
             return wrapper_document_id(s);
         }))
-        .def(py::init([](const py::int_& time){
+        .def(py::init([](const py::int_& time) {
             return wrapper_document_id(time);
         }))
         .def("__repr__", &wrapper_document_id::to_string)
         .def("getTimestamp", &wrapper_document_id::get_timestamp)
         .def("toString", &wrapper_document_id::to_string)
         .def("valueOf", &wrapper_document_id::value_of)
-        .def_property_readonly("str", &wrapper_document_id::to_string)
-        ;
+        .def_property_readonly("str", &wrapper_document_id::to_string);
 
     py::class_<wrapper_document, boost::intrusive_ptr<wrapper_document>>(m, "Document")
         .def("__repr__", &wrapper_document::print)
         .def("__getitem__", &wrapper_document::get)
-        .def("get", &wrapper_document::get)
-        ;
+        .def("get", &wrapper_document::get);
 
     py::class_<wrapper_cursor, boost::intrusive_ptr<wrapper_cursor>>(m, "Cursor")
         .def("__repr__", &wrapper_cursor::print)
@@ -95,18 +93,18 @@ PYBIND11_MODULE(ottergon, m) {
         .def("next", &wrapper_cursor::next)
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
-        .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none())
-        ;
+        .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none());
 
     py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")
         .def_property_readonly("raw_result", &wrapper_result_delete::raw_result)
-        .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count)
-        ;
+        .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count);
 
     py::class_<wrapper_result_update, boost::intrusive_ptr<wrapper_result_update>>(m, "UpdateResult")
         .def_property_readonly("raw_result", &wrapper_result_update::raw_result)
         .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
-        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id)
-        ;
+        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
+
+    m.def("to_aggregate", &experimental::test_to_statement);
+
 }
