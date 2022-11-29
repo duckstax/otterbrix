@@ -59,7 +59,7 @@ namespace components::ql {
 
     template<>
     inline expr_ptr make_expr(condition_type condition, std::string key, const std::string& value) {
-        return make_expr(condition, std::move(key), ::document::impl::new_value(::document::slice_t(value)).detach());
+        return make_expr(condition, std::move(key), ::document::impl::new_value(value).detach());
     }
 
     inline expr_ptr make_expr() {

@@ -106,7 +106,7 @@ namespace components::ql {
         auto res_condition = make_union_expr();
         for (auto it = condition->begin(); it; ++it) {
             if (condition->count() == 1) {
-                res_condition->type_ = get_condition_type_(it.key_string().as_string());
+                res_condition->type_ = get_condition_type_(it.key_string());
             }
             parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
         }

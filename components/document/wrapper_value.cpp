@@ -5,9 +5,9 @@ namespace document {
 
     std::string to_string(const document::wrapper_value_t& doc) {
         if (doc->type() == impl::value_type::string) {
-            return "\"" + doc->to_string().as_string() + "\"";
+            return "\"" + doc->to_string() + "\"";
         }
-        return doc->to_string().as_string();
+        return doc->to_string();
     }
 
     wrapper_value_t sum(const wrapper_value_t& value1, const wrapper_value_t& value2) {

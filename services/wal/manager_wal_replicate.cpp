@@ -27,7 +27,6 @@ namespace services::wal {
         add_handler(handler_id(route::update_one), &manager_wal_replicate_t::update_one);
         add_handler(handler_id(route::update_many), &manager_wal_replicate_t::update_many);
         add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_t::sync);
-        add_handler(handler_id(route::update_many), &manager_wal_replicate_t::update_many);
         add_handler(handler_id(route::create_index), &manager_wal_replicate_t::create_index);
         trace(log_, "manager_wal_replicate_t start thread pool");
     }
