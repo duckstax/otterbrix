@@ -43,6 +43,7 @@ namespace components::expressions {
 
     enum class scalar_type : uint8_t {
         invalid,
+        get_field,
         add,
         subtract,
         multiply,

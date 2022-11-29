@@ -1,45 +1,55 @@
 #include <catch2/catch.hpp>
 #include <components/expressions/scalar_expression.hpp>
 
-//using namespace components::expressions;
-//using key = components::expressions::key_t;
+using namespace components::expressions;
+using key = components::expressions::key_t;
 
-//TEST_CASE("expression::scalar::equals") {
-//    auto expr1 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(1));
-//    auto expr2 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(1));
-//    auto expr3 = make_compare_expression(compare_type::ne, key("name"), core::parameter_id_t(1));
-//    auto expr4 = make_compare_expression(compare_type::eq, key("count"), core::parameter_id_t(1));
-//    auto expr5 = make_compare_expression(compare_type::eq, key("name"), core::parameter_id_t(2));
-//    auto expr_union1 = make_compare_union_expression(compare_type::union_and);
-//    expr_union1->append_child(expr1);
-//    expr_union1->append_child(expr3);
-//    auto expr_union2 = make_compare_union_expression(compare_type::union_and);
-//    expr_union2->append_child(expr1);
-//    expr_union2->append_child(expr3);
-//    auto expr_union3 = make_compare_union_expression(compare_type::union_and);
-//    expr_union3->append_child(expr1);
-//    expr_union3->append_child(expr4);
-//    auto expr_union4 = make_compare_union_expression(compare_type::union_or);
-//    expr_union4->append_child(expr1);
-//    expr_union4->append_child(expr3);
-//    REQUIRE(expression_equal()(expr1, expr2));
-//    REQUIRE_FALSE(expression_equal()(expr1, expr3));
-//    REQUIRE_FALSE(expression_equal()(expr1, expr4));
-//    REQUIRE_FALSE(expression_equal()(expr1, expr5));
-//    REQUIRE(expression_equal()(expr_union1, expr_union2));
-//    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union3));
-//    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union4));
-//}
-//
-//TEST_CASE("expression::scalar::to_string") {
-//    auto expr = make_compare_expression(compare_type::eq, key("count"), core::parameter_id_t(1));
-//    REQUIRE(expr->to_string() == R"({"count": {$eq: #1}})");
-//
-//    expr = make_compare_union_expression(compare_type::union_and);
-//    expr->append_child(make_compare_expression(compare_type::eq, key("key1"), core::parameter_id_t(1)));
-//    expr->append_child(make_compare_expression(compare_type::lt, key("key2"), core::parameter_id_t(2)));
-//    REQUIRE(expr->to_string() == R"({$and: [{"key1": {$eq: #1}}, {"key2": {$lt: #2}}]})");
-//}
+TEST_CASE("expression::scalar::equals") {
+    auto expr1 = make_scalar_expression(scalar_type::get_field, key("name"));
+    auto expr2 = make_scalar_expression(scalar_type::get_field, key("name"));
+    auto expr3 = make_scalar_expression(scalar_type::abs, key("name"));
+    auto expr4 = make_scalar_expression(scalar_type::get_field, key("count"));
+    auto expr_union1 = make_scalar_expression(scalar_type::multiply);
+    expr_union1->append_param(core::parameter_id_t(0));
+    expr_union1->append_param(key("name"));
+    expr_union1->append_param(expr1);
+    auto expr_union2 = make_scalar_expression(scalar_type::multiply);
+    expr_union2->append_param(core::parameter_id_t(0));
+    expr_union2->append_param(key("name"));
+    expr_union2->append_param(expr1);
+    auto expr_union3 = make_scalar_expression(scalar_type::multiply);
+    expr_union3->append_param(core::parameter_id_t(1));
+    expr_union3->append_param(key("name"));
+    expr_union3->append_param(expr1);
+    auto expr_union4 = make_scalar_expression(scalar_type::multiply);
+    expr_union4->append_param(core::parameter_id_t(0));
+    expr_union4->append_param(key("count"));
+    expr_union4->append_param(expr1);
+    auto expr_union5 = make_scalar_expression(scalar_type::multiply);
+    expr_union5->append_param(core::parameter_id_t(0));
+    expr_union5->append_param(key("name"));
+    expr_union5->append_param(expr3);
+    REQUIRE(expression_equal()(expr1, expr2));
+    REQUIRE_FALSE(expression_equal()(expr1, expr3));
+    REQUIRE_FALSE(expression_equal()(expr1, expr4));
+    REQUIRE(expression_equal()(expr_union1, expr_union2));
+    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union3));
+    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union4));
+    REQUIRE_FALSE(expression_equal()(expr_union1, expr_union5));
+}
+
+TEST_CASE("expression::scalar::to_string") {
+    auto expr = make_scalar_expression(scalar_type::get_field, key("count"), key("count"));
+    REQUIRE(expr->to_string() == R"({count: "$count"})");
+    expr = make_scalar_expression(scalar_type::floor, key("count"), key("count"));
+    REQUIRE(expr->to_string() == R"({count: {$floor: "$count"}})");
+
+    expr = make_scalar_expression(scalar_type::multiply, key("multi"));
+    expr->append_param(core::parameter_id_t(1));
+    expr->append_param(key("key"));
+    expr->append_param(make_scalar_expression(scalar_type::get_field, key("value"), key("count")));
+    REQUIRE(expr->to_string() == R"({multi: {$multiply: [#1, "$key", {value: "$count"}]}})");
+}
 
 TEST_CASE("expression::scalar::parser") {
 //    std::string value = R"({"count": {"$gt": 10}})";
