@@ -40,13 +40,13 @@ TEST_CASE("expression::aggregate::equals") {
 
 TEST_CASE("expression::aggregate::to_string") {
     auto expr = make_aggregate_expression(aggregate_type::sum, key("sum"), key("count"));
-    REQUIRE(expr->to_string() == R"({sum: {$sum: "$count"}})");
+    REQUIRE(expr->to_string() == R"(sum: {$sum: "$count"})");
 
     expr = make_aggregate_expression(aggregate_type::sum, key("sum"));
     expr->append_param(core::parameter_id_t(1));
     expr->append_param(key("key"));
     expr->append_param(make_aggregate_expression(aggregate_type::count, key("key"), key("count")));
-    REQUIRE(expr->to_string() == R"({sum: {$sum: [#1, "$key", {key: {$count: "$count"}}]}})");
+    REQUIRE(expr->to_string() == R"(sum: {$sum: [#1, "$key", {key: {$count: "$count"}}]})");
 }
 
 TEST_CASE("expression::aggregate::parser") {

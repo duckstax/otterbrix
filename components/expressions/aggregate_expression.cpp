@@ -13,7 +13,7 @@ namespace components::expressions {
             } else if constexpr (std::is_same_v<type, key_t>) {
                 stream << "\"$" << p << "\"";
             } else if constexpr (std::is_same_v<type, expression_ptr>) {
-                stream << p->to_string();
+                stream << "{" << p->to_string() << "}";
             }
         }, param);
         return stream;
@@ -25,7 +25,7 @@ namespace components::expressions {
             stream << expr->key();
         } else {
             if (!expr->key().is_null()) {
-                stream << "{" << expr->key() << ": ";
+                stream << expr->key() << ": ";
             }
             stream << "{$" << magic_enum::enum_name(expr->type()) << ": ";
             if (expr->params().size() > 1) {
@@ -44,9 +44,6 @@ namespace components::expressions {
                 stream << expr->params().at(0);
             }
             stream << "}";
-            if (!expr->key().is_null()) {
-                stream << "}";
-            }
         }
         return stream;
     }
