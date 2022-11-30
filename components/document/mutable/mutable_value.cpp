@@ -158,10 +158,7 @@ namespace document::impl::internal {
         if (internal::heap_value_t::is_heap_value(v)) {
             document::retain(heap_value_t::as_heap_value(v));
         } else if (v) {
-            retained_const_t<doc_t> doc = doc_t::containing(v);
-            if (_usually_true(doc != nullptr))
-                document::retain(std::move(doc));
-            else if (!is_hardwired_value(v))
+            if (!is_hardwired_value(v))
                 exception_t::_throw(error_code::invalid_data,
                                     "Can't retain immutable value_t %p that's not part of a doc_t",
                                     v);
@@ -173,10 +170,7 @@ namespace document::impl::internal {
         if (internal::heap_value_t::is_heap_value(v)) {
             document::release(heap_value_t::as_heap_value(v));
         } else if (v) {
-            retained_const_t<doc_t> doc = doc_t::containing(v);
-            if (_usually_true(doc != nullptr))
-                document::release(doc.get());
-            else if (!is_hardwired_value(v))
+             if (!is_hardwired_value(v))
                 exception_t::_throw(error_code::invalid_data,
                                     "Can't release immutable value_t %p that's not part of a doc_t",
                                     v);

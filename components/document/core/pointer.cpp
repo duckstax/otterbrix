@@ -27,10 +27,6 @@ pointer_t::pointer_t(size_t offset, int width, bool external)
     }
 }
 
-bool pointer_t::is_external() const {
-    return (_byte[0] & 0x40) != 0;
-}
-
 const value_t* pointer_t::deref_wide() const noexcept {
     return deref<true>();
 }
@@ -39,22 +35,6 @@ const value_t* pointer_t::deref(bool wide) const noexcept {
     return wide ? deref<true>() : deref<false>();
 }
 
-const value_t* pointer_t::deref_extern(bool wide, const value_t *dst) const noexcept {
-    dst = doc_t::resolve_pointer_from(this, dst);
-    if (_usually_true(dst != nullptr))
-        return dst;
-    if (!wide) {
-        dst = offsetby(this, -static_cast<std::ptrdiff_t>(legacy_offset<false>()));
-        auto scope = scope_t::containing(this);
-        if (scope && scope->data().is_contains_address(dst))
-            return dst;
-    }
-
-    auto off = wide ? offset<true>() : offset<false>();
-    fprintf(stderr, "FATAL: Fleece extern pointer at %p, offset -%u,"
-                        " did not resolve to any address\n", static_cast<const void*>(this), off);
-    return nullptr;
-}
 
 void pointer_t::set_narrow_bytes(uint16_t b) {
     *reinterpret_cast<uint16_t*>(_byte) = b;
@@ -78,38 +58,16 @@ const value_t* pointer_t::careful_deref(bool wide, const void* &start, const voi
         return nullptr;
     const value_t *target = offsetby(this, -static_cast<std::ptrdiff_t>(off));
 
-    if (_usually_false(is_external())) {
-        slice_t destination;
-        std::tie(target, destination) = doc_t::resolve_pointer_from_with_range(this, target);
-        if (_usually_false(!target)) {
-            if (wide)
-                return nullptr;
-            target = offsetby(this, -static_cast<std::ptrdiff_t>(legacy_offset<false>()));
-            if (_usually_false(target < start) || _usually_false(target >= end))
-                return nullptr;
-            end = this;
-        } else {
-            assert_always((size_t(target) & 1) == 0);
-            start = destination.buf;
-            end = destination.end();
-        }
-    } else {
-        if (_usually_false(target < start) || _usually_false(target >= end))
-            return nullptr;
-        end = this;
+    if (_usually_false(target < start) || _usually_false(target >= end)) {
+        return nullptr;
     }
+
+    end = this;
 
     if (_usually_false(target->is_pointer()))
         return target->as_pointer()->careful_deref(true, start, end);
     else
         return target;
 }
-
-bool pointer_t::validate(bool wide, const void *start) const noexcept {
-    const void *data_end = this;
-    const value_t *target = careful_deref(wide, start, data_end);
-    return target && target->validate(start, data_end);
-}
-
 
 }

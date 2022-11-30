@@ -1,9 +1,8 @@
 #include "value.hpp"
-#include "utils.hpp"
-
 #include <cstring>
 
 #include <boost/container/small_vector.hpp>
+
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/internal.hpp>
@@ -12,6 +11,10 @@
 #include <components/document/support/endian.hpp>
 #include <components/document/support/num_conversion.hpp>
 #include <components/document/support/varint.hpp>
+#include <components/document/core/pointer.hpp>
+
+#include "utils.hpp"
+
 
 namespace document::impl {
 
@@ -176,7 +179,9 @@ namespace document::impl {
             uint32_t length;
             storage_view tmp(&_byte[1], tiny_value());
             size_t lengthBytes = get_uvar_int32(tmp, &length);
-            return std::string_view(reinterpret_cast<const char*>(&tmp[lengthBytes]),length);
+            if (_usually_false(lengthBytes == 0))
+                return {};
+            return {reinterpret_cast<const char*>(&tmp[lengthBytes]),length};
         }
         return s;
     }

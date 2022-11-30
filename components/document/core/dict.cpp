@@ -289,7 +289,7 @@ uint32_t dict_t::count() const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->count();
     array_t::impl imp(this);
-    if (_usually_false(imp._count > 1 && is_magic_parent_key(imp._first))) {
+    if (_usually_false(imp._count >= 1 && is_magic_parent_key(imp._first))) {
         uint32_t c = 0;
         for (iterator i(this); i; ++i)
             ++c;

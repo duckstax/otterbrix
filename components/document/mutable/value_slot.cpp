@@ -142,7 +142,7 @@ namespace document::impl {
         } else {
             set_pointer(heap_value_t::create(d)->as_value());
         }
-        assert_postcondition(is_equals(as_value()->as_double(), d));
+        assert_postcondition(as_value()->as_double() == d || (std::isnan(as_value()->as_double()) && std::isnan(d)));
     }
 
     void value_slot_t::set(std::string_view s) {
