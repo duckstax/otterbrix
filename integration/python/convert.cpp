@@ -15,6 +15,8 @@
 #include <components/ql/expr.hpp>
 #include <components/ql/experimental/expr.hpp>
 #include <components/ql/parser.hpp>
+#include <components/expressions/aggregate_expression.hpp>
+#include <components/expressions/scalar_expression.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -136,7 +138,6 @@ auto to_order(const py::object& order) -> services::storage::sort::order {
 
 namespace experimental {
 
-    using components::ql::key_t;
     using components::ql::aggregate_statement;
     using components::ql::condition_type;
     using components::ql::get_condition_type_;
@@ -148,11 +149,21 @@ namespace experimental {
     using expr_ns::expr_t;
     using expr_ns::make_expr;
     using expr_ns::make_union_expr;
-    using expr_ns::project_expr_t;
-    using expr_ns::project_expr_ptr;
-    using expr_ns::project_expr_type;
-    using expr_ns::get_project_type;
-    using expr_ns::make_project_expr;
+
+    using components::expressions::key_t;
+    using components::expressions::expression_ptr;
+
+    using components::expressions::aggregate_expression_t;
+    using components::expressions::aggregate_type;
+    using components::expressions::is_aggregate_type;
+    using components::expressions::get_aggregate_type;
+    using components::expressions::make_aggregate_expression;
+
+    using components::expressions::scalar_expression_t;
+    using components::expressions::scalar_type;
+    using components::expressions::is_scalar_type;
+    using components::expressions::get_scalar_type;
+    using components::expressions::make_scalar_expression;
 
     void normalize(expr_ptr &expr) {
         if (expr->type_ == condition_type::novalid && !expr->key_.is_null()) {
@@ -233,7 +244,7 @@ namespace experimental {
         return res_condition;
     }
 
-    project_expr_t::param_storage parse_project_param(const py::handle& condition, aggregate_statement* aggregate) {
+    aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, aggregate_statement* aggregate) {
         auto value = to_(condition);
         if (value->type() == document::impl::value_type::string
             && !value->as_string().as_string().empty()
@@ -242,28 +253,54 @@ namespace experimental {
         } else {
             return aggregate->add_parameter(value);
         }
-        return key_t();
     }
 
-    project_expr_ptr parse_project_expr(const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
+    scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
+        auto value = to_(condition);
+        if (value->type() == document::impl::value_type::string
+            && !value->as_string().as_string().empty()
+            && value->as_string().as_string().at(0) == '$') {
+            return key_t(value->as_string().as_string().substr(1));
+        } else {
+            return aggregate->add_parameter(value);
+        }
+    }
+
+    expression_ptr parse_group_expr(const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
         if (py::isinstance<py::dict>(condition)) {
             for (const auto &it : condition) {
-                auto type = get_project_type(py::str(it).cast<std::string>().substr(1));
-                auto expr = make_project_expr(type, key.empty() ? key_t() : key_t(key));
-                if (py::isinstance<py::dict>(condition[it])) {
-                    expr->append_param(parse_project_expr({}, condition[it], aggregate));
-                } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
-                    for (const auto &value : condition[it]) {
-                        expr->append_param(parse_project_param(value, aggregate));
+                auto key_type = py::str(it).cast<std::string>().substr(1);
+                if (is_aggregate_type(key_type)) {
+                    auto type = get_aggregate_type(key_type);
+                    auto expr = make_aggregate_expression(type, key.empty() ? key_t() : key_t(key));
+                    if (py::isinstance<py::dict>(condition[it])) {
+                        expr->append_param(parse_group_expr({}, condition[it], aggregate));
+                    } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
+                        for (const auto& value : condition[it]) {
+                            expr->append_param(parse_aggregate_param(value, aggregate));
+                        }
+                    } else {
+                        expr->append_param(parse_aggregate_param(condition[it], aggregate));
                     }
-                } else {
-                    expr->append_param(parse_project_param(condition[it], aggregate));
+                    return expr;
+                } else if (is_scalar_type(key_type)) {
+                    auto type = get_scalar_type(key_type);
+                    auto expr = make_scalar_expression(type, key.empty() ? key_t() : key_t(key));
+                    if (py::isinstance<py::dict>(condition[it])) {
+                        expr->append_param(parse_group_expr({}, condition[it], aggregate));
+                    } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
+                        for (const auto& value : condition[it]) {
+                            expr->append_param(parse_scalar_param(value, aggregate));
+                        }
+                    } else {
+                        expr->append_param(parse_scalar_param(condition[it], aggregate));
+                    }
+                    return expr;
                 }
-                return expr;
             }
         } else {
-            auto expr = make_project_expr(project_expr_type::get_field, key.empty() ? key_t() : key_t(key));
-            expr->append_param(parse_project_param(condition, aggregate));
+            auto expr = make_scalar_expression(scalar_type::get_field, key.empty() ? key_t() : key_t(key));
+            expr->append_param(parse_scalar_param(condition, aggregate));
             return expr;
         }
         return nullptr;
@@ -272,7 +309,7 @@ namespace experimental {
     components::ql::aggregate::group_t parse_group(const py::handle& condition, aggregate_statement* aggregate) {
         components::ql::aggregate::group_t group;
         for (const auto &it : condition) {
-            components::ql::aggregate::append_expr(group, parse_project_expr(py::str(it).cast<std::string>(), condition[it], aggregate));
+            components::ql::aggregate::append_expr(group, parse_group_expr(py::str(it).cast<std::string>(), condition[it], aggregate));
         }
         return group;
     }

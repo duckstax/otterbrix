@@ -48,7 +48,7 @@ TEST_CASE("expression::scalar::to_string") {
     expr->append_param(core::parameter_id_t(1));
     expr->append_param(key("key"));
     expr->append_param(make_scalar_expression(scalar_type::get_field, key("value"), key("count")));
-    REQUIRE(expr->to_string() == R"(multi: {$multiply: [#1, "$key", {value: "$count"}]})");
+    REQUIRE(expr->to_string() == R"(multi: {$multiply: [#1, "$key", value: "$count"]})");
 }
 
 TEST_CASE("expression::scalar::parser") {

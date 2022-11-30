@@ -9,19 +9,19 @@
 
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/wrapper_value.hpp>
+#include <components/expressions/expression.hpp>
+#include <components/expressions/key.hpp>
 
-#include <components/ql/key.hpp>
 #include <components/ql/predicate.hpp>
 
 #include <core/strong_typedef.hpp>
-
-STRONG_TYPEDEF(uint16_t, parameter_id_t);
 
 namespace components::ql::experimental {
 
     bool is_union_condition(condition_type type);
 
     using expr_value_t = ::document::wrapper_value_t;
+    using key_t = components::expressions::key_t;
 
     struct expr_t {
         expr_t(const expr_t&) = delete;

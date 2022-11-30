@@ -13,10 +13,10 @@ namespace services::collection::operators::aggregate {
         if (left_ && left_->output()) {
             const auto &documents = left_->output()->documents();
             auto min = std::min_element(documents.cbegin(), documents.cend(), [&](const document_ptr &doc1, const document_ptr &doc2) {
-                return get_value(doc1, key_) < get_value(doc2, key_);
+                return components::ql::get_value(doc1, key_) < components::ql::get_value(doc2, key_);
             });
             if (min != documents.cend()) {
-                return components::document::make_document(key_result_, *get_value(*min, key_));
+                return components::document::make_document(key_result_, *components::ql::get_value(*min, key_));
             }
         }
         return components::document::make_document(key_result_, 0);

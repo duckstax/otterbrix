@@ -41,5 +41,6 @@ namespace components::expressions {
     scalar_expression_ptr make_scalar_expression(scalar_type type, const key_t& name, const key_t& key);
 
     scalar_type get_scalar_type(const std::string& key);
+    bool is_scalar_type(const std::string& key);
 
 } // namespace components::expressions

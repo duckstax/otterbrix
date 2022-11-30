@@ -1,18 +1,16 @@
 #pragma once
 
 #include <components/ql/aggregate/forward.hpp>
-#include <components/ql/experimental/project_expr.hpp>
+#include <components/expressions/expression.hpp>
 
 namespace components::ql::aggregate {
 
-    using project_expr_ptr = experimental::project_expr_ptr;
-
     struct group_t final {
         static constexpr operator_type type = operator_type::group;
-        std::vector<project_expr_ptr> fields;
+        std::vector<expressions::expression_ptr> fields;
     };
 
-    void append_expr(group_t& group, project_expr_ptr&& expr);
+    void append_expr(group_t& group, expressions::expression_ptr&& expr);
 
 
     template <class OStream>
@@ -25,7 +23,7 @@ namespace components::ql::aggregate {
             } else {
                 stream << ", ";
             }
-            stream << field;
+            stream << field->to_string();
         }
         stream << "}";
         return stream;

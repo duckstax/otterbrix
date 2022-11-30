@@ -13,7 +13,7 @@ namespace components::expressions {
             } else if constexpr (std::is_same_v<type, key_t>) {
                 stream << "\"$" << p << "\"";
             } else if constexpr (std::is_same_v<type, expression_ptr>) {
-                stream << "{" << p->to_string() << "}";
+                stream << p->to_string();
             }
         }, param);
         return stream;
@@ -125,6 +125,10 @@ namespace components::expressions {
             return type.value();
         }
         return aggregate_type::invalid;
+    }
+
+    bool is_aggregate_type(const std::string& key) {
+        return magic_enum::enum_cast<aggregate_type>(key).has_value();
     }
 
 } // namespace components::expressions

@@ -41,5 +41,6 @@ namespace components::expressions {
     aggregate_expression_ptr make_aggregate_expression(aggregate_type type, const key_t& name, const key_t& key);
 
     aggregate_type get_aggregate_type(const std::string& key);
+    bool is_aggregate_type(const std::string& key);
 
 } // namespace components::expressions

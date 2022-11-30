@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <components/expressions/key.hpp>
 #include <components/ql/aggregate/forward.hpp>
-#include <components/ql/key.hpp>
 
 namespace components::ql::aggregate {
 
@@ -12,7 +12,7 @@ namespace components::ql::aggregate {
     };
 
     struct sort_value_t {
-        const ql::key_t key;
+        const expressions::key_t key;
         const sort_order order;
     };
 
@@ -21,7 +21,7 @@ namespace components::ql::aggregate {
         std::vector<sort_value_t> values;
     };
 
-    void append_sort(sort_t& sort, const ql::key_t& key, sort_order order);
+    void append_sort(sort_t& sort, const expressions::key_t& key, sort_order order);
 
 
     template <class OStream>
