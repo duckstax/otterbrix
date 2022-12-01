@@ -1,7 +1,9 @@
 #pragma once
 
-#include <components/document/core/array.hpp>
 #include <memory>
+#include <string>
+
+#include <components/document/core/array.hpp>
 
 namespace document::impl {
 
