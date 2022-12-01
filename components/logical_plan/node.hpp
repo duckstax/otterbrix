@@ -4,13 +4,15 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <core/make_intrusive_ptr.hpp>
+#include <components/expressions/expression.hpp>
 #include "forward.hpp"
-#include "expression.hpp"
 
 namespace components::logical_plan {
 
     class node_t;
     using node_ptr = boost::intrusive_ptr<node_t>;
+    using expression_ptr = expressions::expression_ptr;
+    using hash_t = expressions::hash_t;
 
     class node_t : public boost::intrusive_ref_counter<node_t> {
     public:
@@ -18,8 +20,8 @@ namespace components::logical_plan {
 
         node_type type() const;
 
-        void append_child(node_ptr&& child);
-        void append_expression(expression_ptr&& expression);
+        void append_child(const node_ptr& child);
+        void append_expression(const expression_ptr& expression);
 
         bool operator==(const node_t& rhs) const;
         bool operator!=(const node_t& rhs) const;

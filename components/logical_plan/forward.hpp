@@ -12,8 +12,8 @@ namespace components::logical_plan {
         join_t,
         intersect_t,
         limit_t,
-        predicate_t,
-        projection_t,
+        match_t,
+        group_t,
         sort_t,
         update_t,
         union_t
@@ -33,7 +33,5 @@ namespace components::logical_plan {
         continue_t,
         break_t
     };
-
-    using hash_t = std::size_t;
 
 } // namespace components::logical_plan

@@ -7,12 +7,12 @@ namespace components::logical_plan {
         return type_;
     }
 
-    void node_t::append_child(node_ptr&& child) {
-        children_.push_back(std::forward<node_ptr>(child));
+    void node_t::append_child(const node_ptr& child) {
+        children_.push_back(child);
     }
 
-    void node_t::append_expression(expression_ptr&& expression) {
-        expressions_.push_back(std::forward<expression_ptr>(expression));
+    void node_t::append_expression(const expression_ptr& expression) {
+        expressions_.push_back(expression);
     }
 
     hash_t node_t::hash() const {
