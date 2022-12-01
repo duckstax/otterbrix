@@ -11,8 +11,10 @@
 using namespace components;
 using namespace components::ql;
 using namespace components::ql::aggregate;
+using components::expressions::make_compare_expression;
 using components::expressions::make_aggregate_expression;
 using components::expressions::make_scalar_expression;
+using components::expressions::compare_type;
 using components::expressions::aggregate_type;
 using components::expressions::scalar_type;
 using key = components::expressions::key_t;
@@ -26,7 +28,7 @@ std::string debug(const T& value) {
 }
 
 TEST_CASE("aggregate::match") {
-    auto match = make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1)));
+    auto match = make_match(make_compare_expression(compare_type::eq, key("key"), parameter_id_t(1)));
     REQUIRE(debug(match) == R"_($match: {"key": {$eq: #1}})_");
 }
 
@@ -71,7 +73,7 @@ TEST_CASE("aggregate::sort") {
 TEST_CASE("aggregate") {
     SECTION("aggregate::only_match") {
         aggregate_statement aggregate("database", "collection");
-        aggregate.append(operator_type::match, make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1))));
+        aggregate.append(operator_type::match, make_match(make_compare_expression(compare_type::eq, key("key"), parameter_id_t(1))));
         REQUIRE(debug(aggregate) == R"_($aggregate: {$match: {"key": {$eq: #1}}})_");
     }
     SECTION("aggregate::only_group") {
@@ -98,7 +100,7 @@ TEST_CASE("aggregate") {
     SECTION("aggregate::all") {
         aggregate_statement aggregate("database", "collection");
 
-        aggregate.append(operator_type::match, make_match(experimental::make_expr(condition_type::eq, "key", parameter_id_t(1))));
+        aggregate.append(operator_type::match, make_match(make_compare_expression(compare_type::eq, key("key"), parameter_id_t(1))));
 
         group_t group;
         auto scalar_expr = make_scalar_expression(scalar_type::get_field, key("_id"));

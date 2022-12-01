@@ -5,7 +5,6 @@ set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
         expr.cpp
-        experimental/expr.cpp
         aggregate.cpp
         aggregate/match.cpp
         aggregate/group.cpp

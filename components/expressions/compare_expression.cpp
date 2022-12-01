@@ -4,7 +4,7 @@
 
 namespace components::expressions {
 
-    bool is_union_condition(compare_type type) {
+    bool is_union_compare_condition(compare_type type) {
         return type == compare_type::union_and ||
                type == compare_type::union_or ||
                type == compare_type::union_not;
@@ -15,13 +15,13 @@ namespace components::expressions {
         , type_(type)
         , key_(key)
         , value_(value)
-        , union_(is_union_condition(type_)) {}
+        , union_(is_union_compare_condition(type_)) {}
 
     compare_expression_t::compare_expression_t(compare_type condition)
         : expression_i(expression_group::compare)
         , type_(condition)
         , value_(0)
-        , union_(is_union_condition(type_)) {}
+        , union_(is_union_compare_condition(type_)) {}
 
     compare_type compare_expression_t::type() const {
         return type_;
@@ -37,6 +37,10 @@ namespace components::expressions {
 
     const std::vector<compare_expression_ptr>& compare_expression_t::children() const {
         return children_;
+    }
+
+    void compare_expression_t::set_type(compare_type type) {
+        type_ = type;
     }
 
     void compare_expression_t::append_child(const compare_expression_ptr& child) {
@@ -89,13 +93,23 @@ namespace components::expressions {
     }
 
     compare_expression_ptr make_compare_expression(compare_type condition) {
-        assert(!is_union_condition(condition));
+        assert(!is_union_compare_condition(condition));
         return new compare_expression_t(condition);
     }
 
     compare_expression_ptr make_compare_union_expression(compare_type condition) {
-        assert(is_union_condition(condition));
+        assert(is_union_compare_condition(condition));
         return new compare_expression_t(condition);
+    }
+
+    compare_type get_compare_type(const std::string& key) {
+        if (key.empty())       return compare_type::invalid;
+        auto type = magic_enum::enum_cast<compare_type>(key.substr(1));
+        if (type.has_value())  return type.value();
+        if (key == "$and")     return compare_type::union_and;
+        if (key == "$or")      return compare_type::union_or;
+        if (key == "$not")     return compare_type::union_not;
+        return compare_type::invalid;
     }
 
 } // namespace components::expressions

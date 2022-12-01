@@ -13,8 +13,8 @@
 
 #include <components/document/document_view.hpp>
 #include <components/ql/expr.hpp>
-#include <components/ql/experimental/expr.hpp>
 #include <components/ql/parser.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/expressions/aggregate_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
 
@@ -144,14 +144,15 @@ namespace experimental {
     using components::ql::aggregate::operator_type;
     using components::ql::aggregate::sort_order;
 
-    namespace expr_ns = components::ql::experimental;
-    using expr_ns::expr_ptr;
-    using expr_ns::expr_t;
-    using expr_ns::make_expr;
-    using expr_ns::make_union_expr;
-
     using components::expressions::key_t;
     using components::expressions::expression_ptr;
+
+    using components::expressions::compare_expression_t;
+    using components::expressions::compare_expression_ptr;
+    using components::expressions::compare_type;
+    using components::expressions::get_compare_type;
+    using components::expressions::make_compare_expression;
+    using components::expressions::make_compare_union_expression;
 
     using components::expressions::aggregate_expression_t;
     using components::expressions::aggregate_type;
@@ -165,27 +166,27 @@ namespace experimental {
     using components::expressions::get_scalar_type;
     using components::expressions::make_scalar_expression;
 
-    void normalize(expr_ptr &expr) {
-        if (expr->type_ == condition_type::novalid && !expr->key_.is_null()) {
-            expr->type_ = condition_type::eq;
+    void normalize(compare_expression_ptr& expr) {
+        if (expr->type() == compare_type::invalid && !expr->key().is_null()) {
+            expr->set_type(compare_type::eq);
         }
     }
 
-    void normalize_union(expr_ptr &expr) {
-        if (expr->type_ == condition_type::novalid && expr->is_union()) {
-            expr->type_ = condition_type::union_and;
+    void normalize_union(compare_expression_ptr& expr) {
+        if (expr->type() == compare_type::invalid && expr->is_union()) {
+            expr->set_type(compare_type::union_and);
         }
     }
 
-    void parse_find_condition_dict_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
-    void parse_find_condition_array_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
+    void parse_find_condition_dict_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
+    void parse_find_condition_array_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
 
-    void parse_find_condition_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, const std::string& key_word, aggregate_statement* aggregate) {
+    void parse_find_condition_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, const std::string& key_word, aggregate_statement* aggregate) {
         auto real_key = prev_key;
-        auto type = get_condition_type_(key_word);
-        if (type == condition_type::novalid) {
-            type = get_condition_type_(prev_key);
-            if (type != condition_type::novalid) {
+        auto type = get_compare_type(key_word);
+        if (type == compare_type::invalid) {
+            type = get_compare_type(prev_key);
+            if (type != compare_type::invalid) {
                 real_key = key_word;
             }
         }
@@ -195,24 +196,23 @@ namespace experimental {
             parse_find_condition_array_(parent_condition, condition, real_key, aggregate);
         } else {
             auto value = aggregate->add_parameter(to_(condition).detach());
-            auto sub_condition = make_expr(type, real_key, value);
+            auto sub_condition = make_compare_expression(type, key_t(real_key), value);
             if (sub_condition->is_union()) {
                 parse_find_condition_(sub_condition.get(), condition, real_key, std::string(), aggregate);
             }
             normalize(sub_condition);
-            parent_condition->append_sub_condition(std::move(sub_condition));
+            parent_condition->append_child(sub_condition);
         }
     }
 
-    void parse_find_condition_dict_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
+    void parse_find_condition_dict_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
         for (const auto &it : condition) {
             auto key = py::str(it).cast<std::string>();
-            auto type = get_condition_type_(key);
+            auto type = get_compare_type(key);
             auto union_condition = parent_condition;
-            if (is_union_condition(type)) {
-                parent_condition->append_sub_condition(make_union_expr());
-                union_condition = parent_condition->sub_conditions_.at(parent_condition->sub_conditions_.size() - 1).get();
-                union_condition->type_ = type;
+            if (is_union_compare_condition(type)) {
+                parent_condition->append_child(make_compare_union_expression(type));
+                union_condition = parent_condition->children().at(parent_condition->children().size() - 1).get();
             }
             if (prev_key.empty()) {
                 parse_find_condition_(union_condition, condition[it], key, std::string(), aggregate);
@@ -222,23 +222,24 @@ namespace experimental {
         }
     }
 
-    void parse_find_condition_array_(expr_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
+    void parse_find_condition_array_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
         for (const auto &it : condition) {
             parse_find_condition_(parent_condition, it, prev_key, std::string(), aggregate);
         }
     }
 
-    expr_ptr parse_find_condition_(const py::handle& condition, aggregate_statement* aggregate) {
-        auto res_condition = make_union_expr();
+    expression_ptr parse_find_condition_(const py::handle& condition, aggregate_statement* aggregate) {
+        auto res_condition = make_compare_union_expression(compare_type::union_and);
         for (const auto &it : condition) {
             if (py::len(condition) == 1) {
-                res_condition->type_ = get_condition_type_(py::str(it).cast<std::string>());
+                res_condition->set_type(get_compare_type(py::str(it).cast<std::string>()));
             }
             parse_find_condition_(res_condition.get(), condition[it], py::str(it).cast<std::string>(), std::string(), aggregate);
         }
-        if (res_condition->sub_conditions_.size() == 1) {
-            normalize(res_condition->sub_conditions_[0]);
-            return std::move(res_condition->sub_conditions_[0]);
+        if (res_condition->children().size() == 1) {
+            compare_expression_ptr child = res_condition->children()[0];
+            normalize(child);
+            return child;
         }
         normalize_union(res_condition);
         return res_condition;

@@ -23,6 +23,7 @@ namespace components::expressions {
         core::parameter_id_t value() const;
         const std::vector<compare_expression_ptr>& children() const;
 
+        void set_type(compare_type type);
         void append_child(const compare_expression_ptr& child);
 
         bool is_union() const;
@@ -42,5 +43,8 @@ namespace components::expressions {
     compare_expression_ptr make_compare_expression(compare_type condition, const key_t& key, core::parameter_id_t id);
     compare_expression_ptr make_compare_expression(compare_type condition);
     compare_expression_ptr make_compare_union_expression(compare_type condition);
+
+    bool is_union_compare_condition(compare_type type);
+    compare_type get_compare_type(const std::string& key);
 
 } // namespace components::expressions
