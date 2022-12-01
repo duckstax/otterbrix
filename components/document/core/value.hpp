@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <string_view>
 
 #include <components/document/core/internal.hpp>
 #include <components/document/support/endian.hpp>
