@@ -56,7 +56,7 @@ struct dict_impl_t : public array_t::impl
     {}
 
     shared_keys_t* find_shared_keys() const {
-        return doc_t::shared_keys(_first);
+        return nullptr;///doc_t::shared_keys(_first);
     }
 
     bool uses_shared_keys() const {
@@ -419,10 +419,13 @@ dict_iterator_t::dict_iterator_t(const dict_t* d, bool) noexcept
 }
 
 shared_keys_t* dict_iterator_t::find_shared_keys() const {
+    return nullptr;
+    /*
     auto sk = doc_t::shared_keys(_a._first);
     _shared_keys = sk;
     assert_precondition(sk || is_disable_necessary_shared_keys_check);
     return sk;
+    */
 }
 
 std::string dict_iterator_t::key_string() const noexcept {

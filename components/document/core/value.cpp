@@ -265,9 +265,8 @@ namespace document::impl {
         return v ? v->as_dict() : nullptr;
     }
 
-
     shared_keys_t* value_t::shared_keys() const noexcept {
-        return _containing(this);
+        return nullptr; ///_containing(this);
     }
 
     bool value_t::is_equal(const value_t* v) const {

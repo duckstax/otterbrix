@@ -81,17 +81,17 @@ private:
     const std::size_t size_;
 };
 
-void copy_to(storage_view& storage, void* dst) noexcept {
+inline void copy_to(storage_view& storage, void* dst) noexcept {
     if (storage.size() > 0)
         ::memcpy(dst, storage.ptr(), storage.size());
 }
 
-void copy_to(const std::string& storage, void* dst) noexcept {
+inline void copy_to(const std::string& storage, void* dst) noexcept {
     if (!storage.empty())
         ::memcpy(dst, storage.data(), storage.size());
 }
 
-void copy_to(const std::string_view & storage, void* dst) noexcept {
+inline void copy_to(const std::string_view& storage, void* dst) noexcept {
     if (!storage.empty())
         ::memcpy(dst, storage.data(), storage.size());
 }
