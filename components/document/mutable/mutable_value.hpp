@@ -1,8 +1,9 @@
 #pragma once
 
-#include "utils.hpp"
 #include <components/document/core/value.hpp>
 #include <components/document/support/ref_counted.hpp>
+
+#include "components/document/support/utils.hpp"
 
 namespace document::impl {
 
