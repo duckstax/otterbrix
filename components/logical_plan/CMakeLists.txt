@@ -3,6 +3,7 @@ project(logical_plan CXX)
 set(SOURCE_${PROJECT_NAME}
         node.cpp
         node_match.cpp
+        node_group.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
