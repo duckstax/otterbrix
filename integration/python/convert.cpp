@@ -63,7 +63,7 @@ py::object from_(const ::document::impl::value_t* value) {
     } else if (value->is_double()) {
         return py::float_(value->as_double());
     } else if (value->type() == value_type::string) {
-        return py::str(value->as_string().as_string());
+        return py::str(value->as_string());
     } else if (value->type() == value_type::array) {
         py::list list;
         for (uint32_t i = 0; i < value->as_array()->count(); ++i) {
