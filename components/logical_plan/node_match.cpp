@@ -14,10 +14,17 @@ namespace components::logical_plan {
 
     std::string node_match_t::to_string_impl() const {
         std::stringstream stream;
-        stream << "$match: ";
+        stream << "$match: {";
+        bool is_first = true;
         for (const auto& expr : expressions_) {
+            if (is_first) {
+                is_first = false;
+            } else {
+                stream << ", ";
+            }
             stream << expr->to_string();
         }
+        stream << "}";
         return stream.str();
     }
 

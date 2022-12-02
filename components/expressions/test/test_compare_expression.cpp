@@ -33,10 +33,10 @@ TEST_CASE("expression::compare::equals") {
 
 TEST_CASE("expression::compare::to_string") {
     auto expr = make_compare_expression(compare_type::eq, key("count"), core::parameter_id_t(1));
-    REQUIRE(expr->to_string() == R"({"count": {$eq: #1}})");
+    REQUIRE(expr->to_string() == R"("count": {$eq: #1})");
 
     expr = make_compare_union_expression(compare_type::union_and);
     expr->append_child(make_compare_expression(compare_type::eq, key("key1"), core::parameter_id_t(1)));
     expr->append_child(make_compare_expression(compare_type::lt, key("key2"), core::parameter_id_t(2)));
-    REQUIRE(expr->to_string() == R"({$and: [{"key1": {$eq: #1}}, {"key2": {$lt: #2}}]})");
+    REQUIRE(expr->to_string() == R"($and: ["key1": {$eq: #1}, "key2": {$lt: #2}])");
 }

@@ -15,7 +15,7 @@ namespace components::ql::aggregate {
 
     template <class OStream>
     OStream &operator<<(OStream& stream, const match_t& match) {
-        stream << "$match: " << match.query->to_string();
+        stream << "$match: {" << match.query->to_string() << "}";
         return stream;
     }
 

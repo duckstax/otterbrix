@@ -65,16 +65,16 @@ namespace components::expressions {
     std::string compare_expression_t::to_string_impl() const {
         std::stringstream stream;
         if (is_union()) {
-            stream << "{"  << type() << ": [";
+            stream << type() << ": [";
             for (std::size_t i = 0; i < children().size(); ++i) {
                 if (i > 0) {
                     stream << ", ";
                 }
                 stream << children().at(i)->to_string_impl();
             }
-            stream << "]}";
+            stream << "]";
         } else {
-            stream << "{\"" << key() << "\": {" << type() << ": #" << value().t << "}}";
+            stream << "\"" << key() << "\": {" << type() << ": #" << value().t << "}";
         }
         return stream.str();
     }
