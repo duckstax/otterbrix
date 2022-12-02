@@ -16,8 +16,9 @@ namespace duck_charmer {
     wrapper_document_id::wrapper_document_id(oid::timestamp_value_t time)
         : id_(document_id_t(time)) {}
 
-    std::string_view wrapper_document_id::value_of() const {
-        return id_.to_string();
+    std::string wrapper_document_id::value_of() const {
+        auto tmp = id_.to_string();
+        return {tmp.data(),tmp.size()};
     }
 
     std::string wrapper_document_id::to_string() const {
