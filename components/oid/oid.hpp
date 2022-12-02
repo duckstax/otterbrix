@@ -25,19 +25,19 @@ namespace oid {
     public:
         oid_t();
         explicit oid_t(timestamp_value_t timestamp);
-        explicit oid_t(const std::string& str);
+        explicit oid_t(std::string_view str);
         oid_t(const oid_t& other);
 
         ~oid_t() = default;
 
-        oid_t& operator=(const std::string& str);
+        oid_t& operator=(std::string_view str);
         oid_t& operator=(const oid_t& other);
 
         int compare(const oid_t& other) const;
         bool is_null() const;
 
         const byte_t* data() const;
-        std::string_view to_string() const;
+        std::string to_string() const;
         timestamp_value_t get_timestamp() const;
 
         static oid_t null();
@@ -46,7 +46,7 @@ namespace oid {
         bool operator==(const oid_t& other) const;
         bool operator<(const oid_t& other) const;
 
-        static bool is_valid(const std::string& str);
+        static bool is_valid(std::string_view str);
 
         struct hash_t {
             std::size_t operator()(const oid_t& oid) const {
@@ -104,7 +104,7 @@ namespace oid {
     private:
         byte_t data_[size];
 
-        void init(const std::string& str);
+        void init(std::string_view str);
         void clear();
     };
 
@@ -148,7 +148,7 @@ namespace oid {
     }
 
     template<class T>
-    oid_t<T>::oid_t(const std::string& str) {
+    oid_t<T>::oid_t(std::string_view str) {
         init(str);
     }
 
@@ -158,7 +158,7 @@ namespace oid {
     }
 
     template<class T>
-    oid_t<T>& oid_t<T>::operator=(const std::string& str) {
+    oid_t<T>& oid_t<T>::operator=(std::string_view str) {
         init(str);
         return *this;
     }
@@ -190,13 +190,13 @@ namespace oid {
     }
 
     template<class T>
-    std::string_view oid_t<T>::to_string() const {
+    std::string oid_t<T>::to_string() const {
         char str[2 * size];
         for (uint32_t i = 0; i < size; ++i) {
             str[2 * i] = to_char_(data_[i] / 0x10);
             str[2 * i + 1] = to_char_(data_[i] % 0x10);
         }
-        return std::string_view(str, 2 * size);
+        return {str, 2 * size};
     }
 
     template<class T>
@@ -233,7 +233,7 @@ namespace oid {
     }
 
     template<class T>
-    bool oid_t<T>::is_valid(const std::string& str) {
+    bool oid_t<T>::is_valid(const std::string_view str) {
         if (str.size() != 2 * size) {
             return false;
         }
@@ -243,7 +243,7 @@ namespace oid {
     }
 
     template<class T>
-    void oid_t<T>::init(const std::string& str) {
+    void oid_t<T>::init(std::string_view str) {
         if (is_valid(str)) {
             for (uint32_t i = 0; i < size; ++i) {
                 data_[i] = byte_t(from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]));
