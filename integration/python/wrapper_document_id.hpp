@@ -17,7 +17,7 @@ namespace duck_charmer {
         explicit wrapper_document_id(const std::string &str);
         explicit wrapper_document_id(oid::timestamp_value_t time);
 
-        std::string value_of() const;
+        std::string_view value_of() const;
         std::string to_string() const;
         oid::timestamp_value_t get_timestamp() const;
 

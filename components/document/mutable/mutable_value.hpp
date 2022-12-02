@@ -34,7 +34,7 @@ namespace document::impl {
             static heap_value_t* create(uint64_t i);
             static heap_value_t* create(float f);
             static heap_value_t* create(double d);
-            static heap_value_t* create(const std::string& s);
+            static heap_value_t* create(std::string_view s);
             static heap_value_t* create(const value_t *v);
 
             static const value_t* as_value(heap_value_t *v) PURE;
@@ -93,7 +93,6 @@ namespace document::impl {
     retained_const_t<value_t> new_value(uint64_t data);
     retained_const_t<value_t> new_value(float data);
     retained_const_t<value_t> new_value(double data);
-    retained_const_t<value_t> new_value(const std::string& data);
-    retained_const_t<value_t> new_value(std::string& data);
+    retained_const_t<value_t> new_value(std::string_view data);
     retained_const_t<value_t> new_value(const value_t* data);
 }

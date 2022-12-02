@@ -99,7 +99,7 @@ namespace document::impl::internal {
         return create(tag_float, 8, {reinterpret_cast<char*>(&data.le) - 1, sizeof(data.le) + 1});
     }
 
-    heap_value_t *heap_value_t::create(const std::string& s) {
+    heap_value_t *heap_value_t::create( std::string_view s) {
         return create_str(internal::tag_string, s);
     }
 
@@ -254,7 +254,7 @@ namespace document::impl {
         return internal::heap_value_t::create(data)->as_value();
     }
 
-    retained_const_t<value_t> new_value(std::string& data) {
+    retained_const_t<value_t> new_value(std::string_view data) {
         return internal::heap_value_t::create(data)->as_value();
     }
 

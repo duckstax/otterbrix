@@ -37,7 +37,7 @@ namespace oid {
         bool is_null() const;
 
         const byte_t* data() const;
-        std::string to_string() const;
+        std::string_view to_string() const;
         timestamp_value_t get_timestamp() const;
 
         static oid_t null();
@@ -190,13 +190,13 @@ namespace oid {
     }
 
     template<class T>
-    std::string oid_t<T>::to_string() const {
+    std::string_view oid_t<T>::to_string() const {
         char str[2 * size];
         for (uint32_t i = 0; i < size; ++i) {
             str[2 * i] = to_char_(data_[i] / 0x10);
             str[2 * i + 1] = to_char_(data_[i] % 0x10);
         }
-        return std::string(str, 2 * size);
+        return std::string_view(str, 2 * size);
     }
 
     template<class T>

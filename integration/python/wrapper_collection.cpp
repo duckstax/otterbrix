@@ -16,7 +16,7 @@ namespace duck_charmer {
 using components::document::document_id_t;
 
 void generate_document_id_if_not_exists(components::document::document_ptr &document) {
-    if (!document_view_t(document).is_exists(std::string_view ("_id"))) {
+    if (!document_view_t(document).is_exists(std::string_view("_id"))) {
         document->set("_id", document_id_t().to_string());
     }
 }
@@ -67,7 +67,8 @@ std::string wrapper_collection::insert_one(const py::handle &document) {
         auto session_tmp = duck_charmer::session_id_t();
         auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
         debug(log_,"wrapper_collection::insert_one {} inserted", result.inserted_id().is_null() ? 0 : 1);
-        return result.inserted_id().to_string();
+        auto tmp = result.inserted_id().to_string();
+        return {tmp.data(),tmp.size()};
     }
     throw std::runtime_error("wrapper_collection::insert_one");
     return std::string();

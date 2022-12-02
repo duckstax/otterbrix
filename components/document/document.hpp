@@ -69,6 +69,11 @@ namespace components::document {
     }
 
     template<>
+    inline void document_t::set(const std::string& key, std::string_view value) {
+        set_(key, ::document::impl::new_value(value));
+    }
+
+    template<>
     inline void document_t::set(const std::string& key, document_const_value_t value) {
         set_(key, value);
     }
