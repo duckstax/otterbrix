@@ -21,7 +21,6 @@ target_link_libraries(
 		rocketjoe::test_generaty
 		CONAN_PKG::catch2
 		CONAN_PKG::boost
-		CONAN_PKG::fmt
 		${CMAKE_THREAD_LIBS_INIT}
 )
 

@@ -2,9 +2,7 @@
 
 #include <sstream>
 
-#include <fmt/format.h>
 #include <components/document/mutable/mutable_array.h>
-
 #include <components/document/mutable/mutable_dict.h>
 
 using ::document::impl::value_type;
@@ -278,7 +276,9 @@ namespace components::document {
             res << value->as_double();
             return res.str();
         } else if (value->type() == value_type::string) {
-            return fmt::format("\"{}\"",value->as_string());
+            std::string tmp ;
+            tmp.append("\"").append(value->as_string()).append("\"");
+            return tmp;
         }
         return std::string();
     }
