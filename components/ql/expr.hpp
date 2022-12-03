@@ -5,112 +5,18 @@
 #include <utility>
 #include <variant>
 #include <vector>
-#include <components/document/wrapper_value.hpp>
+
 #include <components/document/mutable/mutable_value.hpp>
+#include <components/document/wrapper_value.hpp>
 #include <components/document/document.hpp>
+
+#include "key.hpp"
+#include "predicate.hpp"
 
 namespace components::ql {
 
-    enum class condition_type : std::uint8_t {
-        novalid,
-        eq,
-        ne,
-        gt,
-        lt,
-        gte,
-        lte,
-        regex,
-        any,
-        all,
-        union_and,
-        union_or,
-        union_not
-    };
 
     bool is_union_condition(condition_type type);
-
-    class key_t final {
-    public:
-        key_t()
-            : type_(type::non)
-            , storage_({}) {}
-
-        key_t(std::string_view str)
-            : type_(type::string)
-            , storage_(std::string(str.data(), str.size())) {}
-
-        key_t(const std::string& str)
-            : type_(type::string)
-            , storage_(std::string(str.data(), str.size())) {}
-
-        key_t(std::string&& str)
-            : type_(type::string)
-            , storage_(std::move(str)) {}
-
-        key_t(const char* str)
-            : type_(type::string)
-            , storage_(std::string(str)) {}
-
-        template<typename CharT>
-        key_t(const CharT* data, size_t size)
-            : type_(type::string)
-            , storage_(std::string(data, size)) {}
-
-        enum class type {
-            non,
-            string,
-            int32,
-            uint32
-        };
-
-        auto as_string() const -> const std::string& {
-            return std::get<std::string>(storage_);
-        }
-
-        explicit operator std::string() const {
-            return as_string();
-        }
-
-        type which() const {
-            return type_;
-        }
-
-        auto is_string() const -> bool {
-            return type_ == type::string;
-        }
-
-        auto is_null() const -> bool {
-            return type_ == type::non;
-        }
-
-        bool operator<(const key_t& other) const {
-            return storage_ < other.storage_;
-        }
-
-        bool operator<=(const key_t& other) const {
-            return storage_ <= other.storage_;
-        }
-
-        bool operator>(const key_t& other) const {
-            return storage_ > other.storage_;
-        }
-
-        bool operator>=(const key_t& other) const {
-            return storage_ >= other.storage_;
-        }
-
-        bool operator==(const key_t& other) const {
-            return storage_ == other.storage_;
-        }
-
-        bool operator!=(const key_t& rhs) const {
-            return !(*this == rhs);
-        }
-
-    private:
-        type type_;
-        std::variant<std::monostate,bool, int32_t, uint32_t, std::string> storage_;
-    };
 
     using expr_value_t = ::document::wrapper_value_t;
 
@@ -152,7 +58,7 @@ namespace components::ql {
     }
 
     template<>
-    inline expr_ptr make_expr(condition_type condition, std::string key, const std::string &value) {
+    inline expr_ptr make_expr(condition_type condition, std::string key, const std::string& value) {
         return make_expr(condition, std::move(key), ::document::impl::new_value(value).detach());
     }
 

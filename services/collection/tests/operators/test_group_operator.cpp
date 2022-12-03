@@ -8,6 +8,7 @@
 #include <services/collection/operators/aggregate/operator_avg.hpp>
 #include "test_operator_generaty.hpp"
 
+using namespace components;
 using namespace services::collection::operators;
 
 TEST_CASE("operator::group::base") {
@@ -16,7 +17,7 @@ TEST_CASE("operator::group::base") {
     SECTION("base::all::no_valid") {
         operator_group_t group(d(collection)->view());
         group.set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group.add_key("id_", get::simple_value_t::create("id_"));
+        group.add_key("id_", get::simple_value_t::create(ql::key_t("id_")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 0);
     }
@@ -24,7 +25,7 @@ TEST_CASE("operator::group::base") {
     SECTION("base::all::id") {
         operator_group_t group(d(collection)->view());
         group.set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group.add_key("_id", get::simple_value_t::create("_id"));
+        group.add_key("_id", get::simple_value_t::create(ql::key_t("_id")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 100);
     }
@@ -32,7 +33,7 @@ TEST_CASE("operator::group::base") {
     SECTION("base::all::countBool") {
         operator_group_t group(d(collection)->view());
         group.set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group.add_key("countBool", get::simple_value_t::create("countBool"));
+        group.add_key("countBool", get::simple_value_t::create(ql::key_t("countBool")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 2);
     }
@@ -40,9 +41,9 @@ TEST_CASE("operator::group::base") {
     SECTION("base::all::dict") {
         operator_group_t group(d(collection)->view());
         group.set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group.add_key("even", get::simple_value_t::create("countDict.even"));
-        group.add_key("three", get::simple_value_t::create("countDict.three"));
-        group.add_key("five", get::simple_value_t::create("countDict.five"));
+        group.add_key("even", get::simple_value_t::create(ql::key_t("countDict.even")));
+        group.add_key("three", get::simple_value_t::create(ql::key_t("countDict.three")));
+        group.add_key("five", get::simple_value_t::create(ql::key_t("countDict.five")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 8);
     }
@@ -54,9 +55,9 @@ TEST_CASE("operator::group::sort") {
     SECTION("sort::all") {
         auto group = std::make_unique<operator_group_t>(d(collection)->view());
         group->set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group->add_key("even", get::simple_value_t::create("countDict.even"));
-        group->add_key("three", get::simple_value_t::create("countDict.three"));
-        group->add_key("five", get::simple_value_t::create("countDict.five"));
+        group->add_key("even", get::simple_value_t::create(ql::key_t("countDict.even")));
+        group->add_key("three", get::simple_value_t::create(ql::key_t("countDict.three")));
+        group->add_key("five", get::simple_value_t::create(ql::key_t("countDict.five")));
         auto sort = std::make_unique<operator_sort_t>(d(collection)->view());
         sort->set_children(std::move(group));
         sort->add({"even", "three", "five"});
@@ -85,13 +86,13 @@ TEST_CASE("operator::group::all") {
     SECTION("sort::all") {
         auto group = std::make_unique<operator_group_t>(d(collection)->view());
         group->set_children(std::make_unique<transfer_scan>(d(collection)->view(), predicates::limit_t::unlimit()));
-        group->add_key("even", get::simple_value_t::create("countDict.even"));
-        group->add_key("three", get::simple_value_t::create("countDict.three"));
-        group->add_key("five", get::simple_value_t::create("countDict.five"));
+        group->add_key("even", get::simple_value_t::create(ql::key_t("countDict.even")));
+        group->add_key("three", get::simple_value_t::create(ql::key_t("countDict.three")));
+        group->add_key("five", get::simple_value_t::create(ql::key_t("countDict.five")));
 
         group->add_value("count", std::make_unique<aggregate::operator_count_t>(d(collection)->view()));
-        group->add_value("sum", std::make_unique<aggregate::operator_sum_t>(d(collection)->view(), "count"));
-        group->add_value("avg", std::make_unique<aggregate::operator_avg_t>(d(collection)->view(), "count"));
+        group->add_value("sum", std::make_unique<aggregate::operator_sum_t>(d(collection)->view(), ql::key_t("count")));
+        group->add_value("avg", std::make_unique<aggregate::operator_avg_t>(d(collection)->view(), ql::key_t("count")));
 
         auto sort = std::make_unique<operator_sort_t>(d(collection)->view());
         sort->set_children(std::move(group));

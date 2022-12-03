@@ -5,9 +5,9 @@
 #include <pybind11/stl_bind.h>
 
 #include "components/document/document.hpp"
-#include "components/document/document_view.hpp"
-#include "components/document/document_id.hpp"
 #include <services/collection/sort.hpp>
+
+#include "ql/aggregate.hpp"
 
 namespace py = pybind11;
 
@@ -22,3 +22,10 @@ auto to_pylist(const std::pmr::vector<components::document::document_id_t> &src)
 
 auto to_sorter(const py::handle &sort_dict) -> services::storage::sort::sorter_t;
 auto to_order(const py::object &order) -> services::storage::sort::order;
+
+namespace experimental {
+
+    auto to_statement(const py::handle& source, components::ql::aggregate_statement*) -> void;
+    auto test_to_statement(const py::handle& source) -> py::str;
+
+}
