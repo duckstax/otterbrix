@@ -179,22 +179,6 @@ namespace components::document {
         return document_->value_.get();
     }
 
-    document_view_t::const_value_ptr document_view_t::get_value(const std::string &key) const {
-        auto dot_pos = key.find('.');
-        if (dot_pos != std::string::npos) {
-            auto key_parent = key.substr(0, dot_pos);
-            if (is_exists(key_parent)) {
-                auto doc_parent = make_document(get(key_parent)).detach(); //todo: memory leak
-                if (doc_parent) {
-                    return document_view_t(doc_parent).get_value(key.substr(dot_pos + 1, key.size() - dot_pos));
-                } else {
-                    return nullptr;
-                }
-            }
-        }
-        return get(key);
-    }
-
     document_view_t::const_value_ptr document_view_t::get_value(std::string_view key) const {
         auto dot_pos = key.find('.');
         if (dot_pos != std::string::npos) {

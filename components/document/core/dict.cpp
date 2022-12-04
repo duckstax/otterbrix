@@ -305,15 +305,6 @@ bool dict_t::empty() const noexcept {
     return count_is_zero();
 }
 
-const value_t* dict_t::get(const std::string& key) const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->get(key);
-    if (is_wide_array())
-        return dict_impl_t<true>(this).get(key);
-    else
-        return dict_impl_t<false>(this).get(key);
-}
-
 const value_t* dict_t::get(std::string_view key) const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->get(key);

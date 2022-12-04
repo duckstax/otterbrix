@@ -60,7 +60,6 @@ namespace components::document {
         document_view_t get_dict(uint32_t index) const;
 
         const_value_ptr get_value() const;
-        const_value_ptr get_value(const std::string &key) const;
         const_value_ptr get_value(std::string_view key) const;
         const_value_ptr get_value(uint32_t index) const;
 

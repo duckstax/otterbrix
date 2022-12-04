@@ -41,8 +41,6 @@ namespace document::impl {
         static const value_t* const null_value;
         static const value_t* const undefined_value;
 
-        static const value_t* from_data(const std::string&) noexcept;
-        static const value_t* from_trusted_data(const std::string& ) noexcept;
         value_type type() const noexcept PURE;
         bool is_equal(const value_t*) const PURE;
         bool is_lt(const value_t*) const PURE;

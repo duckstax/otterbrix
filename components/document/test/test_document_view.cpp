@@ -13,31 +13,31 @@ TEST_CASE("document_view::get_value") {
     REQUIRE(view.get_value() != nullptr);
     REQUIRE(view.get_value()->type() == value_type::dict);
 
-    REQUIRE(view.get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(view.get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(view.get_value(std::string_view {"count" })->as_unsigned() == 1);
+    REQUIRE(view.get_value("count") != nullptr);
+    REQUIRE(view.get_value("count")->type() == value_type::number);
+    REQUIRE(view.get_value("count")->as_unsigned() == 1);
 
-    REQUIRE(view.get_value(std::string_view{"countStr"}) != nullptr);
-    REQUIRE(view.get_value(std::string_view{"countStr"})->type() == value_type::string);
-    REQUIRE(view.get_value(std::string_view{"countStr"})->as_string() == "1");
+    REQUIRE(view.get_value("countStr") != nullptr);
+    REQUIRE(view.get_value("countStr")->type() == value_type::string);
+    REQUIRE(view.get_value("countStr")->as_string() == "1");
 
-    REQUIRE(view.get_value(std::string_view{"countArray"}) != nullptr);
-    REQUIRE(view.get_value(std::string_view{"countArray"})->type() == value_type::array);
+    REQUIRE(view.get_value("countArray") != nullptr);
+    REQUIRE(view.get_value("countArray")->type() == value_type::array);
 
-    REQUIRE(view.get_value(std::string_view{"countDict"}) != nullptr);
-    REQUIRE(view.get_value(std::string_view{"countDict"})->type() == value_type::dict);
+    REQUIRE(view.get_value("countDict") != nullptr);
+    REQUIRE(view.get_value("countDict")->type() == value_type::dict);
 
-    REQUIRE(view.get_value(std::string_view{"countArray.1"}) != nullptr);
-    REQUIRE(view.get_value(std::string_view{"countArray.1"})->type() == value_type::number);
-    REQUIRE(view.get_value(std::string_view{"countArray.1"})->as_unsigned() == 2);
+    REQUIRE(view.get_value("countArray.1") != nullptr);
+    REQUIRE(view.get_value("countArray.1")->type() == value_type::number);
+    REQUIRE(view.get_value("countArray.1")->as_unsigned() == 2);
 
-    REQUIRE(view.get_value(std::string_view{"countDict.even"}) != nullptr);
-    REQUIRE(view.get_value(std::string_view{"countDict.even"})->type() == value_type::boolean);
-    REQUIRE(view.get_value(std::string_view{"countDict.even"})->as_bool() == false);
+    REQUIRE(view.get_value("countDict.even") != nullptr);
+    REQUIRE(view.get_value("countDict.even")->type() == value_type::boolean);
+    REQUIRE(view.get_value("countDict.even")->as_bool() == false);
 
-    REQUIRE(view.get_value(std::string_view{"other"}) == nullptr);
-    REQUIRE(view.get_value(std::string_view{"countArray.10"}) == nullptr);
-    REQUIRE(view.get_value(std::string_view{"countDict.other"}) == nullptr);
+    REQUIRE(view.get_value("other") == nullptr);
+    REQUIRE(view.get_value("countArray.10") == nullptr);
+    REQUIRE(view.get_value("countDict.other") == nullptr);
 }
 
 TEST_CASE("document_view::set") {
@@ -70,55 +70,55 @@ TEST_CASE("document_view::set") {
 TEST_CASE("document_view::update") {
     auto doc = gen_doc(1);
 
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->as_int() == 1);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 1);
+    REQUIRE(document_view_t(doc).get_value("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count")->as_int() == 1);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count")->as_int() == 1);
 
     doc->update(document_from_json(R"({"$set": {"count": 100}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->as_int() == 100);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 100);
+    REQUIRE(document_view_t(doc).get_value("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count")->as_int() == 100);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count")->as_int() == 100);
 
     doc->update(document_from_json(R"({"$inc": {"count": 1}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->as_int() == 101);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 101);
+    REQUIRE(document_view_t(doc).get_value("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count")->as_int() == 101);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count")->as_int() == 101);
 
     doc->update(document_from_json(R"({"$inc": {"count": 10}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->as_int() == 111);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 111);
+    REQUIRE(document_view_t(doc).get_value("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count")->as_int() == 111);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count")->as_int() == 111);
 
     doc->update(document_from_json(R"({"$inc": {"count": -1}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count" })->as_int() == 110);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 110);
+    REQUIRE(document_view_t(doc).get_value("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count")->as_int() == 110);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count")->as_int() == 110);
 
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count2" }) == nullptr);
+    REQUIRE(document_view_t(doc).get_value("count2") == nullptr);
     doc->update(document_from_json(R"({"$set": {"count2": 100}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count2" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count2" })->type() == value_type::number);
-    REQUIRE(document_view_t(doc).get_value(std::string_view {"count2" })->as_int() == 100);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count2" }) != nullptr);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(std::string_view {"count2" })->as_int() == 100);
+    REQUIRE(document_view_t(doc).get_value("count2") != nullptr);
+    REQUIRE(document_view_t(doc).get_value("count2")->type() == value_type::number);
+    REQUIRE(document_view_t(doc).get_value("count2")->as_int() == 100);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count2") != nullptr);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get("count2")->as_int() == 100);
 
-    REQUIRE(document_view_t(doc).get_value(std::string_view{"countArray.1"})->as_int() == 2);
+    REQUIRE(document_view_t(doc).get_value("countArray.1")->as_int() == 2);
     doc->update(document_from_json(R"({"$set": {"countArray.1": 100}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view{"countArray.1"})->as_int() == 100);
+    REQUIRE(document_view_t(doc).get_value("countArray.1")->as_int() == 100);
 
-    REQUIRE(document_view_t(doc).get_value(std::string_view{"countDict.even"})->as_int() == false);
+    REQUIRE(document_view_t(doc).get_value("countDict.even")->as_int() == false);
     doc->update(document_from_json(R"({"$set": {"countDict.even": true}})"));
-    REQUIRE(document_view_t(doc).get_value(std::string_view{"countDict.even"})->as_int() == true);
+    REQUIRE(document_view_t(doc).get_value("countDict.even")->as_int() == true);
 }
 
 TEST_CASE("document_view::value from json") {
@@ -142,11 +142,11 @@ TEST_CASE("document_view::value from json") {
     document_view_t view(doc);
 
     REQUIRE(view.get_value() != nullptr);
-    REQUIRE(view.get_value(std::string_view {"count" }) != nullptr);
-    REQUIRE(view.get_value(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(view.get_value(std::string_view {"count" })->as_int() == 1);
+    REQUIRE(view.get_value("count") != nullptr);
+    REQUIRE(view.get_value("count")->type() == value_type::number);
+    REQUIRE(view.get_value("count")->as_int() == 1);
 
-    REQUIRE(view.get_value()->as_dict()->get(std::string_view {"count" }) != nullptr);
-    REQUIRE(view.get_value()->as_dict()->get(std::string_view {"count" })->type() == value_type::number);
-    REQUIRE(view.get_value()->as_dict()->get(std::string_view {"count" })->as_int() == 1);
+    REQUIRE(view.get_value()->as_dict()->get("count") != nullptr);
+    REQUIRE(view.get_value()->as_dict()->get("count")->type() == value_type::number);
+    REQUIRE(view.get_value()->as_dict()->get("count")->as_int() == 1);
 }

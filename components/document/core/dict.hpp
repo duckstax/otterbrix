@@ -41,7 +41,6 @@ public:
 
     uint32_t count() const noexcept PURE;
     bool empty() const noexcept PURE;
-    const value_t* get(const std::string& key) const noexcept PURE;
     const value_t* get(std::string_view key) const noexcept PURE;
     const value_t* get(int key) const noexcept PURE;
     mutable_dict_t* as_mutable() const noexcept PURE;
