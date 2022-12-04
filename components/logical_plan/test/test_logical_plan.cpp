@@ -4,6 +4,7 @@
 #include <components/expressions/aggregate_expression.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
+#include <components/logical_plan/node_sort.hpp>
 
 using namespace components::logical_plan;
 using namespace components::expressions;
@@ -44,5 +45,21 @@ TEST_CASE("logical_plan::group") {
         append_expr(group, std::move(scalar_expr));
         auto node_group = make_node_group(group);
         REQUIRE(node_group->to_string() == R"_($group: {_id: "$date", count_4: {$multiply: [#1, "$count"]}})_");
+    }
+}
+
+TEST_CASE("logical_plan::sort") {
+    {
+        components::ql::aggregate::sort_t sort;
+        components::ql::aggregate::append_sort(sort, key("key"), sort_order::asc);
+        auto node_sort = make_node_sort(sort);
+        REQUIRE(node_sort->to_string() == R"_($sort: {key: 1})_");
+    }
+    {
+        components::ql::aggregate::sort_t sort;
+        components::ql::aggregate::append_sort(sort, key("key1"), sort_order::asc);
+        components::ql::aggregate::append_sort(sort, key("key2"), sort_order::desc);
+        auto node_sort = make_node_sort(sort);
+        REQUIRE(node_sort->to_string() == R"_($sort: {key1: 1, key2: -1})_");
     }
 }

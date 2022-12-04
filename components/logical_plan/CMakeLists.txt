@@ -4,6 +4,7 @@ set(SOURCE_${PROJECT_NAME}
         node.cpp
         node_match.cpp
         node_group.cpp
+        node_sort.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
