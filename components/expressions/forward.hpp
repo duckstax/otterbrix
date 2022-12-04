@@ -13,7 +13,8 @@ namespace components::expressions {
         invalid,
         compare,
         aggregate,
-        scalar
+        scalar,
+        sort
     };
 
     enum class compare_type : uint8_t {
@@ -55,6 +56,11 @@ namespace components::expressions {
         mod,
         pow,
         sqrt
+    };
+
+    enum class sort_order : std::int8_t {
+        desc = -1,
+        asc = 1
     };
 
     template <class OStream>
