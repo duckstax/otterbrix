@@ -3,6 +3,8 @@
 #include <components/document/core/value.hpp>
 #include <components/document/support/ref_counted.hpp>
 
+#include "components/document/support/utils.hpp"
+
 namespace document::impl {
 
     class value_slot_t;
@@ -32,7 +34,7 @@ namespace document::impl {
             static heap_value_t* create(uint64_t i);
             static heap_value_t* create(float f);
             static heap_value_t* create(double d);
-            static heap_value_t* create(const std::string& s);
+            static heap_value_t* create(std::string_view s);
             static heap_value_t* create(const value_t *v);
 
             static const value_t* as_value(heap_value_t *v) PURE;
@@ -50,7 +52,7 @@ namespace document::impl {
 
         protected:
             ~heap_value_t() = default;
-            static heap_value_t* create(tags tag, int tiny, slice_t extra_data);
+            static heap_value_t* create(tags tag, int tiny, storage_view extra_data);
             heap_value_t(tags tag, int tiny);
             tags tag() const;
 
@@ -59,7 +61,7 @@ namespace document::impl {
 
             static void* operator new(size_t size, size_t extra_size);
             heap_value_t() = default;
-            static heap_value_t* create_str(internal::tags tag, const std::string& s);
+            static heap_value_t* create_str(internal::tags tag,std::string_view s);
 
             template <class INT>
             static heap_value_t* create_int(INT i, bool is_unsigned);
@@ -91,7 +93,6 @@ namespace document::impl {
     retained_const_t<value_t> new_value(uint64_t data);
     retained_const_t<value_t> new_value(float data);
     retained_const_t<value_t> new_value(double data);
-    retained_const_t<value_t> new_value(const std::string& data);
-    retained_const_t<value_t> new_value(std::string& data);
+    retained_const_t<value_t> new_value(std::string_view data);
     retained_const_t<value_t> new_value(const value_t* data);
 }

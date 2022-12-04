@@ -1,14 +1,20 @@
 #include "value.hpp"
+#include <cstring>
+
+#include <boost/container/small_vector.hpp>
+
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
-#include <components/document/core/doc.hpp>
 #include <components/document/core/internal.hpp>
-#include <components/document/core/pointer.hpp>
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/num_conversion.hpp>
 #include <components/document/support/varint.hpp>
+#include <components/document/core/pointer.hpp>
+
+#include "utils.hpp"
+
 
 namespace document::impl {
 
@@ -95,7 +101,7 @@ namespace document::impl {
                 } else {
                     byteCount &= 0x7;
                 }
-                memcpy(&n, &_byte[1], ++byteCount);
+                ::memcpy(&n, &_byte[1], ++byteCount);
                 return int64_t(endian::little_dec64(uint64_t(n)));
             }
             case tag_float:
@@ -167,12 +173,15 @@ namespace document::impl {
         }
     }
 
-    slice_t value_t::get_string_bytes() const noexcept {
-        slice_t s(&_byte[1], tiny_value());
-        if (_usually_false(s.size == 0x0F)) {
+    std::string_view value_t::get_string_bytes() const noexcept {
+        std::string_view s(reinterpret_cast<const char*>(&_byte[1]), tiny_value());
+        if (_usually_false(s.size() == 0x0F)) {
             uint32_t length;
-            size_t lengthBytes = get_uvar_int32(s, &length);
-            return slice_t(&s[lengthBytes], length);
+            storage_view tmp(&_byte[1], tiny_value());
+            size_t lengthBytes = get_uvar_int32(tmp, &length);
+            if (_usually_false(lengthBytes == 0))
+                return {};
+            return {reinterpret_cast<const char*>(&tmp[lengthBytes]),length};
         }
         return s;
     }
@@ -216,22 +225,24 @@ namespace document::impl {
                     write_float(as_float(), str, 32);
                 break;
             }
-            default:
-                return as_string().as_string();
+            default: {
+                auto tmp = as_string();
+                return {tmp.data(),tmp.size()};
+            }
         }
-        return std::string(str);
+        return {str};
     }
 
     bool value_t::is_mutable() const {
         return (reinterpret_cast<size_t>(this) & 1) != 0;
     }
 
-    slice_t value_t::as_string() const noexcept {
-        return _usually_true(tag() == tag_string) ? get_string_bytes() : slice_t();
+    std::string_view value_t::as_string() const noexcept {
+        return _usually_true(tag() == tag_string) ? get_string_bytes() : std::string_view();
     }
 
-    slice_t value_t::as_data() const noexcept {
-        return _usually_true(tag() == tag_binary) ? get_string_bytes() : slice_t();
+    std::string_view value_t::as_data() const noexcept {
+        return _usually_true(tag() == tag_binary) ? get_string_bytes() : std::string_view();
     }
 
     const array_t* value_t::as_array() const noexcept {
@@ -255,7 +266,7 @@ namespace document::impl {
     }
 
     shared_keys_t* value_t::shared_keys() const noexcept {
-        return doc_t::shared_keys(this);
+        return nullptr; ///_containing(this);
     }
 
     bool value_t::is_equal(const value_t* v) const {
@@ -372,64 +383,6 @@ namespace document::impl {
         }
     }
 
-    const value_t* value_t::from_trusted_data(slice_t s) noexcept {
-#ifndef NDEBUG
-        assert_precondition(from_data(s) != nullptr);
-#endif
-        return find_root(s);
-    }
-
-    const value_t* value_t::from_data(slice_t s) noexcept {
-        auto root = find_root(s);
-        if (root && _usually_false(!root->validate(s.buf, s.end())))
-            root = nullptr;
-        return root;
-    }
-
-    const value_t* value_t::find_root(slice_t s) noexcept {
-        precondition((reinterpret_cast<size_t>(s.buf) & 1) == 0);
-
-        if (_usually_false(reinterpret_cast<size_t>(s.buf) & 1) || _usually_false(s.size < size_narrow) || _usually_false(s.size % size_narrow))
-            return nullptr;
-        auto root = reinterpret_cast<const value_t*>(offsetby(s.buf, std::ptrdiff_t(s.size - internal::size_narrow)));
-        if (_usually_true(root->is_pointer())) {
-            const void *dataStart = s.buf, *dataEnd = root;
-            return root->as_pointer()->careful_deref(false, dataStart, dataEnd);
-        } else {
-            if (_usually_false(s.size != size_narrow))
-                return nullptr;
-        }
-        return root;
-    }
-
-    bool value_t::validate(const void* data_start, const void* data_end) const noexcept {
-        auto t = tag();
-        if (t == tag_array || t == tag_dict) {
-            array_t::impl array(this);
-            if (_usually_true(array._count > 0)) {
-                size_t itemCount = array._count;
-                if (_usually_true(t == tag_dict))
-                    itemCount *= 2;
-                auto itemsSize = itemCount * array._width;
-                if (_usually_false(offsetby(array._first, std::ptrdiff_t(itemsSize)) > data_end))
-                    return false;
-                auto item = array._first;
-                while (itemCount-- > 0) {
-                    auto nextItem = offsetby(item, array._width);
-                    if (item->is_pointer()) {
-                        if (_usually_false(!item->as_pointer()->validate(array._width == size_wide, data_start)))
-                            return false;
-                    } else {
-                        if (_usually_false(!item->validate(data_start, nextItem)))
-                            return false;
-                    }
-                    item = nextItem;
-                }
-                return true;
-            }
-        }
-        return offsetby(this, std::ptrdiff_t(data_size())) <= data_end;
-    }
 
     internal::tags value_t::tag() const noexcept {
         return internal::tags(_byte[0] >> 4);

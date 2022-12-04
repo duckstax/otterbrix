@@ -5,10 +5,14 @@
 
 namespace services::disk {
 
-    const std::string key_separator = "::";
+    constexpr static std::string_view key_separator = "::";
 
-    std::string gen_key(const std::string &key, const std::string &sub_key) {
-        return key + key_separator + sub_key;
+    std::string gen_key(const std::string &key, std::string_view sub_key) {
+        std::string tmp ;
+        tmp.append(key);
+        tmp.append(key_separator);
+        tmp.append(sub_key);
+        return tmp;
     }
 
     std::string gen_key(const database_name_t &database, const collection_name_t &collection, const document_id_t &id) {
@@ -70,7 +74,8 @@ namespace services::disk {
     std::vector<rocks_id> disk_t::load_list_documents(const database_name_t &database, const collection_name_t &collection) const {
         std::vector<rocks_id> id_documents;
         rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        auto find_key = gen_key(database, collection) + key_separator;
+        auto find_key = gen_key(database, collection);
+        find_key.append(key_separator);
         for (it->Seek(find_key); it->Valid() && it->key().starts_with(find_key); it->Next()) {
             id_documents.push_back(it->key().ToString());
         }

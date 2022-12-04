@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdexcept>
+#include "base.hpp"
 #include <memory>
-#include <components/document/core/base.hpp>
+#include <stdexcept>
 
 namespace document {
 

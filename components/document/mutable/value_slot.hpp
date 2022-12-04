@@ -1,8 +1,13 @@
 #pragma once
 
+#include <climits>
+
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/endian.hpp>
-#include <climits>
+
+#include "internal.hpp"
+#include "utils.hpp"
+#include <components/document/support/varint.hpp>
 
 namespace document::impl {
 
@@ -35,7 +40,7 @@ namespace document::impl {
         void set(uint64_t i);
         void set(float f);
         void set(double d);
-        void set(const std::string& s);
+        void set(std::string_view s);
         void set_value(const value_t* v);
 
         template <class T> void set(const T* t)                    { set_value(t); }
@@ -61,9 +66,21 @@ namespace document::impl {
         void set_inline(internal::tags tag, int tiny);
 
         void release_value();
-        void set_value(internal::tags ag, int tiny, slice_t bytes);
-        template <class INT> void set_int(INT);
-        void set_string_or_data(internal::tags tag, const std::string& s);
+        void set_value(internal::tags ag, int tiny, storage_view bytes);
+        template <class INT>
+        void set_int(INT i) {
+            if (i < 2048 && (!std::numeric_limits<INT>::is_signed || int64_t(i) > -2048)) {
+                set_inline(internal::tag_short, (i >> 8) & 0x0F);
+                _inline._value[1] = uint8_t(i & 0xFF);
+            } else {
+                uint8_t buf[8];
+                auto size = put_int_of_length(buf, int64_t(i), !std::numeric_limits<INT>::is_signed);
+                set_value(internal::tag_int,
+                          int(size-1) | (std::numeric_limits<INT>::is_signed ? 0 : 0x08),
+                          {buf, size});
+            }
+        }
+        void set_string_or_data(internal::tags tag, std::string_view s);
 
         static constexpr uint8_t inline_capacity = 7;
         static constexpr uint8_t inline_tag = 0xFF;

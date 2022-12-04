@@ -16,7 +16,7 @@ namespace duck_charmer {
     using components::document::document_id_t;
 
     void generate_document_id_if_not_exists(components::document::document_ptr& document) {
-        if (!document_view_t(document).is_exists("_id")) {
+        if (!document_view_t(document).is_exists(std::string_view("_id"))) {
             document->set("_id", document_id_t().to_string());
         }
     }

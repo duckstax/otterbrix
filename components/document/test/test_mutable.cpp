@@ -2,7 +2,6 @@
 
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
-#include <components/document/core/slice.hpp>
 #include <components/document/support/varint.hpp>
 
 using namespace document;
@@ -25,8 +24,8 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->as_unsigned() == 0);
         REQUIRE(is_equals(ma->as_float(), 0.0));
         REQUIRE(is_equals(ma->as_double(), 0.0));
-        REQUIRE(ma->as_string() == null_slice);
-        REQUIRE(ma->as_data() == null_slice);
+        REQUIRE(ma->as_string().empty());
+        REQUIRE(ma->as_data().empty());
         REQUIRE(ma->to_string().empty());
         REQUIRE(ma->as_dict() == nullptr);
         REQUIRE(ma->as_array() == ma);
@@ -110,7 +109,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(2)->type() == value_type::boolean);
         REQUIRE(ma->get(2)->as_bool() == true);
         REQUIRE(ma->get(3)->type() == value_type::string);
-        REQUIRE(ma->get(3)->as_string().as_string() == std::string("dog"));
+        REQUIRE(ma->get(3)->as_string() == std::string("dog"));
 
         ma->insert(1, 2);
         REQUIRE(ma->count() == 14);
@@ -204,8 +203,8 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->as_unsigned() == 0);
         REQUIRE(is_equals(md->as_float(), 0.0));
         REQUIRE(is_equals(md->as_double(), 0.0));
-        REQUIRE(md->as_string() == null_slice);
-        REQUIRE(md->as_data() == null_slice);
+        REQUIRE(md->as_string().empty());
+        REQUIRE(md->as_data().empty());
         REQUIRE(md->to_string().empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
@@ -256,7 +255,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         mutable_dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
-            auto key = i1.key_string().as_string();
+            auto key = i1.key_string();
             auto j = std::find(&keys[0], &keys[9], key) - &keys[0];
             REQUIRE(j < 9);
             REQUIRE_FALSE(found[j]);
@@ -367,6 +366,6 @@ TEST_CASE("mutable long string") {
         ma->set(i, std::string(chars, i));
     }
     for (uint32_t i = 0; i < size; ++i) {
-        REQUIRE(ma->get(i)->as_string().as_string() == std::string(chars, i));
+        REQUIRE(ma->get(i)->as_string() == std::string(chars, i));
     }
 }
