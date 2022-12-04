@@ -142,10 +142,10 @@ namespace experimental {
     using components::ql::condition_type;
     using components::ql::get_condition_type_;
     using components::ql::aggregate::operator_type;
-    using components::ql::aggregate::sort_order;
 
     using components::expressions::key_t;
     using components::expressions::expression_ptr;
+    using components::expressions::sort_order;
 
     using components::expressions::compare_expression_t;
     using components::expressions::compare_expression_ptr;

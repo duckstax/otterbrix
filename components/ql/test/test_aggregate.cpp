@@ -17,6 +17,7 @@ using components::expressions::make_scalar_expression;
 using components::expressions::compare_type;
 using components::expressions::aggregate_type;
 using components::expressions::scalar_type;
+using components::expressions::sort_order;
 using key = components::expressions::key_t;
 using core::parameter_id_t;
 
