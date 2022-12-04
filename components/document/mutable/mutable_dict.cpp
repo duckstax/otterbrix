@@ -372,10 +372,6 @@ namespace document::impl {
         return heap_dict()->is_changed();
     }
 
-    const value_t *mutable_dict_t::get(const std::string& key_to_find) const noexcept {
-        return heap_dict()->get(key_to_find);
-    }
-
     const value_t *mutable_dict_t::get(std::string_view key_to_find) const noexcept {
         return heap_dict()->get(key_to_find);
     }
