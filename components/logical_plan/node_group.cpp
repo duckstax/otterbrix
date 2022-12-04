@@ -5,9 +5,7 @@ namespace components::logical_plan {
 
     node_group_t::node_group_t(const ql::aggregate::group_t& group)
         : node_t(node_type::group_t) {
-        for (const auto& expr : group.fields) {
-            append_expression(expr);
-        }
+        append_expressions(group.fields);
     }
 
     hash_t node_group_t::hash_impl() const {

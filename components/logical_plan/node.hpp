@@ -22,6 +22,7 @@ namespace components::logical_plan {
 
         void append_child(const node_ptr& child);
         void append_expression(const expression_ptr& expression);
+        void append_expressions(const std::vector<expression_ptr>& expressions);
 
         bool operator==(const node_t& rhs) const;
         bool operator!=(const node_t& rhs) const;

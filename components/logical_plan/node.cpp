@@ -15,6 +15,11 @@ namespace components::logical_plan {
         expressions_.push_back(expression);
     }
 
+    void node_t::append_expressions(const std::vector<expression_ptr>& expressions) {
+        expressions_.reserve(expressions_.size() + expressions.size());
+        std::copy(expressions.begin(), expressions.end(), std::back_inserter(expressions_));
+    }
+
     hash_t node_t::hash() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, type_);
