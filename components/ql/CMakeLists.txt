@@ -9,7 +9,6 @@ set(SOURCE_${PROJECT_NAME}
         aggregate/match.cpp
         aggregate/group.cpp
         aggregate/sort.cpp
-        #ql_translator.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp

@@ -2,11 +2,13 @@
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
 #include <components/expressions/aggregate_expression.hpp>
+#include <components/ql/aggregate.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_sort.hpp>
-#include <components/logical_plan/node_aggregate.hpp>
+#include <components/optimizer/ql_translator.hpp>
 
+using namespace components::optimizer;
 using namespace components::logical_plan;
 using namespace components::expressions;
 using key = components::expressions::key_t;
@@ -87,7 +89,7 @@ TEST_CASE("logical_plan::aggregate") {
     append_sort(sort, key("count"), sort_order::desc);
     aggregate.append(operator_type::sort, std::move(sort));
 
-    auto node_aggregate = make_node_aggregate(aggregate);
+    auto node_aggregate = ql_translator(&aggregate);
 
     REQUIRE(node_aggregate->to_string() == R"_($aggregate: {)_"
                                            R"_($match: {"key": {$eq: #1}}, )_"
