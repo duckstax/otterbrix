@@ -15,6 +15,7 @@ class key_t {
 public:
     key_t() = default;
     explicit key_t(std::string_view key);
+    explicit key_t(const std::string& key);
     explicit key_t(int key);
     explicit key_t(const value_t *v) noexcept;
 
@@ -26,7 +27,7 @@ public:
     bool operator< (const key_t &k) const noexcept PURE;
 
 private:
-    std::string_view _string;
+    std::string _string;
     int16_t _int {-1};
 };
 

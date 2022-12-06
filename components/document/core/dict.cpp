@@ -27,11 +27,15 @@ static inline void count_comparison() {}
 
 
 dict_t::key_t::key_t(std::string_view raw_str)
+    : _raw_str({raw_str.data(),raw_str.size()})
+{}
+
+dict_t::key_t::key_t(const std::string& raw_str)
     : _raw_str(raw_str)
 {}
 
 std::string_view dict_t::key_t::string() const noexcept {
-    return _raw_str;
+    return {_raw_str.data(),_raw_str.size()};;
 }
 
 int dict_t::key_t::compare(const key_t &k) const noexcept {

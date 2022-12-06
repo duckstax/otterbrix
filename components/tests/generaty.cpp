@@ -48,10 +48,8 @@ document_ptr gen_doc(int num) {
     doc->set("dictArray", array);
     auto dict = document::impl::mutable_dict_t::new_dict();
     for (int i = 0; i < 5; ++i) {
-        auto* ptr = new std::string;
-        *ptr = std::to_string(num + i);
-        auto& number = *ptr;
-        dict->set({number.data(),number.size()}, gen_dict(num + i));
+        auto number = std::to_string(num + i);
+        dict->set(number, gen_dict(num + i));
     }
     doc->set("mixedDict", dict);
     return make_document(doc);

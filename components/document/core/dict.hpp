@@ -19,13 +19,14 @@ public:
     class key_t {
     public:
         explicit key_t(std::string_view);
+        explicit key_t(const std::string&);
         key_t(const key_t&) = delete;
         ~key_t();
         std::string_view string() const noexcept;
         int compare(const key_t &k) const noexcept;
 
     private:
-        std::string_view const _raw_str;
+        std::string const _raw_str;
         shared_keys_t* _shared_keys { nullptr };
         uint32_t _hint { 0xffffffff };
         int32_t _numeric_key { 0 };
