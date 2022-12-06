@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/support/better_assert.hpp>
-#include <components/document/core/slice.hpp>
 
 namespace document::impl {
 
@@ -16,6 +15,7 @@ class key_t {
 public:
     key_t() = default;
     explicit key_t(const std::string& key);
+    explicit key_t(std::string_view key);
     explicit key_t(int key);
     explicit key_t(const value_t *v) noexcept;
 
@@ -39,14 +39,13 @@ public:
     using platform_string_t = const void*;
 
     shared_keys_t() = default;
-    explicit shared_keys_t(slice_t state_data);
     explicit shared_keys_t(const value_t *state);
 
-    virtual bool load_from(slice_t state_data);
     virtual bool load_from(const value_t *state);
 
     size_t count() const PURE;
     bool encode(const std::string&, int &key) const;
+    bool encode(std::string_view, int &key) const;
     bool encode_and_add(const std::string& string, int &key);
 
     std::string decode(int key) const;

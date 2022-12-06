@@ -19,7 +19,7 @@ TEST_CASE("document_view::get_value") {
 
     REQUIRE(view.get_value("countStr") != nullptr);
     REQUIRE(view.get_value("countStr")->type() == value_type::string);
-    REQUIRE(view.get_value("countStr")->as_string().as_string() == "1");
+    REQUIRE(view.get_value("countStr")->as_string() == "1");
 
     REQUIRE(view.get_value("countArray") != nullptr);
     REQUIRE(view.get_value("countArray")->type() == value_type::array);
@@ -49,22 +49,22 @@ TEST_CASE("document_view::set") {
 
     REQUIRE(document_view_t(doc).get_value(key) != nullptr);
     REQUIRE(document_view_t(doc).get_value(key)->type() == value_type::string);
-    REQUIRE(document_view_t(doc).get_value(key)->as_string().as_string() == value);
+    REQUIRE(document_view_t(doc).get_value(key)->as_string() == value);
 
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key) != nullptr);
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->type() == value_type::string);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string().as_string() == value);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string() == value);
 
     value = "super new value";
     doc->set(key, value);
 
     REQUIRE(document_view_t(doc).get_value(key) != nullptr);
     REQUIRE(document_view_t(doc).get_value(key)->type() == value_type::string);
-    REQUIRE(document_view_t(doc).get_value(key)->as_string().as_string() == value);
+    REQUIRE(document_view_t(doc).get_value(key)->as_string() == value);
 
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key) != nullptr);
     REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->type() == value_type::string);
-    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string().as_string() == value);
+    REQUIRE(document_view_t(doc).get_value()->as_dict()->get(key)->as_string() == value);
 }
 
 TEST_CASE("document_view::update") {

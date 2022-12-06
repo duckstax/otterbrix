@@ -1,12 +1,15 @@
 #include "dict.hpp"
-#include <components/document/mutable/mutable_dict.h>
-#include <memory>
-#include <components/document/core/shared_keys.hpp>
-#include <components/document/core/doc.hpp>
-#include <components/document/core/internal.hpp>
-#include <components/document/support/better_assert.hpp>
+
 #include <atomic>
 #include <utility>
+#include <memory>
+
+#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/core/internal.hpp>
+#include <components/document/support/better_assert.hpp>
+
+#include "utils.hpp"
 
 namespace document::impl {
 
@@ -53,7 +56,7 @@ struct dict_impl_t : public array_t::impl
     {}
 
     shared_keys_t* find_shared_keys() const {
-        return doc_t::shared_keys(_first);
+        return nullptr;///doc_t::shared_keys(_first);
     }
 
     bool uses_shared_keys() const {
@@ -76,9 +79,17 @@ struct dict_impl_t : public array_t::impl
     }
 
     inline const value_t* get_unshared(const std::string& key_to_find) const noexcept {
-        auto key = search(key_to_find, [](slice_t target, const value_t *val) {
+        auto key = search(key_to_find, [](std::string_view target, const value_t *val) {
                 count_comparison();
                 return compare_keys(target, val);
+        });
+        return finish_get(key, key_to_find);
+    }
+
+    inline const value_t* get_unshared(std::string_view key_to_find) const noexcept {
+        auto key = search(key_to_find, [](std::string_view target, const value_t *val) {
+            count_comparison();
+            return compare_keys(target, val);
         });
         return finish_get(key, key_to_find);
     }
@@ -93,6 +104,16 @@ struct dict_impl_t : public array_t::impl
     }
 
     inline const value_t* get(const std::string& key_to_find, shared_keys_t *shared_keys = nullptr) const noexcept {
+        if (!shared_keys && uses_shared_keys()) {
+            shared_keys = find_shared_keys();
+            assert_precondition(shared_keys || is_disable_necessary_shared_keys_check);
+        }
+        int encoded;
+        if (shared_keys && lookup_shared_key(key_to_find, shared_keys, encoded))
+            return get(encoded);
+        return get_unshared(key_to_find);
+    }
+    inline const value_t* get(std::string_view key_to_find, shared_keys_t *shared_keys = nullptr) const noexcept {
         if (!shared_keys && uses_shared_keys()) {
             shared_keys = find_shared_keys();
             assert_precondition(shared_keys || is_disable_necessary_shared_keys_check);
@@ -134,7 +155,7 @@ struct dict_impl_t : public array_t::impl
         return has_parent() ? static_cast<const dict_t*>(deref(second())) : nullptr;
     }
 
-    static int compare_keys(slice_t key_to_find, const value_t *key) {
+    static int compare_keys(std::string_view key_to_find, const value_t *key) {
         if (_usually_true(key->is_int()))
             return 1;
         else
@@ -190,7 +211,7 @@ private:
     }
 
     const value_t* find_key_by_search(dict_t::key_t &key_to_find) const {
-        auto key = search(key_to_find._raw_str, [](slice_t target, const value_t *val) {
+        auto key = search(key_to_find._raw_str, [](std::string_view target, const value_t *val) {
                 return compare_keys(target, val);
         });
         if (!key)
@@ -217,7 +238,26 @@ private:
         return false;
     }
 
-    static inline slice_t key_bytes(const value_t *key) {
+
+    bool lookup_shared_key(std::string_view key_to_find, shared_keys_t *shared_keys, int &encoded) const noexcept {
+        if (shared_keys->encode(key_to_find, encoded))
+            return true;
+        if (_count == 0)
+            return false;
+        const value_t *v = offsetby(_first, (_count-1)*2*width);
+        do {
+            if (v->is_int()) {
+                if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
+                    shared_keys->refresh();
+                    return shared_keys->encode(key_to_find, encoded);
+                }
+                return false;
+            }
+        } while (--v >= _first);
+        return false;
+    }
+
+    static inline std::string_view key_bytes(const value_t *key) {
         return deref(key)->get_string_bytes();
     }
 
@@ -249,7 +289,7 @@ uint32_t dict_t::count() const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->count();
     array_t::impl imp(this);
-    if (_usually_false(imp._count > 1 && is_magic_parent_key(imp._first))) {
+    if (_usually_false(imp._count >= 1 && is_magic_parent_key(imp._first))) {
         uint32_t c = 0;
         for (iterator i(this); i; ++i)
             ++c;
@@ -265,7 +305,7 @@ bool dict_t::empty() const noexcept {
     return count_is_zero();
 }
 
-const value_t* dict_t::get(const std::string& key) const noexcept {
+const value_t* dict_t::get(std::string_view key) const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->get(key);
     if (is_wide_array())
@@ -370,28 +410,33 @@ dict_iterator_t::dict_iterator_t(const dict_t* d, bool) noexcept
 }
 
 shared_keys_t* dict_iterator_t::find_shared_keys() const {
+    return nullptr;
+    /*
     auto sk = doc_t::shared_keys(_a._first);
     _shared_keys = sk;
     assert_precondition(sk || is_disable_necessary_shared_keys_check);
     return sk;
+    */
 }
 
 std::string dict_iterator_t::key_string() const noexcept {
-    slice_t key_str = _key->as_string();
-    if (!key_str && _key->is_int()) {
+    auto key_str = _key->as_string();
+    if (key_str.empty() && _key->is_int()) {
         auto sk = _shared_keys ? _shared_keys : find_shared_keys();
         if (!sk)
             return {}; ///null_string;
         key_str = sk->decode(static_cast<int>(_key->as_int()));
     }
-    return key_str.as_string();
+    return {key_str.data(),key_str.size()};
 }
 
 key_t dict_iterator_t::keyt() const noexcept {
     if (_key->is_int())
         return key_t(static_cast<int>(_key->as_int()));
-    else
-        return key_t(_key->as_string().as_string());
+    else {
+        auto tmp = _key->as_string();
+        return key_t(std::string{tmp.data(),tmp.size()});
+    }
 }
 
 dict_iterator_t& dict_iterator_t::operator++() {

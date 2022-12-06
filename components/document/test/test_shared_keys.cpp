@@ -2,7 +2,6 @@
 
 #include <climits>
 
-#include <components/document/core/doc.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/shared_keys.hpp>
 

@@ -18,10 +18,10 @@ namespace document::impl {
         const dict_t* source() const;
         bool is_changed() const;
 
-        const value_t* get(const std::string& key_to_find) const noexcept;
-
+        const value_t* get(std::string_view key_to_find) const noexcept;
+        
         template<typename T>
-        void set(const std::string& key, T value) { heap_dict()->set(key, value); }
+        void set(std::string_view key, T value) { heap_dict()->set(key, value); }
 
         void remove(const std::string& key);
         void remove_all();

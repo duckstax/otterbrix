@@ -1,11 +1,15 @@
 #include "mutable_value.hpp"
+
+#include <cstring>
+
+#include <algorithm>
+
 #include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
-#include <components/document/core/doc.hpp>
+#include <components/document/support/better_assert.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
-#include <components/document/support/better_assert.hpp>
-#include <algorithm>
+
 
 namespace document::impl::internal {
 
@@ -30,9 +34,9 @@ namespace document::impl::internal {
         return tags(_header >> 4);
     }
 
-    heap_value_t* heap_value_t::create(tags tag, int tiny, slice_t extra_data) {
-        auto hv = new (extra_data.size) heap_value_t(tag, tiny);
-        extra_data.copy_to(&hv->_header + 1);
+    heap_value_t* heap_value_t::create(tags tag, int tiny, storage_view extra_data) {
+        auto hv = new (extra_data.size()) heap_value_t(tag, tiny);
+        copy_to(extra_data,&hv->_header + 1);
         return hv;
     }
 
@@ -95,11 +99,11 @@ namespace document::impl::internal {
         return create(tag_float, 8, {reinterpret_cast<char*>(&data.le) - 1, sizeof(data.le) + 1});
     }
 
-    heap_value_t *heap_value_t::create(const std::string& s) {
+    heap_value_t *heap_value_t::create( std::string_view s) {
         return create_str(internal::tag_string, s);
     }
 
-    heap_value_t* heap_value_t::create_str(tags tag, const std::string& s) {
+    heap_value_t* heap_value_t::create_str(tags tag, std::string_view s) {
         uint8_t size_buf[max_varint_len32];
         size_t size_byte_count = 0;
         int tiny;
@@ -120,7 +124,7 @@ namespace document::impl::internal {
         assert_precondition(v->tag() < tag_array);
         size_t size = v->data_size();
         auto hv = new (size - 1) heap_value_t();
-        memcpy(&hv->_header, v, size);
+        ::memcpy(&hv->_header, v, size);
         return hv;
     }
 
@@ -154,10 +158,7 @@ namespace document::impl::internal {
         if (internal::heap_value_t::is_heap_value(v)) {
             document::retain(heap_value_t::as_heap_value(v));
         } else if (v) {
-            retained_const_t<doc_t> doc = doc_t::containing(v);
-            if (_usually_true(doc != nullptr))
-                document::retain(std::move(doc));
-            else if (!is_hardwired_value(v))
+            if (!is_hardwired_value(v))
                 exception_t::_throw(error_code::invalid_data,
                                     "Can't retain immutable value_t %p that's not part of a doc_t",
                                     v);
@@ -169,10 +170,7 @@ namespace document::impl::internal {
         if (internal::heap_value_t::is_heap_value(v)) {
             document::release(heap_value_t::as_heap_value(v));
         } else if (v) {
-            retained_const_t<doc_t> doc = doc_t::containing(v);
-            if (_usually_true(doc != nullptr))
-                document::release(doc.get());
-            else if (!is_hardwired_value(v))
+             if (!is_hardwired_value(v))
                 exception_t::_throw(error_code::invalid_data,
                                     "Can't release immutable value_t %p that's not part of a doc_t",
                                     v);
@@ -256,7 +254,7 @@ namespace document::impl {
         return internal::heap_value_t::create(data)->as_value();
     }
 
-    retained_const_t<value_t> new_value(std::string& data) {
+    retained_const_t<value_t> new_value(std::string_view data) {
         return internal::heap_value_t::create(data)->as_value();
     }
 

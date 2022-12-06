@@ -72,7 +72,7 @@ py::object from_(const ::document::impl::value_t* value) {
     } else if (value->is_double()) {
         return py::float_(value->as_double());
     } else if (value->type() == value_type::string) {
-        return py::str(value->as_string().as_string());
+        return py::str(value->as_string());
     } else if (value->type() == value_type::array) {
         py::list list;
         for (uint32_t i = 0; i < value->as_array()->count(); ++i) {
@@ -248,9 +248,9 @@ namespace experimental {
     aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition, aggregate_statement* aggregate) {
         auto value = to_(condition);
         if (value->type() == document::impl::value_type::string
-            && !value->as_string().as_string().empty()
-            && value->as_string().as_string().at(0) == '$') {
-            return key_t(value->as_string().as_string().substr(1));
+            && !value->as_string().empty()
+            && value->as_string().at(0) == '$') {
+            return key_t(value->as_string().substr(1));
         } else {
             return aggregate->add_parameter(value);
         }
@@ -259,9 +259,9 @@ namespace experimental {
     scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
         auto value = to_(condition);
         if (value->type() == document::impl::value_type::string
-            && !value->as_string().as_string().empty()
-            && value->as_string().as_string().at(0) == '$') {
-            return key_t(value->as_string().as_string().substr(1));
+            && !value->as_string().empty()
+            && value->as_string().at(0) == '$') {
+            return key_t(value->as_string().substr(1));
         } else {
             return aggregate->add_parameter(value);
         }

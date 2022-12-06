@@ -16,7 +16,7 @@ TEST_CASE("single_field_index:base") {
     for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
         auto doc = gen_doc(i);
         document_view_t view(doc);
-        index.insert(document::wrapper_value_t(view.get_value("count")), doc);
+        index.insert(document::wrapper_value_t(view.get_value(std::string_view("count"))), doc);
     }
     {
         auto value = ::document::impl::new_value(10);
