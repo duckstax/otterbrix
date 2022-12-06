@@ -48,10 +48,11 @@ namespace components::expressions {
         return stream;
     }
 
-    aggregate_expression_t::aggregate_expression_t(aggregate_type type, const key_t& key)
+    aggregate_expression_t::aggregate_expression_t(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key)
         : expression_i(expression_group::aggregate)
         , type_(type)
-        , key_(key) {
+        , key_(key)
+        , params_(resource) {
     }
 
     aggregate_type aggregate_expression_t::type() const {
@@ -62,7 +63,7 @@ namespace components::expressions {
         return key_;
     }
 
-    const std::vector<aggregate_expression_t::param_storage>& aggregate_expression_t::params() const {
+    const std::pmr::vector<aggregate_expression_t::param_storage>& aggregate_expression_t::params() const {
         return params_;
     }
 
@@ -105,16 +106,16 @@ namespace components::expressions {
     }
 
 
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type, const key_t& key) {
-        return new aggregate_expression_t(type, key);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key) {
+        return new aggregate_expression_t(resource, type, key);
     }
 
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type) {
-        return make_aggregate_expression(type, key_t());
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type) {
+        return make_aggregate_expression(resource, type, key_t());
     }
 
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type, const key_t& key, const key_t& field) {
-        auto expr = make_aggregate_expression(type, key);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key, const key_t& field) {
+        auto expr = make_aggregate_expression(resource, type, key);
         expr->append_param(field);
         return expr;
     }

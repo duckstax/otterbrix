@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory_resource>
 #include "expression.hpp"
 #include "key.hpp"
 
@@ -18,27 +19,27 @@ namespace components::expressions {
         aggregate_expression_t(const aggregate_expression_t&) = delete;
         aggregate_expression_t(aggregate_expression_t&&) = default;
 
-        aggregate_expression_t(aggregate_type type, const key_t& key);
+        aggregate_expression_t(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key);
 
         aggregate_type type() const;
         const key_t& key() const;
-        const std::vector<param_storage>& params() const;
+        const std::pmr::vector<param_storage>& params() const;
 
         void append_param(const param_storage& param);
 
     private:
         aggregate_type type_;
         key_t key_;
-        std::vector<param_storage> params_;
+        std::pmr::vector<param_storage> params_;
 
         hash_t hash_impl() const final;
         std::string to_string_impl() const final;
         bool equal_impl(const expression_i* rhs) const final;
     };
 
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type, const key_t& key);
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type);
-    aggregate_expression_ptr make_aggregate_expression(aggregate_type type, const key_t& name, const key_t& key);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& name, const key_t& key);
 
     aggregate_type get_aggregate_type(const std::string& key);
     bool is_aggregate_type(const std::string& key);

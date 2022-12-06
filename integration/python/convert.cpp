@@ -8,6 +8,8 @@
 
 #include <magic_enum.hpp>
 
+#include <actor-zeta.hpp>
+
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
 
@@ -178,10 +180,10 @@ namespace experimental {
         }
     }
 
-    void parse_find_condition_dict_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
-    void parse_find_condition_array_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
+    void parse_find_condition_dict_(std::pmr::memory_resource *resource, compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
+    void parse_find_condition_array_(std::pmr::memory_resource *resource, compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate);
 
-    void parse_find_condition_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, const std::string& key_word, aggregate_statement* aggregate) {
+    void parse_find_condition_(std::pmr::memory_resource *resource, compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, const std::string& key_word, aggregate_statement* aggregate) {
         auto real_key = prev_key;
         auto type = get_compare_type(key_word);
         if (type == compare_type::invalid) {
@@ -191,50 +193,50 @@ namespace experimental {
             }
         }
         if (py::isinstance<py::dict>(condition)) {
-            parse_find_condition_dict_(parent_condition, condition, real_key, aggregate);
+            parse_find_condition_dict_(resource, parent_condition, condition, real_key, aggregate);
         } else if (py::isinstance<py::list>(condition) || py::isinstance<py::tuple>(condition)) {
-            parse_find_condition_array_(parent_condition, condition, real_key, aggregate);
+            parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
         } else {
             auto value = aggregate->add_parameter(to_(condition).detach());
-            auto sub_condition = make_compare_expression(type, key_t(real_key), value);
+            auto sub_condition = make_compare_expression(resource, type, key_t(real_key), value);
             if (sub_condition->is_union()) {
-                parse_find_condition_(sub_condition.get(), condition, real_key, std::string(), aggregate);
+                parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate);
             }
             normalize(sub_condition);
             parent_condition->append_child(sub_condition);
         }
     }
 
-    void parse_find_condition_dict_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
+    void parse_find_condition_dict_(std::pmr::memory_resource *resource, compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
         for (const auto &it : condition) {
             auto key = py::str(it).cast<std::string>();
             auto type = get_compare_type(key);
             auto union_condition = parent_condition;
             if (is_union_compare_condition(type)) {
-                parent_condition->append_child(make_compare_union_expression(type));
+                parent_condition->append_child(make_compare_union_expression(resource, type));
                 union_condition = parent_condition->children().at(parent_condition->children().size() - 1).get();
             }
             if (prev_key.empty()) {
-                parse_find_condition_(union_condition, condition[it], key, std::string(), aggregate);
+                parse_find_condition_(resource, union_condition, condition[it], key, std::string(), aggregate);
             } else {
-                parse_find_condition_(union_condition, condition[it], prev_key, key, aggregate);
+                parse_find_condition_(resource, union_condition, condition[it], prev_key, key, aggregate);
             }
         }
     }
 
-    void parse_find_condition_array_(compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
+    void parse_find_condition_array_(std::pmr::memory_resource *resource, compare_expression_t* parent_condition, const py::handle& condition, const std::string& prev_key, aggregate_statement* aggregate) {
         for (const auto &it : condition) {
-            parse_find_condition_(parent_condition, it, prev_key, std::string(), aggregate);
+            parse_find_condition_(resource, parent_condition, it, prev_key, std::string(), aggregate);
         }
     }
 
-    expression_ptr parse_find_condition_(const py::handle& condition, aggregate_statement* aggregate) {
-        auto res_condition = make_compare_union_expression(compare_type::union_and);
+    expression_ptr parse_find_condition_(std::pmr::memory_resource *resource, const py::handle& condition, aggregate_statement* aggregate) {
+        auto res_condition = make_compare_union_expression(resource, compare_type::union_and);
         for (const auto &it : condition) {
             if (py::len(condition) == 1) {
                 res_condition->set_type(get_compare_type(py::str(it).cast<std::string>()));
             }
-            parse_find_condition_(res_condition.get(), condition[it], py::str(it).cast<std::string>(), std::string(), aggregate);
+            parse_find_condition_(resource, res_condition.get(), condition[it], py::str(it).cast<std::string>(), std::string(), aggregate);
         }
         if (res_condition->children().size() == 1) {
             compare_expression_ptr child = res_condition->children()[0];
@@ -267,15 +269,15 @@ namespace experimental {
         }
     }
 
-    expression_ptr parse_group_expr(const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
+    expression_ptr parse_group_expr(std::pmr::memory_resource *resource, const std::string& key, const py::handle& condition, aggregate_statement* aggregate) {
         if (py::isinstance<py::dict>(condition)) {
             for (const auto &it : condition) {
                 auto key_type = py::str(it).cast<std::string>().substr(1);
                 if (is_aggregate_type(key_type)) {
                     auto type = get_aggregate_type(key_type);
-                    auto expr = make_aggregate_expression(type, key.empty() ? key_t() : key_t(key));
+                    auto expr = make_aggregate_expression(resource, type, key.empty() ? key_t() : key_t(key));
                     if (py::isinstance<py::dict>(condition[it])) {
-                        expr->append_param(parse_group_expr({}, condition[it], aggregate));
+                        expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate));
                     } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                         for (const auto& value : condition[it]) {
                             expr->append_param(parse_aggregate_param(value, aggregate));
@@ -286,9 +288,9 @@ namespace experimental {
                     return expr;
                 } else if (is_scalar_type(key_type)) {
                     auto type = get_scalar_type(key_type);
-                    auto expr = make_scalar_expression(type, key.empty() ? key_t() : key_t(key));
+                    auto expr = make_scalar_expression(resource, type, key.empty() ? key_t() : key_t(key));
                     if (py::isinstance<py::dict>(condition[it])) {
-                        expr->append_param(parse_group_expr({}, condition[it], aggregate));
+                        expr->append_param(parse_group_expr(resource, {}, condition[it], aggregate));
                     } else if (py::isinstance<py::list>(condition[it]) || py::isinstance<py::tuple>(condition[it])) {
                         for (const auto& value : condition[it]) {
                             expr->append_param(parse_scalar_param(value, aggregate));
@@ -300,17 +302,17 @@ namespace experimental {
                 }
             }
         } else {
-            auto expr = make_scalar_expression(scalar_type::get_field, key.empty() ? key_t() : key_t(key));
+            auto expr = make_scalar_expression(resource, scalar_type::get_field, key.empty() ? key_t() : key_t(key));
             expr->append_param(parse_scalar_param(condition, aggregate));
             return expr;
         }
         return nullptr;
     }
 
-    components::ql::aggregate::group_t parse_group(const py::handle& condition, aggregate_statement* aggregate) {
+    components::ql::aggregate::group_t parse_group(std::pmr::memory_resource *resource, const py::handle& condition, aggregate_statement* aggregate) {
         components::ql::aggregate::group_t group;
         for (const auto &it : condition) {
-            components::ql::aggregate::append_expr(group, parse_group_expr(py::str(it).cast<std::string>(), condition[it], aggregate));
+            components::ql::aggregate::append_expr(group, parse_group_expr(resource, py::str(it).cast<std::string>(), condition[it], aggregate));
         }
         return group;
     }
@@ -324,6 +326,7 @@ namespace experimental {
     }
 
     auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
+        auto *resource = actor_zeta::detail::pmr::get_default_resource(); //todo
         auto is_sequence = py::isinstance<py::sequence>(source);
 
         if (!is_sequence) {
@@ -356,14 +359,14 @@ namespace experimental {
                         break;
                     }
                     case operator_type::group: {
-                        aggregate->append(operator_type::group, parse_group(obj[key], aggregate));
+                        aggregate->append(operator_type::group, parse_group(resource, obj[key], aggregate));
                         break;
                     }
                     case operator_type::limit: {
                         break;
                     }
                     case operator_type::match: {
-                        aggregate->append(operator_type::match, components::ql::aggregate::make_match(parse_find_condition_(obj[key], aggregate)));
+                        aggregate->append(operator_type::match, components::ql::aggregate::make_match(parse_find_condition_(resource, obj[key], aggregate)));
                         break;
                     }
                     case operator_type::merge: {

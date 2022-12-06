@@ -52,10 +52,11 @@ namespace components::expressions {
         return stream;
     }
 
-    scalar_expression_t::scalar_expression_t(scalar_type type, const key_t& key)
+    scalar_expression_t::scalar_expression_t(std::pmr::memory_resource *resource, scalar_type type, const key_t& key)
         : expression_i(expression_group::scalar)
         , type_(type)
-        , key_(key) {
+        , key_(key)
+        , params_(resource) {
     }
 
     scalar_type scalar_expression_t::type() const {
@@ -66,7 +67,7 @@ namespace components::expressions {
         return key_;
     }
 
-    const std::vector<scalar_expression_t::param_storage>& scalar_expression_t::params() const {
+    const std::pmr::vector<scalar_expression_t::param_storage>& scalar_expression_t::params() const {
         return params_;
     }
 
@@ -109,16 +110,16 @@ namespace components::expressions {
     }
 
 
-    scalar_expression_ptr make_scalar_expression(scalar_type type, const key_t& key) {
-        return new scalar_expression_t(type, key);
+    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type, const key_t& key) {
+        return new scalar_expression_t(resource, type, key);
     }
 
-    scalar_expression_ptr make_scalar_expression(scalar_type type) {
-        return make_scalar_expression(type, key_t());
+    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type) {
+        return make_scalar_expression(resource, type, key_t{});
     }
 
-    scalar_expression_ptr make_scalar_expression(scalar_type type, const key_t& key, const key_t& field) {
-        auto expr = make_scalar_expression(type, key);
+    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type, const key_t& key, const key_t& field) {
+        auto expr = make_scalar_expression(resource, type, key);
         expr->append_param(field);
         return expr;
     }

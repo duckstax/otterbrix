@@ -10,17 +10,12 @@ namespace components::expressions {
                type == compare_type::union_not;
     }
 
-    compare_expression_t::compare_expression_t(compare_type type, const key_t& key, core::parameter_id_t value)
+    compare_expression_t::compare_expression_t(std::pmr::memory_resource *resource, compare_type type, const key_t& key, core::parameter_id_t value)
         : expression_i(expression_group::compare)
         , type_(type)
         , key_(key)
         , value_(value)
-        , union_(is_union_compare_condition(type_)) {}
-
-    compare_expression_t::compare_expression_t(compare_type condition)
-        : expression_i(expression_group::compare)
-        , type_(condition)
-        , value_(0)
+        , children_(resource)
         , union_(is_union_compare_condition(type_)) {}
 
     compare_type compare_expression_t::type() const {
@@ -35,7 +30,7 @@ namespace components::expressions {
         return value_;
     }
 
-    const std::vector<compare_expression_ptr>& compare_expression_t::children() const {
+    const std::pmr::vector<compare_expression_ptr>& compare_expression_t::children() const {
         return children_;
     }
 
@@ -88,18 +83,18 @@ namespace components::expressions {
                std::equal(children_.begin(), children_.end(), other->children_.begin());
     }
 
-    compare_expression_ptr make_compare_expression(compare_type condition, const key_t& key, core::parameter_id_t id) {
-        return new compare_expression_t(condition, key, id);
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource *resource, compare_type type, const key_t& key, core::parameter_id_t id) {
+        return new compare_expression_t(resource, type, key, id);
     }
 
-    compare_expression_ptr make_compare_expression(compare_type condition) {
-        assert(!is_union_compare_condition(condition));
-        return new compare_expression_t(condition);
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource *resource, compare_type type) {
+        assert(!is_union_compare_condition(type));
+        return new compare_expression_t(resource, type, key_t{}, core::parameter_id_t{0});
     }
 
-    compare_expression_ptr make_compare_union_expression(compare_type condition) {
-        assert(is_union_compare_condition(condition));
-        return new compare_expression_t(condition);
+    compare_expression_ptr make_compare_union_expression(std::pmr::memory_resource *resource, compare_type type) {
+        assert(is_union_compare_condition(type));
+        return new compare_expression_t(resource, type, key_t{}, core::parameter_id_t{0});
     }
 
     compare_type get_compare_type(const std::string& key) {
