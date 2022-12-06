@@ -10,7 +10,7 @@
 #include <components/document/wrapper_value.hpp>
 #include <components/document/document.hpp>
 
-#include "key.hpp"
+#include <components/expressions/key.hpp>
 #include "predicate.hpp"
 
 namespace components::ql {
@@ -18,6 +18,7 @@ namespace components::ql {
 
     bool is_union_condition(condition_type type);
 
+    using key_t = components::expressions::key_t;
     using expr_value_t = ::document::wrapper_value_t;
 
     struct expr_t {

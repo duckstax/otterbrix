@@ -2,8 +2,10 @@
 
 #include <string>
 #include <variant>
+#include "forward.hpp"
 
-namespace components::ql {
+namespace components::expressions {
+
     class key_t final {
     public:
         key_t()
@@ -82,6 +84,17 @@ namespace components::ql {
             return !(*this == rhs);
         }
 
+        hash_t hash() const {
+            if (type_ == type::string) {
+                return std::hash<std::string>()(as_string());
+            } else if (type_ == type::int32) {
+                return std::hash<int32_t>()(std::get<int32_t>(storage_));
+            } else if (type_ == type::uint32) {
+                return std::hash<uint32_t>()(std::get<uint32_t>(storage_));
+            }
+            return 0;
+        }
+
     private:
         type type_;
         std::variant<std::monostate, bool, int32_t, uint32_t, std::string> storage_;
@@ -96,4 +109,4 @@ namespace components::ql {
         return stream;
     }
 
-} // namespace components::ql
+} // namespace components::expressions

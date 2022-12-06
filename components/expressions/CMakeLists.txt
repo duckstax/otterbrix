@@ -1,11 +1,11 @@
-project(logical_plan CXX)
+project(expressions CXX)
 
 set(SOURCE_${PROJECT_NAME}
-        node.cpp
-        node_aggregate.cpp
-        node_match.cpp
-        node_group.cpp
-        node_sort.cpp
+        expression.cpp
+        compare_expression.cpp
+        aggregate_expression.cpp
+        scalar_expression.cpp
+        sort_expression.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -25,3 +25,7 @@ target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
 )
+
+if (DEV_MODE)
+    add_subdirectory(test)
+endif ()

@@ -25,8 +25,8 @@ def test_convert_aggregate_match():
             }
         }
     ]
-    assert to_aggregate(example) == '$aggregate: {$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, ' \
-                                    '{"name": {$regex: #2}}]}}'
+    assert to_aggregate(example) == '$aggregate: {$match: {$and: ["size": {$eq: #0}, "count": {$lt: #1}, ' \
+                                    '"name": {$regex: #2}]}}'
 
 
 def test_convert_aggregate_group():
@@ -203,8 +203,8 @@ def test_convert_aggregate():
         }
     ]
     assert to_aggregate(example) == '$aggregate: {'\
-                                    '$match: {$and: [{"size": {$eq: #0}}, {"count": {$lt: #1}}, '\
-                                    '{"name": {$regex: #2}}]}, '\
+                                    '$match: {$and: ["size": {$eq: #0}, "count": {$lt: #1}, '\
+                                    '"name": {$regex: #2}]}, '\
                                     '$group: {_id: "$name", type: #3, total: {$sum: {$multiply: '\
                                     '["$price", "$count"]}}}, '\
                                     '$sort: {name: 1, count: -1}'\

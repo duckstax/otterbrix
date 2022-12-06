@@ -5,13 +5,10 @@ set(SOURCE_${PROJECT_NAME}
         parser.cpp
         find.cpp
         expr.cpp
-        experimental/expr.cpp
-        experimental/project_expr.cpp
         aggregate.cpp
         aggregate/match.cpp
         aggregate/group.cpp
         aggregate/sort.cpp
-        #ql_translator.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp
@@ -36,6 +33,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PUBLIC
         rocketjoe::document
+        rocketjoe::expressions
         CONAN_PKG::boost
 )
 

@@ -1,11 +1,7 @@
-project(logical_plan CXX)
+project(translator CXX)
 
 set(SOURCE_${PROJECT_NAME}
-        node.cpp
-        node_aggregate.cpp
-        node_match.cpp
-        node_group.cpp
-        node_sort.cpp
+        ql_translator.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
@@ -18,10 +14,15 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
-        CONAN_PKG::boost
+        rocketjoe::logical_plan
+        rocketjoe::ql
 )
 
 target_include_directories(
         rocketjoe_${PROJECT_NAME}
         PUBLIC
 )
+
+if (DEV_MODE)
+    add_subdirectory(test)
+endif ()

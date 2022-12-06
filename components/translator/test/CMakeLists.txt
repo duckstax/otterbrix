@@ -1,18 +1,17 @@
-project(test_logical_plan)
-
-add_definitions(-DDEV_MODE)
+project(test_translator)
 
 set(${PROJECT_NAME}_SOURCES
-
+        test_logical_plan.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
-        rocketjoe::document
+        rocketjoe::expressions
+        rocketjoe::ql
         rocketjoe::logical_plan
+        rocketjoe::translator
 )
 
 include(CTest)
