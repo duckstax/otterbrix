@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_sort_t final : public node_t {
     public:
-        explicit node_sort_t(const ql::aggregate::sort_t& sort);
+        node_sort_t();
 
     private:
         hash_t hash_impl() const final;

@@ -3,9 +3,8 @@
 
 namespace components::logical_plan {
 
-    node_sort_t::node_sort_t(const ql::aggregate::sort_t& sort)
+    node_sort_t::node_sort_t()
         : node_t(node_type::sort_t) {
-        append_expressions(sort.values);
     }
 
     hash_t node_sort_t::hash_impl() const {
@@ -30,7 +29,9 @@ namespace components::logical_plan {
 
 
     node_ptr make_node_sort(const ql::aggregate::sort_t& sort) {
-        return new node_sort_t(sort);
+        auto node = new node_sort_t();
+        node->append_expressions(sort.values);
+        return node;
     }
 
 }

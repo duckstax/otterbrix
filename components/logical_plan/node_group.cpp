@@ -3,9 +3,8 @@
 
 namespace components::logical_plan {
 
-    node_group_t::node_group_t(const ql::aggregate::group_t& group)
+    node_group_t::node_group_t()
         : node_t(node_type::group_t) {
-        append_expressions(group.fields);
     }
 
     hash_t node_group_t::hash_impl() const {
@@ -30,7 +29,9 @@ namespace components::logical_plan {
 
 
     node_ptr make_node_group(const ql::aggregate::group_t& group) {
-        return new node_group_t(group);
+        auto node = new node_group_t();
+        node->append_expressions(group.fields);
+        return node;
     }
 
 }

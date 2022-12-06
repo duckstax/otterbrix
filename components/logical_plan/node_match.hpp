@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_match_t final : public node_t {
     public:
-        explicit node_match_t(const ql::aggregate::match_t& match);
+        node_match_t();
 
     private:
         hash_t hash_impl() const final;

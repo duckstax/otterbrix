@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_group_t final : public node_t {
     public:
-        explicit node_group_t(const ql::aggregate::group_t& group);
+        node_group_t();
 
     private:
         hash_t hash_impl() const final;
