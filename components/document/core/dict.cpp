@@ -26,11 +26,11 @@ static inline void count_comparison() {}
 #endif
 
 
-dict_t::key_t::key_t(const std::string& raw_str)
-    : _raw_str(std::move(raw_str))
+dict_t::key_t::key_t(std::string_view raw_str)
+    : _raw_str(raw_str)
 {}
 
-const std::string& dict_t::key_t::string() const noexcept {
+std::string_view dict_t::key_t::string() const noexcept {
     return _raw_str;
 }
 
@@ -419,15 +419,15 @@ shared_keys_t* dict_iterator_t::find_shared_keys() const {
     */
 }
 
-std::string dict_iterator_t::key_string() const noexcept {
+std::string_view dict_iterator_t::key_string() const noexcept {
     auto key_str = _key->as_string();
     if (key_str.empty() && _key->is_int()) {
         auto sk = _shared_keys ? _shared_keys : find_shared_keys();
         if (!sk)
-            return {}; ///null_string;
+            return {};
         key_str = sk->decode(static_cast<int>(_key->as_int()));
     }
-    return {key_str.data(),key_str.size()};
+    return key_str;
 }
 
 key_t dict_iterator_t::keyt() const noexcept {

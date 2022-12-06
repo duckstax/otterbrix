@@ -16,15 +16,15 @@ TEST_CASE("value_t") {
         while (d <= static_cast<double>(UINT64_MAX)) {
             auto n = static_cast<uint64_t>(d);
             auto nBytes = put_uvar_int(buf, n);
-            REQUIRE(get_uvar_int(storage_view(buf, sizeof(buf)), &result) == nBytes);
+            REQUIRE(get_uvar_int(std::string(reinterpret_cast<char*>(buf), sizeof(buf)), &result) == nBytes);
             REQUIRE(result == n);
-            REQUIRE(get_uvar_int(storage_view(buf, nBytes), &result) == nBytes);
+            REQUIRE(get_uvar_int(std::string(reinterpret_cast<char*>(buf), nBytes), &result) == nBytes);
             REQUIRE(result == n);
-            REQUIRE(get_uvar_int(storage_view(buf, nBytes - 1), &result) == 0);
+            REQUIRE(get_uvar_int(std::string(reinterpret_cast<char*>(buf), nBytes - 1), &result) == 0);
             d = std::max(d, 1.0) * 1.5;
         }
         memset(buf, 0x88, sizeof(buf));
-        REQUIRE(get_uvar_int(storage_view(buf, sizeof(buf)), &result) == 0);
+        REQUIRE(get_uvar_int(std::string(reinterpret_cast<char*>(buf), sizeof(buf)), &result) == 0);
     }
 
     SECTION("Var int32 read") {
@@ -35,13 +35,13 @@ TEST_CASE("value_t") {
             auto nBytes = put_uvar_int(buf, n);
             uint32_t result;
             if (n <= UINT32_MAX) {
-                REQUIRE(get_uvar_int32(storage_view(buf, sizeof(buf)), &result) == nBytes);
+                REQUIRE(get_uvar_int32(std::string(reinterpret_cast<char*>(buf), sizeof(buf)), &result) == nBytes);
                 REQUIRE(result == n);
-                REQUIRE(get_uvar_int32(storage_view(buf, nBytes), &result) == nBytes);
+                REQUIRE(get_uvar_int32(std::string(reinterpret_cast<char*>(buf), nBytes), &result) == nBytes);
                 REQUIRE(result == n);
-                REQUIRE(get_uvar_int32(storage_view(buf, nBytes - 1), &result) == 0);
+                REQUIRE(get_uvar_int32(std::string(reinterpret_cast<char*>(buf), nBytes - 1), &result) == 0);
             } else {
-                REQUIRE(get_uvar_int32(storage_view(buf, sizeof(buf)), &result) == 0);
+                REQUIRE(get_uvar_int32(std::string(reinterpret_cast<char*>(buf), sizeof(buf)), &result) == 0);
             }
             d = std::max(d, 1.0) * 1.5;
         }

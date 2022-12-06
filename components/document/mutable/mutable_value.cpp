@@ -34,13 +34,13 @@ namespace document::impl::internal {
         return tags(_header >> 4);
     }
 
-    heap_value_t* heap_value_t::create(tags tag, int tiny, storage_view extra_data) {
+    heap_value_t* heap_value_t::create(tags tag, int tiny, std::string_view extra_data) {
         auto hv = new (extra_data.size()) heap_value_t(tag, tiny);
         copy_to(extra_data,&hv->_header + 1);
         return hv;
     }
 
-    heap_value_t* heap_value_t::create(null_value_t) {
+    heap_value_t* heap_value_t::create(nullptr_t) {
         return new (0) heap_value_t(tag_special, special_value_null);
     }
 
@@ -68,11 +68,11 @@ namespace document::impl::internal {
     heap_value_t* heap_value_t::create_int(INT i, bool is_unsigned) {
         if (i < 2048 && (is_unsigned || -i < 2048)) {
             uint8_t extra = uint8_t(i & 0xFF);
-            return create(tag_short, (i >> 8) & 0x0F, {&extra, 1});
+            return create(tag_short, (i >> 8) & 0x0F, std::string_view(reinterpret_cast<const char*>(&extra), 1));
         } else {
             uint8_t buf[8];
             auto size = put_int_of_length(buf, int64_t(i), is_unsigned);
-            return create(tag_int, int(size-1) | (is_unsigned ? 0x08 : 0), {buf, size});
+            return create(tag_int, int(size-1) | (is_unsigned ? 0x08 : 0), std::string_view(reinterpret_cast<const char*>(buf), size));
         }
     }
 
@@ -218,7 +218,7 @@ namespace document::impl::internal {
 }
 
 namespace document::impl {
-    retained_const_t<value_t> new_value(null_value_t data) {
+    retained_const_t<value_t> new_value(nullptr_t data) {
         return internal::heap_value_t::create(data)->as_value();
     }
 

@@ -14,20 +14,19 @@ class value_t;
 class key_t {
 public:
     key_t() = default;
-    explicit key_t(const std::string& key);
     explicit key_t(std::string_view key);
     explicit key_t(int key);
     explicit key_t(const value_t *v) noexcept;
 
     bool shared() const PURE;
     int as_int() const PURE;
-    const std::string& as_string() const PURE;
+    std::string_view as_string() const PURE;
 
     bool operator== (const key_t &k) const noexcept PURE;
     bool operator< (const key_t &k) const noexcept PURE;
 
 private:
-    std::string _string;
+    std::string_view _string;
     int16_t _int {-1};
 };
 

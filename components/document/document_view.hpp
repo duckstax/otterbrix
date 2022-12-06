@@ -40,9 +40,9 @@ namespace components::document {
         bool is_double(uint32_t index) const;
         bool is_string(const std::string &key) const;
         bool is_string(uint32_t index) const;
-        bool is_array(const std::string &key) const;
+        bool is_array(std::string_view key) const;
         bool is_array(uint32_t index) const;
-        bool is_dict(const std::string &key) const;
+        bool is_dict(std::string_view key) const;
         bool is_dict(uint32_t index) const;
 
         const_value_ptr get(const std::string &key) const;
@@ -54,9 +54,9 @@ namespace components::document {
         int64_t get_long(const std::string &key) const;
         double get_double(const std::string &key) const;
         std::string get_string(const std::string &key) const;
-        document_view_t get_array(const std::string &key) const;
+        document_view_t get_array(std::string_view key) const;
         document_view_t get_array(uint32_t index) const;
-        document_view_t get_dict(const std::string &key) const;
+        document_view_t get_dict(std::string_view key) const;
         document_view_t get_dict(uint32_t index) const;
 
         const_value_ptr get_value() const;

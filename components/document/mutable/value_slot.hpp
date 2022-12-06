@@ -19,7 +19,7 @@ namespace document::impl {
     class value_slot_t {
     public:
         value_slot_t();
-        value_slot_t(null_value_t);
+        value_slot_t(nullptr_t);
         ~value_slot_t();
         value_slot_t(internal::heap_collection_t *md);
         value_slot_t(const value_slot_t &other) noexcept;
@@ -32,7 +32,7 @@ namespace document::impl {
 
         const value_t* as_value() const PURE;
 
-        void set(null_value_t);
+        void set(nullptr_t);
         void set(bool b);
         void set(int32_t i);
         void set(uint32_t i);
@@ -66,7 +66,7 @@ namespace document::impl {
         void set_inline(internal::tags tag, int tiny);
 
         void release_value();
-        void set_value(internal::tags ag, int tiny, storage_view bytes);
+        void set_value(internal::tags ag, int tiny, std::string_view bytes);
         template <class INT>
         void set_int(INT i) {
             if (i < 2048 && (!std::numeric_limits<INT>::is_signed || int64_t(i) > -2048)) {
@@ -77,7 +77,7 @@ namespace document::impl {
                 auto size = put_int_of_length(buf, int64_t(i), !std::numeric_limits<INT>::is_signed);
                 set_value(internal::tag_int,
                           int(size-1) | (std::numeric_limits<INT>::is_signed ? 0 : 0x08),
-                          {buf, size});
+                          std::string_view(reinterpret_cast<char*>(buf), size));
             }
         }
         void set_string_or_data(internal::tags tag, std::string_view s);

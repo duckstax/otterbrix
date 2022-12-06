@@ -5,12 +5,6 @@
 
 namespace document::impl {
 
-key_t::key_t(const std::string& key)
-    : _string(key)
-{
-    assert_precondition(!key.empty());
-}
-
 key_t::key_t(std::string_view key)
     : _string(key)
 {
@@ -40,7 +34,7 @@ int key_t::as_int() const {
     return _int;
 }
 
-const std::string& key_t::as_string() const {
+std::string_view key_t::as_string() const {
     return _string;
 }
 

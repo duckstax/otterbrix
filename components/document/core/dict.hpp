@@ -18,14 +18,14 @@ public:
 
     class key_t {
     public:
-        explicit key_t(const std::string&);
+        explicit key_t(std::string_view);
         key_t(const key_t&) = delete;
         ~key_t();
-        const std::string& string() const noexcept;
+        std::string_view string() const noexcept;
         int compare(const key_t &k) const noexcept;
 
     private:
-        std::string const _raw_str;
+        std::string_view const _raw_str;
         shared_keys_t* _shared_keys { nullptr };
         uint32_t _hint { 0xffffffff };
         int32_t _numeric_key { 0 };
@@ -75,7 +75,7 @@ public:
 
     uint32_t count() const noexcept PURE          { return _a._count; }
 
-    std::string key_string() const noexcept; /// todo: detail view
+    std::string_view key_string() const noexcept;
     const value_t* key() const noexcept PURE      { return _key; }
     const value_t* value() const noexcept PURE    { return _value; }
 

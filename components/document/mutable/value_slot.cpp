@@ -21,7 +21,7 @@ namespace document::impl {
         : _pointer(0)
     {}
 
-    value_slot_t::value_slot_t(null_value_t)
+    value_slot_t::value_slot_t(nullptr_t)
     {
         _inline._tag = inline_tag;
         _inline._value[0] = ((tag_special << 4) | special_value_null);
@@ -98,7 +98,7 @@ namespace document::impl {
         _inline._value[0] = uint8_t((tag << 4) | tiny);
     }
 
-    void value_slot_t::set(null_value_t) {
+    void value_slot_t::set(nullptr_t) {
         set_inline(tag_special, special_value_null);
     }
 
@@ -162,7 +162,7 @@ namespace document::impl {
         set_pointer(v);
     }
 
-    void value_slot_t::set_value(tags ag, int tiny, storage_view bytes) {
+    void value_slot_t::set_value(tags ag, int tiny, std::string_view bytes) {
         if (1 + bytes.size() <= inline_capacity) {
             set_inline(ag, tiny);
             copy_to(bytes,&_inline._value[1]);

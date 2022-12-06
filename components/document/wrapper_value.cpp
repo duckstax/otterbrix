@@ -5,9 +5,12 @@ namespace document {
 
     std::string to_string(const document::wrapper_value_t& doc) {
         if (doc->type() == impl::value_type::string) {
-            return "\"" + doc->to_string() + "\"";
+            std::string tmp ;
+            tmp.append("\"").append(doc->to_string()).append("\"");
+            return tmp;
         }
-        return doc->to_string();
+        auto key = doc->to_string();
+        return {key.data(),key.size()};
     }
 
     wrapper_value_t sum(const wrapper_value_t& value1, const wrapper_value_t& value2) {

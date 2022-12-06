@@ -56,8 +56,8 @@ size_t put_int_of_length(void *buf, int64_t n, bool is_unsigned) {
     }
 }
 
-size_t _get_uvar_int(storage_view  buf, uint64_t *n) {
-    auto pos = static_cast<const uint8_t*>(buf.ptr());
+size_t _get_uvar_int(std::string_view  buf, uint64_t *n) {
+    auto pos = reinterpret_cast<const uint8_t*>(buf.data());
     auto end = pos + std::min(buf.size(), size_t(max_varint_len64));
     uint64_t result = *pos++ & 0x7F;
     int shift = 7;
@@ -69,7 +69,7 @@ size_t _get_uvar_int(storage_view  buf, uint64_t *n) {
         } else {
             result |= uint64_t(byte) << shift;
             *n = result;
-            auto nBytes = size_t(pos - static_cast<const uint8_t*>(buf.ptr()));
+            auto nBytes = size_t(pos - reinterpret_cast<const uint8_t*>(buf.data()));
             if (_usually_false(nBytes == max_varint_len64 && byte > 1))
                 nBytes = 0;
             return nBytes;
@@ -78,7 +78,7 @@ size_t _get_uvar_int(storage_view  buf, uint64_t *n) {
     return 0;
 }
 
-size_t _get_uvar_int32(storage_view buf, uint32_t *n) {
+size_t _get_uvar_int32(std::string_view buf, uint32_t *n) {
     uint64_t n64;
     size_t size = _get_uvar_int(buf, &n64);
     if (size == 0 || n64 > UINT32_MAX)
