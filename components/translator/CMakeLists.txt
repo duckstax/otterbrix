@@ -1,4 +1,4 @@
-project(optimizer CXX)
+project(translator CXX)
 
 set(SOURCE_${PROJECT_NAME}
         ql_translator.cpp

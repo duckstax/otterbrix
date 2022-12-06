@@ -6,9 +6,9 @@
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_sort.hpp>
-#include <components/optimizer/ql_translator.hpp>
+#include <components/translator/ql_translator.hpp>
 
-using namespace components::optimizer;
+using namespace components::translator;
 using namespace components::logical_plan;
 using namespace components::expressions;
 using key = components::expressions::key_t;

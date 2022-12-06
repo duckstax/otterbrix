@@ -7,7 +7,7 @@
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_sort.hpp>
 
-namespace components::optimizer {
+namespace components::translator {
 
     auto translator_aggregate(ql::aggregate_statement* aggregate) -> logical_plan::node_ptr {
         using components::ql::aggregate::operator_type;

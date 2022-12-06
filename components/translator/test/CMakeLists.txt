@@ -1,4 +1,4 @@
-project(test_optimizer)
+project(test_translator)
 
 set(${PROJECT_NAME}_SOURCES
         test_logical_plan.cpp
@@ -11,7 +11,7 @@ target_link_libraries(
         rocketjoe::expressions
         rocketjoe::ql
         rocketjoe::logical_plan
-        rocketjoe::optimizer
+        rocketjoe::translator
 )
 
 include(CTest)
