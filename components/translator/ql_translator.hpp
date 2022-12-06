@@ -5,6 +5,6 @@
 
 namespace components::translator {
 
-    auto ql_translator(ql::ql_statement_t* statement) -> logical_plan::node_ptr;
+    auto ql_translator(std::pmr::memory_resource *resource, ql::ql_statement_t* statement) -> logical_plan::node_ptr;
 
 }

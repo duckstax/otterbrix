@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory_resource>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <core/make_intrusive_ptr.hpp>
@@ -34,10 +35,10 @@ namespace components::logical_plan {
 
     protected:
         const node_type type_;
-        std::vector<node_ptr> children_;
-        std::vector<expression_ptr> expressions_;
+        std::pmr::vector<node_ptr> children_;
+        std::pmr::vector<expression_ptr> expressions_;
 
-        explicit node_t(node_type type);
+        node_t(std::pmr::memory_resource *resource, node_type type);
 
     private:
         virtual hash_t hash_impl() const = 0;

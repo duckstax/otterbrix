@@ -3,8 +3,8 @@
 
 namespace components::logical_plan {
 
-    node_sort_t::node_sort_t()
-        : node_t(node_type::sort_t) {
+    node_sort_t::node_sort_t(std::pmr::memory_resource *resource)
+        : node_t(resource, node_type::sort_t) {
     }
 
     hash_t node_sort_t::hash_impl() const {
@@ -28,8 +28,8 @@ namespace components::logical_plan {
     }
 
 
-    node_ptr make_node_sort(const ql::aggregate::sort_t& sort) {
-        auto node = new node_sort_t();
+    node_ptr make_node_sort(std::pmr::memory_resource *resource, const ql::aggregate::sort_t& sort) {
+        auto node = new node_sort_t{resource};
         node->append_expressions(sort.values);
         return node;
     }

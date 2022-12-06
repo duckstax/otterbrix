@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_sort_t final : public node_t {
     public:
-        node_sort_t();
+        explicit node_sort_t(std::pmr::memory_resource *resource);
 
     private:
         hash_t hash_impl() const final;
@@ -15,6 +15,6 @@ namespace components::logical_plan {
     };
 
 
-    node_ptr make_node_sort(const ql::aggregate::sort_t& sort);
+    node_ptr make_node_sort(std::pmr::memory_resource *resource, const ql::aggregate::sort_t& sort);
 
 }

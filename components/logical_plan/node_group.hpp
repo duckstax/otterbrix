@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_group_t final : public node_t {
     public:
-        node_group_t();
+        explicit node_group_t(std::pmr::memory_resource *resource);
 
     private:
         hash_t hash_impl() const final;
@@ -15,6 +15,6 @@ namespace components::logical_plan {
     };
 
 
-    node_ptr make_node_group(const ql::aggregate::group_t& group);
+    node_ptr make_node_group(std::pmr::memory_resource *resource, const ql::aggregate::group_t& group);
 
 }

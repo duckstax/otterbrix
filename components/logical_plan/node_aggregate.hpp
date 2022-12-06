@@ -7,7 +7,7 @@ namespace components::logical_plan {
 
     class node_aggregate_t final : public node_t {
     public:
-        node_aggregate_t();
+        explicit node_aggregate_t(std::pmr::memory_resource *resource);
 
     private:
         hash_t hash_impl() const final;

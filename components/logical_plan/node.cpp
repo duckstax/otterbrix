@@ -64,7 +64,9 @@ namespace components::logical_plan {
         return !operator==(rhs);
     }
 
-    node_t::node_t(node_type type)
-        : type_(type) {}
+    node_t::node_t(std::pmr::memory_resource *resource, node_type type)
+        : type_(type)
+        , children_(resource)
+        , expressions_(resource) {}
 
 } // namespace components::logical_plan
