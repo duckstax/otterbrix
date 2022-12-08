@@ -26,7 +26,7 @@ namespace document::impl {
 
         class heap_value_t : public ref_counted_t, offset_value_t {
         public:
-            static heap_value_t* create(null_value_t);
+            static heap_value_t* create(nullptr_t);
             static heap_value_t* create(bool b);
             static heap_value_t* create(int i);
             static heap_value_t* create(unsigned i);
@@ -52,7 +52,7 @@ namespace document::impl {
 
         protected:
             ~heap_value_t() = default;
-            static heap_value_t* create(tags tag, int tiny, storage_view extra_data);
+            static heap_value_t* create(tags tag, int tiny, std::string_view extra_data);
             heap_value_t(tags tag, int tiny);
             tags tag() const;
 
@@ -85,7 +85,7 @@ namespace document::impl {
 
     }
 
-    retained_const_t<value_t> new_value(null_value_t data);
+    retained_const_t<value_t> new_value(nullptr_t data);
     retained_const_t<value_t> new_value(bool data);
     retained_const_t<value_t> new_value(int data);
     retained_const_t<value_t> new_value(unsigned data);

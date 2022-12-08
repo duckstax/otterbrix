@@ -177,7 +177,7 @@ namespace document::impl {
         std::string_view s(reinterpret_cast<const char*>(&_byte[1]), tiny_value());
         if (_usually_false(s.size() == 0x0F)) {
             uint32_t length;
-            storage_view tmp(&_byte[1], tiny_value());
+            std::string_view tmp(reinterpret_cast<const char*>(&_byte[1]), tiny_value());
             size_t lengthBytes = get_uvar_int32(tmp, &length);
             if (_usually_false(lengthBytes == 0))
                 return {};
@@ -186,7 +186,7 @@ namespace document::impl {
         return s;
     }
 
-    std::string value_t::to_string() const {
+    std::string_view value_t::to_string() const {
         char buf[32], *str = buf;
         switch (tag()) {
             case tag_short:
@@ -226,8 +226,7 @@ namespace document::impl {
                 break;
             }
             default: {
-                auto tmp = as_string();
-                return {tmp.data(),tmp.size()};
+                return as_string();
             }
         }
         return {str};

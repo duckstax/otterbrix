@@ -52,7 +52,7 @@ TEST_CASE("mutable::mutable_array_t") {
             REQUIRE(ma->get(i)->type() == value_type::null);
         }
 
-        ma->set(0, null_value);
+        ma->set(0, nullptr);
         ma->set(1, false);
         ma->set(2, true);
         ma->set(3, 0);
@@ -220,7 +220,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(md->is_changed());
-        md->set("null", null_value);
+        md->set("null", nullptr);
         md->set("f", false);
         md->set("t", true);
         md->set("z", 0);
@@ -287,7 +287,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         dict_t::iterator i0(d);
         REQUIRE_FALSE(i0);
 
-        md->set("null", null_value);
+        md->set("null", nullptr);
         md->set("f", false);
         md->set("t", true);
         md->set("z", 0);

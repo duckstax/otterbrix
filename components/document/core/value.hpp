@@ -30,10 +30,6 @@ namespace document::impl {
         deep_copy_immutables = (deep_copy | copy_immutables),
     };
 
-    class null_value_t {};
-
-    constexpr null_value_t null_value;
-
     class value_t {
     public:
         static const value_t* const true_value;
@@ -66,7 +62,7 @@ namespace document::impl {
         static const array_t* as_array(const value_t* v) PURE;
         static const dict_t* as_dict(const value_t* v) PURE;
 
-        std::string to_string() const;
+        std::string_view to_string() const;
 
         bool is_mutable() const PURE;
 

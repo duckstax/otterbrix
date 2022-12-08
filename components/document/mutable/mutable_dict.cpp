@@ -147,16 +147,6 @@ namespace document::impl::internal {
         return key_t(key);
     }
 
-    value_slot_t* heap_dict_t::_find_value_for(const std::string& key) const noexcept {
-        if (_map.empty())
-            return nullptr;
-        key_t encoded = encode_key(key);
-        auto slot = _find_value_for(encoded);
-        if (!slot && encoded.shared()) {
-            slot = _find_value_for(key_t(key));
-        }
-        return slot;
-    }
 
     value_slot_t* heap_dict_t::_find_value_for(std::string_view key) const noexcept {
         if (_map.empty())
@@ -179,8 +169,9 @@ namespace document::impl::internal {
     key_t heap_dict_t::_allocate_key(key_t key) {
         if (key.shared())
             return key;
-        _backing_slices.push_back(key.as_string());
-        return key_t(key.as_string());
+        auto tmp_key = key.as_string();
+        _backing_slices.emplace_back(tmp_key.data(),tmp_key.size());
+        return key_t(tmp_key);
     }
 
     value_slot_t& heap_dict_t::_make_value_for(key_t key) {
@@ -188,22 +179,6 @@ namespace document::impl::internal {
         if (it != _map.end())
             return it->second;
         return _map[key_t(_allocate_key(key))];
-    }
-
-    value_slot_t& heap_dict_t::setting(const std::string& key_string) {
-        key_t key;
-        value_slot_t* slotp = _find_value_for(key_string);
-        if (slotp) {
-            key = key_t(key_string);
-        } else {
-            key = encode_key(key_string);
-            slotp = &_make_value_for(key);
-        }
-        if (slotp->empty() && !(_source && _source->get(key))) {
-            ++_count;
-        }
-        mark_changed();
-        return *slotp;
     }
 
     value_slot_t& heap_dict_t::setting(std::string_view key_string) {
@@ -220,14 +195,6 @@ namespace document::impl::internal {
         }
         mark_changed();
         return *slotp;
-    }
-
-    const value_t* heap_dict_t::get(const std::string& key) const noexcept {
-        value_slot_t* val = _find_value_for(key);
-        if (val)
-            return val->as_value();
-        else
-            return _source ? _source->get(key) : nullptr;
     }
 
     const value_t* heap_dict_t::get(std::string_view key) const noexcept {

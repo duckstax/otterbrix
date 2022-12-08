@@ -5,13 +5,13 @@
 
 namespace document::impl {
 
-key_t::key_t(const std::string& key)
-    : _string(key)
+key_t::key_t(std::string_view key)
+    : _string({key.data(),key.size()})
 {
     assert_precondition(!key.empty());
 }
 
-key_t::key_t(std::string_view key)
+key_t::key_t(const std::string& key)
     : _string(key)
 {
     assert_precondition(!key.empty());
@@ -40,8 +40,8 @@ int key_t::as_int() const {
     return _int;
 }
 
-const std::string& key_t::as_string() const {
-    return _string;
+std::string_view key_t::as_string() const {
+    return {_string.data(),_string.size()};
 }
 
 bool key_t::operator== (const key_t &k) const noexcept {

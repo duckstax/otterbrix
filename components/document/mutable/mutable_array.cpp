@@ -108,7 +108,7 @@ namespace document::impl::internal {
     void heap_array_t::resize(uint32_t new_size) {
         if (new_size == count())
             return;
-        _items.resize(new_size, value_slot_t(null_value_t()));
+        _items.resize(new_size, value_slot_t(nullptr));
         set_changed(true);
     }
 
@@ -117,7 +117,7 @@ namespace document::impl::internal {
         if (n == 0)
             return;
         populate(where);
-        _items.insert(_items.begin() + where,  n, value_slot_t(null_value_t()));
+        _items.insert(_items.begin() + where,  n, value_slot_t(nullptr));
         set_changed(true);
     }
 

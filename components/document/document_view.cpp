@@ -97,7 +97,7 @@ namespace components::document {
         return get(index)->type() == value_type::string;
     }
 
-    bool document_view_t::is_array(const std::string &key) const {
+    bool document_view_t::is_array(std::string_view key) const {
         return get(key)->type() == value_type::array;
     }
 
@@ -105,7 +105,7 @@ namespace components::document {
         return get(index)->type() == value_type::array;
     }
 
-    bool document_view_t::is_dict(const std::string &key) const {
+    bool document_view_t::is_dict(std::string_view key) const {
         return get(key)->type() == value_type::dict;
     }
 
@@ -159,7 +159,7 @@ namespace components::document {
         return get_as<std::string>(key);
     }
 
-    document_view_t document_view_t::get_array(const std::string &key) const {
+    document_view_t document_view_t::get_array(const std::string_view key) const {
         return document_view_t(make_document(get(key)->as_array()));
     }
 
@@ -167,7 +167,7 @@ namespace components::document {
         return document_view_t(make_document(get(index)->as_array()));
     }
 
-    document_view_t document_view_t::get_dict(const std::string &key) const {
+    document_view_t document_view_t::get_dict(std::string_view key) const {
         return document_view_t(make_document(get(key)->as_dict()));
     }
 
@@ -270,7 +270,7 @@ namespace components::document {
     std::string document_view_t::to_json_dict() const {
         std::stringstream res;
         for (auto it = as_dict()->begin(); it; ++it) {
-            auto key = static_cast<std::string>(it.key()->as_string());
+            auto key = it.key()->as_string();
             if (!res.str().empty()) res << ",";
             if (is_dict(key)) {
                 res << "\"" << key << "\"" << ":" << get_dict(key).to_json();
