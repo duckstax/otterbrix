@@ -2,42 +2,13 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 
-#include <string>  // string
-#include <utility> // move
-#include <vector>  // vector
+#include <string>
+#include <utility>
+#include <vector>
 
-template<typename BasicJsonType>
-struct json_sax {
-    using number_integer_t = typename BasicJsonType::number_integer_t;
-    using number_unsigned_t = typename BasicJsonType::number_unsigned_t;
-    using number_float_t = typename BasicJsonType::number_float_t;
-    using string_t = typename BasicJsonType::string_t;
-    using binary_t = typename BasicJsonType::binary_t;
-
-    virtual bool null() = 0;
-    virtual bool boolean(bool val) = 0;
-    virtual bool number_integer(number_integer_t val) = 0;
-    virtual bool number_unsigned(number_unsigned_t val) = 0;
-    virtual bool number_float(number_float_t val, const string_t& s) = 0;
-    virtual bool string(string_t& val) = 0;
-    virtual bool binary(binary_t& val) = 0;
-    virtual bool start_object(std::size_t elements) = 0;
-    virtual bool key(string_t& val) = 0;
-    virtual bool end_object() = 0;
-    virtual bool start_array(std::size_t elements) = 0;
-    virtual bool end_array() = 0;
-    virtual bool parse_error(std::size_t position,
-                             const std::string& last_token,
-                             const detail::exception& ex) = 0;
-
-    json_sax() = default;
-    json_sax(const json_sax&) = default;
-    json_sax(json_sax&&) noexcept = default;
-    json_sax& operator=(const json_sax&) = default;
-    json_sax& operator=(json_sax&&) noexcept = default;
-    virtual ~json_sax() = default;
-};
+#include "utils.hpp"
 
 template<typename BasicJsonType>
 class json_sax_dom_parser {

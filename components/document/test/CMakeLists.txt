@@ -6,6 +6,7 @@ set( ${PROJECT_NAME}_SOURCES
 	    test_support.cpp
 	    test_value.cpp
 		test_pack_msgpack.cpp
+		test_serializer.cpp
 		test_document_id.cpp
 		test_document_json.cpp
 		test_document_view.cpp

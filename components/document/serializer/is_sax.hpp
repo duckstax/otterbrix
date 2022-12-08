@@ -4,59 +4,6 @@
 #include <string>  // string
 #include <utility> // declval
 
-template<typename... Ts>
-struct make_void {
-    using type = void;
-};
-
-template<typename... Ts>
-using void_t = typename make_void<Ts...>::type;
-
-struct nonesuch {
-    nonesuch() = delete;
-    ~nonesuch() = delete;
-    nonesuch(nonesuch const&) = delete;
-    nonesuch(nonesuch const&&) = delete;
-    void operator=(nonesuch const&) = delete;
-    void operator=(nonesuch&&) = delete;
-};
-
-template<class Default,
-         class AlwaysVoid,
-         template<class...> class Op,
-         class... Args>
-struct detector {
-    using value_t = std::false_type;
-    using type = Default;
-};
-
-template<class Default, template<class...> class Op, class... Args>
-struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
-    using value_t = std::true_type;
-    using type = Op<Args...>;
-};
-
-template<template<class...> class Op, class... Args>
-using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
-
-template<template<class...> class Op, class... Args>
-struct is_detected_lazy : is_detected<Op, Args...> {};
-
-template<template<class...> class Op, class... Args>
-using detected_t = typename detector<nonesuch, void, Op, Args...>::type;
-
-template<class Default, template<class...> class Op, class... Args>
-using detected_or = detector<Default, void, Op, Args...>;
-
-template<class Default, template<class...> class Op, class... Args>
-using detected_or_t = typename detected_or<Default, Op, Args...>::type;
-
-template<class Expected, template<class...> class Op, class... Args>
-using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
-
-template<class To, template<class...> class Op, class... Args>
-using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
-
 template<typename T>
 using null_function_t = decltype(std::declval<T&>().null());
 
@@ -94,7 +41,54 @@ template<typename T>
 using end_array_function_t = decltype(std::declval<T&>().end_array());
 
 template<typename T, typename Exception>
-using parse_error_function_t = decltype(std::declval<T&>().parse_error(std::declval<std::size_t>(), std::declval<const std::string&>(),std::declval<const Exception&>()));
+using parse_error_function_t = decltype(std::declval<T&>().parse_error(
+    std::declval<std::size_t>(), std::declval<const std::string&>(),
+    std::declval<const Exception&>()));
+
+struct nonesuch {
+    nonesuch() = delete;
+    ~nonesuch() = delete;
+    nonesuch(nonesuch const&) = delete;
+    nonesuch(nonesuch const&&) = delete;
+    void operator=(nonesuch const&) = delete;
+    void operator=(nonesuch&&) = delete;
+};
+
+template<class Default,
+         class AlwaysVoid,
+         template<class...> class Op,
+         class... Args>
+struct detector {
+    using value_t = std::false_type;
+    using type = Default;
+};
+
+template<class Default, template<class...> class Op, class... Args>
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
+    using value_t = std::true_type;
+    using type = Op<Args...>;
+};
+
+template<template<class...> class Op, class... Args>
+using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
+
+template<template<class...> class Op, class... Args>
+struct is_detected_lazy : is_detected<Op, Args...> {};
+
+template<template<class...> class Op, class... Args>
+using detected_t = typename detector<nonesuch, void, Op, Args...>::type;
+
+template<class Default, template<class...> class Op, class... Args>
+using detected_or = detector<Default, void, Op, Args...>;
+
+template<class Default, template<class...> class Op, class... Args>
+using detected_or_t = typename detected_or<Default, Op, Args...>::type;
+
+template<class Expected, template<class...> class Op, class... Args>
+using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+
+template<class To, template<class...> class Op, class... Args>
+using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
 
 template<typename SAX, typename BasicJsonType>
 struct is_sax_static_asserts {
@@ -107,18 +101,18 @@ private:
     using exception_t = typename BasicJsonType::exception;
 
 public:
-    static_assert(is_detected_exact<bool, null_function_t, SAX>::value,"Missing/invalid function: bool null()");
-    static_assert(is_detected_exact<bool, boolean_function_t, SAX>::value,"Missing/invalid function: bool boolean(bool)");
-    static_assert(is_detected_exact<bool, boolean_function_t, SAX>::value,"Missing/invalid function: bool boolean(bool)");
-    static_assert(is_detected_exact<bool, number_integer_function_t, SAX,number_integer_t>::value,"Missing/invalid function: bool number_integer(number_integer_t)");
-    static_assert(is_detected_exact<bool, number_unsigned_function_t, SAX,number_unsigned_t>::value,"Missing/invalid function: bool number_unsigned(number_unsigned_t)");
-    static_assert(is_detected_exact<bool, number_float_function_t, SAX,number_float_t, string_t>::value,"Missing/invalid function: bool number_float(number_float_t, const string_t&)");
-    static_assert(is_detected_exact<bool, string_function_t, SAX, string_t>::value,"Missing/invalid function: bool string(string_t&)");
-    static_assert(is_detected_exact<bool, binary_function_t, SAX, binary_t>::value,"Missing/invalid function: bool binary(binary_t&)");
-    static_assert(is_detected_exact<bool, start_object_function_t, SAX>::value,"Missing/invalid function: bool start_object(std::size_t)");
-    static_assert(is_detected_exact<bool, key_function_t, SAX, string_t>::value,"Missing/invalid function: bool key(string_t&)");
-    static_assert(is_detected_exact<bool, end_object_function_t, SAX>::value,"Missing/invalid function: bool end_object()");
-    static_assert(is_detected_exact<bool, start_array_function_t, SAX>::value,"Missing/invalid function: bool start_array(std::size_t)");
-    static_assert(is_detected_exact<bool, end_array_function_t, SAX>::value,"Missing/invalid function: bool end_array()");
-    static_assert(is_detected_exact<bool, parse_error_function_t, SAX, exception_t>::value,"Missing/invalid function: bool parse_error(std::size_t, const std::string&, const exception&)");
+    static_assert(is_detected_exact<bool, null_function_t, SAX>::value,"Missing function: bool null()");
+    static_assert(is_detected_exact<bool, boolean_function_t, SAX>::value,"Missing function: bool boolean(bool)");
+    static_assert(is_detected_exact<bool, boolean_function_t, SAX>::value,"Missing function: bool boolean(bool)");
+    static_assert(is_detected_exact<bool, number_integer_function_t, SAX,number_integer_t>::value,"Missing function: bool number_integer(number_integer_t)");
+    static_assert(is_detected_exact<bool, number_unsigned_function_t, SAX,number_unsigned_t>::value,"Missing function: bool number_unsigned(number_unsigned_t)");
+    static_assert(is_detected_exact<bool, number_float_function_t, SAX,number_float_t, string_t>::value,"Missing function: bool number_float(number_float_t, const string_t&)");
+    static_assert(is_detected_exact<bool, string_function_t, SAX, string_t>::value,"Missing function: bool string(string_t&)");
+    static_assert(is_detected_exact<bool, binary_function_t, SAX, binary_t>::value,"Missing function: bool binary(binary_t&)");
+    static_assert(is_detected_exact<bool, start_object_function_t, SAX>::value,"Missing function: bool start_object(std::size_t)");
+    static_assert(is_detected_exact<bool, key_function_t, SAX, string_t>::value,"Missing function: bool key(string_t&)");
+    static_assert(is_detected_exact<bool, end_object_function_t, SAX>::value,"Missing function: bool end_object()");
+    static_assert(is_detected_exact<bool, start_array_function_t, SAX>::value,"Missing function: bool start_array(std::size_t)");
+    static_assert(is_detected_exact<bool, end_array_function_t, SAX>::value,"Missing function: bool end_array()");
+    static_assert(is_detected_exact<bool, parse_error_function_t, SAX, exception_t>::value,"Missing function: bool parse_error(std::size_t, const std::string&, const exception&)");
 };

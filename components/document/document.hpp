@@ -5,10 +5,9 @@
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document_id.hpp>
+#include "document_traits.hpp"
 
 namespace document::impl {
-    class dict_t;
-    class array_t;
     class dict_iterator_t;
 }
 
@@ -22,6 +21,7 @@ namespace components::document {
     class document_t final : public boost::intrusive_ref_counter<document_t> {
     public:
         using ptr = boost::intrusive_ptr<document_t>;
+        using traits = type_traits;
 
         document_t();
         explicit document_t(document_value_t value);
@@ -84,9 +84,6 @@ namespace components::document {
         document->set(key, value);
         return document;
     }
-
-    std::string serialize_document(const document_ptr &document);
-    document_ptr deserialize_document(const std::string &text);
 
     bool is_equals_documents(const document_ptr &doc1, const document_ptr &doc2);
 
