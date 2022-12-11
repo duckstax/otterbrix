@@ -22,7 +22,7 @@ namespace components::column {
         ~column() = default;
         column& operator=(column const& other) = delete;
         column& operator=(column&& other) = delete;
-        column(column const& other, std::pmr::memory_resource* mr = std::pmr::get_default_resource());
+        column(column const& other, std::pmr::memory_resource*);
         column(column&& other) noexcept;
 
         template<typename T>
@@ -55,20 +55,18 @@ namespace components::column {
             assert(size >= 0);
         }
 
-        explicit column(column_view view, std::pmr::memory_resource* mr = std::pmr::get_default_resource());
-        [[nodiscard]] data_type type() const noexcept { return _type; }
-        [[nodiscard]] size_type size() const noexcept { return _size; }
+        explicit column(column_view view, std::pmr::memory_resource*);
+        [[nodiscard]] data_type type() const noexcept;
+        [[nodiscard]] size_type size() const noexcept;
         [[nodiscard]] size_type null_count() const;
         void set_null_mask(core::buffer&& new_null_mask, size_type new_null_count = UNKNOWN_NULL_COUNT);
         void set_null_mask(core::buffer const& new_null_mask, size_type new_null_count = UNKNOWN_NULL_COUNT);
         void set_null_count(size_type new_null_count);
-        [[nodiscard]] bool nullable() const noexcept { return (_null_mask.size() > 0); }
-        [[nodiscard]] bool has_nulls() const noexcept { return (null_count() > 0); }
-        [[nodiscard]] size_type num_children() const noexcept { return _children.size(); }
-        column& child(size_type child_index) noexcept { return *_children[child_index]; };
-        [[nodiscard]] column const& child(size_type child_index) const noexcept {
-            return *_children[child_index];
-        };
+        [[nodiscard]] bool nullable() const noexcept;
+        [[nodiscard]] bool has_nulls() const noexcept;
+        [[nodiscard]] size_type num_children() const noexcept;
+        column& child(size_type child_index) noexcept;
+        [[nodiscard]] column const& child(size_type child_index) const noexcept;
 
         struct contents {
             std::unique_ptr<core::buffer> data;
@@ -78,9 +76,9 @@ namespace components::column {
 
         contents release() noexcept;
         [[nodiscard]] column_view view() const;
-        operator column_view() const { return this->view(); };
+        operator column_view() const;
         mutable_column_view mutable_view();
-        operator mutable_column_view() { return this->mutable_view(); };
+        operator mutable_column_view();
 
     private:
         data_type _type{type_id::EMPTY};
