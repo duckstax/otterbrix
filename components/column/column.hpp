@@ -68,7 +68,7 @@ namespace components::column {
         column& child(size_type child_index) noexcept;
         [[nodiscard]] column const& child(size_type child_index) const noexcept;
 
-        struct contents {
+        struct contents final {
             std::unique_ptr<core::buffer> data;
             std::unique_ptr<core::buffer> null_mask;
             std::vector<std::unique_ptr<column>> children;
