@@ -6,6 +6,7 @@
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <core/make_intrusive_ptr.hpp>
 #include <components/expressions/expression.hpp>
+#include <components/ql/base.hpp>
 #include "forward.hpp"
 
 namespace components::logical_plan {
@@ -20,6 +21,11 @@ namespace components::logical_plan {
         virtual ~node_t() = default;
 
         node_type type() const;
+        const collection_full_name_t& collection_full() const;
+        const database_name_t& database_name() const;
+        const collection_name_t& collection_name() const;
+        const std::pmr::vector<node_ptr>& children() const;
+        const std::pmr::vector<expression_ptr>& expressions() const;
 
         void reserve_child(std::size_t count);
         void append_child(const node_ptr& child);
@@ -35,10 +41,11 @@ namespace components::logical_plan {
 
     protected:
         const node_type type_;
+        const collection_full_name_t collection_;
         std::pmr::vector<node_ptr> children_;
         std::pmr::vector<expression_ptr> expressions_;
 
-        node_t(std::pmr::memory_resource *resource, node_type type);
+        node_t(std::pmr::memory_resource *resource, node_type type, const collection_full_name_t& collection);
 
     private:
         virtual hash_t hash_impl() const = 0;

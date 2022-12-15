@@ -3,8 +3,8 @@
 
 namespace components::logical_plan {
 
-    node_group_t::node_group_t(std::pmr::memory_resource *resource)
-        : node_t(resource, node_type::group_t) {
+    node_group_t::node_group_t(std::pmr::memory_resource *resource, const collection_full_name_t& collection)
+        : node_t(resource, node_type::group_t, collection) {
     }
 
     hash_t node_group_t::hash_impl() const {
@@ -28,8 +28,8 @@ namespace components::logical_plan {
     }
 
 
-    node_ptr make_node_group(std::pmr::memory_resource *resource, const ql::aggregate::group_t& group) {
-        auto node = new node_group_t{resource};
+    node_ptr make_node_group(std::pmr::memory_resource *resource, const collection_full_name_t& collection, const ql::aggregate::group_t& group) {
+        auto node = new node_group_t{resource, collection};
         node->append_expressions(group.fields);
         return node;
     }

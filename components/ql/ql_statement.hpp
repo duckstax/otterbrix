@@ -1,10 +1,7 @@
 #pragma once
 
-#include <string>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-
-using database_name_t = std::string;
-using collection_name_t = std::string;
+#include "base.hpp"
 
 namespace components::ql {
 
