@@ -49,8 +49,8 @@ namespace services::collection::operators::predicates {
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                    return value && value->type() == document::impl::value_type::string &&
-                           std::regex_match(get_value_from_document(document, expr->key_)->to_string().data(),
-                                            std::regex(fmt::format(".*{}.*",expr->value_->to_string())));
+                           std::regex_match(to_string(*get_value_from_document(document, expr->key_)).data(),
+                                            std::regex(fmt::format(".*{}.*", to_string(*expr->value_))));
                 });
             default:
                 break;

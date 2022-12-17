@@ -47,7 +47,7 @@ void to_msgpack_(const value_t* value, msgpack::object& o) {
         o.via.f64 = value->as_double();
     } else if (value->type() == value_type::string) {
         //todo kick memory leak
-        auto *s = new std::string(value->to_string());
+        auto *s = new std::string(to_string(value));
         o.type = msgpack::type::object_type::STR;
         o.via.str.size = uint32_t(s->size());
         o.via.str.ptr = s->c_str();

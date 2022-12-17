@@ -26,7 +26,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(is_equals(ma->as_double(), 0.0));
         REQUIRE(ma->as_string().empty());
         REQUIRE(ma->as_data().empty());
-        REQUIRE(ma->to_string().empty());
+        REQUIRE(to_string(ma).empty());
         REQUIRE(ma->as_dict() == nullptr);
         REQUIRE(ma->as_array() == ma);
     }
@@ -205,7 +205,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(is_equals(md->as_double(), 0.0));
         REQUIRE(md->as_string().empty());
         REQUIRE(md->as_data().empty());
-        REQUIRE(md->to_string().empty());
+        REQUIRE(to_string(md).empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
         REQUIRE(md->as_mutable() == md);
