@@ -62,14 +62,16 @@ namespace document::impl {
         static const array_t* as_array(const value_t* v) PURE;
         static const dict_t* as_dict(const value_t* v) PURE;
 
-        std::string_view to_string() const;
-
         bool is_mutable() const PURE;
 
         shared_keys_t* shared_keys() const noexcept PURE;
 
         void _retain() const;
         void _release() const;
+
+        internal::tags tag() const noexcept PURE;
+        unsigned tiny_value() const noexcept PURE;
+        bool big_float() const noexcept PURE;
 
         template<class TValue>
         TValue as() const;
@@ -78,9 +80,6 @@ namespace document::impl {
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
             : _byte{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
 
-
-        internal::tags tag() const noexcept PURE;
-        unsigned tiny_value() const noexcept PURE;
         uint16_t short_value() const noexcept PURE;
         template<typename T>
         T as_float_of_type() const noexcept PURE;
@@ -132,5 +131,7 @@ namespace document::impl {
     double value_t::as<double>() const;
     template<>
     std::string value_t::as<std::string>() const;
+
+    std::string to_string(const value_t* value);
 
 } // namespace document::impl

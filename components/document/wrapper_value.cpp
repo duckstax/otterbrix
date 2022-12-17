@@ -6,10 +6,10 @@ namespace document {
     std::string to_string(const document::wrapper_value_t& doc) {
         if (doc->type() == impl::value_type::string) {
             std::string tmp ;
-            tmp.append("\"").append(doc->to_string()).append("\"");
+            tmp.append("\"").append(to_string(*doc)).append("\"");
             return tmp;
         }
-        auto key = doc->to_string();
+        auto key = to_string(*doc);
         return {key.data(),key.size()};
     }
 
