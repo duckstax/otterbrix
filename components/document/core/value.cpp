@@ -451,18 +451,17 @@ namespace document::impl {
     }
 
     std::string to_string(const value_t* value) {
-        std::string res{33, '\0'};
-        auto *str = res.data();
         switch (value->tag()) {
             case tag_short:
             case tag_int: {
+                char buf[32];
                 int64_t i = value->as_int();
                 if (value->is_unsigned()) {
-                    sprintf(str, "%llu", static_cast<unsigned long long>(i));
+                    sprintf(buf, "%llu", static_cast<unsigned long long>(i));
                 } else {
-                    sprintf(str, "%lld", static_cast<long long>(i));
+                    sprintf(buf, "%lld", static_cast<long long>(i));
                 }
-                break;
+                return {buf};
             }
             case tag_special: {
                 switch (value->tiny_value()) {
@@ -479,19 +478,20 @@ namespace document::impl {
                 }
             }
             case tag_float: {
+                char buf[32];
                 if (value->big_float()) {
-                    write_double(value->as_double(), str, 32);
+                    write_double(value->as_double(), buf, 32);
                 } else {
-                    write_float(value->as_float(), str, 32);
+                    write_float(value->as_float(), buf, 32);
                 }
-                break;
+                return {buf};
             }
             default: {
                 auto s = value->as_string();
                 return {s.data(), s.size()};
             }
         }
-        return res;
+        return {};
     }
 
 } // namespace document::impl

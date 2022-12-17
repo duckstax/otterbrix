@@ -17,9 +17,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
         auto* dict = value->as_dict();
         o.pack_map(dict->count());
         for (auto it = dict->begin(); it; ++it) {
-            //todo kick memory leak
-            auto* s = new std::string(to_string(it.key()));
-            o.pack(s->data());
+            o.pack(to_string(it.key()));
             to_msgpack_(o, it.value());
         }
     } else if (value->type() == value_type::array) {
@@ -37,9 +35,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
     } else if (value->is_double()) {
         o.pack(value->as_double());
     } else if (value->type() == value_type::string) {
-        //todo kick memory leak
-        auto* s = new std::string(to_string(value));
-        o.pack(s->data());
+        o.pack(to_string(value));
     }
 }
 
