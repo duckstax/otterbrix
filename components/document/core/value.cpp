@@ -186,52 +186,6 @@ namespace document::impl {
         return s;
     }
 
-    std::string_view value_t::to_string() const {
-        char buf[32], *str = buf;
-        switch (tag()) {
-            case tag_short:
-            case tag_int: {
-                int64_t i = as_int();
-                if (is_unsigned())
-                    sprintf(str, "%llu", static_cast<unsigned long long>(i));
-                else
-                    sprintf(str, "%lld", static_cast<long long>(i));
-                break;
-            }
-            case tag_special: {
-                switch (tiny_value()) {
-                    case special_value_null:
-                        str = const_cast<char*>("null");
-                        break;
-                    case special_value_undefined:
-                        str = const_cast<char*>("undefined");
-                        break;
-                    case special_value_false:
-                        str = const_cast<char*>("false");
-                        break;
-                    case special_value_true:
-                        str = const_cast<char*>("true");
-                        break;
-                    default:
-                        str = const_cast<char*>("{?special?}");
-                        break;
-                }
-                break;
-            }
-            case tag_float: {
-                if (_byte[0] & 0x8)
-                    write_double(as_double(), str, 32);
-                else
-                    write_float(as_float(), str, 32);
-                break;
-            }
-            default: {
-                return as_string();
-            }
-        }
-        return {str};
-    }
-
     bool value_t::is_mutable() const {
         return (reinterpret_cast<size_t>(this) & 1) != 0;
     }
@@ -391,6 +345,10 @@ namespace document::impl {
         return _byte[0] & 0x0F;
     }
 
+    bool value_t::big_float() const noexcept {
+        return _byte[0] & 0x8;
+    }
+
     uint16_t value_t::short_value() const noexcept {
         return ((uint16_t(_byte[0]) << 8) | _byte[1]) & 0x0FFF;
     }
@@ -490,6 +448,50 @@ namespace document::impl {
 
     void release(const value_t* val) noexcept {
         heap_value_t::release(val);
+    }
+
+    std::string to_string(const value_t* value) {
+        switch (value->tag()) {
+            case tag_short:
+            case tag_int: {
+                char buf[32];
+                int64_t i = value->as_int();
+                if (value->is_unsigned()) {
+                    sprintf(buf, "%llu", static_cast<unsigned long long>(i));
+                } else {
+                    sprintf(buf, "%lld", static_cast<long long>(i));
+                }
+                return {buf};
+            }
+            case tag_special: {
+                switch (value->tiny_value()) {
+                    case special_value_null:
+                        return "null";
+                    case special_value_undefined:
+                        return "undefined";
+                    case special_value_false:
+                        return "false";
+                    case special_value_true:
+                        return "true";
+                    default:
+                        return "{?special?}";
+                }
+            }
+            case tag_float: {
+                char buf[32];
+                if (value->big_float()) {
+                    write_double(value->as_double(), buf, 32);
+                } else {
+                    write_float(value->as_float(), buf, 32);
+                }
+                return {buf};
+            }
+            default: {
+                auto s = value->as_string();
+                return {s.data(), s.size()};
+            }
+        }
+        return {};
     }
 
 } // namespace document::impl
