@@ -5,6 +5,6 @@
 
 namespace services::collection::planner {
 
-    operators::operator_ptr create_plan(const components::logical_plan::node_ptr& node);
+    operators::operator_ptr create_plan(context_collection_t* context, const components::logical_plan::node_ptr& node);
 
 }

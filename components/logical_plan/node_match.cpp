@@ -30,7 +30,9 @@ namespace components::logical_plan {
 
     node_ptr make_node_match(std::pmr::memory_resource *resource, const collection_full_name_t& collection, const ql::aggregate::match_t& match) {
         auto node = new node_match_t{resource, collection};
-        node->append_expression(match.query);
+        if (match.query) {
+            node->append_expression(match.query);
+        }
         return node;
     }
 
