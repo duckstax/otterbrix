@@ -17,18 +17,8 @@ namespace services::collection::operators::predicates {
         return document::wrapper_value_t(components::document::document_view_t(document).get_value(key.as_string()));
     }
 
-    predicate_ptr create_predicate(context_collection_t* context, const components::ql::expr_ptr& expr) {
+    predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr) {
         auto result = create_simple_predicate(context, expr);
-        if (result) {
-            return result;
-        }
-        //todo: other predicates
-        static_assert(true, "not valid condition type");
-        return nullptr;
-    }
-
-    predicate_ptr create_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
-        auto result = create_simple_predicate(context, cond);
         if (result) {
             return result;
         }

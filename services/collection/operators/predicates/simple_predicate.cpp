@@ -11,41 +11,42 @@ namespace services::collection::operators::predicates {
         return func_(document);
     }
 
-    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::expr_ptr& expr) {
-        using components::ql::condition_type;
+    predicate_ptr create_simple_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr) {
+        using components::expressions::compare_type;
 
-        switch (expr->type_) {
-            case condition_type::eq:
+        /*
+        switch (expr->type()) {
+            case compare_type::eq:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value == expr->value_;
                 });
-            case condition_type::ne:
+            case compare_type::ne:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value != expr->value_;
                 });
-            case condition_type::gt:
+            case compare_type::gt:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value > expr->value_;
                 });
-            case condition_type::gte:
+            case compare_type::gte:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value >= expr->value_;
                 });
-            case condition_type::lt:
+            case compare_type::lt:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value < expr->value_;
                 });
-            case condition_type::lte:
+            case compare_type::lte:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                     return value && value <= expr->value_;
                 });
-            case condition_type::regex:
+            case compare_type::regex:
                 return std::make_unique<simple_predicate>(context, [&expr](const components::document::document_ptr& document) {
                     auto value = get_value_from_document(document, expr->key_);
                    return value && value->type() == document::impl::value_type::string &&
@@ -55,13 +56,10 @@ namespace services::collection::operators::predicates {
             default:
                 break;
         }
+        */
         return std::make_unique<simple_predicate>(context, [](const components::document::document_ptr&) {
             return true;
         });
-    }
-
-    predicate_ptr create_simple_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond) {
-        return create_simple_predicate(context, cond->condition_);
     }
 
 } // namespace services::operators::predicates

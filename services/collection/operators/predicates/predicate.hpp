@@ -3,8 +3,7 @@
 #include <services/collection/collection.hpp>
 #include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
-#include <components/ql/expr.hpp>
-#include <components/ql/find.hpp>
+#include <components/expressions/compare_expression.hpp>
 
 namespace services::collection::operators::predicates {
 
@@ -30,7 +29,6 @@ namespace services::collection::operators::predicates {
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
 
-    predicate_ptr create_predicate(context_collection_t* context, const components::ql::expr_ptr& expr);
-    predicate_ptr create_predicate(context_collection_t* context, const components::ql::find_statement_ptr& cond);
+    predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr);
 
 } // namespace services::collection::operators::predicates
