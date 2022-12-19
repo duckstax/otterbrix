@@ -1,9 +1,9 @@
 #pragma once
 
-#include <services/collection/collection.hpp>
 #include <components/document/document.hpp>
-#include <components/document/wrapper_value.hpp>
 #include <components/expressions/compare_expression.hpp>
+#include <components/ql/ql_param_statement.hpp>
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators::predicates {
 
@@ -16,13 +16,15 @@ namespace services::collection::operators::predicates {
         predicate& operator=(const predicate&) = delete;
         virtual ~predicate() = default;
 
-        bool check(const components::document::document_ptr& document);
+        bool check(const components::document::document_ptr& document,
+                   const components::ql::storage_parameters& parameters);
 
     protected:
         context_collection_t* context_;
 
     private:
-        virtual bool check_impl(const components::document::document_ptr& document) = 0;
+        virtual bool check_impl(const components::document::document_ptr& document,
+                                const components::ql::storage_parameters& parameters) = 0;
     };
 
     using predicate_ptr = std::unique_ptr<predicate>;

@@ -9,8 +9,9 @@ namespace services::collection::operators::predicates {
     predicate::predicate(context_collection_t* context)
         : context_(context) {}
 
-    bool predicate::check(const components::document::document_ptr& document) {
-        return check_impl(document);
+    bool predicate::check(const components::document::document_ptr& document,
+                          const components::ql::storage_parameters& parameters) {
+        return check_impl(document, parameters);
     }
 
     document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key) {
