@@ -11,10 +11,10 @@ namespace services::collection::operators::predicates {
                          std::function<bool(const components::document::document_ptr&,
                                             const components::ql::storage_parameters&)> func);
 
+    private:
         bool check_impl(const components::document::document_ptr& document,
                         const components::ql::storage_parameters& parameters) final;
 
-    private:
         std::function<bool(const components::document::document_ptr&,
                            const components::ql::storage_parameters&)> func_;
     };

@@ -101,7 +101,7 @@ namespace services::collection::operators::predicates {
                                                               } else {
                                                                   auto value = get_value_from_document(document, expr->key());
                                                                   return value && value->type() == document::impl::value_type::string &&
-                                                                         std::regex_match(to_string(*get_value_from_document(document, expr->key())).data(),
+                                                                         std::regex_match(to_string(*value).data(),
                                                                                           std::regex(fmt::format(".*{}.*", to_string(it->second))));
                                                               }
                                                           });
