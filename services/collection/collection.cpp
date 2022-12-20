@@ -86,37 +86,37 @@ namespace services::collection {
     }
 
     auto collection_t::find(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
-        debug(log_, "collection::find : {}", name_);
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
-        } else {
-            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::unlimit());
-            searcher->on_execute(no_transaction_context);
-            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-            if (searcher->output()) {
-                for (const auto &document : searcher->output()->documents()) {
-                    result.first->second->append(document_view_t(document));
-                }
-            }
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
-        }
+//        debug(log_, "collection::find : {}", name_);
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
+//        } else {
+//            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::unlimit());
+//            searcher->on_execute(no_transaction_context);
+//            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+//            if (searcher->output()) {
+//                for (const auto &document : searcher->output()->documents()) {
+//                    result.first->second->append(document_view_t(document));
+//                }
+//            }
+//            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
+//        }
     }
 
     void collection_t::find_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) {
-        debug(log_, "collection::find_one : {}", name_);
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
-        } else {
-            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::limit_one());
-            searcher->on_execute(no_transaction_context);
-            if (searcher->output() && !searcher->output()->documents().empty()) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(searcher->output()->documents().at(0))));
-            } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
-            }
-        }
+//        debug(log_, "collection::find_one : {}", name_);
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
+//        } else {
+//            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::limit_one());
+//            searcher->on_execute(no_transaction_context);
+//            if (searcher->output() && !searcher->output()->documents().empty()) {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(searcher->output()->documents().at(0))));
+//            } else {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
+//            }
+//        }
     }
 
     auto collection_t::delete_one(const session_id_t& session, const components::ql::find_statement_ptr& cond) -> void {
@@ -169,46 +169,46 @@ namespace services::collection {
     }
 
     void collection_t::delete_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const operators::predicates::limit_t &limit) {
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
-        } else {
-            operators::operator_delete deleter(view());
-            deleter.set_children(operators::create_searcher(view(), cond->condition_, limit));
-            deleter.on_execute(transaction_context);
-            if (deleter.modified()) {
-                result_delete result(std::move(deleter.modified()->documents()));
-                send_delete_to_disk_(session, result);
-                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
-            } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
-            }
-        }
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
+//        } else {
+//            operators::operator_delete deleter(view());
+//            deleter.set_children(operators::create_searcher(view(), cond->condition_, limit));
+//            deleter.on_execute(transaction_context);
+//            if (deleter.modified()) {
+//                result_delete result(std::move(deleter.modified()->documents()));
+//                send_delete_to_disk_(session, result);
+//                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
+//            } else {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
+//            }
+//        }
     }
 
     void collection_t::update_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::ql::find_statement_ptr& cond, const document_ptr& update,
                                bool upsert, const operators::predicates::limit_t &limit) {
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
-        } else {
-            operators::operator_update updater(view(), update);
-            updater.set_children(operators::create_searcher(view(), cond->condition_, limit));
-            updater.on_execute(transaction_context);
-            if (updater.modified()) {
-                result_update result(std::move(updater.modified()->documents()), std::move(updater.no_modified()->documents()));
-                send_update_to_disk_(session, result);
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
-            } else if (upsert) {
-                result_update result(get_document_id(update), view()->resource());
-                std::pmr::vector<document_ptr> documents(context_->resource());
-                documents.push_back(make_upsert_document(update));
-                insert_(transaction_context, documents);
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
-            } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
-            }
-        }
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+//        } else {
+//            operators::operator_update updater(view(), update);
+//            updater.set_children(operators::create_searcher(view(), cond->condition_, limit));
+//            updater.on_execute(transaction_context);
+//            if (updater.modified()) {
+//                result_update result(std::move(updater.modified()->documents()), std::move(updater.no_modified()->documents()));
+//                send_update_to_disk_(session, result);
+//                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
+//            } else if (upsert) {
+//                result_update result(get_document_id(update), view()->resource());
+//                std::pmr::vector<document_ptr> documents(context_->resource());
+//                documents.push_back(make_upsert_document(update));
+//                insert_(transaction_context, documents);
+//                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
+//            } else {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+//            }
+//        }
     }
 
     void collection_t::send_update_to_disk_(const session_id_t& session, const result_update& result) {

@@ -17,14 +17,14 @@ namespace services::collection::operators::predicates {
         virtual ~predicate() = default;
 
         bool check(const components::document::document_ptr& document,
-                   const components::ql::storage_parameters& parameters);
+                   const components::ql::storage_parameters* parameters);
 
     protected:
         context_collection_t* context_;
 
     private:
         virtual bool check_impl(const components::document::document_ptr& document,
-                                const components::ql::storage_parameters& parameters) = 0;
+                                const components::ql::storage_parameters* parameters) = 0;
     };
 
     using predicate_ptr = std::unique_ptr<predicate>;

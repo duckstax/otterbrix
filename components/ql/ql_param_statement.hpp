@@ -9,6 +9,11 @@ namespace components::ql {
     using expr_value_t = ::document::wrapper_value_t;
     using storage_parameters = std::unordered_map<core::parameter_id_t, expr_value_t>;
 
+    template<class Value>
+    void add_parameter(storage_parameters &storage, core::parameter_id_t id, Value value) {
+        storage.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
+    }
+
 
     class ql_param_statement_t : public ql_statement_t {
     public:
@@ -20,7 +25,7 @@ namespace components::ql {
 
         template<class Value>
         void add_parameter(core::parameter_id_t id, Value value) {
-            values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
+            add_parameter(values_, id, value);
         }
 
         template<class Value>
