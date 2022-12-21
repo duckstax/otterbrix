@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/index/single_field_index.hpp>
 #include <services/collection/operators/scan/full_scan.hpp>
 #include <services/collection/operators/scan/index_scan.hpp>
@@ -9,7 +10,10 @@
 #include <services/collection/operators/predicates/predicate.hpp>
 #include "test_operator_generaty.hpp"
 
+using namespace components::expressions;
 using namespace services::collection::operators;
+using key = components::expressions::key_t;
+using components::ql::add_parameter;
 
 TEST_CASE("operator::insert") {
     auto collection = init_collection();
@@ -20,102 +24,163 @@ TEST_CASE("operator::full_scan") {
     auto collection = init_collection();
 
     SECTION("find::eq") {
-        auto cond = parse_find_condition(R"({"count": {"$eq": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::eq,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 1);
     }
 
     SECTION("find::ne") {
-        auto cond = parse_find_condition(R"({"count": {"$ne": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::ne,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 99);
     }
 
     SECTION("find::gt") {
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 10);
     }
 
     SECTION("find::gte") {
-        auto cond = parse_find_condition(R"({"count": {"$gte": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gte,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 11);
     }
 
     SECTION("find::lt") {
-        auto cond = parse_find_condition(R"({"count": {"$lt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 89);
     }
 
     SECTION("find::lte") {
-        auto cond = parse_find_condition(R"({"count": {"$lte": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lte,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
                        predicates::limit_t::unlimit());
-        scan.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 90);
     }
 
     SECTION("find_one") {
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t(1));
-        scan.on_execute(nullptr);
+                       predicates::limit_t::limit_one());
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        scan.on_execute(&transaction_context);
         REQUIRE(scan.output()->size() == 1);
     }
 }
+
 
 TEST_CASE("operator::delete") {
     auto collection = init_collection();
 
     SECTION("find::delete") {
         REQUIRE(d(collection)->size_test() == 100);
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          predicates::limit_t::unlimit()));
-        delete_.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        delete_.on_execute(&transaction_context);
         REQUIRE(d(collection)->size_test() == 90);
     }
 
     SECTION("find::delete_one") {
         REQUIRE(d(collection)->size_test() == 100);
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t(1)));
-        delete_.on_execute(nullptr);
+                                                         predicates::limit_t::limit_one()));
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        delete_.on_execute(&transaction_context);
         REQUIRE(d(collection)->size_test() == 99);
     }
 
     SECTION("find::delete_limit") {
         REQUIRE(d(collection)->size_test() == 100);
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          predicates::limit_t(5)));
-        delete_.on_execute(nullptr);
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        planner::transaction_context_t transaction_context(&parameters);
+        delete_.on_execute(&transaction_context);
         REQUIRE(d(collection)->size_test() == 95);
     }
 }
@@ -125,14 +190,25 @@ TEST_CASE("operator::update") {
     auto collection = init_collection();
 
     SECTION("find::update") {
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(2), 999);
+        planner::transaction_context_t transaction_context(&parameters);
+
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
+        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
+                                                  compare_type::eq,
+                                                  key("count"),
+                                                  core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
@@ -140,25 +216,36 @@ TEST_CASE("operator::update") {
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          predicates::limit_t::unlimit()));
-        update_.on_execute(nullptr);
+        update_.on_execute(&transaction_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 10);
         }
     }
 
     SECTION("find::update_one") {
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(2), 999);
+        planner::transaction_context_t transaction_context(&parameters);
+
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
+        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
+                                                  compare_type::eq,
+                                                  key("count"),
+                                                  core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
@@ -166,25 +253,36 @@ TEST_CASE("operator::update") {
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          predicates::limit_t(1)));
-        update_.on_execute(nullptr);
+        update_.on_execute(&transaction_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 1);
         }
     }
 
     SECTION("find::update_limit") {
-        auto cond = parse_find_condition(R"({"count": {"$gt": 90}})");
-        auto cond_check = parse_find_condition(R"({"count": {"$eq": 999}})");
+        components::ql::storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(2), 999);
+        planner::transaction_context_t transaction_context(&parameters);
+
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
+        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
+                                                  compare_type::eq,
+                                                  key("count"),
+                                                  core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
@@ -192,21 +290,22 @@ TEST_CASE("operator::update") {
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          predicates::limit_t(5)));
-        update_.on_execute(nullptr);
+        update_.on_execute(&transaction_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
                            predicates::limit_t::unlimit());
-            scan.on_execute(nullptr);
+            scan.on_execute(&transaction_context);
             REQUIRE(scan.output()->size() == 5);
         }
     }
 }
 
+
 TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
-    keys.push_back(components::index::key_t("count"));
+    keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
     fill_collection(collection);
 
@@ -259,6 +358,7 @@ TEST_CASE("operator::index_scan") {
     }
 }
 
+
 TEST_CASE("operator::transfer_scan") {
     auto collection = init_collection();
 
@@ -281,10 +381,11 @@ TEST_CASE("operator::transfer_scan") {
     }
 }
 
+
 TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
-    keys.push_back(components::index::key_t("count"));
+    keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
     fill_collection(collection);
 

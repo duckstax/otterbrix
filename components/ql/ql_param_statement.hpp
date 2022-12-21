@@ -25,7 +25,7 @@ namespace components::ql {
 
         template<class Value>
         void add_parameter(core::parameter_id_t id, Value value) {
-            add_parameter(values_, id, value);
+            components::ql::add_parameter(values_, id, value);
         }
 
         template<class Value>
