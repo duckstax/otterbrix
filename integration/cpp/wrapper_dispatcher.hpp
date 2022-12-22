@@ -15,6 +15,7 @@
 #include <components/log/log.hpp>
 #include <components/session/session.hpp>
 #include <components/ql/index.hpp>
+#include <components/ql/find.hpp>
 
 #include <services/collection/result.hpp>
 #include <services/database/result_database.hpp>
@@ -34,12 +35,12 @@ namespace duck_charmer {
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
         auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one&;
         auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many&;
-        auto find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t*;
-        auto find_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one&;
-        auto delete_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
-        auto delete_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete&;
-        auto update_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
-        auto update_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update&;
+        auto find(session_id_t &session, const components::ql::find_statement_ptr &condition) -> components::cursor::cursor_t*;
+        auto find_one(session_id_t &session, const components::ql::find_statement_ptr &condition) -> result_find_one&;
+        auto delete_one(session_id_t &session, const components::ql::find_statement_ptr &condition) -> result_delete&;
+        auto delete_many(session_id_t &session, const components::ql::find_statement_ptr &condition) -> result_delete&;
+        auto update_one(session_id_t &session, const components::ql::find_statement_ptr &condition, document_ptr update, bool upsert) -> result_update&;
+        auto update_many(session_id_t &session, const components::ql::find_statement_ptr &condition, document_ptr update, bool upsert) -> result_update&;
         auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index;
 

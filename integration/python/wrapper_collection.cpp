@@ -97,11 +97,11 @@ namespace duck_charmer {
     wrapper_result_update wrapper_collection::update_one(py::object cond, py::object fields, bool upsert) {
         trace(log_, "wrapper_collection::update_one");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
-            auto condition = to_document(cond);
+            auto condition = to_statement(cond);
             auto update = to_document(fields);
             generate_document_id_if_not_exists(update);
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->update_one(session_tmp, database_, name_, std::move(condition), std::move(update), upsert);
+            auto result = ptr_->update_one(session_tmp, database_, name_, components::ql::make_find_statement(condition), std::move(update), upsert);
             debug(log_, "wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
             return wrapper_result_update(result);
         }

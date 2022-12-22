@@ -1,6 +1,5 @@
 #pragma once
 
-#include "components/ql/expr.hpp"
 #include "forward.hpp"
 
 namespace components::ql::aggregate {

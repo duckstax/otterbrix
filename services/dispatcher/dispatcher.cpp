@@ -5,7 +5,6 @@
 
 #include <components/document/document.hpp>
 #include <components/ql/statements.hpp>
-#include <components/ql/parser.hpp>
 
 #include <services/collection/route.hpp>
 #include <services/database/database.hpp>

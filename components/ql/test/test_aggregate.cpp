@@ -68,9 +68,9 @@ TEST_CASE("aggregate::group") {
 
 TEST_CASE("aggregate::sort") {
     sort_t sort;
-    append_sort(sort, ql::key_t("name"), sort_order::asc);
-    append_sort(sort, ql::key_t("count"), sort_order::desc);
-    append_sort(sort, ql::key_t("_id"), sort_order::asc);
+    append_sort(sort, key("name"), sort_order::asc);
+    append_sort(sort, key("count"), sort_order::desc);
+    append_sort(sort, key("_id"), sort_order::asc);
     REQUIRE(debug(sort) == R"_($sort: {name: 1, count: -1, _id: 1})_");
 }
 
@@ -97,8 +97,8 @@ TEST_CASE("aggregate") {
     SECTION("aggregate::only_sort") {
         aggregate_statement aggregate("database", "collection");
         sort_t sort;
-        append_sort(sort, ql::key_t("name"), sort_order::asc);
-        append_sort(sort, ql::key_t("count"), sort_order::desc);
+        append_sort(sort, key("name"), sort_order::asc);
+        append_sort(sort, key("count"), sort_order::desc);
         aggregate.append(operator_type::sort, std::move(sort));
         REQUIRE(debug(aggregate) == R"_($aggregate: {$sort: {name: 1, count: -1}})_");
     }
@@ -118,8 +118,8 @@ TEST_CASE("aggregate") {
         aggregate.append(operator_type::group, std::move(group));
 
         sort_t sort;
-        append_sort(sort, ql::key_t("name"), sort_order::asc);
-        append_sort(sort, ql::key_t("count"), sort_order::desc);
+        append_sort(sort, key("name"), sort_order::asc);
+        append_sort(sort, key("count"), sort_order::desc);
         aggregate.append(operator_type::sort, std::move(sort));
 
         REQUIRE(debug(aggregate) == R"_($aggregate: {)_"
