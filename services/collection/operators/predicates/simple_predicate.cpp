@@ -1,5 +1,6 @@
 #include "simple_predicate.hpp"
 #include <regex>
+#include <services/collection/operators/operator.hpp>
 
 namespace services::collection::operators::predicates {
 

@@ -29,8 +29,6 @@ namespace services::collection::operators::predicates {
 
     using predicate_ptr = std::unique_ptr<predicate>;
 
-    document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key);
-
     predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr);
 
 } // namespace services::collection::operators::predicates

@@ -32,4 +32,9 @@ namespace components::ql {
         return aggregate_operator_.type(index);
     }
 
+
+    aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection) {
+        return std::make_unique<aggregate_statement>(database, collection);
+    }
+
 } // namespace components::ql

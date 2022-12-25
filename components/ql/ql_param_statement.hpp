@@ -14,6 +14,8 @@ namespace components::ql {
         storage.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
     }
 
+    const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id);
+
 
     class ql_param_statement_t : public ql_statement_t {
     public:

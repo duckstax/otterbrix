@@ -39,4 +39,13 @@ namespace components::ql {
         values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
     }
 
+    const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id) {
+        auto it = storage->find(id);
+        if (it != storage->end()) {
+            return it->second;
+        }
+        static const expr_value_t null_value = expr_value_t{nullptr};
+        return null_value;
+    }
+
 } // namespace components::ql

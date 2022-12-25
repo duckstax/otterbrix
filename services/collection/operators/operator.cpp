@@ -60,4 +60,8 @@ namespace services::collection::operators {
         , state_(read_write_operator_state::pending) {
     }
 
+    ::document::wrapper_value_t get_value_from_document(const components::document::document_ptr &doc, const components::expressions::key_t &key) {
+        return ::document::wrapper_value_t(components::document::document_view_t(doc).get_value(key.as_string()));
+    }
+
 } // namespace services::collection::operators

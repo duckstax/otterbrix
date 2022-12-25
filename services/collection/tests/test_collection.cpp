@@ -2,7 +2,6 @@
 #include <services/database/database.hpp>
 #include <document/mutable/mutable_dict.h>
 #include <document/mutable/mutable_array.h>
-#include <parser/parser.hpp>
 #include <catch2/catch.hpp>
 
 #include <core/non_thread_scheduler/scheduler_test.hpp>

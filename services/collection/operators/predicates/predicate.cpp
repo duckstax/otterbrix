@@ -4,18 +4,12 @@
 
 namespace services::collection::operators::predicates {
 
-    using components::ql::condition_type;
-
     predicate::predicate(context_collection_t* context)
         : context_(context) {}
 
     bool predicate::check(const components::document::document_ptr& document,
                           const components::ql::storage_parameters* parameters) {
         return check_impl(document, parameters);
-    }
-
-    document::wrapper_value_t get_value_from_document(const components::document::document_ptr& document, const components::ql::key_t& key) {
-        return document::wrapper_value_t(components::document::document_view_t(document).get_value(key.as_string()));
     }
 
     predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr) {

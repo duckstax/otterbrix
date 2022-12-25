@@ -63,4 +63,9 @@ namespace components::ql {
         return stream;
     }
 
+
+    using aggregate_statement_ptr = std::unique_ptr<aggregate_statement>;
+
+    aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection);
+
 } // namespace components::ql

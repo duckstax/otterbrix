@@ -13,10 +13,10 @@ namespace services::collection::operators::aggregate {
         if (left_ && left_->output()) {
             const auto &documents = left_->output()->documents();
             auto max = std::max_element(documents.cbegin(), documents.cend(), [&](const document_ptr &doc1, const document_ptr &doc2) {
-                return components::ql::get_value(doc1, key_) < components::ql::get_value(doc2, key_);
+                return get_value_from_document(doc1, key_) < get_value_from_document(doc2, key_);
             });
             if (max != documents.cend()) {
-                return components::document::make_document(key_result_, *components::ql::get_value(*max, key_));
+                return components::document::make_document(key_result_, *get_value_from_document(*max, key_));
             }
         }
         return components::document::make_document(key_result_, 0);
