@@ -64,7 +64,7 @@ namespace msgpack {
                     o.pack(v.database_);
                     o.pack(v.collection_);
                     o.pack(static_cast<char>(v.index_type_));
-                    o.pack(v.keys_); //todo
+                    //o.pack(v.keys_); //todo
                     return o;
                 }
             };

@@ -360,7 +360,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::find(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, actor_zeta::address_t address) {
+    void dispatcher_t::find(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::find: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
 
         key_collection_t key(statement->database_, statement->collection_);
@@ -383,7 +383,7 @@ namespace services::dispatcher {
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::find_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, actor_zeta::address_t address) {
+    void dispatcher_t::find_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::find_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
@@ -401,7 +401,7 @@ namespace services::dispatcher {
         session_to_address_.erase(session);
     }
 
-    void dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, actor_zeta::address_t address) {
+    void dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::delete_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
@@ -413,7 +413,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, actor_zeta::address_t address) {
+    void dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::delete_many: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
@@ -443,7 +443,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::update_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+    void dispatcher_t::update_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
@@ -455,7 +455,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::update_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+    void dispatcher_t::update_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
@@ -643,32 +643,32 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::insert_many), session, std::move(database_name), std::move(collection_name), std::move(documents), current_message()->sender());
     }
 
-    void manager_dispatcher_t::find(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement) {
+    void manager_dispatcher_t::find(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement) {
         trace(log_, "manager_dispatcher_t::find session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::find), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::find_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement) {
+    void manager_dispatcher_t::find_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement) {
         trace(log_, "manager_dispatcher_t::find_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::find_one), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement) {
+    void manager_dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement) {
         trace(log_, "manager_dispatcher_t::delete_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_one), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement) {
+    void manager_dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement) {
         trace(log_, "manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_many), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, components::document::document_ptr& update, bool upsert) {
+    void manager_dispatcher_t::update_one(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, components::document::document_ptr& update, bool upsert) {
         trace(log_, "manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_one), session, std::move(statement), std::move(update), upsert, current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr statement, components::document::document_ptr& update, bool upsert) {
+    void manager_dispatcher_t::update_many(components::session::session_id_t& session, components::ql::aggregate_statement_ptr& statement, components::document::document_ptr& update, bool upsert) {
         trace(log_, "manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_many), session, std::move(statement), std::move(update), upsert, current_message()->sender());
     }
