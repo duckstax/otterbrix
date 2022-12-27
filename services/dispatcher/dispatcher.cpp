@@ -367,9 +367,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, logic_plan);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, logic_plan.first, logic_plan.second);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_finish), session, result_find(resource_));
         }
@@ -391,9 +390,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, logic_plan);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, logic_plan.first, logic_plan.second);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_one_finish), session, result_find_one());
         }
@@ -411,9 +409,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, delete_one_t(database_name, collection, condition)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, logic_plan);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, logic_plan.first, logic_plan.second);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
         }
@@ -425,9 +422,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, delete_many_t(database_name, collection, condition)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, logic_plan);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, logic_plan.first, logic_plan.second);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
         }
@@ -457,9 +453,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, update_one_t(database_name, collection, condition, update, upsert)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, logic_plan, std::move(update), upsert);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, logic_plan.first, logic_plan.second, std::move(update), upsert);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
         }
@@ -471,9 +466,8 @@ namespace services::dispatcher {
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, update_many_t(database_name, collection, condition, update, upsert)));
-            auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
-            auto logic_plan = components::translator::ql_translator(resource_, ql.get());
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, logic_plan, std::move(update), upsert);
+            auto logic_plan = create_logic_plan(statement);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, logic_plan.first, logic_plan.second, std::move(update), upsert);
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
         }
@@ -568,6 +562,14 @@ namespace services::dispatcher {
             return true;
         }
         return false;
+    }
+
+    std::pair<components::logical_plan::node_ptr, storage_parameters> dispatcher_t::create_logic_plan(
+            components::ql::aggregate_statement_raw_ptr statement) {
+        auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
+        //todo: cache logical plans
+        auto logic_plan = components::translator::ql_translator(resource_, ql.get());
+        return {logic_plan, ql->take_parameters()};
     }
 
 

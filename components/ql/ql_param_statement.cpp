@@ -9,6 +9,10 @@ namespace components::ql {
         return values_;
     }
 
+    storage_parameters ql_param_statement_t::take_parameters() {
+        return std::move(values_);
+    }
+
     auto ql_param_statement_t::next_id() -> core::parameter_id_t {
         auto tmp = counter_;
         counter_ += 1;

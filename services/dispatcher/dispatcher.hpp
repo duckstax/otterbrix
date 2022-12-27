@@ -7,13 +7,14 @@
 #include <actor-zeta/detail/memory_resource.hpp>
 
 #include <core/spinlock/spinlock.hpp>
+#include <core/excutor.hpp>
 
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/log/log.hpp>
 #include <components/ql/index.hpp>
 #include <components/ql/aggregate.hpp>
-#include <core/excutor.hpp>
+#include <components/logical_plan/node.hpp>
 
 #include <services/collection/result.hpp>
 #include <services/database/forward.hpp>
@@ -100,6 +101,9 @@ namespace services::dispatcher {
         components::session::session_id_t load_session_;
         services::wal::id_t last_wal_id_ {0};
         std::size_t load_count_answers_ {0};
+
+        std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> create_logic_plan(
+                components::ql::aggregate_statement_raw_ptr statement);
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;

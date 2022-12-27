@@ -22,6 +22,7 @@ namespace components::ql {
         ql_param_statement_t(statement_type type, database_name_t database, collection_name_t collection);
 
         auto parameters() -> const storage_parameters&;
+        auto take_parameters() -> storage_parameters;
 
         auto next_id() -> core::parameter_id_t;
 
