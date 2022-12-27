@@ -3,8 +3,8 @@ project(test_ottergon)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
-        test_collection.cpp
-        test_save_load.cpp
+#        test_collection.cpp
+#        test_save_load.cpp
 )
 
 find_package(OpenSSL REQUIRED)

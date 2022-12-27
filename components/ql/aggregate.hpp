@@ -65,6 +65,7 @@ namespace components::ql {
 
 
     using aggregate_statement_ptr = std::unique_ptr<aggregate_statement>;
+    using aggregate_statement_raw_ptr = aggregate_statement*;
 
     aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection);
 

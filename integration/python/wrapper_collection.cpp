@@ -102,7 +102,7 @@ namespace duck_charmer {
             auto update = to_document(fields);
             generate_document_id_if_not_exists(update);
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->update_one(session_tmp, std::move(statement), std::move(update), upsert);
+            auto result = ptr_->update_one(session_tmp, statement.release(), std::move(update), upsert);
             debug(log_, "wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
             return wrapper_result_update(result);
         }
@@ -117,7 +117,7 @@ namespace duck_charmer {
             auto update = to_document(fields);
             generate_document_id_if_not_exists(update);
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->update_many(session_tmp, std::move(statement), std::move(update), upsert);
+            auto result = ptr_->update_many(session_tmp, statement.release(), std::move(update), upsert);
             debug(log_, "wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
             return wrapper_result_update(result);
         }
@@ -130,7 +130,7 @@ namespace duck_charmer {
             auto statement = components::ql::make_aggregate_statement(database_, name_);
             to_statement(cond, statement.get());
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->find(session_tmp, std::move(statement));
+            auto result = ptr_->find(session_tmp, statement.release());
             debug(log_, "wrapper_collection::find {} records", result->size());
             return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result));
         }
@@ -144,7 +144,7 @@ namespace duck_charmer {
             auto statement = components::ql::make_aggregate_statement(database_, name_);
             to_statement(cond, statement.get());
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->find_one(session_tmp, std::move(statement));
+            auto result = ptr_->find_one(session_tmp, statement.release());
             debug(log_, "wrapper_collection::find_one {}", result.is_find());
             return from_document(*result);
         }
@@ -158,7 +158,7 @@ namespace duck_charmer {
             auto statement = components::ql::make_aggregate_statement(database_, name_);
             to_statement(cond, statement.get());
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->delete_one(session_tmp, std::move(statement));
+            auto result = ptr_->delete_one(session_tmp, statement.release());
             debug(log_, "wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
             return wrapper_result_delete(result);
         }
@@ -171,7 +171,7 @@ namespace duck_charmer {
             auto statement = components::ql::make_aggregate_statement(database_, name_);
             to_statement(cond, statement.get());
             auto session_tmp = duck_charmer::session_id_t();
-            auto result = ptr_->delete_many(session_tmp, std::move(statement));
+            auto result = ptr_->delete_many(session_tmp, statement.release());
             debug(log_, "wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
             return wrapper_result_delete(result);
         }
