@@ -1,22 +1,23 @@
 #pragma once
 
 #include <collection/operators/operator.hpp>
-#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 
-    class aggregation final {
+    class aggregation final : public read_only_operator_t {
     public:
-        aggregation() = delete;
-        aggregation(const aggregation&) = delete;
-        aggregation& operator=(const aggregation&) = delete;
-        ~aggregation() = delete;
-        aggregation(context_collection_t* ptr);
+        explicit aggregation(context_collection_t* context);
 
-        void on_execute(components::ql::find_statement& cond, components::cursor::sub_cursor_t* sub_cursor);
+        void set_match(operator_ptr&& match);
+        void set_group(operator_ptr&& group);
+        void set_sort(operator_ptr&& sort);
 
     private:
-        context_collection_t* context_;
+        operator_ptr match_{nullptr};
+        operator_ptr group_{nullptr};
+        operator_ptr sort_{nullptr};
+
+        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
     };
 
 } // namespace services::collection::operators

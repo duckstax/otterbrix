@@ -5,6 +5,8 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_match(context_collection_t* context, const components::logical_plan::node_ptr& node);
+    operators::operator_ptr create_plan_match(context_collection_t* context,
+            const components::logical_plan::node_ptr& node,
+            operators::predicates::limit_t limit);
 
 }

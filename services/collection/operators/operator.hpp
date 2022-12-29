@@ -42,6 +42,7 @@ namespace services::collection::operators {
         const operator_write_data_ptr& modified() const;
         const operator_write_data_ptr& no_modified() const;
         void set_children(ptr left, ptr right = nullptr);
+        void take_output(ptr &src);
         void clear(); //todo: replace by copy
 
     protected:

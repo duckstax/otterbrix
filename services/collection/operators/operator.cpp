@@ -42,6 +42,10 @@ namespace services::collection::operators {
         right_ = std::move(right);
     }
 
+    void operator_t::take_output(ptr &src) {
+        output_ = std::move(src->output_);
+    }
+
     void operator_t::clear() {
         state_ = operator_state::created;
         left_ = nullptr;

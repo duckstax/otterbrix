@@ -1,7 +1,7 @@
 #include "collection.hpp"
 #include <core/system_command.hpp>
 #include <services/disk/route.hpp>
-#include <services/collection/operators/scan/scan.hpp>
+#include <services/collection/planner/create_plan.hpp>
 #include <services/collection/operators/scan/primary_key_scan.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_delete.hpp>
@@ -85,30 +85,40 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::find(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters) -> void {
+    auto collection_t::find(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters) -> void {
         debug(log_, "collection::find : {}", name_);
-//        auto dispatcher = current_message()->sender();
-//        if (dropped_) {
-//            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
-//        } else {
-//            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::unlimit());
-//            searcher->on_execute(no_transaction_context);
-//            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-//            if (searcher->output()) {
-//                for (const auto &document : searcher->output()->documents()) {
-//                    result.first->second->append(document_view_t(document));
-//                }
-//            }
-//            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
-//        }
+        auto dispatcher = current_message()->sender();
+        if (dropped_) {
+            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
+        } else {
+            auto plan = planner::create_plan(view(), logic_plan, operators::predicates::limit_t::unlimit());
+            if (!plan) {
+                actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
+            }
+            planner::transaction_context_t transaction_context{&parameters};
+            plan->on_execute(&transaction_context);
+            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+            if (plan->output()) {
+                for (const auto &document : plan->output()->documents()) {
+                    result.first->second->append(document_view_t(document));
+                }
+            }
+            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
+        }
     }
 
-    void collection_t::find_one(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters) {
+    auto collection_t::find_one(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters) -> void {
         debug(log_, "collection::find_one : {}", name_);
-//        auto dispatcher = current_message()->sender();
-//        if (dropped_) {
-//            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
-//        } else {
+        auto dispatcher = current_message()->sender();
+        if (dropped_) {
+            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
+        } else {
 //            auto searcher = operators::create_searcher(view(), cond->condition_, operators::predicates::limit_t::limit_one());
 //            searcher->on_execute(no_transaction_context);
 //            if (searcher->output() && !searcher->output()->documents().empty()) {
@@ -116,25 +126,41 @@ namespace services::collection {
 //            } else {
 //                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
 //            }
-//        }
+        }
     }
 
-    auto collection_t::delete_one(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters) -> void {
+    auto collection_t::delete_one(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters) -> void {
         debug(log_, "collection::delete_one : {}", name_);
         delete_(no_transaction_context, session, logic_plan, parameters, operators::predicates::limit_t::limit_one());
     }
 
-    auto collection_t::delete_many(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters) -> void {
+    auto collection_t::delete_many(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters) -> void {
         debug(log_, "collection::delete_many : {}", name_);
         delete_(no_transaction_context, session, logic_plan, parameters, operators::predicates::limit_t::unlimit());
     }
 
-    auto collection_t::update_one(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_one(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters,
+            const document_ptr& update,
+            bool upsert) -> void {
         debug(log_, "collection::update_one : {}", name_);
         update_(no_transaction_context, session, logic_plan, parameters, update, upsert, operators::predicates::limit_t::limit_one());
     }
 
-    auto collection_t::update_many(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters, const document_ptr& update, bool upsert) -> void {
+    auto collection_t::update_many(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters,
+            const document_ptr& update,
+            bool upsert) -> void {
         debug(log_, "collection::update_many : {}", name_);
         update_(no_transaction_context, session, logic_plan, parameters, update, upsert, operators::predicates::limit_t::unlimit());
     }
@@ -168,7 +194,7 @@ namespace services::collection {
         return true;
     }
 
-    void collection_t::delete_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters, const operators::predicates::limit_t &limit) {
+    void collection_t::delete_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit) {
 //        auto dispatcher = current_message()->sender();
 //        if (dropped_) {
 //            actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
@@ -186,7 +212,7 @@ namespace services::collection {
 //        }
     }
 
-    void collection_t::update_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, const components::ql::storage_parameters& parameters, const document_ptr& update,
+    void collection_t::update_(planner::transaction_context_t* transaction_context, const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update,
                                bool upsert, const operators::predicates::limit_t &limit) {
 //        auto dispatcher = current_message()->sender();
 //        if (dropped_) {

@@ -368,7 +368,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, logic_plan.first, logic_plan.second);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_finish), session, result_find(resource_));
@@ -392,7 +392,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             session_to_address_.emplace(session, session_t(std::move(address)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, logic_plan.first, logic_plan.second);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::find_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::find_one_finish), session, result_find_one());
@@ -412,7 +412,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, delete_one_t(database_name, collection, condition)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, logic_plan.first, logic_plan.second);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
@@ -426,7 +426,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, delete_many_t(database_name, collection, condition)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, logic_plan.first, logic_plan.second);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
@@ -458,7 +458,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, update_one_t(database_name, collection, condition, update, upsert)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, logic_plan.first, logic_plan.second, std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
@@ -472,7 +472,7 @@ namespace services::dispatcher {
         if (it_collection != collection_address_book_.end()) {
             //!make_session(session_to_address_, session, session_t(address, update_many_t(database_name, collection, condition, update, upsert)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, logic_plan.first, logic_plan.second, std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
