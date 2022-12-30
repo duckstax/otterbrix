@@ -101,66 +101,92 @@ TEST_CASE("python::test_collection") {
 
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find(session, database_name, collection_name, make_condition("countStr", "$regex", std::string("9$")));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{1});
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+//            ql->add_parameter(id_par{1}, std::string_view{"9$"});
+//            auto c = dispatcher->find(session, ql);
 //            REQUIRE(c->size() == 10);
 //            delete c;
 //        }
 
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find(session, database_name, collection_name, make_condition("$or", {
-//                                                                                                         make_dict("count", "$gt", 90),
-//                                                                                                         make_dict("countStr", "$regex", std::string("9$"))
-//                                                                                                     }));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
+//            expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1}));
+//            expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{2}));
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+//            ql->add_parameter(id_par{1}, 90);
+//            ql->add_parameter(id_par{2}, std::string_view{"9$"});
+//            auto c = dispatcher->find(session, ql);
 //            REQUIRE(c->size() == 18);
 //            delete c;
 //        }
 
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find(session, database_name, collection_name, make_condition("$and", {
-//                                                                                                        make_dict("$or", {
-//                                                                                                            make_dict("count", "$gt", 90),
-//                                                                                                            make_dict("countStr", "$regex", std::string("9$"))
-//                                                                                                        }),
-//                                                                                                        make_dict("count", "$lte", 30)
-//                                                                                                      }));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr_and = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
+//            auto expr_or = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
+//            expr_or->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1}));
+//            expr_or->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{2}));
+//            expr_and->append_child(expr_or);
+//            expr_and->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, id_par{3}));
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr_and)));
+//            ql->add_parameter(id_par{1}, 90);
+//            ql->add_parameter(id_par{2}, std::string_view{"9$"});
+//            ql->add_parameter(id_par{3}, 30);
+//            auto c = dispatcher->find(session, ql);
 //            REQUIRE(c->size() == 3);
 //            delete c;
 //        }
     }
 
-//    INFO("cursor") {
-//        auto session = duck_charmer::session_id_t();
-//        auto c = dispatcher->find(session, database_name, collection_name, make_document());
-//        REQUIRE(c->size() == 100);
-//        int count = 0;
-//        while (c->has_next()) {
-//            c->next();
-//            ++count;
-//        }
-//        REQUIRE(count == 100);
-//        delete c;
-//    }
+    INFO("cursor") {
+        auto session = duck_charmer::session_id_t();
+        auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+        auto c = dispatcher->find(session, ql);
+        REQUIRE(c->size() == 100);
+        int count = 0;
+        while (c->has_next()) {
+            c->next();
+            ++count;
+        }
+        REQUIRE(count == 100);
+        delete c;
+    }
 
-//    INFO("find_one") {
+    INFO("find_one") {
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("_id", "$eq", gen_id(1)));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+//            ql->add_parameter(id_par{1}, gen_id(1));
+//            auto c = dispatcher->find_one(session, ql);
 //            REQUIRE(c->get_long("count") == 1);
 //        }
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("count", "$eq", 10));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+//            ql->add_parameter(id_par{1}, 10);
+//            auto c = dispatcher->find_one(session, ql);
 //            REQUIRE(c->get_long("count") == 10);
 //        }
 //        {
 //            auto session = duck_charmer::session_id_t();
-//            auto c = dispatcher->find_one(session, database_name, collection_name, make_condition("$and", {
-//                                                                                                             make_dict("count", "$gt", 90),
-//                                                                                                             make_dict("countStr", "$regex", std::string("9$"))
-//                                                                                                         }));
+//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+//            auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
+//            expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1}));
+//            expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{2}));
+//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+//            ql->add_parameter(id_par{1}, 90);
+//            ql->add_parameter(id_par{2}, std::string_view{"9$"});
+//            auto c = dispatcher->find_one(session, ql);
 //            REQUIRE(c->get_long("count") == 99);
 //        }
-//    }
+    }
 }

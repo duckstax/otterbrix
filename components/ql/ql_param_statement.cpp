@@ -2,6 +2,26 @@
 
 namespace components::ql {
 
+    template<>
+    void add_parameter(storage_parameters &storage, core::parameter_id_t id, expr_value_t value) {
+        storage.emplace(id, value);
+    }
+
+    template<>
+    void add_parameter(storage_parameters &storage, core::parameter_id_t id, const ::document::impl::value_t* value) {
+        storage.emplace(id, expr_value_t(value));
+    }
+
+    const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id) {
+        auto it = storage->find(id);
+        if (it != storage->end()) {
+            return it->second;
+        }
+        static const expr_value_t null_value = expr_value_t{nullptr};
+        return null_value;
+    }
+
+
     ql_param_statement_t::ql_param_statement_t(statement_type type, database_name_t database, collection_name_t collection)
         : ql_statement_t(type, std::move(database), std::move(collection)) {}
 
@@ -20,36 +40,7 @@ namespace components::ql {
     }
 
     auto ql_param_statement_t::parameter(core::parameter_id_t id) const -> const expr_value_t& {
-        auto it = values_.find(id);
-        if (it != values_.end()) {
-            return it->second;
-        }
-        static expr_value_t null_(nullptr);
-        return null_;
-    }
-
-    template<>
-    void ql_param_statement_t::add_parameter(core::parameter_id_t id, expr_value_t value) {
-        values_.emplace(id, value);
-    }
-
-    template<>
-    void ql_param_statement_t::add_parameter(core::parameter_id_t id, const ::document::impl::value_t* value) {
-        values_.emplace(id, expr_value_t(value));
-    }
-
-    template<>
-    void ql_param_statement_t::add_parameter(core::parameter_id_t id, const std::string& value) {
-        values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
-    }
-
-    const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id) {
-        auto it = storage->find(id);
-        if (it != storage->end()) {
-            return it->second;
-        }
-        static const expr_value_t null_value = expr_value_t{nullptr};
-        return null_value;
+        return get_parameter(&values_, id);
     }
 
 } // namespace components::ql

@@ -572,7 +572,7 @@ namespace services::dispatcher {
 
     std::pair<components::logical_plan::node_ptr, storage_parameters> dispatcher_t::create_logic_plan(
             components::ql::aggregate_statement_raw_ptr statement) {
-        auto ql = std::unique_ptr<components::ql::aggregate_statement>(statement);
+        auto ql = components::ql::aggregate_statement_ptr(statement);
         //todo: cache logical plans
         auto logic_plan = components::translator::ql_translator(resource_, ql.get());
         return {logic_plan, ql->take_parameters()};

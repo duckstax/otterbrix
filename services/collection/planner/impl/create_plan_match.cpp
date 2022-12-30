@@ -12,8 +12,8 @@ namespace services::collection::planner::impl {
         if (node->expressions().empty()) {
             return std::make_unique<operators::transfer_scan>(context, std::move(limit));
         } else { //todo: other kinds scan
-            auto expr = reinterpret_cast<const components::expressions::compare_expression_ptr&>(node->expressions().at(0));
-            auto predicate = operators::predicates::create_predicate(context, expr);
+            auto expr = reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);
+            auto predicate = operators::predicates::create_predicate(context, *expr);
             return std::make_unique<operators::full_scan>(context, std::move(predicate), std::move(limit));
         }
     }

@@ -11,7 +11,7 @@ namespace services::collection::planner::impl {
             const components::logical_plan::node_ptr& node,
             operators::predicates::limit_t limit) {
         auto op = std::make_unique<operators::aggregation>(context);
-        for (const auto& child : node->children()) {
+        for (const components::logical_plan::node_ptr& child : node->children()) {
             switch (child->type()) {
             case node_type::match_t:
                 op->set_match(create_plan(context, child, limit));
