@@ -2,19 +2,38 @@
 #include <components/expressions/compare_expression.hpp>
 #include <services/collection/operators/scan/full_scan.hpp>
 #include <services/collection/operators/scan/transfer_scan.hpp>
+#include <services/collection/operators/merge/operator_merge.hpp>
 
 namespace services::collection::planner::impl {
+
+    operators::operator_ptr create_plan_match_(
+        context_collection_t* context,
+        const components::expressions::compare_expression_ptr& expr,
+        operators::predicates::limit_t limit) {
+        if (operators::merge::is_operator_merge(expr)) {
+            auto op = operators::merge::create_operator_merge(context, expr, limit);
+            operators::operator_ptr left = nullptr;
+            operators::operator_ptr right = nullptr;
+            left = create_plan_match_(context, expr->children().at(0), operators::predicates::limit_t::unlimit());
+            if (expr->children().size() > 1) { //todo: make if size > 2
+                right = create_plan_match_(context, expr->children().at(1), operators::predicates::limit_t::unlimit());
+            }
+            op->set_children(std::move(left), std::move(right));
+            return op;
+        }
+        auto predicate = operators::predicates::create_predicate(context, expr);
+        return std::make_unique<operators::full_scan>(context, std::move(predicate), limit);
+    }
 
     operators::operator_ptr create_plan_match(
             context_collection_t* context,
             const components::logical_plan::node_ptr& node,
             operators::predicates::limit_t limit) {
         if (node->expressions().empty()) {
-            return std::make_unique<operators::transfer_scan>(context, std::move(limit));
+            return std::make_unique<operators::transfer_scan>(context, limit);
         } else { //todo: other kinds scan
             auto expr = reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);
-            auto predicate = operators::predicates::create_predicate(context, *expr);
-            return std::make_unique<operators::full_scan>(context, std::move(predicate), std::move(limit));
+            return create_plan_match_(context, *expr, limit);
         }
     }
 
