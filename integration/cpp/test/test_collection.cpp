@@ -158,24 +158,24 @@ TEST_CASE("python::test_collection") {
     }
 
     INFO("find_one") {
-//        {
-//            auto session = duck_charmer::session_id_t();
-//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
-//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-//            ql->add_parameter(id_par{1}, gen_id(1));
-//            auto c = dispatcher->find_one(session, ql);
-//            REQUIRE(c->get_long("count") == 1);
-//        }
-//        {
-//            auto session = duck_charmer::session_id_t();
-//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
-//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-//            ql->add_parameter(id_par{1}, 10);
-//            auto c = dispatcher->find_one(session, ql);
-//            REQUIRE(c->get_long("count") == 10);
-//        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
+            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+            ql->add_parameter(id_par{1}, gen_id(1));
+            auto c = dispatcher->find_one(session, ql);
+            REQUIRE(c->get_long("count") == 1);
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
+            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+            ql->add_parameter(id_par{1}, 10);
+            auto c = dispatcher->find_one(session, ql);
+            REQUIRE(c->get_long("count") == 10);
+        }
 //        {
 //            auto session = duck_charmer::session_id_t();
 //            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};

@@ -125,13 +125,11 @@ namespace services::collection {
             }
             planner::transaction_context_t transaction_context{&parameters};
             plan->on_execute(&transaction_context);
-            auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-            if (plan->output()) {
-                for (const auto &document : plan->output()->documents()) {
-                    result.first->second->append(document_view_t(document));
-                }
+            if (plan->output() && !plan->output()->documents().empty()) {
+                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(plan->output()->documents().at(0))));
+            } else {
+                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
             }
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result.first->second.get());
         }
     }
 
