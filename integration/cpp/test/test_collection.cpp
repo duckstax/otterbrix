@@ -99,16 +99,16 @@ TEST_CASE("python::test_collection") {
             delete c;
         }
 
-//        {
-//            auto session = duck_charmer::session_id_t();
-//            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-//            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{1});
-//            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-//            ql->add_parameter(id_par{1}, std::string_view{"9$"});
-//            auto c = dispatcher->find(session, ql);
-//            REQUIRE(c->size() == 10);
-//            delete c;
-//        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{1});
+            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+            ql->add_parameter(id_par{1}, std::string_view{"9$"});
+            auto c = dispatcher->find(session, ql);
+            REQUIRE(c->size() == 10);
+            delete c;
+        }
 
 //        {
 //            auto session = duck_charmer::session_id_t();

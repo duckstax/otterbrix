@@ -102,8 +102,8 @@ namespace services::collection::operators::predicates {
                                                               } else {
                                                                   auto value = get_value_from_document(document, expr->key());
                                                                   return value && value->type() == document::impl::value_type::string &&
-                                                                         std::regex_match(to_string(*value).data(),
-                                                                                          std::regex(fmt::format(".*{}.*", to_string(it->second))));
+                                                                         std::regex_match(value->as_string().data(),
+                                                                                          std::regex(fmt::format(".*{}.*", it->second->as_string())));
                                                               }
                                                           });
             case compare_type::all_true:
