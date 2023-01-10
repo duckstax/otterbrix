@@ -25,3 +25,5 @@ auto to_order(const py::object &order) -> services::storage::sort::order;
 
 auto to_statement(const py::handle& source, components::ql::aggregate_statement*) -> void;
 auto test_to_statement(const py::handle& source) -> py::str;
+
+auto pack_to_match(const py::object &object) -> py::list;

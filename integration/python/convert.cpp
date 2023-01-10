@@ -401,3 +401,11 @@ auto test_to_statement(const py::handle& source) -> py::str {
     stream << aggregate;
     return stream.str();
 }
+
+pybind11::list pack_to_match(const pybind11::object &object) {
+    py::dict match;
+    match["$match"] = object;
+    py::list list;
+    list.append(match);
+    return list;
+}
