@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
 #include <services/wal/wal.hpp>
 #include "test_config.hpp"
@@ -10,8 +11,25 @@ constexpr uint count_documents = 10;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
+using components::ql::aggregate::operator_type;
+using components::expressions::compare_type;
+using key = components::expressions::key_t;
+using id_par = core::parameter_id_t;
+
 uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
     return 10000 * n_db + 100 * n_col + n_doc;
+}
+
+result_find_one find_doc(duck_charmer::wrapper_dispatcher_t* dispatcher,
+                         const database_name_t &db_name,
+                         const collection_name_t &col_name,
+                         int n_doc) {
+    auto session_doc = duck_charmer::session_id_t();
+    auto *ql = new components::ql::aggregate_statement{db_name, col_name};
+    auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
+    ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+    ql->add_parameter(id_par{1}, gen_id(n_doc));
+    return dispatcher->find_one(session_doc, ql);
 }
 
 TEST_CASE("python::test_save_load::disk") {
@@ -47,9 +65,7 @@ TEST_CASE("python::test_save_load::disk") {
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    auto session_doc = duck_charmer::session_id_t();
-                    auto doc_find = dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(int(n_doc))));
-                    REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                 }
             }
         }
@@ -128,20 +144,16 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents - 3);
-                auto session_doc = duck_charmer::session_id_t();
 
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(1))).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 1).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 2).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 3).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 4).is_find());
 
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(2))).is_find());
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(3))).is_find());
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(4))).is_find());
-
-                session_doc = duck_charmer::session_id_t();
-                REQUIRE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(5)))->get_ulong("count") == 0);
+                REQUIRE(find_doc(dispatcher, db_name, col_name, 5)->get_ulong("count") == 0);
 
                 for (uint n_doc = 6; n_doc <= count_documents + 1; ++n_doc) {
-                    session_doc = duck_charmer::session_id_t();
-                    auto doc_find = dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(int(n_doc))));
+                    auto doc_find = find_doc(dispatcher, db_name, col_name, int(n_doc));
                     REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                     REQUIRE(doc_find->get_ulong("count") == 1000);
                 }
