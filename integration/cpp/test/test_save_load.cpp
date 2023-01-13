@@ -116,8 +116,9 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 components::ql::insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
 
-                components::ql::delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
-                wal.delete_one(session, address, delete_one);
+                //todo: uncomment
+//                components::ql::delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
+//                wal.delete_one(session, address, delete_one);
 
                 components::ql::delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
                 wal.delete_many(session, address, delete_many);

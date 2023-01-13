@@ -36,6 +36,15 @@ namespace components::expressions {
 
     void compare_expression_t::set_type(compare_type type) {
         type_ = type;
+        union_ = is_union_compare_condition(type_);
+    }
+
+    void compare_expression_t::set_key(const key_t& key) {
+        key_ = key;
+    }
+
+    void compare_expression_t::set_value(core::parameter_id_t value) {
+        value_ = value;
     }
 
     void compare_expression_t::append_child(const compare_expression_ptr& child) {

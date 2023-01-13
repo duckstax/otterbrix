@@ -1,23 +1,24 @@
 #pragma once
 
-#include "components/ql/ql_statement.hpp"
 #include <boost/beast/core/span.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
+#include <components/ql/aggregate.hpp>
 #include <msgpack.hpp>
 #include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
 
 namespace components::ql {
 
-    struct delete_one_t : ql_statement_t {
-        delete_one_t(const database_name_t& database, const collection_name_t& collection, components::document::document_ptr condition);
+    struct delete_one_t final : ql_statement_t {
+        delete_one_t(const database_name_t& database, const collection_name_t& collection, components::ql::aggregate::match_t match);
+        explicit delete_one_t(components::ql::aggregate_statement_raw_ptr condition);
         delete_one_t() = default;
         delete_one_t(const delete_one_t&) = default;
         delete_one_t& operator=(const delete_one_t&) = default;
         delete_one_t(delete_one_t&&) = default;
         delete_one_t& operator=(delete_one_t&&) = default;
-        ~delete_one_t();
-        components::document::document_ptr condition_;
+        ~delete_one_t() final;
+        components::ql::aggregate::match_t match_;
     };
 } // namespace components::ql
 
@@ -39,7 +40,7 @@ namespace msgpack {
 
                     auto database = o.via.array.ptr[0].as<std::string>();
                     auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto condition = o.via.array.ptr[2].as<components::document::document_ptr>();
+                    auto condition = o.via.array.ptr[2].as<components::ql::aggregate::match_t>();
                     v = components::ql::delete_one_t(database, collection, condition);
                     return o;
                 }
@@ -52,7 +53,7 @@ namespace msgpack {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
-                    o.pack(v.condition_);
+                    o.pack(v.match_);
                     return o;
                 }
             };
@@ -65,7 +66,7 @@ namespace msgpack {
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                    o.via.array.ptr[2] = msgpack::object(v.condition_, o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.match_, o.zone);
                 }
             };
 
