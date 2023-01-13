@@ -25,12 +25,16 @@ namespace components::ql {
     ql_param_statement_t::ql_param_statement_t(statement_type type, database_name_t database, collection_name_t collection)
         : ql_statement_t(type, std::move(database), std::move(collection)) {}
 
-    auto ql_param_statement_t::parameters() -> const storage_parameters& {
+    auto ql_param_statement_t::parameters() const -> const storage_parameters& {
         return values_;
     }
 
     storage_parameters ql_param_statement_t::take_parameters() {
         return std::move(values_);
+    }
+
+    auto ql_param_statement_t::set_parameters(const storage_parameters& parameters) -> void {
+        values_ = parameters;
     }
 
     auto ql_param_statement_t::next_id() -> core::parameter_id_t {
