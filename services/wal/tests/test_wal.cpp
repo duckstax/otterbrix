@@ -14,6 +14,8 @@
 
 using namespace services::wal;
 using namespace components::ql;
+using namespace components::expressions;
+using actor_zeta::detail::pmr::get_default_resource;
 
 constexpr auto database_name = "test_database";
 constexpr auto collection_name = "test_collection";
@@ -160,35 +162,45 @@ TEST_CASE("insert many test") {
     }
 }
 
-//todo: uncomment
-//TEST_CASE("delete one test") {
-//    auto test_wal = create_test_wal("/tmp/wal/delete_one");
+TEST_CASE("delete one test") {
+    auto test_wal = create_test_wal("/tmp/wal/delete_one");
 
-//    for (int num = 1; num <= 5; ++num) {
-//        delete_one_t data(database_name, collection_name, components::document::document_from_json(R"({"count": {"$eq": ")" + std::to_string(num) + "\"}}"));
-//        auto session = components::session::session_id_t();
-//        auto address = actor_zeta::base::address_t::address_t::empty_address();
-//        test_wal.wal->delete_one(session, address, data);
-//    }
+    for (int num = 1; num <= 5; ++num) {
+        auto match = aggregate::make_match(make_compare_expression(get_default_resource(), compare_type::eq, components::expressions::key_t{"count"}, core::parameter_id_t{1}));
+        storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t{1}, num);
+        delete_one_t data(database_name, collection_name, match, parameters);
+        auto session = components::session::session_id_t();
+        auto address = actor_zeta::base::address_t::address_t::empty_address();
+        test_wal.wal->delete_one(session, address, data);
+    }
 
-//    std::size_t index = 0;
-//    for (int num = 1; num <= 5; ++num) {
-//        auto record = test_wal.wal->test_read_record(index);
-//        REQUIRE(record.type == statement_type::delete_one);
-//        REQUIRE(record.id == services::wal::id_t(num));
-//        REQUIRE(std::get<delete_one_t>(record.data).database_ == database_name);
-//        REQUIRE(std::get<delete_one_t>(record.data).collection_ == collection_name);
-//        document_view_t view_condition(std::get<delete_one_t>(record.data).condition_);
-//        REQUIRE(view_condition.get_dict("count").get_string("$eq") == std::to_string(num));
-//        index = test_wal.wal->test_next_record(index);
-//    }
-//}
+    std::size_t index = 0;
+    for (int num = 1; num <= 5; ++num) {
+        auto record = test_wal.wal->test_read_record(index);
+        REQUIRE(record.type == statement_type::delete_one);
+        REQUIRE(record.id == services::wal::id_t(num));
+        REQUIRE(std::get<delete_one_t>(record.data).database_ == database_name);
+        REQUIRE(std::get<delete_one_t>(record.data).collection_ == collection_name);
+        REQUIRE(std::get<delete_one_t>(record.data).match_.query->group() == expression_group::compare);
+        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_one_t>(record.data).match_.query);
+        REQUIRE(match->type() == compare_type::eq);
+        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->value() == core::parameter_id_t{1});
+        REQUIRE(std::get<delete_one_t>(record.data).parameters().size() == 1);
+        REQUIRE(get_parameter(&std::get<delete_one_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() == num);
+        index = test_wal.wal->test_next_record(index);
+    }
+}
 
 TEST_CASE("delete many test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_many");
 
     for (int num = 1; num <= 5; ++num) {
-        delete_many_t data(database_name, collection_name, components::document::document_from_json(R"({"count": {"$gt": ")" + std::to_string(num) + "\"}}"));
+        auto match = aggregate::make_match(make_compare_expression(get_default_resource(), compare_type::eq, components::expressions::key_t{"count"}, core::parameter_id_t{1}));
+        storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t{1}, num);
+        delete_many_t data(database_name, collection_name, match, parameters);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->delete_many(session, address, data);
@@ -201,8 +213,13 @@ TEST_CASE("delete many test") {
         REQUIRE(record.id == services::wal::id_t(num));
         REQUIRE(std::get<delete_many_t>(record.data).database_ == database_name);
         REQUIRE(std::get<delete_many_t>(record.data).collection_ == collection_name);
-        document_view_t view_condition(std::get<delete_many_t>(record.data).condition_);
-        REQUIRE(view_condition.get_dict("count").get_string("$gt") == std::to_string(num));
+        REQUIRE(std::get<delete_many_t>(record.data).match_.query->group() == expression_group::compare);
+        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<delete_many_t>(record.data).match_.query);
+        REQUIRE(match->type() == compare_type::eq);
+        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->value() == core::parameter_id_t{1});
+        REQUIRE(std::get<delete_many_t>(record.data).parameters().size() == 1);
+        REQUIRE(get_parameter(&std::get<delete_many_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() == num);
         index = test_wal.wal->test_next_record(index);
     }
 }
@@ -211,8 +228,11 @@ TEST_CASE("update one test") {
     auto test_wal = create_test_wal("/tmp/wal/update_one");
 
     for (int num = 1; num <= 5; ++num) {
-        update_one_t data(database_name, collection_name, components::document::document_from_json(R"({"count": {"$eq": ")" + std::to_string(num) + "\"}}"),
-                          components::document::document_from_json(R"({"$set": {"count": ")" + std::to_string(num + 10) + "\"}}"), num % 2 == 0);
+        auto match = aggregate::make_match(make_compare_expression(get_default_resource(), compare_type::eq, components::expressions::key_t{"count"}, core::parameter_id_t{1}));
+        storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t{1}, num);
+        auto update = components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
+        update_one_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->update_one(session, address, data);
@@ -223,13 +243,17 @@ TEST_CASE("update one test") {
         auto record = test_wal.wal->test_read_record(index);
         REQUIRE(record.type == statement_type::update_one);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(record.id == services::wal::id_t(num));
         REQUIRE(std::get<update_one_t>(record.data).database_ == database_name);
         REQUIRE(std::get<update_one_t>(record.data).collection_ == collection_name);
-        document_view_t view_condition(std::get<update_one_t>(record.data).condition_);
-        REQUIRE(view_condition.get_dict("count").get_string("$eq") == std::to_string(num));
+        REQUIRE(std::get<update_one_t>(record.data).match_.query->group() == expression_group::compare);
+        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_one_t>(record.data).match_.query);
+        REQUIRE(match->type() == compare_type::eq);
+        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->value() == core::parameter_id_t{1});
+        REQUIRE(std::get<update_one_t>(record.data).parameters().size() == 1);
+        REQUIRE(get_parameter(&std::get<update_one_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() == num);
         document_view_t view_update(std::get<update_one_t>(record.data).update_);
-        REQUIRE(view_update.get_dict("$set").get_string("count") == std::to_string(num + 10));
+        REQUIRE(view_update.get_dict("$set").get_long("count") == num + 10);
         REQUIRE(std::get<update_one_t>(record.data).upsert_ == (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }
@@ -239,8 +263,11 @@ TEST_CASE("update many test") {
     auto test_wal = create_test_wal("/tmp/wal/update_many");
 
     for (int num = 1; num <= 5; ++num) {
-        update_many_t data(database_name, collection_name, components::document::document_from_json(R"({"count": {"$gt": ")" + std::to_string(num) + "\"}}"),
-                           components::document::document_from_json(R"({"$set": {"count": ")" + std::to_string(num + 10) + "\"}}"), num % 2 == 0);
+        auto match = aggregate::make_match(make_compare_expression(get_default_resource(), compare_type::eq, components::expressions::key_t{"count"}, core::parameter_id_t{1}));
+        storage_parameters parameters;
+        add_parameter(parameters, core::parameter_id_t{1}, num);
+        auto update = components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
+        update_many_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
         test_wal.wal->update_many(session, address, data);
@@ -251,13 +278,17 @@ TEST_CASE("update many test") {
         auto record = test_wal.wal->test_read_record(index);
         REQUIRE(record.type == statement_type::update_many);
         REQUIRE(record.id == services::wal::id_t(num));
-        REQUIRE(record.id == services::wal::id_t(num));
         REQUIRE(std::get<update_many_t>(record.data).database_ == database_name);
         REQUIRE(std::get<update_many_t>(record.data).collection_ == collection_name);
-        document_view_t view_condition(std::get<update_many_t>(record.data).condition_);
-        REQUIRE(view_condition.get_dict("count").get_string("$gt") == std::to_string(num));
+        REQUIRE(std::get<update_many_t>(record.data).match_.query->group() == expression_group::compare);
+        auto match = reinterpret_cast<const compare_expression_ptr&>(std::get<update_many_t>(record.data).match_.query);
+        REQUIRE(match->type() == compare_type::eq);
+        REQUIRE(match->key() == components::expressions::key_t{"count"});
+        REQUIRE(match->value() == core::parameter_id_t{1});
+        REQUIRE(std::get<update_many_t>(record.data).parameters().size() == 1);
+        REQUIRE(get_parameter(&std::get<update_many_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() == num);
         document_view_t view_update(std::get<update_many_t>(record.data).update_);
-        REQUIRE(view_update.get_dict("$set").get_string("count") == std::to_string(num + 10));
+        REQUIRE(view_update.get_dict("$set").get_long("count") == num + 10);
         REQUIRE(std::get<update_many_t>(record.data).upsert_ == (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }

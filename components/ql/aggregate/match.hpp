@@ -48,7 +48,7 @@ namespace msgpack {
             template<>
             struct object_with_zone<components::ql::aggregate::match_t> final {
                 void operator()(msgpack::object::with_zone& o, components::ql::aggregate::match_t const& v) const {
-                    //o = msgpack::object(v.query, o.zone);
+                    msgpack::object(v.query, o.zone);
                 }
             };
 

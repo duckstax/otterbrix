@@ -24,8 +24,6 @@ namespace components::expressions {
         const std::pmr::vector<compare_expression_ptr>& children() const;
 
         void set_type(compare_type type);
-        void set_key(const key_t& key);
-        void set_value(core::parameter_id_t value);
         void append_child(const compare_expression_ptr& child);
 
         bool is_union() const;

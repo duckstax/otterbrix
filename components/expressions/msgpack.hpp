@@ -1,6 +1,7 @@
 #pragma once
 
 #include <msgpack.hpp>
+#include <actor-zeta/detail/pmr/default_resource.hpp>
 #include "expression.hpp"
 #include "compare_expression.hpp"
 
@@ -74,9 +75,10 @@ namespace msgpack {
                     if (o.via.array.size != 4) {
                         throw msgpack::type_error();
                     }
-                    v->set_type(static_cast<components::expressions::compare_type>(o.via.array.ptr[0].as<uint8_t>()));
-                    v->set_key(o.via.array.ptr[1].as<components::expressions::key_t>());
-                    v->set_value(o.via.array.ptr[2].as<core::parameter_id_t>());
+                    auto type = static_cast<components::expressions::compare_type>(o.via.array.ptr[0].as<uint8_t>());
+                    auto key = o.via.array.ptr[1].as<components::expressions::key_t>();
+                    auto value = o.via.array.ptr[2].as<core::parameter_id_t>();
+                    v = components::expressions::make_compare_expression(actor_zeta::detail::pmr::get_default_resource(), type, key, value);
                     for (uint32_t i = 0; i < o.via.array.ptr[3].via.array.size; ++i) {
                         v->append_child(o.via.array.ptr[3].via.array.ptr[i].as<components::expressions::compare_expression_ptr>());
                     }
