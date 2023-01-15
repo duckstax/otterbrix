@@ -188,25 +188,37 @@ namespace services::dispatcher {
                 case statement_type::delete_one: {
                     auto data = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
-                    //!delete_one(session_delete, data.database_, data.collection_, data.condition_, manager_wal_);
+                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
+                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
+                    statement->set_parameters(data.parameters());
+                    delete_one(session_delete, statement.release(), manager_wal_);
                     break;
                 }
                 case statement_type::delete_many: {
                     auto data = std::get<delete_many_t>(record.data);
                     components::session::session_id_t session_delete;
-                    //!delete_many(session_delete, data.database_, data.collection_, data.condition_, manager_wal_);
+                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
+                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
+                    statement->set_parameters(data.parameters());
+                    delete_many(session_delete, statement.release(), manager_wal_);
                     break;
                 }
                 case statement_type::update_one: {
                     auto data = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
-                    //!update_one(session_update, data.database_, data.collection_, data.condition_, data.update_, data.upsert_, manager_wal_);
+                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
+                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
+                    statement->set_parameters(data.parameters());
+                    update_one(session_update, statement.release(), data.update_, data.upsert_, manager_wal_);
                     break;
                 }
                 case statement_type::update_many: {
                     auto data = std::get<update_many_t>(record.data);
                     components::session::session_id_t session_update;
-                    //!update_many(session_update, data.database_, data.collection_, data.condition_, data.update_, data.upsert_, manager_wal_);
+                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
+                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
+                    statement->set_parameters(data.parameters());
+                    update_many(session_update, statement.release(), data.update_, data.upsert_, manager_wal_);
                     break;
                 }
                 case statement_type::create_index: {
@@ -410,7 +422,7 @@ namespace services::dispatcher {
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            //!make_session(session_to_address_, session, session_t(address, delete_one_t(database_name, collection, condition)));
+            make_session(session_to_address_, session, session_t(address, delete_one_t{statement}));
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
@@ -424,7 +436,7 @@ namespace services::dispatcher {
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            //!make_session(session_to_address_, session, session_t(address, delete_many_t(database_name, collection, condition)));
+            make_session(session_to_address_, session, session_t(address, delete_many_t{statement}));
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
@@ -456,7 +468,7 @@ namespace services::dispatcher {
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            //!make_session(session_to_address_, session, session_t(address, update_one_t(database_name, collection, condition, update, upsert)));
+            make_session(session_to_address_, session, session_t(address, update_one_t{statement, update, upsert}));
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
         } else {
@@ -470,7 +482,7 @@ namespace services::dispatcher {
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            //!make_session(session_to_address_, session, session_t(address, update_many_t(database_name, collection, condition, update, upsert)));
+            make_session(session_to_address_, session, session_t(address, update_many_t{statement, update, upsert}));
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
         } else {

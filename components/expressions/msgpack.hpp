@@ -42,7 +42,12 @@ namespace msgpack {
             template<>
             struct convert<components::expressions::key_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::expressions::key_t& v) const {
-                    v = components::expressions::key_t(o.as<std::string>());
+                    auto s = o.as<std::string>();
+                    if (s.empty()) {
+                        v = components::expressions::key_t{};
+                    } else {
+                        v = components::expressions::key_t{s};
+                    }
                     return o;
                 }
             };
@@ -51,7 +56,11 @@ namespace msgpack {
             struct pack<components::expressions::key_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::expressions::key_t const& v) const {
-                    o.pack(static_cast<std::string>(v.as_string()));
+                    if (v.is_null()) {
+                        o.pack(std::string{});
+                    } else {
+                        o.pack(static_cast<std::string>(v.as_string()));
+                    }
                     return o;
                 }
             };
@@ -59,7 +68,11 @@ namespace msgpack {
             template<>
             struct object_with_zone<components::expressions::key_t> final {
                 void operator()(msgpack::object::with_zone& o, components::expressions::key_t const& v) const {
-                    msgpack::object(v.as_string(), o.zone);
+                    if (v.is_null()) {
+                        msgpack::object(std::string{}, o.zone);
+                    } else {
+                        msgpack::object(v.as_string(), o.zone);
+                    }
                 }
             };
 

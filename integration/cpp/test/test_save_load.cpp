@@ -101,6 +101,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     }
 
     SECTION("extending wal") {
+        test_spaces space(config);
+        auto* dispatcher = space.dispatcher();
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
         services::wal::wal_replicate_t wal(nullptr, log, config.wal);
@@ -116,20 +118,44 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 components::ql::insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
 
-                //todo: uncomment
-//                components::ql::delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
-//                wal.delete_one(session, address, delete_one);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 1);
+                    components::ql::delete_one_t delete_one(db_name, col_name, match, params);
+                    wal.delete_one(session, address, delete_one);
+                }
 
-                components::ql::delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
-                wal.delete_many(session, address, delete_many);
+                {
+                    auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gte, key{"count"}, core::parameter_id_t{1}));
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, core::parameter_id_t{2}));
+                    auto match = components::ql::aggregate::make_match(expr);
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 2);
+                    components::ql::add_parameter(params, core::parameter_id_t{2}, 4);
+                    components::ql::delete_many_t delete_many(db_name, col_name, match, params);
+                    wal.delete_many(session, address, delete_many);
+                }
 
-                components::ql::update_one_t update_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 5}})"),
-                                                        components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
-                wal.update_one(session, address, update_one);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
+                    components::ql::update_one_t update_one(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
+                    wal.update_one(session, address, update_one);
+                }
 
-                components::ql::update_many_t update_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$gt": 5}})"),
-                                                          components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
-                wal.update_many(session, address, update_many);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
+                    components::ql::update_many_t update_many(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
+                    wal.update_many(session, address, update_many);
+                }
             }
         }
     }
