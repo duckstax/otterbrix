@@ -28,10 +28,11 @@ namespace core {
             : _storage{mr, 1} {
         }
 
-        explicit scalar(std::pmr::memory_resource* mr,
-                        value_type const& initial_value)
+        explicit scalar(
+            std::pmr::memory_resource* mr,
+            value_type const& initial_value)
             : _storage{mr, 1} {
-            set_value_async(initial_value);
+            set_value(initial_value);
         }
 
         scalar(std::pmr::memory_resource* mr, scalar const& other)
@@ -42,14 +43,14 @@ namespace core {
             return _storage.front_element();
         }
 
-        void set_value_async(value_type const& value) {
-            _storage.set_element_async(0, value);
+        void set_value(value_type const& value) {
+            _storage.set_element(0, value);
         }
 
-        void set_value_async(value_type&&) = delete;
+        void set_value(value_type&&) = delete;
 
-        void set_value_to_zero_async() {
-            _storage.set_element_to_zero_async(value_type{0});
+        void set_value_to_zero() {
+            _storage.set_element_to_zero(value_type{0});
         }
 
         [[nodiscard]] pointer data() noexcept { return static_cast<pointer>(_storage.data()); }

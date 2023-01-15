@@ -3,13 +3,16 @@
 #include "buffer.hpp"
 
 #include <cstddef>
+#include <type_traits>
 #include <vector>
+
+#include "core/assert/assert.hpp"
 
 namespace core {
 
     template<typename T>
     class uvector {
-        static_assert(std::is_trivially_copyable<T>::value, "uvector only supports types that are trivially copyable.");
+        static_assert(std::is_trivially_copyable_v<T>, "only supports trivially copyable");
 
     public:
         using value_type = T;
@@ -29,26 +32,31 @@ namespace core {
 
         uvector() = delete;
 
-        uvector(std::pmr::memory_resource* mr, std::size_t size)
-            : _storage{mr, elements_to_bytes(size)} {
+        uvector(std::pmr::memory_resource* resource, std::size_t size)
+            : storage_{resource, elements_to_bytes(size)} {
         }
 
         uvector(std::pmr::memory_resource* mr, uvector const& other)
-            : _storage{mr, other._storage} {
+            : storage_{mr, other.storage_} {
         }
 
         [[nodiscard]] pointer element_ptr(std::size_t element_index) noexcept {
-            assert(element_index < size());
+            assertion_exception(element_index < size());
             return data() + element_index;
         }
 
         [[nodiscard]] const_pointer element_ptr(std::size_t element_index) const noexcept {
-            assert(element_index < size());
+            assertion_exception(element_index < size());
             return data() + element_index;
         }
 
-        void set_element_async(std::size_t element_index, value_type const& value) {
-            assert(element_index < size());
+        void set_element_to_zero(std::size_t element_index) {
+            assertion_exception(element_index < size());
+            assertion_exception(memset(element_ptr(element_index), 0, sizeof(value_type)));
+        }
+
+        void set_element(std::size_t element_index, T const& value) {
+            assertion_exception(element_index < size());
 
             if constexpr (std::is_same<value_type, bool>::value) {
                 memset(element_ptr(element_index), value, sizeof(value));
@@ -57,7 +65,7 @@ namespace core {
 
             if constexpr (std::is_fundamental<value_type>::value) {
                 if (value == value_type{0}) {
-                    set_element_to_zero_async(element_index);
+                    set_element_to_zero(element_index);
                     return;
                 }
             }
@@ -65,18 +73,8 @@ namespace core {
             std::memcpy(element_ptr(element_index), &value, sizeof(value));
         }
 
-        void set_element_async(std::size_t, value_type const&&) = delete;
-        void set_element_to_zero_async(std::size_t element_index) {
-            assert(element_index < size());
-            assert(memset(element_ptr(element_index), 0, sizeof(value_type)));
-        }
-
-        void set_element(std::size_t element_index, T const& value) {
-            set_element_async(element_index, value);
-        }
-
         [[nodiscard]] value_type element(std::size_t element_index) const {
-            assert(element_index < size());
+            assertion_exception(element_index < size());
             value_type value;
             std::memcpy(&value, element_ptr(element_index), sizeof(value));
             return value;
@@ -88,19 +86,19 @@ namespace core {
             return element(size() - 1);
         }
         void reserve(std::size_t new_capacity) {
-            _storage.reserve(elements_to_bytes(new_capacity));
+            storage_.reserve(elements_to_bytes(new_capacity));
         }
         void resize(std::size_t new_size) {
-            _storage.resize(elements_to_bytes(new_size));
+            storage_.resize(elements_to_bytes(new_size));
         }
-        void shrink_to_fit() { _storage.shrink_to_fit(); }
-        buffer release() noexcept { return std::move(_storage); }
+        void shrink_to_fit() { storage_.shrink_to_fit(); }
+        buffer release() noexcept { return std::move(storage_); }
         [[nodiscard]] std::size_t capacity() const noexcept {
-            return bytes_to_elements(_storage.capacity());
+            return bytes_to_elements(storage_.capacity());
         }
-        [[nodiscard]] pointer data() noexcept { return static_cast<pointer>(_storage.data()); }
+        [[nodiscard]] pointer data() noexcept { return static_cast<pointer>(storage_.data()); }
         [[nodiscard]] const_pointer data() const noexcept {
-            return static_cast<const_pointer>(_storage.data());
+            return static_cast<const_pointer>(storage_.data());
         }
         [[nodiscard]] iterator begin() noexcept { return data(); }
         [[nodiscard]] const_iterator cbegin() const noexcept { return data(); }
@@ -108,21 +106,21 @@ namespace core {
         [[nodiscard]] iterator end() noexcept { return data() + size(); }
         [[nodiscard]] const_iterator cend() const noexcept { return data() + size(); }
         [[nodiscard]] const_iterator end() const noexcept { return cend(); }
-        [[nodiscard]] std::size_t size() const noexcept { return bytes_to_elements(_storage.size()); }
+        [[nodiscard]] std::size_t size() const noexcept { return bytes_to_elements(storage_.size()); }
 
         [[nodiscard]] std::int64_t ssize() const noexcept {
-            assert(size() < static_cast<std::size_t>(std::numeric_limits<int64_t>::max()));
+            assertion_exception(size() < static_cast<std::size_t>(std::numeric_limits<int64_t>::max()));
             return static_cast<int64_t>(size());
         }
 
         [[nodiscard]] bool is_empty() const noexcept { return size() == 0; }
 
         [[nodiscard]] std::pmr::memory_resource* memory_resource() const noexcept {
-            return _storage.memory_resource();
+            return storage_.memory_resource();
         }
 
     private:
-        buffer _storage{};
+        buffer storage_;
 
         [[nodiscard]] std::size_t constexpr elements_to_bytes(std::size_t num_elements) const noexcept {
             return num_elements * sizeof(value_type);
@@ -132,4 +130,26 @@ namespace core {
             return num_bytes / sizeof(value_type);
         }
     };
+
+    template<typename T>
+    uvector<T> make_uvector(std::pmr::memory_resource* resource, const std::vector<T>& src) {
+        core::uvector<T> ret(resource, src.size());
+        std::memcpy(ret.data(), src.data(), src.size() * sizeof(T));
+        return ret;
+    }
+
+    template<typename T>
+    std::vector<T> make_vector(std::pmr::memory_resource* resource, uvector<T>& src) {
+        std::vector<T> result(src.size(), std::pmr::polymorphic_allocator<T>(resource));
+        std::memcpy(result.data(), src.data(), src.size() * sizeof(T));
+        return result;
+    }
+
+    template<typename T>
+    uvector<T> make_empty_uvector(std::pmr::memory_resource* resource, std::size_t size) {
+        uvector<T> ret(resource, size);
+        std::memset(ret.data(), 0, size * sizeof(T));
+        return ret;
+    }
+
 } // namespace core

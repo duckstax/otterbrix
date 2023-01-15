@@ -1,16 +1,19 @@
-#include "core/uvector.hpp"
 #include <catch2/catch.hpp>
 
+#include "core/uvector.hpp"
+
+#include <components/log/log.hpp>
+#include <core/assert/trace_full_exception.hpp>
 #include <cstddef>
 #include <memory_resource>
 
-TEMPLATE_TEST_CASE("MemoryResource", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("memory resource", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     core::uvector<TestType> vec(resource, 128);
     REQUIRE(vec.memory_resource() == std::pmr::get_default_resource());
 }
 
-TEMPLATE_TEST_CASE("ZeroSizeConstructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("zero size constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, 0);
     REQUIRE(vec.size() == 0);
@@ -18,7 +21,7 @@ TEMPLATE_TEST_CASE("ZeroSizeConstructor", "[vector][template]", std::int8_t, std
     REQUIRE(vec.is_empty());
 }
 
-TEMPLATE_TEST_CASE("NonZeroSizeConstructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("non zero size constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
@@ -30,7 +33,7 @@ TEMPLATE_TEST_CASE("NonZeroSizeConstructor", "[vector][template]", std::int8_t, 
     REQUIRE(vec.element_ptr(0) != nullptr);
 }
 
-TEMPLATE_TEST_CASE("CopyConstructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("copy constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     auto const size{12345};
     core::uvector<TestType> vec(mr, size);
@@ -42,7 +45,7 @@ TEMPLATE_TEST_CASE("CopyConstructor", "[vector][template]", std::int8_t, std::in
     REQUIRE(uv_copy.element_ptr(0) != nullptr);
 }
 
-TEMPLATE_TEST_CASE("ResizeSmaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("resize smaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -62,7 +65,7 @@ TEMPLATE_TEST_CASE("ResizeSmaller", "[vector][template]", std::int8_t, std::int3
     REQUIRE(vec.capacity() == smaller_size);
 }
 
-TEMPLATE_TEST_CASE("ResizeLarger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("resize larger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -87,7 +90,7 @@ TEMPLATE_TEST_CASE("ResizeLarger", "[vector][template]", std::int8_t, std::int32
     REQUIRE(vec.begin() == larger_begin);
 }
 
-TEMPLATE_TEST_CASE("ReserveSmaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("reserve smaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -104,7 +107,7 @@ TEMPLATE_TEST_CASE("ReserveSmaller", "[vector][template]", std::int8_t, std::int
     REQUIRE(vec.capacity() == original_capacity);
 }
 
-TEMPLATE_TEST_CASE("ReserveLarger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("reserve larger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -122,7 +125,7 @@ TEMPLATE_TEST_CASE("ReserveLarger", "[vector][template]", std::int8_t, std::int3
     REQUIRE(vec.element(0) == 1);
 }
 
-TEMPLATE_TEST_CASE("ResizeToZero", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("resize to zero", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -136,7 +139,7 @@ TEMPLATE_TEST_CASE("ResizeToZero", "[vector][template]", std::int8_t, std::int32
     REQUIRE(vec.capacity() == 0);
 }
 
-TEMPLATE_TEST_CASE("Release", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("release", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, original_size);
@@ -152,7 +155,7 @@ TEMPLATE_TEST_CASE("Release", "[vector][template]", std::int8_t, std::int32_t, s
     REQUIRE(storage.size() == original_size * sizeof(TestType));
 }
 
-TEMPLATE_TEST_CASE("ElementPointer", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("element pointer", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
@@ -161,26 +164,7 @@ TEMPLATE_TEST_CASE("ElementPointer", "[vector][template]", std::int8_t, std::int
     }
 }
 
-/*
-
-TEMPLATE_TEST_CASE("OOBSetElement", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
-    auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
-    vec.set_element(vec.size() + 1, 42);
-    ///REQUIRE(vec.set_element(vec.size() + 1, 42));
-}
-
-TEMPLATE_TEST_CASE("OOBGetElement", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
-    auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
-    auto foo = [&]() { return vec.element(vec.size() + 1); };
-    REQUIRE(foo());
-}
- */
-
-TEMPLATE_TEST_CASE("GetSetElement", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
@@ -190,28 +174,28 @@ TEMPLATE_TEST_CASE("GetSetElement", "[vector][template]", std::int8_t, std::int3
     }
 }
 
-TEMPLATE_TEST_CASE("GetSetElementAsync", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
         auto init = static_cast<TestType>(i);
-        vec.set_element_async(i, init);
+        vec.set_element(i, init);
         REQUIRE(init == vec.element(i));
     }
 }
 
-TEMPLATE_TEST_CASE("SetElementZeroAsync", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("set element zero", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
-        vec.set_element_to_zero_async(i);
+        vec.set_element_to_zero(i);
         REQUIRE(TestType{0} == vec.element(i));
     }
 }
 
-TEMPLATE_TEST_CASE("FrontBackElement", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("front back element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
@@ -225,7 +209,7 @@ TEMPLATE_TEST_CASE("FrontBackElement", "[vector][template]", std::int8_t, std::i
     REQUIRE(last == vec.back_element());
 }
 
-TEMPLATE_TEST_CASE("Iterators", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("iterators", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);

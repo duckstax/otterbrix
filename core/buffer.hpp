@@ -13,9 +13,10 @@ namespace core {
     public:
         buffer(buffer const& other) = delete;
         buffer& operator=(buffer const& other) = delete;
+        buffer() = delete;
 
-        buffer()
-            : mr_{std::pmr::get_default_resource()} {}
+        explicit buffer(std::pmr::memory_resource* mr)
+            : mr_{mr} {}
 
         explicit buffer(std::pmr::memory_resource* mr, std::size_t size)
             : mr_{mr} {

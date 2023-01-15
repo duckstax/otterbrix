@@ -1,22 +1,18 @@
-project(test_core)
+project(test_assert)
 
 add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
-        test_buffer.cpp
-        test_scalar.cpp
-        test_uvector.cpp
+        test_assert.cpp
         )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        CONAN_PKG::catch2
+        rocketjoe::log
         CONAN_PKG::boost
         ottergon::assert
-        rocketjoe::log
-        ${CMAKE_THREAD_LIBS_INIT}
 )
 
 include(CTest)

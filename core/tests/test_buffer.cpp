@@ -32,20 +32,20 @@ bool equal(core::buffer& buffer1, core::buffer& buffer2) {
 
     result = std::equal(
         static_cast<char*>(buffer1.data()),
-        static_cast<char*>(buffer1.data())+buffer1.size(),
+        static_cast<char*>(buffer1.data()) + buffer1.size(),
         static_cast<char*>(buffer2.data()),
-        static_cast<char*>(buffer2.data())+buffer1.size());
+        static_cast<char*>(buffer2.data()) + buffer1.size());
 
     return result;
 }
 
-TEST_CASE("EmptyBuffer") {
+TEST_CASE("empty buffer") {
     auto* mr = std::pmr::get_default_resource();
     core::buffer buff(mr, 0);
     REQUIRE(buff.is_empty());
 }
 
-TEST_CASE("MemoryResource") {
+TEST_CASE("memory resource") {
     auto* mr = std::pmr::get_default_resource();
     const auto size = gen_size();
     core::buffer buff(mr, size);
@@ -57,7 +57,7 @@ TEST_CASE("MemoryResource") {
     REQUIRE(mr->is_equal(*buff.memory_resource()));
 }
 
-TEST_CASE("CopyFromRawDevicePointer") {
+TEST_CASE("copy from raw pointer") {
     auto* mr = std::pmr::get_default_resource();
     auto size = gen_size();
     void* device_memory = malloc(size);
@@ -69,7 +69,7 @@ TEST_CASE("CopyFromRawDevicePointer") {
     REQUIRE(std::pmr::get_default_resource() == buff.memory_resource());
 }
 
-TEST_CASE("CopyFromRawHostPointer") {
+TEST_CASE("copy from raw pointer") {
     auto* mr = std::pmr::get_default_resource();
     const auto size = gen_size();
     std::vector<uint8_t> host_data(size);
@@ -80,7 +80,7 @@ TEST_CASE("CopyFromRawHostPointer") {
     REQUIRE(std::pmr::get_default_resource() == buff.memory_resource());
 }
 
-TEST_CASE("CopyFromNullptr") {
+TEST_CASE("copy from nullptr") {
     auto* mr = std::pmr::get_default_resource();
     core::buffer buff(mr, nullptr, 0);
     REQUIRE(nullptr == buff.data());
@@ -89,7 +89,7 @@ TEST_CASE("CopyFromNullptr") {
     REQUIRE(std::pmr::get_default_resource() == buff.memory_resource());
 }
 
-TEST_CASE("CopyConstructor") {
+TEST_CASE("copy constructor") {
     auto* mr = std::pmr::get_default_resource();
     const auto size = 200;
     core::buffer buff(mr, size);
@@ -104,16 +104,16 @@ TEST_CASE("CopyConstructor") {
     REQUIRE(buff_copy.memory_resource() == std::pmr::get_default_resource());
     REQUIRE(buff_copy.memory_resource()->is_equal(*std::pmr::get_default_resource()));
 
-    REQUIRE(equal(buff,buff_copy));
+    REQUIRE(equal(buff, buff_copy));
 
     core::buffer buff_copy2(buff.memory_resource(), buff);
     REQUIRE(buff_copy2.memory_resource() == buff.memory_resource());
     REQUIRE(buff_copy2.memory_resource()->is_equal(*buff.memory_resource()));
 
-    REQUIRE(equal(buff,buff_copy));
+    REQUIRE(equal(buff, buff_copy));
 }
 
-TEST_CASE("CopyCapacityLargerThanSize") {
+TEST_CASE("copy capacity larger than size") {
     auto* mr = std::pmr::get_default_resource();
     auto size = 200;
     core::buffer buff(mr, size);
@@ -129,10 +129,10 @@ TEST_CASE("CopyCapacityLargerThanSize") {
     REQUIRE(new_size == buff_copy.capacity());
     REQUIRE(buff_copy.memory_resource() == std::pmr::get_default_resource());
     REQUIRE(buff_copy.memory_resource()->is_equal(*std::pmr::get_default_resource()));
-    REQUIRE(equal(buff,buff_copy));
+    REQUIRE(equal(buff, buff_copy));
 }
 
-TEST_CASE("CopyConstructorExplicitMr") {
+TEST_CASE("copy constructor explicit memory resource") {
     auto* mr = std::pmr::get_default_resource();
     auto size = 200;
     core::buffer buff(mr, size);
@@ -146,10 +146,10 @@ TEST_CASE("CopyConstructorExplicitMr") {
     REQUIRE(buff.capacity() == buff_copy.capacity());
     REQUIRE(buff.memory_resource() == buff_copy.memory_resource());
     REQUIRE(buff.memory_resource()->is_equal(*buff_copy.memory_resource()));
-    REQUIRE(equal(buff,buff_copy));
+    REQUIRE(equal(buff, buff_copy));
 }
 
-TEST_CASE("CopyCapacityLargerThanSizeExplicitMr") {
+TEST_CASE("copy capacity larger than size explicit memory resource") {
     auto* mr = std::pmr::get_default_resource();
     auto size = 200;
     core::buffer buff(mr, size);
@@ -169,10 +169,10 @@ TEST_CASE("CopyCapacityLargerThanSizeExplicitMr") {
     REQUIRE(buff.memory_resource() == buff_copy.memory_resource());
     REQUIRE(buff.memory_resource()->is_equal(*buff_copy.memory_resource()));
 
-    REQUIRE(equal(buff,buff_copy));
+    REQUIRE(equal(buff, buff_copy));
 }
 
-TEST_CASE("MoveConstructor") {
+TEST_CASE("move constructor") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -195,7 +195,7 @@ TEST_CASE("MoveConstructor") {
     REQUIRE(nullptr != buff.memory_resource());
 }
 
-TEST_CASE("MoveConstructorStream") {
+TEST_CASE("move constructor") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -218,7 +218,7 @@ TEST_CASE("MoveConstructorStream") {
     REQUIRE(nullptr != buff.memory_resource());
 }
 
-TEST_CASE("MoveAssignmentToDefault") {
+TEST_CASE("move assignment to default") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -228,7 +228,7 @@ TEST_CASE("MoveAssignmentToDefault") {
     auto capacity = src.capacity();
     auto* mr = src.memory_resource();
 
-    core::buffer dest;
+    core::buffer dest(mr_tmp);
     dest = std::move(src);
 
     REQUIRE(nullptr != dest.data());
@@ -243,7 +243,7 @@ TEST_CASE("MoveAssignmentToDefault") {
     REQUIRE(nullptr != src.memory_resource());
 }
 
-TEST_CASE("MoveAssignment") {
+TEST_CASE("move assignment") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -268,7 +268,7 @@ TEST_CASE("MoveAssignment") {
     REQUIRE(nullptr != src.memory_resource());
 }
 
-TEST_CASE("SelfMoveAssignment") {
+TEST_CASE("self move assignment") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -286,7 +286,7 @@ TEST_CASE("SelfMoveAssignment") {
     REQUIRE(mr == buff.memory_resource());
 }
 
-TEST_CASE("ResizeSmaller") {
+TEST_CASE("resize smaller") {
     auto* mr = std::pmr::get_default_resource();
     const auto size = 200;
 
@@ -309,11 +309,10 @@ TEST_CASE("ResizeSmaller") {
     REQUIRE(old_data != buff.data());
     REQUIRE(new_size == buff.size());
     REQUIRE(buff.capacity() == buff.size());
-    REQUIRE(equal(buff,old_content));
-
+    REQUIRE(equal(buff, old_content));
 }
 
-TEST_CASE("ResizeBigger") {
+TEST_CASE("resize bigger") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -326,7 +325,7 @@ TEST_CASE("ResizeBigger") {
     REQUIRE(old_data != buff.data());
 }
 
-TEST_CASE("ReserveSmaller") {
+TEST_CASE("reserve smaller") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
@@ -340,7 +339,7 @@ TEST_CASE("ReserveSmaller") {
     REQUIRE(old_data == buff.data());
 }
 
-TEST_CASE("ReserveBigger") {
+TEST_CASE("reserve bigger") {
     auto* mr_tmp = std::pmr::get_default_resource();
     const auto size_tmp = gen_size();
 
