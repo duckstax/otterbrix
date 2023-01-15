@@ -139,8 +139,8 @@ namespace core {
     }
 
     template<typename T>
-    std::vector<T> make_vector(std::pmr::memory_resource* resource, uvector<T>& src) {
-        std::vector<T> result(src.size(), std::pmr::polymorphic_allocator<T>(resource));
+    std::pmr::vector<T> make_vector(std::pmr::memory_resource* resource, uvector<T>& src) {
+        std::pmr::vector<T> result(src.size(), resource);
         std::memcpy(result.data(), src.data(), src.size() * sizeof(T));
         return result;
     }
