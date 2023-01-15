@@ -31,7 +31,7 @@ namespace components::dataframe::column {
             std::pmr::memory_resource* resource,
             core::uvector<T>&& other,
             core::buffer&& null_mask,
-            size_type null_count = UNKNOWN_NULL_COUNT)
+            size_type null_count = unknown_null_count)
             : type_(data_type(type_to_id<T>()))
             , size_{[&]() {
                 assert(other.size() <= static_cast<std::size_t>(std::numeric_limits<size_type>::max()));
@@ -50,7 +50,7 @@ namespace components::dataframe::column {
             size_type size,
             B1&& data,
             B2&& null_mask = {},
-            size_type null_count = UNKNOWN_NULL_COUNT,
+            size_type null_count = unknown_null_count,
             std::vector<std::unique_ptr<column_t>>&& children = {})
             : type_{dtype}
             , size_{[&]() {
@@ -68,8 +68,8 @@ namespace components::dataframe::column {
         [[nodiscard]] data_type type() const noexcept;
         [[nodiscard]] size_type size() const noexcept;
         [[nodiscard]] size_type null_count() const;
-        void set_null_mask(core::buffer&& new_null_mask, size_type new_null_count = UNKNOWN_NULL_COUNT);
-        void set_null_mask(core::buffer const& new_null_mask, size_type new_null_count = UNKNOWN_NULL_COUNT);
+        void set_null_mask(core::buffer&& new_null_mask, size_type new_null_count = unknown_null_count);
+        void set_null_mask(core::buffer const& new_null_mask, size_type new_null_count = unknown_null_count);
         void set_null_count(size_type new_null_count);
         [[nodiscard]] bool nullable() const noexcept;
         [[nodiscard]] bool has_nulls() const noexcept;
@@ -95,7 +95,7 @@ namespace components::dataframe::column {
         std::pmr::memory_resource* resource_;
         core::buffer data_;
         core::buffer null_mask_;
-        mutable size_type null_count_{UNKNOWN_NULL_COUNT};
+        mutable size_type null_count_{unknown_null_count};
         std::vector<std::unique_ptr<column_t>> children_;
     };
 

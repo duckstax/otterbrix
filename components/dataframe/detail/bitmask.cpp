@@ -36,7 +36,7 @@ namespace components::dataframe::detail {
             case mask_state::unallocated:
                 return 0;
             case mask_state::uninitialized:
-                return UNKNOWN_NULL_COUNT;
+                return unknown_null_count;
             case mask_state::all_null:
                 return size;
             case mask_state::all_valid:

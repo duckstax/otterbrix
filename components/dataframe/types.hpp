@@ -16,7 +16,7 @@ namespace components::dataframe {
     using valid_type = uint8_t;
     using offset_type = int32_t;
 
-    static constexpr size_type UNKNOWN_NULL_COUNT{-1};
+    static constexpr size_type unknown_null_count{-1};
 
     enum class type_id : int32_t {
         empty,

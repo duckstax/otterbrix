@@ -13,7 +13,7 @@ using namespace components::dataframe;
 
 TEST_CASE("state null count") {
     REQUIRE(0 == state_null_count(mask_state::unallocated, 42));
-    REQUIRE(UNKNOWN_NULL_COUNT == state_null_count(mask_state::uninitialized, 42));
+    REQUIRE(unknown_null_count == state_null_count(mask_state::uninitialized, 42));
     REQUIRE(42 == state_null_count(mask_state::all_null, 42));
     REQUIRE(0 == state_null_count(mask_state::all_valid, 42));
 }
