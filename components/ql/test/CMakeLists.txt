@@ -3,7 +3,6 @@ project(test_ql)
 add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
-        base.cpp
         test_aggregate.cpp
         )
 

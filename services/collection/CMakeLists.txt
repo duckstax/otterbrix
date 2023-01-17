@@ -8,6 +8,9 @@ set(${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         planner/transaction_context.cpp
+        planner/create_plan.cpp
+        planner/impl/create_plan_aggregate.cpp
+        planner/impl/create_plan_match.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp
@@ -19,7 +22,6 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_group.cpp
         operators/operator_sort.cpp
         operators/aggregation.cpp
-        operators/scan/scan.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp
         operators/scan/primary_key_scan.cpp
@@ -62,6 +64,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::index
+        rocketjoe::logical_plan
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

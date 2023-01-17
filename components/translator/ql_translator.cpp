@@ -12,20 +12,20 @@ namespace components::translator {
     auto translator_aggregate(std::pmr::memory_resource *resource, ql::aggregate_statement* aggregate) -> logical_plan::node_ptr {
         using components::ql::aggregate::operator_type;
 
-        auto node = new logical_plan::node_aggregate_t{resource};
+        auto node = new logical_plan::node_aggregate_t{resource, {aggregate->database_, aggregate->collection_}};
         auto count = aggregate->count_operators();
         node->reserve_child(count);
         for (std::size_t i = 0; i < count; ++i) {
             auto type = aggregate->type_operator(i);
             switch (type) {
                 case operator_type::match:
-                    node->append_child(logical_plan::make_node_match(resource, aggregate->get_operator<ql::aggregate::match_t>(i)));
+                    node->append_child(logical_plan::make_node_match(resource, node->collection_full(), aggregate->get_operator<ql::aggregate::match_t>(i)));
                     break;
                 case operator_type::group:
-                    node->append_child(logical_plan::make_node_group(resource, aggregate->get_operator<ql::aggregate::group_t>(i)));
+                    node->append_child(logical_plan::make_node_group(resource, node->collection_full(), aggregate->get_operator<ql::aggregate::group_t>(i)));
                     break;
                 case operator_type::sort:
-                    node->append_child(logical_plan::make_node_sort(resource, aggregate->get_operator<ql::aggregate::sort_t>(i)));
+                    node->append_child(logical_plan::make_node_sort(resource, node->collection_full(), aggregate->get_operator<ql::aggregate::sort_t>(i)));
                     break;
                 default:
                     break;

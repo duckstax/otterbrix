@@ -423,3 +423,4 @@ conaninfo.txt
 build
 .vscode
 *.wal
+*.txt.user

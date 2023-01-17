@@ -2,9 +2,8 @@ project(ql CXX)
 
 set(SOURCE_${PROJECT_NAME}
         aggregate/operator.cpp
-        parser.cpp
         find.cpp
-        expr.cpp
+        ql_param_statement.cpp
         aggregate.cpp
         aggregate/match.cpp
         aggregate/group.cpp

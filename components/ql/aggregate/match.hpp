@@ -2,6 +2,7 @@
 
 #include <components/ql/aggregate/forward.hpp>
 #include <components/expressions/expression.hpp>
+#include <components/expressions/msgpack.hpp>
 
 namespace components::ql::aggregate {
 
@@ -20,3 +21,37 @@ namespace components::ql::aggregate {
     }
 
 } // namespace components::ql::aggregate
+
+
+// User defined class template specialization
+namespace msgpack {
+    MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
+        namespace adaptor {
+
+            template<>
+            struct convert<components::ql::aggregate::match_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::aggregate::match_t& v) const {
+                    v.query = o.as<components::expressions::expression_ptr>();
+                    return o;
+                }
+            };
+
+            template<>
+            struct pack<components::ql::aggregate::match_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::aggregate::match_t const& v) const {
+                    o.pack(v.query);
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<components::ql::aggregate::match_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::aggregate::match_t const& v) const {
+                    msgpack::object(v.query, o.zone);
+                }
+            };
+
+        } // namespace adaptor
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+} // namespace msgpack

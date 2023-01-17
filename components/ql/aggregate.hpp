@@ -7,43 +7,20 @@
 #include <vector>
 
 #include <components/expressions/expression.hpp>
-#include <components/ql/ql_statement.hpp>
+#include <components/ql/ql_param_statement.hpp>
 #include "aggregate/operator.hpp"
 
 namespace components::ql {
 
     aggregate::operator_type get_aggregate_type(const std::string&);
 
-    class aggregate_statement final : public ql_statement_t {
-        using storage_parameters = std::unordered_map<core::parameter_id_t, expr_value_t>;
-
+    class aggregate_statement final : public ql_param_statement_t {
     public:
         aggregate_statement(database_name_t database, collection_name_t collection);
 
         void append(aggregate::operator_type type, aggregate::operator_storage_t storage);
 
-//        template<class... Args>
-//        void append(Args&&... args) {
-//            aggregate_operator_.append(std::forward<Args>(args)...);
-//        }
-
         void reserve(std::size_t size);
-
-        auto next_id() -> core::parameter_id_t; ///change return core::parameter_id_t(counter_ ++);
-
-        template<class Value>
-        void add_parameter(core::parameter_id_t id, Value value) {
-            values_.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
-        }
-
-        template<class Value>
-        core::parameter_id_t add_parameter(Value value) {
-            auto id = next_id();
-            add_parameter(id, value);
-            return id;
-        }
-
-        auto parameter(core::parameter_id_t id) const -> const expr_value_t&;
 
         auto count_operators() const -> std::size_t;
         auto type_operator(std::size_t index) const -> aggregate::operator_type;
@@ -55,8 +32,6 @@ namespace components::ql {
 
     private:
         aggregate::operators_t aggregate_operator_;
-        uint16_t counter_{0};
-        storage_parameters values_;
     };
 
 
@@ -87,5 +62,11 @@ namespace components::ql {
         stream << "}";
         return stream;
     }
+
+
+    using aggregate_statement_ptr = std::unique_ptr<aggregate_statement>;
+    using aggregate_statement_raw_ptr = aggregate_statement*;
+
+    aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection);
 
 } // namespace components::ql

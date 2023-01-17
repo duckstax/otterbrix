@@ -105,76 +105,66 @@ namespace duck_charmer {
         return std::get<result_insert_many>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> components::cursor::cursor_t* {
-        trace(log_, "wrapper_dispatcher_t::find session: {}, collection name : {} ", session.data(), collection);
+    auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
+        trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find),
             session,
-            database,
-            collection,
             std::move(condition));
         wait();
         return std::get<components::cursor::cursor_t*>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_find_one &{
-        trace(log_, "wrapper_dispatcher_t::find_one session: {}, collection name : {} ", session.data(), collection);
+    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one & {
+        trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find_one),
             session,
-            database,
-            collection,
             std::move(condition));
         wait();
         return std::get<result_find_one>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete &{
-        trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
+        trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_one),
             session,
-            database,
-            collection,
             std::move(condition));
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition) -> result_delete &{
-        trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete &{
+        trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_many),
             session,
-            database,
-            collection,
             std::move(condition));
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update &{
-        trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), database, collection);
+    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
+        trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_one),
             session,
-            database,
-            collection,
             std::move(condition),
             std::move(update),
             upsert);
@@ -182,16 +172,14 @@ namespace duck_charmer {
         return std::get<result_update>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr condition, document_ptr update, bool upsert) -> result_update &{
-        trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), database, collection);
+    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
+        trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_many),
             session,
-            database,
-            collection,
             std::move(condition),
             std::move(update),
             upsert);

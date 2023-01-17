@@ -30,7 +30,9 @@ namespace components::expressions {
         all,
         union_and,
         union_or,
-        union_not
+        union_not,
+        all_true,
+        all_false
     };
 
     enum class aggregate_type : uint8_t {

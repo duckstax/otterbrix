@@ -10,14 +10,14 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void full_scan::on_execute_impl(planner::transaction_context_t*) {
+    void full_scan::on_execute_impl(planner::transaction_context_t* transaction_context) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0
         }
         output_ = make_operator_data(context_->resource());
         for (auto& it : context_->storage()) {
-            if (predicate_->check(it.second)) {
+            if (predicate_->check(it.second, transaction_context ? transaction_context->parameters : nullptr)) {
                 output_->append(it.second);
                 ++count;
                 if (!limit_.check(count)) {

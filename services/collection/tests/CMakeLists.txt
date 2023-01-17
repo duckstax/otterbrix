@@ -10,6 +10,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/test_operators.cpp
         operators/test_get_operators.cpp
         operators/test_merge_operators.cpp
+        planner/test_create_plan_match.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

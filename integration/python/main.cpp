@@ -105,6 +105,6 @@ PYBIND11_MODULE(ottergon, m) {
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
 
-    m.def("to_aggregate", &experimental::test_to_statement);
+    m.def("to_aggregate", &test_to_statement);
 
 }

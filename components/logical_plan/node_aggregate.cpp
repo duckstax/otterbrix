@@ -3,8 +3,8 @@
 
 namespace components::logical_plan {
 
-    node_aggregate_t::node_aggregate_t(std::pmr::memory_resource *resource)
-        : node_t(resource, node_type::aggregate_t) {
+    node_aggregate_t::node_aggregate_t(std::pmr::memory_resource *resource, const collection_full_name_t& collection)
+        : node_t(resource, node_type::aggregate_t, collection) {
     }
 
     hash_t node_aggregate_t::hash_impl() const {

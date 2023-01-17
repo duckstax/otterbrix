@@ -2,11 +2,10 @@
 
 #include <climits>
 
+#include <components/document/core/internal.hpp>
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/endian.hpp>
-
-#include "internal.hpp"
-#include "utils.hpp"
+#include <components/document/support/utils.hpp>
 #include <components/document/support/varint.hpp>
 
 namespace document::impl {
