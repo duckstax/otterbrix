@@ -219,6 +219,7 @@ namespace components::dataframe::detail {
         bool const inclusive;
     };
 
+    /*
     template<typename InputIteratorT, typename OutputIteratorT,
              typename BeginOffsetIteratorT, typename EndOffsetIteratorT>
     void Sum(void* d_temp_storage, size_t& temp_storage_bytes,
@@ -230,7 +231,8 @@ namespace components::dataframe::detail {
         size_t element_size = sizeof(value_type);
 
         // Calculate the required allocation size for the temporary storage buffer
-        size_t num_elements = std::distance(std::begin(d_in), std::end(d_out));
+        //!size_t num_elements = std::distance(d_in, d_out);
+        size_t num_elements = num_segments;
         temp_storage_bytes = element_size * num_elements;
 
         // If d_temp_storage is NULL, return the required allocation size
@@ -239,14 +241,15 @@ namespace components::dataframe::detail {
         }
 
         // Perform the segmented sum using std::transform_reduce
-        std::transform(d_begin_offsets, d_end_offsets, d_temp_storage,
+        std::transform(d_begin_offsets, d_end_offsets, d_out,//!d_temp_storage,
                        [d_in](const auto& offset) {
-                           return std::reduce(d_in + offset, d_in + *(offset + 1), 0, std::plus<>());
+                           return std::reduce(d_in + offset, d_in + offset + 1, 0, std::plus<>());
                        });
 
         // Copy the results from d_temp_storage to d_out using std::copy
         std::copy(static_cast<char*>(d_temp_storage), static_cast<char*>(d_temp_storage) + temp_storage_bytes, d_out);
     }
+    */
 
     template<typename OffsetIterator>
     core::uvector<size_type> segmented_count_bits(std::pmr::memory_resource* resource, bitmask_type const* bitmask,
@@ -267,7 +270,7 @@ namespace components::dataframe::detail {
 
         // Allocate temporary memory.
         size_t temp_storage_bytes{0};
-
+        /* //todo
         Sum(nullptr,
             temp_storage_bytes,
             num_set_bits_in_word,
@@ -286,6 +289,7 @@ namespace components::dataframe::detail {
             num_ranges,
             first_word_indices,
             last_word_indices);
+        */
 
         // Adjust counts in segment boundaries (if segments are not word-aligned).
         constexpr size_type block_size{256};
@@ -294,10 +298,10 @@ namespace components::dataframe::detail {
         if (count_bit == count_bits_policy::unset_bits) {
             // Convert from set bits counts to unset bits by subtracting the number of
             // set bits from the length of the segment.
-            auto segments_begin = boost::iterators::make_zip_iterator(first_bit_indices_begin, last_bit_indices_begin);
+            auto segments_begin = boost::iterators::make_zip_iterator(boost::make_tuple(first_bit_indices_begin, last_bit_indices_begin));
             auto segment_length_iterator = boost::iterators::transform_iterator(segments_begin, [](auto const& segment) {
-                auto const begin = std::get<0>(segment);
-                auto const end = std::get<1>(segment);
+                auto const begin = boost::get<0>(segment);
+                auto const end = boost::get<1>(segment);
                 return end - begin;
             });
             std::transform(
@@ -379,6 +383,13 @@ namespace components::dataframe::detail {
         return segmented_count_bits(resource, bitmask, indices_begin, indices_end, count_bits_policy::set_bits);
     }
 
+    std::pmr::vector<size_type> segmented_count_set_bits(
+        std::pmr::memory_resource* resource,
+        bitmask_type const* bitmask,
+        core::span<size_type const> indices) {
+        return segmented_count_set_bits(resource, bitmask, indices.begin(), indices.end());
+    }
+
     // Count zero bits in the specified ranges.
     template<typename IndexIterator>
     std::pmr::vector<size_type> segmented_count_unset_bits(
@@ -387,6 +398,13 @@ namespace components::dataframe::detail {
         IndexIterator indices_begin,
         IndexIterator indices_end) {
         return segmented_count_bits(resource, bitmask, indices_begin, indices_end, count_bits_policy::unset_bits);
+    }
+
+    std::pmr::vector<size_type> segmented_count_unset_bits(
+        std::pmr::memory_resource* resource,
+        bitmask_type const* bitmask,
+        core::span<size_type const> indices) {
+        return segmented_count_unset_bits(resource, bitmask, indices.begin(), indices.end());
     }
 
     // Count valid elements in the specified ranges of a validity bitmask.
@@ -564,6 +582,10 @@ namespace components::dataframe::detail {
         std::pmr::memory_resource* resource,
         const bitmask_type* bitmask,
         core::span<const size_type> indices) {
+        if (bitmask == nullptr) {
+            auto const num_segments = validate_segmented_indices(indices.begin(), indices.end());
+            return std::pmr::vector<size_type>(num_segments, 0);
+        }
         return segmented_count_set_bits(resource, bitmask, indices.begin(), indices.end());
     }
 
