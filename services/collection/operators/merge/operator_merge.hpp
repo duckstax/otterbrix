@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/expressions/compare_expression.hpp>
 #include <services/collection/operators/operator.hpp>
 #include <services/collection/operators/predicates/limit.hpp>
 
@@ -19,8 +20,8 @@ namespace services::collection::operators::merge {
 
     using operator_merge_ptr = std::unique_ptr<operator_merge_t>;
 
-    bool is_operator_merge(const components::ql::expr_ptr& expr);
-    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::ql::expr_ptr& expr, predicates::limit_t limit);
-    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::ql::find_statement_ptr& cond, predicates::limit_t limit);
+    bool is_operator_merge(const components::expressions::compare_expression_ptr& expr);
+    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::expressions::compare_type& type, predicates::limit_t limit);
+    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::expressions::compare_expression_ptr& expr, predicates::limit_t limit);
 
 } // namespace services::collection::operators::merge

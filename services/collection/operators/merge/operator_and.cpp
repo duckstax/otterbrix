@@ -6,7 +6,7 @@ namespace services::collection::operators::merge {
         : operator_merge_t(context, limit) {
     }
 
-    void operator_and_t::on_merge_impl(planner::transaction_context_t* transaction_context) {
+    void operator_and_t::on_merge_impl(planner::transaction_context_t*) {
         //todo: optimize merge
         int count = 0;
         if (!limit_.check(count)) {

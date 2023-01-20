@@ -10,11 +10,11 @@ namespace services::wal {
 
     constexpr static auto wal_name = ".wal";
 
-    bool file_exist_(const boost::filesystem::path &path) {
-        boost::filesystem::file_status s = boost::filesystem::file_status{};
-        return boost::filesystem::status_known(s)
-                   ? boost::filesystem::exists(s)
-                   : boost::filesystem::exists(path);
+    bool file_exist_(const std::filesystem::path &path) {
+        std::filesystem::file_status s = std::filesystem::file_status{};
+        return std::filesystem::status_known(s)
+                   ? std::filesystem::exists(s)
+                   : std::filesystem::exists(path);
     }
 
     std::size_t next_index(std::size_t index, size_tt size) {
@@ -40,7 +40,7 @@ namespace services::wal {
         add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
         if (config_.sync_to_disk) {
             if (!file_exist_(config_.path)) {
-                boost::filesystem::create_directory(config_.path);
+                std::filesystem::create_directory(config_.path);
             }
             file_ = std::make_unique<core::file::file_t>(config_.path / wal_name);
             file_->seek_eof();
@@ -67,15 +67,15 @@ namespace services::wal {
 
     size_tt read_size_impl(buffer_t& input, int index_start) {
         size_tt size_tmp = 0;
-        size_tmp = 0xff00 & size_tt(input[index_start] << 8);
-        size_tmp |= 0x00ff & size_tt(input[index_start + 1]);
+        size_tmp = size_tt(0xff00 & input[size_t(index_start)] << 8);
+        size_tmp |= size_tt(0x00ff & input[size_t(index_start) + 1]);
         return size_tmp;
     }
 
     static size_tt read_size_impl(const char* input, int index_start) {
         size_tt size_tmp = 0;
-        size_tmp = 0xff00 & (size_tt(input[index_start] << 8));
-        size_tmp |= 0x00ff & (size_tt(input[index_start + 1]));
+        size_tmp = size_tt(0xff00 & (input[index_start] << 8));
+        size_tmp |= size_tt(0x00ff & (input[index_start + 1]));
         return size_tmp;
     }
 
@@ -280,7 +280,7 @@ namespace services::wal {
         : wal_replicate_t(manager, log, std::move(config)) {
     }
 
-    void wal_replicate_without_disk_t::load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) {
+    void wal_replicate_without_disk_t::load(session_id_t& session, address_t& sender, services::wal::id_t) {
         std::vector<record_t> records;
         actor_zeta::send(sender, address(), handler_id(route::load_finish), session, std::move(records));
     }
@@ -288,7 +288,7 @@ namespace services::wal {
     void wal_replicate_without_disk_t::write_buffer(buffer_t&) {
     }
 
-    void wal_replicate_without_disk_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
+    void wal_replicate_without_disk_t::read_buffer(buffer_t& buffer, size_t, size_t size) const {
         buffer.resize(size);
         std::fill(buffer.begin(), buffer.end(), '\0');
     }

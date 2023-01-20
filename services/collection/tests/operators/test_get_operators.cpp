@@ -4,32 +4,33 @@
 
 using namespace components;
 using namespace services::collection::operators;
+using key = components::expressions::key_t;
 
 TEST_CASE("operator::get::get_value") {
     auto doc = gen_doc(1);
 
-    auto getter = get::simple_value_t::create(ql::key_t("count"));
+    auto getter = get::simple_value_t::create(key("count"));
     REQUIRE(getter->value(doc));
     REQUIRE(getter->value(doc)->as_int() == 1);
 
-    getter = get::simple_value_t::create("countStr");
+    getter = get::simple_value_t::create(key("countStr"));
     REQUIRE(getter->value(doc));
     REQUIRE(getter->value(doc)->as_string() == "1");
 
-    getter = get::simple_value_t::create("countArray.0");
+    getter = get::simple_value_t::create(key("countArray.0"));
     REQUIRE(getter->value(doc));
     REQUIRE(getter->value(doc)->as_int() == 1);
 
-    getter = get::simple_value_t::create("countDict.even");
+    getter = get::simple_value_t::create(key("countDict.even"));
     REQUIRE(getter->value(doc));
     REQUIRE(getter->value(doc)->as_bool() == false);
 
-    getter = get::simple_value_t::create("no_valid");
+    getter = get::simple_value_t::create(key("no_valid"));
     REQUIRE_FALSE(getter->value(doc));
 
-    getter = get::simple_value_t::create("countArray.10");
+    getter = get::simple_value_t::create(key("countArray.10"));
     REQUIRE_FALSE(getter->value(doc));
 
-    getter = get::simple_value_t::create("countDict.no_valid");
+    getter = get::simple_value_t::create(key("countDict.no_valid"));
     REQUIRE_FALSE(getter->value(doc));
 }

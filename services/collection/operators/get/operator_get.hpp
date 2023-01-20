@@ -1,6 +1,5 @@
 #pragma once
 
-#include <components/ql/expr.hpp>
 #include <services/collection/operators/operator.hpp>
 
 namespace services::collection::operators::get {

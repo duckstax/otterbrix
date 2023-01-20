@@ -42,6 +42,7 @@ namespace services::collection::operators {
         const operator_write_data_ptr& modified() const;
         const operator_write_data_ptr& no_modified() const;
         void set_children(ptr left, ptr right = nullptr);
+        void take_output(ptr &src);
         void clear(); //todo: replace by copy
 
     protected:
@@ -84,5 +85,7 @@ namespace services::collection::operators {
     };
 
     using operator_ptr = operator_t::ptr;
+
+    ::document::wrapper_value_t get_value_from_document(const components::document::document_ptr &doc, const components::expressions::key_t &key);
 
 } // namespace services::collection::operators

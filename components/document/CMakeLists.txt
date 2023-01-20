@@ -3,10 +3,8 @@ project(document)
 set(${PROJECT_NAME}_SOURCES
         core/array.cpp
         core/dict.cpp
-        core/doc.cpp
         core/pointer.cpp
         core/shared_keys.cpp
-        core/slice_core.cpp
         core/value.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
@@ -37,9 +35,9 @@ add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
-        boost_json
+        rocketjoe_${PROJECT_NAME} PUBLIC
+        CONAN_PKG::msgpack-cxx
+        CONAN_PKG::boost
         dl
 )
 

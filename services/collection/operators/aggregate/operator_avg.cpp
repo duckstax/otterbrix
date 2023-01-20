@@ -15,7 +15,7 @@ namespace services::collection::operators::aggregate {
             if (!documents.empty()) {
                 document::wrapper_value_t sum_(nullptr);
                 std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                    sum_ = sum(sum_, get_value(doc, key_));
+                    sum_ = sum(sum_, get_value_from_document(doc, key_));
                 });
                 return components::document::make_document(key_result_, sum_->as_double() / double(documents.size()));
             }

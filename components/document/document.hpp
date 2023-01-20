@@ -2,7 +2,6 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <components/document/core/slice.hpp>
 #include <components/document/mutable/mutable_value.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document_id.hpp>
@@ -35,7 +34,8 @@ namespace components::document {
     private:
         document_value_t value_;
 
-        void set_(const std::string &key, document_const_value_t value);
+        void set_(const std::string &key, const document_const_value_t& value);
+        void set_(std::string_view key, const document_const_value_t& value);
 
         friend class document_view_t;
     };
@@ -65,12 +65,17 @@ namespace components::document {
 
     template<>
     inline void document_t::set(const std::string& key, const std::string &value) {
-        set_(key, ::document::impl::new_value(::document::slice_t(value)));
+        set_(key, ::document::impl::new_value(value));
     }
 
     template<>
-    inline void document_t::set(const std::string& key, ::document::retained_const_t<::document::impl::value_t> value) {
-        set_(key, std::move(value));
+    inline void document_t::set(const std::string& key, std::string_view value) {
+        set_(key, ::document::impl::new_value(value));
+    }
+
+    template<>
+    inline void document_t::set(const std::string& key, document_const_value_t value) {
+        set_(key, value);
     }
 
     template <class T>

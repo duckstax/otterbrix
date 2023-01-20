@@ -25,12 +25,12 @@ namespace oid {
     public:
         oid_t();
         explicit oid_t(timestamp_value_t timestamp);
-        explicit oid_t(const std::string& str);
+        explicit oid_t(std::string_view str);
         oid_t(const oid_t& other);
 
         ~oid_t() = default;
 
-        oid_t& operator=(const std::string& str);
+        oid_t& operator=(std::string_view str);
         oid_t& operator=(const oid_t& other);
 
         int compare(const oid_t& other) const;
@@ -46,7 +46,7 @@ namespace oid {
         bool operator==(const oid_t& other) const;
         bool operator<(const oid_t& other) const;
 
-        static bool is_valid(const std::string& str);
+        static bool is_valid(std::string_view str);
 
         struct hash_t {
             std::size_t operator()(const oid_t& oid) const {
@@ -56,7 +56,7 @@ namespace oid {
 
         struct timestamp_generator {
             static void write(byte_t *data, timestamp_value_t value) {
-                for (auto i = 0; i < T::size_timestamp; ++i) {
+                for (timestamp_value_t i = 0; i < T::size_timestamp; ++i) {
                     data[T::size_timestamp - i - 1] = byte_t(value >> 8 * i);
                 }
             }
@@ -69,7 +69,7 @@ namespace oid {
         struct random_generator {
             static void write(byte_t *data) {
                 static random_generator generator;
-                for (auto i = 0; i < T::size_random; ++i) {
+                for (random_value_t i = 0; i < T::size_random; ++i) {
                     data[T::size_random - i - 1] = byte_t(generator.value_ >> 8 * i);
                 }
             }
@@ -80,7 +80,7 @@ namespace oid {
             random_generator() {
                 time_t t;
                 srandom(static_cast<std::uint32_t>(std::time(&t)));
-                value_ = random();
+                value_ = random_value_t(random());
             }
         };
 
@@ -88,7 +88,7 @@ namespace oid {
             static void write(byte_t *data) {
                 static increment_generator generator;
                 ++generator.value_;
-                for (auto i = 0; i < T::size_increment; ++i) {
+                for (increment_value_t i = 0; i < T::size_increment; ++i) {
                     data[T::size_increment - i - 1] = byte_t(generator.value_ >> 8 * i);
                 }
             }
@@ -97,14 +97,14 @@ namespace oid {
             increment_value_t value_;
 
             increment_generator() {
-                value_ = random();
+                value_ = increment_value_t(random());
             }
         };
 
     private:
         byte_t data_[size];
 
-        void init(const std::string& str);
+        void init(std::string_view str);
         void clear();
     };
 
@@ -148,7 +148,7 @@ namespace oid {
     }
 
     template<class T>
-    oid_t<T>::oid_t(const std::string& str) {
+    oid_t<T>::oid_t(std::string_view str) {
         init(str);
     }
 
@@ -158,7 +158,7 @@ namespace oid {
     }
 
     template<class T>
-    oid_t<T>& oid_t<T>::operator=(const std::string& str) {
+    oid_t<T>& oid_t<T>::operator=(std::string_view str) {
         init(str);
         return *this;
     }
@@ -176,7 +176,7 @@ namespace oid {
 
     template<class T>
     bool oid_t<T>::is_null() const {
-        for (auto i = 0; i < size; ++i) {
+        for (uint32_t i = 0; i < size; ++i) {
             if (data_[i] > 0) {
                 return false;
             }
@@ -192,17 +192,17 @@ namespace oid {
     template<class T>
     std::string oid_t<T>::to_string() const {
         char str[2 * size];
-        for (auto i = 0; i < size; ++i) {
+        for (uint32_t i = 0; i < size; ++i) {
             str[2 * i] = to_char_(data_[i] / 0x10);
             str[2 * i + 1] = to_char_(data_[i] % 0x10);
         }
-        return std::string(str, 2 * size);
+        return {str, 2 * size};
     }
 
     template<class T>
     timestamp_value_t oid_t<T>::get_timestamp() const {
         timestamp_value_t value = 0;
-        for (auto i = 0; i < T::size_timestamp; ++i) {
+        for (timestamp_value_t i = 0; i < T::size_timestamp; ++i) {
             value = (value << 8) + static_cast<timestamp_value_t>(*(data() + offset_timestamp + i));
         }
         return value;
@@ -233,7 +233,7 @@ namespace oid {
     }
 
     template<class T>
-    bool oid_t<T>::is_valid(const std::string& str) {
+    bool oid_t<T>::is_valid(const std::string_view str) {
         if (str.size() != 2 * size) {
             return false;
         }
@@ -243,10 +243,10 @@ namespace oid {
     }
 
     template<class T>
-    void oid_t<T>::init(const std::string& str) {
+    void oid_t<T>::init(std::string_view str) {
         if (is_valid(str)) {
-            for (auto i = 0; i < size; ++i) {
-                data_[i] = from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]);
+            for (uint32_t i = 0; i < size; ++i) {
+                data_[i] = byte_t(from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]));
             }
         } else {
             this->clear();

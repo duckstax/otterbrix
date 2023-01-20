@@ -2,7 +2,6 @@
 #include <services/database/database.hpp>
 #include <document/mutable/mutable_dict.h>
 #include <document/mutable/mutable_array.h>
-#include <parser/parser.hpp>
 #include <catch2/catch.hpp>
 
 #include <core/non_thread_scheduler/scheduler_test.hpp>
@@ -81,7 +80,7 @@ collection_t* d(context_ptr&ptr){
 }
 
 context_ptr gen_collection() {
-    static auto log = initialization_logger("duck_charmer", "/tmp/docker_logs/");
+    static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
 
     auto collection = make_context(log);

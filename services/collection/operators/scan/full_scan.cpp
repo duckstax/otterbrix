@@ -17,7 +17,7 @@ namespace services::collection::operators {
         }
         output_ = make_operator_data(context_->resource());
         for (auto& it : context_->storage()) {
-            if (predicate_->check(it.second)) {
+            if (predicate_->check(it.second, transaction_context ? transaction_context->parameters : nullptr)) {
                 output_->append(it.second);
                 ++count;
                 if (!limit_.check(count)) {

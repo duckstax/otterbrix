@@ -1,10 +1,12 @@
 #pragma once
+
+#include <vector>
 #include <string>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace core::file {
 
-    using path_t = boost::filesystem::path;
+    using path_t = std::filesystem::path;
 
     class file_t {
     public:

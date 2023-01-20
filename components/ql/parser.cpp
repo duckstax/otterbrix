@@ -40,6 +40,34 @@ namespace components::ql {
         return condition_type::novalid;
     }
 
+    condition_type get_condition_type_(std::string_view key) {
+        if (key == "$eq")
+            return condition_type::eq;
+        if (key == "$ne")
+            return condition_type::ne;
+        if (key == "$gt")
+            return condition_type::gt;
+        if (key == "$lt")
+            return condition_type::lt;
+        if (key == "$gte")
+            return condition_type::gte;
+        if (key == "$lte")
+            return condition_type::lte;
+        if (key == "$regex")
+            return condition_type::regex;
+        if (key == "$in")
+            return condition_type::any;
+        if (key == "$all")
+            return condition_type::all;
+        if (key == "$and")
+            return condition_type::union_and;
+        if (key == "$or")
+            return condition_type::union_or;
+        if (key == "$not")
+            return condition_type::union_not;
+        return condition_type::novalid;
+    }
+
     void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word);
     void parse_find_condition_dict_(expr_t* parent_condition, const dict_t* condition, const std::string& prev_key);
     void parse_find_condition_array_(expr_t* parent_condition, const array_t* condition, const std::string& prev_key);
@@ -106,7 +134,7 @@ namespace components::ql {
         auto res_condition = make_union_expr();
         for (auto it = condition->begin(); it; ++it) {
             if (condition->count() == 1) {
-                res_condition->type_ = get_condition_type_(it.key_string().as_string());
+                res_condition->type_ = get_condition_type_(it.key_string());
             }
             parse_find_condition_(res_condition.get(), it.value(), std::string(it.key()->as_string()), std::string());
         }

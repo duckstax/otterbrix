@@ -20,12 +20,12 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
+        CONAN_PKG::actor-zeta
+        CONAN_PKG::boost
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME}
         PUBLIC
-        cursor.hpp
 )
 
 if (DEV_MODE)

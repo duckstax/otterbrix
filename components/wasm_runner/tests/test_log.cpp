@@ -1,20 +1,19 @@
 #include <fstream>
 #include <sstream>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 #include <catch2/catch.hpp>
 
-
 #include <components/log/log.hpp>
 
-#include "wasm.hpp"
+#include "wasm_runner/wasm.hpp"
 
 using namespace std;
 using namespace proxy_wasm;
 using namespace components::wasm_runner;
 
-string read_test_wasm_file(const boost::filesystem::path& path) {
+string read_test_wasm_file(const std::filesystem::path& path) {
     ifstream file(path.string(), ios::binary);
     stringstream file_string_stream;
 
@@ -154,7 +153,7 @@ TEST_CASE("wasm_manager_t log", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
     auto wasm_path =  "log_wasm.wasm";
-    REQUIRE(boost::filesystem::exists(wasm_path));
+    REQUIRE(std::filesystem::exists(wasm_path));
     auto wasm = read_test_wasm_file(wasm_path);
     REQUIRE(!wasm.empty());
 
@@ -170,7 +169,7 @@ TEST_CASE("wasm_manager_t log_quickjs", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
     auto wasm_path =  "log_quickjs_wasm.wasm";
-    REQUIRE(boost::filesystem::exists(wasm_path));
+    REQUIRE(std::filesystem::exists(wasm_path));
     auto wasm = read_test_wasm_file(wasm_path);
     REQUIRE(!wasm.empty());
     string_view plugin_id = "plugin_id1";

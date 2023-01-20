@@ -1,5 +1,5 @@
 #include "cursor.hpp"
-
+#include <boost/json.hpp>
 namespace components::cursor {
 
     void cursor_t::push(sub_cursor_t* sub_cursor) {

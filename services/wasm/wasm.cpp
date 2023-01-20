@@ -9,7 +9,7 @@ using namespace std;
 
 namespace services::wasm {
 
-    string read_wasm_file(const boost::filesystem::path& path) {
+    string read_wasm_file(const std::filesystem::path& path) {
         ifstream file(path.string(), ios::binary);
         stringstream file_string_stream;
 
@@ -18,7 +18,7 @@ namespace services::wasm {
         return file_string_stream.str();
     }
 
-    auto wasm_runner_t::load_code(const boost::filesystem::path& path) -> void {
+    auto wasm_runner_t::load_code(const std::filesystem::path& path) -> void {
         auto code = read_wasm_file(path);
 
         wasm_manager_.initialize("", "", "", "", false, "", "", {}, {}, code, false);

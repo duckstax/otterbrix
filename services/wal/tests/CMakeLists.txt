@@ -11,13 +11,17 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
         non_thread_scheduler
         rocketjoe::ql
         rocketjoe::log
         rocketjoe::session
         rocketjoe::wal
         rocketjoe::test_generaty
+
+        CONAN_PKG::catch2
+        CONAN_PKG::crc32c
+        CONAN_PKG::actor-zeta
+        CONAN_PKG::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

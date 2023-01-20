@@ -1,5 +1,6 @@
 #include "document.hpp"
 
+#include <boost/json/src.hpp>
 #include <boost/json.hpp>
 #include <components/document/mutable/mutable_array.h>
 #include <components/document/mutable/mutable_dict.h>
@@ -11,37 +12,49 @@ namespace components::document {
     using ::document::impl::mutable_dict_t;
     using ::document::impl::value_type;
 
-    document_view_t::const_value_ptr inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
+    document_const_value_t inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
         if (value->type() == ::document::impl::value_type::number) {
             if (src->is_unsigned()) {
-                return ::document::impl::new_value(src->as_unsigned() + value->as_unsigned()).detach();
+                return ::document::impl::new_value(src->as_unsigned() + value->as_unsigned());
             } else if (src->is_int()) {
-                return ::document::impl::new_value(src->as_int() + value->as_int()).detach();
+                return ::document::impl::new_value(src->as_int() + value->as_int());
             } else if (src->is_double()) {
-                return ::document::impl::new_value(src->as_double() + value->as_double()).detach();
+                return ::document::impl::new_value(src->as_double() + value->as_double());
             }
         }
         //todo error not valid type
-        return src;
+        return nullptr;
     }
 
-    document_const_value_t get_value_by_key_(document_const_value_t object, const std::string &key) {
+    document_const_value_t get_value_by_key_(const document_const_value_t& object, const std::string &key) {
         if (object->type() == value_type::dict) {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
             try {
-                return object->as_array()->as_mutable()->get(std::atol(key.c_str()));
+                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.c_str())));
             } catch (...) {
             }
         }
         return nullptr;
     }
 
-    void set_new_value_(document_const_value_t object, const std::string &key, document_const_value_t value) {
+    document_const_value_t get_value_by_key_(const document_const_value_t& object, std::string_view key) {
+        if (object->type() == value_type::dict) {
+            return object->as_dict()->as_mutable()->get(key);
+        } else if (object->type() == value_type::array) {
+            try {
+                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.data())));
+            } catch (...) {
+            }
+        }
+        return nullptr;
+    }
+
+    void set_new_value_(const document_const_value_t& object, const std::string &key, const document_const_value_t& value) {
         auto dot_pos = key.find('.');
         if (dot_pos != std::string::npos) {
             auto key_parent = key.substr(0, dot_pos);
-            document_const_value_t object_parent = get_value_by_key_(object, key_parent);
+            auto object_parent = get_value_by_key_(object, key_parent);
             if (!object_parent) {
                 auto dot_pos_next = key.find('.', dot_pos + 1);
                 auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
@@ -60,10 +73,48 @@ namespace components::document {
             }
         } else {
             if (object->type() == value_type::dict) {
-                object->as_dict()->as_mutable()->set(key, std::move(value));
+                object->as_dict()->as_mutable()->set(key, value);
             } else if (object->type() == value_type::array) {
                 try {
                     auto index = uint32_t(std::atol(key.c_str()));
+                    if (index < object->as_array()->count()) {
+                        object->as_array()->as_mutable()->set(index, value);
+                    } else {
+                        object->as_array()->as_mutable()->append(value);
+                    }
+                } catch (...) {
+                }
+            }
+        }
+    }
+
+    void set_new_value_(const document_const_value_t& object, std::string_view key, const document_const_value_t& value) {
+        auto dot_pos = key.find('.');
+        if (dot_pos != std::string::npos) {
+            auto key_parent = key.substr(0, dot_pos);
+            auto object_parent = get_value_by_key_(object, key_parent);
+            if (!object_parent) {
+                auto dot_pos_next = key.find('.', dot_pos + 1);
+                auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
+                if (key_next.find_first_not_of("0123456789") == std::string::npos) {
+                    set_new_value_(object, key_parent, mutable_array_t::new_array().detach());
+                } else {
+                    set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
+                }
+                object_parent = get_value_by_key_(object, key_parent);
+                if (!object_parent && object->type() == value_type::array) {
+                    object_parent = object->as_array()->get(object->as_array()->count() - 1);
+                }
+            }
+            if (object_parent) {
+                set_new_value_(object_parent, key.substr(dot_pos + 1, key.size() - dot_pos), value);
+            }
+        } else {
+            if (object->type() == value_type::dict) {
+                object->as_dict()->as_mutable()->set(key, value);
+            } else if (object->type() == value_type::array) {
+                try {
+                    auto index = uint32_t(std::atol(key.data()));
                     if (index < object->as_array()->count()) {
                         object->as_array()->as_mutable()->set(index, value);
                     } else {
@@ -91,16 +142,16 @@ namespace components::document {
             auto key_update = static_cast<std::string>(it_update.key()->as_string());
             auto fields = it_update.value()->as_dict();
             for (auto it_field = fields->begin(); it_field; ++it_field) {
-                auto key_field = it_field.key()->as_string().as_string();
+                auto key_field = it_field.key()->as_string();
                 auto old_value = view.get_value(key_field);
-                auto new_value = old_value;
+                document_const_value_t new_value = nullptr;
                 if (key_update == "$set") {
-                    new_value = it_field.value();
+                    new_value = ::document::impl::new_value(it_field.value());
                 } else if (key_update == "$inc") {
-                    new_value = inc_(new_value, it_field.value());
+                    new_value = inc_(old_value, it_field.value());
                 }
                 //todo impl others methods
-                if (!new_value->is_equal(old_value)) {
+                if (new_value && !new_value->is_equal(old_value)) {
                     set_(key_field, new_value);
                     result = true;
                 }
@@ -109,8 +160,12 @@ namespace components::document {
         return result;
     }
 
-    void document_t::set_(const std::string &key, document_const_value_t value) {
-        set_new_value_(value_, key, std::move(value));
+    void document_t::set_(const std::string &key, const document_const_value_t& value) {
+        set_new_value_(value_, key, value);
+    }
+
+    void document_t::set_(std::string_view key, const document_const_value_t& value) {
+        set_new_value_(value_, key, value);
     }
 
     document_ptr make_document() {
@@ -166,7 +221,7 @@ namespace components::document {
         } else if (item.is_double()) {
             return ::document::impl::new_value(item.get_double());
         } else if (item.is_string()) {
-            return ::document::impl::new_value(::document::slice_t(item.get_string().c_str()));
+            return ::document::impl::new_value(std::string(item.get_string().c_str()));
         } else if (item.is_array()) {
             auto array = ::document::impl::mutable_array_t::new_array();
             for (const auto &child : item.get_array()) {

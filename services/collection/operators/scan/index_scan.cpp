@@ -5,29 +5,37 @@ namespace services::collection::operators {
 
     using range = components::index::index_t::range;
 
-    std::vector<range> search_range_by_index(components::index::index_t* index, const components::ql::expr_ptr &expr) {
-        using components::ql::condition_type;
-        switch (expr->type_) {
-            case condition_type::eq:
-                return {index->find(expr->value_)};
-            case condition_type::ne:
-                return {index->lower_bound(expr->value_), index->upper_bound(expr->value_)};
-            case condition_type::gt:
-                return {index->upper_bound(expr->value_)};
-            case condition_type::lt:
-                return {index->lower_bound(expr->value_)};
-            case condition_type::gte:
-                return {index->find(expr->value_), index->upper_bound(expr->value_)};
-            case condition_type::lte:
-                return {index->lower_bound(expr->value_), index->find(expr->value_)};
+    std::vector<range> search_range_by_index(components::index::index_t* index,
+                                             const components::expressions::compare_expression_ptr &expr,
+                                             const components::ql::storage_parameters *parameters) {
+        using components::expressions::compare_type;
+        using components::ql::get_parameter;
+        auto value = get_parameter(parameters, expr->value());
+        switch (expr->type()) {
+            case compare_type::eq:
+                return {index->find(value)};
+            case compare_type::ne:
+                return {index->lower_bound(value), index->upper_bound(value)};
+            case compare_type::gt:
+                return {index->upper_bound(value)};
+            case compare_type::lt:
+                return {index->lower_bound(value)};
+            case compare_type::gte:
+                return {index->find(value), index->upper_bound(value)};
+            case compare_type::lte:
+                return {index->lower_bound(value), index->find(value)};
             default:
                 //todo: error
                 return {{index->cend(), index->cend()}, {index->cend(), index->cend()}};
         }
     }
 
-    void search_by_index(components::index::index_t* index, const components::ql::expr_ptr &expr, const predicates::limit_t &limit, operator_data_ptr &result) {
-        auto ranges = search_range_by_index(index, expr);
+    void search_by_index(components::index::index_t* index,
+                         const components::expressions::compare_expression_ptr &expr,
+                         const predicates::limit_t &limit,
+                         const components::ql::storage_parameters *parameters,
+                         operator_data_ptr &result) {
+        auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
         for (const auto &range : ranges) {
             for (auto it = range.first; it != range.second; ++it) {
@@ -41,7 +49,7 @@ namespace services::collection::operators {
     }
 
 
-    index_scan::index_scan(context_collection_t* context, components::ql::expr_ptr expr, predicates::limit_t limit)
+    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, predicates::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
         , limit_(limit) {
@@ -52,9 +60,9 @@ namespace services::collection::operators {
             return; //limit = 0
         }
         output_ = make_operator_data(context_->resource());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key_});
+        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
         if (index) {
-            search_by_index(index, expr_, limit_, output_);
+            search_by_index(index, expr_, limit_, transaction_context->parameters, output_);
         }
     }
 

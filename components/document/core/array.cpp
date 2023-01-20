@@ -19,7 +19,7 @@ namespace document::impl {
             _count = v->count_value();
             if (_usually_false(_count == long_array_count)) {
                 uint32_t extra_count;
-                size_t count_size = get_uvar_int32(slice_t(_first, 10), &extra_count);
+                size_t count_size = get_uvar_int32(std::string_view(reinterpret_cast<const char*>(_first), 10), &extra_count);
                 if (_usually_true(count_size > 0))
                     _count += extra_count;
                 else

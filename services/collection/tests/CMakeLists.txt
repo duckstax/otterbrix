@@ -10,6 +10,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/test_operators.cpp
         operators/test_get_operators.cpp
         operators/test_merge_operators.cpp
+        planner/test_create_plan_match.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
@@ -23,7 +24,9 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::test_generaty
-        ${CONAN_LIBS}
+        CONAN_PKG::spdlog
+        CONAN_PKG::abseil
+        CONAN_PKG::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

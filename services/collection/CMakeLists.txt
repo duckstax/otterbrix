@@ -8,6 +8,9 @@ set(${PROJECT_NAME}_HEADERS
 
 set(${PROJECT_NAME}_SOURCES
         planner/transaction_context.cpp
+        planner/create_plan.cpp
+        planner/impl/create_plan_aggregate.cpp
+        planner/impl/create_plan_match.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp
@@ -19,7 +22,6 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_group.cpp
         operators/operator_sort.cpp
         operators/aggregation.cpp
-        operators/scan/scan.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp
         operators/scan/primary_key_scan.cpp
@@ -49,7 +51,7 @@ set(${PROJECT_NAME}_SOURCES
 add_library(rocketjoe_${PROJECT_NAME}
         ${${PROJECT_NAME}_HEADERS}
         ${${PROJECT_NAME}_SOURCES}
-        )
+)
 
 
 add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
@@ -57,16 +59,19 @@ add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
 set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PRIVATE
-        ${CONAN_LIBS}
+        rocketjoe_${PROJECT_NAME} PUBLIC
         rocketjoe::document
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::index
+        rocketjoe::logical_plan
+        CONAN_PKG::spdlog
+        CONAN_PKG::abseil
+        CONAN_PKG::boost
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
-        )
+)
 
 if (DEV_MODE)
     add_definitions(-DDEV_MODE)

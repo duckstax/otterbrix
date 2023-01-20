@@ -1,10 +1,8 @@
 #pragma once
 
-#include <string>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-
-using database_name_t = std::string;
-using collection_name_t = std::string;
+#include <components/document/wrapper_value.hpp>
+#include "base.hpp"
 
 namespace components::ql {
 
@@ -22,8 +20,10 @@ namespace components::ql {
         delete_many,
         update_one,
         update_many,
-        create_index
+        create_index,
+        aggregate
     };
+
 
     // Base struct for every QL statement
     struct ql_statement_t : public boost::intrusive_ref_counter<ql_statement_t> {
