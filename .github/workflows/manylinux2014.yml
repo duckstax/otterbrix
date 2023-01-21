@@ -136,7 +136,7 @@ jobs:
           cp integration/python/ottergon/pyproject.toml .
           cp integration/python/ottergon/get_path.py .
           
-          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
+          python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel --verbose
@@ -207,8 +207,7 @@ jobs:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
     needs: [ test-wheel, build-info ]
-    # TODO remove second branch condition later
-    if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
+    if: ${{ github.ref_name == 'master'}}
     strategy:
       fail-fast: false
       matrix:
@@ -246,5 +245,5 @@ jobs:
           pwd
           ls
           echo "Pretend to upload"
-          #twine upload --skip-existing *
+          twine upload --skip-existing *
         working-directory: ./app

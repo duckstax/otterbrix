@@ -18,7 +18,7 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN    pip3 install --no-cache-dir conan==1.52.0 cmake && \
+RUN    pip3 install --no-cache-dir conan==1.54.0 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -52,7 +52,7 @@ FROM k0tb9g9m0t/manylinux-bazel-2014 as build_wheel
 
 RUN yum install -y ninja-build python3-pip wget unzip zip gcc-c++ java-11-openjdk-devel
 
-RUN  pip3 install --no-cache-dir conan==1.52.0 pytest==6.2.5
+RUN  pip3 install --no-cache-dir conan==1.54.0 pytest==6.2.5
 RUN  conan user
 RUN  conan profile new default --detect --force
 RUN  conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -89,8 +89,8 @@ RUN ls wasm_bin
 
 RUN   PYBIN=(/opt/python/*/bin) && \
       for BIN in "${PYBIN[@]}";  do  \
-      if [[  ${BIN} == *"cp38"* ]]; then \
-          ${BIN}/python3 -m pip install --no-cache-dir  wheel setuptools scikit-build && \
+      if [[  ${BIN} == *"cp311"* ]]; then \
+          ${BIN}/python3 -m pip install --no-cache-dir  wheel setuptools scikit-build==0.16.4  && \
           mkdir -p $(echo "./$(${BIN}/python3 get_path.py )") && \
           conan install . -s build_type=Release -if=$(echo "./$(${BIN}/python3 get_path.py )") && \
           ${BIN}/python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON && \
@@ -120,10 +120,10 @@ RUN apt update && \
 
 WORKDIR /app
 
-COPY --from=build_wheel /app/work/dist/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /app/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+COPY --from=build_wheel /app/work/dist/ottergon-0.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /app/ottergon-0.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 COPY ./integration  ./integration
 
-RUN pip3 install ./ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+RUN pip3 install ./ottergon-0.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 RUN python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
 RUN python3 -c "from ottergon import Client, DataBase, Collection"
 RUN pytest
