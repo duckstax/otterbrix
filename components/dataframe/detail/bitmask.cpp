@@ -219,7 +219,6 @@ namespace components::dataframe::detail {
         bool const inclusive;
     };
 
-    /*
     template<typename InputIteratorT, typename OutputIteratorT,
              typename BeginOffsetIteratorT, typename EndOffsetIteratorT>
     void Sum(void* d_temp_storage, size_t& temp_storage_bytes,
@@ -232,24 +231,26 @@ namespace components::dataframe::detail {
 
         // Calculate the required allocation size for the temporary storage buffer
         //!size_t num_elements = std::distance(d_in, d_out);
-        size_t num_elements = num_segments;
-        temp_storage_bytes = element_size * num_elements;
+        temp_storage_bytes = element_size * static_cast<size_t>(num_segments);
 
         // If d_temp_storage is NULL, return the required allocation size
-        if constexpr (std::is_null_pointer_v<decltype(d_temp_storage)>) {
+        if (!d_temp_storage) {
             return;
         }
 
         // Perform the segmented sum using std::transform_reduce
-        std::transform(d_begin_offsets, d_end_offsets, d_out,//!d_temp_storage,
-                       [d_in](const auto& offset) {
-                           return std::reduce(d_in + offset, d_in + offset + 1, 0, std::plus<>());
-                       });
+        //std::transform(d_begin_offsets, d_end_offsets, d_out,//!d_temp_storage,
+                       //[d_in](const auto& offset) {
+                           //return std::reduce(d_in + offset, d_in + offset + 1, 0, std::plus<>());
+                       //});
 
         // Copy the results from d_temp_storage to d_out using std::copy
-        std::copy(static_cast<char*>(d_temp_storage), static_cast<char*>(d_temp_storage) + temp_storage_bytes, d_out);
+        //std::copy(static_cast<char*>(d_temp_storage), static_cast<char*>(d_temp_storage) + temp_storage_bytes, d_out);
+
+        for (auto it_begin = d_begin_offsets, it_end = d_end_offsets, end = d_begin_offsets + num_segments; it_begin != end; ++it_begin, ++it_end) {
+            *d_out++ = std::accumulate(d_in + *it_begin, d_in + *it_end, 0);
+        }
     }
-    */
 
     template<typename OffsetIterator>
     core::uvector<size_type> segmented_count_bits(std::pmr::memory_resource* resource, bitmask_type const* bitmask,
@@ -270,7 +271,6 @@ namespace components::dataframe::detail {
 
         // Allocate temporary memory.
         size_t temp_storage_bytes{0};
-        /* //todo
         Sum(nullptr,
             temp_storage_bytes,
             num_set_bits_in_word,
@@ -289,7 +289,6 @@ namespace components::dataframe::detail {
             num_ranges,
             first_word_indices,
             last_word_indices);
-        */
 
         // Adjust counts in segment boundaries (if segments are not word-aligned).
         constexpr size_type block_size{256};
