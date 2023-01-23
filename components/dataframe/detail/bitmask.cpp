@@ -527,7 +527,7 @@ namespace components::dataframe::detail {
 
     bool is_set_bit(
         bitmask_type const* bitmask,
-        size_type index) {
+        size_t index) {
         auto size_word = sizeof(bitmask_type) * CHAR_BIT;
         auto index_word = index / size_word;
         auto index_bit = size_word - index % size_word - 1;
@@ -549,11 +549,13 @@ namespace components::dataframe::detail {
             return 0;
         }
 
-        auto const num_words = detail::num_bitmask_words(num_bits_to_count);
-        constexpr size_type block_size{256};
-        core::scalar<size_type> non_zero_count(resource, 0);
-        count_set_bits_impl<block_size>(bitmask, start, stop - 1, non_zero_count.data());
-        return non_zero_count.value();
+        return std::accumulate(bitmask_iterator{bitmask, size_t(start)}, bitmask_iterator{bitmask, size_t(stop)}, 0);
+
+        //!auto const num_words = detail::num_bitmask_words(num_bits_to_count);
+        //!constexpr size_type block_size{256};
+        //!core::scalar<size_type> non_zero_count(resource, 0);
+        //!count_set_bits_impl<block_size>(bitmask, start, stop - 1, non_zero_count.data());
+        //!return non_zero_count.value();
     }
 
     // Count zero bits in the specified range
@@ -596,5 +598,84 @@ namespace components::dataframe::detail {
         }
         return segmented_count_set_bits(resource, bitmask, indices.begin(), indices.end());
     }
+
+
+    bitmask_iterator::bitmask_iterator(const bitmask_type* data, size_t pos)
+        : data_(data)
+        , pos_(pos)
+    {}
+
+    bitmask_iterator::bitmask_iterator(const bitmask_type* data)
+        : bitmask_iterator(data, 0)
+    {}
+
+    bool bitmask_iterator::operator*() const {
+        return is_set_bit(data_, pos_);
+    }
+
+    bitmask_iterator& bitmask_iterator::operator++() {
+        ++pos_;
+        return *this;
+    }
+
+    bitmask_iterator bitmask_iterator::operator++(int) {
+        auto old = *this;
+        ++(*this);
+        return old;
+    }
+
+    bitmask_iterator& bitmask_iterator::operator--() {
+        --pos_;
+        return *this;
+    }
+
+    bitmask_iterator bitmask_iterator::operator--(int) {
+        auto old = *this;
+        --(*this);
+        return old;
+    }
+
+    bool bitmask_iterator::operator[](size_t n) const {
+        return is_set_bit(data_, n);
+    }
+
+    bitmask_iterator& bitmask_iterator::operator+=(size_t n) {
+        pos_ += n;
+        return *this;
+    }
+
+    bitmask_iterator& bitmask_iterator::operator-=(size_t n) {
+        pos_ -= n;
+        return *this;
+    }
+
+    void swap(bitmask_iterator& a, bitmask_iterator& b) {
+        std::swap(a.pos_, b.pos_);
+    }
+
+    bool operator==(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return lhs.pos_ == rhs.pos_;
+    }
+
+    bool operator!=(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return !(lhs == rhs);
+    }
+
+    bool operator<(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return lhs.pos_ < rhs.pos_;
+    }
+
+    bool operator>(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return rhs < lhs;
+    }
+
+    bool operator<=(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return !(rhs > lhs);
+    }
+
+    bool operator>=(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return !(lhs < rhs);
+    }
+
 
 } // namespace components::dataframe::detail

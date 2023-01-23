@@ -31,7 +31,7 @@ namespace components::dataframe::detail {
 
     bool is_set_bit(
         bitmask_type const* bitmask,
-        size_type index);
+        size_t index);
 
     size_type count_set_bits(
         std::pmr::memory_resource* resource,
@@ -78,5 +78,39 @@ namespace components::dataframe::detail {
         size_type end_bit);
 
     size_type num_bitmask_words(size_type number_of_bits);
+
+
+    class bitmask_iterator : public std::iterator<std::random_access_iterator_tag, bool>
+    {
+    public:
+        bitmask_iterator(const bitmask_type* data, size_t pos);
+        explicit bitmask_iterator(const bitmask_type* data);
+        bitmask_iterator() = delete;
+        bitmask_iterator(const bitmask_iterator&) = default;
+        bitmask_iterator& operator=(const bitmask_iterator&) = default;
+        ~bitmask_iterator() = default;
+
+        bool operator*() const;
+        bitmask_iterator& operator++();
+        bitmask_iterator operator++(int);
+        bitmask_iterator& operator--();
+        bitmask_iterator operator--(int);
+        bool operator[](size_t n) const;
+        bitmask_iterator& operator+=(size_t n);
+        bitmask_iterator& operator-=(size_t n);
+
+    private:
+        const bitmask_type* data_{nullptr};
+        size_t pos_{0};
+
+        friend void swap(bitmask_iterator& a, bitmask_iterator& b);
+        friend bool operator==(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend bool operator!=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend bool operator<(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend bool operator>(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend bool operator<=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend bool operator>=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+
+    };
 
 } // namespace components::dataframe::detail
