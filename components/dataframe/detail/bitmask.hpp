@@ -29,6 +29,10 @@ namespace components::dataframe::detail {
         size_type end_bit,
         bool valid);
 
+    bool is_set_bit(
+        bitmask_type const* bitmask,
+        size_type index);
+
     size_type count_set_bits(
         std::pmr::memory_resource* resource,
         bitmask_type const* bitmask,

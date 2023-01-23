@@ -525,6 +525,15 @@ namespace components::dataframe::detail {
         *global_count += tmp_count;
     }
 
+    bool is_set_bit(
+        bitmask_type const* bitmask,
+        size_type index) {
+        auto size_word = sizeof(bitmask_type) * CHAR_BIT;
+        auto index_word = index / size_word;
+        auto index_bit = size_word - index % size_word - 1;
+        return *(bitmask + index_word) & (1 << index_bit);
+    }
+
     // Count non-zero bits in the specified range
     size_type count_set_bits(
         std::pmr::memory_resource* resource,
