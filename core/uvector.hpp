@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <type_traits>
 #include <vector>
+#include <bitset>
 
 #include "core/assert/assert.hpp"
 
@@ -128,6 +129,17 @@ namespace core {
 
         [[nodiscard]] std::size_t constexpr bytes_to_elements(std::size_t num_bytes) const noexcept {
             return num_bytes / sizeof(value_type);
+        }
+
+        template <class stream_t>
+        friend stream_t& operator<<(stream_t &stream, const uvector& v) {
+            for (auto i = 0u; i < v.storage_.size(); ++i) {
+                if (i > 0) {
+                    stream << "'";
+                }
+                stream << std::bitset<8>(*reinterpret_cast<const uint8_t*>(v.storage_.data() + i));
+            }
+            return stream;
         }
     };
 
