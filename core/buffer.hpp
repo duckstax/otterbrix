@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cassert>
 #include <cstddef>
 #include <cstring>
@@ -140,6 +141,21 @@ namespace core {
                 assert(nullptr != source);
                 std::memcpy(data_, source, bytes);
             }
+        }
+
+        template <class stream_t>
+        friend stream_t& operator<<(stream_t &stream, const buffer& buf) {
+            if (!buf.data_) {
+                stream << "{NULL_BITMASK}";
+                return stream;
+            }
+            for (auto i = 0u; i < buf.size_; ++i) {
+                if (i > 0) {
+                    stream << "'";
+                }
+                stream << std::bitset<8>(*(reinterpret_cast<const uint8_t*>(buf.data_) + i));
+            }
+            return stream;
         }
     };
 } // namespace core
