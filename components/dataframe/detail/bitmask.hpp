@@ -80,9 +80,15 @@ namespace components::dataframe::detail {
     size_type num_bitmask_words(size_type number_of_bits);
 
 
-    class bitmask_iterator : public std::iterator<std::random_access_iterator_tag, bool>
+    class bitmask_iterator
     {
     public:
+        using value_type = bool;
+        using difference_type = std::size_t;
+        using pointer = bool*;
+        using reference = bool&;
+        using iterator_category = std::random_access_iterator_tag;
+
         bitmask_iterator(const bitmask_type* data, size_t pos);
         explicit bitmask_iterator(const bitmask_type* data);
         bitmask_iterator() = delete;
@@ -110,7 +116,6 @@ namespace components::dataframe::detail {
         friend bool operator>(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
         friend bool operator<=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
         friend bool operator>=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
-
     };
 
 } // namespace components::dataframe::detail

@@ -528,7 +528,7 @@ namespace components::dataframe::detail {
     bool is_set_bit(
         bitmask_type const* bitmask,
         size_t index) {
-        auto size_word = sizeof(bitmask_type) * CHAR_BIT;
+        constexpr auto size_word = sizeof(bitmask_type) * CHAR_BIT;
         auto index_word = index / size_word;
         auto index_bit = size_word - index % size_word - 1;
         return *(bitmask + index_word) & (1 << index_bit);
