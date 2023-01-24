@@ -549,13 +549,7 @@ namespace components::dataframe::detail {
             return 0;
         }
 
-        return std::accumulate(bitmask_iterator{bitmask, size_t(start)}, bitmask_iterator{bitmask, size_t(stop)}, 0);
-
-        //!auto const num_words = detail::num_bitmask_words(num_bits_to_count);
-        //!constexpr size_type block_size{256};
-        //!core::scalar<size_type> non_zero_count(resource, 0);
-        //!count_set_bits_impl<block_size>(bitmask, start, stop - 1, non_zero_count.data());
-        //!return non_zero_count.value();
+        return size_type(std::count_if(bitmask_iterator{bitmask, size_t(start)}, bitmask_iterator{bitmask, size_t(stop)}, [](bool value){ return value; }));
     }
 
     // Count zero bits in the specified range
