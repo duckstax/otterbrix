@@ -495,36 +495,6 @@ namespace components::dataframe::detail {
         }
     }
 
-    template<size_type block_size>
-    void count_set_bits_impl(
-        bitmask_type const* bitmask,
-        size_type first_bit_index,
-        size_type last_bit_index,
-        size_type* global_count) {
-        auto const first_word_index{detail::word_index(first_bit_index)};
-        auto const last_word_index{detail::word_index(last_bit_index)};
-        size_type tmp_count{0};
-
-        for (size_type thread_word_index = first_word_index; thread_word_index <= last_word_index; thread_word_index++) {
-            tmp_count += core::popcount(bitmask[thread_word_index]);
-        }
-
-        size_type num_slack_bits = first_bit_index % detail::size_in_bits<bitmask_type>();
-        if (num_slack_bits > 0) {
-            bitmask_type word = bitmask[first_word_index];
-            auto slack_mask = detail::set_least_significant_bits(num_slack_bits);
-            tmp_count -= core::popcount(word & slack_mask);
-        }
-
-        num_slack_bits = last_bit_index % detail::size_in_bits<bitmask_type>();
-        if (num_slack_bits > 0) {
-            bitmask_type word = bitmask[last_word_index];
-            auto slack_mask = detail::set_most_significant_bits(num_slack_bits);
-            tmp_count -= core::popcount(word & slack_mask);
-        }
-        *global_count += tmp_count;
-    }
-
     bool is_set_bit(
         bitmask_type const* bitmask,
         size_t index) {
@@ -590,7 +560,7 @@ namespace components::dataframe::detail {
             auto const num_segments = validate_segmented_indices(indices.begin(), indices.end());
             return std::pmr::vector<size_type>(num_segments, 0);
         }
-        return segmented_count_set_bits(resource, bitmask, indices.begin(), indices.end());
+        return segmented_count_unset_bits(resource, bitmask, indices.begin(), indices.end());
     }
 
 
