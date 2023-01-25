@@ -151,6 +151,13 @@ namespace core {
         return result;
     }
 
+    template<>
+    inline std::pmr::vector<bool> make_vector(std::pmr::memory_resource* resource, uvector<bool>& src) {
+        std::pmr::vector<bool> result(src.size(), resource);
+        std::copy(src.begin(), src.end(), result.begin());
+        return result;
+    }
+
     template<typename T>
     uvector<T> make_empty_uvector(std::pmr::memory_resource* resource, std::size_t size) {
         uvector<T> ret(resource, size);
