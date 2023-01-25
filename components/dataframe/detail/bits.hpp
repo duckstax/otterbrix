@@ -38,6 +38,11 @@ namespace components::dataframe::detail {
         bitmask[word_index(bit_index)] |= (bitmask_type{1} << intra_word_index(bit_index));
     }
 
+    inline bool bit_is_set(bitmask_type const* bitmask, size_type bit_index) {
+        assert(nullptr != bitmask);
+        return bitmask[word_index(bit_index)] & (bitmask_type{1} << intra_word_index(bit_index));
+    }
+
     bitmask_type funnel_shift_r(bitmask_type curr_word, bitmask_type next_word, size_type source_begin_bit);
 
     bitmask_type funnel_shift_l(bitmask_type curr_word, bitmask_type next_word, size_type source_end_bit);

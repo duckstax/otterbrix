@@ -9,6 +9,10 @@
 
 #include <dataframe/tests/tools.hpp>
 
+#include <boost/iterator/counting_iterator.hpp>
+#include <boost/iterator/transform_iterator.hpp>
+#include <boost/iterator/zip_iterator.hpp>
+
 using namespace components::dataframe;
 
 TEST_CASE("state null count") {
@@ -91,8 +95,8 @@ TEST_CASE("empty range") {
     std::vector<size_type> indices = {0, 0, 17, 17};
     auto set_counts = detail::segmented_count_set_bits(ptr, mask.data(), indices);
     REQUIRE_THAT(set_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
-//    auto valid_counts = detail::segmented_valid_count(ptr, mask.data(), indices);
-//    REQUIRE_THAT(valid_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
+    //    auto valid_counts = detail::segmented_valid_count(ptr, mask.data(), indices);
+    //    REQUIRE_THAT(valid_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
 }
 
 TEST_CASE("single word all zero") {
@@ -457,17 +461,17 @@ TEST_CASE("null_ptr") {
 }
 
 TEST_CASE("test zero offset") {
-    auto*ptr= std::pmr::get_default_resource();
+    auto* ptr = std::pmr::get_default_resource();
     std::vector<int> validity_bit(1000);
     for (auto& m : validity_bit) {
-        m = GENERATE(0,1); /// uniform random generator int {0, 1}
+        m = GENERATE(0, 1); /// uniform random generator int {0, 1}
     }
-    auto input_mask = test::make_null_mask(ptr,validity_bit.begin(), validity_bit.end());
+    auto input_mask = test::make_null_mask(ptr, validity_bit.begin(), validity_bit.end());
 
     int begin_bit = 0;
     int end_bit = 800;
-    auto gold_splice_mask = test::make_null_mask(ptr,validity_bit.begin() + begin_bit, validity_bit.begin() + end_bit);
-    auto splice_mask = copy_bitmask(ptr,static_cast<const bitmask_type*>(input_mask.data()), begin_bit, end_bit);
+    auto gold_splice_mask = test::make_null_mask(ptr, validity_bit.begin() + begin_bit, validity_bit.begin() + end_bit);
+    auto splice_mask = copy_bitmask(ptr, static_cast<const bitmask_type*>(input_mask.data()), begin_bit, end_bit);
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
@@ -478,17 +482,108 @@ TEST_CASE("test non zero offset") {
     auto* ptr = std::pmr::get_default_resource();
     std::vector<int> validity_bit(1000);
     for (auto& m : validity_bit) {
-        m = GENERATE(0,1); /// uniform random generator int {0, 1}
+        m = GENERATE(0, 1); /// uniform random generator int {0, 1}
     }
-    auto input_mask = test::make_null_mask(ptr,validity_bit.begin(), validity_bit.end());
+    auto input_mask = test::make_null_mask(ptr, validity_bit.begin(), validity_bit.end());
 
     int begin_bit = 321;
     int end_bit = 998;
-    auto gold_splice_mask = test::make_null_mask(ptr,validity_bit.begin() + begin_bit, validity_bit.begin() + end_bit);
+    auto gold_splice_mask = test::make_null_mask(ptr, validity_bit.begin() + begin_bit, validity_bit.begin() + end_bit);
 
-    auto splice_mask = copy_bitmask(ptr,static_cast<const bitmask_type*>(input_mask.data()), begin_bit, end_bit);
+    auto splice_mask = copy_bitmask(ptr, static_cast<const bitmask_type*>(input_mask.data()), begin_bit, end_bit);
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
     REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), num_bitmask_words(number_of_bits)));
+}
+
+std::ostream& operator<<(std::ostream& stream, std::pmr::vector<bool> const& bits) {
+    for (auto _bit : bits)
+        stream << int(_bit);
+    return stream;
+}
+
+void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type const* bitmask, // Device Ptr
+                          size_type start_bit,
+                          std::pmr::vector<bool> const& expect) {
+    core::uvector<bool> result(resource, expect.size());
+    auto counting_iter = boost::iterators::make_counting_iterator<size_type>(0);
+    std::transform(counting_iter + start_bit,
+                   counting_iter + start_bit + expect.size(),
+                   result.begin(),
+                   [bitmask_type const* null_mask = bitmask](size_type element_index) -> bool const noexcept {
+                       return detail::bit_is_set(null_mask, element_index);
+                   });
+
+    auto vector_result = core::make_vector(resource, result);
+    REQUIRE_THAT(vector_result, Catch::Equals(expect));
+}
+
+void test_set_null_range(std::pmr::memory_resource* resource, size_type size,
+                         size_type begin,
+                         size_type end,
+                         bool valid) {
+    std::pmr::vector<bool> expected(end - begin, valid);
+    core::buffer mask = create_null_mask(resource, size, mask_state::uninitialized);
+    set_null_mask(static_cast<bitmask_type*>(mask.data()), begin, end, valid);
+    expect_bitmask_equal(resource, static_cast<bitmask_type*>(mask.data()), begin, expected);
+}
+
+void test_null_partition(std::pmr::memory_resource* resource, size_type size, size_type middle, bool valid) {
+    std::pmr::vector<bool> expected(size);
+    std::generate(expected.begin(), expected.end(), [n = 0, middle, valid]() mutable {
+        auto i = n++;
+        return (!valid) ^ (i < middle);
+    });
+
+    core::buffer mask = create_null_mask(resource, size, mask_state::uninitialized);
+    set_null_mask(static_cast<bitmask_type*>(mask.data()), 0, middle, valid);
+    set_null_mask(static_cast<bitmask_type*>(mask.data()), middle, size, !valid);
+    expect_bitmask_equal(resource, static_cast<bitmask_type*>(mask.data()), 0, expected);
+}
+
+TEST_CASE("fill_range") {
+    auto* resource = std::pmr::get_default_resource();
+    size_type size = 121;
+    for (auto begin = 0; begin < size; begin += 5)
+        for (auto end = begin + 1; end <= size; end += 7) {
+            test_set_null_range(resource, size, begin, end, true);
+            test_set_null_range(resource, size, begin, end, false);
+        }
+}
+
+TEST_CASE("null_mask_partition") {
+    auto* resource = std::pmr::get_default_resource();
+    size_type size = 64;
+    for (auto middle = 1; middle < size; middle++) {
+        test_null_partition(resource, size, middle, true);
+        test_null_partition(resource, size, middle, false);
+    }
+}
+TEST_CASE("error_range") {
+    auto* resource = std::pmr::get_default_resource();
+    size_type size = 121;
+    using size_pair = std::pair<size_type, size_type>;
+    std::vector<size_pair> begin_end_fail{
+        {-1, size}, // begin>=0
+        {-2, -1},   // begin>=0
+        {9, 8},     // begin<=end
+    };
+    for (auto begin_end : begin_end_fail) {
+        auto begin = begin_end.first, end = begin_end.second;
+        REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, true), std::logic_error);
+        REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, false), std::logic_error);
+    }
+    std::vector<size_pair> begin_end_pass{
+        {0, size},        // begin>=0
+        {0, 1},           // begin>=0
+        {8, 8},           // begin==end
+        {8, 9},           // begin<=end
+        {size - 1, size}, // begin<=end
+    };
+    for (auto begin_end : begin_end_pass) {
+        auto begin = begin_end.first, end = begin_end.second;
+        REQUIRE_NOTHROW(test_set_null_range(resource, size, begin, end, true));
+        REQUIRE_NOTHROW(test_set_null_range(resource, size, begin, end, false));
+    }
 }
