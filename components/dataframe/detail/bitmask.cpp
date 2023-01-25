@@ -82,9 +82,8 @@ namespace components::dataframe::detail {
                              size_type source_begin_bit,
                              size_type source_end_bit,
                              size_type number_of_mask_words) {
-        for (size_type destination_word_index = 0; destination_word_index < number_of_mask_words; destination_word_index++) {
-            destination[destination_word_index] = get_mask_offset_word(source, destination_word_index, source_begin_bit, source_end_bit);
-        }
+        std::copy(bitmask_iterator(source, size_t(source_begin_bit)), bitmask_iterator(source, size_t(source_end_bit)),
+                  out_bitmask_iterator(destination));
     }
 
     template<int block_size, typename Binop>
@@ -504,6 +503,21 @@ namespace components::dataframe::detail {
         return *(bitmask + index_word) & (1 << index_bit);
     }
 
+    void set_bit(
+        bitmask_type* bitmask,
+        size_t index,
+        bool value) {
+        constexpr auto size_word = sizeof(bitmask_type) * CHAR_BIT;
+        auto index_word = index / size_word;
+        auto index_bit = size_word - index % size_word - 1;
+        auto& word = *(bitmask + index_word);
+        if (value) {
+            word |= (1 << index_bit);
+        } else {
+            word &= ~(1 << index_bit);
+        }
+    }
+
     // Count non-zero bits in the specified range
     size_type count_set_bits(
         std::pmr::memory_resource* resource,
@@ -639,6 +653,40 @@ namespace components::dataframe::detail {
 
     bool operator>=(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
         return !(lhs < rhs);
+    }
+
+    size_t operator-(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+        return lhs.pos_ - rhs.pos_;
+    }
+
+
+    out_bitmask_iterator::out_bitmask_iterator(bitmask_type* data, size_t pos)
+        : data_(data)
+        , pos_(pos) {
+    }
+
+    out_bitmask_iterator::out_bitmask_iterator(bitmask_type* data)
+        : out_bitmask_iterator(data, 0) {
+    }
+
+    out_bitmask_iterator& out_bitmask_iterator::operator*() {
+        return *this;
+    }
+
+    out_bitmask_iterator& out_bitmask_iterator::operator++() {
+        ++pos_;
+        return *this;
+    }
+
+    out_bitmask_iterator out_bitmask_iterator::operator++(int) {
+        auto old = *this;
+        ++(*this);
+        return old;
+    }
+
+    out_bitmask_iterator& out_bitmask_iterator::operator=(bool value) {
+        set_bit(data_, pos_, value);
+        return *this;
     }
 
 

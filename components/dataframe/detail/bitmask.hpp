@@ -33,6 +33,11 @@ namespace components::dataframe::detail {
         bitmask_type const* bitmask,
         size_t index);
 
+    void set_bit(
+        bitmask_type* bitmask,
+        size_t index,
+        bool value);
+
     size_type count_set_bits(
         std::pmr::memory_resource* resource,
         bitmask_type const* bitmask,
@@ -116,6 +121,29 @@ namespace components::dataframe::detail {
         friend bool operator>(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
         friend bool operator<=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
         friend bool operator>=(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+        friend size_t operator-(const bitmask_iterator& lhs, const bitmask_iterator& rhs);
+    };
+
+    class out_bitmask_iterator
+    {
+    public:
+        using iterator_category = std::output_iterator_tag;
+
+        out_bitmask_iterator(bitmask_type* data, size_t pos);
+        explicit out_bitmask_iterator(bitmask_type* data);
+        out_bitmask_iterator() = delete;
+        out_bitmask_iterator(const out_bitmask_iterator&) = default;
+        out_bitmask_iterator& operator=(const out_bitmask_iterator&) = default;
+        ~out_bitmask_iterator() = default;
+
+        out_bitmask_iterator& operator*();
+        out_bitmask_iterator& operator++();
+        out_bitmask_iterator operator++(int);
+        out_bitmask_iterator& operator=(bool value);
+
+    private:
+        bitmask_type* data_;
+        size_t pos_;
     };
 
 } // namespace components::dataframe::detail
