@@ -47,7 +47,8 @@ namespace core {
 
     trace_full_exception_base::trace_full_exception_base() = default;
 
-    trace_full_exception_base::trace_full_exception_base(std::string_view what) {
+    trace_full_exception_base::trace_full_exception_base(std::string_view what)
+        : pimpl_(new impl) {
         fmt::format_to(std::back_inserter(pimpl_->message_buffer_), FMT_COMPILE("{}"), what);
         ensure_null_terminated();
     }
