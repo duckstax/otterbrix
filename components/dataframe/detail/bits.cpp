@@ -2,6 +2,23 @@
 
 namespace components::dataframe::detail {
 
+    bool is_set_bit(bitmask_type const* bitmask, size_type index) {
+        auto index_word = word_index(index);
+        auto index_bit = intra_word_index(index);
+        return *(bitmask + index_word) & (1 << index_bit);
+    }
+
+    void set_bit(bitmask_type* bitmask, size_type index, bool value) {
+        auto index_word = word_index(index);
+        auto index_bit = intra_word_index(index);
+        auto& word = *(bitmask + index_word);
+        if (value) {
+            word |= (1 << index_bit);
+        } else {
+            word &= ~(1 << index_bit);
+        }
+    }
+
     bitmask_type funnel_shift_r(bitmask_type curr_word, bitmask_type next_word, size_type source_begin_bit) {
         bitmask_type mask = 0;
         bitmask_type result = 0;

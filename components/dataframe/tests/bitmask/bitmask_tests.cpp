@@ -519,7 +519,7 @@ void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type cons
                    counting_iter + start_bit + expect.size(),
                    result.begin(),
                    [bitmask](size_type element_index) {
-                       return detail::bit_is_set(bitmask, element_index);
+                       return detail::is_set_bit(bitmask, element_index);
                    });
     auto vector_result = core::make_vector(resource, result);
     REQUIRE_THAT(vector_result, Catch::Equals(expect));
