@@ -24,6 +24,7 @@ public:
     auto set_level(level l) -> void;
     auto get_level() const -> log_t::level;
     auto context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> void;
+    auto is_valid() noexcept -> bool;
 
     inline spdlog::logger *operator->() const noexcept {
         return logger_.get();

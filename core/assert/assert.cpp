@@ -29,7 +29,9 @@ namespace core::detail {
     void log_and_throw_invariant_error(std::string_view condition, std::string_view message) {
         const std::string err_str = fmt::format("invariant ({}) violation: {}", condition, message);
         auto log = get_logger();
-        error(log, err_str);
+        if (log.is_valid()) {
+            error(log, err_str);
+        }
         throw InvariantError(err_str);
     }
 
