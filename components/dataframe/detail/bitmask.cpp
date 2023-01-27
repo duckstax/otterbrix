@@ -354,8 +354,7 @@ namespace components::dataframe::detail {
         }
 
         // Construct a contiguous host buffer of indices and copy to device.
-        auto const h_indices = std::vector<size_type>(indices_begin, indices_end);
-        auto const d_indices = core::make_uvector(resource, h_indices);
+        auto const d_indices = core::make_uvector<size_type>(resource, indices_begin, indices_end);
 
         // Compute the bit counts over each segment.
         auto first_bit_indices_begin = boost::iterators::make_transform_iterator(boost::iterators::make_counting_iterator(0), index_t{false, d_indices.data()});
