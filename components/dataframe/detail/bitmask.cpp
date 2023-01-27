@@ -472,25 +472,7 @@ namespace components::dataframe::detail {
         if (begin_bit == end_bit)
             return;
         if (bitmask != nullptr) {
-            auto number_of_mask_words = num_bitmask_words(end_bit) - begin_bit / detail::size_in_bits<bitmask_type>();
-            size_type destination_word_index = 0;
-            bitmask_type fill_value = valid ? 0xffff'ffff : 0;
-            bitmask_type* x = bitmask + detail::word_index(begin_bit);
-            const auto last_word = detail::word_index(end_bit) - detail::word_index(begin_bit);
-            for (destination_word_index = 0; destination_word_index < number_of_mask_words; destination_word_index++) {
-                if (destination_word_index == 0 || destination_word_index == last_word) {
-                    bitmask_type mask = ~bitmask_type{0};
-                    if (destination_word_index == 0) {
-                        mask = ~(detail::set_least_significant_bits(detail::intra_word_index(begin_bit)));
-                    }
-                    if (destination_word_index == last_word) {
-                        mask = mask & detail::set_least_significant_bits(detail::intra_word_index(end_bit));
-                    }
-                    x[destination_word_index] = valid ? x[destination_word_index] | mask : x[destination_word_index] & ~mask;
-                } else {
-                    x[destination_word_index] = fill_value;
-                }
-            }
+            std::fill(out_bitmask_iterator{bitmask, size_t(begin_bit)}, out_bitmask_iterator{bitmask, size_t(end_bit)}, valid);
         }
     }
 
