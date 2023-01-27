@@ -665,5 +665,13 @@ namespace components::dataframe::detail {
         return *this;
     }
 
+    bool operator==(const out_bitmask_iterator& lhs, const out_bitmask_iterator& rhs) {
+        return lhs.pos_ == rhs.pos_;
+    }
+
+    bool operator!=(const out_bitmask_iterator& lhs, const out_bitmask_iterator& rhs) {
+        return !(lhs == rhs);
+    }
+
 
 } // namespace components::dataframe::detail

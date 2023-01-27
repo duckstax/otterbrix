@@ -135,6 +135,9 @@ namespace components::dataframe::detail {
     private:
         bitmask_type* data_;
         size_t pos_;
+
+        friend bool operator==(const out_bitmask_iterator& lhs, const out_bitmask_iterator& rhs);
+        friend bool operator!=(const out_bitmask_iterator& lhs, const out_bitmask_iterator& rhs);
     };
 
 } // namespace components::dataframe::detail
