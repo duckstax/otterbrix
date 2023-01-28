@@ -1,7 +1,6 @@
 #include "bitmask.hpp"
 
 #include <algorithm>
-#include <iterator>
 #include <memory>
 #include <memory_resource>
 #include <optional>
@@ -27,7 +26,7 @@ namespace components::dataframe::detail {
     std::size_t bitmask_allocation_size_bytes(size_type number_of_bits, std::size_t padding_boundary) {
         assertion_exception(padding_boundary > 0);
         auto necessary_bytes = math::div_rounding_up_safe<size_type>(number_of_bits, CHAR_BIT);
-        auto padded_bytes = padding_boundary * math::div_rounding_up_safe<size_type>(necessary_bytes, padding_boundary);
+        auto padded_bytes = padding_boundary * math::div_rounding_up_safe<size_t>(size_t(necessary_bytes), padding_boundary);
         return padded_bytes;
     }
 
@@ -47,7 +46,7 @@ namespace components::dataframe::detail {
     }
 
     core::buffer create_null_mask(std::pmr::memory_resource* mr, size_type size, mask_state state) {
-        size_type mask_size{0};
+        size_t mask_size{0};
 
         if (state != mask_state::unallocated) {
             mask_size = bitmask_allocation_size_bytes(size);
@@ -63,6 +62,7 @@ namespace components::dataframe::detail {
         return mask;
     }
 
+    /* not used
     inline bitmask_type get_mask_offset_word(bitmask_type const* source,
                                              size_type des_word_index,
                                              size_type src_begin_bit,
@@ -70,22 +70,24 @@ namespace components::dataframe::detail {
         size_type source_word_index = des_word_index + detail::word_index(src_begin_bit);
         bitmask_type curr_word = source[source_word_index];
         bitmask_type next_word = 0;
-        if (detail::word_index(src_end_bit - 1) > detail::word_index(src_begin_bit + des_word_index * detail::size_in_bits<bitmask_type>())) {
+        if (detail::word_index(src_end_bit - 1) > detail::word_index(src_begin_bit + des_word_index * size_type(detail::size_in_bits<bitmask_type>()))) {
             next_word = source[source_word_index + 1];
         }
         return detail::funnel_shift_r(curr_word, next_word, src_begin_bit);
     }
+    */
 
     // TODO: Also make binops test that uses offset in column_view
     void copy_offset_bitmask(bitmask_type* destination,
                              bitmask_type const* source,
                              size_type source_begin_bit,
                              size_type source_end_bit,
-                             size_type number_of_mask_words) {
-        std::copy(bitmask_iterator(source, size_t(source_begin_bit)), bitmask_iterator(source, size_t(source_end_bit)),
+                             size_type /*number_of_mask_words*/) {
+        std::copy(bitmask_iterator(source, source_begin_bit), bitmask_iterator(source, source_end_bit),
                   out_bitmask_iterator(destination));
     }
 
+    /* not used
     template<int block_size, typename Binop>
     void offset_bitmask_binop(
         Binop op,
@@ -163,6 +165,7 @@ namespace components::dataframe::detail {
         offset_bitmask_binop<block_size>(op, dest_mask, d_masks, d_begin_bits, mask_size_bits, d_counter.data());
         return d_counter.value();
     }
+    */
 
     enum class count_bits_policy : bool {
         unset_bits, /// Count unset (0) bits
@@ -258,7 +261,7 @@ namespace components::dataframe::detail {
                                                   OffsetIterator last_bit_indices_begin,
                                                   count_bits_policy count_bit) {
         auto const num_ranges = static_cast<size_type>(std::distance(first_bit_indices_begin, first_bit_indices_end));
-        core::uvector<size_type> d_bit_counts(resource, num_ranges);
+        core::uvector<size_type> d_bit_counts(resource, size_t(num_ranges));
 
         auto popc = [](bitmask_type word) -> size_type {
             return static_cast<size_type>(core::popcount(word));
@@ -290,7 +293,7 @@ namespace components::dataframe::detail {
             last_word_indices);
 
         // Adjust counts in segment boundaries (if segments are not word-aligned).
-        constexpr size_type block_size{256};
+        //constexpr size_type block_size{256};
         subtract_set_bits_range_boundaries_kernel(bitmask, num_ranges, first_bit_indices_begin, last_bit_indices_begin, d_bit_counts.begin());
 
         if (count_bit == count_bits_policy::unset_bits) {
@@ -413,9 +416,9 @@ namespace components::dataframe::detail {
         IndexIterator indices_end) {
         if (bitmask == nullptr) {
             // Return a vector of segment lengths.
-            auto const num_segments = validate_segmented_indices(indices_begin, indices_end);
+            auto const num_segments = size_t(validate_segmented_indices(indices_begin, indices_end));
             auto ret = std::pmr::vector<size_type>(num_segments, 0);
-            for (size_type i = 0; i < num_segments; i++) {
+            for (size_t i = 0; i < num_segments; i++) {
                 ret[i] = indices_begin[2 * i + 1] - indices_begin[2 * i];
             }
             return ret;
@@ -471,13 +474,13 @@ namespace components::dataframe::detail {
         if (begin_bit == end_bit)
             return;
         if (bitmask != nullptr) {
-            std::fill(out_bitmask_iterator{bitmask, size_t(begin_bit)}, out_bitmask_iterator{bitmask, size_t(end_bit)}, valid);
+            std::fill(out_bitmask_iterator{bitmask, begin_bit}, out_bitmask_iterator{bitmask, end_bit}, valid);
         }
     }
 
     // Count non-zero bits in the specified range
     size_type count_set_bits(
-        std::pmr::memory_resource* resource,
+        std::pmr::memory_resource* /*resource*/,
         bitmask_type const* bitmask,
         size_type start,
         size_type stop) {
@@ -490,7 +493,7 @@ namespace components::dataframe::detail {
             return 0;
         }
 
-        return size_type(std::count_if(bitmask_iterator{bitmask, size_t(start)}, bitmask_iterator{bitmask, size_t(stop)}, [](bool value){ return value; }));
+        return size_type(std::count_if(bitmask_iterator{bitmask, start}, bitmask_iterator{bitmask, stop}, [](bool value){ return value; }));
     }
 
     // Count zero bits in the specified range
@@ -528,14 +531,14 @@ namespace components::dataframe::detail {
         const bitmask_type* bitmask,
         core::span<const size_type> indices) {
         if (bitmask == nullptr) {
-            auto const num_segments = validate_segmented_indices(indices.begin(), indices.end());
+            auto const num_segments = size_t(validate_segmented_indices(indices.begin(), indices.end()));
             return std::pmr::vector<size_type>(num_segments, 0);
         }
         return segmented_count_unset_bits(resource, bitmask, indices.begin(), indices.end());
     }
 
 
-    bitmask_iterator::bitmask_iterator(const bitmask_type* data, size_t pos)
+    bitmask_iterator::bitmask_iterator(const bitmask_type* data, size_type pos)
         : data_(data)
         , pos_(pos)
     {}
@@ -570,16 +573,16 @@ namespace components::dataframe::detail {
         return old;
     }
 
-    bool bitmask_iterator::operator[](size_t n) const {
+    bool bitmask_iterator::operator[](size_type n) const {
         return is_set_bit(data_, n);
     }
 
-    bitmask_iterator& bitmask_iterator::operator+=(size_t n) {
+    bitmask_iterator& bitmask_iterator::operator+=(size_type n) {
         pos_ += n;
         return *this;
     }
 
-    bitmask_iterator& bitmask_iterator::operator-=(size_t n) {
+    bitmask_iterator& bitmask_iterator::operator-=(size_type n) {
         pos_ -= n;
         return *this;
     }
@@ -612,12 +615,12 @@ namespace components::dataframe::detail {
         return !(lhs < rhs);
     }
 
-    size_t operator-(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
+    size_type operator-(const bitmask_iterator& lhs, const bitmask_iterator& rhs) {
         return lhs.pos_ - rhs.pos_;
     }
 
 
-    out_bitmask_iterator::out_bitmask_iterator(bitmask_type* data, size_t pos)
+    out_bitmask_iterator::out_bitmask_iterator(bitmask_type* data, size_type pos)
         : data_(data)
         , pos_(pos) {
     }

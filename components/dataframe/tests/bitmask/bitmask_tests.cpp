@@ -63,10 +63,10 @@ TEST_CASE("null mask") {
 
 core::uvector<bitmask_type> make_mask(std::pmr::memory_resource* resource, size_type size, bool fill_valid = false) {
     if (!fill_valid) {
-        return core::make_empty_uvector<bitmask_type>(resource, size);
+        return core::make_empty_uvector<bitmask_type>(resource, size_t(size));
     } else {
-        auto ret = core::uvector<bitmask_type>(resource, size);
-        std::memset(ret.data(), ~bitmask_type{0}, size * sizeof(bitmask_type));
+        auto ret = core::uvector<bitmask_type>(resource, size_t(size));
+        std::memset(ret.data(), -1, size_t(size) * sizeof(bitmask_type));
         return ret;
     }
 }
@@ -432,7 +432,7 @@ TEST_CASE("multiple words single bit unset") {
 void clean_end_word(core::buffer& mask, int begin_bit, int end_bit) {
     auto ptr = static_cast<bitmask_type*>(mask.data());
 
-    auto number_of_mask_words = num_bitmask_words(static_cast<size_t>(end_bit - begin_bit));
+    auto number_of_mask_words = num_bitmask_words(static_cast<size_type>(end_bit - begin_bit));
     auto number_of_bits = end_bit - begin_bit;
     if (number_of_bits % 32 != 0) {
         bitmask_type end_mask = 0;
@@ -482,7 +482,7 @@ TEST_CASE("test zero offset") {
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
-    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), num_bitmask_words(number_of_bits)));
+    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), size_t(num_bitmask_words(number_of_bits))));
 }
 
 TEST_CASE("test non zero offset") {
@@ -501,7 +501,7 @@ TEST_CASE("test non zero offset") {
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
-    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), num_bitmask_words(number_of_bits)));
+    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), size_t(num_bitmask_words(number_of_bits))));
 }
 
 std::ostream& operator<<(std::ostream& stream, std::pmr::vector<bool> const& bits) {
@@ -516,7 +516,7 @@ void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type cons
     core::uvector<bool> result(resource, expect.size());
     auto counting_iter = boost::iterators::make_counting_iterator<size_type>(0);
     std::transform(counting_iter + start_bit,
-                   counting_iter + start_bit + expect.size(),
+                   counting_iter + start_bit + size_type(expect.size()),
                    result.begin(),
                    [bitmask](size_type element_index) {
                        return detail::is_set_bit(bitmask, element_index);
@@ -529,14 +529,14 @@ void test_set_null_range(std::pmr::memory_resource* resource, size_type size,
                          size_type begin,
                          size_type end,
                          bool valid) {
-    std::pmr::vector<bool> expected(end - begin, valid);
+    std::pmr::vector<bool> expected(size_t(end - begin), valid);
     core::buffer mask = create_null_mask(resource, size, mask_state::uninitialized);
     set_null_mask(static_cast<bitmask_type*>(mask.data()), begin, end, valid);
     expect_bitmask_equal(resource, static_cast<bitmask_type*>(mask.data()), begin, expected);
 }
 
 void test_null_partition(std::pmr::memory_resource* resource, size_type size, size_type middle, bool valid) {
-    std::pmr::vector<bool> expected(size);
+    std::pmr::vector<bool> expected(static_cast<size_t>(size));
     std::generate(expected.begin(), expected.end(), [n = 0, middle, valid]() mutable {
         auto i = n++;
         return (!valid) ^ (i < middle);
