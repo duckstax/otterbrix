@@ -118,6 +118,10 @@ namespace components::dataframe::detail {
     class out_bitmask_iterator
     {
     public:
+        using value_type = bool;
+        using difference_type = std::size_t;
+        using pointer = bool*;
+        using reference = bool&;
         using iterator_category = std::output_iterator_tag;
 
         out_bitmask_iterator(bitmask_type* data, size_t pos);
