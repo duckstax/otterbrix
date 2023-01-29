@@ -19,6 +19,7 @@
 
 #include "dataframe/math.hpp"
 #include "dataframe/types.hpp"
+#include "dataframe/column/column_view.hpp"
 
 #include "bits.hpp"
 
@@ -86,6 +87,7 @@ namespace components::dataframe::detail {
             destination[destination_word_index] = get_mask_offset_word(source, destination_word_index, source_begin_bit, source_end_bit);
         }
     }
+
 
     template<int block_size, typename Binop>
     void offset_bitmask_binop(
@@ -465,6 +467,14 @@ namespace components::dataframe::detail {
             copy_offset_bitmask(static_cast<bitmask_type*>(dest_mask.data()), mask, begin_bit, end_bit, number_of_mask_words);
         }
         return dest_mask;
+    }
+
+    core::buffer copy_bitmask(std::pmr::memory_resource* mr, column::column_view const& view) {
+        core::buffer null_mask{mr, 0};
+        if (view.nullable()) {
+            null_mask = copy_bitmask(mr, view.null_mask(), view.offset(), view.offset() + view.size());
+        }
+        return null_mask;
     }
 
     void set_null_mask(bitmask_type* bitmask, size_type begin_bit, size_type end_bit, bool valid) {

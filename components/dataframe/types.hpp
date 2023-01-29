@@ -8,7 +8,6 @@
 
 #include <boost/container_hash/hash.hpp>
 
-
 namespace components::dataframe {
 
     using size_type = int32_t;
@@ -83,8 +82,19 @@ namespace components::dataframe {
         return lhs.id() == rhs.id() && lhs.scale() == rhs.scale();
     }
 
-    inline bool operator!=(data_type const& lhs, data_type const& rhs) {
-        return !(lhs == rhs);
+    inline bool operator!=(data_type const& lhs, data_type const& rhs) { return !(lhs == rhs); }
+    std::size_t size_of(data_type element_type);
 
-    }
-}
+} // namespace components::dataframe
+
+namespace std {
+    template<>
+    struct hash<components::dataframe::data_type> {
+        std::size_t operator()(const components::dataframe::data_type& s) const {
+            std::size_t h1 = std::hash<std::int32_t>{}(static_cast<std::int32_t>(s.id()));
+            std::size_t h2 = std::hash<std::int32_t>{}(s.scale());
+            boost::hash_combine(h1, h2);
+            return h1;
+        }
+    };
+} // namespace std
