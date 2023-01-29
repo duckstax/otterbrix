@@ -33,15 +33,9 @@ namespace components::dataframe::detail {
         return bit_index % size_in_bits<bitmask_type>();
     }
 
-    inline void set_bit_unsafe(bitmask_type* bitmask, size_type bit_index){
-        assert(nullptr != bitmask);
-        bitmask[word_index(bit_index)] |= (bitmask_type{1} << intra_word_index(bit_index));
-    }
+    bool is_set_bit(bitmask_type const* bitmask, size_type index);
 
-    inline bool bit_is_set(bitmask_type const* bitmask, size_type bit_index) {
-        assert(nullptr != bitmask);
-        return bitmask[word_index(bit_index)] & (bitmask_type{1} << intra_word_index(bit_index));
-    }
+    void set_bit(bitmask_type* bitmask, size_type index, bool value);
 
     bitmask_type funnel_shift_r(bitmask_type curr_word, bitmask_type next_word, size_type source_begin_bit);
 

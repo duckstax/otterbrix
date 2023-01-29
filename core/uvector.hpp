@@ -137,17 +137,30 @@ namespace core {
         }
     };
 
+    template<typename T, typename It>
+    uvector<T> make_uvector(std::pmr::memory_resource* resource, It begin, It end) {
+        const auto size = static_cast<std::size_t>(std::distance(begin, end));
+        core::uvector<T> ret(resource, size);
+        std::memcpy(ret.data(), &*begin, size * sizeof(T));
+        return ret;
+    }
+
     template<typename T>
     uvector<T> make_uvector(std::pmr::memory_resource* resource, const std::vector<T>& src) {
-        core::uvector<T> ret(resource, src.size());
-        std::memcpy(ret.data(), src.data(), src.size() * sizeof(T));
-        return ret;
+        return make_uvector<T>(resource, src.begin(), src.end());
     }
 
     template<typename T>
     std::pmr::vector<T> make_vector(std::pmr::memory_resource* resource, uvector<T>& src) {
         std::pmr::vector<T> result(src.size(), resource);
         std::memcpy(result.data(), src.data(), src.size() * sizeof(T));
+        return result;
+    }
+
+    template<>
+    inline std::pmr::vector<bool> make_vector(std::pmr::memory_resource* resource, uvector<bool>& src) {
+        std::pmr::vector<bool> result(src.size(), resource);
+        std::copy(src.begin(), src.end(), result.begin());
         return result;
     }
 

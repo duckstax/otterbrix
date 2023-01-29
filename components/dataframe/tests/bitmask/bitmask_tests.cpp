@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <core/assert/trace_full_exception.hpp>
 #include <core/buffer.hpp>
 #include <core/uvector.hpp>
 
@@ -12,6 +13,12 @@
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/iterator/zip_iterator.hpp>
+
+#ifdef NDEBUG
+#define IF_REQUIRE_THROWS_AS(f, error) REQUIRE_THROWS_AS(f, error)
+#else
+#define IF_REQUIRE_THROWS_AS(f, error)
+#endif
 
 using namespace components::dataframe;
 
@@ -45,21 +52,21 @@ TEST_CASE("num bitmask words") {
 
 TEST_CASE("null mask") {
     auto* ptr = std::pmr::get_default_resource();
-    //REQUIRE_THROWS_AS(detail::count_set_bits(ptr, nullptr, 0, 32), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::count_set_bits(ptr, nullptr, 0, 32), core::trace_full_exception);
     REQUIRE(32 == test::valid_count(ptr, nullptr, 0, 32));
 
     std::vector<size_type> indices = {0, 32, 7, 25};
-    //REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, nullptr, indices), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, nullptr, indices), core::trace_full_exception);
     auto valid_counts = detail::segmented_valid_count(ptr, nullptr, indices);
     REQUIRE_THAT(valid_counts, Catch::Equals(std::pmr::vector<size_type>({32, 18})));
 }
 
 core::uvector<bitmask_type> make_mask(std::pmr::memory_resource* resource, size_type size, bool fill_valid = false) {
     if (!fill_valid) {
-        return core::make_empty_uvector<bitmask_type>(resource, size);
+        return core::make_empty_uvector<bitmask_type>(resource, size_t(size));
     } else {
-        auto ret = core::uvector<bitmask_type>(resource, size);
-        std::memset(ret.data(), ~bitmask_type{0}, size * sizeof(bitmask_type));
+        auto ret = core::uvector<bitmask_type>(resource, size_t(size));
+        std::memset(ret.data(), -1, size_t(size) * sizeof(bitmask_type));
         return ret;
     }
 }
@@ -67,23 +74,23 @@ core::uvector<bitmask_type> make_mask(std::pmr::memory_resource* resource, size_
 TEST_CASE("negative start") {
     auto* ptr = std::pmr::get_default_resource();
     auto mask = make_mask(ptr, 1);
-    //REQUIRE_THROWS_AS(detail::count_set_bits(ptr, mask.data(), -1, 32), std::logic_error);
-    //REQUIRE_THROWS_AS(test::valid_count(ptr, mask.data(), -1, 32), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::count_set_bits(ptr, mask.data(), -1, 32), core::trace_full_exception);
+    IF_REQUIRE_THROWS_AS(test::valid_count(ptr, mask.data(), -1, 32), core::trace_full_exception);
 
     std::vector<size_type> indices = {0, 16, -1, 32};
-    //REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, mask.data(), indices), std::logic_error);
-    //REQUIRE_THROWS_AS(detail::segmented_valid_count(ptr, mask.data(), indices), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, mask.data(), indices), core::trace_full_exception);
+    IF_REQUIRE_THROWS_AS(detail::segmented_valid_count(ptr, mask.data(), indices), core::trace_full_exception);
 }
 
 TEST_CASE("start larger than stop") {
     auto* ptr = std::pmr::get_default_resource();
     auto mask = make_mask(ptr, 1);
-    //REQUIRE_THROWS_AS(detail::count_set_bits(ptr, mask.data(), 32, 31), std::logic_error);
-    //REQUIRE_THROWS_AS(test::valid_count(ptr, mask.data(), 32, 31), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::count_set_bits(ptr, mask.data(), 32, 31), core::trace_full_exception);
+    IF_REQUIRE_THROWS_AS(test::valid_count(ptr, mask.data(), 32, 31), core::trace_full_exception);
 
     std::vector<size_type> indices = {0, 16, 31, 30};
-    //REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, mask.data(), indices), std::logic_error);
-    //REQUIRE_THROWS_AS(detail::segmented_valid_count(ptr, mask.data(), indices), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::segmented_count_set_bits(ptr, mask.data(), indices), core::trace_full_exception);
+    IF_REQUIRE_THROWS_AS(detail::segmented_valid_count(ptr, mask.data(), indices), core::trace_full_exception);
 }
 
 TEST_CASE("empty range") {
@@ -95,8 +102,8 @@ TEST_CASE("empty range") {
     std::vector<size_type> indices = {0, 0, 17, 17};
     auto set_counts = detail::segmented_count_set_bits(ptr, mask.data(), indices);
     REQUIRE_THAT(set_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
-    //    auto valid_counts = detail::segmented_valid_count(ptr, mask.data(), indices);
-    //    REQUIRE_THAT(valid_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
+    auto valid_counts = detail::segmented_valid_count(ptr, mask.data(), indices);
+    REQUIRE_THAT(valid_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
 }
 
 TEST_CASE("single word all zero") {
@@ -283,11 +290,11 @@ TEST_CASE("single bit all set 0") {
 
 TEST_CASE("null mask 0") {
     auto* ptr = std::pmr::get_default_resource();
-    //REQUIRE_THROWS_AS(detail::count_unset_bits(ptr, nullptr, 0, 32), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::count_unset_bits(ptr, nullptr, 0, 32), core::trace_full_exception);
     REQUIRE(0 == detail::null_count(ptr, nullptr, 0, 32));
 
     std::vector<size_type> indices = {0, 32, 7, 25};
-    //REQUIRE_THROWS_AS(detail::segmented_count_unset_bits(ptr, nullptr, indices), std::logic_error);
+    IF_REQUIRE_THROWS_AS(detail::segmented_count_unset_bits(ptr, nullptr, indices), core::trace_full_exception);
     auto null_counts = detail::segmented_null_count(ptr, nullptr, indices);
     REQUIRE_THAT(null_counts, Catch::Equals(std::pmr::vector<size_type>({0, 0})));
 }
@@ -425,7 +432,7 @@ TEST_CASE("multiple words single bit unset") {
 void clean_end_word(core::buffer& mask, int begin_bit, int end_bit) {
     auto ptr = static_cast<bitmask_type*>(mask.data());
 
-    auto number_of_mask_words = num_bitmask_words(static_cast<size_t>(end_bit - begin_bit));
+    auto number_of_mask_words = num_bitmask_words(static_cast<size_type>(end_bit - begin_bit));
     auto number_of_bits = end_bit - begin_bit;
     if (number_of_bits % 32 != 0) {
         bitmask_type end_mask = 0;
@@ -438,13 +445,13 @@ void clean_end_word(core::buffer& mask, int begin_bit, int end_bit) {
 TEST_CASE("negative start 2") {
     auto* ptr = std::pmr::get_default_resource();
     auto mask = make_mask(ptr, 1);
-    //REQUIRE_THROWS_AS(copy_bitmask(ptr, mask.data(), -1, 32), std::logic_error);
+    IF_REQUIRE_THROWS_AS(copy_bitmask(ptr, mask.data(), -1, 32), core::trace_full_exception);
 }
 
 TEST_CASE("start larger than stop 2") {
     auto* ptr = std::pmr::get_default_resource();
     auto mask = make_mask(ptr, 1);
-    //REQUIRE_THROWS_AS(copy_bitmask(ptr, mask.data(), 32, 31), std::logic_error);
+    IF_REQUIRE_THROWS_AS(copy_bitmask(ptr, mask.data(), 32, 31), core::trace_full_exception);
 }
 
 TEST_CASE("empty range 2") {
@@ -475,7 +482,7 @@ TEST_CASE("test zero offset") {
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
-    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), num_bitmask_words(number_of_bits)));
+    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), size_t(num_bitmask_words(number_of_bits))));
 }
 
 TEST_CASE("test non zero offset") {
@@ -494,7 +501,7 @@ TEST_CASE("test non zero offset") {
 
     clean_end_word(splice_mask, begin_bit, end_bit);
     auto number_of_bits = end_bit - begin_bit;
-    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), num_bitmask_words(number_of_bits)));
+    REQUIRE(test::equal(gold_splice_mask.data(), splice_mask.data(), size_t(num_bitmask_words(number_of_bits))));
 }
 
 std::ostream& operator<<(std::ostream& stream, std::pmr::vector<bool> const& bits) {
@@ -509,12 +516,11 @@ void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type cons
     core::uvector<bool> result(resource, expect.size());
     auto counting_iter = boost::iterators::make_counting_iterator<size_type>(0);
     std::transform(counting_iter + start_bit,
-                   counting_iter + start_bit + expect.size(),
+                   counting_iter + start_bit + size_type(expect.size()),
                    result.begin(),
-                   [bitmask_type const* null_mask = bitmask](size_type element_index) -> bool const noexcept {
-                       return detail::bit_is_set(null_mask, element_index);
+                   [bitmask](size_type element_index) {
+                       return detail::is_set_bit(bitmask, element_index);
                    });
-
     auto vector_result = core::make_vector(resource, result);
     REQUIRE_THAT(vector_result, Catch::Equals(expect));
 }
@@ -523,14 +529,14 @@ void test_set_null_range(std::pmr::memory_resource* resource, size_type size,
                          size_type begin,
                          size_type end,
                          bool valid) {
-    std::pmr::vector<bool> expected(end - begin, valid);
+    std::pmr::vector<bool> expected(size_t(end - begin), valid);
     core::buffer mask = create_null_mask(resource, size, mask_state::uninitialized);
     set_null_mask(static_cast<bitmask_type*>(mask.data()), begin, end, valid);
     expect_bitmask_equal(resource, static_cast<bitmask_type*>(mask.data()), begin, expected);
 }
 
 void test_null_partition(std::pmr::memory_resource* resource, size_type size, size_type middle, bool valid) {
-    std::pmr::vector<bool> expected(size);
+    std::pmr::vector<bool> expected(static_cast<size_t>(size));
     std::generate(expected.begin(), expected.end(), [n = 0, middle, valid]() mutable {
         auto i = n++;
         return (!valid) ^ (i < middle);
@@ -560,6 +566,7 @@ TEST_CASE("null_mask_partition") {
         test_null_partition(resource, size, middle, false);
     }
 }
+
 TEST_CASE("error_range") {
     auto* resource = std::pmr::get_default_resource();
     size_type size = 121;
@@ -571,8 +578,8 @@ TEST_CASE("error_range") {
     };
     for (auto begin_end : begin_end_fail) {
         auto begin = begin_end.first, end = begin_end.second;
-        REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, true), std::logic_error);
-        REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, false), std::logic_error);
+        IF_REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, true), core::trace_full_exception);
+        IF_REQUIRE_THROWS_AS(test_set_null_range(resource, size, begin, end, false), core::trace_full_exception);
     }
     std::vector<size_pair> begin_end_pass{
         {0, size},        // begin>=0

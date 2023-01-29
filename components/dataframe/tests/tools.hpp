@@ -23,7 +23,7 @@ namespace components::dataframe::test {
 
             auto null_mask = std::vector<bitmask_type>(num_words, 0);
             for (auto i = 0; i < size; ++i)
-                if (*(begin + i)) detail::set_bit_unsafe(null_mask.data(), i);
+                if (*(begin + i)) detail::set_bit(null_mask.data(), i, true);
 
             return null_mask;
         }
