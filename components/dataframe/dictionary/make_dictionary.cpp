@@ -4,6 +4,8 @@
 #include <memory_resource>
 
 #include <dataframe/type_dispatcher.hpp>
+#include <dataframe/column/make.hpp>
+#include <dataframe/detail/bitmask.hpp>
 
 namespace components::dataframe::dictionary {
     namespace {
@@ -25,11 +27,11 @@ namespace components::dataframe::dictionary {
                                                              column::column_view const& indices_column) {
         assertion_exception_msg(!keys_column.has_nulls(), "keys column must not have nulls");
         if (keys_column.is_empty()) {
-            return make_empty_column(resource, type_id::dictionary32);
+            return column::make_empty_column(resource, type_id::dictionary32);
         }
 
         auto keys_copy = std::make_unique<column::column_t>(resource, keys_column);
-        auto indices_copy = type_dispatcher(indices_column.type(), dispatch_create_indices{}, indices_column);
+        auto indices_copy = type_dispatcher(indices_column.type(), dispatch_create_indices{}, resource, indices_column);
         core::buffer null_mask{resource, 0};
         auto null_count = indices_column.null_count();
         if (null_count) {
@@ -39,7 +41,8 @@ namespace components::dataframe::dictionary {
         std::vector<std::unique_ptr<column::column_t>> children;
         children.emplace_back(std::move(indices_copy));
         children.emplace_back(std::move(keys_copy));
-        return std::make_unique<column::column_t>(data_type{type_id::dictionary32},
+        return std::make_unique<column::column_t>(resource,
+                                                  data_type{type_id::dictionary32},
                                                   indices_column.size(),
                                                   core::buffer{resource, 0},
                                                   std::move(null_mask),
@@ -59,7 +62,8 @@ namespace components::dataframe::dictionary {
         std::vector<std::unique_ptr<column::column_t>> children;
         children.emplace_back(std::move(indices_column));
         children.emplace_back(std::move(keys_column));
-        return std::make_unique<column::column_t>(data_type{type_id::dictionary32},
+        return std::make_unique<column::column_t>(resource,
+                                                  data_type{type_id::dictionary32},
                                                   count,
                                                   core::buffer{resource},
                                                   std::move(null_mask),

@@ -7,6 +7,7 @@ set(${PROJECT_NAME}_SOURCES
         column/make.cpp
         column/slice.cpp
         column/strings_column_view.cpp
+        detail/cast.cpp
         detail/bits.cpp
         detail/bitmask.cpp
         dictionary/dictionary_column_view.cpp
