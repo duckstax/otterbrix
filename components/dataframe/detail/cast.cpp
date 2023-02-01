@@ -30,6 +30,11 @@ namespace {
         return is_supported_non_fixed_point_cast<From, To>() || is_supported_fixed_point_cast<From, To>();
     }
 
+    template <typename To, typename From>
+    constexpr inline auto device_cast(From element) {
+        return static_cast<To>(element);
+    }
+
     template<typename To, typename From>
     constexpr inline To unary_cast(const From element) {
         if constexpr (is_numeric<From>() && is_numeric<To>()) {
@@ -67,29 +72,123 @@ namespace {
         return {};
     }
 
+    template <typename T, std::enable_if_t<is_fixed_point<T>()>* = nullptr>
+    std::unique_ptr<column::column_t> rescale(std::pmr::memory_resource* resource, const column::column_view& input, core::numbers::scale_type scale) {
+        std::make_unique<column::column_t>(resource, input.type(), input.size(), core::buffer{resource}, detail::copy_bitmask(resource, input), input.null_count()); //todo: delete
+//        using device_t = device_storage_type_t<T>;
+//        const auto type = data_type{type_to_id<T>(), scale};
+//        if (input.type().scale() >= scale) {
+//            const auto scalar = std::make_unique<scalar_type_t<T>>(resource, 0, core::numbers::scale_type{scale});
+//            return detail::binary_operation(input, *scalar, binary_operator::ADD, type, stream, mr);
+//        } else {
+//            auto const diff = input.type().scale() - scale;
+//            if (-diff > cuda::std::numeric_limits<RepType>::digits10) {
+//                auto const scalar = make_fixed_point_scalar<T>(0, scale_type{scale}, stream);
+//                auto output_column = make_column_from_scalar(*scalar, input.size(), stream, mr);
+//                if (input.nullable()) {
+//                    auto const null_mask = copy_bitmask(input, stream, mr);
+//                    output_column->set_null_mask(std::move(null_mask));
+//                }
+//                return output_column;
+//            }
+//            auto const scalar = make_fixed_point_scalar<T>(std::pow(10, -diff), scale_type{diff}, stream);
+//            return detail::binary_operation(input, *scalar, binary_operator::DIV, type, stream, mr);
+//        }
+    }
 
+    template<typename To, typename From>
+    std::unique_ptr<column::column_t> dispatch_unary_cast_to(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
+        const auto size = input.size();
+        auto output = std::make_unique<column::column_t>(resource, type, size, core::buffer{resource}, detail::copy_bitmask(resource, input), input.null_count());
+        column::mutable_column_view output_mutable = *output;
+        if constexpr (is_supported_non_fixed_point_cast<From, To>()) {
+            std::transform(input.begin<From>(),
+                           input.end<From>(),
+                           output_mutable.begin<To>(),
+                           unary_cast<To>);
+        } else if constexpr (is_fixed_point<From>() && is_numeric<To>()) {
+            using device_t = device_storage_type_t<From>;
+            const auto scale = core::numbers::scale_type{input.type().scale()};
+            std::transform(input.begin<device_t>(),
+                           input.end<device_t>(),
+                           output_mutable.begin<To>(),
+                           [scale](From v) { return fixed_point_unary_cast<To>(v, scale); });
+        } else if constexpr (is_numeric<From>() && is_fixed_point<To>()) {
+            using device_t = device_storage_type_t<To>;
+            const auto scale = core::numbers::scale_type{type.scale()};
+            std::transform(input.begin<From>(),
+                           input.end<From>(),
+                           output_mutable.begin<device_t>(),
+                           [scale](From v) { return fixed_point_unary_cast<From, To>(v, scale); });
+        } else if constexpr (is_fixed_point<From>() && is_fixed_point<To>() && std::is_same_v<From, To>) {
+            if (input.type() == type) {
+                return std::make_unique<column::column_t>(resource, input);
+            }
+            return rescale<To>(resource, input, core::numbers::scale_type{type.scale()});
+        } else if constexpr (is_fixed_point<From>() && is_fixed_point<To>() && !std::is_same_v<From, To>) {
+            using from_device_t = device_storage_type_t<From>;
+            using to_device_t = device_storage_type_t<To>;
+            if (input.type().scale() == type.scale()) {
+                std::transform(input.begin<from_device_t>(),
+                               input.end<from_device_t>(),
+                               output_mutable.begin<to_device_t>(),
+                               device_cast<to_device_t, from_device_t>);
+            } else {
+                if constexpr (sizeof(from_device_t) < sizeof(to_device_t)) {
+                    std::transform(input.begin<from_device_t>(),
+                                   input.end<from_device_t>(),
+                                   output_mutable.begin<to_device_t>(),
+                                   device_cast<to_device_t, from_device_t>);
+                    return rescale<To>(resource, output_mutable, core::numbers::scale_type{type.scale()});
+                } else {
+                    auto temporary = rescale<From>(resource, input, core::numbers::scale_type{type.scale()});
+                    return detail::cast(resource, *temporary, type);
+                }
+            }
+        } else if constexpr (!is_fixed_width<To>()) {
+            assertion_exception_msg(false, "Column type must be numeric or chrono or decimal32/64/128");
+        } else if constexpr (is_fixed_point<From>()) {
+            assertion_exception_msg(false, "Currently only decimal32/64/128 to floating point/integral is supported");
+        } else if constexpr (is_timestamp<From>() && is_numeric<To>()) {
+            assertion_exception_msg(false, "Timestamps can be created only from duration");
+        } else {
+            assertion_exception_msg(false, "not valid dispatch unary cast");
+        }
+        return output;
+    }
+
+#if 0
+    template<typename T>
+    std::unique_ptr<column::column_t> dispatch_unary_cast_from(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
+        if constexpr (is_fixed_width<T>()) {
+            return type_dispatcher(type, dispatch_unary_cast_to<T>, resource, input, type);
+        } else {
+            assertion_exception_msg(false, "Column type must be numeric or chrono or decimal32/64/128");
+        }
+    }
+#else
     struct dispatch_unary_cast_from {
         column::column_view input;
 
-        explicit dispatch_unary_cast_from(column::column_view inp)
-            : input(std::move(inp)) {}
+        explicit dispatch_unary_cast_from(const column::column_view& inp) : input(inp) {}
 
-        template <typename T, std::enable_if_t<is_fixed_width<T>()>* = nullptr>
+        template<typename T, std::enable_if_t<is_fixed_width<T>()>* = nullptr>
         std::unique_ptr<column::column_t> operator()(std::pmr::memory_resource* resource, data_type type) {
-            return type_dispatcher(type, dispatch_unary_cast_to<T>{input}, resource, type);
+            return type_dispatcher(type, dispatch_unary_cast_to<T>, resource, input, type);
         }
 
         template <typename T, typename... Args>
         std::enable_if_t<!is_fixed_width<T>(), std::unique_ptr<column::column_t>> operator()(Args&&...) {
-            assertion_exception_msg(false, "Column type must be numeric or chrono or decimal32/64/128");
+            assertion_exception_msg( false, "Column type must be numeric or chrono or decimal32/64/128");
         }
     };
+#endif
 
 } // namespace
 
 namespace components::dataframe::detail {
 
-    std::unique_ptr<column::column_t> cast(std::pmr::memory_resource* resource, column::column_view const& input, data_type type) {
+    std::unique_ptr<column::column_t> cast(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
         assertion_exception_msg(is_fixed_width(type), "Unary cast type must be fixed-width.");
         return type_dispatcher(input.type(), dispatch_unary_cast_from{input}, resource, type);
     }
