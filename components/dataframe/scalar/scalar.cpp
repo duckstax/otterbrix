@@ -59,7 +59,7 @@ namespace components::dataframe::scalar {
     }
 
     string_scalar::value_type string_scalar::value() const {
-        return value_type{data(), size()};
+        return value_type{data(), std::size_t(size())};
     }
 
     size_type string_scalar::size() const { return _data.size(); }

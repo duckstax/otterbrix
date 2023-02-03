@@ -83,6 +83,7 @@ namespace components::dataframe {
     }
 
     inline bool operator!=(data_type const& lhs, data_type const& rhs) { return !(lhs == rhs); }
+
     std::size_t size_of(data_type element_type);
 
 } // namespace components::dataframe

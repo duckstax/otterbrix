@@ -17,15 +17,16 @@
 namespace components::dataframe::table {
 
     namespace detail {
-        std::pmr::vector<column::column_view> slice(column::column_view const& input,core::span<size_type const> indices) {
+        std::pmr::vector<column::column_view> slice(std::pmr::memory_resource* resource, column::column_view const& input, core::span<size_type const> indices) {
             assertion_exception_msg(indices.size() % 2 == 0, "indices size must be even");
 
             if (indices.empty()){
                 return {};
             }
 
-            auto indices_iter = boost::iterators::make_transform_iterator(boost::iterators::make_counting_iterator(0), [offset = input.offset(), &indices](size_type index) { return indices[index] + offset; });
-            auto null_counts = detail::segmented_null_count(input.null_mask(), indices_iter, indices_iter + indices.size());
+            //auto indices_iter = boost::iterators::make_transform_iterator(boost::iterators::make_counting_iterator(0), [offset = input.offset(), &indices](size_type index) { return indices[index] + offset; });
+            //auto null_counts = components::dataframe::detail::segmented_null_count(resource, input.null_mask(), indices_iter, indices_iter + indices.size());
+            auto null_counts = components::dataframe::detail::segmented_null_count(resource, input.null_mask(), indices);
 
             auto const children = std::vector<column::column_view>(input.child_begin(), input.child_end());
 
@@ -47,13 +48,13 @@ namespace components::dataframe::table {
             return  std::pmr::vector<column::column_view>{begin, begin + indices.size() / 2};
         }
 
-        std::pmr::vector<table_view> slice(table_view const& input,core::span<size_type const> indices) {
+        std::pmr::vector<table_view> slice(std::pmr::memory_resource* resource, table_view const& input, core::span<size_type const> indices) {
             assertion_exception_msg(indices.size() % 2 == 0, "indices size must be even");
             if (indices.empty()) {
                 return {};
             }
 
-            auto op = [&indices](auto const& c) { return detail::slice(c, indices); };
+            auto op = [&indices, &resource](auto const& c) { return detail::slice(resource, c, indices); };
             auto f = boost::iterators::make_transform_iterator(input.begin(), op);
 
             auto sliced_table = std::pmr::vector<std::pmr::vector<column::column_view>>(f, f + input.num_columns());
@@ -61,7 +62,7 @@ namespace components::dataframe::table {
             std::pmr::vector<table_view> result{};
             size_t num_output_tables = indices.size() / 2;
             for (size_t i = 0; i < num_output_tables; i++) {
-                std::pmr::vector<column::column_view> table_columns;
+                std::vector<column::column_view> table_columns; //todo: pmr
                 for (size_type j = 0; j < input.num_columns(); j++) {
                     table_columns.emplace_back(sliced_table[j][i]);
                 }
@@ -71,18 +72,18 @@ namespace components::dataframe::table {
             return result;
         }
 
-        std::pmr::vector<table_view> slice(table_view const& input,std::initializer_list<size_type> indices) {
-            return slice(input, core::span<size_type const>(indices.begin(), indices.size()));
-        };
+        std::pmr::vector<table_view> slice(std::pmr::memory_resource* resource, table_view const& input,std::initializer_list<size_type> indices) {
+            return slice(resource, input, core::span<size_type const>(indices.begin(), indices.size()));
+        }
 
     } // namespace detail
 
-    std::pmr::vector<table_view> slice(table_view const& input, core::span<size_type const> indices) {
-        return detail::slice(input, indices);
-    };
+    std::pmr::vector<table_view> slice(std::pmr::memory_resource* resource, table_view const& input, core::span<size_type const> indices) {
+        return detail::slice(resource, input, indices);
+    }
 
-    std::pmr::vector<table_view> slice(table_view const& input, std::initializer_list<size_type> indices) {
-        return detail::slice(input, indices);
-    };
+    std::pmr::vector<table_view> slice(std::pmr::memory_resource* resource, table_view const& input, std::initializer_list<size_type> indices) {
+        return detail::slice(resource, input, indices);
+    }
 
 } // namespace components::dataframe::table

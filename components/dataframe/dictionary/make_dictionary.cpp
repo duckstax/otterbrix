@@ -6,8 +6,21 @@
 #include <dataframe/type_dispatcher.hpp>
 #include <dataframe/column/make.hpp>
 #include <dataframe/detail/bitmask.hpp>
+#include <dataframe/detail/cast.hpp>
 
 namespace components::dataframe::dictionary {
+
+    data_type get_indices_type_for_size(size_type keys_size)
+    {
+        if (keys_size <= std::numeric_limits<uint8_t>::max()) {
+            return data_type{type_id::uint8};
+        }
+        if (keys_size <= std::numeric_limits<uint16_t>::max()) {
+            return data_type{type_id::uint16};
+        }
+        return data_type{type_id::uint32};
+    }
+
     namespace {
         struct dispatch_create_indices {
             template<typename IndexType, std::enable_if_t<is_index_type<IndexType>()>* = nullptr>
@@ -96,21 +109,22 @@ namespace components::dataframe::dictionary {
         auto const null_count = indices->null_count(); // before calling release()
         auto contents = indices->release();
         // compute the indices type using the size of the key set
-        auto const new_type = dictionary::detail::get_indices_type_for_size(keys->size());
+        auto const new_type = get_indices_type_for_size(keys->size());
 
         // create the dictionary indices: convert to unsigned and remove nulls
         auto indices_column = [&] {
             // If the types match, then just commandeer the column's data buffer.
             if (new_type.id() == indices_type) {
                 return std::make_unique<column::column_t>(
-                    new_type, indices_size, std::move(*(contents.data.release())), core::buffer{resource}, 0);
+                    resource, new_type, indices_size, std::move(*(contents.data.release())), core::buffer{resource}, 0);
             }
             // If the new type does not match, then convert the data.
             column::column_view cast_view{data_type{indices_type}, indices_size, contents.data->data()};
-            return detail::cast(cast_view, new_type, mr);
+            return detail::cast(resource, cast_view, new_type);
         }();
 
-        return make_dictionary_column(std::move(keys),
+        return make_dictionary_column(resource,
+                                      std::move(keys),
                                       std::move(indices_column),
                                       std::move(*(contents.null_mask.release())),
                                       null_count);

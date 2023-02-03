@@ -80,6 +80,11 @@ namespace components::dataframe::detail {
 
     size_type num_bitmask_words(size_type number_of_bits);
 
+    std::pmr::vector<size_type> segmented_null_count(
+        std::pmr::memory_resource* resource,
+        const bitmask_type* bitmask,
+        core::span<const size_type> indices);
+
 
     class bitmask_iterator
     {

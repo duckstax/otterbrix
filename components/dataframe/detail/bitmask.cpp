@@ -436,6 +436,7 @@ namespace components::dataframe::detail {
     // Count null elements in the specified ranges of a validity bitmask.
     template<typename IndexIterator>
     std::pmr::vector<size_type> segmented_null_count(
+        std::pmr::memory_resource* resource,
         bitmask_type const* bitmask,
         IndexIterator indices_begin,
         IndexIterator indices_end) {
@@ -444,7 +445,7 @@ namespace components::dataframe::detail {
             auto const num_segments = validate_segmented_indices(indices_begin, indices_end);
             return std::pmr::vector<size_type>(num_segments, 0);
         }
-        return detail::segmented_count_unset_bits(bitmask, indices_begin, indices_end);
+        return detail::segmented_count_unset_bits(resource, bitmask, indices_begin, indices_end);
     }
 
     core::buffer copy_bitmask(
@@ -539,11 +540,12 @@ namespace components::dataframe::detail {
         std::pmr::memory_resource* resource,
         const bitmask_type* bitmask,
         core::span<const size_type> indices) {
-        if (bitmask == nullptr) {
-            auto const num_segments = size_t(validate_segmented_indices(indices.begin(), indices.end()));
-            return std::pmr::vector<size_type>(num_segments, 0);
-        }
-        return segmented_count_unset_bits(resource, bitmask, indices.begin(), indices.end());
+        return segmented_null_count(resource, bitmask, indices.begin(), indices.end());
+//        if (bitmask == nullptr) {
+//            auto const num_segments = size_t(validate_segmented_indices(indices.begin(), indices.end()));
+//            return std::pmr::vector<size_type>(num_segments, 0);
+//        }
+//        return segmented_count_unset_bits(resource, bitmask, indices.begin(), indices.end());
     }
 
 

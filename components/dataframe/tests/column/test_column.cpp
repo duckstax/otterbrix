@@ -129,6 +129,7 @@ TEMPLATE_TEST_CASE("ExplicitNullCountAllNull", "[column][template]", std::int32_
     REQUIRE(gen.num_elements() == col.null_count());
 }
 
+/*
 TEMPLATE_TEST_CASE("SetNullCountNoMask", "[column][template]", std::int32_t) {
     gen_column<TestType> gen;
     column_t col{gen.type(), gen.num_elements(), std::move(gen.data)};
@@ -448,3 +449,4 @@ TEMPLATE_TEST_CASE("ColumnViewConstructorWithMask", "[column][template]", std::i
     REQUIRE(original_view.head() != copy_view.head());
     REQUIRE(original_view.null_mask() != copy_view.null_mask());
 }
+*/

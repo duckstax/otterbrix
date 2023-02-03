@@ -30,11 +30,6 @@ namespace {
         return is_supported_non_fixed_point_cast<From, To>() || is_supported_fixed_point_cast<From, To>();
     }
 
-    template <typename To, typename From>
-    constexpr inline auto device_cast(From element) {
-        return static_cast<To>(element);
-    }
-
     template<typename To, typename From>
     constexpr inline To unary_cast(const From element) {
         if constexpr (is_numeric<From>() && is_numeric<To>()) {
@@ -96,7 +91,7 @@ namespace {
 //        }
     }
 
-    template<typename To, typename From>
+    template<typename From, typename To>
     std::unique_ptr<column::column_t> dispatch_unary_cast_to(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
         const auto size = input.size();
         auto output = std::make_unique<column::column_t>(resource, type, size, core::buffer{resource}, detail::copy_bitmask(resource, input), input.null_count());
@@ -132,13 +127,13 @@ namespace {
                 std::transform(input.begin<from_device_t>(),
                                input.end<from_device_t>(),
                                output_mutable.begin<to_device_t>(),
-                               device_cast<to_device_t, from_device_t>);
+                               [](from_device_t e){return static_cast<to_device_t>(e);});
             } else {
                 if constexpr (sizeof(from_device_t) < sizeof(to_device_t)) {
                     std::transform(input.begin<from_device_t>(),
                                    input.end<from_device_t>(),
                                    output_mutable.begin<to_device_t>(),
-                                   device_cast<to_device_t, from_device_t>);
+                                   [](from_device_t e){return static_cast<to_device_t>(e);});
                     return rescale<To>(resource, output_mutable, core::numbers::scale_type{type.scale()});
                 } else {
                     auto temporary = rescale<From>(resource, input, core::numbers::scale_type{type.scale()});
@@ -157,7 +152,8 @@ namespace {
         return output;
     }
 
-#if 0
+#define release_func
+#ifdef release_func
     template<typename T>
     std::unique_ptr<column::column_t> dispatch_unary_cast_from(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
         if constexpr (is_fixed_width<T>()) {
@@ -190,7 +186,11 @@ namespace components::dataframe::detail {
 
     std::unique_ptr<column::column_t> cast(std::pmr::memory_resource* resource, const column::column_view& input, data_type type) {
         assertion_exception_msg(is_fixed_width(type), "Unary cast type must be fixed-width.");
+#ifdef release_func
+        //return type_dispatcher(input.type(), dispatch_unary_cast_from, resource, input, type);
+#else
         return type_dispatcher(input.type(), dispatch_unary_cast_from{input}, resource, type);
+#endif
     }
 
 } // namespace components::dataframe::detail

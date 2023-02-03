@@ -20,6 +20,7 @@ set(${PROJECT_NAME}_SOURCES
         table/slice.cpp
         bitmask.cpp
         traits.cpp
+        types.cpp
 )
 
 
