@@ -28,15 +28,15 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool number_integer(json::number_integer_t /*unused*/) {
+        bool number_integer(document_t::number_integer_t /*unused*/) {
             return events_left-- > 0;
         }
 
-        bool number_unsigned(json::number_unsigned_t /*unused*/) {
+        bool number_unsigned(document_t::number_unsigned_t /*unused*/) {
             return events_left-- > 0;
         }
 
-        bool number_float(json::number_float_t /*unused*/, const std::string& /*unused*/) {
+        bool number_float(document_t::number_float_t /*unused*/, const std::string& /*unused*/) {
             return events_left-- > 0;
         }
 
@@ -68,7 +68,7 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const json::exception& /*unused*/) // NOLINT(readability-convert-member-functions-to-static)
+        bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const document_t::exception& /*unused*/) // NOLINT(readability-convert-member-functions-to-static)
         {
             return false;
         }
@@ -82,13 +82,13 @@ TEST_CASE("MessagePack") {
     SECTION("individual values") {
         SECTION("discarded") {
             // discarded values are not serialized
-            json const j = json::value_t::discarded;
+            document_t const j = document_t::value_t::discarded;
             const auto result = to_msgpack(j);
             CHECK(result.empty());
         }
 
         SECTION("null") {
-            json const j = nullptr;
+            document_t const j = nullptr;
             std::vector<uint8_t> const expected = {0xc0};
             const auto result = to_msgpack(j);
             CHECK(result == expected);
@@ -100,7 +100,7 @@ TEST_CASE("MessagePack") {
 
         SECTION("boolean") {
             SECTION("true") {
-                json const j = true;
+                document_t const j = true;
                 std::vector<uint8_t> const expected = {0xc3};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -111,7 +111,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("false") {
-                json const j = false;
+                document_t const j = false;
                 std::vector<uint8_t> const expected = {0xc2};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -128,8 +128,7 @@ TEST_CASE("MessagePack") {
                     for (auto i = -32; i <= -1; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json const j = i;
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -156,9 +155,9 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 0; i <= 127; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json j = -1;
-                        j.get_ref<json::number_integer_t&>() = static_cast<json::number_integer_t>(i);
+
+                        document_t j = -1;
+                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -184,9 +183,8 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 128; i <= 255; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json j = -1;
-                        j.get_ref<json::number_integer_t&>() = static_cast<json::number_integer_t>(i);
+                        document_t j = -1;
+                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -217,9 +215,8 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 256; i <= 65535; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json j = -1;
-                        j.get_ref<json::number_integer_t&>() = static_cast<json::number_integer_t>(i);
+                        document_t j = -1;
+                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -253,9 +250,8 @@ TEST_CASE("MessagePack") {
                              65536u, 77777u, 1048576u, 4294967295u}) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json j = -1;
-                        j.get_ref<json::number_integer_t&>() = static_cast<json::number_integer_t>(i);
+                        document_t j = -1;
+                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -294,9 +290,8 @@ TEST_CASE("MessagePack") {
                              4294967296LU, 9223372036854775807LU}) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json j = -1;
-                        j.get_ref<json::number_integer_t&>() = static_cast<json::number_integer_t>(i);
+                        document_t j = -1;
+                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -341,8 +336,7 @@ TEST_CASE("MessagePack") {
                     for (auto i = -128; i <= -33; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json const j = i;
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -369,7 +363,7 @@ TEST_CASE("MessagePack") {
                 }
 
                 SECTION("-9263 (int 16)") {
-                    json const j = -9263;
+                    document_t const j = -9263;
                     std::vector<uint8_t> const expected = {0xd1, 0xdb, 0xd1};
 
                     const auto result = to_msgpack(j);
@@ -387,8 +381,7 @@ TEST_CASE("MessagePack") {
                     for (int16_t i = -32768; i <= static_cast<std::int16_t>(-129); ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json const j = i;
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -427,8 +420,7 @@ TEST_CASE("MessagePack") {
                     for (auto i : numbers) {
                         CAPTURE(i)
 
-                        // create JSON value with integer number
-                        json const j = i;
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -469,8 +461,8 @@ TEST_CASE("MessagePack") {
                     for (auto i : numbers) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_integer());
@@ -517,8 +509,8 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 0; i <= 127; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_unsigned());
@@ -544,8 +536,8 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 128; i <= 255; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_unsigned());
@@ -576,8 +568,8 @@ TEST_CASE("MessagePack") {
                     for (size_t i = 256; i <= 65535; ++i) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_unsigned());
@@ -611,8 +603,8 @@ TEST_CASE("MessagePack") {
                              65536u, 77777u, 1048576u, 4294967295u}) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_unsigned());
@@ -651,8 +643,8 @@ TEST_CASE("MessagePack") {
                              4294967296LU, 18446744073709551615LU}) {
                         CAPTURE(i)
 
-                        // create JSON value with unsigned integer number
-                        json const j = i;
+
+                        document_t const j = i;
 
                         // check type
                         CHECK(j.is_number_unsigned());
@@ -697,7 +689,7 @@ TEST_CASE("MessagePack") {
             SECTION("float") {
                 SECTION("3.1415925") {
                     double const v = 3.1415925;
-                    json const j = v;
+                    document_t const j = v;
                     std::vector<uint8_t> const expected =
                         {
                             0xcb, 0x40, 0x09, 0x21, 0xfb, 0x3f, 0xa6, 0xde, 0xfc};
@@ -712,7 +704,7 @@ TEST_CASE("MessagePack") {
 
                 SECTION("1.0") {
                     double const v = 1.0;
-                    json const j = v;
+                    document_t const j = v;
                     std::vector<uint8_t> const expected =
                         {
                             0xca, 0x3f, 0x80, 0x00, 0x00};
@@ -727,7 +719,7 @@ TEST_CASE("MessagePack") {
 
                 SECTION("128.128") {
                     double const v = 128.1280059814453125;
-                    json const j = v;
+                    document_t const j = v;
                     std::vector<uint8_t> const expected =
                         {
                             0xca, 0x43, 0x00, 0x20, 0xc5};
@@ -755,9 +747,9 @@ TEST_CASE("MessagePack") {
                 for (size_t N = 0; N < first_bytes.size(); ++N) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::string(N, 'x');
-                    json const j = s;
+                    document_t const j = s;
 
                     // create expected byte vector
                     std::vector<uint8_t> expected;
@@ -788,9 +780,9 @@ TEST_CASE("MessagePack") {
                 for (size_t N = 32; N <= 255; ++N) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::string(N, 'x');
-                    json const j = s;
+                    document_t const j = s;
 
                     // create expected byte vector
                     std::vector<uint8_t> expected;
@@ -819,9 +811,9 @@ TEST_CASE("MessagePack") {
                          256u, 999u, 1025u, 3333u, 2048u, 65535u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::string(N, 'x');
-                    json const j = s;
+                    document_t const j = s;
 
                     // create expected byte vector (hack: create string first)
                     std::vector<uint8_t> expected(N, 'x');
@@ -849,9 +841,9 @@ TEST_CASE("MessagePack") {
                          65536u, 77777u, 1048576u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::string(N, 'x');
-                    json const j = s;
+                    document_t const j = s;
 
                     // create expected byte vector (hack: create string first)
                     std::vector<uint8_t> expected(N, 'x');
@@ -878,7 +870,7 @@ TEST_CASE("MessagePack") {
 
         SECTION("array") {
             SECTION("empty") {
-                json const j = json::array();
+                document_t const j = document_t::array();
                 std::vector<uint8_t> const expected = {0x90};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -889,7 +881,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("[null]") {
-                json const j = {nullptr};
+                document_t const j = {nullptr};
                 std::vector<uint8_t> const expected = {0x91, 0xc0};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -922,7 +914,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("array 16") {
-                json j(16, nullptr);
+                document_t j(16, nullptr);
                 std::vector<uint8_t> expected(j.size() + 3, 0xc0); // all null
                 expected[0] = 0xdc;                                // array 16
                 expected[1] = 0x00;                                // size (0x0010), byte 0
@@ -936,7 +928,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("array 32") {
-                json j(65536, nullptr);
+                document_t j(65536, nullptr);
                 std::vector<uint8_t> expected(j.size() + 5, 0xc0); // all null
                 expected[0] = 0xdd;                                // array 32
                 expected[1] = 0x00;                                // size (0x00100000), byte 0
@@ -960,7 +952,7 @@ TEST_CASE("MessagePack") {
 
         SECTION("object") {
             SECTION("empty") {
-                json const j = json::object();
+                document_t const j = document_t::object();
                 std::vector<uint8_t> const expected = {0x80};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -971,7 +963,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("{\"\":null}") {
-                json const j = {{"", nullptr}};
+                document_t const j = {{"", nullptr}};
                 std::vector<uint8_t> const expected = {0x81, 0xa0, 0xc0};
                 const auto result = to_msgpack(j);
                 CHECK(result == expected);
@@ -982,7 +974,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("{\"a\": {\"b\": {\"c\": {}}}}") {
-                json const j = from_json(R"({"a": {"b": {"c": {}}}})");
+                document_t const j = from_json(R"({"a": {"b": {"c": {}}}})");
                 std::vector<uint8_t> const expected =
                     {
                         0x81, 0xa1, 0x61, 0x81, 0xa1, 0x62, 0x81, 0xa1, 0x63, 0x80};
@@ -995,7 +987,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("map 16") {
-                json const j = R"({"00": null, "01": null, "02": null, "03": null,
+                document_t const j = R"({"00": null, "01": null, "02": null, "03": null,
                              "04": null, "05": null, "06": null, "07": null,
                              "08": null, "09": null, "10": null, "11": null,
                              "12": null, "13": null, "14": null, "15": null})"_json;
@@ -1018,7 +1010,7 @@ TEST_CASE("MessagePack") {
             }
 
             SECTION("map 32") {
-                json j;
+                document_t j;
                 for (auto i = 0; i < 65536; ++i) {
                     // format i to a fixed width of 5
                     // each entry will need 7 bytes: 6 for fixstr, 1 for null
@@ -1052,9 +1044,8 @@ TEST_CASE("MessagePack") {
                 for (size_t N = 0; N <= 0xFF; ++N) {
                     CAPTURE(N)
 
-                    // create JSON value with byte array containing of N * 'x'
                     const auto s = std::vector<uint8_t>(N, 'x');
-                    json j = json::binary(s);
+                    document_t j = document_t::binary(s);
                     std::uint8_t const subtype = 42;
                     j.get_binary().set_subtype(subtype);
 
@@ -1120,9 +1111,9 @@ TEST_CASE("MessagePack") {
                          256u, 999u, 1025u, 3333u, 2048u, 65535u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::vector<uint8_t>(N, 'x');
-                    json j = json::binary(s);
+                    document_t j = document_t::binary(s);
                     std::uint8_t const subtype = 42;
                     j.get_binary().set_subtype(subtype);
 
@@ -1153,9 +1144,9 @@ TEST_CASE("MessagePack") {
                          65536u, 77777u, 1048576u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::vector<uint8_t>(N, 'x');
-                    json j = json::binary(s);
+                    document_t j = document_t::binary(s);
                     std::uint8_t const subtype = 42;
                     j.get_binary().set_subtype(subtype);
 
@@ -1188,9 +1179,8 @@ TEST_CASE("MessagePack") {
                 for (std::size_t N = 0; N <= 0xFF; ++N) {
                     CAPTURE(N)
 
-                    // create JSON value with byte array containing of N * 'x'
                     const auto s = std::vector<uint8_t>(N, 'x');
-                    json const j = json::binary(s);
+                    document_t const j = document_t::binary(s);
 
                     // create expected byte vector
                     std::vector<std::uint8_t> expected;
@@ -1221,9 +1211,9 @@ TEST_CASE("MessagePack") {
                          256u, 999u, 1025u, 3333u, 2048u, 65535u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::vector<std::uint8_t>(N, 'x');
-                    json const j = json::binary(s);
+                    document_t const j = document_t::binary(s);
 
                     // create expected byte vector (hack: create string first)
                     std::vector<std::uint8_t> expected(N, 'x');
@@ -1251,9 +1241,9 @@ TEST_CASE("MessagePack") {
                          65536u, 77777u, 1048576u}) {
                     CAPTURE(N)
 
-                    // create JSON value with string containing of N * 'x'
+
                     const auto s = std::vector<std::uint8_t>(N, 'x');
-                    json const j = json::binary(s);
+                    document_t const j = document_t::binary(s);
 
                     // create expected byte vector (hack: create string first)
                     std::vector<uint8_t> expected(N, 'x');
@@ -1281,19 +1271,19 @@ TEST_CASE("MessagePack") {
 
     SECTION("from float32") {
         auto given = std::vector<uint8_t>({0xca, 0x41, 0xc8, 0x00, 0x01});
-        json const j = from_msgpack(given);
+        document_t const j = from_msgpack(given);
         CHECK(j.get<double>() == Approx(25.0000019073486));
     }
 
     SECTION("errors") {
         SECTION("empty byte vector") {
-            json _;
+            document_t _;
             CHECK_THROWS_WITH_AS(_ = from_msgpack(std::vector<uint8_t>()), "[json.exception.parse_error.110] parse error at byte 1: syntax error while parsing MessagePack value: unexpected end of input", json::parse_error&);
             CHECK(from_msgpack(std::vector<uint8_t>(), true, false).is_discarded());
         }
 
         SECTION("too short byte vector") {
-            json _;
+            document_t _;
 
             CHECK_THROWS_WITH_AS(_ = from_msgpack(std::vector<uint8_t>({0x87})),
                                  "[json.exception.parse_error.110] parse error at byte 2: syntax error while parsing MessagePack string: unexpected end of input", json::parse_error&);
@@ -1361,7 +1351,7 @@ TEST_CASE("MessagePack") {
 
         SECTION("unsupported bytes") {
             SECTION("concrete examples") {
-                json _;
+                document_t _;
                 CHECK_THROWS_WITH_AS(_ = from_msgpack(std::vector<uint8_t>({0xc1})), "[json.exception.parse_error.112] parse error at byte 1: syntax error while parsing MessagePack value: invalid byte: 0xC1", json::parse_error&);
             }
 
@@ -1370,7 +1360,7 @@ TEST_CASE("MessagePack") {
                      {
                          // never used
                          0xc1}) {
-                    json _;
+                    document_t _;
                     CHECK_THROWS_AS(_ = from_msgpack(std::vector<uint8_t>({static_cast<uint8_t>(byte)})), json::parse_error&);
                     CHECK(from_msgpack(std::vector<uint8_t>({static_cast<uint8_t>(byte)}), true, false).is_discarded());
                 }
@@ -1378,7 +1368,7 @@ TEST_CASE("MessagePack") {
         }
 
         SECTION("invalid string in map") {
-            json _;
+            document_t _;
             CHECK_THROWS_WITH_AS(_ = from_msgpack(std::vector<uint8_t>({0x81, 0xff, 0x01})), "[json.exception.parse_error.113] parse error at byte 2: syntax error while parsing MessagePack string: expected length specification (0xA0-0xBF, 0xD9-0xDB); last byte: 0xFF", json::parse_error&);
             CHECK(from_msgpack(std::vector<uint8_t>({0x81, 0xff, 0x01}), true, false).is_discarded());
         }
@@ -1387,12 +1377,12 @@ TEST_CASE("MessagePack") {
             std::vector<uint8_t> const vec = {0xc0, 0xc0};
             SECTION("non-strict mode") {
                 const auto result = from_msgpack(vec, false);
-                CHECK(result == json());
+                CHECK(result == document_t());
             }
 
             SECTION("strict mode") {
-                json _;
-                CHECK_THROWS_WITH_AS(_ = from_msgpack(vec), "[json.exception.parse_error.110] parse error at byte 2: syntax error while parsing MessagePack value: expected end of input; last byte: 0xC0", json::parse_error&);
+                document_t _;
+                CHECK_THROWS_WITH_AS(_ = from_msgpack(vec), "[document_t.exception.parse_error.110] parse error at byte 2: syntax error while parsing MessagePack value: expected end of input; last byte: 0xC0", json::parse_error&);
                 CHECK(from_msgpack(vec, true, false).is_discarded());
             }
         }

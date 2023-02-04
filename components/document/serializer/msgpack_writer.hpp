@@ -325,8 +325,7 @@ private:
     }
 
 public:
-    template<typename C = std::CharType,
-             std::enable_if_t<std::is_signed<C>::value && std::is_signed<char>::value>* = nullptr>
+    template<typename C = std::CharType,std::enable_if_t<std::is_signed<C>::value && std::is_signed<char>::value>* = nullptr>
     static constexpr CharType to_char_type(std::uint8_t x) noexcept {
         return *reinterpret_cast<char*>(&x);
     }

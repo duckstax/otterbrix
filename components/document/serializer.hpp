@@ -34,7 +34,7 @@ namespace components::document {
         const bool strict = true;
         const bool allow_exceptions = true;
 
-        json_sax_dom_parser<basic_json> sdp(result, allow_exceptions);
+        json_sax_dom_parser<document_t> sdp(result, allow_exceptions);
         auto ia = input_adapter(std::forward<InputType>(i));
         const bool res = binary_reader<decltype(ia)>(std::move(ia)).sax_parse(&sdp, strict);
         return res;
@@ -45,15 +45,15 @@ namespace components::document {
         constexpr static bool strict = true;
         constexpr static bool allow_exceptions = true;
 
-        json_sax_dom_parser<basic_json> sdp(result, allow_exceptions);
+        json_sax_dom_parser<document_t> sdp(result, allow_exceptions);
         auto ia = input_adapter(std::move(first), std::move(last));
         const bool res = binary_reader<decltype(ia)>(std::move(ia), ).sax_parse(&sdp, strict);
         return res;
     }
 
-    std::vector<std::uint8_t> to_msgpack(const basic_json& j);
-    void to_msgpack(const basic_json& j, output_adapter<std::uint8_t> o);
-    void to_msgpack(const basic_json& j, output_adapter<char> o);
+    std::vector<std::uint8_t> to_msgpack(const document_t& j);
+    void to_msgpack(const document_t& j, output_adapter<std::uint8_t> o);
+    void to_msgpack(const document_t& j, output_adapter<char> o);
 
     document_ptr from_json(const std::string &json);
     std::string to_json(const document_ptr &doc);

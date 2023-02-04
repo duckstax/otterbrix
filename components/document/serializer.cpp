@@ -9,17 +9,17 @@
 
 namespace components::document {
 
-    std::vector<std::uint8_t> to_msgpack(const basic_json& j) {
+    std::vector<std::uint8_t> to_msgpack(const document_t& j) {
         std::vector<std::uint8_t> result;
         to_msgpack(j, result);
         return result;
     }
 
-    void to_msgpack(const basic_json& j, output_adapter<std::uint8_t> o) {
+    void to_msgpack(const document_t& j, output_adapter<std::uint8_t> o) {
         binary_writer<std::uint8_t>(o).write_msgpack(j);
     }
 
-    void to_msgpack(const basic_json& j, output_adapter<char> o) {
+    void to_msgpack(const document_t& j, output_adapter<char> o) {
         binary_writer<char>(o).write_msgpack(j);
     }
 
