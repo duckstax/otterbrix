@@ -3,6 +3,7 @@
 
 #include <dataframe/column/make.hpp>
 #include <dataframe/detail/bitmask.hpp>
+#include <dataframe/detail/util.hpp>
 #include <dataframe/dictionary/make_dictionary.hpp>
 #include <dataframe/scalar/scalar.hpp>
 #include <dataframe/traits.hpp>
@@ -127,6 +128,46 @@ namespace components::dataframe::column {
   else if (is_fixed_point(type)) return make_fixed_point_column(resource,type, size, state);
   else                           return make_numeric_column    (resource,type, size, state);
         // clang-format on
+    }
+
+    std::unique_ptr<column_t> make_structs_column(
+        std::pmr::memory_resource* resource,
+        size_type num_rows,
+        std::vector<std::unique_ptr<column_t>>&& child_columns,
+        size_type null_count,
+        core::buffer&& null_mask) {
+        assertion_exception_msg(null_count <= 0 || !null_mask.is_empty(),
+                                "Struct column with nulls must be nullable.");
+
+        assertion_exception_msg(std::all_of(child_columns.begin(),
+                                            child_columns.end(),
+                                            [&](auto const& child_col) { return num_rows == child_col->size(); }),
+                                "Child columns must have the same number of rows as the Struct column.");
+
+        if (!null_mask.is_empty()) {
+            for (auto& child : child_columns) {
+                child = dataframe::detail::superimpose_nulls(resource,
+                                                             static_cast<bitmask_type const*>(null_mask.data()),
+                                                             null_count,
+                                                             std::move(child));
+            }
+        }
+
+        return std::make_unique<column::column_t>(resource,
+                                                  data_type{type_id::structs},
+                                                  num_rows,
+                                                  core::buffer{resource},
+                                                  std::move(null_mask),
+                                                  null_count,
+                                                  std::move(child_columns));
+    }
+
+    std::unique_ptr<column_t> make_column_from_scalar(
+        std::pmr::memory_resource* resource,
+        scalar::scalar_t const& s,
+        size_type size) {
+        //return type_dispatcher(s.type(), column_from_scalar_dispatch{}, s, size, stream, mr);
+        //todo
     }
 
     std::unique_ptr<column_t> make_dictionary_from_scalar(std::pmr::memory_resource* resource,

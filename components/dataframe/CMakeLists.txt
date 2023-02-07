@@ -10,6 +10,7 @@ set(${PROJECT_NAME}_SOURCES
         detail/cast.cpp
         detail/bits.cpp
         detail/bitmask.cpp
+        detail/util.cpp
         dictionary/dictionary_column_view.cpp
         dictionary/make_dictionary.cpp
         lists/lists_column_view.cpp
