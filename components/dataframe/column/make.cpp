@@ -130,6 +130,46 @@ namespace components::dataframe::column {
         // clang-format on
     }
 
+    std::unique_ptr<column_t> make_strings_column(
+        std::pmr::memory_resource* resource,
+        core::span<std::pair<const char*, size_type> const> strings) {
+        //todo: impl
+    }
+
+    std::unique_ptr<column_t> make_strings_column(
+        std::pmr::memory_resource* resource,
+        core::span<std::string_view const> string_views,
+        const std::string_view null_placeholder) {
+        //todo: impl
+    }
+
+    std::unique_ptr<column_t> make_strings_column(
+        std::pmr::memory_resource* resource,
+        core::span<char const> strings,
+        core::span<size_type const> offsets,
+        core::span<bitmask_type const> null_mask,
+        size_type null_count) {
+        //todo: impl
+    }
+
+    std::unique_ptr<column_t> make_strings_column(std::pmr::memory_resource* resource,
+                                                  size_type num_strings,
+                                                  std::unique_ptr<column_t> offsets_column,
+                                                  std::unique_ptr<column_t> chars_column,
+                                                  size_type null_count,
+                                                  core::buffer&& null_mask) {
+        //todo: impl
+    }
+
+    std::unique_ptr<column_t> make_strings_column(std::pmr::memory_resource* resource,
+                                                  size_type num_strings,
+                                                  core::uvector<size_type>&& offsets,
+                                                  core::uvector<char>&& chars,
+                                                  core::buffer&& null_mask,
+                                                  size_type null_count) {
+        //todo: impl
+    }
+
     std::unique_ptr<column_t> make_structs_column(
         std::pmr::memory_resource* resource,
         size_type num_rows,

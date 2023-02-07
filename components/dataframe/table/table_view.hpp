@@ -25,7 +25,18 @@ namespace components::dataframe::table {
             using iterator = decltype(std::begin(_columns));        ///< Iterator type for the table
             using const_iterator = decltype(std::cbegin(_columns)); ///< const iterator type for the table
 
-            explicit table_view_base(std::vector<ColumnView> const& cols);
+            explicit table_view_base(std::vector<ColumnView> const& cols)
+                : _columns{cols} {
+                if (num_columns() > 0) {
+                    std::for_each(_columns.begin(), _columns.end(), [this](ColumnView col) {
+                        assertion_exception_msg(col.size() == _columns.front().size(), "Column size mismatch.");
+                    });
+                    _num_rows = _columns.front().size();
+                } else {
+                    _num_rows = 0;
+                }
+            }
+
             iterator begin() noexcept { return std::begin(_columns); }
             [[nodiscard]] const_iterator begin() const noexcept { return std::begin(_columns); }
             iterator end() noexcept { return std::end(_columns); }
