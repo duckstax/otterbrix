@@ -5,6 +5,8 @@
 #include <random>
 #include <algorithm>
 
+#include <core/assert/trace_full_exception.hpp>
+
 #include "dataframe/column/column.hpp"
 #include "dataframe/column/column_view.hpp"
 #include "dataframe/column/make.hpp"
@@ -17,10 +19,16 @@
 using namespace components::dataframe;
 using namespace components::dataframe::column;
 
+#ifdef NDEBUG
+#define IF_REQUIRE_THROWS_AS(f, error) REQUIRE_THROWS_AS(f, error)
+#else
+#define IF_REQUIRE_THROWS_AS(f, error)
+#endif
+
 /*
-bool equal(std::pmr::memory_resource* resource,column_view const& lhs,column_view const& rhs) {
-    auto lhs_indices = generate_all_row_indices(resource,lhs.size());
-    auto rhs_indices = generate_all_row_indices(resource,rhs.size());
+bool equal(std::pmr::memory_resource *resource, const column_view &lhs, const column_view &rhs) {
+    auto lhs_indices = generate_all_row_indices(resource, lhs.size());
+    auto rhs_indices = generate_all_row_indices(resource, rhs.size());
     return type_dispatcher(
         lhs.type(),
         column_comparator<true>{},
@@ -30,6 +38,7 @@ bool equal(std::pmr::memory_resource* resource,column_view const& lhs,column_vie
         *rhs_indices);
 }
 */
+
 template<typename T>
 struct gen_column {
     data_type type() { return data_type{type_to_id<T>()}; }
@@ -38,8 +47,8 @@ struct gen_column {
         : resource_(std::pmr::get_default_resource())
         , data(resource_, _num_elements * size_of(type()))
         , mask(resource_, bitmask_allocation_size_bytes(_num_elements))
-        , all_valid_mask(resource_, create_null_mask(resource_,num_elements(), mask_state::all_valid))
-        , all_null_mask(resource_, create_null_mask(resource_,num_elements(), mask_state::all_null)) {
+        , all_valid_mask(resource_, create_null_mask(resource_, num_elements(), mask_state::all_valid))
+        , all_null_mask(resource_, create_null_mask(resource_, num_elements(), mask_state::all_null)) {
         test::sequence(data);
         test::sequence(mask);
     }
@@ -57,7 +66,7 @@ struct gen_column {
     core::buffer all_null_mask;
 };
 
-void verify_column_views(column_t col) {
+void verify_column_views(column_t& col) {
     column_view view = col;
     mutable_column_view mutable_view = col;
     REQUIRE(col.type() == view.type());
@@ -78,7 +87,7 @@ void verify_column_views(column_t col) {
 TEMPLATE_TEST_CASE("default null count no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data),core::buffer(resource));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer(resource));
     REQUIRE_FALSE(col.nullable());
     REQUIRE_FALSE(col.has_nulls());
     REQUIRE(0 == col.null_count());
@@ -87,7 +96,7 @@ TEMPLATE_TEST_CASE("default null count no mask", "[column][template]", std::int3
 TEMPLATE_TEST_CASE("default null count empty mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), core::buffer(resource));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer(resource));
     REQUIRE_FALSE(col.nullable());
     REQUIRE_FALSE(col.has_nulls());
     REQUIRE(0 == col.null_count());
@@ -96,7 +105,7 @@ TEMPLATE_TEST_CASE("default null count empty mask", "[column][template]", std::i
 TEMPLATE_TEST_CASE("default null count all valid", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
     REQUIRE(col.nullable());
     REQUIRE_FALSE(col.has_nulls());
     REQUIRE(0 == col.null_count());
@@ -105,7 +114,7 @@ TEMPLATE_TEST_CASE("default null count all valid", "[column][template]", std::in
 TEMPLATE_TEST_CASE("explicit null count all valid", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask), 0);
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask), 0);
     REQUIRE(col.nullable());
     REQUIRE_FALSE(col.has_nulls());
     REQUIRE(0 == col.null_count());
@@ -114,107 +123,106 @@ TEMPLATE_TEST_CASE("explicit null count all valid", "[column][template]", std::i
 TEMPLATE_TEST_CASE("default null count all null", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
     REQUIRE(col.nullable());
     REQUIRE(col.has_nulls());
     REQUIRE(gen.num_elements() == col.null_count());
 }
 
-TEMPLATE_TEST_CASE("ExplicitNullCountAllNull", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("explicit null count all null", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask), gen.num_elements());
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask), gen.num_elements());
     REQUIRE(col.nullable());
     REQUIRE(col.has_nulls());
     REQUIRE(gen.num_elements() == col.null_count());
 }
 
-/*
-TEMPLATE_TEST_CASE("SetNullCountNoMask", "[column][template]", std::int32_t) {
-    gen_column<TestType> gen;
-    column_t col{gen.type(), gen.num_elements(), std::move(gen.data)};
-    REQUIRE_THROWS_AS(col.set_null_count(1), std::logic_error);
-}
-
-TEMPLATE_TEST_CASE("SetEmptyNullMaskNonZeroNullCount", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("set null count no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col{gen.type(), gen.num_elements(), std::move(gen.data)};
+    column_t col{resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{resource}};
+    IF_REQUIRE_THROWS_AS(col.set_null_count(1), core::trace_full_exception);
+}
+
+TEMPLATE_TEST_CASE("set empty null mask non zero null count", "[column][template]", std::int32_t) {
+    std::pmr::memory_resource* resource = std::pmr::get_default_resource();
+    gen_column<TestType> gen;
+    column_t col{resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{resource}};
     core::buffer empty_null_mask(resource);
-    REQUIRE_THROWS_AS(col.set_null_mask(empty_null_mask, gen.num_elements()), std::logic_error);
+    IF_REQUIRE_THROWS_AS(col.set_null_mask(empty_null_mask, gen.num_elements()), core::trace_full_exception);
 }
 
-TEMPLATE_TEST_CASE("SetInvalidSizeNullMaskNonZeroNullCount", "[column][template]", std::int32_t) {
-    gen_column<TestType> gen;
-    column_t col{gen.type(), gen.num_elements(), std::move(gen.data)};
-    auto invalid_size_null_mask = create_null_mask(std::min(gen.num_elements() - 50, 0), mask_state::all_valid);
-    REQUIRE_THROWS_AS(col.set_null_mask(invalid_size_null_mask, gen.num_elements()), std::logic_error);
-}
-
-TEMPLATE_TEST_CASE("SetNullCountEmptyMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("set invalid size null mask non zero null count", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col{gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{}};
-    REQUIRE_THROWS_AS(col.set_null_count(1), std::logic_error);
+    column_t col{resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{resource}};
+    auto invalid_size_null_mask = create_null_mask(resource, std::min(gen.num_elements() - 50, 0), mask_state::all_valid);
+    IF_REQUIRE_THROWS_AS(col.set_null_mask(invalid_size_null_mask, gen.num_elements()), core::trace_full_exception);
 }
 
-TEMPLATE_TEST_CASE("SetNullCountAllValid", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("set null count empty mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t col{resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{resource}};
+    IF_REQUIRE_THROWS_AS(col.set_null_count(1), core::trace_full_exception);
+}
+
+TEMPLATE_TEST_CASE("set null count all valid", "[column][template]", std::int32_t) {
+    std::pmr::memory_resource* resource = std::pmr::get_default_resource();
+    gen_column<TestType> gen;
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
     REQUIRE_NOTHROW(col.set_null_count(0));
     REQUIRE(0 == col.null_count());
 }
 
-TEMPLATE_TEST_CASE("SetNullCountAllNull", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("set null count all null", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
     REQUIRE_NOTHROW(col.set_null_count(gen.num_elements()));
     REQUIRE(gen.num_elements() == col.null_count());
 }
 
-TEMPLATE_TEST_CASE("ResetNullCountAllNull", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("reset null count all null", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
-
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_null_mask));
     REQUIRE(gen.num_elements() == col.null_count());
     REQUIRE_NOTHROW(col.set_null_count(unknown_null_count));
     REQUIRE(gen.num_elements() == col.null_count());
 }
 
-TEMPLATE_TEST_CASE("ResetNullCountAllValid", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("reset null count all valid", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
     REQUIRE(0 == col.null_count());
     REQUIRE_NOTHROW(col.set_null_count(unknown_null_count));
     REQUIRE(0 == col.null_count());
 }
 
-TEMPLATE_TEST_CASE("CopyDataNoMask", "[column][template]", std::int32_t) {
+/*
+TEMPLATE_TEST_CASE("copy data no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data),core::buffer(resource));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer(resource));
     REQUIRE(gen.type() == col.type());
     REQUIRE_FALSE(col.nullable());
     REQUIRE(0 == col.null_count());
     REQUIRE(gen.num_elements() == col.size());
     REQUIRE(0 == col.num_children());
-
     verify_column_views(col);
-
     column_view v = col;
     REQUIRE(v.head() != gen.data.data());
     REQUIRE(equal(v.head(), gen.data.data(), gen.data.size()));
 }
 
-TEMPLATE_TEST_CASE("MoveDataNoMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("move data no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
     void* original_data = gen.data.data();
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data));
     REQUIRE(gen.type() == col.type());
     REQUIRE_FALSE(col.nullable());
     REQUIRE(0 == col.null_count());
@@ -228,11 +236,11 @@ TEMPLATE_TEST_CASE("MoveDataNoMask", "[column][template]", std::int32_t) {
     REQUIRE(v.head() == original_data);
 }
 
-TEMPLATE_TEST_CASE("CopyDataAndMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("copy data and mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
 
-    column_t col(resource,gen.type(),
+    column_t col(resource, gen.type(),
                  gen.num_elements(),
                  core::buffer{resource, gen.data},
                  core::buffer{resource, gen.all_valid_mask});
@@ -253,12 +261,12 @@ TEMPLATE_TEST_CASE("CopyDataAndMask", "[column][template]", std::int32_t) {
     REQUIRE(equal(v.null_mask(), gen.all_valid_mask.data(), gen.mask.size()));
 }
 
-TEMPLATE_TEST_CASE("MoveDataAndMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("move data and mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
     void* original_data = gen.data.data();
     void* original_mask = gen.all_valid_mask.data();
-    column_t col(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t col(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
     REQUIRE(gen.type() == col.type());
     REQUIRE(col.nullable());
     REQUIRE(0 == col.null_count());
@@ -273,11 +281,11 @@ TEMPLATE_TEST_CASE("MoveDataAndMask", "[column][template]", std::int32_t) {
     REQUIRE(v.null_mask() == original_mask);
 }
 
-TEMPLATE_TEST_CASE("CopyConstructorNoMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("copy constructor no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t original(resource,gen.type(), gen.num_elements(), std::move(gen.data));
-    column_t copy{resource,original};
+    column_t original(resource, gen.type(), gen.num_elements(), std::move(gen.data));
+    column_t copy{resource, original};
     verify_column_views(copy);
     REQUIRE(equal(original, copy));
 
@@ -287,11 +295,11 @@ TEMPLATE_TEST_CASE("CopyConstructorNoMask", "[column][template]", std::int32_t) 
     REQUIRE(original_view.head() != copy_view.head());
 }
 
-TEMPLATE_TEST_CASE("CopyConstructorWithMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("copy constructor with mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t original(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
-    column_t copy{resource,original};
+    column_t original(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t copy{resource, original};
     verify_column_views(copy);
     REQUIRE(equal(original, copy));
 
@@ -302,10 +310,10 @@ TEMPLATE_TEST_CASE("CopyConstructorWithMask", "[column][template]", std::int32_t
     REQUIRE(original_view.null_mask() != copy_view.null_mask());
 }
 
-TEMPLATE_TEST_CASE("MoveConstructorNoMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("move constructor no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t original(resource,gen.type(), gen.num_elements(), std::move(gen.data));
+    column_t original(resource, gen.type(), gen.num_elements(), std::move(gen.data));
 
     auto original_data = original.view().head();
 
@@ -321,10 +329,10 @@ TEMPLATE_TEST_CASE("MoveConstructorNoMask", "[column][template]", std::int32_t) 
     REQUIRE(original_data == moved_to_view.head());
 }
 
-TEMPLATE_TEST_CASE("MoveConstructorWithMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("move constructor with mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
-    column_t original(resource,gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
+    column_t original(resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask));
     auto original_data = original.view().head();
     auto original_mask = original.view().null_mask();
     column_t moved_to{std::move(original)};
@@ -339,12 +347,12 @@ TEMPLATE_TEST_CASE("MoveConstructorWithMask", "[column][template]", std::int32_t
     REQUIRE(original_mask == moved_to_view.null_mask());
 }
 
-TEMPLATE_TEST_CASE("DeviceUvectorConstructorNoMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("device uvector constructor no mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
 
     core::uvector<TestType> original(resource, static_cast<std::size_t>(gen.num_elements()));
-    copy(static_cast<TestType*>(gen.data.data()),static_cast<TestType*>(gen.data.data()) + gen.num_elements(),original.begin());
+    copy(static_cast<TestType*>(gen.data.data()), static_cast<TestType*>(gen.data.data()) + gen.num_elements(), original.begin());
 
     auto original_data = original.data();
     column_t moved_to{std::move(original)};
@@ -355,12 +363,12 @@ TEMPLATE_TEST_CASE("DeviceUvectorConstructorNoMask", "[column][template]", std::
     REQUIRE(original_data == moved_to_view.head());
 }
 
-TEMPLATE_TEST_CASE("DeviceUvectorConstructorWithMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("device uvector constructor with mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
 
     core::uvector<TestType> original(resource, static_cast<std::size_t>(gen.num_elements()));
-    copy(static_cast<TestType*>(gen.data.data()),static_cast<TestType*>(gen.data.data()) + gen.num_elements(),original.begin());
+    copy(static_cast<TestType*>(gen.data.data()), static_cast<TestType*>(gen.data.data()) + gen.num_elements(), original.begin());
 
     auto original_data = original.data();
     auto original_mask = gen.all_valid_mask.data();
@@ -373,12 +381,12 @@ TEMPLATE_TEST_CASE("DeviceUvectorConstructorWithMask", "[column][template]", std
     REQUIRE(original_mask == moved_to_view.null_mask());
 }
 
-TEMPLATE_TEST_CASE("ConstructWithChildren", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("construct with children", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
     std::vector<std::unique_ptr<column_t>> children;
 
-    children.emplace_back(std::make_unique<column_t>(data_type{type_id::int8}, 42, core::buffer(resource, gen.data), core::buffer(resource,gen.all_valid_mask)));
+    children.emplace_back(std::make_unique<column_t>(data_type{type_id::int8}, 42, core::buffer(resource, gen.data), core::buffer(resource, gen.all_valid_mask)));
     children.emplace_back(std::make_unique<column_t>(data_type{type_id::float64}, 314, core::buffer(resource, gen.data), core::buffer{resource, gen.all_valid_mask}));
     column_t col{gen.type(), gen.num_elements(), core::buffer(resource, gen.data), core::buffer{resource, gen.all_valid_mask}, unknown_null_count, std::move(children)};
 
@@ -390,7 +398,7 @@ TEMPLATE_TEST_CASE("ConstructWithChildren", "[column][template]", std::int32_t) 
     REQUIRE(314 == col.child(1).size());
 }
 
-TEMPLATE_TEST_CASE("ReleaseNoChildren", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("release no children", "[column][template]", std::int32_t) {
     gen_column<TestType> gen;
     column_t col{gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask)};
     auto original_data = col.view().head();
@@ -406,7 +414,7 @@ TEMPLATE_TEST_CASE("ReleaseNoChildren", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.num_children());
 }
 
-TEMPLATE_TEST_CASE("ReleaseWithChildren", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("release with children", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
     std::vector<std::unique_ptr<column_t>> children;
@@ -435,7 +443,7 @@ TEMPLATE_TEST_CASE("ReleaseWithChildren", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.num_children());
 }
 
-TEMPLATE_TEST_CASE("ColumnViewConstructorWithMask", "[column][template]", std::int32_t) {
+TEMPLATE_TEST_CASE("column view constructor with mask", "[column][template]", std::int32_t) {
     std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     gen_column<TestType> gen;
     column_t original{gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask)};

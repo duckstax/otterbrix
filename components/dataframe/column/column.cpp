@@ -143,7 +143,8 @@ namespace components::dataframe::column {
     void column_t::set_null_mask(core::buffer const& new_null_mask,
                                size_type new_null_count) {
         if (new_null_count > 0) {
-            assert(new_null_mask.size() >= bitmask_allocation_size_bytes(this->size()));
+            assertion_exception_msg(new_null_mask.size() >= bitmask_allocation_size_bytes(this->size()),
+                                    "Size of nullmask should match size of column");
         }
         null_mask_ = core::buffer{resource_,new_null_mask};
         null_count_ = new_null_count;
@@ -151,7 +152,7 @@ namespace components::dataframe::column {
 
     void column_t::set_null_count(size_type new_null_count) {
         if (new_null_count > 0) {
-            assert(nullable());
+            assertion_exception_msg(nullable(), "Invalid null count");
         }
         null_count_ = new_null_count;
     }
