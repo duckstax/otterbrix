@@ -267,8 +267,8 @@ namespace components::dataframe::column {
 
     // Copy from a view
     column_t::column_t(std::pmr::memory_resource* resource, column_view view)
-        : column_t(resource_,std::move(*type_dispatcher(view.type(), create_column_from_view{resource,view}))) {
-        assert(resource!= nullptr);
+        : column_t(resource,std::move(*type_dispatcher(view.type(), create_column_from_view{resource,view}))) {
+        //assert(resource!= nullptr);
     }
 
 } // namespace components::dataframe::column

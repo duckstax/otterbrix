@@ -1,5 +1,6 @@
 #include <memory>
 #include <memory_resource>
+#include <numeric>
 
 #include <dataframe/column/make.hpp>
 #include <dataframe/detail/bitmask.hpp>
@@ -223,6 +224,14 @@ namespace components::dataframe::column {
             make_column_from_scalar(resource, scalar::numeric_scalar<uint32_t>(resource, 0), size),
             core::buffer{resource, 0},
             0);
+    }
+
+    std::unique_ptr<column::column_t> generate_all_row_indices(
+        std::pmr::memory_resource* resource,
+        size_type num_rows) {
+        auto indices = make_fixed_width_column(resource, data_type{type_id::int32}, num_rows, mask_state::unallocated);
+        std::iota(indices->mutable_view().begin<size_type>(), indices->mutable_view().end<size_type>(), 0);
+        return indices;
     }
 
 } // namespace components::dataframe::column

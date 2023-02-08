@@ -49,7 +49,7 @@ namespace components::dataframe::column {
             data_type dtype,
             size_type size,
             B1&& data,
-            B2&& null_mask = {},
+            B2&& null_mask,
             size_type null_count = unknown_null_count,
             std::vector<std::unique_ptr<column_t>>&& children = {})
             : type_{dtype}

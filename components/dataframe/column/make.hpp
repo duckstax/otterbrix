@@ -175,4 +175,8 @@ namespace components::dataframe::column {
         scalar::scalar_t const& s,
         size_type size);
 
+    std::unique_ptr<column::column_t> generate_all_row_indices(
+        std::pmr::memory_resource* resource,
+        size_type num_rows);
+
 } // namespace components::dataframe::column
