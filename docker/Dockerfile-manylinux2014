@@ -24,7 +24,7 @@ RUN    pip3 install --no-cache-dir conan==1.52.0 cmake && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
     conan config set general.parallel_download=$(nproc) && \
     conan config set general.cpu_count=$(nproc) && \
-    conan remote add duckstax http://conan.duckstax.com:9300
+    conan remote add duckstax http://conan.duckstax.com
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
@@ -58,7 +58,7 @@ RUN  conan profile new default --detect --force
 RUN  conan profile update settings.compiler.libcxx=libstdc++11 default
 RUN  conan config set general.parallel_download=$(nproc)
 RUN  conan config set general.cpu_count=$(nproc)
-RUN  conan remote add duckstax http://conan.duckstax.com:9300
+RUN  conan remote add duckstax http://conan.duckstax.com
 
 WORKDIR /app
 
