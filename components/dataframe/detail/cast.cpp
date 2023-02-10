@@ -69,26 +69,7 @@ namespace {
 
     template <typename T, std::enable_if_t<is_fixed_point<T>()>* = nullptr>
     std::unique_ptr<column::column_t> rescale(std::pmr::memory_resource* resource, const column::column_view& input, core::numbers::scale_type scale) {
-        std::make_unique<column::column_t>(resource, input.type(), input.size(), core::buffer{resource}, detail::copy_bitmask(resource, input), input.null_count()); //todo: delete
-//        using device_t = device_storage_type_t<T>;
-//        const auto type = data_type{type_to_id<T>(), scale};
-//        if (input.type().scale() >= scale) {
-//            const auto scalar = std::make_unique<scalar_type_t<T>>(resource, 0, core::numbers::scale_type{scale});
-//            return detail::binary_operation(input, *scalar, binary_operator::ADD, type, stream, mr);
-//        } else {
-//            auto const diff = input.type().scale() - scale;
-//            if (-diff > cuda::std::numeric_limits<RepType>::digits10) {
-//                auto const scalar = make_fixed_point_scalar<T>(0, scale_type{scale}, stream);
-//                auto output_column = make_column_from_scalar(*scalar, input.size(), stream, mr);
-//                if (input.nullable()) {
-//                    auto const null_mask = copy_bitmask(input, stream, mr);
-//                    output_column->set_null_mask(std::move(null_mask));
-//                }
-//                return output_column;
-//            }
-//            auto const scalar = make_fixed_point_scalar<T>(std::pow(10, -diff), scale_type{diff}, stream);
-//            return detail::binary_operation(input, *scalar, binary_operator::DIV, type, stream, mr);
-//        }
+        std::make_unique<column::column_t>(resource, input.type(), input.size(), core::buffer{resource}, detail::copy_bitmask(resource, input), input.null_count()); //todo: impl
     }
 
     template<typename From, typename To>
