@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include <core/btree/btree.hpp>
 #include "core/pmr.hpp"
 #include "forward.hpp"
 #include "index.hpp"
@@ -56,6 +57,7 @@ namespace components::index {
     }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);
+    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr> &docs);
     void insert_one(const index_engine_ptr& ptr, id_index id, document_ptr docs);
     void find(const index_engine_ptr& index, id_index id, result_set_t*);
     void find(const index_engine_ptr& index, query_t query, result_set_t*);

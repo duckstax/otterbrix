@@ -39,6 +39,11 @@ PYBIND11_MODULE(ottergon, m) {
         .def("__getitem__", &wrapper_database::create);
 
     py::enum_<index_type>(m, "TypeIndex")
+        .value("SINGLE", index_type::single)
+        .value("COMPOSITE", index_type::composite)
+        .value("MULTIKEY", index_type::multikey)
+        .value("HASHED", index_type::hashed)
+        .value("WILDCARD", index_type::wildcard)
         .export_values();
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")

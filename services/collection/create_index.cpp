@@ -45,7 +45,8 @@ namespace services::collection {
             switch (index.index_type_) {
 
                 case index_type::single: {
-                    make_index<single_field_index_t>(context_->index_engine(), index.keys_);
+                    auto id_index = make_index<single_field_index_t>(context_->index_engine(), index.keys_);
+                    insert(context_->index_engine(), id_index, context_->storage());
                     break;
                 }
 

@@ -35,6 +35,23 @@ namespace components::index {
         }
     }
 
+    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr> &docs) {
+        auto* index = search_index(ptr, id);
+        for (auto &doc : docs) {
+            auto range = index->keys();
+            for (auto j = range.first; j != range.second; ++j) {
+                const auto& key_tmp = *j;
+                const std::string& key = key_tmp.as_string(); // hack
+                document::document_view_t view(doc.second);
+                if ((!(view.is_null(key)))) {
+                    auto* data = view.get_value(key);
+                    ::document::wrapper_value_t key_(data);
+                    index->insert(key_, doc.second);
+                }
+            }
+        }
+    }
+
     void insert_one(const index_engine_ptr& ptr, id_index id, document_ptr doc) {
         auto* index = search_index(ptr, id);
         auto range = index->keys();

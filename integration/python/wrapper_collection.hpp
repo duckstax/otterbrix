@@ -42,7 +42,7 @@ namespace duck_charmer {
         wrapper_result_delete delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
-        bool create_index(py::list keys, index_type type);
+        bool create_index(const py::list& keys, index_type type);
 
     private:
         const std::string name_;
