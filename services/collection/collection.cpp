@@ -38,6 +38,10 @@ namespace services::collection {
         add_handler(handler_id(route::create_index), &collection_t::create_index);
     }
 
+    collection_t::~collection_t() {
+        trace(log_, "delete collection_t");
+    }
+
     void collection_t::create_documents(components::session::session_id_t& session, std::pmr::vector<document_ptr>& documents) {
         debug(log_, "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
         insert_(no_transaction_context, documents);

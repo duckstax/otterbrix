@@ -24,6 +24,10 @@ namespace services::disk {
         add_handler(handler_id(route::fix_wal_id), &agent_disk_t::fix_wal_id);
     }
 
+    agent_disk_t::~agent_disk_t() {
+        trace(log_, "delete agent_disk_t");
+    }
+
     auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
         trace(log_, "agent_disk::load , session : {}", session.data());
         result_load_t result(disk_.databases(), disk_.wal_id());
@@ -119,6 +123,10 @@ namespace services::disk {
         add_handler(handler_id(route::remove_documents), &manager_disk_t::remove_documents);
         add_handler(handler_id(route::flush), &manager_disk_t::flush);
         trace(log_, "manager_disk finish");
+    }
+
+    manager_disk_t::~manager_disk_t() {
+        trace(log_, "delete manager_disk_t");
     }
 
     void manager_disk_t::create_agent() {

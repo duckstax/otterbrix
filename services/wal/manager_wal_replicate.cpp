@@ -31,6 +31,10 @@ namespace services::wal {
         trace(log_, "manager_wal_replicate_t start thread pool");
     }
 
+    manager_wal_replicate_t::~manager_wal_replicate_t() {
+        trace(log_, "delete manager_wal_replicate_t");
+    }
+
     auto manager_wal_replicate_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_;
     }

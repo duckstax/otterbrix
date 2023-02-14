@@ -22,6 +22,10 @@ namespace duck_charmer {
         add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
     }
 
+    wrapper_dispatcher_t::~wrapper_dispatcher_t() {
+        trace(log_, "delete wrapper_dispatcher_t");
+    }
+
     auto wrapper_dispatcher_t::load() -> void {
         session_id_t session;
         trace(log_, "wrapper_dispatcher_t::load session: {}", session.data());

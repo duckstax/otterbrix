@@ -32,6 +32,7 @@ namespace services::wal {
         }
 
         manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_wal, log_t&);
+        ~manager_wal_replicate_t();
         void create_wal_worker();
         void load(session_id_t& session, services::wal::id_t wal_id);
         void create_database(session_id_t& session, components::ql::create_database_t& data);

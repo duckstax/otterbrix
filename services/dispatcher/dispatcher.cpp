@@ -92,6 +92,10 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::dispatcher_t finish name:{}", type());
     }
 
+    dispatcher_t::~dispatcher_t() {
+        trace(log_, "delete dispatcher_t");
+    }
+
     void dispatcher_t::load(components::session::session_id_t &session, actor_zeta::address_t sender) {
         trace(log_, "dispatcher_t::load, session: {}", session.data());
         load_session_ = session;
@@ -622,6 +626,7 @@ namespace services::dispatcher {
 
     manager_dispatcher_t::~manager_dispatcher_t() {
         ZoneScoped;
+        trace(log_, "delete manager_dispatcher_t");
     }
 
     auto manager_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {

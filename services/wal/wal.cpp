@@ -63,6 +63,7 @@ namespace services::wal {
     }
 
     wal_replicate_t::~wal_replicate_t() {
+        trace(log_, "delete wal_replicate_t");
     }
 
     size_tt read_size_impl(buffer_t& input, int index_start) {

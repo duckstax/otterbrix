@@ -28,7 +28,7 @@
 
 namespace services::dispatcher {
 
-        class key_collection_t {
+    class key_collection_t {
     public:
         key_collection_t(database_name_t  database, collection_name_t  collection);
         key_collection_t() = delete;
@@ -51,6 +51,7 @@ namespace services::dispatcher {
     class dispatcher_t final : public actor_zeta::basic_async_actor {
     public:
         dispatcher_t(manager_dispatcher_t*, std::pmr::memory_resource *resource, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
+        ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
         void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);

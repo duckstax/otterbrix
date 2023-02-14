@@ -18,6 +18,7 @@ namespace services::disk {
     class agent_disk_t final : public actor_zeta::basic_async_actor {
     public:
         agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
+        ~agent_disk_t();
 
         auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
 
@@ -67,6 +68,7 @@ namespace services::disk {
         }
 
         manager_disk_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_disk config, log_t& log);
+        ~manager_disk_t();
 
         void create_agent();
 

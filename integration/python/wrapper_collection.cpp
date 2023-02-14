@@ -30,7 +30,7 @@ namespace duck_charmer {
     }
 
     wrapper_collection::~wrapper_collection() {
-        trace(log_, "wrapper_collection::~wrapper_collection");
+        trace(log_, "delete wrapper_collection");
     }
 
     std::string wrapper_collection::print() {

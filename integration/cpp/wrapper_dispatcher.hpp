@@ -29,6 +29,7 @@ namespace duck_charmer {
     public:
         /// blocking method
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
+        ~wrapper_dispatcher_t();
         auto load() -> void;
         auto create_database(session_id_t &session, const database_name_t &database) -> void;
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
