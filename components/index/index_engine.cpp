@@ -136,7 +136,11 @@ namespace components::index {
     }
 
     auto index_engine_t::matching(const keys_base_storage_t& query) -> index_t::pointer {
-        return mapper_.find(query)->second->get();
+        auto it = mapper_.find(query);
+        if (it != mapper_.end()) {
+            return it->second->get();
+        }
+        return nullptr;
     }
 
     void index_engine_t::insert_document(const document_ptr& document) {

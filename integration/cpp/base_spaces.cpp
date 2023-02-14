@@ -86,6 +86,10 @@ namespace duck_charmer {
     }
 
     base_spaces::~base_spaces() {
+        //manager_database_->scheduler()->stop();
+        //manager_dispatcher_->scheduler()->stop();
+        //manager_wal_->scheduler()->stop();
+        //manager_disk_->scheduler()->stop();
         trace(log_, "delete spaces");
     }
 
