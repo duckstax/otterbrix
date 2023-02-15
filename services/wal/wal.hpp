@@ -12,9 +12,10 @@
 
 #include "dto.hpp"
 #include "record.hpp"
-#include "manager_wal_replicate.hpp"
 
 namespace services::wal {
+
+    class manager_wal_replicate_t;
 
     class wal_replicate_t : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
@@ -82,5 +83,8 @@ namespace services::wal {
         void write_buffer(buffer_t&) final;
         void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const final;
     };
+
+
+    using wal_replicate_ptr = std::unique_ptr<wal_replicate_t>;
 
 } //namespace services::wal

@@ -12,6 +12,7 @@
 #include <components/ql/statements.hpp>
 
 #include "base.hpp"
+#include "wal.hpp"
 
 namespace services::wal {
 
@@ -69,7 +70,7 @@ namespace services::wal {
         log_t log_;
         actor_zeta::scheduler_raw e_;
         std::unordered_map<std::string, actor_zeta::address_t> dispatcher_to_address_book_;
-        std::vector<actor_zeta::address_t> dispathers_;
+        std::vector<wal_replicate_ptr> dispatchers_;
     };
 
     using manager_wal_ptr = std::unique_ptr<manager_wal_replicate_t>;

@@ -5,6 +5,7 @@
 
 #include "dto.hpp"
 #include "route.hpp"
+#include "manager_wal_replicate.hpp"
 
 namespace services::wal {
 
