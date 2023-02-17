@@ -20,7 +20,8 @@ for num in range(1000):
     new_obj['countStr'] = str(num)
     new_obj['countBool'] = True if num & 1 else False
     friedrich_collection.insert(new_obj)
-    friedrich_collection.create_index(['count'], TypeIndex.SINGLE)
+
+friedrich_collection.create_index(['count'], TypeIndex.SINGLE)
 
 
 def test_collection_find():

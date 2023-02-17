@@ -188,8 +188,8 @@ namespace services::disk {
                 actor_zeta::send(agent(), address(), command.name(), command);
             }
             commands_.erase(session);
-            actor_zeta::send(agent(), address(), handler_id(route::fix_wal_id), wal_id);
         }
+        actor_zeta::send(agent(), address(), handler_id(route::fix_wal_id), wal_id);
     }
 
     auto manager_disk_t::agent() -> actor_zeta::address_t {
