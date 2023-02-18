@@ -18,10 +18,9 @@ namespace services::collection {
         : actor_zeta::basic_async_actor(database, std::string(name))
         , name_(name)
         , database_name_(database->name()) //todo for run test [default: database->name()]
-        , log_(log.clone())
         , database_(database ? database->address() : actor_zeta::address_t::empty_address()) //todo for run test [default: database->address()]
         , mdisk_(std::move(mdisk))
-        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource()))
+        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_one), &collection_t::insert_one);
@@ -39,17 +38,17 @@ namespace services::collection {
     }
 
     collection_t::~collection_t() {
-        trace(log_, "delete collection_t");
+        trace(log(), "delete collection_t");
     }
 
     void collection_t::create_documents(components::session::session_id_t& session, std::pmr::vector<document_ptr>& documents) {
-        debug(log_, "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
+        debug(log(), "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
         insert_(no_transaction_context, documents);
         actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_documents_finish), session);
     }
 
     auto collection_t::size(session_id_t& session) -> void {
-        debug(log_, "collection {}::size", name_);
+        debug(log(), "collection {}::size", name_);
         auto dispatcher = current_message()->sender();
         auto result = dropped_
                           ? result_size()
@@ -58,7 +57,7 @@ namespace services::collection {
     }
 
     void collection_t::insert_one(session_id_t& session, document_ptr& document) {
-        debug(log_, "collection_t::insert_one : {}", name_);
+        debug(log(), "collection_t::insert_one : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result_insert_one());
@@ -76,7 +75,7 @@ namespace services::collection {
     }
 
     void collection_t::insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents) {
-        debug(log_, "collection_t::insert_many : {}", name_);
+        debug(log(), "collection_t::insert_many : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(context_->resource()));
@@ -93,7 +92,7 @@ namespace services::collection {
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
             components::ql::storage_parameters parameters) -> void {
-        debug(log_, "collection::find : {}", name_);
+        debug(log(), "collection::find : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
@@ -118,7 +117,7 @@ namespace services::collection {
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
             components::ql::storage_parameters parameters) -> void {
-        debug(log_, "collection::find_one : {}", name_);
+        debug(log(), "collection::find_one : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
@@ -141,7 +140,7 @@ namespace services::collection {
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
             components::ql::storage_parameters parameters) -> void {
-        debug(log_, "collection::delete_one : {}", name_);
+        debug(log(), "collection::delete_one : {}", name_);
         delete_(session, logic_plan, parameters, operators::predicates::limit_t::limit_one());
     }
 
@@ -149,7 +148,7 @@ namespace services::collection {
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
             components::ql::storage_parameters parameters) -> void {
-        debug(log_, "collection::delete_many : {}", name_);
+        debug(log(), "collection::delete_many : {}", name_);
         delete_(session, logic_plan, parameters, operators::predicates::limit_t::unlimit());
     }
 
@@ -159,7 +158,7 @@ namespace services::collection {
             components::ql::storage_parameters parameters,
             const document_ptr& update,
             bool upsert) -> void {
-        debug(log_, "collection::update_one : {}", name_);
+        debug(log(), "collection::update_one : {}", name_);
         update_(session, logic_plan, parameters, update, upsert, operators::predicates::limit_t::limit_one());
     }
 
@@ -169,12 +168,12 @@ namespace services::collection {
             components::ql::storage_parameters parameters,
             const document_ptr& update,
             bool upsert) -> void {
-        debug(log_, "collection::update_many : {}", name_);
+        debug(log(), "collection::update_many : {}", name_);
         update_(session, logic_plan, parameters, update, upsert, operators::predicates::limit_t::unlimit());
     }
 
     void collection_t::drop(const session_id_t& session) {
-        debug(log_, "collection::drop : {}", name_);
+        debug(log(), "collection::drop : {}", name_);
         auto dispatcher = current_message()->sender();
         actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(name_));
     }
@@ -287,6 +286,10 @@ namespace services::collection {
         dropped_ = true;
         context_ = nullptr;
         return ptr;
+    }
+
+    log_t& collection_t::log() noexcept {
+        return context_->log();
     }
 
 #ifdef DEV_MODE

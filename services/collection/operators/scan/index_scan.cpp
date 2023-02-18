@@ -56,6 +56,7 @@ namespace services::collection::operators {
     }
 
     void index_scan::on_execute_impl(planner::transaction_context_t* transaction_context) {
+        trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());
         if (!limit_.check(0)) {
             return; //limit = 0
         }

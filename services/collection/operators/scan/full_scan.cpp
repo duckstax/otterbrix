@@ -11,6 +11,7 @@ namespace services::collection::operators {
     }
 
     void full_scan::on_execute_impl(planner::transaction_context_t* transaction_context) {
+        trace(context_->log(), "full_scan");
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0

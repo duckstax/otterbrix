@@ -35,8 +35,9 @@ namespace services::collection {
 
     class context_collection_t final {
     public:
-        explicit context_collection_t(std::pmr::memory_resource* resource)
+        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log)
             : resource_(resource)
+            , log_(log)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
             , storage_(resource_) {
@@ -59,8 +60,13 @@ namespace services::collection {
             return resource_;
         }
 
+        log_t& log() noexcept {
+            return log_;
+        }
+
     private:
         std::pmr::memory_resource* resource_;
+        log_t log_;
         /**
         *  index
         */
@@ -134,9 +140,10 @@ namespace services::collection {
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 
+        log_t& log() noexcept;
+
         const std::string name_;
         const std::string database_name_;
-        log_t log_;
         actor_zeta::address_t database_;
         actor_zeta::address_t mdisk_;
 
