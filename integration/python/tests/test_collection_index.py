@@ -2,65 +2,79 @@ import pytest
 import shutil
 from ottergon import Client, DataBase, Collection, TypeIndex
 
+shutil.rmtree('./wal')
+shutil.rmtree('./disk')
+
+database_name = "TestDatabase"
+collection_name = "TestCollection"
+
+client = Client()
+database = client[database_name]
+
 
 def gen_id(num):
     res = str(num)
-    while (len(res) < 24):
+    while len(res) < 24:
         res = '0' + res
     return res
 
 
-shutil.rmtree('./wal')
-shutil.rmtree('./disk')
+def insert(collection, num):
+    new_obj = {
+        '_id': gen_id(num),
+        'count': num,
+        'countStr': str(num),
+        'countBool': True if num & 1 else False
+    }
+    collection.insert(new_obj)
 
 
-client = Client()
-friedrich_database = client["FriedrichDatabase"]
-friedrich_collection = friedrich_database["FriedrichCollection"]
+@pytest.fixture()
+def gen_collection(request):
+    collection = database[collection_name]
+    for num in range(1000):
+        insert(collection, num)
+    collection.create_index(['count'], TypeIndex.SINGLE)
+    collection.create_index(['countStr'], TypeIndex.SINGLE)
+
+    def finalize():
+        collection.drop()
+
+    request.addfinalizer(finalizer=finalize)
+
+    return {
+        'collection': collection
+    }
 
 
-def insert(num):
-    new_obj = {}
-    new_obj['_id'] = gen_id(num)
-    new_obj['count'] = num
-    new_obj['countStr'] = str(num)
-    new_obj['countBool'] = True if num & 1 else False
-    friedrich_collection.insert(new_obj)
-
-
-for num in range(1000):
-    insert(num)
-
-friedrich_collection.create_index(['count'], TypeIndex.SINGLE)
-friedrich_collection.create_index(['countStr'], TypeIndex.SINGLE)
-
-
-def test_collection_find_by_one_index():
-    c = friedrich_collection.find({'count': {'$eq': 100}})
+def test_collection_find_by_one_index(gen_collection):
+    col = gen_collection['collection']
+    c = col.find({'count': {'$eq': 100}})
     assert len(c) == 1
     c.next()
     assert c['count'] == 100
     c.close()
 
-    c = friedrich_collection.find({'count': {'$eq': 1001}})
+    c = col.find({'count': {'$eq': 1001}})
     assert len(c) == 0
     c.close()
 
-    c = friedrich_collection.find({'count': {'$gte': 100}})
+    c = col.find({'count': {'$gte': 100}})
     assert len(c) == 900
     c.close()
 
-    c = friedrich_collection.find({'count': {'$lt': 100}})
+    c = col.find({'count': {'$lt': 100}})
     assert len(c) == 100
     c.close()
 
-    c = friedrich_collection.find({'count': {'$and': [{'$lte': 100}, {'$gt': 50}]}})
+    c = col.find({'count': {'$and': [{'$lte': 100}, {'$gt': 50}]}})
     assert len(c) == 50
     c.close()
 
 
-def test_collection_find_by_two_index():
-    c = friedrich_collection.find({'$and': [
+def test_collection_find_by_two_index(gen_collection):
+    col = gen_collection['collection']
+    c = col.find({'$and': [
         {'count': {'$eq': 100}},
         {'countStr': {'$eq': '100'}}
     ]})
@@ -69,14 +83,14 @@ def test_collection_find_by_two_index():
     assert c['count'] == 100
     c.close()
 
-    c = friedrich_collection.find({'$and': [
+    c = col.find({'$and': [
         {'count': {'$eq': 100}},
         {'countStr': {'$eq': '101'}}
     ]})
     assert len(c) == 0
     c.close()
 
-    c = friedrich_collection.find({'$or': [
+    c = col.find({'$or': [
         {'count': {'$eq': 100}},
         {'countStr': {'$eq': '101'}}
     ]})
@@ -84,51 +98,54 @@ def test_collection_find_by_two_index():
     c.close()
 
 
-def test_collection_find_by_one_index_after_insert():
-    c = friedrich_collection.find({'count': {'$eq': 1001}})
+def test_collection_find_by_one_index_after_insert(gen_collection):
+    col = gen_collection['collection']
+    c = col.find({'count': {'$eq': 1001}})
     assert len(c) == 0
     c.close()
 
-    insert(1001)
+    insert(col, 1001)
 
-    c = friedrich_collection.find({'count': {'$eq': 1001}})
+    c = col.find({'count': {'$eq': 1001}})
     assert len(c) == 1
     c.next()
     assert c['count'] == 1001
     c.close()
 
 
-def test_collection_find_by_one_index_after_delete():
-    c = friedrich_collection.find({'count': {'$gt': 500}})
+def test_collection_find_by_one_index_after_delete(gen_collection):
+    col = gen_collection['collection']
+    c = col.find({'count': {'$gte': 500}})
     assert len(c) == 500
     c.close()
 
-    friedrich_collection.delete_one({'count': {'$gt': 500}})
+    col.delete_one({'count': {'$gte': 500}})
 
-    c = friedrich_collection.find({'count': {'$gt': 500}})
+    c = col.find({'count': {'$gte': 500}})
     assert len(c) == 499
     c.close()
 
-    friedrich_collection.delete_many({'count': {'$gt': 500}})
+    col.delete_many({'count': {'$gte': 500}})
 
-    c = friedrich_collection.find({'count': {'$gt': 500}})
+    c = col.find({'count': {'$gte': 500}})
     assert len(c) == 0
     c.close()
 
 
-def test_collection_find_by_one_index_after_update():
-    c = friedrich_collection.find({'count': {'$lt': 10}})
+def test_collection_find_by_one_index_after_update(gen_collection):
+    col = gen_collection['collection']
+    c = col.find({'count': {'$lt': 10}})
     assert len(c) == 10
     c.close()
 
-    friedrich_collection.update_one({'count': {'$gte': 10}}, {'$inc': {'count': -2000}})
+    col.update_one({'count': {'$gte': 10}}, {'$set': {'count': 0}})
 
-    c = friedrich_collection.find({'count': {'lt': 10}})
+    c = col.find({'count': {'$lt': 10}})
     assert len(c) == 11
     c.close()
 
-    # friedrich_collection.update_many({'count': {'$gte': 10}}, {'$set': {'count': 5}})
-    #
-    # c = friedrich_collection.find({'count': {'lt': 10}})
-    # assert len(c) == 100
-    # c.close()
+    col.update_many({'count': {'$gte': 10}}, {'$set': {'count': 0}})
+
+    c = col.find({'count': {'$lt': 10}})
+    assert len(c) == 1000
+    c.close()
