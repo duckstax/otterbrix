@@ -24,12 +24,16 @@ namespace components::index {
         return iterator_ != dynamic_cast<const impl_t *>(other)->iterator_; //todo
     }
 
+    index_t::iterator::iterator_impl_t *single_field_index_t::impl_t::copy() const {
+        return new impl_t(*this);
+    }
+
     single_field_index_t::impl_t::impl_t(const_iterator iterator)
         : iterator_(iterator) {
     }
 
     auto single_field_index_t::insert_impl(value_t key, components::index::document_ptr value) -> void {
-        storage_.emplace(key, value);
+        storage_.insert({key, value});
     }
 
     auto single_field_index_t::remove_impl(components::index::value_t key) -> void {
@@ -37,13 +41,8 @@ namespace components::index {
     }
 
     index_t::range single_field_index_t::find_impl(const value_t& value) const {
-        auto it = storage_.find(value);
-        if (it != storage_.cend()) {
-            auto first = iterator(new impl_t(it));
-            auto second = iterator(new impl_t(++it));
-            return std::make_pair(first, second);
-        }
-        return std::make_pair(cend(), cend());
+        auto range = storage_.equal_range(value);
+        return std::make_pair(iterator(new impl_t(range.first)), iterator(new impl_t(range.second)));
     }
 
     index_t::range single_field_index_t::lower_bound_impl(const value_t& value) const {

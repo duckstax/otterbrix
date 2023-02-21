@@ -21,7 +21,7 @@ TEST_CASE("single_field_index:base") {
     {
         auto value = ::document::impl::new_value(10);
         auto find_range = index.find(components::index::value_t(value));
-        REQUIRE(find_range.first != index.cend());
+        REQUIRE(find_range.first != find_range.second);
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 10);
         REQUIRE(document_view_t(*find_range.first).get_string("countStr") == "10");
         REQUIRE(++find_range.first == find_range.second);
@@ -29,7 +29,7 @@ TEST_CASE("single_field_index:base") {
     {
         auto value = ::document::impl::new_value(11);
         auto find_range = index.find(components::index::value_t(value));
-        REQUIRE(find_range.first == index.cend());
+        REQUIRE(find_range.first == find_range.second);
     }
     {
         auto value = ::document::impl::new_value(4);
@@ -65,6 +65,23 @@ TEST_CASE("single_field_index:base") {
         REQUIRE(document_view_t(*find_range.first).get_long("count") == 8);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 10);
         REQUIRE(document_view_t(*(++find_range.first)).get_long("count") == 13);
+        REQUIRE(++find_range.first == find_range.second);
+    }
+    {
+        for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
+            auto doc = gen_doc(i);
+            document_view_t view(doc);
+            index.insert(document::wrapper_value_t(view.get_value(std::string_view("count"))), doc);
+        }
+        auto value = ::document::impl::new_value(10);
+        auto find_range = index.find(components::index::value_t(value));
+        REQUIRE(find_range.first != find_range.second);
+        REQUIRE(std::distance(find_range.first, find_range.second) == 2);
+        REQUIRE(document_view_t(*find_range.first).get_long("count") == 10);
+        REQUIRE(document_view_t(*find_range.first).get_string("countStr") == "10");
+        ++find_range.first;
+        REQUIRE(document_view_t(*find_range.first).get_long("count") == 10);
+        REQUIRE(document_view_t(*find_range.first).get_string("countStr") == "10");
         REQUIRE(++find_range.first == find_range.second);
     }
 }

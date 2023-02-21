@@ -1,4 +1,5 @@
 import pytest
+import shutil
 from ottergon import Client, DataBase, Collection, TypeIndex
 
 
@@ -7,6 +8,10 @@ def gen_id(num):
     while (len(res) < 24):
         res = '0' + res
     return res
+
+
+shutil.rmtree('./wal')
+shutil.rmtree('./disk')
 
 
 client = Client()
@@ -91,3 +96,39 @@ def test_collection_find_by_one_index_after_insert():
     c.next()
     assert c['count'] == 1001
     c.close()
+
+
+def test_collection_find_by_one_index_after_delete():
+    c = friedrich_collection.find({'count': {'$gt': 500}})
+    assert len(c) == 500
+    c.close()
+
+    friedrich_collection.delete_one({'count': {'$gt': 500}})
+
+    c = friedrich_collection.find({'count': {'$gt': 500}})
+    assert len(c) == 499
+    c.close()
+
+    friedrich_collection.delete_many({'count': {'$gt': 500}})
+
+    c = friedrich_collection.find({'count': {'$gt': 500}})
+    assert len(c) == 0
+    c.close()
+
+
+def test_collection_find_by_one_index_after_update():
+    c = friedrich_collection.find({'count': {'$lt': 10}})
+    assert len(c) == 10
+    c.close()
+
+    friedrich_collection.update_one({'count': {'$gte': 10}}, {'$inc': {'count': -2000}})
+
+    c = friedrich_collection.find({'count': {'lt': 10}})
+    assert len(c) == 11
+    c.close()
+
+    # friedrich_collection.update_many({'count': {'$gte': 10}}, {'$set': {'count': 5}})
+    #
+    # c = friedrich_collection.find({'count': {'lt': 10}})
+    # assert len(c) == 100
+    # c.close()

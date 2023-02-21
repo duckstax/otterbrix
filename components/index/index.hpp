@@ -25,8 +25,11 @@ namespace components::index {
 
             class iterator_impl_t;
 
-            explicit iterator_t(iterator_impl_t* );
+            explicit iterator_t(iterator_impl_t*);
             virtual ~iterator_t();
+
+            iterator_t(const iterator_t &other);
+            iterator_t &operator=(const iterator_t &other);
 
             reference operator*() const;
             iterator_t& operator++();
@@ -40,6 +43,7 @@ namespace components::index {
                 virtual iterator_impl_t* next() = 0;
                 virtual bool equals(const iterator_impl_t* other) const = 0;
                 virtual bool not_equals(const iterator_impl_t* other) const = 0;
+                virtual iterator_impl_t *copy() const = 0;
             };
 
         private:

@@ -12,7 +12,7 @@ namespace components::index {
     class single_field_index_t final : public index_t {
     public:
         using comparator_t = std::less<value_t>;
-        using storage_t = core::pmr::btree::btree_t<value_t, document_ptr, comparator_t>;
+        using storage_t = core::pmr::btree::multi_btree_t<value_t, document_ptr, comparator_t>;
         using const_iterator = storage_t::const_iterator;
 
         single_field_index_t(std::pmr::memory_resource*, const keys_base_storage_t&);
@@ -21,11 +21,12 @@ namespace components::index {
     private:
         class impl_t final : public index_t::iterator::iterator_impl_t {
         public:
-            impl_t(const_iterator iterator);
-            index_t::iterator::reference value_ref() const override;
-            iterator_impl_t* next() override;
-            bool equals(const iterator_impl_t* other) const override;
-            bool not_equals(const iterator_impl_t* other) const override;
+            explicit impl_t(const_iterator iterator);
+            index_t::iterator::reference value_ref() const final;
+            iterator_impl_t* next() final;
+            bool equals(const iterator_impl_t* other) const final;
+            bool not_equals(const iterator_impl_t* other) const final;
+            iterator_impl_t *copy() const final;
 
         private:
             const_iterator iterator_;

@@ -70,7 +70,16 @@ namespace components::index {
         : impl_(ptr) {}
 
     index_t::iterator_t::~iterator_t() {
-        //delete impl_; //todo
+        delete impl_;
+    }
+
+    index_t::iterator_t::iterator_t(const iterator_t &other)
+        : impl_(other.impl_->copy()) {}
+
+    index_t::iterator_t &index_t::iterator_t::operator=(const iterator_t &other) {
+        delete impl_;
+        impl_ = other.impl_->copy();
+        return *this;
     }
 
     index_t::~index_t() = default;
