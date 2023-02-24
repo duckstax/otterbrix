@@ -17,3 +17,5 @@ target_link_libraries(
         cpp_ottergon
         rocketjoe::test_generaty
 )
+
+file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
