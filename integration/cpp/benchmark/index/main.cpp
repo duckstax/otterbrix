@@ -19,10 +19,10 @@ void only_find_all(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
+    auto session = duck_charmer::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto session = duck_charmer::session_id_t();
             dispatcher->find(session, create_aggregate(collection_name));
         }
     }
@@ -33,10 +33,10 @@ void only_find_eq(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
+    auto session = duck_charmer::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto session = duck_charmer::session_id_t();
             dispatcher->find(session, create_aggregate(collection_name, compare_type::eq, "count", 115));
         }
     }
@@ -47,10 +47,10 @@ void only_find_gt(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
+    auto session = duck_charmer::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            auto session = duck_charmer::session_id_t();
             dispatcher->find(session, create_aggregate(collection_name, compare_type::gt, "count", size_collection - 100));
         }
     }
