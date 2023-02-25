@@ -15,7 +15,7 @@
 
 namespace services::wal {
 
-    class manager_wal_replicate_t;
+    class base_manager_wal_replicate_t;
 
     class wal_replicate_t : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
@@ -23,7 +23,7 @@ namespace services::wal {
         using file_ptr = std::unique_ptr<core::file::file_t>;
 
     public:
-        wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        wal_replicate_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
         virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(session_id_t& session, address_t& sender, components::ql::create_database_t& data);
         void drop_database(session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
@@ -77,7 +77,7 @@ namespace services::wal {
         using address_t = actor_zeta::address_t;
 
     public:
-        wal_replicate_without_disk_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        wal_replicate_without_disk_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
         void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) final;
     private:
         void write_buffer(buffer_t&) final;

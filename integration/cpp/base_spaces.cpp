@@ -24,7 +24,11 @@ namespace duck_charmer {
         resource = actor_zeta::detail::pmr::get_default_resource();
 
         trace(log_, "manager_wal start");
-        manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource, scheduler_.get(), config.wal, log_);
+        if (config.wal.on) {
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource, scheduler_.get(), config.wal, log_);
+        } else {
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_empty_t>(resource, scheduler_.get(), log_);
+        }
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_disk start");

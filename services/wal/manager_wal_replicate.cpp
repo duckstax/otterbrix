@@ -6,12 +6,27 @@
 
 namespace services::wal {
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*mr, actor_zeta::scheduler_raw scheduler,
-                                                     configuration::config_wal config, log_t& log)
-        : actor_zeta::cooperative_supervisor<manager_wal_replicate_t>(mr,"manager_wal")
-        , config_(std::move(config))
-        , log_(log.clone())
+    base_manager_wal_replicate_t::base_manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
+        : actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t>(mr, "manager_wal")
         , e_(scheduler) {
+    }
+
+    auto base_manager_wal_replicate_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
+        return e_;
+    }
+
+    auto base_manager_wal_replicate_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
+        std::unique_lock<spin_lock> _(lock_);
+        set_current_message(std::move(msg));
+        execute(this,current_message());
+    }
+
+
+    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler,
+                                                     configuration::config_wal config, log_t& log)
+        : base_manager_wal_replicate_t(mr, scheduler)
+        , config_(std::move(config))
+        , log_(log.clone()) {
         trace(log_, "manager_wal_replicate_t");
         add_handler(handler_id(route::create), &manager_wal_replicate_t::create_wal_worker);
         add_handler(handler_id(route::load), &manager_wal_replicate_t::load);
@@ -32,16 +47,6 @@ namespace services::wal {
 
     manager_wal_replicate_t::~manager_wal_replicate_t() {
         trace(log_, "delete manager_wal_replicate_t");
-    }
-
-    auto manager_wal_replicate_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_;
-    }
-
-    auto manager_wal_replicate_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
-        std::unique_lock<spin_lock> _(lock_);
-        set_current_message(std::move(msg));
-        execute(this,current_message());
     }
 
     void manager_wal_replicate_t::create_wal_worker() {
@@ -116,6 +121,27 @@ namespace services::wal {
     void manager_wal_replicate_t::create_index(session_id_t& session, components::ql::create_index_t& data) {
         trace(log_, "manager_wal_replicate_t::create_index");
         actor_zeta::send(dispatchers_[0]->address(), address(), handler_id(route::create_index), session, current_message()->sender(), std::move(data));
+    }
+
+
+    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, log_t& log)
+        : base_manager_wal_replicate_t(mr, scheduler) {
+        trace(log, "manager_wal_replicate_empty_t");
+        using namespace components;
+        add_handler(handler_id(route::create), &manager_wal_replicate_empty_t::nothing<>);
+        add_handler(handler_id(route::load), &manager_wal_replicate_empty_t::nothing<session_id_t&, services::wal::id_t>);
+        add_handler(handler_id(route::create_database), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::create_database_t&>);
+        add_handler(handler_id(route::drop_database), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::drop_database_t&>);
+        add_handler(handler_id(route::create_collection), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::create_collection_t&>);
+        add_handler(handler_id(route::drop_collection), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::drop_collection_t&>);
+        add_handler(handler_id(route::insert_one), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::insert_one_t&>);
+        add_handler(handler_id(route::insert_many), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::insert_many_t&>);
+        add_handler(handler_id(route::delete_one), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::delete_one_t&>);
+        add_handler(handler_id(route::delete_many), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::delete_many_t&>);
+        add_handler(handler_id(route::update_one), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::update_one_t&>);
+        add_handler(handler_id(route::update_many), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::update_many_t&>);
+        add_handler(core::handler_id(core::route::sync), &manager_wal_replicate_empty_t::nothing<address_pack&>);
+        add_handler(handler_id(route::create_index), &manager_wal_replicate_empty_t::nothing<session_id_t&, ql::create_index_t&>);
     }
 
 } //namespace services::wal
