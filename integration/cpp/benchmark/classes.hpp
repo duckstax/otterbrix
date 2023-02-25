@@ -98,6 +98,15 @@ aggregate_statement_raw_ptr create_aggregate(const collection_name_t& collection
     return aggregate;
 }
 
+template <typename T = int>
+document_ptr gen_update(const std::string& key = {}, T value = T()) {
+    auto doc = document::impl::mutable_dict_t::new_dict();
+    auto val = document::impl::mutable_dict_t::new_dict();
+    val->set(key, value);
+    doc->set("$set", val);
+    return make_document(doc);
+}
+
 //template<class T>
 //document::retained_t<mutable_dict_t> make_dict(const std::string& field, const std::string& key, T value) {
 //    auto key_value = mutable_dict_t::new_dict();

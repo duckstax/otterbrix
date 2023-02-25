@@ -58,16 +58,41 @@ void only_find_gt(benchmark::State& state) {
     }
 }
 
+template <bool on_wal, bool on_disk, bool on_index>
+void delete_insert_update_one(benchmark::State& state) {
+    state.PauseTiming();
+    auto* dispatcher = wr_dispatcher<on_wal, on_disk>();
+    collection_name_t collection_name = get_collection_name<on_index>();
+    auto session = duck_charmer::session_id_t();
+    state.ResumeTiming();
+    for (auto _ : state) {
+        for (int i = 1; i <= 50; ++i) {
+            dispatcher->delete_one(session, create_aggregate(collection_name, compare_type::gt, "count", i));
+        }
+        for (int i = 1; i <= 50; ++i) {
+            auto doc = gen_doc(i);
+            dispatcher->insert_one(session, database_name, collection_name, doc);
+        }
+        for (int i = 1; i <= 50; ++i) {
+            dispatcher->update_one(session, create_aggregate(collection_name, compare_type::gt, "count", i), gen_update("count", size_collection + i), false);
+        }
+        for (int i = 1; i <= 50; ++i) {
+            dispatcher->update_one(session, create_aggregate(collection_name, compare_type::gt, "count", i), gen_update("count", i), false);
+        }
+    }
+}
 
 
 BENCHMARK_FUNC(only_find_all, wal_off, disk_off);
 BENCHMARK_FUNC(only_find_eq, wal_off, disk_off);
 BENCHMARK_FUNC(only_find_gt, wal_off, disk_off);
+BENCHMARK_FUNC(delete_insert_update_one, wal_off, disk_off);
 
 #ifdef test_with_disk
 BENCHMARK_FUNC(only_find_all, wal_on, disk_on);
 BENCHMARK_FUNC(only_find_eq, wal_on, disk_on);
 BENCHMARK_FUNC(only_find_gt, wal_on, disk_on);
+BENCHMARK_FUNC(delete_insert_update_one, wal_on, disk_on);
 #endif
 
 int main(int argc, char** argv) {
