@@ -42,7 +42,7 @@ namespace services::collection::operators {
                 if (!limit.check(count)) {
                     return;
                 }
-                result->append(*it);
+                result->append(it->doc); //todo: check nullptr and get by id
                 ++count;
             }
         }

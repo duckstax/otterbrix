@@ -30,8 +30,17 @@ namespace components::index {
         return cend_impl();
     }
 
-    auto index_t::insert(value_t key, doc_t value) -> void {
+    auto index_t::insert(value_t key, index_value_t value) -> void {
         return insert_impl(key, std::move(value));
+    }
+
+    auto index_t::insert(value_t key, const document::document_id_t &id) -> void {
+        return insert_impl(key, {id, nullptr});
+    }
+
+    auto index_t::insert(value_t key, document::document_ptr doc) -> void {
+        auto id = document::get_document_id(doc);
+        return insert_impl(key, {id, std::move(doc)});
     }
 
     auto index_t::remove(value_t key) -> void {
@@ -54,8 +63,12 @@ namespace components::index {
         return name_;
     }
 
-    const document_ptr& index_t::iterator_t::operator*() const {
+    index_t::iterator_t::reference index_t::iterator_t::operator*() const {
         return impl_->value_ref();
+    }
+
+    index_t::iterator_t::pointer index_t::iterator_t::operator->() const {
+        return &impl_->value_ref();
     }
 
     index_t::iterator_t& index_t::iterator_t::operator++() {

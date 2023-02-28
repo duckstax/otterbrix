@@ -46,7 +46,7 @@ namespace components::index {
                 if ((!(view.is_null(key)))) {
                     auto* data = view.get_value(key);
                     ::document::wrapper_value_t key_(data);
-                    index->insert(key_, doc.second);
+                    index->insert(key_, {doc.first, doc.second});
                 }
             }
         }

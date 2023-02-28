@@ -32,8 +32,8 @@ namespace components::index {
         : iterator_(iterator) {
     }
 
-    auto single_field_index_t::insert_impl(value_t key, components::index::document_ptr value) -> void {
-        storage_.insert({key, value});
+    auto single_field_index_t::insert_impl(value_t key, index_value_t value) -> void {
+        storage_.insert({key, std::move(value)});
     }
 
     auto single_field_index_t::remove_impl(components::index::value_t key) -> void {
