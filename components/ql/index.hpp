@@ -30,6 +30,16 @@ namespace components::ql {
             , index_type_(index_type::no_valid) {
         }
 
+        std::string name() const {
+            //todo: user input
+            std::stringstream s;
+            s << collection_ << "_";
+            for (const auto &key : keys_) {
+                s << "_" << key.as_string();
+            }
+            return s.str();
+        }
+
         ~create_index_t() final = default;
 
         keys_base_storage_t keys_;

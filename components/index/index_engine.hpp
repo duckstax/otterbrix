@@ -46,11 +46,12 @@ namespace components::index {
     auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t*;
 
     template<class Target, class... Args>
-    auto make_index(index_engine_ptr& ptr, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
+    auto make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
         return ptr->add_index(
             keys,
             core::pmr::make_unique<Target>(
                 ptr->resource(),
+                std::move(name),
                 keys,
                 std::forward<Args>(args).../*,
                 core::pmr::deleter_t(ptr->resource())*/));

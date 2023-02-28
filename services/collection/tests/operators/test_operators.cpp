@@ -306,7 +306,7 @@ TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
     fill_collection(collection);
 
     SECTION("find::eq") {
@@ -442,7 +442,7 @@ TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
     fill_collection(collection);
 
     SECTION("index_scan after delete") {

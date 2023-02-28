@@ -2,9 +2,10 @@
 
 namespace components::index {
 
-    index_t::index_t(std::pmr::memory_resource* resource, components::ql::index_type type, const keys_base_storage_t& keys)
+    index_t::index_t(std::pmr::memory_resource* resource, components::ql::index_type type, std::string name, const keys_base_storage_t& keys)
         : resource_(resource)
         , type_(type)
+        , name_(std::move(name))
         , keys_(keys) {
               assert(resource!= nullptr);
     }
@@ -30,7 +31,7 @@ namespace components::index {
     }
 
     auto index_t::insert(value_t key, doc_t value) -> void {
-        return insert_impl(key, value);
+        return insert_impl(key, std::move(value));
     }
 
     auto index_t::remove(value_t key) -> void {
@@ -47,6 +48,10 @@ namespace components::index {
 
     ql::index_type index_t::type() const noexcept {
         return type_;
+    }
+
+    const std::string &index_t::name() const noexcept {
+        return name_;
     }
 
     const document_ptr& index_t::iterator_t::operator*() const {

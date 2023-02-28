@@ -63,9 +63,10 @@ namespace components::index {
         auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
         std::pmr::memory_resource* resource() const noexcept;
         ql::index_type type() const noexcept;
+        const std::string &name() const noexcept;
 
     protected:
-        index_t(std::pmr::memory_resource* resource, index_type type, const keys_base_storage_t& keys);
+        index_t(std::pmr::memory_resource* resource, index_type type, std::string name, const keys_base_storage_t& keys);
 
         virtual void insert_impl(value_t value_key, doc_t) = 0;
         virtual void remove_impl(value_t value_key) = 0;
@@ -78,6 +79,7 @@ namespace components::index {
     private:
         std::pmr::memory_resource* resource_;
         index_type type_;
+        std::string name_;
         keys_base_storage_t keys_;
     };
 

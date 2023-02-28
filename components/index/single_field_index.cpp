@@ -2,8 +2,8 @@
 
 namespace components::index {
 
-    single_field_index_t::single_field_index_t(std::pmr::memory_resource* resource, const keys_base_storage_t& keys)
-        : index_t(resource, ql::index_type::single, keys)
+    single_field_index_t::single_field_index_t(std::pmr::memory_resource* resource, std::string name, const keys_base_storage_t& keys)
+        : index_t(resource, ql::index_type::single, std::move(name), keys)
         , storage_(resource) {}
 
     single_field_index_t::~single_field_index_t() = default;
