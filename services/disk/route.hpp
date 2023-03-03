@@ -5,6 +5,7 @@
 namespace services::disk {
     enum class route : uint64_t {
         create_agent,
+        create_index_agent,
 
         load,
         load_finish,
