@@ -5,6 +5,7 @@ set(${PROJECT_NAME}_SOURCES
         index.cpp
         index_engine.cpp
         single_field_index.cpp
+        #disk_single_field_index.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
