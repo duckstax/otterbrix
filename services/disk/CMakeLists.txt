@@ -4,6 +4,7 @@ set(${PROJECT_NAME}_HEADERS
         command.hpp
         disk.hpp
         agent_disk.hpp
+        index_disk.hpp
         index_agent_disk.hpp
         manager_disk.hpp
         metadata.hpp
@@ -15,6 +16,7 @@ set(${PROJECT_NAME}_SOURCES
         command.cpp
         disk.cpp
         agent_disk.cpp
+        index_disk.cpp
         index_agent_disk.cpp
         manager_disk.cpp
         metadata.cpp
