@@ -6,10 +6,11 @@
 
 namespace rocksdb {
     class DB;
-    class Comparator;
 } // namespace rocksdb
 
 namespace services::disk {
+
+    class base_comparator;
 
     class index_disk {
         using document_id_t = components::document::document_id_t;
@@ -20,8 +21,17 @@ namespace services::disk {
     public:
         enum class compare {
             str,
-            numeric,
-            fraction
+            int8,
+            int16,
+            int32,
+            int64,
+            uint8,
+            uint16,
+            uint32,
+            uint64,
+            float32,
+            float64,
+            bool8
         };
 
         index_disk(const path_t& path, compare compare_type);
@@ -35,7 +45,7 @@ namespace services::disk {
 
     private:
         std::unique_ptr<rocksdb::DB> db_;
-        std::unique_ptr<rocksdb::Comparator> comparator_;
+        std::unique_ptr<base_comparator> comparator_;
     };
 
 } // namespace services::disk

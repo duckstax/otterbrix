@@ -3,38 +3,89 @@
 
 namespace services::disk {
 
-    class str_comparator final : public rocksdb::Comparator {
+    class base_comparator : public rocksdb::Comparator {
     public:
-        str_comparator() = default;
+        virtual rocksdb::Slice slice(const document::wrapper_value_t& value) const = 0;
+    };
+
+    template <class T>
+    class comparator final : public base_comparator {
+    public:
+        comparator() = default;
 
     private:
         int Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const final {
             return a.compare(b);
         }
 
+        rocksdb::Slice slice(const T& value) const {
+            return rocksdb::Slice{reinterpret_cast<const char*>(&value), sizeof(T)};
+        }
+
+        rocksdb::Slice slice(const document::wrapper_value_t& value) const final {
+            return rocksdb::Slice{value->as_string()};
+        }
+
         const char* Name() const final {
-            return "str_comparator";
+            return "comparator";
         }
 
-        void FindShortestSeparator(std::string* start, const rocksdb::Slice& limit) const final {
-            auto size = limit.size();
-            if (start->size() < size) {
-                start->resize(size);
-            }
-        }
+        void FindShortestSeparator(std::string*, const rocksdb::Slice&) const final {}
 
-        void FindShortSuccessor(std::string*) const final {
-        }
+        void FindShortSuccessor(std::string*) const final {}
     };
 
-    std::unique_ptr<rocksdb::Comparator> make_comparator(index_disk::compare compare_type) {
+    template <> rocksdb::Slice comparator<std::string>::slice(const document::wrapper_value_t& value) const {
+        return rocksdb::Slice{value->as_string()};
+    }
+
+#define ADD_TYPE_SLICE(TYPE, FUNC) \
+    template <> rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const { \
+        static auto v = TYPE(value->FUNC()); \
+        return slice(v); \
+    }
+
+    ADD_TYPE_SLICE(int8_t, as_int)
+    ADD_TYPE_SLICE(int16_t, as_int)
+    ADD_TYPE_SLICE(int32_t, as_int)
+    ADD_TYPE_SLICE(int64_t, as_int)
+    ADD_TYPE_SLICE(uint8_t, as_unsigned)
+    ADD_TYPE_SLICE(uint16_t, as_unsigned)
+    ADD_TYPE_SLICE(uint32_t, as_unsigned)
+    ADD_TYPE_SLICE(uint64_t, as_unsigned)
+    ADD_TYPE_SLICE(float, as_float)
+    ADD_TYPE_SLICE(double, as_double)
+    ADD_TYPE_SLICE(bool, as_bool)
+
+
+    std::unique_ptr<base_comparator> make_comparator(index_disk::compare compare_type) {
         switch (compare_type) {
             case index_disk::compare::str:
-                return std::make_unique<str_comparator>();
-            case index_disk::compare::numeric:
-                return std::make_unique<str_comparator>(); //todo
+                return std::make_unique<comparator<std::string>>();
+            case index_disk::compare::int8:
+                return std::make_unique<comparator<int8_t>>();
+            case index_disk::compare::int16:
+                return std::make_unique<comparator<int16_t>>();
+            case index_disk::compare::int32:
+                return std::make_unique<comparator<int32_t>>();
+            case index_disk::compare::int64:
+                return std::make_unique<comparator<int64_t>>();
+            case index_disk::compare::uint8:
+                return std::make_unique<comparator<uint8_t>>();
+            case index_disk::compare::uint16:
+                return std::make_unique<comparator<uint16_t>>();
+            case index_disk::compare::uint32:
+                return std::make_unique<comparator<uint32_t>>();
+            case index_disk::compare::uint64:
+                return std::make_unique<comparator<uint64_t>>();
+            case index_disk::compare::float32:
+                return std::make_unique<comparator<float>>();
+            case index_disk::compare::float64:
+                return std::make_unique<comparator<double>>();
+            case index_disk::compare::bool8:
+                return std::make_unique<comparator<bool>>();
         }
-        return std::make_unique<str_comparator>();
+        return std::make_unique<comparator<std::string>>();
     }
 
     index_disk::index_disk(const path_t& path, compare compare_type)
@@ -56,17 +107,17 @@ namespace services::disk {
     index_disk::~index_disk() = default;
 
     void index_disk::insert(const wrapper_value_t& key, const document_id_t& value) {
-        db_->Put(rocksdb::WriteOptions(), key->as_string(), value.to_string());
+        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), value.to_string()); //todo: bin format
     }
 
     void index_disk::remove(wrapper_value_t key) {
-        db_->Delete(rocksdb::WriteOptions(), key->as_string());
+        db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key));
     }
 
     index_disk::result index_disk::find(const wrapper_value_t& value) const {
         index_disk::result res;
-        std::string sbuf;
-        auto status = db_->Get(rocksdb::ReadOptions(), value->as_string(), &sbuf);
+        std::string sbuf; //todo: bin format
+        auto status = db_->Get(rocksdb::ReadOptions(), comparator_->slice(value), &sbuf);
         if (!status.IsNotFound()) {
             res.emplace_back(sbuf);
         }
@@ -76,11 +127,11 @@ namespace services::disk {
     index_disk::result index_disk::lower_bound(const wrapper_value_t& value) const {
         index_disk::result res;
         rocksdb::ReadOptions options;
-        rocksdb::Slice upper_bound{value->as_string()};
+        auto upper_bound = comparator_->slice(value);
         options.iterate_upper_bound = &upper_bound;
         rocksdb::Iterator* it = db_->NewIterator(options);
         for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            res.emplace_back(it->value().ToString());
+            res.emplace_back(it->value().ToString()); //todo: bin format
         }
         delete it;
         return res;
@@ -89,7 +140,7 @@ namespace services::disk {
     index_disk::result index_disk::upper_bound(const wrapper_value_t& value) const {
         index_disk::result res;
         rocksdb::ReadOptions options;
-        rocksdb::Slice lower_bound{value->as_string()};
+        auto lower_bound = comparator_->slice(value);
         options.iterate_lower_bound = &lower_bound;
         rocksdb::Iterator* it = db_->NewIterator(options);
         it->SeekToFirst();
@@ -97,7 +148,7 @@ namespace services::disk {
             it->Next();
         }
         for (; it->Valid(); it->Next()) {
-            res.emplace_back(it->value().ToString());
+            res.emplace_back(it->value().ToString()); //todo: bin format
         }
         delete it;
         return res;
