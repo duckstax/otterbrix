@@ -92,7 +92,11 @@ namespace services::disk {
         rocksdb::Slice lower_bound{value->as_string()};
         options.iterate_lower_bound = &lower_bound;
         rocksdb::Iterator* it = db_->NewIterator(options);
-        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        it->SeekToFirst();
+        if (it->key() == lower_bound) {
+            it->Next();
+        }
+        for (; it->Valid(); it->Next()) {
             res.emplace_back(it->value().ToString());
         }
         delete it;
