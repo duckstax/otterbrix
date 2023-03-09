@@ -20,7 +20,8 @@ namespace services::disk {
     public:
         enum class compare {
             str,
-            numeric
+            numeric,
+            fraction
         };
 
         index_disk(const path_t& path, compare compare_type);

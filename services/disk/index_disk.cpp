@@ -75,24 +75,25 @@ namespace services::disk {
 
     index_disk::result index_disk::lower_bound(const wrapper_value_t& value) const {
         index_disk::result res;
-        rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        for (it->SeekForPrev(value->as_string()); it->Valid(); it->Prev()) {
-            if (it->key().ToString() != value->as_string()) {
-                res.emplace_back(it->value().ToString());
-            }
+        rocksdb::ReadOptions options;
+        rocksdb::Slice upper_bound{value->as_string()};
+        options.iterate_upper_bound = &upper_bound;
+        rocksdb::Iterator* it = db_->NewIterator(options);
+        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+            res.emplace_back(it->value().ToString());
         }
         delete it;
-        std::reverse(res.begin(), res.end());
         return res;
     }
 
     index_disk::result index_disk::upper_bound(const wrapper_value_t& value) const {
         index_disk::result res;
-        rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions());
-        for (it->Seek(value->as_string()); it->Valid(); it->Next()) {
-            if (it->key().ToString() != value->as_string()) {
-                res.emplace_back(it->value().ToString());
-            }
+        rocksdb::ReadOptions options;
+        rocksdb::Slice lower_bound{value->as_string()};
+        options.iterate_lower_bound = &lower_bound;
+        rocksdb::Iterator* it = db_->NewIterator(options);
+        for (it->SeekToFirst(); it->Valid(); it->Next()) {
+            res.emplace_back(it->value().ToString());
         }
         delete it;
         return res;
