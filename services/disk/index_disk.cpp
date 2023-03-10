@@ -8,7 +8,7 @@ namespace services::disk {
         virtual rocksdb::Slice slice(const document::wrapper_value_t& value) const = 0;
     };
 
-    template <class T>
+    template<class T>
     class comparator final : public base_comparator {
     public:
         comparator() = default;
@@ -35,14 +35,44 @@ namespace services::disk {
         void FindShortSuccessor(std::string*) const final {}
     };
 
-    template <> rocksdb::Slice comparator<std::string>::slice(const document::wrapper_value_t& value) const {
+    template<>
+    rocksdb::Slice comparator<std::string>::slice(const document::wrapper_value_t& value) const {
         return rocksdb::Slice{value->as_string()};
     }
 
-#define ADD_TYPE_SLICE(TYPE, FUNC) \
-    template <> rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const { \
-        static auto v = TYPE(value->FUNC()); \
-        return slice(v); \
+    template<>
+    int comparator<std::string>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
+        return a.compare(b);
+    }
+
+    template<>
+    int comparator<double>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
+        auto a_ = *reinterpret_cast<const double*>(a.data());
+        auto b_ = *reinterpret_cast<const double*>(b.data());
+        if (a_ < b_)
+            return -1;
+        if (a_ > b_)
+            return 1;
+        return 0;
+    }
+
+    template<>
+    int comparator<float>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
+        auto a_ = *reinterpret_cast<const float*>(a.data());
+        auto b_ = *reinterpret_cast<const float*>(b.data());
+        if (a_ < b_)
+            return -1;
+        if (a_ > b_)
+            return 1;
+        return 0;
+    }
+
+#define ADD_TYPE_SLICE(TYPE, FUNC)                                                         \
+    template<>                                                                             \
+    rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const { \
+        static TYPE v;                                                                     \
+        v = TYPE(value->FUNC());                                                           \
+        return slice(v);                                                                   \
     }
 
     ADD_TYPE_SLICE(int8_t, as_int)
@@ -56,7 +86,6 @@ namespace services::disk {
     ADD_TYPE_SLICE(float, as_float)
     ADD_TYPE_SLICE(double, as_double)
     ADD_TYPE_SLICE(bool, as_bool)
-
 
     std::unique_ptr<base_comparator> make_comparator(index_disk::compare compare_type) {
         switch (compare_type) {
@@ -88,6 +117,11 @@ namespace services::disk {
         return std::make_unique<comparator<std::string>>();
     }
 
+    rocksdb::Slice to_slice(const components::document::document_id_t& value) {
+        return rocksdb::Slice{reinterpret_cast<const char*>(value.data()), components::document::document_id_t::size};
+    }
+
+
     index_disk::index_disk(const path_t& path, compare compare_type)
         : db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
@@ -107,7 +141,7 @@ namespace services::disk {
     index_disk::~index_disk() = default;
 
     void index_disk::insert(const wrapper_value_t& key, const document_id_t& value) {
-        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), value.to_string()); //todo: bin format
+        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(value));
     }
 
     void index_disk::remove(wrapper_value_t key) {
@@ -116,10 +150,10 @@ namespace services::disk {
 
     index_disk::result index_disk::find(const wrapper_value_t& value) const {
         index_disk::result res;
-        std::string sbuf; //todo: bin format
-        auto status = db_->Get(rocksdb::ReadOptions(), comparator_->slice(value), &sbuf);
+        rocksdb::PinnableSlice slice;
+        auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
-            res.emplace_back(sbuf);
+            res.emplace_back(reinterpret_cast<const oid::byte_t*>(slice.data()));
         }
         return res;
     }
@@ -131,7 +165,7 @@ namespace services::disk {
         options.iterate_upper_bound = &upper_bound;
         rocksdb::Iterator* it = db_->NewIterator(options);
         for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            res.emplace_back(it->value().ToString()); //todo: bin format
+            res.emplace_back(reinterpret_cast<const oid::byte_t*>(it->value().data()));
         }
         delete it;
         return res;
@@ -148,7 +182,7 @@ namespace services::disk {
             it->Next();
         }
         for (; it->Valid(); it->Next()) {
-            res.emplace_back(it->value().ToString()); //todo: bin format
+            res.emplace_back(reinterpret_cast<const oid::byte_t*>(it->value().data()));
         }
         delete it;
         return res;
