@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/document/document_id.hpp>
+#include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
 #include <filesystem>
 
@@ -39,6 +40,7 @@ namespace services::disk {
 
         void insert(const wrapper_value_t& key, const document_id_t& value);
         void remove(wrapper_value_t key);
+        void remove(const wrapper_value_t& key, const document_id_t& doc);
         result find(const wrapper_value_t& value) const;
         result lower_bound(const wrapper_value_t& value) const;
         result upper_bound(const wrapper_value_t& value) const;

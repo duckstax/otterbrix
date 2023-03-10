@@ -117,10 +117,21 @@ namespace services::disk {
         return std::make_unique<comparator<std::string>>();
     }
 
-    rocksdb::Slice to_slice(const components::document::document_id_t& value) {
-        return rocksdb::Slice{reinterpret_cast<const char*>(value.data()), components::document::document_id_t::size};
+    rocksdb::Slice to_slice(const std::vector<components::document::document_id_t>& values) {
+        return rocksdb::Slice{reinterpret_cast<const char*>(values.data()), values.size() * components::document::document_id_t::size};
     }
 
+    void from_slice(const rocksdb::Slice &slice, std::vector<components::document::document_id_t> &docs) {
+        auto size = docs.size();
+        docs.resize(size + slice.size() / components::document::document_id_t::size);
+        std::memcpy(docs.data() + size, slice.data(), slice.size());
+    }
+
+    std::vector<components::document::document_id_t> from_slice(const rocksdb::Slice &slice) {
+        std::vector<components::document::document_id_t> result;
+        from_slice(slice, result);
+        return result;
+    }
 
     index_disk::index_disk(const path_t& path, compare compare_type)
         : db_(nullptr)
@@ -141,11 +152,17 @@ namespace services::disk {
     index_disk::~index_disk() = default;
 
     void index_disk::insert(const wrapper_value_t& key, const document_id_t& value) {
-        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(value));
+        auto values = find(key);
+        values.push_back(value);
+        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
     }
 
     void index_disk::remove(wrapper_value_t key) {
         db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key));
+    }
+
+    void index_disk::remove(const wrapper_value_t& key, const document_id_t& doc) {
+        //todo
     }
 
     index_disk::result index_disk::find(const wrapper_value_t& value) const {
@@ -153,7 +170,7 @@ namespace services::disk {
         rocksdb::PinnableSlice slice;
         auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
-            res.emplace_back(reinterpret_cast<const oid::byte_t*>(slice.data()));
+            return from_slice(slice);
         }
         return res;
     }
@@ -165,7 +182,7 @@ namespace services::disk {
         options.iterate_upper_bound = &upper_bound;
         rocksdb::Iterator* it = db_->NewIterator(options);
         for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            res.emplace_back(reinterpret_cast<const oid::byte_t*>(it->value().data()));
+            from_slice(it->value(), res);
         }
         delete it;
         return res;
@@ -182,7 +199,7 @@ namespace services::disk {
             it->Next();
         }
         for (; it->Valid(); it->Next()) {
-            res.emplace_back(reinterpret_cast<const oid::byte_t*>(it->value().data()));
+            from_slice(it->value(), res);
         }
         delete it;
         return res;

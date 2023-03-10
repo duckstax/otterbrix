@@ -162,3 +162,38 @@ TEST_CASE("index_disk::double") {
     REQUIRE(index.lower_bound(value(10.)).size() == 5);
     REQUIRE(index.upper_bound(value(90.)).size() == 5);
 }
+
+TEST_CASE("index_disk::multi_values::int32") {
+    std::filesystem::path path{"/tmp/index_disk/int32_multi"};
+    std::filesystem::remove_all(path);
+    std::filesystem::create_directories(path);
+    auto index = index_disk(path, index_disk::compare::int32);
+
+    for (int i = 1; i <= 100; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            index.insert(value(int64_t(i)), document_id_t{gen_id(1000 * j + i)});
+        }
+    }
+
+    REQUIRE(index.find(value(1l)).size() == 10);
+    REQUIRE(index.find(value(1l)).front() == document_id_t{gen_id(1)});
+    REQUIRE(index.find(value(10l)).size() == 10);
+    REQUIRE(index.find(value(10l)).front() == document_id_t{gen_id(10)});
+    REQUIRE(index.find(value(100l)).size() == 10);
+    REQUIRE(index.find(value(100l)).front() == document_id_t{gen_id(100)});
+    REQUIRE(index.find(value(101l)).empty());
+    REQUIRE(index.find(value(0l)).empty());
+
+    REQUIRE(index.lower_bound(value(10l)).size() == 90);
+    REQUIRE(index.upper_bound(value(90l)).size() == 100);
+
+    for (int i = 2; i <= 100; i += 2) {
+        for (int j = 5; j < 10; ++j) {
+            index.remove(value(int64_t(i)), document_id_t{gen_id(1000 * j + i)});
+        }
+    }
+
+    REQUIRE(index.find(value(2l)).size() == 5);
+    REQUIRE(index.lower_bound(value(10l)).size() == 50);
+    REQUIRE(index.upper_bound(value(90l)).size() == 50);
+}
