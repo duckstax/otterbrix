@@ -162,7 +162,15 @@ namespace services::disk {
     }
 
     void index_disk::remove(const wrapper_value_t& key, const document_id_t& doc) {
-        //todo
+        auto values = find(key);
+        if (!values.empty()) {
+            values.erase(std::remove(values.begin(), values.end(), doc), values.end());
+            if (values.empty()) {
+                remove(key);
+            } else {
+                db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
+            }
+        }
     }
 
     index_disk::result index_disk::find(const wrapper_value_t& value) const {

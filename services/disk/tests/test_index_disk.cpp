@@ -194,6 +194,6 @@ TEST_CASE("index_disk::multi_values::int32") {
     }
 
     REQUIRE(index.find(value(2l)).size() == 5);
-    REQUIRE(index.lower_bound(value(10l)).size() == 50);
-    REQUIRE(index.upper_bound(value(90l)).size() == 50);
+    REQUIRE(index.lower_bound(value(10l)).size() == 70);
+    REQUIRE(index.upper_bound(value(90l)).size() == 75);
 }
