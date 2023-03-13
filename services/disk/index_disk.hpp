@@ -13,7 +13,7 @@ namespace services::disk {
 
     class base_comparator;
 
-    class index_disk {
+    class index_disk_t {
         using document_id_t = components::document::document_id_t;
         using wrapper_value_t = document::wrapper_value_t;
         using path_t = std::filesystem::path;
@@ -35,8 +35,8 @@ namespace services::disk {
             bool8
         };
 
-        index_disk(const path_t& path, compare compare_type);
-        ~index_disk();
+        index_disk_t(const path_t& path, compare compare_type);
+        ~index_disk_t();
 
         void insert(const wrapper_value_t& key, const document_id_t& value);
         void remove(wrapper_value_t key);

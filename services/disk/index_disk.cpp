@@ -87,31 +87,31 @@ namespace services::disk {
     ADD_TYPE_SLICE(double, as_double)
     ADD_TYPE_SLICE(bool, as_bool)
 
-    std::unique_ptr<base_comparator> make_comparator(index_disk::compare compare_type) {
+    std::unique_ptr<base_comparator> make_comparator(index_disk_t::compare compare_type) {
         switch (compare_type) {
-            case index_disk::compare::str:
+            case index_disk_t::compare::str:
                 return std::make_unique<comparator<std::string>>();
-            case index_disk::compare::int8:
+            case index_disk_t::compare::int8:
                 return std::make_unique<comparator<int8_t>>();
-            case index_disk::compare::int16:
+            case index_disk_t::compare::int16:
                 return std::make_unique<comparator<int16_t>>();
-            case index_disk::compare::int32:
+            case index_disk_t::compare::int32:
                 return std::make_unique<comparator<int32_t>>();
-            case index_disk::compare::int64:
+            case index_disk_t::compare::int64:
                 return std::make_unique<comparator<int64_t>>();
-            case index_disk::compare::uint8:
+            case index_disk_t::compare::uint8:
                 return std::make_unique<comparator<uint8_t>>();
-            case index_disk::compare::uint16:
+            case index_disk_t::compare::uint16:
                 return std::make_unique<comparator<uint16_t>>();
-            case index_disk::compare::uint32:
+            case index_disk_t::compare::uint32:
                 return std::make_unique<comparator<uint32_t>>();
-            case index_disk::compare::uint64:
+            case index_disk_t::compare::uint64:
                 return std::make_unique<comparator<uint64_t>>();
-            case index_disk::compare::float32:
+            case index_disk_t::compare::float32:
                 return std::make_unique<comparator<float>>();
-            case index_disk::compare::float64:
+            case index_disk_t::compare::float64:
                 return std::make_unique<comparator<double>>();
-            case index_disk::compare::bool8:
+            case index_disk_t::compare::bool8:
                 return std::make_unique<comparator<bool>>();
         }
         return std::make_unique<comparator<std::string>>();
@@ -133,7 +133,7 @@ namespace services::disk {
         return result;
     }
 
-    index_disk::index_disk(const path_t& path, compare compare_type)
+    index_disk_t::index_disk_t(const path_t& path, compare compare_type)
         : db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
         rocksdb::Options options;
@@ -149,19 +149,19 @@ namespace services::disk {
         }
     }
 
-    index_disk::~index_disk() = default;
+    index_disk_t::~index_disk_t() = default;
 
-    void index_disk::insert(const wrapper_value_t& key, const document_id_t& value) {
+    void index_disk_t::insert(const wrapper_value_t& key, const document_id_t& value) {
         auto values = find(key);
         values.push_back(value);
         db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
     }
 
-    void index_disk::remove(wrapper_value_t key) {
+    void index_disk_t::remove(wrapper_value_t key) {
         db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key));
     }
 
-    void index_disk::remove(const wrapper_value_t& key, const document_id_t& doc) {
+    void index_disk_t::remove(const wrapper_value_t& key, const document_id_t& doc) {
         auto values = find(key);
         if (!values.empty()) {
             values.erase(std::remove(values.begin(), values.end(), doc), values.end());
@@ -173,8 +173,8 @@ namespace services::disk {
         }
     }
 
-    index_disk::result index_disk::find(const wrapper_value_t& value) const {
-        index_disk::result res;
+    index_disk_t::result index_disk_t::find(const wrapper_value_t& value) const {
+        index_disk_t::result res;
         rocksdb::PinnableSlice slice;
         auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
@@ -183,8 +183,8 @@ namespace services::disk {
         return res;
     }
 
-    index_disk::result index_disk::lower_bound(const wrapper_value_t& value) const {
-        index_disk::result res;
+    index_disk_t::result index_disk_t::lower_bound(const wrapper_value_t& value) const {
+        index_disk_t::result res;
         rocksdb::ReadOptions options;
         auto upper_bound = comparator_->slice(value);
         options.iterate_upper_bound = &upper_bound;
@@ -196,8 +196,8 @@ namespace services::disk {
         return res;
     }
 
-    index_disk::result index_disk::upper_bound(const wrapper_value_t& value) const {
-        index_disk::result res;
+    index_disk_t::result index_disk_t::upper_bound(const wrapper_value_t& value) const {
+        index_disk_t::result res;
         rocksdb::ReadOptions options;
         auto lower_bound = comparator_->slice(value);
         options.iterate_lower_bound = &lower_bound;

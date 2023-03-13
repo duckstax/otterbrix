@@ -3,7 +3,7 @@
 #include <components/document/mutable/mutable_value.hpp>
 #include <services/disk/index_disk.hpp>
 
-using services::disk::index_disk;
+using services::disk::index_disk_t;
 using components::document::document_id_t;
 using document::wrapper_value_t;
 
@@ -43,7 +43,7 @@ TEST_CASE("index_disk::string") {
     std::filesystem::path path{"/tmp/index_disk/string"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk(path, index_disk::compare::str);
+    auto index = index_disk_t(path, index_disk_t::compare::str);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(value_str(i), document_id_t{gen_id(i)});
@@ -74,7 +74,7 @@ TEST_CASE("index_disk::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk(path, index_disk::compare::int32);
+    auto index = index_disk_t(path, index_disk_t::compare::int32);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(value(int64_t(i)), document_id_t{gen_id(i)});
@@ -105,7 +105,7 @@ TEST_CASE("index_disk::uint32") {
     std::filesystem::path path{"/tmp/index_disk/uint32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk(path, index_disk::compare::uint32);
+    auto index = index_disk_t(path, index_disk_t::compare::uint32);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(value(uint64_t(i)), document_id_t{gen_id(i)});
@@ -136,7 +136,7 @@ TEST_CASE("index_disk::double") {
     std::filesystem::path path{"/tmp/index_disk/double"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk(path, index_disk::compare::float64);
+    auto index = index_disk_t(path, index_disk_t::compare::float64);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(value(double(i)), document_id_t{gen_id(i)});
@@ -167,7 +167,7 @@ TEST_CASE("index_disk::multi_values::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32_multi"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk(path, index_disk::compare::int32);
+    auto index = index_disk_t(path, index_disk_t::compare::int32);
 
     for (int i = 1; i <= 100; ++i) {
         for (int j = 0; j < 10; ++j) {
