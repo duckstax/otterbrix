@@ -2,9 +2,13 @@
 
 namespace components::index {
 
-    disk_single_field_index_t::disk_single_field_index_t(std::pmr::memory_resource* resource, std::string name, const keys_base_storage_t& keys)
+    disk_single_field_index_t::disk_single_field_index_t(actor_zeta::base::supervisor_abstract* disk_manager,
+                                                         std::pmr::memory_resource* resource,
+                                                         std::string name,
+                                                         const keys_base_storage_t& keys)
         : index_t(resource, ql::index_type::single, std::move(name), keys)
-        , actor_zeta::basic_async_actor(manager, name) {}
+        , actor_zeta::basic_async_actor(disk_manager, name)
+        , disk_manager_(disk_manager) {}
 
     disk_single_field_index_t::~disk_single_field_index_t() = default;
 

@@ -1,33 +1,41 @@
 #pragma once
 
 #include <filesystem>
-#include <core/excutor.hpp>
 #include <core/btree/btree.hpp>
-#include <configuration/configuration.hpp>
+#include <core/excutor.hpp>
 #include <components/log/log.hpp>
-#include <services/wal/manager_wal_replicate.hpp>
-#include "command.hpp"
-
-namespace rocksdb {
-    class DB;
-}
+#include <components/ql/base.hpp>
+#include <components/session/session.hpp>
+#include "index_disk.hpp"
 
 namespace services::disk {
 
     using index_name_t = std::string;
-    using session_id_t = ::components::session::session_id_t;
-    using path_t = std::filesystem::path;
 
     class base_manager_disk_t;
 
     class index_agent_disk_t final : public actor_zeta::basic_async_actor {
+
+        using path_t = std::filesystem::path;
+        using session_id_t = ::components::session::session_id_t;
+        using document_id_t = components::document::document_id_t;
+        using wrapper_value_t = document::wrapper_value_t;
+
     public:
-        index_agent_disk_t(base_manager_disk_t*, const path_t&, const collection_name_t&, const index_name_t&, log_t&);
+        index_agent_disk_t(base_manager_disk_t*, const path_t&, const collection_name_t&, const index_name_t&, index_disk_t::compare compare_type, log_t&);
         ~index_agent_disk_t() final;
+
+        void drop(session_id_t& session);
+
+        void insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
+        void remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
+        void find(session_id_t& session, const wrapper_value_t& value);
+        void lower_bound(session_id_t& session, const wrapper_value_t& value);
+        void upper_bound(session_id_t& session, const wrapper_value_t& value);
 
     private:
         log_t log_;
-        std::unique_ptr<rocksdb::DB> db_;
+        std::unique_ptr<index_disk_t> index_disk_;
     };
 
     using index_agent_disk_ptr = std::unique_ptr<index_agent_disk_t>;

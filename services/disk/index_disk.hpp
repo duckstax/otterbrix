@@ -45,6 +45,8 @@ namespace services::disk {
         result lower_bound(const wrapper_value_t& value) const;
         result upper_bound(const wrapper_value_t& value) const;
 
+        void drop();
+
     private:
         std::unique_ptr<rocksdb::DB> db_;
         std::unique_ptr<base_comparator> comparator_;

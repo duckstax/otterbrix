@@ -1,10 +1,10 @@
 #pragma once
 
+#include "core/btree/btree.hpp"
+#include "core/excutor.hpp"
+#include "index/forward.hpp"
+#include "index/index.hpp"
 #include <memory>
-#include <core/btree/btree.hpp>
-#include <core/excutor.hpp>
-#include "forward.hpp"
-#include "index.hpp"
 
 namespace components::index {
 
@@ -13,7 +13,10 @@ namespace components::index {
         using buffer_t = std::vector<index_value_t>;
         using const_iterator = buffer_t::const_iterator;
 
-        disk_single_field_index_t(std::pmr::memory_resource* resource, std::string name, const keys_base_storage_t& keys);
+        disk_single_field_index_t(actor_zeta::base::supervisor_abstract* disk_manager,
+                                  std::pmr::memory_resource* resource,
+                                  std::string name,
+                                  const keys_base_storage_t& keys);
         ~disk_single_field_index_t() final;
 
     private:
@@ -39,6 +42,7 @@ namespace components::index {
         iterator cend_impl() const final;
 
     private:
+        actor_zeta::base::supervisor_abstract* disk_manager_;
         buffer_t buffer_;
     };
 

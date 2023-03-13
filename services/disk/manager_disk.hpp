@@ -41,7 +41,6 @@ namespace services::disk {
         ~manager_disk_t();
 
         void create_agent();
-        void create_index_agent(const collection_name_t &collection_name, const index_name_t &index_name);
 
         auto load(session_id_t& session) -> void;
 
@@ -56,6 +55,10 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
+        void create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, index_disk_t::compare compare_type);
+        void drop_index_agent(session_id_t& session, const index_name_t &index_name);
+        void drop_index_agent_success(session_id_t& session);
+
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         log_t log_;
@@ -65,7 +68,6 @@ namespace services::disk {
         command_storage_t commands_;
 
         auto agent() -> actor_zeta::address_t;
-        auto index_agent(const index_name_t &name) -> actor_zeta::address_t;
     };
 
 

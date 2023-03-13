@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <memory_resource>
+#include <actor-zeta.hpp>
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
@@ -38,6 +39,11 @@ namespace services::disk {
         std::pmr::vector<components::document::document_id_t> documents;
     };
 
+    struct command_drop_index_t {
+        std::string index_name;
+        actor_zeta::base::address_t address;
+    };
+
     class command_t {
     public:
         using command_name_t = uint64_t;
@@ -59,7 +65,8 @@ namespace services::disk {
                      command_append_collection_t,
                      command_remove_collection_t,
                      command_write_documents_t,
-                     command_remove_documents_t>
+                     command_remove_documents_t,
+                     command_drop_index_t>
             command_;
     };
 

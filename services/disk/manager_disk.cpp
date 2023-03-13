@@ -1,5 +1,6 @@
 #include "manager_disk.hpp"
 #include <core/system_command.hpp>
+#include <components/index/disk/route.hpp>
 #include "route.hpp"
 #include "result.hpp"
 
@@ -29,7 +30,6 @@ namespace services::disk {
         trace(log_, "manager_disk start");
         add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
         add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
-        add_handler(handler_id(route::create_index_agent), &manager_disk_t::create_index_agent);
         add_handler(handler_id(route::load), &manager_disk_t::load);
         add_handler(handler_id(route::append_database), &manager_disk_t::append_database);
         add_handler(handler_id(route::remove_database), &manager_disk_t::remove_database);
@@ -38,6 +38,9 @@ namespace services::disk {
         add_handler(handler_id(route::write_documents), &manager_disk_t::write_documents);
         add_handler(handler_id(route::remove_documents), &manager_disk_t::remove_documents);
         add_handler(handler_id(route::flush), &manager_disk_t::flush);
+        add_handler(handler_id(index::route::create), &manager_disk_t::create_index_agent);
+        add_handler(handler_id(index::route::drop), &manager_disk_t::drop_index_agent);
+        add_handler(handler_id(index::route::success), &manager_disk_t::drop_index_agent_success);
         trace(log_, "manager_disk finish");
     }
 
@@ -53,15 +56,6 @@ namespace services::disk {
                 agents_.emplace_back(agent_disk_ptr(ptr));
             },
             config_.path, name_agent, log_);
-    }
-
-    void manager_disk_t::create_index_agent(const collection_name_t &collection_name, const index_name_t &index_name) {
-        trace(log_, "manager_disk create_index_agent : {}", index_name);
-        auto address = spawn_actor<index_agent_disk_t>(
-            [&](index_agent_disk_t* ptr) {
-                index_agents_.insert_or_assign(index_name, index_agent_disk_ptr(ptr));
-            },
-            config_.path, collection_name, index_name, log_);
     }
 
     auto manager_disk_t::load(session_id_t& session) -> void {
@@ -117,15 +111,48 @@ namespace services::disk {
         actor_zeta::send(agent(), address(), handler_id(route::fix_wal_id), wal_id);
     }
 
-    auto manager_disk_t::agent() -> actor_zeta::address_t {
-        return agents_[0]->address();
+    void manager_disk_t::create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, index_disk_t::compare compare_type) {
+        if (index_agents_.contains(index_name)) {
+            error(log_, "manager_disk: index {} already exists", index_name);
+            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
+        } else {
+            trace(log_, "manager_disk: create_index_agent : {}", index_name);
+            auto address_agent = spawn_actor<index_agent_disk_t>(
+                [&](index_agent_disk_t* ptr) {
+                    index_agents_.insert_or_assign(index_name, index_agent_disk_ptr(ptr));
+                },
+                config_.path, collection_name, index_name, compare_type, log_);
+            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_create), session, address_agent);
+        }
     }
 
-    auto manager_disk_t::index_agent(const index_name_t &name) -> actor_zeta::address_t {
-        if (index_agents_.contains(name)) {
-            return index_agents_.at(name)->address();
+    void manager_disk_t::drop_index_agent(session_id_t& session, const index_name_t &index_name) {
+        if (index_agents_.contains(index_name)) {
+            trace(log_, "manager_disk: drop_index_agent : {}", index_name);
+            command_drop_index_t command{index_name, current_message()->sender()};
+            append_command(commands_, session, command_t(command));
+            actor_zeta::send(index_agents_.at(index_name)->address(), address(), index::handler_id(index::route::drop), session);
+        } else {
+            error(log_, "manager_disk: index {} already exists", index_name);
+            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
         }
-        return actor_zeta::address_t::empty_address();
+    }
+
+    void manager_disk_t::drop_index_agent_success(session_id_t& session) {
+        auto it = commands_.find(session);
+        if (it != commands_.end()) {
+            for (const auto& command : commands_.at(session)) {
+                auto command_drop = command.get<command_drop_index_t>();
+                index_agents_.erase(command_drop.index_name);
+                trace(log_, "manager_disk: drop_index_agent : {} : success", command_drop.index_name);
+                actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
+            }
+            commands_.erase(session);
+        }
+    }
+
+    auto manager_disk_t::agent() -> actor_zeta::address_t {
+        return agents_[0]->address();
     }
 
 
@@ -133,7 +160,6 @@ namespace services::disk {
         : base_manager_disk_t(mr, scheduler) {
         add_handler(core::handler_id(core::route::sync), &manager_disk_empty_t::nothing<std::tuple<actor_zeta::address_t, actor_zeta::address_t>>);
         add_handler(handler_id(route::create_agent), &manager_disk_empty_t::nothing<>);
-        add_handler(handler_id(route::create_index_agent), &manager_disk_empty_t::nothing<const collection_name_t&, const index_name_t&>);
         add_handler(handler_id(route::load), &manager_disk_empty_t::load);
         add_handler(handler_id(route::append_database), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&>);
         add_handler(handler_id(route::remove_database), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&>);
@@ -142,6 +168,8 @@ namespace services::disk {
         add_handler(handler_id(route::write_documents), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&, const collection_name_t&, const std::vector<document_ptr>&>);
         add_handler(handler_id(route::remove_documents), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&, const collection_name_t&, const std::vector<document_id_t>&>);
         add_handler(handler_id(route::flush), &manager_disk_empty_t::nothing<session_id_t&, wal::id_t>);
+        add_handler(handler_id(index::route::create), &manager_disk_empty_t::nothing<session_id_t&, const collection_name_t&, const index_name_t&, index_disk_t::compare>);
+        add_handler(handler_id(index::route::drop), &manager_disk_empty_t::nothing<session_id_t&, const index_name_t&>);
     }
 
     auto manager_disk_empty_t::load(session_id_t& session) -> void {

@@ -213,4 +213,8 @@ namespace services::disk {
         return res;
     }
 
+    void index_disk_t::drop() {
+        //todo: remove directories
+    }
+
 } // namespace services::disk
