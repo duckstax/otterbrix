@@ -159,4 +159,11 @@ namespace components::index {
         }
     }
 
+    void set_disk_agent(const index_engine_ptr& ptr, id_index id, actor_zeta::address_t address) {
+        auto* index = search_index(ptr, id);
+        if (index) {
+            index->set_disk_agent(std::move(address));
+        }
+    }
+
 } // namespace components::index

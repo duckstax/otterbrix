@@ -63,6 +63,10 @@ namespace components::index {
         return name_;
     }
 
+    void index_t::set_disk_agent(actor_zeta::address_t address) noexcept {
+        disk_agent_ = std::move(address);
+    }
+
     index_t::iterator_t::reference index_t::iterator_t::operator*() const {
         return impl_->value_ref();
     }

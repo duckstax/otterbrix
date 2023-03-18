@@ -168,14 +168,17 @@ namespace services::disk {
         add_handler(handler_id(route::write_documents), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&, const collection_name_t&, const std::vector<document_ptr>&>);
         add_handler(handler_id(route::remove_documents), &manager_disk_empty_t::nothing<session_id_t&, const database_name_t&, const collection_name_t&, const std::vector<document_id_t>&>);
         add_handler(handler_id(route::flush), &manager_disk_empty_t::nothing<session_id_t&, wal::id_t>);
-        add_handler(handler_id(index::route::create), &manager_disk_empty_t::nothing<session_id_t&, const collection_name_t&, const index_name_t&, index_disk_t::compare>);
+        add_handler(handler_id(index::route::create), &manager_disk_empty_t::create_index_agent);
         add_handler(handler_id(index::route::drop), &manager_disk_empty_t::nothing<session_id_t&, const index_name_t&>);
     }
 
     auto manager_disk_empty_t::load(session_id_t& session) -> void {
         auto result = result_load_t::empty();
         actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, result);
+    }
 
+    void manager_disk_empty_t::create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, index_disk_t::compare) {
+        actor_zeta::send(current_message()->sender(), address(), handler_id(index::route::success_create), session, actor_zeta::address_t::empty_address());
     }
 
 

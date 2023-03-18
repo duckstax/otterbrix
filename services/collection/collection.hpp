@@ -25,6 +25,7 @@
 #include "forward.hpp"
 #include "result.hpp"
 #include "route.hpp"
+#include "session/session.hpp"
 
 namespace services::collection {
 
@@ -126,6 +127,7 @@ namespace services::collection {
         void close_cursor(session_id_t& session);
 
         void create_index(const session_id_t& session, components::ql::create_index_t& index);
+        void create_index_finish(const session_id_t& session, const actor_zeta::address_t& index_address);
 
         context_collection_t* view() const;
 
@@ -149,6 +151,7 @@ namespace services::collection {
 
         std::unique_ptr<context_collection_t> context_;
         std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
+        sessions::sessions_storage_t sessions_;
         bool dropped_{false};
 
 #ifdef DEV_MODE

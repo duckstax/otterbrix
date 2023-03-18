@@ -1,5 +1,6 @@
 #include "collection.hpp"
 #include <core/system_command.hpp>
+#include <components/index/disk/route.hpp>
 #include <services/disk/route.hpp>
 #include <services/collection/planner/create_plan.hpp>
 #include <services/collection/operators/scan/primary_key_scan.hpp>
@@ -35,6 +36,7 @@ namespace services::collection {
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
         add_handler(handler_id(route::create_index), &collection_t::create_index);
+        add_handler(handler_id(index::route::success_create), &collection_t::create_index_finish);
     }
 
     collection_t::~collection_t() {

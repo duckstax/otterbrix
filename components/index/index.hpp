@@ -72,6 +72,7 @@ namespace components::index {
         std::pmr::memory_resource* resource() const noexcept;
         ql::index_type type() const noexcept;
         const std::string &name() const noexcept;
+        void set_disk_agent(actor_zeta::address_t address) noexcept;
 
     protected:
         index_t(std::pmr::memory_resource* resource, index_type type, std::string name, const keys_base_storage_t& keys);
@@ -89,6 +90,7 @@ namespace components::index {
         index_type type_;
         std::string name_;
         keys_base_storage_t keys_;
+        actor_zeta::address_t disk_agent_{actor_zeta::address_t::empty_address()};
     };
 
     using index_ptr = core::pmr::unique_ptr<index_t>;
