@@ -32,7 +32,7 @@ WORKDIR /app/build
 COPY conan/profiles/wasm ./conan/profiles/wasm
 RUN conan config install conan
 COPY conanfile-wasm.txt ./
-RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-wasm.txt
+RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-client-wasm.txt
 
 WORKDIR /app
 COPY ./integration ./integration

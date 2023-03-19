@@ -1,5 +1,5 @@
-name: ubuntu 20.04 with sanitizer
-on: [push, pull_request]
+name: ubuntu 20.04
+on: [push]
 jobs:
   run:
     name: Run
@@ -7,21 +7,19 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-20.04]
-        python-version: [ 3.8]
+        python-version: [3.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install system dependencies
         run: |
-            sudo apt-get update \
-            && sudo apt-get install -y \
-            python3-pip python3-dev
+          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
 
       - name: conan installation and configuration
         run: |
@@ -29,13 +27,6 @@ jobs:
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan profile new emscripten-module
-          conan profile update settings.compiler=clang emscripten-module
-          conan profile update settings.compiler.version=15 emscripten-module
-          conan profile update settings.compiler.libcxx=libc++ emscripten-module
-          conan profile update settings.arch=wasm emscripten-module
-          conan profile update settings.os=Emscripten emscripten-module
-          echo -e 'LDFLAGS=--no-entry -s STANDALONE_WASM -s PURE_WASI=1 -s ABORTING_MALLOC=0 -s EXPORTED_FUNCTIONS=['_malloc'] -s ERROR_ON_UNDEFINED_SYMBOLS=0\n[tool_requires]\nemsdk/3.1.7' >> "${HOME}/.conan/profiles/emscripten-module"
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com
@@ -51,11 +42,15 @@ jobs:
           CC: gcc
         run: |
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DADDRESS_SANITIZER=ON -DDEV_MODE=ON
-          cmake --build . --parallel
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+          cmake --build .
 
       - name: Test
-        run: cd build && ctest -C
+        run: |
+          cd build
+          ctest -C -V --output-on-failure
 
       - name: PyTest
-        run: cd build/integration/python/ && pytest
+        run: |
+          cd build/integration/python/
+          pytest

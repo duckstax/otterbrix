@@ -38,8 +38,8 @@ jobs:
       - name: download dependencies
         run: |
           mkdir build && cd build
-          cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release
+          cp ../conanfile-host-wasm.txt .
+          conan install conanfile-host-wasm.txt --build missing -s build_type=Release
           
           cd ..
           
@@ -47,7 +47,7 @@ jobs:
           cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
-          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-client-wasm.txt.txt
 
       - name: build wasm target
         run: |
