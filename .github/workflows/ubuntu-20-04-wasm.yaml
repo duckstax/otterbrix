@@ -1,4 +1,4 @@
-name: ubuntu 20.04
+name: ubuntu 20.04 wasm
 on: [push]
 jobs:
   run:
@@ -27,19 +27,19 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip install conan==1.53.0 pytest==6.2.5
+          pip install conan==1.54.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
-          conan remote add duckstax http://conan.duckstax.com:9300
+          conan remote add duckstax http://conan.duckstax.com
 
       - name: download dependencies
         run: |
           mkdir build && cd build
-          cp ../conanfile.txt .
-          conan install . --build missing -s build_type=Release
+          cp ../conanfile-host-wasm.txt .
+          conan install conanfile-host-wasm.txt --build missing -s build_type=Release
           
           cd ..
           
@@ -47,7 +47,7 @@ jobs:
           cp -r ../conan .
           cp ../conanfile-wasm.txt .
           conan config install conan
-          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-client-wasm.txt.txt
 
       - name: build wasm target
         run: |
