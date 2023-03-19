@@ -9,7 +9,10 @@ target_include_directories(${PROJECT_NAME} PUBLIC "")
 
 target_link_libraries(
         ${PROJECT_NAME}  PRIVATE
-        CONAN_PKG::msgpack-cxx CONAN_PKG::proxy-wasm-cpp-sdk CONAN_PKG::quickjs CONAN_PKG::boost
+        CONAN_PKG::msgpack-cxx 
+        #CONAN_PKG::proxy-wasm-cpp-sdk 
+        CONAN_PKG::quickjs 
+        CONAN_PKG::boost
 )
 
 set_target_properties( ${PROJECT_NAME}

@@ -14,7 +14,7 @@ else()
     add_subdirectory(ql)
     add_subdirectory(translator)
     add_subdirectory(session)
-    add_subdirectory(wasm_runner)
+    # add_subdirectory(wasm_runner)
 endif()
 
 if (DEV_MODE)

@@ -37,7 +37,7 @@ target_link_libraries(
         CONAN_PKG::rocksdb
         CONAN_PKG::benchmark
         CONAN_PKG::actor-zeta
-        CONAN_PKG::proxy-wasm-cpp-host
+        #CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::libcurl

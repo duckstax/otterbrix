@@ -9,18 +9,18 @@
 
 namespace components::document {
 
-    std::vector<std::uint8_t> to_msgpack(const document_t& j) {
+    std::vector<std::uint8_t> to_msgpack(const document_ptr& j) {
         std::vector<std::uint8_t> result;
-        to_msgpack(j, result);
+        to_msgpack(document_view_t(j), result);
         return result;
     }
 
-    void to_msgpack(const document_t& j, output_adapter<std::uint8_t> o) {
-        binary_writer<std::uint8_t>(o).write_msgpack(j);
+    void to_msgpack(const document_view_t& j, output_adapter<std::uint8_t> o) {
+        binary_writer<document_view_t, std::uint8_t>(o).write_msgpack(j);
     }
 
-    void to_msgpack(const document_t& j, output_adapter<char> o) {
-        binary_writer<char>(o).write_msgpack(j);
+    void to_msgpack(const document_view_t& j, output_adapter<char> o) {
+        binary_writer<document_view_t, char>(o).write_msgpack(j);
     }
 
     static document_const_value_t json2value(const boost::json::value &item) {

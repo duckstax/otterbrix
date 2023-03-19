@@ -20,7 +20,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         rocketjoe_${PROJECT_NAME} PRIVATE
         rocketjoe::log
-        rocketjoe::wasm_runner
+        #rocketjoe::wasm_runner
         CONAN_PKG::spdlog
         CONAN_PKG::actor-zeta
         CONAN_PKG::openssl

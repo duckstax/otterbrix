@@ -4,6 +4,12 @@
 
 #define HEDLEY_UNLIKELY(expr) __builtin_expect(!!(expr), 0)
 
+#define JSON_THROW(exception)                           \
+    {std::clog << "Error in " << __FILE__ << ":" << __LINE__ \
+               << " (function " << __FUNCTION__ << ") - "    \
+               << (exception).what() << std::endl;           \
+     std::abort();}
+
 template<typename T, typename U, std::enable_if_t<!std::is_same<T, U>::value, int> = 0>
 T conditional_static_cast(U value) {
     return static_cast<T>(value);

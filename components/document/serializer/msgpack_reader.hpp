@@ -20,18 +20,24 @@
 #include "utils.hpp"
 
 template<
-    typename BasicJsonType,
+    typename document_t,
     typename InputAdapterType,
-    typename SAX = json_sax_dom_parser<BasicJsonType>>
+    typename SAX = json_sax_dom_parser<document_t>>
 class binary_reader final {
     using json_sax_t = SAX;
     using char_type = typename InputAdapterType::char_type;
     using char_int_type = typename std::char_traits<char_type>::int_type;
 
+    using number_integer_t = components::document::type_traits::number_integer_t;
+    using number_unsigned_t = components::document::type_traits::number_unsigned_t;
+    using number_float_t = components::document::type_traits::number_float_t;
+    using string_t = components::document::type_traits::string_t;
+    using binary_t = components::document::type_traits::binary_t;
+
 public:
     explicit binary_reader(InputAdapterType&& adapter) noexcept
         : ia(std::move(adapter)) {
-        std::ignore(is_sax_static_asserts<SAX, BasicJsonType>{});
+        std::ignore(is_sax_static_asserts<SAX, document_t>{});
     }
 
     // make class move-only
@@ -49,7 +55,8 @@ public:
             get();
 
             if (HEDLEY_UNLIKELY(current != std::char_traits<char_type>::eof())) {
-                return sax->parse_error(chars_read, get_token_string(), parse_error::create(110, chars_read, exception_message(concat("expected end of input; last byte: 0x", get_token_string()), "value"), nullptr));
+                // return sax->parse_error(chars_read, get_token_string(), parse_error::create(110, chars_read, exception_message(concat("expected end of input; last byte: 0x", get_token_string()), "value"), nullptr));
+                return false;
             }
         }
 
@@ -420,7 +427,8 @@ private:
             default: // anything else
             {
                 auto last_token = get_token_string();
-                return sax->parse_error(chars_read, last_token, parse_error::create(112, chars_read, exception_message(concat("invalid byte: 0x", last_token), "value"), nullptr));
+                //return sax->parse_error(chars_read, last_token, parse_error::create(112, chars_read, exception_message(concat("invalid byte: 0x", last_token), "value"), nullptr));
+                return false;
             }
         }
     }
@@ -486,14 +494,15 @@ private:
 
             default: {
                 auto last_token = get_token_string();
-                return sax->parse_error(chars_read, last_token, parse_error::create(113, chars_read, exception_message(concat("expected length specification (0xA0-0xBF, 0xD9-0xDB); last byte: 0x", last_token), "string"), nullptr));
+                //return sax->parse_error(chars_read, last_token, parse_error::create(113, chars_read, exception_message(concat("expected length specification (0xA0-0xBF, 0xD9-0xDB); last byte: 0x", last_token), "string"), nullptr));
+                return false;
             }
         }
     }
     bool get_msgpack_binary(binary_t& result) {
         // helper function to set the subtype
         auto assign_and_return_true = [&result](std::int8_t subtype) {
-            result.set_subtype(static_cast<std::uint8_t>(subtype));
+            //result.set_subtype(static_cast<std::uint8_t>(subtype));
             return true;
         };
 
@@ -688,8 +697,8 @@ private:
     }
     bool unexpect_eof(const char* context) const {
         if (HEDLEY_UNLIKELY(current == std::char_traits<char_type>::eof())) {
-            return sax->parse_error(chars_read, "<end of file>",
-                                    parse_error::create(110, chars_read, exception_message("unexpected end of input", context), nullptr));
+            //return sax->parse_error(chars_read, "<end of file>", parse_error::create(110, chars_read, exception_message("unexpected end of input", context), nullptr));
+            return false;
         }
         return true;
     }
@@ -700,7 +709,7 @@ private:
     }
     std::string exception_message(const std::string& detail, const std::string& context) const {
         std::string error_msg = "syntax error while parsing ";
-        return concat(error_msg, ' ', context, ": ", detail);
+        return error_msg + ' ' + context + ": " + detail;
     }
 
 private:

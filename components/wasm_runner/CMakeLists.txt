@@ -21,7 +21,7 @@ target_link_libraries(
         rocketjoe_${PROJECT_NAME} PUBLIC
         rocketjoe::log
         CONAN_PKG::spdlog
-        CONAN_PKG::proxy-wasm-cpp-host
+        # CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::openssl

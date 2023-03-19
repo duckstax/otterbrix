@@ -19,9 +19,9 @@ namespace components::document {
     using document_const_value_t = ::document::retained_const_t<::document::impl::value_t>;
 
     class document_t final : public boost::intrusive_ref_counter<document_t> {
+        
     public:
         using ptr = boost::intrusive_ptr<document_t>;
-        using traits = type_traits;
 
         document_t();
         explicit document_t(document_value_t value);
@@ -30,7 +30,7 @@ namespace components::document {
         void set(const std::string &key, T value);
 
         bool update(const ptr& update);
-
+        
     private:
         document_value_t value_;
 
