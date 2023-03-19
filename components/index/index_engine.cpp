@@ -5,6 +5,8 @@
 
 #include "components/document/mutable/mutable_dict.hpp"
 #include "core/pmr.hpp"
+#include <components/index/disk/route.hpp>
+#include <services/collection/collection.hpp>
 
 namespace components::index {
 
@@ -143,18 +145,32 @@ namespace components::index {
         return nullptr;
     }
 
-    void index_engine_t::insert_document(const document_ptr& document) {
+    void index_engine_t::insert_document(const document_ptr& document,
+                                         services::collection::context_collection_t* context,
+                                         services::collection::planner::transaction_context_t *transaction_context) {
         for (auto &index : storage_) {
             if (is_match_document(index, document)) {
-                index->insert(get_value_by_index(index, document), document);
+                auto key = get_value_by_index(index, document);
+                index->insert(key, document);
+                if (index->is_disk() && context && transaction_context) {
+                    context->send(index->disk_agent(), services::index::handler_id(services::index::route::insert),
+                                  transaction_context->session, key, document::get_document_id(document));
+                }
             }
         }
     }
 
-    void index_engine_t::delete_document(const document_ptr& document) {
+    void index_engine_t::delete_document(const document_ptr& document,
+                                         services::collection::context_collection_t* context,
+                                         services::collection::planner::transaction_context_t *transaction_context) {
         for (auto &index : storage_) {
             if (is_match_document(index, document)) {
-                index->remove(get_value_by_index(index, document));
+                auto key = get_value_by_index(index, document);
+                index->remove(key); //todo: bug
+                if (index->is_disk() && context && transaction_context) {
+                    context->send(index->disk_agent(), services::index::handler_id(services::index::route::remove),
+                                  transaction_context->session, key, document::get_document_id(document));
+                }
             }
         }
     }

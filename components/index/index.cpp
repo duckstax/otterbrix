@@ -63,6 +63,14 @@ namespace components::index {
         return name_;
     }
 
+    bool index_t::is_disk() const noexcept {
+        return disk_agent_ != actor_zeta::address_t::empty_address();
+    }
+
+    const actor_zeta::address_t& index_t::disk_agent() const noexcept {
+        return disk_agent_;
+    }
+
     void index_t::set_disk_agent(actor_zeta::address_t address) noexcept {
         disk_agent_ = std::move(address);
     }

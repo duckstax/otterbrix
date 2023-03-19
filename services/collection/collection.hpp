@@ -21,6 +21,7 @@
 #include <services/collection/planner/transaction_context.hpp>
 #include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
+#include <utility>
 
 #include "forward.hpp"
 #include "result.hpp"
@@ -36,12 +37,13 @@ namespace services::collection {
 
     class context_collection_t final {
     public:
-        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log)
+        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log, actor_zeta::address_t address)
             : resource_(resource)
             , log_(log)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
-            , storage_(resource_) {
+            , storage_(resource_)
+            , address_(std::move(address)) {
             assert(resource != nullptr);
         }
 
@@ -65,6 +67,11 @@ namespace services::collection {
             return log_;
         }
 
+        template<typename ...Args>
+        void send(const actor_zeta::address_t& address, uint64_t signal, Args&&...args) {
+            actor_zeta::send(address, address_, signal, args...);
+        }
+
     private:
         std::pmr::memory_resource* resource_;
         log_t log_;
@@ -78,6 +85,7 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
+        actor_zeta::address_t address_;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
