@@ -32,8 +32,8 @@ public:
         assert(oa);
     }
 
-    void write_msgpack(const document_view_t& j) {
-        switch (j.get_value()->type()) {
+    void write_simple_datatype(const document::impl::value_t* v) {
+        switch (v->type()) {
             case document::impl::value_type::null:
             {
                 oa->write_character(to_char_type(0xC0));
@@ -42,7 +42,7 @@ public:
 
             case document::impl::value_type::boolean: // true and false
             {
-                oa->write_character(j.get_value()->as_bool()
+                oa->write_character(v->as_bool()
                                         ? to_char_type(0xC3)
                                         : to_char_type(0xC2));
                 break;
@@ -50,8 +50,7 @@ public:
             
             case document::impl::value_type::number: {
 
-                
-                #define numValue j.get_value()
+                #define numValue v
 
                 if (numValue->is_unsigned()){
                     if (numValue->as_unsigned() < 128)
@@ -111,7 +110,7 @@ public:
 
             case document::impl::value_type::string: {
                 // step 1: write control byte and the string length
-                const auto N = j.get_value()->as_string().size();
+                const auto N = v->as_string().size();
                 if (N <= 31) {
                     // fixstr
                     write_number(static_cast<std::uint8_t>(0xA0 | N));
@@ -131,13 +130,30 @@ public:
 
                 // step 2: write the string
                 oa->write_characters(
-                    reinterpret_cast<const CharType*>(j.get_value()->as_string().data()),
+                    reinterpret_cast<const CharType*>(v->as_string().data()),
                     N);
                 break;
             }
-            /*
+            case document::impl::value_type::undefined:
+            default:
+                break;
+        }
+    }
+
+    void write_msgpack(const document_view_t& j) {
+        switch (j.get_value()->type()) {
+            case document::impl::value_type::null:
+            case document::impl::value_type::boolean:
+            case document::impl::value_type::number:
+            case document::impl::value_type::string:
+            {
+                write_simple_datatype(j.get_value());
+                break;
+            }
             case document::impl::value_type::array: {
+
                 // step 1: write control byte and the array size
+
                 const auto N = j.get_value()->as_array()->count();
                 if (N <= 15) {
                     // fixarray
@@ -152,10 +168,9 @@ public:
                     write_number(static_cast<std::uint32_t>(N));
                 }
 
-
                 // step 2: write each element
-                for (const auto& el : j.get_value()->as_array()) {
-                    write_msgpack(el);
+                for (uint32_t i = 0; i < j.get_value()->as_array()->count(); ++i) {
+                    write_simple_datatype(j.get_value()->as_array()->get(i));
                 }
                 break;
             }
@@ -249,17 +264,9 @@ public:
                 }
                 for (auto it = j.get_value()->as_dict()->begin(); it; ++it) {
 
-                    // todo - value can be non string!
+                    write_simple_datatype(it.key());
+                    write_simple_datatype(it.value());
 
-                    oa->write_characters(
-                        reinterpret_cast<const CharType*>(it.key()->as_string().data()),
-                        it.key()->as_string().size()
-                    );
-
-                    oa->write_characters(
-                        reinterpret_cast<const CharType*>(it.value()->as_string().data()),
-                    it.value()->as_string().size()
-                    );
                 }
                 break;
             }
