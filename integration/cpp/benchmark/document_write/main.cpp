@@ -17,6 +17,7 @@ void document_write(benchmark::State& state) {
     std::string value_str{"100.001"};
 
     auto f = [&](const std::string &key) {
+        doc->set(key, nullptr);
         doc->set(key, value_bool);
         doc->set(key, value_int);
         doc->set(key, value_double);
