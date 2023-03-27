@@ -3,7 +3,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_subdirectory(document)
 
 if(WASM_BUILD)
-
+    add_subdirectory(wasm_runner)
 else()
     add_subdirectory(cursor)
     add_subdirectory(expressions)
@@ -14,7 +14,6 @@ else()
     add_subdirectory(ql)
     add_subdirectory(translator)
     add_subdirectory(session)
-    # add_subdirectory(wasm_runner)
 endif()
 
 if (DEV_MODE)

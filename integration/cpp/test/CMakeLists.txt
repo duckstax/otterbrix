@@ -37,7 +37,6 @@ target_link_libraries(
         CONAN_PKG::rocksdb
         CONAN_PKG::benchmark
         CONAN_PKG::actor-zeta
-        #CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::libcurl
@@ -49,6 +48,13 @@ target_link_libraries(
         OpenSSL::Crypto
 
 )
+
+if (WASM_BUILD)
+    target_link_libraries(
+            ${PROJECT_NAME} PRIVATE
+            CONAN_PKG::proxy-wasm-cpp-host
+    )
+endif ()
 
 include(CTest)
 include(Catch)
