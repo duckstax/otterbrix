@@ -33,9 +33,9 @@ namespace components::document {
         return res;
     }
 
-    std::vector<std::uint8_t> to_msgpack(const document_t& j);
-    void to_msgpack(const document_view_t& j, output_adapter<std::uint8_t> o);
-    void to_msgpack(const document_view_t& j, output_adapter<char> o);
+    std::vector<std::uint8_t> to_msgpack(const document_ptr& j);
+    void to_msgpack(const document_ptr& j, output_adapter<std::uint8_t> o);
+    void to_msgpack(const document_ptr& j, output_adapter<char> o);
 
     document_ptr from_json(const std::string &json);
     std::string to_json(const document_ptr &doc);

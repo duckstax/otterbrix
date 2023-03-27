@@ -15,16 +15,17 @@
 
 #include "utils.hpp"
 #include "output_adapters.hpp"
+#include <components/document/document_view.hpp>
 
 
 template<typename CharType>
 using output_adapter_t = std::shared_ptr<output_adapter_protocol<CharType>>;
 
-template<typename document_view_t, typename CharType>
+template<typename document_ptr, typename CharType>
 class binary_writer {
-    using string_t = typename components::document::type_traits::string_t;
-    using binary_t = typename components::document::type_traits::binary_t;
-    using number_float_t = typename components::document::type_traits::number_float_t;
+    using string_t = std::string;
+    // using binary_t = byte_container_t;  # document::impl::value_type::data
+    using number_float_t = float;
 
 public:
     explicit binary_writer(output_adapter_t<CharType> adapter)
@@ -140,7 +141,8 @@ public:
         }
     }
 
-    void write_msgpack(const document_view_t& j) {
+    void write_msgpack(const document_ptr& ptr) {
+        components::document::document_view_t j(ptr);
         switch (j.get_value()->type()) {
             case document::impl::value_type::null:
             case document::impl::value_type::boolean:

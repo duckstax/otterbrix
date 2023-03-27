@@ -54,3 +54,9 @@ document_ptr gen_doc(int num) {
     doc->set("mixedDict", dict);
     return make_document(doc);
 }
+
+document_ptr gen_number_doc(int num) {
+    auto array = document::impl::mutable_array_t::new_array();
+    array->append(num);
+    return make_document(array);
+}

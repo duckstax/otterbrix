@@ -28,11 +28,11 @@ class binary_reader final {
     using char_type = typename InputAdapterType::char_type;
     using char_int_type = typename std::char_traits<char_type>::int_type;
 
-    using number_integer_t = components::document::type_traits::number_integer_t;
-    using number_unsigned_t = components::document::type_traits::number_unsigned_t;
-    using number_float_t = components::document::type_traits::number_float_t;
-    using string_t = components::document::type_traits::string_t;
-    using binary_t = components::document::type_traits::binary_t;
+    using number_integer_t = int32_t;
+    using number_unsigned_t = uint32_t;
+    using number_float_t = float;
+    using string_t = std::string;
+    using binary_t = byte_container_t;
 
 public:
     explicit binary_reader(InputAdapterType&& adapter) noexcept

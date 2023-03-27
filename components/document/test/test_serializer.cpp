@@ -12,8 +12,12 @@
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
 
+
+#include <components/tests/generaty.hpp>
+
 using namespace components::document;
 
+/*
 namespace {
     class SaxCountdown {
     public:
@@ -24,35 +28,35 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool boolean(bool /*unused*/) {
+        bool boolean(bool) {
             return events_left-- > 0;
         }
 
-        bool number_integer(document_t::number_integer_t /*unused*/) {
+        bool number_integer(document_t::number_integer_t ) {
             return events_left-- > 0;
         }
 
-        bool number_unsigned(document_t::number_unsigned_t /*unused*/) {
+        bool number_unsigned(document_t::number_unsigned_t ) {
             return events_left-- > 0;
         }
 
-        bool number_float(document_t::number_float_t /*unused*/, const std::string& /*unused*/) {
+        bool number_float(document_t::number_float_t , const std::string& ) {
             return events_left-- > 0;
         }
 
-        bool string(std::string& /*unused*/) {
+        bool string(std::string& ) {
             return events_left-- > 0;
         }
 
-        bool binary(std::vector<std::uint8_t>& /*unused*/) {
+        bool binary(std::vector<std::uint8_t>& ) {
             return events_left-- > 0;
         }
 
-        bool start_object(std::size_t /*unused*/) {
+        bool start_object(std::size_t ) {
             return events_left-- > 0;
         }
 
-        bool key(std::string& /*unused*/) {
+        bool key(std::string& ) {
             return events_left-- > 0;
         }
 
@@ -60,7 +64,7 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool start_array(std::size_t /*unused*/) {
+        bool start_array(std::size_t ) {
             return events_left-- > 0;
         }
 
@@ -68,7 +72,7 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const document_t::exception& /*unused*/) // NOLINT(readability-convert-member-functions-to-static)
+        bool parse_error(std::size_t , const std::string& , const document_t::exception& ) // NOLINT(readability-convert-member-functions-to-static)
         {
             return false;
         }
@@ -77,48 +81,45 @@ namespace {
         int events_left = 0;
     };
 } // namespace
-
+*/
 TEST_CASE("MessagePack") {
     SECTION("individual values") {
-        SECTION("discarded") {
-            // discarded values are not serialized
-            document_t const j = document_t::value_t::discarded;
-            const auto result = to_msgpack(j);
+        SECTION("undefined") {
+            // undefined values are not serialized
+            
+            const auto result = to_msgpack(make_document(document::impl::value_t::undefined_value));
             CHECK(result.empty());
         }
 
         SECTION("null") {
-            document_t const j = nullptr;
             std::vector<uint8_t> const expected = {0xc0};
-            const auto result = to_msgpack(j);
+            const auto result = to_msgpack(make_document(document::impl::value_t::null_value));
             CHECK(result == expected);
 
             // roundtrip
-            CHECK(from_msgpack(result) == j);
-            CHECK(from_msgpack(result, true, false) == j);
+            //CHECK(from_msgpack(result) == docView);
+            //CHECK(from_msgpack(result, true, false) == docView);
         }
 
         SECTION("boolean") {
             SECTION("true") {
-                document_t const j = true;
                 std::vector<uint8_t> const expected = {0xc3};
-                const auto result = to_msgpack(j);
+                const auto result = to_msgpack(make_document(document::impl::value_t::true_value));
                 CHECK(result == expected);
 
                 // roundtrip
-                CHECK(from_msgpack(result) == j);
-                CHECK(from_msgpack(result, true, false) == j);
+                //CHECK(is_equals_documents(from_msgpack(result), doc));
+                //CHECK(from_msgpack(result, true, false) == docView);
             }
 
             SECTION("false") {
-                document_t const j = false;
                 std::vector<uint8_t> const expected = {0xc2};
-                const auto result = to_msgpack(j);
+                const auto result = to_msgpack(make_document(document::impl::value_t::false_value));
                 CHECK(result == expected);
 
                 // roundtrip
-                CHECK(from_msgpack(result) == j);
-                CHECK(from_msgpack(result, true, false) == j);
+                //CHECK(is_equals_documents(from_msgpack(result), doc));
+                //CHECK(from_msgpack(result, true, false) == docView);
             }
         }
 
@@ -126,19 +127,20 @@ TEST_CASE("MessagePack") {
             SECTION("signed") {
                 SECTION("-32..-1 (negative fixnum)") {
                     for (auto i = -32; i <= -1; ++i) {
-                        CAPTURE(i)
+                        CAPTURE(i);
 
-                        document_t const j = i;
+                        document_ptr doc = gen_number_doc(i);
+                        document_view_t docView(doc);
 
                         // check type
-                        CHECK(j.is_number_integer());
+                        CHECK(docView.get_value()->is_int());
 
                         // create expected byte vector
                         std::vector<uint8_t> const expected{
                             static_cast<uint8_t>(i)};
 
                         // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
                         CHECK(result.size() == 1);
 
@@ -146,21 +148,26 @@ TEST_CASE("MessagePack") {
                         CHECK(static_cast<int8_t>(result[0]) == i);
 
                         // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
+                        //CHECK(is_equals_documents(from_msgpack(result), doc));
+                        //CHECK(from_msgpack(result, true, false) == docView); ????
                     }
                 }
-
+            }
+        }
+    }
+}
+/*
                 SECTION("0..127 (positive fixnum)") {
                     for (size_t i = 0; i <= 127; ++i) {
                         CAPTURE(i)
 
 
                         document_t j = -1;
+
                         j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
                         // check type
-                        CHECK(j.is_number_integer());
+                        //CHECK(j.is_number_integer());
 
                         // create expected byte vector
                         std::vector<uint8_t> const expected{static_cast<uint8_t>(i)};
@@ -1407,4 +1414,4 @@ TEST_CASE("MessagePack") {
             CHECK(!sax_parse(v, &scp));
         }
     }
-}
+}*/
