@@ -10,7 +10,7 @@ namespace services::collection::operators::merge {
         , limit_(limit) {
     }
 
-    void operator_merge_t::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void operator_merge_t::on_execute_impl(components::transaction::context_t* transaction_context) {
         on_merge_impl(transaction_context);
     }
 

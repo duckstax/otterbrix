@@ -20,7 +20,7 @@ namespace services::collection::operators {
         sort_ = std::move(sort);
     }
 
-    void aggregation::on_execute_impl(planner::transaction_context_t *transaction_context) {
+    void aggregation::on_execute_impl(components::transaction::context_t *transaction_context) {
         operator_ptr executor = match_
                 ? std::move(match_)
                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, predicates::limit_t::unlimit()));

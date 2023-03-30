@@ -32,7 +32,7 @@ TEST_CASE("operator_merge::and") {
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 50);
     add_parameter(parameters, core::parameter_id_t(2), 60);
-    planner::transaction_context_t transaction_context(&parameters);
+    components::transaction::context_t transaction_context(&parameters);
     op_and.on_execute(&transaction_context);
     REQUIRE(op_and.output()->size() == 10);
 }
@@ -57,7 +57,7 @@ TEST_CASE("operator_merge::or") {
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 10);
     add_parameter(parameters, core::parameter_id_t(2), 90);
-    planner::transaction_context_t transaction_context(&parameters);
+    components::transaction::context_t transaction_context(&parameters);
     op_or.on_execute(&transaction_context);
     REQUIRE(op_or.output()->size() == 20);
 }
@@ -74,7 +74,7 @@ TEST_CASE("operator_merge::not") {
                                                     predicates::limit_t::unlimit()));
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 10);
-    planner::transaction_context_t transaction_context(&parameters);
+    components::transaction::context_t transaction_context(&parameters);
     op_not.on_execute(&transaction_context);
     REQUIRE(op_not.output()->size() == 10);
 }
@@ -124,7 +124,7 @@ TEST_CASE("operator_merge::complex") {
     add_parameter(parameters, core::parameter_id_t(2), 90);
     add_parameter(parameters, core::parameter_id_t(3), 5);
     add_parameter(parameters, core::parameter_id_t(4), 95);
-    planner::transaction_context_t transaction_context(&parameters);
+    components::transaction::context_t transaction_context(&parameters);
     op->on_execute(&transaction_context);
     REQUIRE(op->output()->size() == 10);
 }

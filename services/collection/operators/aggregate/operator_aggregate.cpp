@@ -6,7 +6,7 @@ namespace services::collection::operators::aggregate {
         : read_only_operator_t(context, operator_type::aggregate) {
     }
 
-    void operator_aggregate_t::on_execute_impl(planner::transaction_context_t*) {
+    void operator_aggregate_t::on_execute_impl(components::transaction::context_t*) {
         output_ = make_operator_data(context_->resource());
         output_->append(aggregate_impl());
     }

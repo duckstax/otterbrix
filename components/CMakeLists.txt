@@ -14,6 +14,7 @@ else()
     add_subdirectory(ql)
     add_subdirectory(translator)
     add_subdirectory(session)
+    add_subdirectory(transaction)
 endif()
 
 if (DEV_MODE)

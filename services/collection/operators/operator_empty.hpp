@@ -9,7 +9,7 @@ namespace services::collection::operators {
         operator_empty_t(context_collection_t* context, operator_data_ptr &&data);
 
     private:
-        void on_execute_impl(planner::transaction_context_t*) final;
+        void on_execute_impl(components::transaction::context_t*) final;
     };
 
 } // namespace services::collection::operators

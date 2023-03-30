@@ -7,18 +7,18 @@ namespace services::collection::operators {
         , update_(std::move(update)) {
     }
 
-    void operator_update::on_execute_impl(planner::transaction_context_t*) {
+    void operator_update::on_execute_impl(components::transaction::context_t* transaction_context) {
         if (left_ && left_->output() && !left_->output()->documents().empty()) {
             modified_ = make_operator_write_data(context_->resource());
             no_modified_ = make_operator_write_data(context_->resource());
             for (auto& document : left_->output()->documents()) {
-                context_->index_engine()->delete_document(document); //todo: can optimized
+                context_->index_engine()->delete_document(document, transaction_context); //todo: can optimized
                 if (document->update(update_)) {
                     modified_->append(get_document_id(document));
                 } else {
                     no_modified_->append(get_document_id(document));
                 }
-                context_->index_engine()->insert_document(document);
+                context_->index_engine()->insert_document(document, transaction_context);
             }
         }
     }

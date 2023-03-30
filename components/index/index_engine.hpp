@@ -11,14 +11,7 @@
 #include "core/pmr.hpp"
 #include "forward.hpp"
 #include "index.hpp"
-
-namespace services::collection {
-     class context_collection_t;
-
-     namespace planner {
-         class transaction_context_t;
-     }
-}
+#include <components/transaction/context.hpp>
 
 namespace components::index {
 
@@ -31,12 +24,8 @@ namespace components::index {
         auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
-        void insert_document(const document_ptr& document,
-                             services::collection::context_collection_t* context,
-                             services::collection::planner::transaction_context_t *transaction_context);
-        void delete_document(const document_ptr& document,
-                             services::collection::context_collection_t* context,
-                             services::collection::planner::transaction_context_t *transaction_context);
+        void insert_document(const document_ptr& document, transaction::context_t *transaction_context);
+        void delete_document(const document_ptr& document, transaction::context_t *transaction_context);
 
     private:
         using comparator_t = std::less<keys_base_storage_t>;

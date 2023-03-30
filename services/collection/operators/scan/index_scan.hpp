@@ -10,7 +10,7 @@ namespace services::collection::operators {
         index_scan(context_collection_t* collection, components::expressions::compare_expression_ptr expr, predicates::limit_t limit);
 
     private:
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::transaction::context_t* transaction_context) final;
 
         const components::expressions::compare_expression_ptr expr_;
         const predicates::limit_t limit_;

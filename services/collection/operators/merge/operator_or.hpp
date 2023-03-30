@@ -9,7 +9,7 @@ namespace services::collection::operators::merge {
         explicit operator_or_t(context_collection_t* context, predicates::limit_t limit);
 
     private:
-        void on_merge_impl(planner::transaction_context_t* transaction_context) final;
+        void on_merge_impl(components::transaction::context_t* transaction_context) final;
     };
 
 } // namespace services::collection::operators::merge

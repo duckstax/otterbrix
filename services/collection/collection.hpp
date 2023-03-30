@@ -17,8 +17,8 @@
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
+#include <components/transaction/context.hpp>
 
-#include <services/collection/planner/transaction_context.hpp>
 #include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
 #include <utility>
@@ -37,13 +37,12 @@ namespace services::collection {
 
     class context_collection_t final {
     public:
-        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log, actor_zeta::address_t address)
+        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log)
             : resource_(resource)
             , log_(log)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
-            , storage_(resource_)
-            , address_(std::move(address)) {
+            , storage_(resource_) {
             assert(resource != nullptr);
         }
 
@@ -67,11 +66,6 @@ namespace services::collection {
             return log_;
         }
 
-        template<typename ...Args>
-        void send(const actor_zeta::address_t& address, uint64_t signal, Args&&...args) {
-            actor_zeta::send(address, address_, signal, args...);
-        }
-
     private:
         std::pmr::memory_resource* resource_;
         log_t log_;
@@ -85,7 +79,6 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
-        actor_zeta::address_t address_;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
@@ -142,7 +135,7 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        std::pmr::vector<document_id_t> insert_(planner::transaction_context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
+        std::pmr::vector<document_id_t> insert_(components::transaction::context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
         void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit);

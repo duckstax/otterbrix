@@ -17,7 +17,7 @@ namespace services::collection::operators {
         values_.push_back({name, std::move(aggregator)});
     }
 
-    void operator_group_t::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void operator_group_t::on_execute_impl(components::transaction::context_t* transaction_context) {
         if (left_ && left_->output()) {
             output_ = make_operator_data(context_->resource());
             create_list_documents();
@@ -57,7 +57,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_group_t::calc_aggregate_values(planner::transaction_context_t* transaction_context) {
+    void operator_group_t::calc_aggregate_values(components::transaction::context_t* transaction_context) {
         for (const auto &value : values_) {
             auto &aggregator = value.aggregator;
             for (std::size_t i = 0; i < output_->documents().size(); ++i) {

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <components/transaction/context.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/operators/operator_data.hpp>
 #include <services/collection/operators/operator_write_data.hpp>
-#include <services/collection/planner/transaction_context.hpp>
 
 namespace services::collection::operators {
 
@@ -35,7 +35,7 @@ namespace services::collection::operators {
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
-        void on_execute(planner::transaction_context_t* transaction_context);
+        void on_execute(components::transaction::context_t* transaction_context);
 
         operator_state state() const;
         const operator_data_ptr& output() const;
@@ -54,7 +54,7 @@ namespace services::collection::operators {
         operator_write_data_ptr no_modified_ {nullptr};
 
     private:
-        virtual void on_execute_impl(planner::transaction_context_t* transaction_context) = 0;
+        virtual void on_execute_impl(components::transaction::context_t* transaction_context) = 0;
 
         const operator_type type_;
         operator_state state_ {operator_state::created};

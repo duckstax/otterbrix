@@ -7,7 +7,7 @@ namespace services::collection::operators {
         , type_(type) {
     }
 
-    void operator_t::on_execute(planner::transaction_context_t* transaction_context) {
+    void operator_t::on_execute(components::transaction::context_t* transaction_context) {
         if (state_ == operator_state::created) {
             state_ = operator_state::running;
             if (left_) {
