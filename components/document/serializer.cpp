@@ -50,7 +50,7 @@ namespace components::document {
         return ::document::impl::value_t::null_value;
     }
 
-    document_ptr from_json(const std::string &json) {
+    document_ptr document_from_json(const std::string &json) {
         auto doc = make_document();
         auto tree = boost::json::parse(json);
         for (const auto &item : tree.as_object()) {
@@ -59,15 +59,15 @@ namespace components::document {
         return doc;
     }
 
-    std::string to_json(const document_ptr &doc) {
+    std::string document_to_json(const document_ptr &doc) {
         return document_view_t(doc).to_json();
     }
 
     std::string serialize_document(const document_ptr &document) {
-        return to_json(document);
+        return document_to_json(document);
     }
 
     document_ptr deserialize_document(const std::string &text) {
-        return from_json(text);
+        return document_from_json(text);
     }
 }
