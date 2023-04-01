@@ -64,7 +64,7 @@ target_link_libraries(
         rocketjoe::session
         rocketjoe::index
         rocketjoe::logical_plan
-        rocketjoe::transaction
+        rocketjoe::pipeline
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

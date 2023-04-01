@@ -9,7 +9,7 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void transfer_scan::on_execute_impl(components::transaction::context_t*) {
+    void transfer_scan::on_execute_impl(components::pipeline::context_t*) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0

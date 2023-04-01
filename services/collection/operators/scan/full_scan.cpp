@@ -10,7 +10,7 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void full_scan::on_execute_impl(components::transaction::context_t* transaction_context) {
+    void full_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(), "full_scan");
         int count = 0;
         if (!limit_.check(count)) {
@@ -18,7 +18,7 @@ namespace services::collection::operators {
         }
         output_ = make_operator_data(context_->resource());
         for (auto& it : context_->storage()) {
-            if (predicate_->check(it.second, transaction_context ? transaction_context->parameters : nullptr)) {
+            if (predicate_->check(it.second, pipeline_context ? pipeline_context->parameters : nullptr)) {
                 output_->append(it.second);
                 ++count;
                 if (!limit_.check(count)) {

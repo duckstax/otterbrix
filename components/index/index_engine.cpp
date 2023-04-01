@@ -144,26 +144,26 @@ namespace components::index {
         return nullptr;
     }
 
-    void index_engine_t::insert_document(const document_ptr& document, transaction::context_t *transaction_context) {
+    void index_engine_t::insert_document(const document_ptr& document, pipeline::context_t *pipeline_context) {
         for (auto &index : storage_) {
             if (is_match_document(index, document)) {
                 auto key = get_value_by_index(index, document);
                 index->insert(key, document);
-                if (index->is_disk() && transaction_context) {
-                    transaction_context->send(index->disk_agent(), services::index::handler_id(services::index::route::insert),
+                if (index->is_disk() && pipeline_context) {
+                    pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::insert),
                                               key, document::get_document_id(document));
                 }
             }
         }
     }
 
-    void index_engine_t::delete_document(const document_ptr& document, transaction::context_t *transaction_context) {
+    void index_engine_t::delete_document(const document_ptr& document, pipeline::context_t *pipeline_context) {
         for (auto &index : storage_) {
             if (is_match_document(index, document)) {
                 auto key = get_value_by_index(index, document);
                 index->remove(key); //todo: bug
-                if (index->is_disk() && transaction_context) {
-                    transaction_context->send(index->disk_agent(), services::index::handler_id(services::index::route::remove),
+                if (index->is_disk() && pipeline_context) {
+                    pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::remove),
                                               key, document::get_document_id(document));
                 }
             }

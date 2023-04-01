@@ -14,8 +14,8 @@ namespace services::collection::operators::merge {
         predicates::limit_t limit_;
 
     private:
-        void on_execute_impl(components::transaction::context_t* transaction_context) final;
-        virtual void on_merge_impl(components::transaction::context_t* transaction_context) = 0;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
+        virtual void on_merge_impl(components::pipeline::context_t* pipeline_context) = 0;
     };
 
     using operator_merge_ptr = std::unique_ptr<operator_merge_t>;

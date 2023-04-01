@@ -21,7 +21,7 @@ target_link_libraries(
         rocketjoe::document
         rocketjoe::cursor
         rocketjoe::ql
-        rocketjoe::transaction
+        rocketjoe::pipeline
         dl
         CONAN_PKG::boost
 )

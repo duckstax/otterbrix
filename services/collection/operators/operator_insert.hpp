@@ -10,7 +10,7 @@ namespace services::collection::operators {
         operator_insert(context_collection_t* collection, const std::pmr::vector<document_ptr>& documents);
 
     private:
-        void on_execute_impl(components::transaction::context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
         std::pmr::vector<document_ptr> documents_;
     };

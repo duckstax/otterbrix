@@ -17,7 +17,7 @@ namespace services::collection::operators {
     private:
         services::storage::sort::sorter_t sorter_;
 
-        void on_execute_impl(components::transaction::context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
     };
 
 } // namespace services::collection::operators

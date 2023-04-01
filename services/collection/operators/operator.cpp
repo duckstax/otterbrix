@@ -7,16 +7,16 @@ namespace services::collection::operators {
         , type_(type) {
     }
 
-    void operator_t::on_execute(components::transaction::context_t* transaction_context) {
+    void operator_t::on_execute(components::pipeline::context_t* pipeline_context) {
         if (state_ == operator_state::created) {
             state_ = operator_state::running;
             if (left_) {
-                left_->on_execute(transaction_context);
+                left_->on_execute(pipeline_context);
             }
             if (right_) {
-                right_->on_execute(transaction_context);
+                right_->on_execute(pipeline_context);
             }
-            on_execute_impl(transaction_context);
+            on_execute_impl(pipeline_context);
             state_ = operator_state::executed;
         }
     }

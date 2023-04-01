@@ -55,7 +55,7 @@ namespace services::collection::operators {
         , limit_(limit) {
     }
 
-    void index_scan::on_execute_impl(components::transaction::context_t* transaction_context) {
+    void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());
         if (!limit_.check(0)) {
             return; //limit = 0
@@ -63,7 +63,7 @@ namespace services::collection::operators {
         output_ = make_operator_data(context_->resource());
         auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
         if (index) {
-            search_by_index(index, expr_, limit_, transaction_context->parameters, output_);
+            search_by_index(index, expr_, limit_, pipeline_context->parameters, output_);
         }
     }
 

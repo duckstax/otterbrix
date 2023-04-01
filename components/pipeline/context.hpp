@@ -4,7 +4,7 @@
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
 
-namespace components::transaction {
+namespace components::pipeline {
 
     class context_t {
     public:
@@ -28,4 +28,4 @@ namespace components::transaction {
         actor_zeta::address_t address_{actor_zeta::address_t::empty_address()};
     };
 
-} // namespace components::transaction
+} // namespace components::pipeline

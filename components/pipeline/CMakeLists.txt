@@ -1,4 +1,4 @@
-project(transaction)
+project(pipeline)
 
 set(${PROJECT_NAME}_SOURCES
         context.cpp

@@ -13,7 +13,7 @@ namespace services::collection::operators {
     private:
         std::pmr::vector<document_id_t> ids_;
 
-        void on_execute_impl(components::transaction::context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
     };
 
 } // namespace services::operators

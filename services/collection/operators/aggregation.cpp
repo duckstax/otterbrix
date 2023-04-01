@@ -20,7 +20,7 @@ namespace services::collection::operators {
         sort_ = std::move(sort);
     }
 
-    void aggregation::on_execute_impl(components::transaction::context_t *transaction_context) {
+    void aggregation::on_execute_impl(components::pipeline::context_t *pipeline_context) {
         operator_ptr executor = match_
                 ? std::move(match_)
                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, predicates::limit_t::unlimit()));
@@ -32,7 +32,7 @@ namespace services::collection::operators {
             sort_->set_children(std::move(executor));
             executor = std::move(sort_);
         }
-        executor->on_execute(transaction_context);
+        executor->on_execute(pipeline_context);
         take_output(executor);
     }
 

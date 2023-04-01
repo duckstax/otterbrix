@@ -17,7 +17,7 @@
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
-#include <components/transaction/context.hpp>
+#include <components/pipeline/context.hpp>
 
 #include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
@@ -135,7 +135,7 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        std::pmr::vector<document_id_t> insert_(components::transaction::context_t* transaction_context, const std::pmr::vector<document_ptr>& documents);
+        std::pmr::vector<document_id_t> insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
         void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit);

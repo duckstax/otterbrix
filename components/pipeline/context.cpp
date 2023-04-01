@@ -1,6 +1,6 @@
 #include "context.hpp"
 
-namespace components::transaction {
+namespace components::pipeline {
 
     context_t::context_t(ql::storage_parameters* init_parameters)
         : parameters(init_parameters) {}
@@ -10,4 +10,4 @@ namespace components::transaction {
         , parameters(init_parameters)
         , address_(std::move(address)) {}
 
-} // namespace components::transaction
+} // namespace components::pipeline

@@ -17,11 +17,11 @@ namespace services::collection::operators {
         values_.push_back({name, std::move(aggregator)});
     }
 
-    void operator_group_t::on_execute_impl(components::transaction::context_t* transaction_context) {
+    void operator_group_t::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {
             output_ = make_operator_data(context_->resource());
             create_list_documents();
-            calc_aggregate_values(transaction_context);
+            calc_aggregate_values(pipeline_context);
         }
     }
 
@@ -57,14 +57,14 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_group_t::calc_aggregate_values(components::transaction::context_t* transaction_context) {
+    void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
         for (const auto &value : values_) {
             auto &aggregator = value.aggregator;
             for (std::size_t i = 0; i < output_->documents().size(); ++i) {
                 auto &document = output_->documents().at(i);
                 aggregator->clear(); //todo: need copy aggregator
                 aggregator->set_children(std::make_unique<operator_empty_t>(context_, input_documents_.at(i)->copy()));
-                aggregator->on_execute(transaction_context);
+                aggregator->on_execute(pipeline_context);
                 document->set(value.name, *aggregator->value());
             }
         }

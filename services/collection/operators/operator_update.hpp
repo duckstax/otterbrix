@@ -9,7 +9,7 @@ namespace services::collection::operators {
         operator_update(context_collection_t* context, document_ptr update);
 
     private:
-        void on_execute_impl(components::transaction::context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
         document_ptr update_;
     };
