@@ -1,4 +1,5 @@
 #include "operator_or.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators::merge {
 

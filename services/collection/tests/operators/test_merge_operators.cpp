@@ -32,7 +32,7 @@ TEST_CASE("operator_merge::and") {
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 50);
     add_parameter(parameters, core::parameter_id_t(2), 60);
-    components::pipeline::context_t pipeline_context(&parameters);
+    components::pipeline::context_t pipeline_context(std::move(parameters));
     op_and.on_execute(&pipeline_context);
     REQUIRE(op_and.output()->size() == 10);
 }
@@ -57,7 +57,7 @@ TEST_CASE("operator_merge::or") {
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 10);
     add_parameter(parameters, core::parameter_id_t(2), 90);
-    components::pipeline::context_t pipeline_context(&parameters);
+    components::pipeline::context_t pipeline_context(std::move(parameters));
     op_or.on_execute(&pipeline_context);
     REQUIRE(op_or.output()->size() == 20);
 }
@@ -74,7 +74,7 @@ TEST_CASE("operator_merge::not") {
                                                     predicates::limit_t::unlimit()));
     components::ql::storage_parameters parameters;
     add_parameter(parameters, core::parameter_id_t(1), 10);
-    components::pipeline::context_t pipeline_context(&parameters);
+    components::pipeline::context_t pipeline_context(std::move(parameters));
     op_not.on_execute(&pipeline_context);
     REQUIRE(op_not.output()->size() == 10);
 }
@@ -124,7 +124,7 @@ TEST_CASE("operator_merge::complex") {
     add_parameter(parameters, core::parameter_id_t(2), 90);
     add_parameter(parameters, core::parameter_id_t(3), 5);
     add_parameter(parameters, core::parameter_id_t(4), 95);
-    components::pipeline::context_t pipeline_context(&parameters);
+    components::pipeline::context_t pipeline_context(std::move(parameters));
     op->on_execute(&pipeline_context);
     REQUIRE(op->output()->size() == 10);
 }

@@ -3,7 +3,8 @@
 namespace services::collection::sessions {
 
     enum class type_t {
-        create_index
+        create_index,
+        suspend_plan,
     };
 
 

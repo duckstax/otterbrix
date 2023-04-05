@@ -2,6 +2,7 @@
 
 #include <components/logical_plan/node.hpp>
 #include <services/collection/operators/operator.hpp>
+#include <services/collection/operators/predicates/limit.hpp>
 
 namespace services::collection::planner::impl {
 

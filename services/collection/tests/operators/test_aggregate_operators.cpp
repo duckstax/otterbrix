@@ -36,7 +36,7 @@ TEST_CASE("operator::aggregate::count") {
                                                        predicates::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);
-        components::pipeline::context_t pipeline_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
         count.on_execute(&pipeline_context);
         REQUIRE(count.value()->as_unsigned() == 10);
     }
@@ -63,7 +63,7 @@ TEST_CASE("operator::aggregate::min") {
                                                       predicates::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 80);
-        components::pipeline::context_t pipeline_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
         min_.on_execute(&pipeline_context);
         REQUIRE(min_.value()->as_unsigned() == 81);
     }
@@ -90,7 +90,7 @@ TEST_CASE("operator::aggregate::max") {
                                                       predicates::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 20);
-        components::pipeline::context_t pipeline_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
         max_.on_execute(&pipeline_context);
         REQUIRE(max_.value()->as_unsigned() == 19);
     }
@@ -117,7 +117,7 @@ TEST_CASE("operator::aggregate::sum") {
                                                       predicates::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);
-        components::pipeline::context_t pipeline_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
         sum_.on_execute(&pipeline_context);
         REQUIRE(sum_.value()->as_unsigned() == 45);
     }
@@ -144,7 +144,7 @@ TEST_CASE("operator::aggregate::avg") {
                                                       predicates::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);
-        components::pipeline::context_t pipeline_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
         avg_.on_execute(&pipeline_context);
         REQUIRE(::document::is_equals(avg_.value()->as_double(), 5.0));
     }

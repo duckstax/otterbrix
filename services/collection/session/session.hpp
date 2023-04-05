@@ -4,15 +4,16 @@
 #include <components/session/session.hpp>
 #include "session_type.hpp"
 #include "create_index.hpp"
+#include "suspend_plan.hpp"
 
 namespace services::collection::sessions {
 
     class session_t {
     public:
         template<class T>
-        explicit session_t(const T& statement)
+        explicit session_t(T&& statement)
             : type_(statement.type())
-            , data_(statement)
+            , data_(std::move(statement))
         {}
 
         template<class T>
@@ -28,7 +29,8 @@ namespace services::collection::sessions {
         type_t type_;
 
         std::variant<
-            create_index
+            create_index_t,
+            suspend_plan_t
             > data_;
     };
 
@@ -36,7 +38,7 @@ namespace services::collection::sessions {
     using sessions_storage_t =  std::unordered_map<components::session::session_id_t, session_t>;
 
     template<typename T>
-    void make_session(sessions_storage_t& storage, components::session::session_id_t session, const T& statement) {
+    void make_session(sessions_storage_t& storage, components::session::session_id_t session, T&& statement) {
         storage.emplace(session, session_t{statement});
     }
 

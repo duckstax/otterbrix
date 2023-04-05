@@ -78,7 +78,7 @@ namespace services::collection {
 
                 case index_type::single: {
                     auto id_index = make_index<single_field_index_t>(context_->index_engine(), index.name(), index.keys_);
-                    sessions::make_session(sessions_, session, sessions::create_index{current_message()->sender(), id_index});
+                    sessions::make_session(sessions_, session, sessions::create_index_t{current_message()->sender(), id_index});
                     actor_zeta::send(mdisk_, address(), index::handler_id(index::route::create), session, name_, index.name(), get_compare_type(index.keys_, context_));
                     break;
                 }
@@ -104,11 +104,33 @@ namespace services::collection {
 
 
     void collection_t::create_index_finish(const session_id_t& session, const actor_zeta::address_t& index_address) {
-        auto &create_index = sessions::find(sessions_, session).get<sessions::create_index>();
+        debug(log(), "collection::create_index_finish");
+        auto &create_index = sessions::find(sessions_, session).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
         insert(context_->index_engine(), create_index.id_index, context_->storage());
         actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, result_create_index(true));
         sessions::remove(sessions_, session);
+    }
+
+    void collection_t::index_modify_finish(const session_id_t& session) {
+        debug(log(), "collection::index_modify_finish");
+        sessions::remove(sessions_, session);
+    }
+
+    void collection_t::index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result) {
+        debug(log(), "collection::index_find_result: {}", result.size());
+        auto &suspend_plan = sessions::find(sessions_, session).get<sessions::suspend_plan_t>();
+        auto res = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+        suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);
+        if (suspend_plan.plan->is_executed()) {
+            if (suspend_plan.plan->output()) {
+                for (const auto& document : suspend_plan.plan->output()->documents()) {
+                    res.first->second->append(document_view_t(document));
+                }
+            }
+        }
+        sessions::remove(sessions_, session);
+        actor_zeta::send(suspend_plan.client, address(), handler_id(route::find_finish), session, res.first->second.get());
     }
 
 } // namespace services::collection

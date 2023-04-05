@@ -1,7 +1,7 @@
 #include "index_engine.hpp"
 
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "components/document/mutable/mutable_dict.hpp"
 #include "core/pmr.hpp"
@@ -36,9 +36,9 @@ namespace components::index {
         }
     }
 
-    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr> &docs) {
+    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr>& docs) {
         auto* index = search_index(ptr, id);
-        for (auto &doc : docs) {
+        for (auto& doc : docs) {
             auto range = index->keys();
             for (auto j = range.first; j != range.second; ++j) {
                 const auto& key_tmp = *j;
@@ -64,7 +64,7 @@ namespace components::index {
                 if ((!(view.is_null(key)))) {
                     auto* data = view.get_value(key);
                     ::document::wrapper_value_t key_(data);
-                    index->insert(key_ , doc);
+                    index->insert(key_, doc);
                 }
             }
         }
@@ -74,7 +74,7 @@ namespace components::index {
         return ptr->matching(id);
     }
 
-    auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t & query) -> index_t::pointer {
+    auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t::pointer {
         return ptr->matching(query);
     }
 
@@ -107,15 +107,14 @@ namespace components::index {
         return components::index::value_t(nullptr);
     }
 
-
     index_engine_t::index_engine_t(actor_zeta::detail::pmr::memory_resource* resource)
         : resource_(resource)
         , mapper_(resource)
         , index_to_mapper_(resource)
-        , storage_(resource){
+        , storage_(resource) {
     }
 
-    auto index_engine_t::add_index(const keys_base_storage_t & keys, index_ptr index) -> uint32_t {
+    auto index_engine_t::add_index(const keys_base_storage_t& keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
         auto d = storage_.insert(end, std::move(index));
         mapper_.emplace(keys, d);
@@ -144,27 +143,27 @@ namespace components::index {
         return nullptr;
     }
 
-    void index_engine_t::insert_document(const document_ptr& document, pipeline::context_t *pipeline_context) {
-        for (auto &index : storage_) {
+    void index_engine_t::insert_document(const document_ptr& document, pipeline::context_t* pipeline_context) {
+        for (auto& index : storage_) {
             if (is_match_document(index, document)) {
                 auto key = get_value_by_index(index, document);
                 index->insert(key, document);
                 if (index->is_disk() && pipeline_context) {
                     pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::insert),
-                                              key, document::get_document_id(document));
+                                           key, document::get_document_id(document));
                 }
             }
         }
     }
 
-    void index_engine_t::delete_document(const document_ptr& document, pipeline::context_t *pipeline_context) {
-        for (auto &index : storage_) {
+    void index_engine_t::delete_document(const document_ptr& document, pipeline::context_t* pipeline_context) {
+        for (auto& index : storage_) {
             if (is_match_document(index, document)) {
                 auto key = get_value_by_index(index, document);
                 index->remove(key); //todo: bug
                 if (index->is_disk() && pipeline_context) {
                     pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::remove),
-                                              key, document::get_document_id(document));
+                                           key, document::get_document_id(document));
                 }
             }
         }

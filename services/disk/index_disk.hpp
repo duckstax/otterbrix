@@ -17,7 +17,6 @@ namespace services::disk {
         using document_id_t = components::document::document_id_t;
         using wrapper_value_t = document::wrapper_value_t;
         using path_t = std::filesystem::path;
-        using result = std::vector<document_id_t>;
 
     public:
         enum class compare {
@@ -34,6 +33,7 @@ namespace services::disk {
             float64,
             bool8
         };
+        using result = std::vector<document_id_t>;
 
         index_disk_t(const path_t& path, compare compare_type);
         ~index_disk_t();
@@ -41,8 +41,11 @@ namespace services::disk {
         void insert(const wrapper_value_t& key, const document_id_t& value);
         void remove(wrapper_value_t key);
         void remove(const wrapper_value_t& key, const document_id_t& doc);
+        void find(const wrapper_value_t& value, result &res) const;
         result find(const wrapper_value_t& value) const;
+        void lower_bound(const wrapper_value_t& value, result &res) const;
         result lower_bound(const wrapper_value_t& value) const;
+        void upper_bound(const wrapper_value_t& value, result &res) const;
         result upper_bound(const wrapper_value_t& value) const;
 
         void drop();

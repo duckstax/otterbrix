@@ -127,12 +127,6 @@ namespace services::disk {
         std::memcpy(docs.data() + size, slice.data(), slice.size());
     }
 
-    std::vector<components::document::document_id_t> from_slice(const rocksdb::Slice &slice) {
-        std::vector<components::document::document_id_t> result;
-        from_slice(slice, result);
-        return result;
-    }
-
     index_disk_t::index_disk_t(const path_t& path, compare compare_type)
         : db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
@@ -141,6 +135,9 @@ namespace services::disk {
         options.create_if_missing = true;
         options.comparator = comparator_.get();
         rocksdb::DB* db;
+        if (!std::filesystem::is_directory(path)) {
+            std::filesystem::create_directories(path);
+        }
         auto status = rocksdb::DB::Open(options, path.string(), &db);
         if (status.ok()) {
             db_.reset(db);
@@ -173,18 +170,21 @@ namespace services::disk {
         }
     }
 
-    index_disk_t::result index_disk_t::find(const wrapper_value_t& value) const {
-        index_disk_t::result res;
+    void index_disk_t::find(const wrapper_value_t& value, result &res) const {
         rocksdb::PinnableSlice slice;
         auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
-            return from_slice(slice);
+            from_slice(slice, res);
         }
+    }
+
+    index_disk_t::result index_disk_t::find(const wrapper_value_t& value) const {
+        index_disk_t::result res;
+        find(value, res);
         return res;
     }
 
-    index_disk_t::result index_disk_t::lower_bound(const wrapper_value_t& value) const {
-        index_disk_t::result res;
+    void index_disk_t::lower_bound(const wrapper_value_t& value, result &res) const {
         rocksdb::ReadOptions options;
         auto upper_bound = comparator_->slice(value);
         options.iterate_upper_bound = &upper_bound;
@@ -193,11 +193,15 @@ namespace services::disk {
             from_slice(it->value(), res);
         }
         delete it;
+    }
+
+    index_disk_t::result index_disk_t::lower_bound(const wrapper_value_t& value) const {
+        index_disk_t::result res;
+        lower_bound(value, res);
         return res;
     }
 
-    index_disk_t::result index_disk_t::upper_bound(const wrapper_value_t& value) const {
-        index_disk_t::result res;
+    void index_disk_t::upper_bound(const wrapper_value_t& value, result &res) const {
         rocksdb::ReadOptions options;
         auto lower_bound = comparator_->slice(value);
         options.iterate_lower_bound = &lower_bound;
@@ -210,6 +214,11 @@ namespace services::disk {
             from_slice(it->value(), res);
         }
         delete it;
+    }
+
+    index_disk_t::result index_disk_t::upper_bound(const wrapper_value_t& value) const {
+        index_disk_t::result res;
+        upper_bound(value, res);
         return res;
     }
 

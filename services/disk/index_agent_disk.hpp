@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <core/btree/btree.hpp>
 #include <core/excutor.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <components/log/log.hpp>
 #include <components/ql/base.hpp>
 #include <components/session/session.hpp>
@@ -29,9 +30,7 @@ namespace services::disk {
 
         void insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
         void remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
-        void find(session_id_t& session, const wrapper_value_t& value);
-        void lower_bound(session_id_t& session, const wrapper_value_t& value);
-        void upper_bound(session_id_t& session, const wrapper_value_t& value);
+        void find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare);
 
     private:
         log_t log_;

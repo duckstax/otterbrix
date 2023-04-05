@@ -1,4 +1,5 @@
 #include "operator_sort.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 

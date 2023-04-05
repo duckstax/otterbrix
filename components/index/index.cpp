@@ -7,7 +7,7 @@ namespace components::index {
         , type_(type)
         , name_(std::move(name))
         , keys_(keys) {
-              assert(resource!= nullptr);
+        assert(resource != nullptr);
     }
 
     index_t::range index_t::find(const value_t& value) const {
@@ -34,7 +34,7 @@ namespace components::index {
         return insert_impl(key, std::move(value));
     }
 
-    auto index_t::insert(value_t key, const document::document_id_t &id) -> void {
+    auto index_t::insert(value_t key, const document::document_id_t& id) -> void {
         return insert_impl(key, {id, nullptr});
     }
 
@@ -59,7 +59,7 @@ namespace components::index {
         return type_;
     }
 
-    const std::string &index_t::name() const noexcept {
+    const std::string& index_t::name() const noexcept {
         return name_;
     }
 
@@ -103,10 +103,10 @@ namespace components::index {
         delete impl_;
     }
 
-    index_t::iterator_t::iterator_t(const iterator_t &other)
+    index_t::iterator_t::iterator_t(const iterator_t& other)
         : impl_(other.impl_->copy()) {}
 
-    index_t::iterator_t &index_t::iterator_t::operator=(const iterator_t &other) {
+    index_t::iterator_t& index_t::iterator_t::operator=(const iterator_t& other) {
         delete impl_;
         impl_ = other.impl_->copy();
         return *this;

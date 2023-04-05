@@ -15,6 +15,9 @@ namespace services::disk {
         , log_(log.clone())
         , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type)) {
         trace(log_, "index_agent_disk::create {}", index_name);
+        add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
+        add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
+        add_handler(handler_id(index::route::find), &index_agent_disk_t::find);
     }
 
     index_agent_disk_t::~index_agent_disk_t() {
@@ -39,22 +42,37 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
-    void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value) {
+    void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare) {
+        using components::expressions::compare_type;
+
         trace(log_, "index_agent_disk_t::find");
-        auto result = index_disk_->find(value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_find), session, result);
-    }
-
-    void index_agent_disk_t::lower_bound(session_id_t& session, const wrapper_value_t& value) {
-        trace(log_, "index_agent_disk_t::lower_bound");
-        auto result = index_disk_->lower_bound(value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_find), session, result);
-    }
-
-    void index_agent_disk_t::upper_bound(session_id_t& session, const wrapper_value_t& value) {
-        trace(log_, "index_agent_disk_t::upper_bound");
-        auto result = index_disk_->upper_bound(value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_find), session, result);
+        index_disk_t::result res;
+        switch (compare) {
+            case compare_type::eq:
+                index_disk_->find(value, res);
+                break;
+            case compare_type::ne:
+                index_disk_->lower_bound(value, res);
+                index_disk_->upper_bound(value, res);
+                break;
+            case compare_type::gt:
+                index_disk_->upper_bound(value, res);
+                break;
+            case compare_type::lt:
+                index_disk_->lower_bound(value, res);
+                break;
+            case compare_type::gte:
+                index_disk_->find(value, res);
+                index_disk_->upper_bound(value, res);
+                break;
+            case compare_type::lte:
+                index_disk_->lower_bound(value, res);
+                index_disk_->find(value, res);
+                break;
+            default:
+                break;
+        }
+        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_find), session, res);
     }
 
 } //namespace services::disk

@@ -1,4 +1,5 @@
 #include "operator_group.hpp"
+#include <services/collection/collection.hpp>
 #include <services/collection/operators/operator_empty.hpp>
 
 namespace services::collection::operators {

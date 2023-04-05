@@ -11,8 +11,6 @@ namespace services::index {
         insert,
         remove,
         find,
-        lower_bound,
-        upper_bound,
 
         success,
         success_create,
