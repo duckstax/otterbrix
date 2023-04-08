@@ -43,6 +43,10 @@ namespace components::index {
         return insert_impl(key, {id, std::move(doc)});
     }
 
+    auto index_t::insert(document::document_ptr doc) -> void {
+        insert_impl(std::move(doc));
+    }
+
     auto index_t::remove(value_t key) -> void {
         remove_impl(key);
     }
@@ -73,6 +77,10 @@ namespace components::index {
 
     void index_t::set_disk_agent(actor_zeta::address_t address) noexcept {
         disk_agent_ = std::move(address);
+    }
+
+    void index_t::clean_memory_to_new_elements(std::size_t count) noexcept {
+        clean_memory_to_new_elements_impl(count);
     }
 
     index_t::iterator_t::reference index_t::iterator_t::operator*() const {

@@ -119,6 +119,7 @@ namespace services::collection {
 
     void collection_t::index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result) {
         debug(log(), "collection::index_find_result: {}", result.size());
+        components::index::sync_index_from_disk(context_->index_engine(), current_message()->sender(), result, context_->storage());
         auto &suspend_plan = sessions::find(sessions_, session).get<sessions::suspend_plan_t>();
         auto res = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
         suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);

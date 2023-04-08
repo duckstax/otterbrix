@@ -58,9 +58,11 @@ namespace services::collection::operators {
     void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());
         auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
-        if (index->is_disk()) {
+        if (index && index->is_disk()) {
             trace(context_->log(), "index_scan: send query into disk");
             auto value = components::ql::get_parameter(&pipeline_context->parameters, expr_->value());
+            debug(context_->log(), "INDEX_SCAN: {}", value->as_int());
+            debug(context_->log(), "INDEX_SCAN: {}", expr_->value());
             pipeline_context->send(index->disk_agent(), index::handler_id(index::route::find), pipeline_context->session, value, expr_->type());
             async_wait();
         } else {

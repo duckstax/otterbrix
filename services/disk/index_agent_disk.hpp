@@ -30,7 +30,7 @@ namespace services::disk {
 
         void insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
         void remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
-        void find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare);
+        void find(session_id_t& session, wrapper_value_t value, components::expressions::compare_type compare);
 
     private:
         log_t log_;

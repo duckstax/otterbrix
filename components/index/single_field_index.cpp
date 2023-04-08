@@ -36,6 +36,12 @@ namespace components::index {
         storage_.insert({key, std::move(value)});
     }
 
+    auto single_field_index_t::insert_impl(document::document_ptr doc) -> void {
+        auto view = document::document_view_t{doc};
+        auto id = document::get_document_id(doc);
+        insert_impl(index::value_t{view.get_value(keys().first->as_string())}, {id, std::move(doc)});
+    }
+
     auto single_field_index_t::remove_impl(components::index::value_t key) -> void {
         storage_.erase(storage_.find(key));
     }
@@ -61,6 +67,10 @@ namespace components::index {
 
     index_t::iterator single_field_index_t::cend_impl() const {
         return index_t::iterator(new impl_t(storage_.cend()));
+    }
+
+    void single_field_index_t::clean_memory_to_new_elements_impl(std::size_t) {
+        storage_.clear(); //todo: cache
     }
 
 } // namespace components::index

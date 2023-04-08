@@ -32,13 +32,16 @@ namespace components::index {
             const_iterator iterator_;
         };
 
-        auto insert_impl(value_t key, index_value_t value) -> void override;
+        auto insert_impl(value_t key, index_value_t value) -> void final;
+        auto insert_impl(document::document_ptr doc) -> void final;
         auto remove_impl(value_t key) -> void final;
-        range find_impl(const value_t& value) const override;
-        range lower_bound_impl(const value_t& value) const override;
-        range upper_bound_impl(const value_t& value) const override;
-        iterator cbegin_impl() const override;
-        iterator cend_impl() const override;
+        range find_impl(const value_t& value) const final;
+        range lower_bound_impl(const value_t& value) const final;
+        range upper_bound_impl(const value_t& value) const final;
+        iterator cbegin_impl() const final;
+        iterator cend_impl() const final;
+
+        void clean_memory_to_new_elements_impl(std::size_t count) final;
 
     private:
         storage_t storage_;

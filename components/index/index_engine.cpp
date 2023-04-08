@@ -78,6 +78,10 @@ namespace components::index {
         return ptr->matching(query);
     }
 
+    auto search_index(const index_engine_ptr& ptr, const actor_zeta::address_t& address) -> index_t::pointer {
+        return ptr->matching(address);
+    }
+
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr {
         auto size = sizeof(index_engine_t);
         auto align = alignof(index_engine_t);
@@ -111,6 +115,7 @@ namespace components::index {
         : resource_(resource)
         , mapper_(resource)
         , index_to_mapper_(resource)
+        , index_to_address_(resource)
         , storage_(resource) {
     }
 
@@ -121,6 +126,10 @@ namespace components::index {
         auto new_id = index_to_mapper_.size();
         index_to_mapper_.emplace(new_id, d);
         return uint32_t(new_id);
+    }
+
+    auto index_engine_t::add_disk_agent(id_index id, actor_zeta::address_t address) -> void {
+        index_to_address_.emplace(address, index_to_mapper_.find(id)->second);
     }
 
     actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {
@@ -138,6 +147,14 @@ namespace components::index {
     auto index_engine_t::matching(const keys_base_storage_t& query) -> index_t::pointer {
         auto it = mapper_.find(query);
         if (it != mapper_.end()) {
+            return it->second->get();
+        }
+        return nullptr;
+    }
+
+    auto index_engine_t::matching(const actor_zeta::address_t& address) -> index_t::pointer {
+        auto it = index_to_address_.find(address);
+        if (it != index_to_address_.end()) {
             return it->second->get();
         }
         return nullptr;
@@ -169,10 +186,24 @@ namespace components::index {
         }
     }
 
-    void set_disk_agent(const index_engine_ptr& ptr, id_index id, actor_zeta::address_t address) {
+    void set_disk_agent(const index_engine_ptr& ptr, id_index id, const actor_zeta::address_t& address) {
         auto* index = search_index(ptr, id);
         if (index) {
-            index->set_disk_agent(std::move(address));
+            index->set_disk_agent(address);
+            ptr->add_disk_agent(id, address);
+        }
+    }
+
+    void sync_index_from_disk(const index_engine_ptr& ptr,
+                              const actor_zeta::address_t& index_address,
+                              const std::pmr::vector<document::document_id_t>& ids,
+                              const core::pmr::btree::btree_t<document::document_id_t, document_ptr> &storage) {
+        auto* index = search_index(ptr, index_address);
+        if (index) {
+            index->clean_memory_to_new_elements(ids.size());
+            for (const auto &id : ids) {
+                index->insert(storage.find(id)->second);
+            }
         }
     }
 

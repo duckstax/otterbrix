@@ -62,6 +62,7 @@ namespace components::index {
         void insert(value_t, index_value_t);
         void insert(value_t, const document::document_id_t&);
         void insert(value_t, document::document_ptr);
+        void insert(document::document_ptr);
         void remove(value_t);
         range find(const value_t& value) const;
         range lower_bound(const value_t& value) const;
@@ -77,16 +78,21 @@ namespace components::index {
         const actor_zeta::address_t& disk_agent() const noexcept;
         void set_disk_agent(actor_zeta::address_t address) noexcept;
 
+        void clean_memory_to_new_elements(std::size_t count) noexcept;
+
     protected:
         index_t(std::pmr::memory_resource* resource, index_type type, std::string name, const keys_base_storage_t& keys);
 
         virtual void insert_impl(value_t value_key, index_value_t) = 0;
+        virtual void insert_impl(document::document_ptr) = 0;
         virtual void remove_impl(value_t value_key) = 0;
         virtual range find_impl(const value_t& value) const = 0;
         virtual range lower_bound_impl(const value_t& value) const = 0;
         virtual range upper_bound_impl(const value_t& value) const = 0;
         virtual iterator cbegin_impl() const  = 0;
         virtual iterator cend_impl() const  = 0;
+
+        virtual void clean_memory_to_new_elements_impl(std::size_t count) = 0;
 
     private:
         std::pmr::memory_resource* resource_;

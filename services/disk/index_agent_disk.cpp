@@ -42,10 +42,12 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
-    void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare) {
+    void index_agent_disk_t::find(session_id_t& session, wrapper_value_t value, components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 
         trace(log_, "index_agent_disk_t::find");
+        debug(log_, "FIND: {}", compare);
+        debug(log_, "FIND: {}", value->as_int());
         index_disk_t::result res;
         switch (compare) {
             case compare_type::eq:
