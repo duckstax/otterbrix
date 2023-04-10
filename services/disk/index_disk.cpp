@@ -87,47 +87,47 @@ namespace services::disk {
     ADD_TYPE_SLICE(double, as_double)
     ADD_TYPE_SLICE(bool, as_bool)
 
-    std::unique_ptr<base_comparator> make_comparator(index_disk_t::compare compare_type) {
+    std::unique_ptr<base_comparator> make_comparator(components::ql::index_compare compare_type) {
         switch (compare_type) {
-            case index_disk_t::compare::str:
+            case components::ql::index_compare::str:
                 return std::make_unique<comparator<std::string>>();
-            case index_disk_t::compare::int8:
+            case components::ql::index_compare::int8:
                 return std::make_unique<comparator<int8_t>>();
-            case index_disk_t::compare::int16:
+            case components::ql::index_compare::int16:
                 return std::make_unique<comparator<int16_t>>();
-            case index_disk_t::compare::int32:
+            case components::ql::index_compare::int32:
                 return std::make_unique<comparator<int32_t>>();
-            case index_disk_t::compare::int64:
+            case components::ql::index_compare::int64:
                 return std::make_unique<comparator<int64_t>>();
-            case index_disk_t::compare::uint8:
+            case components::ql::index_compare::uint8:
                 return std::make_unique<comparator<uint8_t>>();
-            case index_disk_t::compare::uint16:
+            case components::ql::index_compare::uint16:
                 return std::make_unique<comparator<uint16_t>>();
-            case index_disk_t::compare::uint32:
+            case components::ql::index_compare::uint32:
                 return std::make_unique<comparator<uint32_t>>();
-            case index_disk_t::compare::uint64:
+            case components::ql::index_compare::uint64:
                 return std::make_unique<comparator<uint64_t>>();
-            case index_disk_t::compare::float32:
+            case components::ql::index_compare::float32:
                 return std::make_unique<comparator<float>>();
-            case index_disk_t::compare::float64:
+            case components::ql::index_compare::float64:
                 return std::make_unique<comparator<double>>();
-            case index_disk_t::compare::bool8:
+            case components::ql::index_compare::bool8:
                 return std::make_unique<comparator<bool>>();
         }
         return std::make_unique<comparator<std::string>>();
     }
 
-    rocksdb::Slice to_slice(const std::vector<components::document::document_id_t>& values) {
+    rocksdb::Slice to_slice(const index_disk_t::result& values) {
         return rocksdb::Slice{reinterpret_cast<const char*>(values.data()), values.size() * components::document::document_id_t::size};
     }
 
-    void from_slice(const rocksdb::Slice &slice, std::vector<components::document::document_id_t> &docs) {
+    void from_slice(const rocksdb::Slice &slice, index_disk_t::result &docs) {
         auto size = docs.size();
         docs.resize(size + slice.size() / components::document::document_id_t::size);
         std::memcpy(docs.data() + size, slice.data(), slice.size());
     }
 
-    index_disk_t::index_disk_t(const path_t& path, compare compare_type)
+    index_disk_t::index_disk_t(const path_t& path, components::ql::index_compare compare_type)
         : db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
         rocksdb::Options options;

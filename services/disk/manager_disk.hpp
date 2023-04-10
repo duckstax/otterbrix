@@ -55,7 +55,7 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
-        void create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, index_disk_t::compare compare_type);
+        void create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, components::ql::index_compare compare_type);
         void drop_index_agent(session_id_t& session, const index_name_t &index_name);
         void drop_index_agent_success(session_id_t& session);
 
@@ -76,7 +76,7 @@ namespace services::disk {
         manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
-        void create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, index_disk_t::compare);
+        void create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, components::ql::index_compare);
 
         template<class ...Args>
         auto nothing(Args&&...) -> void {}

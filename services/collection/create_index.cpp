@@ -39,36 +39,6 @@ namespace services::collection {
         return result;
     }
 
-    services::disk::index_disk_t::compare get_compare_type(const components::ql::keys_base_storage_t &keys,
-                                                           const std::unique_ptr<context_collection_t> &context) {
-        using compare = services::disk::index_disk_t::compare;
-        if (context->storage().empty()) {
-            return compare::str;
-        }
-        if (keys.empty()) {
-            return compare::str;
-        }
-        if (keys.size() > 1) { //todo: other kind indexes
-            return compare::str;
-        }
-        auto doc = document_view_t{context->storage().begin()->second};
-        auto key = keys.front().as_string();
-        //todo: other value types
-        if (doc.is_bool(key)) {
-            return compare::bool8;
-        }
-        if (doc.is_ulong(key)) {
-            return compare::uint64;
-        }
-        if (doc.is_long(key)) {
-            return compare::int64;
-        }
-        if (doc.is_double(key)) {
-            return compare::float64;
-        }
-        return compare::str;
-    }
-
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
         debug(log(), "collection::create_index : {} {} {}", name_, name_index_type(index.index_type_), keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
@@ -79,7 +49,7 @@ namespace services::collection {
                 case index_type::single: {
                     auto id_index = make_index<single_field_index_t>(context_->index_engine(), index.name(), index.keys_);
                     sessions::make_session(sessions_, session, sessions::create_index_t{current_message()->sender(), id_index});
-                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::create), session, name_, index.name(), get_compare_type(index.keys_, context_));
+                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::create), session, name_, index.name(), index.index_compare_);
                     break;
                 }
 

@@ -26,7 +26,7 @@ TEST_CASE("integration::test_index") {
         }
         {
             auto session = duck_charmer::session_id_t();
-            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single};
+            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, components::ql::index_compare::int64};
             ql.keys_.emplace_back("count");
             dispatcher->create_index(session, ql);
         }

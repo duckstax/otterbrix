@@ -19,15 +19,32 @@ namespace components::ql {
         no_valid = 255
     };
 
+    enum class index_compare {
+        str,
+        int8,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
+        bool8
+    };
+
     struct create_index_t final : ql_statement_t {
-        create_index_t(const database_name_t& database, const collection_name_t& collection, index_type type)
+        create_index_t(const database_name_t& database, const collection_name_t& collection, index_type type, index_compare index_compare)
             : ql_statement_t(statement_type::create_index, database, collection)
-            , index_type_(type) {
+            , index_type_(type)
+            , index_compare_(index_compare) {
         }
 
         create_index_t()
             : ql_statement_t(statement_type::create_index, {}, {})
-            , index_type_(index_type::no_valid) {
+            , index_type_(index_type::no_valid)
+            , index_compare_(index_compare::str) {
         }
 
         std::string name() const {
@@ -44,6 +61,7 @@ namespace components::ql {
 
         keys_base_storage_t keys_;
         index_type index_type_;
+        index_compare index_compare_;
     };
 } // namespace components::ql
 

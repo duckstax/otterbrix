@@ -111,7 +111,7 @@ namespace services::disk {
         actor_zeta::send(agent(), address(), handler_id(route::fix_wal_id), wal_id);
     }
 
-    void manager_disk_t::create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, index_disk_t::compare compare_type) {
+    void manager_disk_t::create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, components::ql::index_compare compare_type) {
         if (index_agents_.contains(index_name)) {
             error(log_, "manager_disk: index {} already exists", index_name);
             actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
@@ -121,7 +121,7 @@ namespace services::disk {
                 [&](index_agent_disk_t* ptr) {
                     index_agents_.insert_or_assign(index_name, index_agent_disk_ptr(ptr));
                 },
-                config_.path, collection_name, index_name, compare_type, log_);
+                resource(), config_.path, collection_name, index_name, compare_type, log_);
             actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_create), session, address_agent);
         }
     }
@@ -177,7 +177,7 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, result);
     }
 
-    void manager_disk_empty_t::create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, index_disk_t::compare) {
+    void manager_disk_empty_t::create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, components::ql::index_compare) {
         actor_zeta::send(current_message()->sender(), address(), handler_id(index::route::success_create), session, actor_zeta::address_t::empty_address());
     }
 

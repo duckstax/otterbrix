@@ -23,16 +23,18 @@ namespace services::disk {
         using wrapper_value_t = document::wrapper_value_t;
 
     public:
-        index_agent_disk_t(base_manager_disk_t*, const path_t&, const collection_name_t&, const index_name_t&, index_disk_t::compare compare_type, log_t&);
+        index_agent_disk_t(base_manager_disk_t*, actor_zeta::detail::pmr::memory_resource* resource,
+                           const path_t&, const collection_name_t&, const index_name_t&, components::ql::index_compare compare_type, log_t&);
         ~index_agent_disk_t() final;
 
         void drop(session_id_t& session);
 
         void insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
         void remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
-        void find(session_id_t& session, wrapper_value_t value, components::expressions::compare_type compare);
+        void find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare);
 
     private:
+        actor_zeta::detail::pmr::memory_resource* resource_;
         log_t log_;
         std::unique_ptr<index_disk_t> index_disk_;
     };

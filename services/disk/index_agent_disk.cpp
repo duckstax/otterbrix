@@ -6,12 +6,14 @@
 namespace services::disk {
 
     index_agent_disk_t::index_agent_disk_t(base_manager_disk_t* manager,
+                                           actor_zeta::detail::pmr::memory_resource* resource,
                                            const path_t& path_db,
                                            const collection_name_t& collection_name,
                                            const index_name_t& index_name,
-                                           index_disk_t::compare compare_type,
+                                           components::ql::index_compare compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
+        , resource_(resource)
         , log_(log.clone())
         , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type)) {
         trace(log_, "index_agent_disk::create {}", index_name);
@@ -42,13 +44,11 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
-    void index_agent_disk_t::find(session_id_t& session, wrapper_value_t value, components::expressions::compare_type compare) {
+    void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 
         trace(log_, "index_agent_disk_t::find");
-        debug(log_, "FIND: {}", compare);
-        debug(log_, "FIND: {}", value->as_int());
-        index_disk_t::result res;
+        index_disk_t::result res{resource_};
         switch (compare) {
             case compare_type::eq:
                 index_disk_->find(value, res);

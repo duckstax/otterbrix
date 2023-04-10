@@ -58,7 +58,7 @@ template <bool on_wal, bool on_disk>
 void create_index(const collection_name_t& collection_name) {
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
     auto session = duck_charmer::session_id_t();
-    create_index_t ql{database_name, collection_name, index_type::single};
+    create_index_t ql{database_name, collection_name, index_type::single, index_compare::int64};
     ql.keys_.emplace_back("count");
     dispatcher->create_index(session, ql);
 }

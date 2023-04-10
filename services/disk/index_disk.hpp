@@ -1,9 +1,11 @@
 #pragma once
 
+#include <filesystem>
+#include <memory_resource>
 #include <components/document/document_id.hpp>
 #include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
-#include <filesystem>
+#include <components/ql/index.hpp>
 
 namespace rocksdb {
     class DB;
@@ -19,23 +21,9 @@ namespace services::disk {
         using path_t = std::filesystem::path;
 
     public:
-        enum class compare {
-            str,
-            int8,
-            int16,
-            int32,
-            int64,
-            uint8,
-            uint16,
-            uint32,
-            uint64,
-            float32,
-            float64,
-            bool8
-        };
-        using result = std::vector<document_id_t>;
+        using result = std::pmr::vector<document_id_t>;
 
-        index_disk_t(const path_t& path, compare compare_type);
+        index_disk_t(const path_t& path, components::ql::index_compare compare_type);
         ~index_disk_t();
 
         void insert(const wrapper_value_t& key, const document_id_t& value);
