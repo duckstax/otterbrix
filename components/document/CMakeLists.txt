@@ -19,7 +19,6 @@ set(${PROJECT_NAME}_SOURCES
 
         document.cpp
         document_view.cpp
-        range.cpp
         structure.cpp
         wrapper_value.cpp
 )
