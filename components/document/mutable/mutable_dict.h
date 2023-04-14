@@ -27,9 +27,6 @@ namespace document::impl {
 
         void remove(const std::string& key);
         void remove_all();
-
-        mutable_array_t* get_mutable_array(const std::string& key);
-        mutable_dict_t* get_mutable_dict(const std::string& key);
     };
 
 } // namespace document::impl

@@ -64,10 +64,6 @@ namespace document::impl::internal {
         }
     }
 
-    mutable_array_t *heap_array_t::as_mutable_array(heap_array_t *a) {
-        return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value(a)));
-    }
-
     mutable_array_t *heap_array_t::as_mutable_array() const {
         return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value()));
     }
@@ -240,10 +236,6 @@ namespace document::impl {
 
     mutable_array_t *mutable_array_t::get_mutable_array(uint32_t i) {
         return heap_array()->get_mutable_array(i);
-    }
-
-    mutable_dict_t *mutable_array_t::get_mutable_dict(uint32_t i) {
-        return heap_array()->get_mutable_dict(i);
     }
 
 }

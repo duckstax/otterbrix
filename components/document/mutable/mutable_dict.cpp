@@ -104,10 +104,6 @@ namespace document::impl::internal {
         }
     }
 
-    mutable_dict_t *heap_dict_t::as_mutable_dict(heap_dict_t *a) {
-        return static_cast<mutable_dict_t*>(const_cast<value_t*>(as_value(a)));
-    }
-
     mutable_dict_t *heap_dict_t::as_mutable_dict() const {
         return static_cast<mutable_dict_t*>(const_cast<value_t*>(as_value()));
     }
@@ -349,14 +345,6 @@ namespace document::impl {
 
     void mutable_dict_t::remove_all() {
         heap_dict()->remove_all();
-    }
-
-    mutable_array_t *mutable_dict_t::get_mutable_array(const std::string& key) {
-        return heap_dict()->get_mutable_array(key);
-    }
-
-    mutable_dict_t *mutable_dict_t::get_mutable_dict(const std::string& key) {
-        return heap_dict()->get_mutable_dict(key);
     }
 
 }

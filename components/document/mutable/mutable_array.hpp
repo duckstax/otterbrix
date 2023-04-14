@@ -35,7 +35,6 @@ namespace document::impl::internal {
         heap_array_t(uint32_t initial_count);
         heap_array_t(const array_t *array);
 
-        static mutable_array_t* as_mutable_array(heap_array_t *a);
         mutable_array_t* as_mutable_array() const;
 
         uint32_t count() const;

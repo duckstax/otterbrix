@@ -31,7 +31,6 @@ namespace document::impl {
         void remove(uint32_t where, uint32_t n);
 
         mutable_array_t* get_mutable_array(uint32_t i);
-        mutable_dict_t* get_mutable_dict(uint32_t i);
     };
 
 }

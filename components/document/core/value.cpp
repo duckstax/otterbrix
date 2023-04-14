@@ -296,44 +296,7 @@ namespace document::impl {
     }
 
     bool value_t::is_lte(const document::impl::value_t* rhs) const {
-        if (tag() < rhs->tag())
-            return true;
-        if (tag() > rhs->tag())
-            return false;
-
-        if (!rhs || _byte[0] != rhs->_byte[0])
-            return false;
-        if (_usually_false(this == rhs))
-            return true;
-        switch (tag()) {
-            case tag_short:
-            case tag_int:
-                return as_int() <= rhs->as_int();
-            case tag_float:
-                if (is_double())
-                    return as_double() <= rhs->as_double();
-                else
-                    return as_float() <= rhs->as_float();
-            case tag_special:
-                return _byte[1] <= rhs->_byte[1];
-            case tag_string:
-            case tag_binary:
-                return get_string_bytes() <= rhs->get_string_bytes();
-            case tag_array: {
-                array_t::iterator i(reinterpret_cast<const array_t*>(this));
-                array_t::iterator j(reinterpret_cast<const array_t*>(rhs));
-                if (i.count() != j.count())
-                    return false;
-                for (; i; ++i, ++j)
-                    if (!i.value()->is_lte(j.value()))
-                        return false;
-                return true;
-            }
-            case tag_dict:
-                return (reinterpret_cast<const dict_t*>(this))->is_lte(reinterpret_cast<const dict_t*>(rhs));
-            default:
-                return false;
-        }
+        return !rhs->is_lt(this);
     }
 
 

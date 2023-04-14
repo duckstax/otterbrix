@@ -47,21 +47,20 @@ namespace document::impl {
         uint64_t as_unsigned() const noexcept PURE;
         float as_float() const noexcept PURE;
         double as_double() const noexcept PURE;
-        bool is_int() const noexcept PURE;
-        bool is_unsigned() const noexcept PURE;
-        bool is_double() const noexcept PURE;
-        bool is_undefined() const noexcept PURE;
-        bool is_pointer() const noexcept PURE;
         const internal::pointer_t* as_pointer() const PURE;
         std::string_view as_string() const noexcept PURE;
         std::string_view as_data() const noexcept PURE;
-
         const array_t* as_array() const noexcept PURE;
         const dict_t* as_dict() const noexcept PURE;
 
         static const array_t* as_array(const value_t* v) PURE;
         static const dict_t* as_dict(const value_t* v) PURE;
 
+        bool is_int() const noexcept PURE;
+        bool is_unsigned() const noexcept PURE;
+        bool is_double() const noexcept PURE;
+        bool is_undefined() const noexcept PURE;
+        bool is_pointer() const noexcept PURE;
         bool is_mutable() const PURE;
 
         shared_keys_t* shared_keys() const noexcept PURE;
@@ -120,17 +119,6 @@ namespace document::impl {
         assert("value_t: not valid type for as");
         return TValue();
     }
-
-    template<>
-    bool value_t::as<bool>() const;
-    template<>
-    uint64_t value_t::as<uint64_t>() const;
-    template<>
-    int64_t value_t::as<int64_t>() const;
-    template<>
-    double value_t::as<double>() const;
-    template<>
-    std::string value_t::as<std::string>() const;
 
     std::string to_string(const value_t* value);
 

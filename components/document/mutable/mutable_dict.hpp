@@ -47,7 +47,6 @@ namespace document::impl::internal {
 
         heap_dict_t(const dict_t *dict = nullptr);
 
-        static mutable_dict_t* as_mutable_dict(heap_dict_t *a);
         mutable_dict_t* as_mutable_dict() const;
 
         const dict_t* source() const;
