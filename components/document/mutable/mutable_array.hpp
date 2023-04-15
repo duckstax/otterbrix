@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <components/document/core/array.hpp>
+#include <components/document/internal/heap.hpp>
 #include <components/document/mutable/value_slot.hpp>
 #include <components/document/support/better_assert.hpp>
 

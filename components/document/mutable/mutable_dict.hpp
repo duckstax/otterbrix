@@ -1,10 +1,11 @@
 #pragma once
 
-#include <components/document/mutable/value_slot.hpp>
-#include <components/document/core/dict.hpp>
-#include <components/document/core/shared_keys.hpp>
 #include <deque>
 #include <map>
+#include <components/document/core/dict.hpp>
+#include <components/document/core/shared_keys.hpp>
+#include <components/document/internal/heap.hpp>
+#include <components/document/mutable/value_slot.hpp>
 
 namespace document::impl {
     class shared_keys_t;

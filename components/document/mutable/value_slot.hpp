@@ -3,7 +3,7 @@
 #include <climits>
 
 #include <components/document/core/internal.hpp>
-#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/core/value.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/utils.hpp>
 #include <components/document/support/varint.hpp>

@@ -6,8 +6,10 @@
 #include <components/document/core/internal.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/exception.hpp>
+#include <components/document/support/ref_counted.hpp>
 
 namespace document::impl {
+
     class array_t;
     class dict_t;
     class shared_keys_t;
@@ -121,5 +123,16 @@ namespace document::impl {
     }
 
     std::string to_string(const value_t* value);
+
+    retained_const_t<value_t> new_value(nullptr_t data);
+    retained_const_t<value_t> new_value(bool data);
+    retained_const_t<value_t> new_value(int data);
+    retained_const_t<value_t> new_value(unsigned data);
+    retained_const_t<value_t> new_value(int64_t data);
+    retained_const_t<value_t> new_value(uint64_t data);
+    retained_const_t<value_t> new_value(float data);
+    retained_const_t<value_t> new_value(double data);
+    retained_const_t<value_t> new_value(std::string_view data);
+    retained_const_t<value_t> new_value(const value_t* data);
 
 } // namespace document::impl

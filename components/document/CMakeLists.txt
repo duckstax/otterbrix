@@ -6,10 +6,10 @@ set(${PROJECT_NAME}_SOURCES
         core/pointer.cpp
         core/shared_keys.cpp
         core/value.cpp
+        internal/heap.cpp
         msgpack/msgpack_encoder.cpp
         mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
-        mutable/mutable_value.cpp
         mutable/value_slot.cpp
         support/better_assert.cpp
         support/exception.cpp

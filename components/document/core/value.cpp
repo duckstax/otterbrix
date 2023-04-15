@@ -6,7 +6,7 @@
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/internal.hpp>
-#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/internal/heap.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/num_conversion.hpp>
@@ -455,6 +455,50 @@ namespace document::impl {
             }
         }
         return {};
+    }
+
+    retained_const_t<value_t> new_value(nullptr_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(bool data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(int data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(unsigned data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(int64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(uint64_t data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(float data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(double data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(const std::string& data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(std::string_view data) {
+        return internal::heap_value_t::create(data)->as_value();
+    }
+
+    retained_const_t<value_t> new_value(const value_t* data) {
+        return internal::heap_value_t::create(data)->as_value();
     }
 
 } // namespace document::impl

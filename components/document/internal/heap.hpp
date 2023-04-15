@@ -3,8 +3,6 @@
 #include <components/document/core/value.hpp>
 #include <components/document/support/ref_counted.hpp>
 
-#include "components/document/support/utils.hpp"
-
 namespace document::impl {
 
     class value_slot_t;
@@ -12,12 +10,10 @@ namespace document::impl {
     namespace internal {
 
         struct offset_value_t {
-            uint8_t _pad = 0xFF;
-            uint8_t _header;
+            uint8_t pad_ = 0xFF;
+            uint8_t header_ = 0;
 
             offset_value_t() = default;
-
-        private:
             offset_value_t(const offset_value_t&) = delete;
             offset_value_t(offset_value_t&&) = delete;
             offset_value_t& operator=(const offset_value_t&) = delete;
@@ -80,19 +76,8 @@ namespace document::impl {
             void set_changed(bool c);
 
         private:
-            bool _changed {false};
+            bool changed_ {false};
         };
 
     }
-
-    retained_const_t<value_t> new_value(nullptr_t data);
-    retained_const_t<value_t> new_value(bool data);
-    retained_const_t<value_t> new_value(int data);
-    retained_const_t<value_t> new_value(unsigned data);
-    retained_const_t<value_t> new_value(int64_t data);
-    retained_const_t<value_t> new_value(uint64_t data);
-    retained_const_t<value_t> new_value(float data);
-    retained_const_t<value_t> new_value(double data);
-    retained_const_t<value_t> new_value(std::string_view data);
-    retained_const_t<value_t> new_value(const value_t* data);
 }
