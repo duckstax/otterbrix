@@ -57,9 +57,6 @@ namespace document::impl::internal {
         void insert(uint32_t where, uint32_t n);
         void remove(uint32_t where, uint32_t n);
 
-        mutable_array_t* get_mutable_array(uint32_t i);
-        mutable_dict_t* get_mutable_dict(uint32_t i);
-
         void disconnect_from_source();
         void copy_children(copy_flags flags);
 

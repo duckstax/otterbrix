@@ -144,14 +144,6 @@ namespace document::impl::internal {
         return result;
     }
 
-    mutable_array_t* heap_array_t::get_mutable_array(uint32_t i)  {
-        return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value(get_mutable(i, internal::tag_array))));
-    }
-
-    mutable_dict_t* heap_array_t::get_mutable_dict(uint32_t i) {
-        return static_cast<mutable_dict_t*>(const_cast<value_t*>(as_value(get_mutable(i, internal::tag_dict))));
-    }
-
     value_slot_t& heap_array_t::setting(uint32_t index) {
 #if DEBUG
         assert_precondition(index < _items.size());
@@ -232,10 +224,6 @@ namespace document::impl {
 
     void mutable_array_t::remove(uint32_t where, uint32_t n) {
         heap_array()->remove(where, n);
-    }
-
-    mutable_array_t *mutable_array_t::get_mutable_array(uint32_t i) {
-        return heap_array()->get_mutable_array(i);
     }
 
 }

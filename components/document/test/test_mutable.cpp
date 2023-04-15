@@ -156,7 +156,6 @@ TEST_CASE("mutable::mutable_array_t") {
         mb->append(ma);
         REQUIRE(mb->is_changed());
         REQUIRE(mb->get(0) == ma);
-        REQUIRE(mb->get_mutable_array(0) == ma);
     }
 
     SECTION("copy") {
