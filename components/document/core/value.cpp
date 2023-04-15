@@ -96,12 +96,12 @@ namespace document::impl {
                 int64_t n = 0;
                 unsigned byteCount = tiny_value();
                 if ((byteCount & 0x8) == 0) {
-                    if (_byte[1 + byteCount] & 0x80)
+                    if (byte_[1 + byteCount] & 0x80)
                         n = -1;
                 } else {
                     byteCount &= 0x7;
                 }
-                ::memcpy(&n, &_byte[1], ++byteCount);
+                ::memcpy(&n, &byte_[1], ++byteCount);
                 return int64_t(endian::little_dec64(uint64_t(n)));
             }
             case tag_float:
@@ -128,20 +128,20 @@ namespace document::impl {
     }
 
     bool value_t::is_unsigned() const noexcept {
-        return tag() == internal::tag_int && (_byte[0] & 0x08) != 0;
+        return tag() == internal::tag_int && (byte_[0] & 0x08) != 0;
     }
 
     bool value_t::is_double() const noexcept {
-        return tag() == internal::tag_float && (_byte[0] & 0x8);
+        return tag() == internal::tag_float && (byte_[0] & 0x8);
     }
 
     bool value_t::is_undefined() const noexcept {
-        return _byte[0] == ((internal::tag_special << 4) |
+        return byte_[0] == ((internal::tag_special << 4) |
                             internal::special_value_undefined);
     }
 
     bool value_t::is_pointer() const noexcept {
-        return (_byte[0] & 0x80) != 0;
+        return (byte_[0] & 0x80) != 0;
     }
 
     const internal::pointer_t* value_t::as_pointer() const {
@@ -155,13 +155,13 @@ namespace document::impl {
     T value_t::as_float_of_type() const noexcept {
         switch (tag()) {
             case tag_float: {
-                if (_byte[0] & 0x8) {
+                if (byte_[0] & 0x8) {
                     endian::little_double d;
-                    memcpy(&d, &_byte[2], sizeof(d));
+                    memcpy(&d, &byte_[2], sizeof(d));
                     return T(d);
                 } else {
                     endian::little_float f;
-                    memcpy(&f, &_byte[2], sizeof(f));
+                    memcpy(&f, &byte_[2], sizeof(f));
                     return T(f);
                 }
             }
@@ -174,10 +174,10 @@ namespace document::impl {
     }
 
     std::string_view value_t::get_string_bytes() const noexcept {
-        std::string_view s(reinterpret_cast<const char*>(&_byte[1]), tiny_value());
+        std::string_view s(reinterpret_cast<const char*>(&byte_[1]), tiny_value());
         if (_usually_false(s.size() == 0x0F)) {
             uint32_t length;
-            std::string_view tmp(reinterpret_cast<const char*>(&_byte[1]), tiny_value());
+            std::string_view tmp(reinterpret_cast<const char*>(&byte_[1]), tiny_value());
             size_t lengthBytes = get_uvar_int32(tmp, &length);
             if (_usually_false(lengthBytes == 0))
                 return {};
@@ -223,7 +223,7 @@ namespace document::impl {
     }
 
     bool value_t::is_equal(const value_t* v) const {
-        if (!v || _byte[0] != v->_byte[0])
+        if (!v || byte_[0] != v->byte_[0])
             return false;
         if (_usually_false(this == v))
             return true;
@@ -237,7 +237,7 @@ namespace document::impl {
                 else
                     return is_equals(as_float(), v->as_float());
             case tag_special:
-                return _byte[1] == v->_byte[1];
+                return byte_[1] == v->byte_[1];
             case tag_string:
             case tag_binary:
                 return get_string_bytes() == v->get_string_bytes();
@@ -274,7 +274,7 @@ namespace document::impl {
                 else
                     return as_float() < rhs->as_float();
             case tag_special:
-                return _byte[1] < rhs->_byte[1];
+                return byte_[1] < rhs->byte_[1];
             case tag_string:
             case tag_binary:
                 return get_string_bytes() < rhs->get_string_bytes();
@@ -299,21 +299,28 @@ namespace document::impl {
         return !rhs->is_lt(this);
     }
 
+    void value_t::retain_() const {
+        heap_value_t::retain(this);
+    }
+
+    void value_t::release_() const {
+        heap_value_t::release(this);
+    }
 
     internal::tags value_t::tag() const noexcept {
-        return internal::tags(_byte[0] >> 4);
+        return internal::tags(byte_[0] >> 4);
     }
 
     unsigned value_t::tiny_value() const noexcept {
-        return _byte[0] & 0x0F;
+        return byte_[0] & 0x0F;
     }
 
     bool value_t::big_float() const noexcept {
-        return _byte[0] & 0x8;
+        return byte_[0] & 0x8;
     }
 
     uint16_t value_t::short_value() const noexcept {
-        return ((uint16_t(_byte[0]) << 8) | _byte[1]) & 0x0FFF;
+        return ((uint16_t(byte_[0]) << 8) | byte_[1]) & 0x0FFF;
     }
 
     size_t value_t::data_size() const noexcept {
@@ -338,15 +345,15 @@ namespace document::impl {
     }
 
     bool value_t::is_wide_array() const noexcept {
-        return (_byte[0] & 0x08) != 0;
+        return (byte_[0] & 0x08) != 0;
     }
 
     uint32_t value_t::count_value() const noexcept {
-        return ((uint32_t(_byte[0]) << 8) | _byte[1]) & 0x07FF;
+        return ((uint32_t(byte_[0]) << 8) | byte_[1]) & 0x07FF;
     }
 
     bool value_t::count_is_zero() const noexcept {
-        return _byte[1] == 0 && (_byte[0] & 0x7) == 0;
+        return byte_[1] == 0 && (byte_[0] & 0x7) == 0;
     }
 
     const value_t* value_t::deref(bool wide) const {
@@ -376,12 +383,9 @@ namespace document::impl {
         return offsetby(this, wide ? internal::size_wide : internal::size_narrow);
     }
 
-    void value_t::_retain() const {
-        heap_value_t::retain(this);
-    }
 
-    void value_t::_release() const {
-        heap_value_t::release(this);
+    void release(const value_t* val) noexcept {
+        heap_value_t::release(val);
     }
 
     template<>
@@ -407,10 +411,6 @@ namespace document::impl {
     template<>
     std::string value_t::as<std::string>() const {
         return static_cast<std::string>(as_string());
-    }
-
-    void release(const value_t* val) noexcept {
-        heap_value_t::release(val);
     }
 
     std::string to_string(const value_t* value) {

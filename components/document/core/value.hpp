@@ -67,8 +67,8 @@ namespace document::impl {
 
         shared_keys_t* shared_keys() const noexcept PURE;
 
-        void _retain() const;
-        void _release() const;
+        void retain_() const;
+        void release_() const;
 
         internal::tags tag() const noexcept PURE;
         unsigned tiny_value() const noexcept PURE;
@@ -78,8 +78,10 @@ namespace document::impl {
         TValue as() const;
 
     protected:
+        uint8_t byte_[internal::size_wide];
+
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
-            : _byte{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
+            : byte_{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
 
         uint16_t short_value() const noexcept PURE;
         template<typename T>
@@ -102,8 +104,6 @@ namespace document::impl {
 
         size_t data_size() const noexcept PURE;
 
-        uint8_t _byte[internal::size_wide];
-
         friend class internal::pointer_t;
         friend class value_slot_t;
         friend class internal::heap_collection_t;
@@ -113,6 +113,7 @@ namespace document::impl {
         template<bool WIDE>
         friend struct dict_impl_t;
     };
+
 
     void release(const value_t* val) noexcept;
 

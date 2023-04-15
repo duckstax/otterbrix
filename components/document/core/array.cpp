@@ -14,7 +14,7 @@ namespace document::impl {
             _width = size_narrow;
             _count = 0;
         } else if (_usually_true(!v->is_mutable())) {
-            _first = reinterpret_cast<const value_t*>(&v->_byte[2]);
+            _first = reinterpret_cast<const value_t*>(&v->byte_[2]);
             _width = v->is_wide_array() ? size_wide : size_narrow;
             _count = v->count_value();
             if (_usually_false(_count == long_array_count)) {

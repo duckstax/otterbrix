@@ -168,11 +168,11 @@ struct dict_impl_t : public array_t::impl
 
     static int compare_keys(int key_to_find, const value_t *key) {
         assert_precondition(key->tag() == tag_short || key->tag() == tag_string || key->tag() >= tag_pointer);
-        uint8_t byte0 = key->_byte[0];
+        uint8_t byte0 = key->byte_[0];
         if (_usually_true(byte0 <= 0x07))
-            return key_to_find - ((byte0 << 8) | key->_byte[1]);
+            return key_to_find - ((byte0 << 8) | key->byte_[1]);
         else if (_usually_false(byte0 <= 0x0F))
-            return key_to_find - static_cast<int16_t>(0xF0 | (byte0 << 8) | key->_byte[1]);
+            return key_to_find - static_cast<int16_t>(0xF0 | (byte0 << 8) | key->byte_[1]);
         else
             return -1;
     }
@@ -363,7 +363,7 @@ const dict_t* dict_t::get_parent() const noexcept {
 }
 
 bool dict_t::is_magic_parent_key(const value_t *v) {
-    return v->_byte[0] == uint8_t((tag_short<<4) | 0x08) && v->_byte[1] == 0;
+    return v->byte_[0] == uint8_t((tag_short<<4) | 0x08) && v->byte_[1] == 0;
 }
 
 bool dict_t::is_equals(const dict_t* dv) const noexcept {

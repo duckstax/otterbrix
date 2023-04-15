@@ -13,15 +13,15 @@
 namespace document {
 
 void release(const ref_counted_t *r) noexcept {
-    if (r) r->_release();
+    if (r) r->release_();
 }
 
 void assign_ref(ref_counted_t* &dst, ref_counted_t *src) noexcept {
     ref_counted_t *old_value = dst;
     if (_usually_true(src != old_value)) {
-        if (src) src->_retain();
+        if (src) src->retain_();
         dst = src;
-        if (old_value) old_value->_release();
+        if (old_value) old_value->release_();
     }
 }
 
@@ -46,7 +46,7 @@ static void fail(const ref_counted_t *obj, const char *what, int ref_count, bool
 
 
 #if !DEBUG
-void ref_counted_t::_release() const noexcept {
+void ref_counted_t::release_() const noexcept {
     if (--_ref_count <= 0)
         delete this;
 }
