@@ -65,14 +65,10 @@ namespace document::impl {
         bool is_pointer() const noexcept PURE;
         bool is_mutable() const PURE;
 
-        shared_keys_t* shared_keys() const noexcept PURE;
-
         void retain_() const;
         void release_() const;
 
         internal::tags tag() const noexcept PURE;
-        unsigned tiny_value() const noexcept PURE;
-        bool big_float() const noexcept PURE;
 
         template<class TValue>
         TValue as() const;
@@ -84,6 +80,11 @@ namespace document::impl {
             : byte_{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
 
         uint16_t short_value() const noexcept PURE;
+        unsigned tiny_value() const noexcept PURE;
+        bool big_float() const noexcept PURE;
+
+        shared_keys_t* shared_keys() const noexcept PURE;
+
         template<typename T>
         T as_float_of_type() const noexcept PURE;
 
@@ -112,6 +113,7 @@ namespace document::impl {
         friend class dict_t;
         template<bool WIDE>
         friend struct dict_impl_t;
+        friend std::string to_string(const value_t* value);
     };
 
 
