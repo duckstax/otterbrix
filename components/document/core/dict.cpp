@@ -53,20 +53,20 @@ void dict_t::key_t::set_shared_keys(shared_keys_t *sk) {
 
 
 template <bool WIDE>
-struct dict_impl_t : public array_t::impl
+struct dict_impl_t : public array_t::iterator
 {
     explicit dict_impl_t(const dict_t *d) noexcept
-        : impl(d)
+        : array_t::iterator(d)
     {}
 
     shared_keys_t* find_shared_keys() const {
-        return nullptr;///doc_t::shared_keys(_first);
+        return nullptr;///doc_t::shared_keys(first_);
     }
 
     bool uses_shared_keys() const {
-        return _count > 0 && _first->tag() == tag_short
-                && !(dict_t::is_magic_parent_key(_first)
-                     && (_count == 1 || offsetby(_first, 2*_width)->tag() != tag_short));
+        return count_ > 0 && first_->tag() == tag_short
+                && !(dict_t::is_magic_parent_key(first_)
+                     && (count_ == 1 || offsetby(first_, 2*width_)->tag() != tag_short));
     }
 
     template <class KEY>
@@ -138,7 +138,7 @@ struct dict_impl_t : public array_t::impl
         if (_usually_true(shared_keys != nullptr)) {
             if (_usually_true(key_to_find._has_numeric_key))
                 return get(key_to_find._numeric_key);
-            if (_usually_false(_count == 0))
+            if (_usually_false(count_ == 0))
                 return nullptr;
             if (lookup_shared_key(key_to_find._raw_str, shared_keys, key_to_find._numeric_key)) {
                 key_to_find._has_numeric_key = true;
@@ -152,7 +152,7 @@ struct dict_impl_t : public array_t::impl
     }
 
     bool has_parent() const {
-        return _usually_true(_count > 0) && _usually_false(dict_t::is_magic_parent_key(_first));
+        return _usually_true(count_ > 0) && _usually_false(dict_t::is_magic_parent_key(first_));
     }
 
     const dict_t* get_parent() const {
@@ -187,8 +187,8 @@ struct dict_impl_t : public array_t::impl
 private:
     template <class T, class CMP>
     inline const value_t* search(T target, CMP comparator) const {
-        const value_t *begin = _first;
-        size_t n = _count;
+        const value_t *begin = first_;
+        size_t n = count_;
         while (n > 0) {
             size_t mid = n >> 1;
             const value_t *mid_value = offsetby(begin, static_cast<ptrdiff_t>(mid * 2 * width));
@@ -206,8 +206,8 @@ private:
     }
 
     const value_t* find_key_by_hint(dict_t::key_t &key_to_find) const {
-        if (key_to_find._hint < _count) {
-            const value_t *key  = offsetby(_first, key_to_find._hint * 2 * width);
+        if (key_to_find._hint < count_) {
+            const value_t *key  = offsetby(first_, key_to_find._hint * 2 * width);
             if (compare_keys(key_to_find._raw_str, key) == 0)
                 return key;
         }
@@ -227,9 +227,9 @@ private:
     bool lookup_shared_key(const std::string& key_to_find, shared_keys_t *shared_keys, int &encoded) const noexcept {
         if (shared_keys->encode(key_to_find, encoded))
             return true;
-        if (_count == 0)
+        if (count_ == 0)
             return false;
-        const value_t *v = offsetby(_first, (_count-1)*2*width);
+        const value_t *v = offsetby(first_, (count_-1)*2*width);
         do {
             if (v->is_int()) {
                 if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
@@ -238,7 +238,7 @@ private:
                 }
                 return false;
             }
-        } while (--v >= _first);
+        } while (--v >= first_);
         return false;
     }
 
@@ -246,9 +246,9 @@ private:
     bool lookup_shared_key(std::string_view key_to_find, shared_keys_t *shared_keys, int &encoded) const noexcept {
         if (shared_keys->encode(key_to_find, encoded))
             return true;
-        if (_count == 0)
+        if (count_ == 0)
             return false;
-        const value_t *v = offsetby(_first, (_count-1)*2*width);
+        const value_t *v = offsetby(first_, (count_-1)*2*width);
         do {
             if (v->is_int()) {
                 if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
@@ -257,7 +257,7 @@ private:
                 }
                 return false;
             }
-        } while (--v >= _first);
+        } while (--v >= first_);
         return false;
     }
 
@@ -292,14 +292,14 @@ constexpr dict_t::dict_t()
 uint32_t dict_t::count() const noexcept {
     if (_usually_false(is_mutable()))
         return heap_dict()->count();
-    array_t::impl imp(this);
-    if (_usually_false(imp._count >= 1 && is_magic_parent_key(imp._first))) {
+    array_t::iterator imp(this);
+    if (_usually_false(imp.count() >= 1 && is_magic_parent_key(imp.first_value()))) {
         uint32_t c = 0;
         for (iterator i(this); i; ++i)
             ++c;
         return c;
     } else {
-        return imp._count;
+        return imp.count();
     }
 }
 
@@ -416,7 +416,7 @@ dict_iterator_t::dict_iterator_t(const dict_t* d, bool) noexcept
 shared_keys_t* dict_iterator_t::find_shared_keys() const {
     return nullptr;
     /*
-    auto sk = doc_t::shared_keys(_a._first);
+    auto sk = doc_t::shared_keys(_a.first_);
     _shared_keys = sk;
     assert_precondition(sk || is_disable_necessary_shared_keys_check);
     return sk;
@@ -448,9 +448,9 @@ dict_iterator_t& dict_iterator_t::operator++() {
         if (_key_compare >= 0)
             ++(*_parent);
         if (_key_compare <= 0) {
-            _throw_if(_a._count == 0, error_code::out_of_range, "iterating past end of dict");
-            --_a._count;
-            _a._first = offsetby(_a._first, 2*_a._width);
+            _throw_if(_a.count_ == 0, error_code::out_of_range, "iterating past end of dict");
+            --_a.count_;
+            _a.first_ = offsetby(_a.first_, 2*_a.width_);
         }
         read();
     } while (_usually_false(_parent && _value && _value->is_undefined()));
@@ -458,16 +458,16 @@ dict_iterator_t& dict_iterator_t::operator++() {
 }
 
 dict_iterator_t& dict_iterator_t::operator += (uint32_t n) {
-    _throw_if(n > _a._count, error_code::out_of_range, "iterating past end of dict");
-    _a._count -= n;
-    _a._first = offsetby(_a._first, 2*_a._width*n);
+    _throw_if(n > _a.count_, error_code::out_of_range, "iterating past end of dict");
+    _a.count_ -= n;
+    _a.first_ = offsetby(_a.first_, 2*_a.width_*n);
     read();
     return *this;
 }
 
 void dict_iterator_t::read() noexcept {
-    if (_usually_true(_a._count)) {
-        _key   = _a.deref(_a._first);
+    if (_usually_true(_a.count_)) {
+        _key   = _a.deref(_a.first_);
         _value = _a.deref(_a.second());
     } else {
         _key = _value = nullptr;
@@ -479,7 +479,7 @@ void dict_iterator_t::read() noexcept {
         else if (_usually_false(!parent_key))
             _key_compare = _key ? -1 : 0;
         else
-            _key_compare = compare_keys(_key, parent_key, (_a._width > size_narrow));
+            _key_compare = compare_keys(_key, parent_key, (_a.width_ > size_narrow));
         if (_key_compare > 0) {
             _key = parent_key;
             _value = _parent->value();

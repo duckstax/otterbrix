@@ -336,8 +336,9 @@ namespace document::impl {
             case tag_binary:
                 return size_t(reinterpret_cast<const uint8_t*>(get_string_bytes().end()) - reinterpret_cast<const uint8_t*>(this));
             case tag_array:
+                return size_t(reinterpret_cast<const uint8_t*>(array_t::iterator(as_array()).first_value()) - reinterpret_cast<const uint8_t*>(this));
             case tag_dict:
-                return size_t(reinterpret_cast<const uint8_t*>(array_t::impl(this)._first) - reinterpret_cast<const uint8_t*>(this));
+                return size_t(reinterpret_cast<const uint8_t*>(dict_iterator_t(as_dict()).value()) - reinterpret_cast<const uint8_t*>(this));
             case tag_pointer:
             default:
                 return 2;

@@ -74,7 +74,7 @@ public:
     explicit dict_iterator_t(const dict_t*) noexcept;
     dict_iterator_t(const dict_t*, const shared_keys_t*) noexcept;
 
-    uint32_t count() const noexcept PURE          { return _a._count; }
+    uint32_t count() const noexcept PURE          { return _a.count(); }
 
     std::string_view key_string() const noexcept;
     const value_t* key() const noexcept PURE      { return _key; }
@@ -95,7 +95,7 @@ private:
     void read() noexcept;
     shared_keys_t* find_shared_keys() const;
 
-    array_t::impl _a;
+    array_t::iterator _a;
     const value_t *_key {nullptr};
     const value_t *_value {nullptr};
     mutable const shared_keys_t *_shared_keys { nullptr };
