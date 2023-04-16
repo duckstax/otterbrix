@@ -6,40 +6,6 @@
 
 namespace document::impl::internal {
 
-    heap_array_t::iterator_t::iterator_t(const heap_array_t *ma) noexcept
-        : _iter(ma->_items.begin())
-        , _iter_end(ma->_items.end())
-        , _source_iter(ma->_source)
-    {
-        ++(*this);
-    }
-
-    heap_array_t::iterator_t::iterator_t(const mutable_array_t *ma) noexcept
-        : iterator_t(static_cast<heap_array_t*>(heap_collection_t::as_heap_value(ma)))
-    {}
-
-    const value_t *heap_array_t::iterator_t::value() const noexcept {
-        return _value;
-    }
-
-    heap_array_t::iterator_t::operator bool() const noexcept {
-        return _value != nullptr;
-    }
-
-    heap_array_t::iterator_t& heap_array_t::iterator_t::operator ++() {
-        if (_iter == _iter_end) {
-            _value = nullptr;
-        } else {
-            _value = _iter->as_value();
-            if (!_value)
-                _value = _source_iter[_index];
-            ++_iter;
-            ++_index;
-        }
-        return *this;
-    }
-
-
     heap_array_t::heap_array_t()
         : heap_collection_t(tag_array)
     {}

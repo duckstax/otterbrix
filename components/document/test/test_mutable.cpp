@@ -39,7 +39,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->empty());
         REQUIRE_FALSE(ma->get(0));
 
-        mutable_array_t::iterator_t i0(ma);
+        array_t::iterator i0(ma);
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(ma->is_changed());
@@ -95,7 +95,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(15)->as_int() == 9223372036854775807LL);
         REQUIRE(ma->get(16)->as_int() == -9223372036854775807LL);
 
-        mutable_array_t::iterator_t i1(ma);
+        array_t::iterator i1(ma);
         for (auto type : types) {
             REQUIRE(i1);
             REQUIRE(i1.value() != nullptr);

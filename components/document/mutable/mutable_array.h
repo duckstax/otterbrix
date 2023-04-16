@@ -10,8 +10,6 @@ namespace document::impl {
 
     class mutable_array_t : public array_t {
     public:
-        using iterator_t = internal::heap_array_t::iterator_t;
-
         static retained_t<mutable_array_t> new_array(uint32_t initial_count = 0);
         static retained_t<mutable_array_t> new_array(const array_t *a, copy_flags flags = default_copy);
 

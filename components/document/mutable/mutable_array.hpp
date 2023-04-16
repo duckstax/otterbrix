@@ -16,22 +16,6 @@ namespace document::impl::internal {
 
     class heap_array_t : public heap_collection_t {
     public:
-        class iterator_t {
-        public:
-            iterator_t(const heap_array_t *ma NONNULL) noexcept;
-            iterator_t(const mutable_array_t *ma NONNULL) noexcept;
-            const value_t* value() const noexcept;
-            explicit operator bool() const noexcept;
-            iterator_t& operator ++();
-
-        private:
-            const value_t* _value;
-            std::vector<value_slot_t>::const_iterator _iter, _iter_end;
-            array_t::iterator _source_iter;
-            uint32_t _index {0};
-        };
-
-
         heap_array_t();
         heap_array_t(uint32_t initial_count);
         heap_array_t(const array_t *array);
