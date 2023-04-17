@@ -5,8 +5,6 @@
 
 namespace document::impl {
 
-    class mutable_array_t;
-
     class mutable_dict_t : public dict_t {
     public:
         using iterator = internal::heap_dict_t::iterator;

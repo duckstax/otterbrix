@@ -198,16 +198,16 @@ namespace document::impl {
         return _usually_true(tag() == tag_binary) ? get_string_bytes() : std::string_view();
     }
 
-    const array_t* value_t::as_array() const noexcept {
+    array_t* value_t::as_array() const noexcept {
         if (_usually_false(tag() != tag_array))
             return nullptr;
-        return reinterpret_cast<const array_t*>(this);
+        return const_cast<array_t*>(reinterpret_cast<const array_t*>(this)); //todo: remove const_cast
     }
 
-    const dict_t* value_t::as_dict() const noexcept {
+    dict_t* value_t::as_dict() const noexcept {
         if (_usually_false(tag() != tag_dict))
             return nullptr;
-        return reinterpret_cast<const dict_t*>(this);
+        return const_cast<dict_t*>(reinterpret_cast<const dict_t*>(this)); //todo: remove const_cast
     }
 
     const array_t* value_t::as_array(const value_t* v) {

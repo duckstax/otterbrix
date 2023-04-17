@@ -52,8 +52,8 @@ namespace document::impl {
         const internal::pointer_t* as_pointer() const PURE;
         std::string_view as_string() const noexcept PURE;
         std::string_view as_data() const noexcept PURE;
-        const array_t* as_array() const noexcept PURE;
-        const dict_t* as_dict() const noexcept PURE;
+        array_t* as_array() const noexcept PURE;
+        dict_t* as_dict() const noexcept PURE;
 
         static const array_t* as_array(const value_t* v) PURE;
         static const dict_t* as_dict(const value_t* v) PURE;

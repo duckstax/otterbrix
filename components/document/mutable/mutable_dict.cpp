@@ -1,6 +1,6 @@
 #include "mutable_dict.hpp"
 #include "mutable_dict.h"
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/value_slot.hpp>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/support/better_assert.hpp>
@@ -271,14 +271,6 @@ namespace document::impl::internal {
         }
         _count = 0;
         mark_changed();
-    }
-
-    mutable_array_t *heap_dict_t::get_mutable_array(const std::string& key) {
-        return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value(get_mutable(key, tag_array))));
-    }
-
-    mutable_dict_t *heap_dict_t::get_mutable_dict(const std::string& key) {
-        return static_cast<mutable_dict_t*>(const_cast<value_t*>(as_value(get_mutable(key, tag_dict))));
     }
 
     heap_array_t* heap_dict_t::array_key_value() {

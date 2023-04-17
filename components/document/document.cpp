@@ -2,13 +2,13 @@
 
 #include <boost/json/src.hpp>
 #include <boost/json.hpp>
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/core/array.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/document_view.hpp>
 
 namespace components::document {
 
-    using ::document::impl::mutable_array_t;
+    using ::document::impl::array_t;
     using ::document::impl::mutable_dict_t;
     using ::document::impl::value_type;
 
@@ -31,7 +31,7 @@ namespace components::document {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
             try {
-                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.c_str())));
+                return object->as_array()->get(uint32_t(std::atol(key.c_str())));
             } catch (...) {
             }
         }
@@ -43,7 +43,7 @@ namespace components::document {
             return object->as_dict()->as_mutable()->get(key);
         } else if (object->type() == value_type::array) {
             try {
-                return object->as_array()->as_mutable()->get(uint32_t(std::atol(key.data())));
+                return object->as_array()->get(uint32_t(std::atol(key.data())));
             } catch (...) {
             }
         }
@@ -59,7 +59,7 @@ namespace components::document {
                 auto dot_pos_next = key.find('.', dot_pos + 1);
                 auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
                 if (key_next.find_first_not_of("0123456789") == std::string::npos) {
-                    set_new_value_(object, key_parent, mutable_array_t::new_array().detach());
+                    set_new_value_(object, key_parent, array_t::new_array().detach());
                 } else {
                     set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
                 }
@@ -78,9 +78,9 @@ namespace components::document {
                 try {
                     auto index = uint32_t(std::atol(key.c_str()));
                     if (index < object->as_array()->count()) {
-                        object->as_array()->as_mutable()->set(index, value);
+                        object->as_array()->set(index, value);
                     } else {
-                        object->as_array()->as_mutable()->append(value);
+                        object->as_array()->append(value);
                     }
                 } catch (...) {
                 }
@@ -97,7 +97,7 @@ namespace components::document {
                 auto dot_pos_next = key.find('.', dot_pos + 1);
                 auto key_next = key.substr(dot_pos + 1, (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
                 if (key_next.find_first_not_of("0123456789") == std::string::npos) {
-                    set_new_value_(object, key_parent, mutable_array_t::new_array().detach());
+                    set_new_value_(object, key_parent, array_t::new_array().detach());
                 } else {
                     set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
                 }
@@ -116,9 +116,9 @@ namespace components::document {
                 try {
                     auto index = uint32_t(std::atol(key.data()));
                     if (index < object->as_array()->count()) {
-                        object->as_array()->as_mutable()->set(index, value);
+                        object->as_array()->set(index, value);
                     } else {
-                        object->as_array()->as_mutable()->append(value);
+                        object->as_array()->append(value);
                     }
                 } catch (...) {
                 }
@@ -177,7 +177,7 @@ namespace components::document {
     }
 
     document_ptr make_document(const ::document::impl::array_t *array) {
-        return new document_t(::document::impl::mutable_array_t::new_array(array));
+        return new document_t(::document::impl::array_t::new_array(array));
     }
 
     document_ptr make_document(const ::document::impl::value_t *value) {
@@ -223,7 +223,7 @@ namespace components::document {
         } else if (item.is_string()) {
             return ::document::impl::new_value(std::string(item.get_string().c_str()));
         } else if (item.is_array()) {
-            auto array = ::document::impl::mutable_array_t::new_array();
+            auto array = ::document::impl::array_t::new_array();
             for (const auto &child : item.get_array()) {
                 array->append(json2value(child));
             }

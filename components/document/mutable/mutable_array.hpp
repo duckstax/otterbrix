@@ -8,7 +8,6 @@
 #include <components/document/support/better_assert.hpp>
 
 namespace document::impl {
-    class mutable_array_t;
     class mutable_dict_t;
 }
 
@@ -20,7 +19,7 @@ namespace document::impl::internal {
         heap_array_t(uint32_t initial_count);
         heap_array_t(const array_t *array);
 
-        mutable_array_t* as_mutable_array() const;
+        array_t* as_mutable_array() const;
 
         uint32_t count() const;
         bool empty() const;
@@ -46,7 +45,6 @@ namespace document::impl::internal {
 
     protected:
         friend class impl::array_t;
-        friend class impl::mutable_array_t;
 
         ~heap_array_t() = default;
         const value_slot_t* first();
@@ -55,8 +53,8 @@ namespace document::impl::internal {
         void populate(unsigned from_index);
         heap_collection_t* get_mutable(uint32_t index, tags if_type);
 
-        std::vector<value_slot_t> _items;
-        retained_const_t<array_t> _source;
+        std::vector<value_slot_t> items_;
+        retained_const_t<array_t> source_;
     };
 
 }

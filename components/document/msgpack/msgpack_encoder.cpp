@@ -22,7 +22,7 @@ const value_t *to_structure_(const msgpack::object &msg_object) {
         }
         return dict;
     } else if (msg_object.type == msgpack::type::object_type::ARRAY) {
-        auto array = mutable_array_t::new_array().detach();
+        auto array = array_t::new_array().detach();
         msgpack::object_array msg_array = msg_object.via.array;
         for (uint32_t i = 0; i < msg_array.size; ++i) {
             array->append(to_structure_(msg_array.ptr[i]));

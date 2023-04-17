@@ -1,6 +1,6 @@
 #include "array.hpp"
 #include <components/document/core/internal.hpp>
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
 
@@ -147,12 +147,43 @@ namespace document::impl {
         return dynamic_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(this));
     }
 
-    mutable_array_t* array_t::as_mutable() const {
-        return is_mutable() ? reinterpret_cast<mutable_array_t*>(const_cast<array_t*>(this)) : nullptr;
-    }
-
     array_iterator_t array_t::begin() const noexcept {
         return iterator(this);
+    }
+
+    retained_t<array_t> array_t::new_array(uint32_t initial_count) {
+        return (new internal::heap_array_t(initial_count))->as_mutable_array();
+    }
+
+    retained_t<array_t> array_t::new_array(const array_t *a, copy_flags flags) {
+        auto ha = retained(new internal::heap_array_t(a));
+        if (flags)
+            ha->copy_children(flags);
+        return ha->as_mutable_array();
+    }
+
+    retained_t<array_t> array_t::copy(copy_flags f) {
+        return new_array(this, f);
+    }
+
+    const array_t *array_t::source() const {
+        return heap_array()->source_;
+    }
+
+    bool array_t::is_changed() const {
+        return heap_array()->is_changed();
+    }
+
+    void array_t::resize(uint32_t new_size) {
+        heap_array()->resize(new_size);
+    }
+
+    void array_t::insert(uint32_t where, uint32_t n) {
+        heap_array()->insert(where, n);
+    }
+
+    void array_t::remove(uint32_t where, uint32_t n) {
+        heap_array()->remove(where, n);
     }
 
     EVEN_ALIGNED static constexpr array_t empty_array_instance;

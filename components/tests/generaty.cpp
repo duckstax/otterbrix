@@ -1,7 +1,7 @@
 #include "generaty.hpp"
 
 document::retained_t<document::impl::array_t> gen_array(int num) {
-    auto array = document::impl::mutable_array_t::new_array();
+    auto array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(num + i);
     }
@@ -34,12 +34,12 @@ document_ptr gen_doc(int num) {
     doc->set("countBool", num % 2 != 0);
     doc->set("countArray", gen_array(num));
     doc->set("countDict", gen_dict(num));
-    auto array = document::impl::mutable_array_t::new_array();
+    auto array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(gen_array(num + i));
     }
     doc->set("nestedArray", array);
-    array = document::impl::mutable_array_t::new_array();
+    array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         auto dict = document::impl::mutable_dict_t::new_dict();
         dict->set("number", num + i);

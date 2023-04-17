@@ -70,9 +70,6 @@ namespace document::impl::internal {
         void remove(const std::string& str_key);
         void remove_all();
 
-        mutable_array_t* get_mutable_array(const std::string& key);
-        mutable_dict_t* get_mutable_dict(const std::string& key);
-
         void disconnect_from_source();
         void copy_children(copy_flags flags);
 

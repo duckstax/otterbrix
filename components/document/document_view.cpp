@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/core/array.hpp>
 #include <components/document/mutable/mutable_dict.h>
 
 using ::document::impl::value_type;
@@ -245,7 +245,7 @@ namespace components::document {
     }
 
     ::document::retained_t<::document::impl::array_t> document_view_t::to_array() const {
-        return ::document::impl::mutable_array_t::new_array(as_array());
+        return ::document::impl::array_t::new_array(as_array());
     }
 
     std::string value_to_string(document_view_t::const_value_ptr value) {

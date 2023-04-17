@@ -1,7 +1,7 @@
 #pragma once
 
 #include <components/document/document.hpp>
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/core/array.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/tests/generaty.hpp>
 #include <integration/cpp/base_spaces.hpp>
@@ -43,7 +43,7 @@ document_ptr make_condition(const std::string& field, const std::string& key, T 
 
 inline document::retained_t<mutable_dict_t> make_dict(const std::string& aggregate, const std::list<document::retained_t<mutable_dict_t>> &sub_dict) {
     auto dict = mutable_dict_t::new_dict();
-    auto array = mutable_array_t::new_array();
+    auto array = array_t::new_array();
     for (const auto& sub_cond : sub_dict) {
         array->append(sub_cond);
     }

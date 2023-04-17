@@ -4,8 +4,6 @@
 
 namespace document::impl {
 
-    class mutable_array_t;
-
     class array_t : public value_t {
     public:
 
@@ -50,10 +48,27 @@ namespace document::impl {
         uint32_t count() const noexcept PURE;
         bool empty() const noexcept PURE;
         const value_t* get(uint32_t index) const noexcept PURE;
-        mutable_array_t* as_mutable() const PURE;
         static const array_t* const empty_array;
 
         iterator begin() const noexcept;
+
+        static retained_t<array_t> new_array(uint32_t initial_count = 0);
+        static retained_t<array_t> new_array(const array_t *a, copy_flags flags = default_copy);
+
+        retained_t<array_t> copy(copy_flags f = default_copy);
+
+        const array_t* source() const;
+        bool is_changed() const;
+
+        void resize(uint32_t new_size);
+        void insert(uint32_t where, uint32_t n);
+        void remove(uint32_t where, uint32_t n);
+
+        template <typename T>
+        void set(uint32_t index, T t);
+
+        template <typename T>
+        void append(const T &t);
 
     protected:
         internal::heap_array_t* heap_array() const;
@@ -66,6 +81,19 @@ namespace document::impl {
         friend struct dict_impl_t;
         friend class internal::heap_array_t;
     };
+
+
+    template <typename T>
+    void array_t::set(uint32_t index, T t) {
+        //todo
+//        heap_array()->set(index, t);
+    }
+
+    template <typename T>
+    void array_t::append(const T &t) {
+        //todo
+//        heap_array()->append(t);
+    }
 
 
     using array_iterator_t = array_t::iterator;

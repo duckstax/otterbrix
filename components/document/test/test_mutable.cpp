@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <components/document/mutable/mutable_array.h>
+#include <components/document/core/array.hpp>
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/support/varint.hpp>
 
@@ -10,11 +10,9 @@ using namespace document::impl;
 TEST_CASE("mutable::mutable_array_t") {
 
     SECTION("check type") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
 
         REQUIRE(ma->as_array() == ma);
-        REQUIRE(ma->is_mutable());
-        REQUIRE(ma->as_mutable() == ma);
         REQUIRE(ma->type() == value_type::array);
         REQUIRE_FALSE(ma->is_int());
         REQUIRE_FALSE(ma->is_unsigned());
@@ -33,7 +31,7 @@ TEST_CASE("mutable::mutable_array_t") {
 
     SECTION("set value") {
         constexpr uint32_t size = 17;
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
 
         REQUIRE(ma->count() == 0);
         REQUIRE(ma->empty());
@@ -120,7 +118,7 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 
     SECTION("to array_t") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
         auto a = ma->as_array();
         REQUIRE(a->type() == value_type::array);
         REQUIRE(a->count() == 0);
@@ -146,12 +144,12 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 
     SECTION("pointer") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
         ma->resize(2);
         ma->set(0, 100);
         ma->set(1, 200);
 
-        auto mb = mutable_array_t::new_array();
+        auto mb = array_t::new_array();
         REQUIRE_FALSE(mb->is_changed());
         mb->append(ma);
         REQUIRE(mb->is_changed());
@@ -159,15 +157,15 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 
     SECTION("copy") {
-        auto ma = mutable_array_t::new_array(2);
+        auto ma = array_t::new_array(2);
         ma->set(0, 100);
         ma->set(1, std::string("dog"));
 
-        auto mb = mutable_array_t::new_array(1);
+        auto mb = array_t::new_array(1);
         mb->set(0, ma);
         REQUIRE(mb->get(0) == ma);
 
-        auto mc = mutable_array_t::new_array(1);
+        auto mc = array_t::new_array(1);
         mc->set(0, mb);
         REQUIRE(mc->get(0) == mb);
 
@@ -360,7 +358,7 @@ TEST_CASE("mutable::mutable_dict_t") {
 TEST_CASE("mutable long string") {
     constexpr uint32_t size = 50;
     const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    auto ma = mutable_array_t::new_array(50);
+    auto ma = array_t::new_array(50);
     for (uint32_t i = 0; i < size; ++i) {
         ma->set(i, std::string(chars, i));
     }

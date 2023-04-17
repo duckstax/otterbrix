@@ -1,5 +1,4 @@
 #include "mutable_array.hpp"
-#include "mutable_array.h"
 #include <components/document/mutable/mutable_dict.h>
 #include <components/document/support/varint.hpp>
 #include <components/document/support/better_assert.hpp>
@@ -12,46 +11,42 @@ namespace document::impl::internal {
 
     heap_array_t::heap_array_t(uint32_t initial_count)
         : heap_collection_t(tag_array)
-        , _items(initial_count)
+        , items_(initial_count)
     {}
 
     heap_array_t::heap_array_t(const array_t *array)
         : heap_collection_t(tag_array)
-        , _items(array ? array->count() : 0)
+        , items_(array ? array->count() : 0)
     {
         if (array) {
-            if (array->is_mutable()) {
-                auto ha = array->as_mutable()->heap_array();
-                _items = ha->_items;
-                _source = ha->_source;
-            } else {
-                _source = array;
-            }
+            auto ha = array->heap_array();
+            items_ = ha->items_;
+            source_ = ha->source_;
         }
     }
 
-    mutable_array_t *heap_array_t::as_mutable_array() const {
-        return static_cast<mutable_array_t*>(const_cast<value_t*>(as_value()));
+    array_t *heap_array_t::as_mutable_array() const {
+        return static_cast<array_t*>(const_cast<value_t*>(as_value()));
     }
 
     uint32_t heap_array_t::count() const {
-        return uint32_t(_items.size());
+        return uint32_t(items_.size());
     }
 
     bool heap_array_t::empty() const {
-        return _items.empty();
+        return items_.empty();
     }
 
     const array_t *heap_array_t::source() const {
-        return _source;
+        return source_;
     }
 
     void heap_array_t::populate(unsigned from_index) {
-        if (!_source)
+        if (!source_)
             return;
-        auto dst = _items.begin() + from_index;
-        array_t::iterator src(_source);
-        for (src += from_index; src && dst != _items.end(); ++src, ++dst) {
+        auto dst = items_.begin() + from_index;
+        array_t::iterator src(source_);
+        for (src += from_index; src && dst != items_.end(); ++src, ++dst) {
             if (!*dst)
                 dst->set(src.value());
         }
@@ -60,17 +55,17 @@ namespace document::impl::internal {
     const value_t* heap_array_t::get(uint32_t index) {
         if (index >= count())
             return nullptr;
-        auto &item = _items[index];
+        auto &item = items_[index];
         if (item)
             return item.as_value();
-        assert(_source);
-        return _source->get(index);
+        assert(source_);
+        return source_->get(index);
     }
 
     void heap_array_t::resize(uint32_t new_size) {
         if (new_size == count())
             return;
-        _items.resize(new_size, value_slot_t(nullptr));
+        items_.resize(new_size, value_slot_t(nullptr));
         set_changed(true);
     }
 
@@ -79,7 +74,7 @@ namespace document::impl::internal {
         if (n == 0)
             return;
         populate(where);
-        _items.insert(_items.begin() + where,  n, value_slot_t(nullptr));
+        items_.insert(items_.begin() + where,  n, value_slot_t(nullptr));
         set_changed(true);
     }
 
@@ -88,8 +83,8 @@ namespace document::impl::internal {
         if (n == 0)
             return;
         populate(where + n);
-        auto at = _items.begin() + where;
-        _items.erase(at, at + n);
+        auto at = items_.begin() + where;
+        items_.erase(at, at + n);
         set_changed(true);
     }
 
@@ -97,13 +92,13 @@ namespace document::impl::internal {
         if (index >= count())
             return nullptr;
         retained_t<heap_collection_t> result = nullptr;
-        auto &mval = _items[index];
+        auto &mval = items_[index];
         if (mval) {
             result = mval.make_mutable(if_type);
-        } else if (_source) {
-            result = heap_collection_t::mutable_copy(_source->get(index), if_type);
+        } else if (source_) {
+            result = heap_collection_t::mutable_copy(source_->get(index), if_type);
             if (result)
-                _items[index].set(result->as_value());
+                items_[index].set(result->as_value());
         }
         if (result)
             set_changed(true);
@@ -112,16 +107,16 @@ namespace document::impl::internal {
 
     value_slot_t& heap_array_t::setting(uint32_t index) {
 #if DEBUG
-        assert_precondition(index < _items.size());
+        assert_precondition(index < items_.size());
 #endif
         set_changed(true);
-        return _items[index];
+        return items_[index];
     }
 
     value_slot_t& heap_array_t::appending() {
         set_changed(true);
-        _items.emplace_back();
-        return _items.back();
+        items_.emplace_back();
+        return items_.back();
     }
 
     value_slot_t &heap_array_t::inserting(uint32_t index) {
@@ -131,65 +126,26 @@ namespace document::impl::internal {
 
     const value_slot_t* heap_array_t::first() {
         populate(0);
-        return &_items.front();
+        return &items_.front();
     }
 
     void heap_array_t::disconnect_from_source() {
-        if (!_source)
+        if (!source_)
             return;
         uint32_t index = 0;
-        for (auto &mval : _items) {
+        for (auto &mval : items_) {
             if (!mval)
-                mval.set(_source->get(index));
+                mval.set(source_->get(index));
             ++index;
         }
-        _source = nullptr;
+        source_ = nullptr;
     }
 
     void heap_array_t::copy_children(copy_flags flags) {
         if (flags & copy_immutables)
             disconnect_from_source();
-        for (auto &entry : _items)
+        for (auto &entry : items_)
             entry.copy_value(flags);
-    }
-
-}
-
-namespace document::impl {
-
-    retained_t<mutable_array_t> mutable_array_t::new_array(uint32_t initial_count) {
-        return (new internal::heap_array_t(initial_count))->as_mutable_array();
-    }
-
-    retained_t<mutable_array_t> mutable_array_t::new_array(const array_t *a, copy_flags flags) {
-        auto ha = retained(new internal::heap_array_t(a));
-        if (flags)
-            ha->copy_children(flags);
-        return ha->as_mutable_array();
-    }
-
-    retained_t<mutable_array_t> mutable_array_t::copy(copy_flags f) {
-        return new_array(this, f);
-    }
-
-    const array_t *mutable_array_t::source() const {
-        return heap_array()->_source;
-    }
-
-    bool mutable_array_t::is_changed() const {
-        return heap_array()->is_changed();
-    }
-
-    void mutable_array_t::resize(uint32_t new_size) {
-        heap_array()->resize(new_size);
-    }
-
-    void mutable_array_t::insert(uint32_t where, uint32_t n) {
-        heap_array()->insert(where, n);
-    }
-
-    void mutable_array_t::remove(uint32_t where, uint32_t n) {
-        heap_array()->remove(where, n);
     }
 
 }
