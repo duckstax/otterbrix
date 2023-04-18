@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/document/core/value.hpp>
+#include <components/document/internal/value_slot.hpp>
 
 namespace document::impl {
 
@@ -43,19 +44,17 @@ namespace document::impl {
         };
 
 
-        constexpr array_t();
-
         uint32_t count() const noexcept PURE;
         bool empty() const noexcept PURE;
         const value_t* get(uint32_t index) const noexcept PURE;
-        static const array_t* const empty_array;
-
         iterator begin() const noexcept;
 
         static retained_t<array_t> new_array(uint32_t initial_count = 0);
         static retained_t<array_t> new_array(const array_t *a, copy_flags flags = default_copy);
+        static const array_t* empty_array();
 
         retained_t<array_t> copy(copy_flags f = default_copy);
+        retained_t<internal::heap_collection_t> mutable_copy() const;
 
         const array_t* source() const;
         bool is_changed() const;
@@ -70,29 +69,28 @@ namespace document::impl {
         template <typename T>
         void append(const T &t);
 
-    protected:
-        internal::heap_array_t* heap_array() const;
-
     private:
+        array_t();
+
+        internal::value_slot_t& slot(uint32_t index);
+        internal::value_slot_t& appending();
+
         friend class value_t;
         friend class dict_t;
         friend class dict_iterator_t;
         template<bool WIDE>
         friend struct dict_impl_t;
-        friend class internal::heap_array_t;
     };
 
 
     template <typename T>
     void array_t::set(uint32_t index, T t) {
-        //todo
-//        heap_array()->set(index, t);
+        slot(index).set(t);
     }
 
     template <typename T>
     void array_t::append(const T &t) {
-        //todo
-//        heap_array()->append(t);
+        appending().set(t);
     }
 
 

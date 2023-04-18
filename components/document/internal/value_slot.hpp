@@ -8,12 +8,9 @@
 #include <components/document/support/utils.hpp>
 #include <components/document/support/varint.hpp>
 
-namespace document::impl {
+namespace document::impl::internal {
 
-    namespace internal {
-        class heap_array_t;
-        class heap_dict_t;
-    }
+    class heap_dict_t;
 
     class value_slot_t {
     public:
@@ -49,7 +46,6 @@ namespace document::impl {
         void copy_value(copy_flags flags);
 
     protected:
-        friend class internal::heap_array_t;
         friend class internal::heap_dict_t;
 
         internal::heap_collection_t* as_mutable_collection() const;

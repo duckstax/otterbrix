@@ -7,10 +7,9 @@ set(${PROJECT_NAME}_SOURCES
         core/shared_keys.cpp
         core/value.cpp
         internal/heap.cpp
+        internal/value_slot.cpp
         msgpack/msgpack_encoder.cpp
-        mutable/mutable_array.cpp
         mutable/mutable_dict.cpp
-        mutable/value_slot.cpp
         support/better_assert.cpp
         support/exception.cpp
         support/num_conversion.cpp

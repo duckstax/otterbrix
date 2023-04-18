@@ -1,90 +1,11 @@
 #include "mutable_dict.hpp"
 #include "mutable_dict.h"
-#include <components/document/mutable/mutable_array.hpp>
-#include <components/document/mutable/value_slot.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/internal/value_slot.hpp>
 #include <components/document/core/shared_keys.hpp>
 #include <components/document/support/better_assert.hpp>
 
 namespace document::impl::internal {
-
-    heap_dict_t::iterator::iterator(const heap_dict_t *dict) noexcept
-        : _source_iter(dict->_source)
-        , _new_iter(dict->_map.begin())
-        , _new_end(dict->_map.end())
-        , _count(dict->count() + 1)
-        , _shared_keys(dict->shared_keys())
-    {
-        get_source();
-        get_new();
-        ++(*this);
-    }
-
-    heap_dict_t::iterator::iterator(const mutable_dict_t *dict) noexcept
-        : iterator(static_cast<heap_dict_t*>(heap_collection_t::as_heap_value(dict)))
-    {}
-
-    uint32_t heap_dict_t::iterator::count() const noexcept {
-        return _count;
-    }
-
-    std::string heap_dict_t::iterator::key_string() const noexcept {
-        return _key;
-    }
-
-    const value_t *heap_dict_t::iterator::value() const noexcept {
-        return _value;
-    }
-
-    heap_dict_t::iterator::operator bool() const noexcept {
-        return _value != nullptr;
-    }
-
-    void heap_dict_t::iterator::get_source() {
-        _source_active = static_cast<bool>(_source_iter);
-        if (_usually_true(_source_active))
-            _source_key = key_t(_source_iter.key());
-    }
-
-    void heap_dict_t::iterator::get_new() {
-        _new_active = (_new_iter != _new_end);
-    }
-
-    void heap_dict_t::iterator::decode_key(key_t key) {
-        if (key.shared())
-            _key = _shared_keys->decode(key.as_int());
-        else
-            _key = key.as_string();
-    }
-
-    heap_dict_t::iterator& heap_dict_t::iterator::operator++() {
-        --_count;
-        while (_usually_true(_source_active || _new_active)) {
-            if (!_new_active || (_source_active && _source_key < _new_iter->first)) {
-                decode_key(_source_key);
-                _value = _source_iter.value();
-                ++_source_iter;
-                get_source();
-                return *this;
-            } else {
-                bool exists = !!(_new_iter->second);
-                if (_usually_true(exists)) {
-                    decode_key(_new_iter->first);
-                    _value = _new_iter->second.as_value();
-                }
-                if (_source_active && _source_key == _new_iter->first) {
-                    ++_source_iter;
-                    get_source();
-                }
-                ++_new_iter;
-                get_new();
-                if (_usually_true(exists))
-                    return *this;
-            }
-        }
-        _value = nullptr;
-        return *this;
-    }
-
 
     heap_dict_t::heap_dict_t(const dict_t *dict)
         : heap_collection_t(tag_dict)
@@ -126,7 +47,6 @@ namespace document::impl::internal {
 
     void heap_dict_t::mark_changed() {
         set_changed(true);
-        _iterable = nullptr;
     }
 
     key_t heap_dict_t::encode_key(const std::string& key) const noexcept {
@@ -273,19 +193,6 @@ namespace document::impl::internal {
         mark_changed();
     }
 
-    heap_array_t* heap_dict_t::array_key_value() {
-        if (!_iterable) {
-            _iterable = new heap_array_t(2*count());
-            uint32_t n = 0;
-            for (iterator i(this); i; ++i) {
-                _iterable->set(n++, i.key_string());
-                _iterable->set(n++, i.value());
-            }
-            assert(n == 2*_count);
-        }
-        return _iterable.get();
-    }
-
     void heap_dict_t::disconnect_from_source() {
         if (!_source)
             return;
@@ -302,6 +209,16 @@ namespace document::impl::internal {
             disconnect_from_source();
         for (auto &entry : _map)
             entry.second.copy_value(flags);
+    }
+
+    array_t* heap_dict_t::array_key_value() {
+        auto *array = array_t::new_array(2 * count()).detach();
+        uint32_t n = 0;
+        for (auto value : _map) {
+            array->set(n++, value.first.as_string());
+            array->set(n++, value.second.as_value());
+        }
+        return array;
     }
 
 }

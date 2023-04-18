@@ -7,8 +7,6 @@ namespace document::impl {
 
     class mutable_dict_t : public dict_t {
     public:
-        using iterator = internal::heap_dict_t::iterator;
-
         static retained_t<mutable_dict_t> new_dict(const dict_t* d = nullptr, copy_flags flags = default_copy);
 
         retained_t<mutable_dict_t> copy(copy_flags f = default_copy);

@@ -7,13 +7,10 @@
 #include <algorithm>
 
 #include "components/document/support/platform_compat.hpp"
-#include <components/document/mutable/mutable_array.hpp>
 #include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
 
-namespace document::impl {
-
-    using namespace internal;
+namespace document::impl::internal {
 
     static_assert(sizeof(value_slot_t) == 8);
 
@@ -223,10 +220,7 @@ namespace document::impl {
             retained_t<heap_collection_t> copy;
             switch (value->tag()) {
             case tag_array:
-                copy = new heap_array_t(static_cast<array_t*>(const_cast<value_t*>(value)));
-                if (recurse)
-                    static_cast<heap_array_t*>(copy.get())->copy_children(flags);
-                set(copy->as_value());
+                set(static_cast<array_t*>(const_cast<value_t*>(value))->copy(flags));
                 break;
             case tag_dict:
                 copy = new heap_dict_t(static_cast<dict_t*>(const_cast<value_t*>(value)));

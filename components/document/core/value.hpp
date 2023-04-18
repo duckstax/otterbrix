@@ -14,6 +14,10 @@ namespace document::impl {
     class dict_t;
     class shared_keys_t;
 
+    namespace internal {
+        class value_slot_t;
+    }
+
     enum class value_type : int8_t {
         undefined = -1,
         null = 0,
@@ -106,7 +110,7 @@ namespace document::impl {
         size_t data_size() const noexcept PURE;
 
         friend class internal::pointer_t;
-        friend class value_slot_t;
+        friend class internal::value_slot_t;
         friend class internal::heap_collection_t;
         friend class internal::heap_value_t;
         friend class array_t;
