@@ -55,6 +55,7 @@ namespace document::impl {
 
         retained_t<array_t> copy(copy_flags f = default_copy);
         retained_t<internal::heap_collection_t> mutable_copy() const;
+        void copy_children(copy_flags flags = default_copy);
 
         const array_t* source() const;
         bool is_changed() const;

@@ -49,12 +49,23 @@ namespace document::impl {
                 set_changed(true);
             }
 
+            void populate(unsigned from_index) {
+                if (!source_)
+                    return;
+                auto dst = items_.begin() + from_index;
+                array_t::iterator src(source_);
+                for (src += from_index; src && dst != items_.end(); ++src, ++dst) {
+                    if (!*dst)
+                        dst->set(src.value());
+                }
+            }
+
             void insert(uint32_t where, uint32_t n) {
                 _throw_if(where > count(), error_code::out_of_range, "insert position is past end of array");
                 if (n == 0) {
                     return;
                 }
-                //populate(where);
+                populate(where);
                 items_.insert(items_.begin() + where,  n, value_slot_t(nullptr));
                 set_changed(true);
             }
@@ -64,7 +75,7 @@ namespace document::impl {
                 if (n == 0) {
                     return;
                 }
-                //populate(where + n);
+                populate(where + n);
                 auto at = items_.begin() + where;
                 items_.erase(at, at + n);
                 set_changed(true);
@@ -183,7 +194,7 @@ namespace document::impl {
     const value_t* array_t::iterator::first_value() const noexcept {
         if (_usually_false(count_ == 0))
             return nullptr;
-        return deref(first_);
+        return first_;//deref(first_);
     }
 
     size_t array_t::iterator::index_of(const value_t* v) const noexcept {
@@ -291,6 +302,10 @@ namespace document::impl {
 
     retained_t<internal::heap_collection_t> array_t::mutable_copy() const {
         return new heap_array_t(this);
+    }
+
+    void array_t::copy_children(copy_flags flags) {
+        heap_array(this)->copy_children(flags);
     }
 
     const array_t *array_t::source() const {

@@ -85,7 +85,7 @@ namespace document::impl::internal {
         if (_usually_false(v == pointer()))
             return;
         release_value();
-        _pointer = uint64_t(size_t(retain(v)));
+        _pointer = uint64_t(retain(v));
         assert(is_pointer());
     }
 
@@ -219,9 +219,14 @@ namespace document::impl::internal {
             bool recurse = (flags & deep_copy);
             retained_t<heap_collection_t> copy;
             switch (value->tag()) {
-            case tag_array:
-                set(static_cast<array_t*>(const_cast<value_t*>(value))->copy(flags));
+            case tag_array: {
+                auto copy_value = array_t::new_array(static_cast<array_t*>(const_cast<value_t*>(value))).detach();
+                if (recurse) {
+                    copy_value->copy_children(flags);
+                }
+                set(copy_value);
                 break;
+            }
             case tag_dict:
                 copy = new heap_dict_t(static_cast<dict_t*>(const_cast<value_t*>(value)));
                 if (recurse)
