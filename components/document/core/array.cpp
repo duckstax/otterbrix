@@ -49,23 +49,11 @@ namespace document::impl {
                 set_changed(true);
             }
 
-            void populate(unsigned from_index) {
-                if (!source_)
-                    return;
-                auto dst = items_.begin() + from_index;
-                array_t::iterator src(source_);
-                for (src += from_index; src && dst != items_.end(); ++src, ++dst) {
-                    if (!*dst)
-                        dst->set(src.value());
-                }
-            }
-
             void insert(uint32_t where, uint32_t n) {
                 _throw_if(where > count(), error_code::out_of_range, "insert position is past end of array");
                 if (n == 0) {
                     return;
                 }
-                populate(where);
                 items_.insert(items_.begin() + where,  n, value_slot_t(nullptr));
                 set_changed(true);
             }
@@ -75,7 +63,6 @@ namespace document::impl {
                 if (n == 0) {
                     return;
                 }
-                populate(where + n);
                 auto at = items_.begin() + where;
                 items_.erase(at, at + n);
                 set_changed(true);
@@ -115,11 +102,11 @@ namespace document::impl {
         };
 
         heap_array_t* heap_array(const array_t *array) {
-            return dynamic_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(array));
+            return reinterpret_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(array));
         }
 
         array_t *to_array(const heap_array_t *ha) {
-            return static_cast<array_t*>(const_cast<value_t*>(ha->as_value()));
+            return reinterpret_cast<array_t*>(const_cast<value_t*>(ha->as_value()));
         }
 
         heap_array_t::heap_array_t(const array_t *array)
@@ -194,7 +181,7 @@ namespace document::impl {
     const value_t* array_t::iterator::first_value() const noexcept {
         if (_usually_false(count_ == 0))
             return nullptr;
-        return first_;//deref(first_);
+        return deref(first_);
     }
 
     size_t array_t::iterator::index_of(const value_t* v) const noexcept {
