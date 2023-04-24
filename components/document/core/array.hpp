@@ -9,38 +9,23 @@ namespace document::impl {
     public:
 
         struct iterator {
-            explicit iterator(const value_t* a) noexcept; //todo: replace to array_t
+            explicit iterator(const array_t* a) noexcept;
 
             uint32_t count() const noexcept PURE;
             const value_t* value() const noexcept PURE;
             explicit operator const value_t*() const noexcept;
             const value_t* operator->() const noexcept PURE;
-            const value_t* read() noexcept;
             explicit operator bool() const noexcept PURE;
             iterator& operator++();
-            iterator& operator+=(uint32_t);
-
-            const value_t* second() const noexcept PURE;
-            const value_t* first_value() const noexcept PURE;
-            const value_t* deref(const value_t*) const noexcept PURE;
-            const value_t* operator[](unsigned index) const noexcept PURE;
-            size_t index_of(const value_t* v) const noexcept PURE;
-            void offset(uint32_t n);
-            bool is_mutable() const noexcept PURE;
-
-        protected:
-            //todo: move to private
-            const value_t* first_;
-            uint32_t count_;
-            uint8_t width_;
-
-            iterator() = default;
+            iterator& operator+=(uint32_t n);
 
         private:
+            const array_t* source_;
             const value_t* value_;
+            uint32_t count_;
+            uint32_t pos_;
 
-            friend class array_t;
-            friend class dict_iterator_t; //todo: delete
+            void set_value_();
         };
 
 
@@ -53,11 +38,10 @@ namespace document::impl {
         static retained_t<array_t> new_array(const array_t *a, copy_flags flags = default_copy);
         static const array_t* empty_array();
 
-        retained_t<array_t> copy(copy_flags f = default_copy);
+        retained_t<array_t> copy(copy_flags f = default_copy) const;
         retained_t<internal::heap_collection_t> mutable_copy() const;
-        void copy_children(copy_flags flags = default_copy);
+        void copy_children(copy_flags flags = default_copy) const;
 
-        const array_t* source() const;
         bool is_changed() const;
 
         void resize(uint32_t new_size);
