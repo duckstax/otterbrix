@@ -161,6 +161,8 @@ namespace document::impl {
 
     dict_t::iterator::iterator(const dict_t* d, const shared_keys_t* sk) noexcept
         : source_(d)
+        , count_(d->count())
+        , pos_(0)
         , shared_keys_(sk) {
         set_value_();
     }
@@ -237,8 +239,8 @@ namespace document::impl {
     }
 
     const dict_t* dict_t::empty_dict() {
-        static const dict_t empty_dict_;
-        return &empty_dict_;
+        static const auto empty_dict_ = new_dict();
+        return empty_dict_.get();
     }
 
     uint32_t dict_t::count() const noexcept {

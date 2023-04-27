@@ -160,8 +160,8 @@ namespace document::impl {
     }
 
     const array_t* array_t::empty_array() {
-        static const array_t empty_array_;
-        return &empty_array_;
+        static const auto empty_array_ = new_array();
+        return empty_array_.get();
     }
 
     array_t::array_t()
