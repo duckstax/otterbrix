@@ -2,7 +2,7 @@
 
 #include <components/document/document.hpp>
 #include <components/document/core/array.hpp>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/dict.hpp>
 #include <components/tests/generaty.hpp>
 #include <integration/cpp/base_spaces.hpp>
 
@@ -27,10 +27,10 @@ public:
 };
 
 template<class T>
-document::retained_t<mutable_dict_t> make_dict(const std::string& field, const std::string& key, T value) {
-    auto key_value = mutable_dict_t::new_dict();
+document::retained_t<dict_t> make_dict(const std::string& field, const std::string& key, T value) {
+    auto key_value = dict_t::new_dict();
     key_value->set(key, value);
-    auto cond = mutable_dict_t::new_dict();
+    auto cond = dict_t::new_dict();
     cond->set(field, key_value);
     return cond;
 }
@@ -41,8 +41,8 @@ document_ptr make_condition(const std::string& field, const std::string& key, T 
     return make_document(dict);
 }
 
-inline document::retained_t<mutable_dict_t> make_dict(const std::string& aggregate, const std::list<document::retained_t<mutable_dict_t>> &sub_dict) {
-    auto dict = mutable_dict_t::new_dict();
+inline document::retained_t<dict_t> make_dict(const std::string& aggregate, const std::list<document::retained_t<dict_t>> &sub_dict) {
+    auto dict = dict_t::new_dict();
     auto array = array_t::new_array();
     for (const auto& sub_cond : sub_dict) {
         array->append(sub_cond);
@@ -51,7 +51,7 @@ inline document::retained_t<mutable_dict_t> make_dict(const std::string& aggrega
     return dict;
 }
 
-inline document_ptr make_condition(const std::string& aggregate, const std::list<document::retained_t<mutable_dict_t>> &sub_conditions) {
+inline document_ptr make_condition(const std::string& aggregate, const std::list<document::retained_t<dict_t>> &sub_conditions) {
     auto dict = make_dict(aggregate, sub_conditions);
     return make_document(dict);
 }

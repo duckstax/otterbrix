@@ -3,13 +3,13 @@
 #include <boost/json/src.hpp>
 #include <boost/json.hpp>
 #include <components/document/core/array.hpp>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/dict.hpp>
 #include <components/document/document_view.hpp>
 
 namespace components::document {
 
     using ::document::impl::array_t;
-    using ::document::impl::mutable_dict_t;
+    using ::document::impl::dict_t;
     using ::document::impl::value_type;
 
     document_const_value_t inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
@@ -28,7 +28,7 @@ namespace components::document {
 
     document_const_value_t get_value_by_key_(const document_const_value_t& object, const std::string &key) {
         if (object->type() == value_type::dict) {
-            return object->as_dict()->as_mutable()->get(key);
+            return object->as_dict()->get(key);
         } else if (object->type() == value_type::array) {
             try {
                 return object->as_array()->get(uint32_t(std::atol(key.c_str())));
@@ -40,7 +40,7 @@ namespace components::document {
 
     document_const_value_t get_value_by_key_(const document_const_value_t& object, std::string_view key) {
         if (object->type() == value_type::dict) {
-            return object->as_dict()->as_mutable()->get(key);
+            return object->as_dict()->get(key);
         } else if (object->type() == value_type::array) {
             try {
                 return object->as_array()->get(uint32_t(std::atol(key.data())));
@@ -61,7 +61,7 @@ namespace components::document {
                 if (key_next.find_first_not_of("0123456789") == std::string::npos) {
                     set_new_value_(object, key_parent, array_t::new_array().detach());
                 } else {
-                    set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
+                    set_new_value_(object, key_parent, dict_t::new_dict().detach());
                 }
                 object_parent = get_value_by_key_(object, key_parent);
                 if (!object_parent && object->type() == value_type::array) {
@@ -73,7 +73,7 @@ namespace components::document {
             }
         } else {
             if (object->type() == value_type::dict) {
-                object->as_dict()->as_mutable()->set(key, value);
+                object->as_dict()->set(key, value);
             } else if (object->type() == value_type::array) {
                 try {
                     auto index = uint32_t(std::atol(key.c_str()));
@@ -99,7 +99,7 @@ namespace components::document {
                 if (key_next.find_first_not_of("0123456789") == std::string::npos) {
                     set_new_value_(object, key_parent, array_t::new_array().detach());
                 } else {
-                    set_new_value_(object, key_parent, mutable_dict_t::new_dict().detach());
+                    set_new_value_(object, key_parent, dict_t::new_dict().detach());
                 }
                 object_parent = get_value_by_key_(object, key_parent);
                 if (!object_parent && object->type() == value_type::array) {
@@ -111,7 +111,7 @@ namespace components::document {
             }
         } else {
             if (object->type() == value_type::dict) {
-                object->as_dict()->as_mutable()->set(key, value);
+                object->as_dict()->set(key, value);
             } else if (object->type() == value_type::array) {
                 try {
                     auto index = uint32_t(std::atol(key.data()));
@@ -127,7 +127,7 @@ namespace components::document {
     }
 
     document_t::document_t()
-        : value_(mutable_dict_t::new_dict()) {
+        : value_(dict_t::new_dict()) {
     }
 
     document_t::document_t(document_value_t value)
@@ -173,7 +173,7 @@ namespace components::document {
     }
 
     document_ptr make_document(const ::document::impl::dict_t *dict) {
-        return new document_t(::document::impl::mutable_dict_t::new_dict(dict));
+        return new document_t(::document::impl::dict_t::new_dict(dict));
     }
 
     document_ptr make_document(const ::document::impl::array_t *array) {
@@ -229,7 +229,7 @@ namespace components::document {
             }
             return array->as_array();
         } else if (item.is_object()) {
-            auto dict = ::document::impl::mutable_dict_t::new_dict();
+            auto dict = ::document::impl::dict_t::new_dict();
             for (const auto &child : item.get_object()) {
                 dict->set(std::string(child.key()), json2value(child.value()));
             }

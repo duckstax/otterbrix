@@ -3,11 +3,11 @@
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
 #include <components/document/core/array.hpp>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/dict.hpp>
 #include <msgpack.hpp>
 
 using ::document::impl::array_t;
-using ::document::impl::mutable_dict_t;
+using ::document::impl::dict_t;
 using ::document::impl::value_t;
 using ::document::impl::value_type;
 

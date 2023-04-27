@@ -1,7 +1,6 @@
 #include "array.hpp"
-#include <components/document/core/internal.hpp>
+#include <vector>
 #include <components/document/internal/heap.hpp>
-#include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
 
 namespace document::impl {
@@ -9,12 +8,18 @@ namespace document::impl {
     namespace internal {
 
         class heap_array_t : public heap_collection_t {
+            std::vector<value_slot_t> items_;
+
         public:
             explicit heap_array_t(uint32_t initial_count)
                 : heap_collection_t(tag_array)
                 , items_(initial_count) {}
 
             explicit heap_array_t(const array_t* array);
+
+            array_t* array() const {
+                return reinterpret_cast<array_t*>(const_cast<value_t*>(as_value()));
+            }
 
             uint32_t count() const {
                 return uint32_t(items_.size());
@@ -74,17 +79,10 @@ namespace document::impl {
                 items_.emplace_back();
                 return items_.back();
             }
-
-        private:
-            std::vector<value_slot_t> items_;
         };
 
         heap_array_t* heap_array(const array_t* array) {
             return reinterpret_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(array));
-        }
-
-        array_t* to_array(const heap_array_t* ha) {
-            return reinterpret_cast<array_t*>(const_cast<value_t*>(ha->as_value()));
         }
 
         heap_array_t::heap_array_t(const array_t* array)
@@ -148,6 +146,24 @@ namespace document::impl {
         }
     }
 
+
+    retained_t<array_t> array_t::new_array(uint32_t initial_count) {
+        return (new internal::heap_array_t(initial_count))->array();
+    }
+
+    retained_t<array_t> array_t::new_array(const array_t* a, copy_flags flags) {
+        auto ha = retained(new internal::heap_array_t(a));
+        if (flags) {
+            ha->copy_children(flags);
+        }
+        return ha->array();
+    }
+
+    const array_t* array_t::empty_array() {
+        static const array_t empty_array_;
+        return &empty_array_;
+    }
+
     array_t::array_t()
         : value_t(tag_array, 0, 0) {}
 
@@ -165,23 +181,6 @@ namespace document::impl {
 
     array_iterator_t array_t::begin() const noexcept {
         return iterator(this);
-    }
-
-    retained_t<array_t> array_t::new_array(uint32_t initial_count) {
-        return to_array(new internal::heap_array_t(initial_count));
-    }
-
-    retained_t<array_t> array_t::new_array(const array_t* a, copy_flags flags) {
-        auto ha = retained(new internal::heap_array_t(a));
-        if (flags) {
-            ha->copy_children(flags);
-        }
-        return to_array(ha);
-    }
-
-    const array_t* array_t::empty_array() {
-        static const array_t empty_array_;
-        return &empty_array_;
     }
 
     retained_t<array_t> array_t::copy(copy_flags f) const {

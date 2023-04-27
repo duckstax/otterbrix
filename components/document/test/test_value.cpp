@@ -60,9 +60,9 @@ TEST_CASE("value_t") {
         REQUIRE(impl::array_t::empty_array()->count() == 0);
         REQUIRE_FALSE(impl::array_t::empty_array()->is_mutable());
 
-        REQUIRE(impl::dict_t::empty_dict->type() == value_type::dict);
-        REQUIRE(impl::dict_t::empty_dict->count() == 0);
-        REQUIRE_FALSE(impl::dict_t::empty_dict->is_mutable());
+        REQUIRE(impl::dict_t::empty_dict()->type() == value_type::dict);
+        REQUIRE(impl::dict_t::empty_dict()->count() == 0);
+        REQUIRE_FALSE(impl::dict_t::empty_dict()->is_mutable());
     }
 
     SECTION("Pointers") {

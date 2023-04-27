@@ -3,7 +3,8 @@
 #include <algorithm>
 #include <cstring>
 
-#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
@@ -149,7 +150,7 @@ namespace document::impl::internal {
     static bool is_hardwired_value(const value_t *v) {
         return v == value_t::null_value || v == value_t::undefined_value
                 || v == value_t::true_value || v == value_t::false_value
-                || v == array_t::empty_array() || v == dict_t::empty_dict;
+                || v == array_t::empty_array() || v == dict_t::empty_dict();
     }
 
     const value_t* heap_value_t::retain(const value_t *v) {
@@ -194,8 +195,8 @@ namespace document::impl::internal {
         if (v->is_mutable())
             return static_cast<heap_collection_t*>(as_heap_value(v));
         switch (if_type) {
-        case tag_array: return static_cast<const array_t*>(v)->mutable_copy();
-        case tag_dict:  return new heap_dict_t(static_cast<const dict_t*>(v));
+        case tag_array: return reinterpret_cast<const array_t*>(v)->mutable_copy();
+        case tag_dict:  return reinterpret_cast<const dict_t*>(v)->mutable_copy();
         default:        return nullptr;
         }
     }

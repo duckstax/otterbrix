@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <components/document/core/array.hpp>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/dict.hpp>
 #include <components/document/support/varint.hpp>
 
 using namespace document;
@@ -186,7 +186,7 @@ TEST_CASE("mutable::mutable_array_t") {
 TEST_CASE("mutable::mutable_dict_t") {
 
     SECTION("check type") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         REQUIRE(md->type() == value_type::dict);
 
         REQUIRE(md->is_mutable());
@@ -205,15 +205,14 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(to_string(md).empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
-        REQUIRE(md->as_mutable() == md);
     }
 
     SECTION("set value") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         REQUIRE(md->count() == 0);
         REQUIRE(md->get("key") == nullptr);
 
-        mutable_dict_t::iterator i0(md);
+        dict_t::iterator i0(md);
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(md->is_changed());
@@ -249,7 +248,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->get("foo") == nullptr);
 
         bool found[9] = { };
-        mutable_dict_t::iterator i1(md);
+        dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
             auto key = i1.key_string();
@@ -269,12 +268,12 @@ TEST_CASE("mutable::mutable_dict_t") {
 
         md->remove_all();
         REQUIRE(md->count() == 0);
-        mutable_dict_t::iterator i2(md);
+        dict_t::iterator i2(md);
         REQUIRE_FALSE(i2);
     }
 
     SECTION("to dict_t") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         auto d = md->as_dict();
         REQUIRE(d->type() == value_type::dict);
         REQUIRE(d->count() == 0);
@@ -328,15 +327,15 @@ TEST_CASE("mutable::mutable_dict_t") {
     }
 
     SECTION("copy") {
-        auto ma = mutable_dict_t::new_dict();
+        auto ma = dict_t::new_dict();
         ma->set("a", 100);
         ma->set("b", std::string("dog"));
 
-        auto mb = mutable_dict_t::new_dict();
+        auto mb = dict_t::new_dict();
         mb->set("a", ma);
         REQUIRE(mb->get("a") == ma);
 
-        auto mc = mutable_dict_t::new_dict();
+        auto mc = dict_t::new_dict();
         mc->set("a", mb);
         REQUIRE(mc->get("a") == mb);
 

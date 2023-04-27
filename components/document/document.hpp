@@ -9,7 +9,6 @@
 namespace document::impl {
     class dict_t;
     class array_t;
-    class dict_iterator_t;
 }
 
 namespace components::document {

@@ -6,8 +6,9 @@
 
 #include <algorithm>
 
+#include <components/document/core/dict.hpp>
+#include <components/document/internal/heap.hpp>
 #include "components/document/support/platform_compat.hpp"
-#include <components/document/mutable/mutable_dict.hpp>
 #include <components/document/support/varint.hpp>
 
 namespace document::impl::internal {
@@ -220,19 +221,21 @@ namespace document::impl::internal {
             retained_t<heap_collection_t> copy;
             switch (value->tag()) {
             case tag_array: {
-                auto copy_value = array_t::new_array(static_cast<array_t*>(const_cast<value_t*>(value))).detach();
+                auto copy_value = array_t::new_array(reinterpret_cast<array_t*>(const_cast<value_t*>(value))).detach();
                 if (recurse) {
                     copy_value->copy_children(flags);
                 }
                 set(copy_value);
                 break;
             }
-            case tag_dict:
-                copy = new heap_dict_t(static_cast<dict_t*>(const_cast<value_t*>(value)));
-                if (recurse)
-                    static_cast<heap_dict_t*>(copy.get())->copy_children(flags);
-                set(copy->as_value());
+            case tag_dict: {
+                auto copy_value = dict_t::new_dict(reinterpret_cast<dict_t*>(const_cast<value_t*>(value))).detach();
+                if (recurse) {
+                    copy_value->copy_children(flags);
+                }
+                set(copy_value);
                 break;
+            }
             case tag_string:
                 set(value->as_string());
                 break;

@@ -9,7 +9,6 @@ set(${PROJECT_NAME}_SOURCES
         internal/heap.cpp
         internal/value_slot.cpp
         msgpack/msgpack_encoder.cpp
-        mutable/mutable_dict.cpp
         support/better_assert.cpp
         support/exception.cpp
         support/num_conversion.cpp

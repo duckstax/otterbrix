@@ -7,7 +7,6 @@ namespace document::impl {
 
     class array_t : public value_t {
     public:
-
         struct iterator {
             explicit iterator(const array_t* a) noexcept;
 
@@ -28,15 +27,14 @@ namespace document::impl {
             void set_value_();
         };
 
+        static retained_t<array_t> new_array(uint32_t initial_count = 0);
+        static retained_t<array_t> new_array(const array_t* a, copy_flags flags = default_copy);
+        static const array_t* empty_array();
 
         uint32_t count() const noexcept PURE;
         bool empty() const noexcept PURE;
         const value_t* get(uint32_t index) const noexcept PURE;
         iterator begin() const noexcept;
-
-        static retained_t<array_t> new_array(uint32_t initial_count = 0);
-        static retained_t<array_t> new_array(const array_t *a, copy_flags flags = default_copy);
-        static const array_t* empty_array();
 
         retained_t<array_t> copy(copy_flags f = default_copy) const;
         retained_t<internal::heap_collection_t> mutable_copy() const;
@@ -48,36 +46,29 @@ namespace document::impl {
         void insert(uint32_t where, uint32_t n);
         void remove(uint32_t where, uint32_t n);
 
-        template <typename T>
+        template<typename T>
         void set(uint32_t index, T t);
 
-        template <typename T>
-        void append(const T &t);
+        template<typename T>
+        void append(const T& t);
+
+        internal::value_slot_t& slot(uint32_t index);
 
     private:
         array_t();
 
-        internal::value_slot_t& slot(uint32_t index);
         internal::value_slot_t& appending();
-
-        friend class value_t;
-        friend class dict_t;
-        friend class dict_iterator_t;
-        template<bool WIDE>
-        friend struct dict_impl_t;
     };
 
-
-    template <typename T>
+    template<typename T>
     void array_t::set(uint32_t index, T t) {
         slot(index).set(t);
     }
 
-    template <typename T>
-    void array_t::append(const T &t) {
+    template<typename T>
+    void array_t::append(const T& t) {
         appending().set(t);
     }
-
 
     using array_iterator_t = array_t::iterator;
 

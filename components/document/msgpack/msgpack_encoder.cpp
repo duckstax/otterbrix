@@ -15,7 +15,7 @@ const value_t *to_structure_(const msgpack::object &msg_object) {
     } else if (msg_object.type == msgpack::type::object_type::STR) {
         return document::impl::new_value(msg_object.as<std::string>()).detach();
     } else if (msg_object.type == msgpack::type::object_type::MAP) {
-        auto dict = mutable_dict_t::new_dict().detach();
+        auto dict = dict_t::new_dict().detach();
         msgpack::object_map msg_dict = msg_object.via.map;
         for (uint32_t i = 0; i < msg_dict.size; ++i) {
             dict->set(msg_dict.ptr[i].key.as<std::string>(), to_structure_(msg_dict.ptr[i].val));
