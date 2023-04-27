@@ -3,7 +3,6 @@
 #include <map>
 
 #include <components/document/internal/heap.hpp>
-#include <components/document/core/shared_keys.hpp>
 #include <components/document/support/better_assert.hpp>
 
 namespace document::impl {
@@ -96,15 +95,8 @@ namespace document::impl {
                 set_changed(true);
             }
 
-            //shared_keys_t* shared_keys() const {
-            //    return _shared_keys;
-            //}
-
         private:
             dict_t::key_t encode_key_(std::string_view key) const noexcept {
-                //int int_key = 0;
-                //if (_shared_keys && _shared_keys->encode(key, int_key))
-                //    return key_t(int_key);
                 return dict_t::key_t{key};
             }
         };
@@ -120,8 +112,6 @@ namespace document::impl {
                 auto hd = heap_dict(dict);
                 a_ = array_t::new_array(hd->a_);
                 map_ = hd->map_;
-                //backing_slices_ = hd->backing_slices_;
-                //shared_keys_ = dict->shared_keys();
             } else {
                 a_ = array_t::new_array();
             }
@@ -138,9 +128,7 @@ namespace document::impl {
     dict_t::key_t::key_t(const std::string& raw_str)
         : raw_str_(raw_str) {}
 
-    dict_t::key_t::~key_t() {
-        //release(shared_keys_);
-    }
+    dict_t::key_t::~key_t() = default;
 
     std::string_view dict_t::key_t::string() const noexcept {
         return {raw_str_.data(), raw_str_.size()};
@@ -150,20 +138,11 @@ namespace document::impl {
         return raw_str_.compare(k.raw_str_);
     }
 
-    //void dict_t::key_t::set_shared_keys(shared_keys_t* sk) {
-    //    assert_precondition(!_shared_keys);
-    //    _shared_keys = retain(sk);
-    //}
-
 
     dict_t::iterator::iterator(const dict_t* d) noexcept
-        : dict_t::iterator(d, nullptr) {}
-
-    dict_t::iterator::iterator(const dict_t* d, const shared_keys_t* sk) noexcept
         : source_(d)
         , count_(d->count())
-        , pos_(0)
-        , shared_keys_(sk) {
+        , pos_(0) {
         set_value_();
     }
 
@@ -172,15 +151,10 @@ namespace document::impl {
     }
 
     std::string_view dict_t::iterator::key_string() const noexcept {
-        auto key = this->key();
-        auto key_str = key->as_string();
-        if (key_str.empty() && key->is_int()) {
-            auto sk = shared_keys_ ? shared_keys_ : find_shared_keys();
-            if (sk) {
-                key_str = sk->decode(static_cast<int>(key->as_int()));
-            }
+        if (key_) {
+            return key()->as_string();
         }
-        return key_str;
+        return {};
     }
 
     const value_t* dict_t::iterator::key() const noexcept {
@@ -218,14 +192,6 @@ namespace document::impl {
         }
     }
 
-    shared_keys_t* dict_t::iterator::find_shared_keys() const {
-        return nullptr;
-        //auto sk = doc_t::shared_keys(_a.first_);
-        //_shared_keys = sk;
-        //assert_precondition(sk || is_disable_necessary_shared_keys_check);
-        //return sk;
-    }
-
 
     dict_t::dict_t()
         : value_t(internal::tag_dict, 0, 0) {}
@@ -258,10 +224,6 @@ namespace document::impl {
     const value_t* dict_t::get(std::string_view key) const noexcept {
         return heap_dict(this)->get(key);
     }
-
-    //const value_t* dict_t::get(int key) const noexcept {
-    //    return heap_dict(this)->get(key);
-    //}
 
     bool dict_t::is_equals(const dict_t* dv) const noexcept {
         dict_t::iterator i(this);

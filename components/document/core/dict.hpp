@@ -7,8 +7,6 @@
 
 namespace document::impl {
 
-    class shared_keys_t;
-
     class dict_t : public value_t {
     public:
         class key_t {
@@ -21,18 +19,11 @@ namespace document::impl {
 
         private:
             std::string const raw_str_;
-            //shared_keys_t* shared_keys_{nullptr};
-            //uint32_t _hint{0xffffffff};
-            //int32_t _numeric_key{0};
-            //bool _has_numeric_key{false};
-
-            //void set_shared_keys(shared_keys_t* sk);
         };
 
         class iterator {
         public:
             explicit iterator(const dict_t* d) noexcept;
-            iterator(const dict_t* d, const shared_keys_t* sk) noexcept;
 
             uint32_t count() const noexcept PURE;
 
@@ -50,11 +41,8 @@ namespace document::impl {
             const value_t* value_;
             uint32_t count_;
             uint32_t pos_;
-            mutable const shared_keys_t* shared_keys_;
 
             void set_value_();
-
-            shared_keys_t* find_shared_keys() const;
         };
 
         static retained_t<dict_t> new_dict(const dict_t* d = nullptr, copy_flags flags = default_copy);
@@ -65,7 +53,6 @@ namespace document::impl {
 
         const value_t* get(key_t& key) const noexcept;
         const value_t* get(std::string_view key) const noexcept PURE;
-        //const value_t* get(int key) const noexcept PURE;
 
         bool is_equals(const dict_t* NONNULL) const noexcept PURE;
 
