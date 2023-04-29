@@ -141,6 +141,9 @@ namespace components::document {
         for (auto it_update = dict->begin(); it_update; ++it_update) {
             auto key_update = static_cast<std::string>(it_update.key()->as_string());
             auto fields = it_update.value()->as_dict();
+            if (!fields) {
+                break;
+            }
             for (auto it_field = fields->begin(); it_field; ++it_field) {
                 auto key_field = it_field.key()->as_string();
                 auto old_value = view.get_value(key_field);
