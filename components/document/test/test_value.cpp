@@ -65,6 +65,14 @@ TEST_CASE("value_t") {
         //REQUIRE_FALSE(impl::dict_t::empty_dict()->is_mutable());
     }
 
+    SECTION("Check type") {
+        REQUIRE(impl::new_value(10000ul)->is_unsigned());
+        REQUIRE(impl::new_value(10000)->is_int());
+        //REQUIRE(impl::new_value(10ul)->is_unsigned()); //todo
+        REQUIRE(impl::new_value(10ul)->is_int());
+        REQUIRE(impl::new_value(10)->is_int());
+    }
+
     SECTION("Pointers") {
         impl::internal::pointer_t v(4, impl::internal::size_narrow);
         REQUIRE(v.offset<false>() == 4u);
