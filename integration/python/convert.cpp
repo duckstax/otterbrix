@@ -10,8 +10,8 @@
 
 #include <actor-zeta.hpp>
 
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 
 #include <components/document/document_view.hpp>
 #include <components/expressions/compare_expression.hpp>
@@ -43,14 +43,14 @@ using components::document::document_view_t;
         return ::document::impl::new_value(obj.cast<std::string>());
     }
     if (py::isinstance<py::tuple>(obj) || py::isinstance<py::list>(obj)) {
-        auto out = ::document::impl::mutable_array_t::new_array();
+        auto out = ::document::impl::array_t::new_array();
         for (const py::handle value : obj) {
             out->append(to_(value));
         }
         return out->as_array();
     }
     if (py::isinstance<py::dict>(obj)) {
-        auto out = ::document::impl::mutable_dict_t::new_dict();
+        auto out = ::document::impl::dict_t::new_dict();
         for (const py::handle key : obj) {
             out->set(py::str(key).cast<std::string>(), to_(obj[key]));
         }

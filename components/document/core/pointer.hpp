@@ -21,10 +21,6 @@ public:
     const value_t* careful_deref(bool wide, const void* &start, const void* &end) const noexcept;
 
 private:
-    template <bool WIDE> PURE
-    uint32_t legacy_offset() const noexcept;
-
-
     void set_narrow_bytes(uint16_t b);
     void set_wide_bytes(uint32_t b);
     uint16_t narrow_bytes() const PURE;
@@ -46,14 +42,6 @@ inline const value_t* pointer_t::deref() const noexcept {
     assert(off > 0);
     const value_t *dst = offsetby(this, -static_cast<std::ptrdiff_t>(off));
     return dst;
-}
-
-template <bool WIDE>
-PURE uint32_t pointer_t::legacy_offset() const noexcept {
-    if (WIDE)
-        return (endian::dec32(wide_bytes()) & ~0x80000000) << 1;
-    else
-        return static_cast<uint32_t>((endian::dec16(narrow_bytes()) & ~0x8000) << 1);
 }
 
 }

@@ -2,14 +2,13 @@
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <components/document/mutable/mutable_value.hpp>
+#include <components/document/core/value.hpp>
 #include <components/document/support/ref_counted.hpp>
 #include <components/document/document_id.hpp>
 
 namespace document::impl {
     class dict_t;
     class array_t;
-    class dict_iterator_t;
 }
 
 namespace components::document {

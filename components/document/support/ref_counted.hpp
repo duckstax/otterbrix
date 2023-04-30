@@ -25,11 +25,11 @@ private:
     friend void assign_ref(ref_counted_t* &dst, ref_counted_t *src) noexcept;
 
 #if DEBUG
-    void _retain() const noexcept                { _careful_retain(); }
-    void _release() const noexcept               { _careful_release(); }
+    void retain_() const noexcept                { _careful_retain(); }
+    void release_() const noexcept               { _careful_release(); }
 #else
-    ALWAYS_INLINE void _retain() const noexcept  { ++_ref_count; }
-    void _release() const noexcept;
+    ALWAYS_INLINE void retain_() const noexcept  { ++_ref_count; }
+    void release_() const noexcept;
 #endif
 
     static constexpr int32_t careful_initial_ref_count = -6666666;
@@ -47,7 +47,7 @@ private:
 
 template <typename REFCOUNTED>
 ALWAYS_INLINE REFCOUNTED* retain(REFCOUNTED *r) noexcept {
-    if (r) r->_retain();
+    if (r) r->retain_();
     return r;
 }
 

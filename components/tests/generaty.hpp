@@ -1,8 +1,8 @@
 #pragma once
 
 #include <components/document/document.hpp>
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 
 using namespace components::document;
 

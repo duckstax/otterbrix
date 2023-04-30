@@ -1,11 +1,10 @@
-#include "mutable_value.hpp"
-
-#include <cstring>
+#include "heap.hpp"
 
 #include <algorithm>
+#include <cstring>
 
-#include <components/document/mutable/mutable_array.hpp>
-#include <components/document/mutable/mutable_dict.hpp>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/varint.hpp>
@@ -18,7 +17,7 @@ namespace document::impl::internal {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winvalid-offsetof"
 #endif
-        static_assert(offsetof(heap_value_t, _header) & 1, "_header must be at odd address");
+        static_assert(offsetof(heap_value_t, header_) & 1, "header must be at odd address");
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
@@ -26,17 +25,17 @@ namespace document::impl::internal {
     }
 
     heap_value_t::heap_value_t(tags tag, int tiny) {
-        _pad = 0xFF;
-        _header = uint8_t((tag << 4) | tiny);
+        pad_ = 0xFF;
+        header_ = uint8_t((tag << 4) | tiny);
     }
 
     tags heap_value_t::tag() const {
-        return tags(_header >> 4);
+        return tags(header_ >> 4);
     }
 
     heap_value_t* heap_value_t::create(tags tag, int tiny, std::string_view extra_data) {
         auto hv = new (extra_data.size()) heap_value_t(tag, tiny);
-        copy_to(extra_data,&hv->_header + 1);
+        copy_to(extra_data, &hv->header_ + 1);
         return hv;
     }
 
@@ -114,7 +113,7 @@ namespace document::impl::internal {
             size_byte_count = put_uvar_int(&size_buf, s.length());
         }
         auto hv = new (size_byte_count + s.length()) heap_value_t(tag, tiny);
-        uint8_t *str_data = &hv->_header + 1;
+        uint8_t *str_data = &hv->header_ + 1;
         memcpy(str_data, size_buf, size_byte_count);
         memcpy(str_data + size_byte_count, s.data(), s.length());
         return hv;
@@ -124,7 +123,7 @@ namespace document::impl::internal {
         assert_precondition(v->tag() < tag_array);
         size_t size = v->data_size();
         auto hv = new (size - 1) heap_value_t();
-        ::memcpy(&hv->_header, v, size);
+        ::memcpy(&hv->header_, v, size);
         return hv;
     }
 
@@ -133,7 +132,7 @@ namespace document::impl::internal {
     }
 
     const value_t *heap_value_t::as_value() const {
-        return reinterpret_cast<const value_t*>(&_header);
+        return reinterpret_cast<const value_t*>(&header_);
     }
 
     bool heap_value_t::is_heap_value(const value_t *v) {
@@ -144,14 +143,14 @@ namespace document::impl::internal {
         if (!is_heap_value(v))
             return nullptr;
         auto ov = reinterpret_cast<offset_value_t*>(size_t(v) & size_t(~1));
-        assert_postcondition(ov->_pad == 0xFF);
+        assert_postcondition(ov->pad_ == 0xFF);
         return static_cast<heap_value_t*>(ov);
     }
 
     static bool is_hardwired_value(const value_t *v) {
         return v == value_t::null_value || v == value_t::undefined_value
                 || v == value_t::true_value || v == value_t::false_value
-                || v == array_t::empty_array || v == dict_t::empty_dict;
+                || v == array_t::empty_array() || v == dict_t::empty_dict();
     }
 
     const value_t* heap_value_t::retain(const value_t *v) {
@@ -196,69 +195,23 @@ namespace document::impl::internal {
         if (v->is_mutable())
             return static_cast<heap_collection_t*>(as_heap_value(v));
         switch (if_type) {
-        case tag_array: return new heap_array_t(static_cast<const array_t*>(v));
-        case tag_dict:  return new heap_dict_t(static_cast<const dict_t*>(v));
+        case tag_array: return reinterpret_cast<const array_t*>(v)->mutable_copy();
+        case tag_dict:  return reinterpret_cast<const dict_t*>(v)->mutable_copy();
         default:        return nullptr;
         }
     }
 
     bool heap_collection_t::is_changed() const {
-        return _changed;
+        return changed_;
     }
 
     heap_collection_t::heap_collection_t(tags tag)
         : heap_value_t(tag, 0)
-        , _changed(false)
+        , changed_(false)
     {}
 
     void heap_collection_t::set_changed(bool c) {
-        _changed = c;
+        changed_ = c;
     }
 
-}
-
-namespace document::impl {
-    retained_const_t<value_t> new_value(nullptr_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(bool data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(int data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(unsigned data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(int64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(uint64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(float data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(double data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(const std::string& data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(std::string_view data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
-
-    retained_const_t<value_t> new_value(const value_t* data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
 }
