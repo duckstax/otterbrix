@@ -1,6 +1,6 @@
 #include "dict.hpp"
 
-#include <map>
+#include <unordered_map>
 
 #include <components/document/internal/heap.hpp>
 #include <components/document/support/better_assert.hpp>
@@ -9,16 +9,22 @@ namespace document::impl {
 
     namespace internal {
 
-        struct key_less {
-            bool operator()(const dict_t::key_t &key1, const dict_t::key_t &key2) const {
-                return key1.compare(key2) < 0;
+        struct key_hash {
+            size_t operator()(const dict_t::key_t& key) const {
+                return std::hash<std::string_view>{}(key.string());
+            }
+        };
+
+        struct key_eq {
+            bool operator()(const dict_t::key_t& key1, const dict_t::key_t& key2) const {
+                return key1.string() == key2.string();
             }
         };
 
 
         class heap_dict_t : public heap_collection_t {
             retained_t<array_t> a_;
-            std::map<dict_t::key_t, uint32_t, key_less> map_;
+            std::unordered_map<dict_t::key_t, uint32_t, key_hash, key_eq> map_;
             uint32_t count_ {0};
 
         public:
