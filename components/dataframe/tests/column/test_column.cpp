@@ -25,19 +25,28 @@ using namespace components::dataframe::column;
 #define IF_REQUIRE_THROWS_AS(f, error)
 #endif
 
-/*
-bool equal(std::pmr::memory_resource *resource, const column_view &lhs, const column_view &rhs) {
-    auto lhs_indices = generate_all_row_indices(resource, lhs.size());
-    auto rhs_indices = generate_all_row_indices(resource, rhs.size());
-    return type_dispatcher(
-        lhs.type(),
-        column_comparator<true>{},
-        lhs,
-        rhs,
-        *lhs_indices,
-        *rhs_indices);
-}
-*/
+namespace {
+
+    bool equal(const void* lhs, const void* rhs, std::size_t size) {
+        if (lhs == rhs || size == 0) {
+            return true;
+        }
+        if (!lhs || !rhs) {
+            return false;
+        }
+        return memcmp(lhs, rhs, size) == 0;
+    }
+
+    bool equal(const column_view &v1, const column_view &v2) {
+        return equal(v1.head(), v2.head(), v1.size());
+    }
+
+    bool equal(const column_t &c1, const column_t &c2) {
+        return equal(c1.view(), c2.view());
+    }
+
+} // namespace
+
 
 template<typename T>
 struct gen_column {
@@ -214,7 +223,7 @@ TEMPLATE_TEST_CASE("copy data no mask", "[column][template]", std::int32_t) {
     verify_column_views(col);
     column_view v = col;
     REQUIRE(v.head() != gen.data.data());
-    //REQUIRE(equal(resource, v.head(), gen.data.data())); //todo: repair
+    REQUIRE(equal(v.head(), gen.data.data(), gen.data.size()));
 }
 
 TEMPLATE_TEST_CASE("move data no mask", "[column][template]", std::int32_t) {
@@ -249,8 +258,8 @@ TEMPLATE_TEST_CASE("copy data and mask", "[column][template]", std::int32_t) {
     column_view v = col;
     REQUIRE(v.head() != gen.data.data());
     REQUIRE(v.null_mask() != gen.all_valid_mask.data());
-    //REQUIRE(equal(v.head(), gen.data.data(), gen.data.size())); //todo: repair
-    //REQUIRE(equal(v.null_mask(), gen.all_valid_mask.data(), gen.mask.size())); //todo: repair
+    REQUIRE(equal(v.head(), gen.data.data(), gen.data.size()));
+    REQUIRE(equal(v.null_mask(), gen.all_valid_mask.data(), gen.all_valid_mask.size()));
 }
 
 TEMPLATE_TEST_CASE("move data and mask", "[column][template]", std::int32_t) {
@@ -276,7 +285,7 @@ TEMPLATE_TEST_CASE("copy constructor no mask", "[column][template]", std::int32_
     column_t original{resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{resource}};
     column_t copy{resource, original};
     verify_column_views(copy);
-    //REQUIRE(equal(original, copy)); //todo: repair
+    REQUIRE(equal(original, copy));
     column_view original_view = original;
     column_view copy_view = copy;
     REQUIRE(original_view.head() != copy_view.head());
@@ -288,7 +297,7 @@ TEMPLATE_TEST_CASE("copy constructor with mask", "[column][template]", std::int3
     column_t original{resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask)};
     column_t copy{resource, original};
     verify_column_views(copy);
-    //REQUIRE(equal(original, copy)); //todo: repair
+    REQUIRE(equal(original, copy));
     column_view original_view = original;
     column_view copy_view = copy;
     REQUIRE(original_view.head() != copy_view.head());
@@ -417,7 +426,7 @@ TEMPLATE_TEST_CASE("column view constructor with mask", "[column][template]", st
     column_view original_view = original;
     column_t copy{resource, original_view};
     verify_column_views(copy);
-    //REQUIRE(equal(original, copy)); //todo: repair
+    REQUIRE(equal(original, copy));
     column_view copy_view = copy;
     REQUIRE(original_view.head() != copy_view.head());
     REQUIRE(original_view.null_mask() != copy_view.null_mask());
