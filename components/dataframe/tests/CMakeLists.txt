@@ -2,6 +2,7 @@ project(test_dataframe)
 
 set(${PROJECT_NAME}_SOURCES
         bitmask/bitmask_tests.cpp
+        column/test_column.cpp
         tools.cpp
 )
 

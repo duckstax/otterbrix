@@ -5,6 +5,7 @@
 #include <core/buffer.hpp>
 #include <core/span.hpp>
 
+#include <dataframe/forward.hpp>
 #include <dataframe/types.hpp>
 #include <dataframe/enums.hpp>
 
@@ -73,7 +74,16 @@ namespace components::dataframe::detail {
         size_type begin_bit,
         size_type end_bit);
 
+    core::buffer copy_bitmask(
+        std::pmr::memory_resource* resource,
+        column::column_view const& view);
+
     size_type num_bitmask_words(size_type number_of_bits);
+
+    std::pmr::vector<size_type> segmented_null_count(
+        std::pmr::memory_resource* resource,
+        const bitmask_type* bitmask,
+        core::span<const size_type> indices);
 
 
     class bitmask_iterator
