@@ -2,12 +2,12 @@
 
 #include <components/document/document.hpp>
 #include <components/document/document_view.hpp>
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <msgpack.hpp>
 
-using ::document::impl::mutable_array_t;
-using ::document::impl::mutable_dict_t;
+using ::document::impl::array_t;
+using ::document::impl::dict_t;
 using ::document::impl::value_t;
 using ::document::impl::value_type;
 
@@ -17,9 +17,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
         auto* dict = value->as_dict();
         o.pack_map(dict->count());
         for (auto it = dict->begin(); it; ++it) {
-            //todo kick memory leak
-            auto* s = new std::string(it.key()->to_string());
-            o.pack(s->data());
+            o.pack(to_string(it.key()));
             to_msgpack_(o, it.value());
         }
     } else if (value->type() == value_type::array) {
@@ -37,9 +35,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
     } else if (value->is_double()) {
         o.pack(value->as_double());
     } else if (value->type() == value_type::string) {
-        //todo kick memory leak
-        auto* s = new std::string(value->to_string());
-        o.pack(s->data());
+        o.pack(to_string(value));
     }
 }
 

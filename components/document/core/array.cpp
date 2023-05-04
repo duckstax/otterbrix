@@ -1,134 +1,222 @@
 #include "array.hpp"
-#include <components/document/core/internal.hpp>
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.hpp>
+#include <vector>
+#include <components/document/internal/heap.hpp>
 #include <components/document/support/varint.hpp>
 
 namespace document::impl {
 
+    namespace internal {
+
+        class heap_array_t : public heap_collection_t {
+            std::vector<value_slot_t> items_;
+
+        public:
+            explicit heap_array_t(uint32_t initial_count)
+                : heap_collection_t(tag_array)
+                , items_(initial_count) {}
+
+            explicit heap_array_t(const array_t* array);
+
+            array_t* array() const {
+                return reinterpret_cast<array_t*>(const_cast<value_t*>(as_value()));
+            }
+
+            uint32_t count() const {
+                return uint32_t(items_.size());
+            }
+
+            bool empty() const {
+                return items_.empty();
+            }
+
+            const value_t* get(uint32_t index) {
+                if (index >= count()) {
+                    return nullptr;
+                }
+                return items_[index].as_value();
+            }
+
+            void resize(uint32_t new_size) {
+                if (new_size == count()) {
+                    return;
+                }
+                items_.resize(new_size, value_slot_t(nullptr));
+                set_changed(true);
+            }
+
+            void insert(uint32_t where, uint32_t n) {
+                _throw_if(where > count(), error_code::out_of_range, "insert position is past end of array");
+                if (n == 0) {
+                    return;
+                }
+                items_.insert(items_.begin() + where, n, value_slot_t(nullptr));
+                set_changed(true);
+            }
+
+            void remove(uint32_t where, uint32_t n) {
+                _throw_if(where + n > count(), error_code::out_of_range, "remove range is past end of array");
+                if (n == 0) {
+                    return;
+                }
+                auto at = items_.begin() + where;
+                items_.erase(at, at + n);
+                set_changed(true);
+            }
+
+            void copy_children(copy_flags flags) {
+                for (auto& entry : items_) {
+                    entry.copy_value(flags);
+                }
+            }
+
+            value_slot_t& slot(uint32_t index) {
+                set_changed(true);
+                return items_[index];
+            }
+
+            value_slot_t& appending() {
+                set_changed(true);
+                items_.emplace_back();
+                return items_.back();
+            }
+        };
+
+        heap_array_t* heap_array(const array_t* array) {
+            return reinterpret_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(array));
+        }
+
+        heap_array_t::heap_array_t(const array_t* array)
+            : heap_collection_t(tag_array)
+            , items_(array ? array->count() : 0) {
+            if (array) {
+                auto ha = heap_array(array);
+                items_ = ha->items_;
+            }
+        }
+
+    } // namespace internal
+
     using namespace internal;
 
-    array_t::impl::impl(const value_t* v) noexcept {
-        if (_usually_false(v == nullptr)) {
-            _first = nullptr;
-            _width = size_narrow;
-            _count = 0;
-        } else if (_usually_true(!v->is_mutable())) {
-            _first = reinterpret_cast<const value_t*>(&v->_byte[2]);
-            _width = v->is_wide_array() ? size_wide : size_narrow;
-            _count = v->count_value();
-            if (_usually_false(_count == long_array_count)) {
-                uint32_t extra_count;
-                size_t count_size = get_uvar_int32(std::string_view(reinterpret_cast<const char*>(_first), 10), &extra_count);
-                if (_usually_true(count_size > 0))
-                    _count += extra_count;
-                else
-                    _count = 0;
-                _first = offsetby(_first, static_cast<std::ptrdiff_t>(count_size + (count_size & 1)));
-            }
+    array_t::iterator::iterator(const array_t* a) noexcept
+        : source_(a)
+        , value_(nullptr)
+        , count_(heap_array(a)->count())
+        , pos_(0) {
+        set_value_();
+    }
+
+    uint32_t array_t::iterator::count() const noexcept {
+        return count_;
+    }
+
+    const value_t* array_t::iterator::value() const noexcept {
+        return value_;
+    }
+
+    array_t::iterator::operator const value_t*() const noexcept {
+        return value_;
+    }
+
+    const value_t* array_t::iterator::operator->() const noexcept {
+        return value_;
+    }
+
+    array_t::iterator::operator bool() const noexcept {
+        return pos_ < count_;
+    }
+
+    array_t::iterator& array_t::iterator::operator++() {
+        ++pos_;
+        set_value_();
+        return *this;
+    }
+
+    array_t::iterator& array_t::iterator::operator+=(uint32_t n) {
+        pos_ += n;
+        set_value_();
+        return *this;
+    }
+
+    void array_t::iterator::set_value_() {
+        if (pos_ < count_) {
+            value_ = heap_array(source_)->get(pos_);
         } else {
-            auto mcoll = heap_value_t::as_heap_value(v);
-            heap_array_t* mut_array;
-            if (v->tag() == tag_array) {
-                mut_array = dynamic_cast<heap_array_t*>(mcoll);
-                _count = mut_array->count();
-            } else {
-                mut_array = dynamic_cast<heap_dict_t*>(mcoll)->array_key_value();
-                _count = mut_array->count() / 2;
-            }
-            _first = _count ? reinterpret_cast<const value_t*>(mut_array->first()) : nullptr;
-            _width = sizeof(value_slot_t);
+            value_ = nullptr;
         }
     }
 
-    const value_t* array_t::impl::deref(const value_t* v) const noexcept {
-        if (_usually_false(is_mutable()))
-            return reinterpret_cast<const value_slot_t*>(v)->as_value();
-        return v->deref(_width == size_wide);
+
+    retained_t<array_t> array_t::new_array(uint32_t initial_count) {
+        return (new internal::heap_array_t(initial_count))->array();
     }
 
-    const value_t* array_t::impl::operator[](unsigned index) const noexcept {
-        if (_usually_false(index >= _count))
-            return nullptr;
-        if (_width == size_narrow)
-            return offsetby(_first, size_narrow * index)->deref<false>();
-        else if (_usually_true(_width == size_wide))
-            return offsetby(_first, size_wide * index)->deref<true>();
-        else
-            return (reinterpret_cast<const value_slot_t*>(_first) + index)->as_value();
+    retained_t<array_t> array_t::new_array(const array_t* a, copy_flags flags) {
+        auto ha = retained(new internal::heap_array_t(a));
+        if (flags) {
+            ha->copy_children(flags);
+        }
+        return ha->array();
     }
 
-    const value_t* array_t::impl::second() const noexcept {
-        return offsetby(_first, _width);
+    const array_t* array_t::empty_array() {
+        static const auto empty_array_ = new_array();
+        return empty_array_.get();
     }
 
-    const value_t* array_t::impl::first_value() const noexcept {
-        if (_usually_false(_count == 0))
-            return nullptr;
-        return deref(_first);
-    }
-
-    size_t array_t::impl::index_of(const value_t* v) const noexcept {
-        return (reinterpret_cast<size_t>(v) - reinterpret_cast<size_t>(_first)) / _width;
-    }
-
-    void array_t::impl::offset(uint32_t n) {
-        _throw_if(n > _count, error_code::out_of_range, "iterating past end of array");
-        _count -= n;
-        if (_usually_true(_count > 0))
-            _first = offsetby(_first, _width * n);
-    }
-
-    bool array_t::impl::is_mutable() const noexcept {
-        return _width > 4;
-    }
-
-    constexpr array_t::array_t()
-        : value_t(internal::tag_array, 0, 0) {}
+    array_t::array_t()
+        : value_t(tag_array, 0, 0) {}
 
     uint32_t array_t::count() const noexcept {
-        if (_usually_false(is_mutable()))
-            return heap_array()->count();
-        return impl(this)._count;
+        return heap_array(this)->count();
     }
 
     bool array_t::empty() const noexcept {
-        if (_usually_false(is_mutable()))
-            return heap_array()->empty();
-        return count_is_zero();
+        return heap_array(this)->empty();
     }
 
     const value_t* array_t::get(uint32_t index) const noexcept {
-        if (_usually_false(is_mutable()))
-            return heap_array()->get(index);
-        return impl(this)[index];
+        return heap_array(this)->get(index);
     }
 
-    heap_array_t* array_t::heap_array() const {
-        return dynamic_cast<heap_array_t*>(internal::heap_collection_t::as_heap_value(this));
+    array_iterator_t array_t::begin() const noexcept {
+        return iterator(this);
     }
 
-    mutable_array_t* array_t::as_mutable() const {
-        return is_mutable() ? reinterpret_cast<mutable_array_t*>(const_cast<array_t*>(this)) : nullptr;
+    retained_t<array_t> array_t::copy(copy_flags f) const {
+        return new_array(this, f);
     }
 
-    array_iterator_t::array_iterator_t(const array_t* a) noexcept
-        : impl(a)
-        , _value(first_value()) {}
-
-    array_iterator_t& array_iterator_t::operator++() {
-        offset(1);
-        _value = first_value();
-        return *this;
+    retained_t<internal::heap_collection_t> array_t::mutable_copy() const {
+        return new heap_array_t(this);
     }
 
-    array_iterator_t& array_iterator_t::operator+=(uint32_t n) {
-        offset(n);
-        _value = first_value();
-        return *this;
+    void array_t::copy_children(copy_flags flags) const {
+        heap_array(this)->copy_children(flags);
     }
 
-    EVEN_ALIGNED static constexpr array_t empty_array_instance;
-    const array_t* const array_t::empty_array = &empty_array_instance;
+    bool array_t::is_changed() const {
+        return heap_array(this)->is_changed();
+    }
+
+    void array_t::resize(uint32_t new_size) {
+        heap_array(this)->resize(new_size);
+    }
+
+    void array_t::insert(uint32_t where, uint32_t n) {
+        heap_array(this)->insert(where, n);
+    }
+
+    void array_t::remove(uint32_t where, uint32_t n) {
+        heap_array(this)->remove(where, n);
+    }
+
+    internal::value_slot_t& array_t::slot(uint32_t index) {
+        return heap_array(this)->slot(index);
+    }
+
+    internal::value_slot_t& array_t::appending() {
+        return heap_array(this)->appending();
+    }
 
 } // namespace document::impl

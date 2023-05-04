@@ -1,4 +1,5 @@
 #include <catch2/catch.hpp>
+#include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
 #include <services/wal/wal.hpp>
 #include "test_config.hpp"
@@ -10,8 +11,25 @@ constexpr uint count_documents = 10;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
+using components::ql::aggregate::operator_type;
+using components::expressions::compare_type;
+using key = components::expressions::key_t;
+using id_par = core::parameter_id_t;
+
 uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
     return 10000 * n_db + 100 * n_col + n_doc;
+}
+
+result_find_one find_doc(duck_charmer::wrapper_dispatcher_t* dispatcher,
+                         const database_name_t &db_name,
+                         const collection_name_t &col_name,
+                         int n_doc) {
+    auto session_doc = duck_charmer::session_id_t();
+    auto *ql = new components::ql::aggregate_statement{db_name, col_name};
+    auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
+    ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+    ql->add_parameter(id_par{1}, gen_id(n_doc));
+    return dispatcher->find_one(session_doc, ql);
 }
 
 TEST_CASE("python::test_save_load::disk") {
@@ -47,9 +65,7 @@ TEST_CASE("python::test_save_load::disk") {
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    auto session_doc = duck_charmer::session_id_t();
-                    auto doc_find = dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(int(n_doc))));
-                    REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                 }
             }
         }
@@ -85,6 +101,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     }
 
     SECTION("extending wal") {
+        test_spaces space(config);
+        auto* dispatcher = space.dispatcher();
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
         services::wal::wal_replicate_t wal(nullptr, log, config.wal);
@@ -100,19 +118,44 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 components::ql::insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
 
-                components::ql::delete_one_t delete_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 1}})"));
-                wal.delete_one(session, address, delete_one);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 1);
+                    components::ql::delete_one_t delete_one(db_name, col_name, match, params);
+                    wal.delete_one(session, address, delete_one);
+                }
 
-                components::ql::delete_many_t delete_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$and": [{"$gte": 2}, {"$lte": 4}]}})"));
-                wal.delete_many(session, address, delete_many);
+                {
+                    auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gte, key{"count"}, core::parameter_id_t{1}));
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, core::parameter_id_t{2}));
+                    auto match = components::ql::aggregate::make_match(expr);
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 2);
+                    components::ql::add_parameter(params, core::parameter_id_t{2}, 4);
+                    components::ql::delete_many_t delete_many(db_name, col_name, match, params);
+                    wal.delete_many(session, address, delete_many);
+                }
 
-                components::ql::update_one_t update_one(db_name, col_name, components::document::document_from_json(R"({"count": {"$eq": 5}})"),
-                                                        components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
-                wal.update_one(session, address, update_one);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
+                    components::ql::update_one_t update_one(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
+                    wal.update_one(session, address, update_one);
+                }
 
-                components::ql::update_many_t update_many(db_name, col_name, components::document::document_from_json(R"({"count": {"$gt": 5}})"),
-                                                          components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
-                wal.update_many(session, address, update_many);
+                {
+                    auto match = components::ql::aggregate::make_match(
+                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, core::parameter_id_t{1}));
+                    components::ql::storage_parameters params;
+                    components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
+                    components::ql::update_many_t update_many(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
+                    wal.update_many(session, address, update_many);
+                }
             }
         }
     }
@@ -128,20 +171,16 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents - 3);
-                auto session_doc = duck_charmer::session_id_t();
 
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(1))).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 1).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 2).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 3).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 4).is_find());
 
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(2))).is_find());
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(3))).is_find());
-                REQUIRE_FALSE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(4))).is_find());
-
-                session_doc = duck_charmer::session_id_t();
-                REQUIRE(dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(5)))->get_ulong("count") == 0);
+                REQUIRE(find_doc(dispatcher, db_name, col_name, 5)->get_ulong("count") == 0);
 
                 for (uint n_doc = 6; n_doc <= count_documents + 1; ++n_doc) {
-                    session_doc = duck_charmer::session_id_t();
-                    auto doc_find = dispatcher->find_one(session_doc, db_name, col_name, make_condition("_id", "$eq", gen_id(int(n_doc))));
+                    auto doc_find = find_doc(dispatcher, db_name, col_name, int(n_doc));
                     REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                     REQUIRE(doc_find->get_ulong("count") == 1000);
                 }

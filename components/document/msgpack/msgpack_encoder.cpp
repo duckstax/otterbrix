@@ -15,14 +15,14 @@ const value_t *to_structure_(const msgpack::object &msg_object) {
     } else if (msg_object.type == msgpack::type::object_type::STR) {
         return document::impl::new_value(msg_object.as<std::string>()).detach();
     } else if (msg_object.type == msgpack::type::object_type::MAP) {
-        auto dict = mutable_dict_t::new_dict().detach();
+        auto dict = dict_t::new_dict().detach();
         msgpack::object_map msg_dict = msg_object.via.map;
         for (uint32_t i = 0; i < msg_dict.size; ++i) {
             dict->set(msg_dict.ptr[i].key.as<std::string>(), to_structure_(msg_dict.ptr[i].val));
         }
         return dict;
     } else if (msg_object.type == msgpack::type::object_type::ARRAY) {
-        auto array = mutable_array_t::new_array().detach();
+        auto array = array_t::new_array().detach();
         msgpack::object_array msg_array = msg_object.via.array;
         for (uint32_t i = 0; i < msg_array.size; ++i) {
             array->append(to_structure_(msg_array.ptr[i]));
@@ -47,7 +47,7 @@ void to_msgpack_(const value_t* value, msgpack::object& o) {
         o.via.f64 = value->as_double();
     } else if (value->type() == value_type::string) {
         //todo kick memory leak
-        auto *s = new std::string(value->to_string());
+        auto *s = new std::string(to_string(value));
         o.type = msgpack::type::object_type::STR;
         o.via.str.size = uint32_t(s->size());
         o.via.str.ptr = s->c_str();

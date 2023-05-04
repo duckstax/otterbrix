@@ -42,6 +42,10 @@ namespace services::collection::operators {
         right_ = std::move(right);
     }
 
+    void operator_t::take_output(ptr &src) {
+        output_ = std::move(src->output_);
+    }
+
     void operator_t::clear() {
         state_ = operator_state::created;
         left_ = nullptr;
@@ -58,6 +62,10 @@ namespace services::collection::operators {
     read_write_operator_t::read_write_operator_t(context_collection_t* collection, operator_type type)
         : operator_t(collection, type)
         , state_(read_write_operator_state::pending) {
+    }
+
+    ::document::wrapper_value_t get_value_from_document(const components::document::document_ptr &doc, const components::expressions::key_t &key) {
+        return ::document::wrapper_value_t(components::document::document_view_t(doc).get_value(key.as_string()));
     }
 
 } // namespace services::collection::operators

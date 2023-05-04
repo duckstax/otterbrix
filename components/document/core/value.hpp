@@ -6,11 +6,17 @@
 #include <components/document/core/internal.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/exception.hpp>
+#include <components/document/support/ref_counted.hpp>
 
 namespace document::impl {
+
     class array_t;
     class dict_t;
     class shared_keys_t;
+
+    namespace internal {
+        class value_slot_t;
+    }
 
     enum class value_type : int8_t {
         undefined = -1,
@@ -47,41 +53,42 @@ namespace document::impl {
         uint64_t as_unsigned() const noexcept PURE;
         float as_float() const noexcept PURE;
         double as_double() const noexcept PURE;
+        const internal::pointer_t* as_pointer() const PURE;
+        std::string_view as_string() const noexcept PURE;
+        std::string_view as_data() const noexcept PURE;
+        array_t* as_array() const noexcept PURE;
+        dict_t* as_dict() const noexcept PURE;
+
+        static const array_t* as_array(const value_t* v) PURE;
+        static const dict_t* as_dict(const value_t* v) PURE;
+
         bool is_int() const noexcept PURE;
         bool is_unsigned() const noexcept PURE;
         bool is_double() const noexcept PURE;
         bool is_undefined() const noexcept PURE;
         bool is_pointer() const noexcept PURE;
-        const internal::pointer_t* as_pointer() const PURE;
-        std::string_view as_string() const noexcept PURE;
-        std::string_view as_data() const noexcept PURE;
-
-        const array_t* as_array() const noexcept PURE;
-        const dict_t* as_dict() const noexcept PURE;
-
-        static const array_t* as_array(const value_t* v) PURE;
-        static const dict_t* as_dict(const value_t* v) PURE;
-
-        std::string_view to_string() const;
-
         bool is_mutable() const PURE;
 
-        shared_keys_t* shared_keys() const noexcept PURE;
+        void retain_() const;
+        void release_() const;
 
-        void _retain() const;
-        void _release() const;
+        internal::tags tag() const noexcept PURE;
 
         template<class TValue>
         TValue as() const;
 
     protected:
+        uint8_t byte_[internal::size_wide];
+
         constexpr value_t(internal::tags tag, int tiny, int byte1 = 0)
-            : _byte{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
+            : byte_{static_cast<uint8_t>((tag << 4) | tiny), static_cast<uint8_t>(byte1)} {}
 
-
-        internal::tags tag() const noexcept PURE;
-        unsigned tiny_value() const noexcept PURE;
         uint16_t short_value() const noexcept PURE;
+        unsigned tiny_value() const noexcept PURE;
+        bool big_float() const noexcept PURE;
+
+        shared_keys_t* shared_keys() const noexcept PURE;
+
         template<typename T>
         T as_float_of_type() const noexcept PURE;
 
@@ -102,17 +109,17 @@ namespace document::impl {
 
         size_t data_size() const noexcept PURE;
 
-        uint8_t _byte[internal::size_wide];
-
         friend class internal::pointer_t;
-        friend class value_slot_t;
+        friend class internal::value_slot_t;
         friend class internal::heap_collection_t;
         friend class internal::heap_value_t;
         friend class array_t;
         friend class dict_t;
         template<bool WIDE>
         friend struct dict_impl_t;
+        friend std::string to_string(const value_t* value);
     };
+
 
     void release(const value_t* val) noexcept;
 
@@ -132,5 +139,18 @@ namespace document::impl {
     double value_t::as<double>() const;
     template<>
     std::string value_t::as<std::string>() const;
+
+    std::string to_string(const value_t* value);
+
+    retained_const_t<value_t> new_value(nullptr_t data);
+    retained_const_t<value_t> new_value(bool data);
+    retained_const_t<value_t> new_value(int data);
+    retained_const_t<value_t> new_value(unsigned data);
+    retained_const_t<value_t> new_value(int64_t data);
+    retained_const_t<value_t> new_value(uint64_t data);
+    retained_const_t<value_t> new_value(float data);
+    retained_const_t<value_t> new_value(double data);
+    retained_const_t<value_t> new_value(std::string_view data);
+    retained_const_t<value_t> new_value(const value_t* data);
 
 } // namespace document::impl

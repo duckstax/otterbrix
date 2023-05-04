@@ -24,6 +24,7 @@ target_link_libraries(
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::ql
+        rocketjoe::translator
         CONAN_PKG::spdlog
 )
 

@@ -39,6 +39,11 @@ PYBIND11_MODULE(ottergon, m) {
         .def("__getitem__", &wrapper_database::create);
 
     py::enum_<index_type>(m, "TypeIndex")
+        .value("SINGLE", index_type::single)
+        .value("COMPOSITE", index_type::composite)
+        .value("MULTIKEY", index_type::multikey)
+        .value("HASHED", index_type::hashed)
+        .value("WILDCARD", index_type::wildcard)
         .export_values();
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
@@ -105,6 +110,6 @@ PYBIND11_MODULE(ottergon, m) {
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
 
-    m.def("to_aggregate", &experimental::test_to_statement);
+    m.def("to_aggregate", &test_to_statement);
 
 }

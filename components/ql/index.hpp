@@ -4,12 +4,12 @@
 #include <vector>
 
 #include <msgpack.hpp>
-
+#include <components/expressions/key.hpp>
 #include "ql_statement.hpp"
 
 namespace components::ql {
 
-    using keys_base_storage_t = std::pmr::vector<key_t>;
+    using keys_base_storage_t = std::pmr::vector<components::expressions::key_t>;
 
     enum class index_type : char {
         single,
@@ -64,7 +64,7 @@ namespace msgpack {
                     o.pack(v.database_);
                     o.pack(v.collection_);
                     o.pack(static_cast<char>(v.index_type_));
-                    o.pack(v.keys_); //todo
+                    //o.pack(v.keys_); //todo
                     return o;
                 }
             };

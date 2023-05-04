@@ -15,8 +15,6 @@ magic_enum/0.8.1
 
 actor-zeta/1.0.0a7@duckstax/stable
 
-proxy-wasm-cpp-host/3c703dcc44e7fc24062215e4f3c5c16d616362e8@duckstax/stable
-
 
 [options]
 actor-zeta:cxx_standard=17

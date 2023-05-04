@@ -1,8 +1,7 @@
 #include <services/collection/collection.hpp>
 #include <services/database/database.hpp>
 #include <document/mutable/mutable_dict.h>
-#include <document/mutable/mutable_array.h>
-#include <parser/parser.hpp>
+#include <document/core/array.hpp>
 #include <catch2/catch.hpp>
 
 #include <core/non_thread_scheduler/scheduler_test.hpp>
@@ -25,7 +24,7 @@ document_ptr gen_doc(const std::string& id, const std::string& name, const std::
     dict->set("type", type);
     dict->set("age", age);
     dict->set("male", male);
-    auto array = ::document::impl::mutable_array_t::new_array();
+    auto array = ::document::impl::array_t::new_array();
     for (const auto& value : friends) {
         array->append(value);
     }
