@@ -25,7 +25,6 @@ namespace components::dataframe::detail {
                                      : (lists::lists_column_view{input}).offsets();
             auto const row_begin = boost::counting_iterator<size_type>(0);
             auto const row_end = row_begin + input.size();
-            //todo: check
             return std::count_if(row_begin, row_end - 1, [&offsets](const size_type& row) {
                        return offsets.begin<size_type>()[row] != offsets.begin<size_type>()[row + 1];
                    }) > 0;
@@ -66,71 +65,6 @@ namespace components::dataframe::detail {
                 bool nullify_out_of_bounds) {
                 column_gatherer_impl<element_t> gatherer{};
                 return gatherer(resource, source_column, gather_map_begin, gather_map_end, nullify_out_of_bounds);
-            }
-        };
-
-        template<typename element_t>
-        struct column_gatherer_impl<element_t, std::enable_if_t<is_rep_layout_compatible<element_t>()>> {
-            template<typename iterator>
-            std::unique_ptr<column::column_t> operator()(
-                std::pmr::memory_resource* resource,
-                const column::column_view& column,
-                iterator gather_map_begin,
-                iterator gather_map_end,
-                bool nullify_out_of_bounds) {
-                //todo: impl
-            }
-        };
-
-        template<>
-        struct column_gatherer_impl<column::strings_column_view> {
-            template<typename iterator>
-            std::unique_ptr<column::column_t> operator()(
-                std::pmr::memory_resource* resource,
-                const column::column_view& source_column,
-                iterator gather_map_begin,
-                iterator gather_map_end,
-                bool nullify_out_of_bounds) {
-                //todo: impl
-            }
-        };
-
-        template<>
-        struct column_gatherer_impl<lists::list_view> {
-            template<typename iterator>
-            std::unique_ptr<column::column_t> operator()(
-                std::pmr::memory_resource* resource,
-                const column::column_view& column,
-                iterator gather_map_begin,
-                iterator gather_map_end,
-                bool nullify_out_of_bounds) {
-                //todo: impl
-            }
-        };
-
-        template<>
-        struct column_gatherer_impl<dictionary::dictionary32> {
-            template<typename iterator>
-            std::unique_ptr<column::column_t> operator()(
-                std::pmr::memory_resource* resource,
-                const column::column_view& source_column,
-                iterator gather_map_begin,
-                iterator gather_map_end,
-                bool nullify_out_of_bounds) {
-                //todo: impl
-            }
-        };
-
-        template<>
-        struct column_gatherer_impl<structs::struct_view> {
-            template<typename iterator>
-            std::unique_ptr<column::column_t> operator()(
-                std::pmr::memory_resource* resource,
-                const column::column_view& column,
-                iterator gather_map_begin,
-                iterator gather_map_end,
-                bool nullify_out_of_bounds) {
-                //todo: impl
             }
         };
 
