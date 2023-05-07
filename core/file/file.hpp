@@ -17,7 +17,9 @@ namespace core::file {
         std::string readall() const;
         void read(std::vector<char> &desc, std::size_t size, __off64_t offset = 0) const;
         void clear();
-        void append(char *data, std::size_t size);
+        void append(char* data, std::size_t size);
+        void append(void* data, std::size_t size);
+        void append(const void* data, std::size_t size);
         void append(std::string &data);
         void rewrite(std::string &data);
         void seek_eof();

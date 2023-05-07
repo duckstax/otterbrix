@@ -26,7 +26,8 @@ namespace services::disk {
     manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, configuration::config_disk config, log_t& log)
         : base_manager_disk_t(mr, scheduler)
         , log_(log.clone())
-        , config_(std::move(config)) {
+        , config_(std::move(config))
+        , metafile_indexes_(nullptr) {
         trace(log_, "manager_disk start");
         add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
         add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
@@ -41,6 +42,12 @@ namespace services::disk {
         add_handler(handler_id(index::route::create), &manager_disk_t::create_index_agent);
         add_handler(handler_id(index::route::drop), &manager_disk_t::drop_index_agent);
         add_handler(handler_id(index::route::success), &manager_disk_t::drop_index_agent_success);
+        if (!config_.path.empty()) {
+            if (!std::filesystem::is_directory(config_.path / "indexes")) {
+                std::filesystem::create_directories(config_.path / "indexes");
+            }
+            metafile_indexes_ = std::make_unique<core::file::file_t>(config_.path / "indexes/METADATA");
+        }
         trace(log_, "manager_disk finish");
     }
 
@@ -112,18 +119,7 @@ namespace services::disk {
     }
 
     void manager_disk_t::create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, components::ql::index_compare compare_type) {
-        if (index_agents_.contains(index_name)) {
-            error(log_, "manager_disk: index {} already exists", index_name);
-            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
-        } else {
-            trace(log_, "manager_disk: create_index_agent : {}", index_name);
-            auto address_agent = spawn_actor<index_agent_disk_t>(
-                [&](index_agent_disk_t* ptr) {
-                    index_agents_.insert_or_assign(index_name, index_agent_disk_ptr(ptr));
-                },
-                resource(), config_.path, collection_name, index_name, compare_type, log_);
-            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_create), session, address_agent);
-        }
+        create_index_agent_(session, metadata_index_t{collection_name, index_name, compare_type});
     }
 
     void manager_disk_t::drop_index_agent(session_id_t& session, const index_name_t &index_name) {
@@ -153,6 +149,22 @@ namespace services::disk {
 
     auto manager_disk_t::agent() -> actor_zeta::address_t {
         return agents_[0]->address();
+    }
+
+    void manager_disk_t::create_index_agent_(session_id_t& session, const metadata_index_t &metadata_index) {
+        if (index_agents_.contains(metadata_index.index_name)) {
+            error(log_, "manager_disk: index {} already exists", metadata_index.index_name);
+            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
+        } else {
+            trace(log_, "manager_disk: create_index_agent : {}", metadata_index.index_name);
+            auto address_agent = spawn_actor<index_agent_disk_t>(
+                [&](index_agent_disk_t* ptr) {
+                    index_agents_.insert_or_assign(metadata_index.index_name, index_agent_disk_ptr(ptr));
+                },
+                resource(), config_.path, metadata_index.collection_name, metadata_index.index_name, metadata_index.compare_type, log_);
+            metafile_indexes_->append(static_cast<const void*>(&metadata_index), sizeof(metadata_index_t));
+            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_create), session, address_agent);
+        }
     }
 
 

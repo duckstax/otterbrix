@@ -47,9 +47,17 @@ namespace core::file {
         ::ftruncate(fd_, offset_);
     }
 
-    void file_t::append(char *data, std::size_t size) {
+    void file_t::append(char* data, std::size_t size) {
         iovec write_data{data, size};
         offset_ += ::pwritev(fd_, &write_data, 1, offset_);
+    }
+
+    void file_t::append(void* data, std::size_t size) {
+        append(static_cast<char*>(data), size);
+    }
+
+    void file_t::append(const void* data, std::size_t size) {
+        append(const_cast<void*>(data), size);
     }
 
     void file_t::append(std::string &data) {

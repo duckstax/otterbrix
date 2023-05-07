@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/excutor.hpp>
+#include <core/file/file.hpp>
 #include <configuration/configuration.hpp>
 #include <components/log/log.hpp>
 #include "agent_disk.hpp"
@@ -9,6 +10,13 @@
 namespace services::disk {
 
     using session_id_t = ::components::session::session_id_t;
+
+
+    struct metadata_index_t {
+        collection_name_t collection_name;
+        index_name_t index_name;
+        components::ql::index_compare compare_type;
+    };
 
 
     class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
@@ -66,8 +74,10 @@ namespace services::disk {
         std::vector<agent_disk_ptr> agents_;
         index_agent_disk_storage_t index_agents_;
         command_storage_t commands_;
+        file_ptr metafile_indexes_;
 
         auto agent() -> actor_zeta::address_t;
+        void create_index_agent_(session_id_t& session, const metadata_index_t &metadata_index);
     };
 
 
