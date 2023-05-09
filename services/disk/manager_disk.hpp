@@ -77,7 +77,8 @@ namespace services::disk {
         file_ptr metafile_indexes_;
 
         auto agent() -> actor_zeta::address_t;
-        void create_index_agent_(session_id_t& session, const metadata_index_t &metadata_index);
+        void create_index_agent_(const actor_zeta::address_t& sender, session_id_t& session, const metadata_index_t &metadata_index);
+        void load_indexes(session_id_t& session);
     };
 
 

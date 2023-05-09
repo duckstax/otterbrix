@@ -8,6 +8,20 @@ namespace services::disk {
 
     using components::document::document_id_t;
 
+    std::string metadata_index_to_string(const metadata_index_t& data) {
+        std::stringstream s;
+        s << data.collection_name << '\0'
+          << data.index_name << '\0'
+          << uint32_t(data.compare_type) << '\n';
+        return s.str();
+    }
+
+    metadata_index_t string_to_metadata_index(const std::string& str) {
+        metadata_index_t data;
+        return data;
+    }
+
+
     base_manager_disk_t::base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_disk_t>(mr, "manager_disk")
         , e_(scheduler) {
@@ -67,6 +81,7 @@ namespace services::disk {
 
     auto manager_disk_t::load(session_id_t& session) -> void {
         trace(log_, "manager_disk_t::load , session : {}", session.data());
+        load_indexes(session);
         actor_zeta::send(agent(), address(), handler_id(route::load), session, current_message()->sender());
     }
 
@@ -119,7 +134,7 @@ namespace services::disk {
     }
 
     void manager_disk_t::create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, components::ql::index_compare compare_type) {
-        create_index_agent_(session, metadata_index_t{collection_name, index_name, compare_type});
+        create_index_agent_(current_message()->sender(), session, metadata_index_t{collection_name, index_name, compare_type});
     }
 
     void manager_disk_t::drop_index_agent(session_id_t& session, const index_name_t &index_name) {
@@ -151,7 +166,7 @@ namespace services::disk {
         return agents_[0]->address();
     }
 
-    void manager_disk_t::create_index_agent_(session_id_t& session, const metadata_index_t &metadata_index) {
+    void manager_disk_t::create_index_agent_(const actor_zeta::address_t& sender, session_id_t& session, const metadata_index_t &metadata_index) {
         if (index_agents_.contains(metadata_index.index_name)) {
             error(log_, "manager_disk: index {} already exists", metadata_index.index_name);
             actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
@@ -162,8 +177,29 @@ namespace services::disk {
                     index_agents_.insert_or_assign(metadata_index.index_name, index_agent_disk_ptr(ptr));
                 },
                 resource(), config_.path, metadata_index.collection_name, metadata_index.index_name, metadata_index.compare_type, log_);
-            metafile_indexes_->append(static_cast<const void*>(&metadata_index), sizeof(metadata_index_t));
-            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_create), session, address_agent);
+            metafile_indexes_->append(metadata_index_to_string(metadata_index));
+            if (sender) {
+                actor_zeta::send(sender, address(), index::handler_id(index::route::success_create), session, address_agent);
+            }
+        }
+    }
+
+    void manager_disk_t::load_indexes(session_id_t& session) {
+        if (metafile_indexes_) {
+            __off64_t offset = 0;
+            while (true) {
+                metadata_index_t data;
+                data.collection_name = metafile_indexes_->readline(offset, '\0');
+                data.index_name = metafile_indexes_->readline(offset, '\0');
+                auto type = metafile_indexes_->readline(offset);
+                if (!type.empty()) {
+                    data.compare_type = components::ql::index_compare(std::atoi(type.c_str()));
+                    create_index_agent_(actor_zeta::address_t::empty_address(), session, data);
+                } else {
+                    break;
+                }
+            }
+            metafile_indexes_->seek_eof();
         }
     }
 
