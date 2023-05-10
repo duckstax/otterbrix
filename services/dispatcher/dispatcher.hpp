@@ -82,7 +82,7 @@ namespace services::dispatcher {
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address);
         void size_finish(components::session::session_id_t&, result_size& result);
         void create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address);
-        void create_index_finish(components::session::session_id_t &session, result_create_index& result);
+        void create_index_finish(components::session::session_id_t &session, const std::string& name, result_create_index& result);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         bool check_load_from_wal(components::session::session_id_t& session);

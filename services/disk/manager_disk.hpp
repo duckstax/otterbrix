@@ -12,13 +12,6 @@ namespace services::disk {
     using session_id_t = ::components::session::session_id_t;
 
 
-    struct metadata_index_t {
-        collection_name_t collection_name;
-        index_name_t index_name;
-        components::ql::index_compare compare_type;
-    };
-
-
     class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
     protected:
         base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
@@ -51,6 +44,7 @@ namespace services::disk {
         void create_agent();
 
         auto load(session_id_t& session) -> void;
+        auto load_indexes(session_id_t& session) -> void;
 
         auto append_database(session_id_t& session, const database_name_t& database) -> void;
         auto remove_database(session_id_t& session, const database_name_t& database) -> void;
@@ -63,7 +57,7 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
-        void create_index_agent(session_id_t& session, const collection_name_t &collection_name, const index_name_t &index_name, components::ql::index_compare compare_type);
+        void create_index_agent(session_id_t& session, const components::ql::create_index_t &index);
         void drop_index_agent(session_id_t& session, const index_name_t &index_name);
         void drop_index_agent_success(session_id_t& session);
 
@@ -75,10 +69,11 @@ namespace services::disk {
         index_agent_disk_storage_t index_agents_;
         command_storage_t commands_;
         file_ptr metafile_indexes_;
+        session_id_t load_session_;
 
         auto agent() -> actor_zeta::address_t;
-        void create_index_agent_(const actor_zeta::address_t& sender, session_id_t& session, const metadata_index_t &metadata_index);
-        void load_indexes(session_id_t& session);
+        void write_index_(const components::ql::create_index_t &index);
+        void load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher);
     };
 
 

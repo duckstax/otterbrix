@@ -35,20 +35,49 @@ namespace services::collection::sessions {
     };
 
 
-    using sessions_storage_t =  std::unordered_map<components::session::session_id_t, session_t>;
+    struct session_key_t {
+        components::session::session_id_t id;
+        std::string name;
+    };
+
+    inline bool operator==(const session_key_t& key1, const session_key_t& key2) {
+        return key1.id == key2.id && key1.name == key2.name;
+    }
+
+    struct session_key_hash {
+        std::size_t operator()(const session_key_t& key) const {
+            return std::hash<components::session::session_id_t>()(key.id);
+        }
+    };
+
+    using sessions_storage_t = std::unordered_map<session_key_t, session_t, session_key_hash>;
 
     template<typename T>
     void make_session(sessions_storage_t& storage, components::session::session_id_t session, T&& statement) {
-        storage.emplace(session, session_t{statement});
+        storage.emplace(session_key_t{session, {}}, session_t{statement});
+    }
+
+    template<typename T>
+    void make_session(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name, T&& statement) {
+        storage.emplace(session_key_t{session, session_name}, session_t{statement});
     }
 
     inline session_t& find(sessions_storage_t& storage, components::session::session_id_t session) {
-        auto it = storage.find(session);
+        auto it = storage.find(session_key_t{session, {}});
         return it->second;
     }
 
-    inline void remove(sessions_storage_t& storage,components::session::session_id_t session) {
-        storage.erase(session);
+    inline session_t& find(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
+        auto it = storage.find(session_key_t{session, session_name});
+        return it->second;
+    }
+
+    inline void remove(sessions_storage_t& storage, components::session::session_id_t session) {
+        storage.erase(session_key_t{session, {}});
+    }
+
+    inline void remove(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
+        storage.erase(session_key_t{session, session_name});
     }
 
 } // namespace services::collection::sessions

@@ -42,6 +42,9 @@ namespace services::disk {
 
     template<>
     int comparator<std::string>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
+        if (a.empty() && b.empty()) return 0;
+        if (!a.data()) return -1;
+        if (!b.data()) return 1;
         return a.compare(b);
     }
 

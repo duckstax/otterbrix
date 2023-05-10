@@ -128,7 +128,7 @@ namespace services::collection {
         void close_cursor(session_id_t& session);
 
         void create_index(const session_id_t& session, components::ql::create_index_t& index);
-        void create_index_finish(const session_id_t& session, const actor_zeta::address_t& index_address);
+        void create_index_finish(const session_id_t& session, const std::string& name, const actor_zeta::address_t& index_address);
         void index_modify_finish(const session_id_t& session);
         void index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result);
 

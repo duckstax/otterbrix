@@ -44,8 +44,11 @@ namespace services::collection {
 
     void collection_t::create_documents(components::session::session_id_t& session, std::pmr::vector<document_ptr>& documents) {
         trace(log(), "{}::{}::create_documents, count: {}", database_name_, name_, documents.size());
-        components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
-        insert_(&pipeline_context, documents);
+        //components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
+        //insert_(&pipeline_context, documents);
+        for (const auto &doc : documents) {
+            context_->storage().emplace(components::document::get_document_id(doc), doc);
+        }
         actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_documents_finish), session);
     }
 

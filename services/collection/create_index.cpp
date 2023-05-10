@@ -48,8 +48,8 @@ namespace services::collection {
 
                 case index_type::single: {
                     auto id_index = make_index<single_field_index_t>(context_->index_engine(), index.name(), index.keys_);
-                    sessions::make_session(sessions_, session, sessions::create_index_t{current_message()->sender(), id_index});
-                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::create), session, name_, index.name(), index.index_compare_);
+                    sessions::make_session(sessions_, session, index.name(), sessions::create_index_t{current_message()->sender(), id_index});
+                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::create), session, index);
                     break;
                 }
 
@@ -73,13 +73,13 @@ namespace services::collection {
     }
 
 
-    void collection_t::create_index_finish(const session_id_t& session, const actor_zeta::address_t& index_address) {
+    void collection_t::create_index_finish(const session_id_t& session, const std::string& name, const actor_zeta::address_t& index_address) {
         debug(log(), "collection::create_index_finish");
-        auto &create_index = sessions::find(sessions_, session).get<sessions::create_index_t>();
+        auto &create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
         insert(context_->index_engine(), create_index.id_index, context_->storage());
-        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, result_create_index(true));
-        sessions::remove(sessions_, session);
+        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name, result_create_index(true));
+        sessions::remove(sessions_, session, name);
     }
 
     void collection_t::index_modify_finish(const session_id_t& session) {

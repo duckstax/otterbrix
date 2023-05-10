@@ -7,6 +7,7 @@ namespace services::disk {
         create_agent,
 
         load,
+        load_indexes,
         load_finish,
 
         append_database,
