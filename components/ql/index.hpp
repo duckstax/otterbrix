@@ -73,13 +73,14 @@ namespace msgpack {
             template<>
             struct convert<components::ql::create_index_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::ql::create_index_t& v) const {
-                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 4) {
+                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 5) {
                         throw msgpack::type_error();
                     }
                     v.database_ = o.via.array.ptr[0].as<std::string>();
                     v.collection_ = o.via.array.ptr[1].as<std::string>();
                     v.index_type_ = static_cast<components::ql::index_type>(o.via.array.ptr[2].as<uint8_t>());
-                    auto data = o.via.array.ptr[3].as<std::vector<std::string>>();
+                    v.index_compare_ = static_cast<components::ql::index_compare>(o.via.array.ptr[3].as<uint8_t>());
+                    auto data = o.via.array.ptr[4].as<std::vector<std::string>>();
                     v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
                     return o;
                 }
@@ -89,10 +90,11 @@ namespace msgpack {
             struct pack<components::ql::create_index_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::create_index_t const& v) const {
-                    o.pack_array(4);
+                    o.pack_array(5);
                     o.pack(v.database_);
                     o.pack(v.collection_);
                     o.pack(static_cast<uint8_t>(v.index_type_));
+                    o.pack(static_cast<uint8_t>(v.index_compare_));
                     o.pack(v.keys_);
                     return o;
                 }
@@ -102,13 +104,14 @@ namespace msgpack {
             struct object_with_zone<components::ql::create_index_t> final {
                 void operator()(msgpack::object::with_zone& o, components::ql::create_index_t const& v) const {
                     o.type = type::ARRAY;
-                    o.via.array.size = 4;
+                    o.via.array.size = 5;
                     o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
                     o.via.array.ptr[2] = msgpack::object(static_cast<uint8_t>(v.index_type_), o.zone);
+                    o.via.array.ptr[3] = msgpack::object(static_cast<uint8_t>(v.index_compare_), o.zone);
                     std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
-                    o.via.array.ptr[3] = msgpack::object(tmp, o.zone);
+                    o.via.array.ptr[4] = msgpack::object(tmp, o.zone);
                 }
             };
 
