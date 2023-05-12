@@ -27,19 +27,19 @@ namespace services::disk {
     }
 
     void index_agent_disk_t::drop(session_id_t& session) {
-        trace(log_, "index_agent_disk_t::drop");
+        trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
         index_disk_->drop();
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
     void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
-        trace(log_, "index_agent_disk_t::insert {}", value.to_string());
+        trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
     void index_agent_disk_t::remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
-        trace(log_, "index_agent_disk_t::remove {}", value.to_string());
+        trace(log_, "index_agent_disk_t::remove {}, session: {}", value.to_string(), session.data());
         index_disk_->remove(key, value);
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
@@ -47,7 +47,7 @@ namespace services::disk {
     void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 
-        trace(log_, "index_agent_disk_t::find");
+        trace(log_, "index_agent_disk_t::find, session: {}", session.data());
         index_disk_t::result res{resource_};
         switch (compare) {
             case compare_type::eq:
