@@ -7,105 +7,77 @@
 
 namespace document::impl {
 
-class dict_iterator_t;
-class mutable_dict_t;
-class shared_keys_t;
-class key_t;
-
-
-class dict_t : public value_t {
-public:
-
-    class key_t {
+    class dict_t : public value_t {
     public:
-        explicit key_t(std::string_view);
-        explicit key_t(const std::string&);
-        key_t(const key_t&) = delete;
-        ~key_t();
-        std::string_view string() const noexcept;
-        int compare(const key_t &k) const noexcept;
+        class key_t {
+        public:
+            explicit key_t(std::string_view);
+            explicit key_t(const std::string&);
+            ~key_t();
+            std::string_view string() const noexcept;
+            int compare(const key_t& k) const noexcept;
+
+        private:
+            std::string const raw_str_;
+        };
+
+        class iterator {
+        public:
+            explicit iterator(const dict_t* d) noexcept;
+
+            uint32_t count() const noexcept PURE;
+
+            std::string_view key_string() const noexcept;
+            const value_t* key() const noexcept PURE;
+            const value_t* value() const noexcept PURE;
+
+            explicit operator bool() const noexcept PURE;
+            iterator& operator++();
+            iterator& operator+=(uint32_t n);
+
+        private:
+            const dict_t* source_;
+            const value_t* key_;
+            const value_t* value_;
+            uint32_t count_;
+            uint32_t pos_;
+
+            void set_value_();
+        };
+
+        static retained_t<dict_t> new_dict(const dict_t* d = nullptr, copy_flags flags = default_copy);
+        static const dict_t* empty_dict();
+
+        uint32_t count() const noexcept PURE;
+        bool empty() const noexcept PURE;
+
+        const value_t* get(key_t& key) const noexcept;
+        const value_t* get(std::string_view key) const noexcept PURE;
+
+        bool is_equals(const dict_t* NONNULL) const noexcept PURE;
+
+        retained_t<dict_t> copy(copy_flags f = default_copy) const;
+        retained_t<internal::heap_collection_t> mutable_copy() const;
+        void copy_children(copy_flags flags = default_copy) const;
+
+        bool is_changed() const;
+
+        template<typename T>
+        void set(std::string_view key, T value) {
+            slot(key).set(value);
+        }
+
+        void remove(std::string_view key);
+        void remove_all();
+
+        iterator begin() const noexcept;
 
     private:
-        std::string const _raw_str;
-        shared_keys_t* _shared_keys { nullptr };
-        uint32_t _hint { 0xffffffff };
-        int32_t _numeric_key { 0 };
-        bool _has_numeric_key { false };
+        dict_t();
 
-        void set_shared_keys(shared_keys_t *sk);
-
-        template <bool WIDE> friend struct dict_impl_t;
+        internal::value_slot_t& slot(std::string_view key);
     };
 
+    using dict_iterator_t = dict_t::iterator;
 
-    constexpr dict_t();
-
-    uint32_t count() const noexcept PURE;
-    bool empty() const noexcept PURE;
-    const value_t* get(std::string_view key) const noexcept PURE;
-    const value_t* get(int key) const noexcept PURE;
-    mutable_dict_t* as_mutable() const noexcept PURE;
-    bool is_equals(const dict_t* NONNULL) const noexcept PURE;
-
-    static const dict_t* const empty_dict;
-
-    using iterator = dict_iterator_t;
-
-    inline iterator begin() const noexcept;
-
-    const value_t* get(key_t &key) const noexcept;
-    const value_t* get(const document::impl::key_t &key) const noexcept;
-
-protected:
-    internal::heap_dict_t* heap_dict() const noexcept PURE;
-    const dict_t* get_parent() const noexcept PURE;
-
-    static bool is_magic_parent_key(const value_t *v);
-
-    template <bool WIDE> friend struct dict_impl_t;
-    friend class dict_iterator_t;
-    friend class value_t;
-    friend class internal::heap_dict_t;
-};
-
-
-class dict_iterator_t {
-public:
-    explicit dict_iterator_t(const dict_t*) noexcept;
-    dict_iterator_t(const dict_t*, const shared_keys_t*) noexcept;
-
-    uint32_t count() const noexcept PURE          { return _a._count; }
-
-    std::string_view key_string() const noexcept;
-    const value_t* key() const noexcept PURE      { return _key; }
-    const value_t* value() const noexcept PURE    { return _value; }
-
-    explicit operator bool() const noexcept PURE  { return _key != nullptr; }
-    dict_iterator_t& operator ++();
-    dict_iterator_t& operator += (uint32_t n);
-
-    const shared_keys_t* shared_keys() const PURE { return _shared_keys; }
-    key_t keyt() const noexcept;
-
-protected:
-    dict_iterator_t() = default;
-
-private:
-    dict_iterator_t(const dict_t* d, bool) noexcept;
-    void read() noexcept;
-    shared_keys_t* find_shared_keys() const;
-
-    array_t::impl _a;
-    const value_t *_key {nullptr};
-    const value_t *_value {nullptr};
-    mutable const shared_keys_t *_shared_keys { nullptr };
-    std::unique_ptr<dict_iterator_t> _parent;
-    int _key_compare { -1 };
-
-    friend class value_t;
-};
-
-
-inline dict_t::iterator dict_t::begin() const noexcept  { return iterator(this); }
-
-}
+} // namespace document::impl

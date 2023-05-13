@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 #include <components/tests/generaty.hpp>
-#include <components/document/mutable/mutable_value.hpp>
 #include <services/disk/index_disk.hpp>
 
 using services::disk::index_disk_t;

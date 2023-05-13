@@ -1,490 +1,293 @@
 #include "dict.hpp"
 
-#include <atomic>
-#include <utility>
-#include <memory>
+#include <unordered_map>
 
-#include <components/document/mutable/mutable_dict.h>
-#include <components/document/core/shared_keys.hpp>
-#include <components/document/core/internal.hpp>
+#include <components/document/internal/heap.hpp>
 #include <components/document/support/better_assert.hpp>
-
-#include "utils.hpp"
 
 namespace document::impl {
 
-using namespace internal;
+    namespace internal {
 
-#ifndef NDEBUG
-namespace internal {
-std::atomic<unsigned> total_comparisons;
-bool is_disable_necessary_shared_keys_check = false;
-}
-static inline void count_comparison() { ++total_comparisons; }
-#else
-static inline void count_comparison() {}
-#endif
+        struct key_hash {
+            size_t operator()(const dict_t::key_t& key) const {
+                return std::hash<std::string_view>{}(key.string());
+            }
+        };
 
-
-dict_t::key_t::key_t(std::string_view raw_str)
-    : _raw_str({raw_str.data(),raw_str.size()})
-{}
-
-dict_t::key_t::key_t(const std::string& raw_str)
-    : _raw_str(raw_str)
-{}
-
-std::string_view dict_t::key_t::string() const noexcept {
-    return {_raw_str.data(),_raw_str.size()};;
-}
-
-int dict_t::key_t::compare(const key_t &k) const noexcept {
-    return _raw_str.compare(k._raw_str);
-}
-
-dict_t::key_t::~key_t() {
-    release(_shared_keys);
-}
-
-void dict_t::key_t::set_shared_keys(shared_keys_t *sk) {
-    assert_precondition(!_shared_keys);
-    _shared_keys = retain(sk);
-}
+        struct key_eq {
+            bool operator()(const dict_t::key_t& key1, const dict_t::key_t& key2) const {
+                return key1.string() == key2.string();
+            }
+        };
 
 
-template <bool WIDE>
-struct dict_impl_t : public array_t::impl
-{
-    explicit dict_impl_t(const dict_t *d) noexcept
-        : impl(d)
-    {}
+        class heap_dict_t : public heap_collection_t {
+            retained_t<array_t> a_;
+            std::unordered_map<dict_t::key_t, uint32_t, key_hash, key_eq> map_;
+            uint32_t count_ {0};
 
-    shared_keys_t* find_shared_keys() const {
-        return nullptr;///doc_t::shared_keys(_first);
-    }
+        public:
+            explicit heap_dict_t(const dict_t *dict = nullptr);
 
-    bool uses_shared_keys() const {
-        return _count > 0 && _first->tag() == tag_short
-                && !(dict_t::is_magic_parent_key(_first)
-                     && (_count == 1 || offsetby(_first, 2*_width)->tag() != tag_short));
-    }
+            dict_t* dict() const {
+                return reinterpret_cast<dict_t*>(const_cast<value_t*>(as_value()));
+            }
 
-    template <class KEY>
-    const value_t* finish_get(const value_t *key_found, KEY &key_to_find) const noexcept {
-        if (key_found) {
-            auto value = deref(next(key_found));
-            if (_usually_false(value->is_undefined()))
-                value = nullptr;
-            return value;
-        } else {
-            const dict_t *parent = get_parent();
-            return parent ? parent->get(key_to_find) : nullptr;
-        }
-    }
+            uint32_t count() const {
+                return count_;
+            }
 
-    inline const value_t* get_unshared(const std::string& key_to_find) const noexcept {
-        auto key = search(key_to_find, [](std::string_view target, const value_t *val) {
-                count_comparison();
-                return compare_keys(target, val);
-        });
-        return finish_get(key, key_to_find);
-    }
+            bool empty() const {
+                return count_ == 0;
+            }
 
-    inline const value_t* get_unshared(std::string_view key_to_find) const noexcept {
-        auto key = search(key_to_find, [](std::string_view target, const value_t *val) {
-            count_comparison();
-            return compare_keys(target, val);
-        });
-        return finish_get(key, key_to_find);
-    }
+            void copy_children(copy_flags flags) {
+                a_->copy_children(flags);
+            }
 
-    inline const value_t* get(int key_to_find) const noexcept {
-        assert_precondition(key_to_find >= 0);
-        auto key = search(key_to_find, [](int target, const value_t *key) {
-            count_comparison();
-            return compare_keys(target, key);
-        });
-        return finish_get(key, key_to_find);
-    }
+            const value_t* get_key(uint32_t index) const noexcept {
+                return a_->get(index);
+            }
 
-    inline const value_t* get(const std::string& key_to_find, shared_keys_t *shared_keys = nullptr) const noexcept {
-        if (!shared_keys && uses_shared_keys()) {
-            shared_keys = find_shared_keys();
-            assert_precondition(shared_keys || is_disable_necessary_shared_keys_check);
-        }
-        int encoded;
-        if (shared_keys && lookup_shared_key(key_to_find, shared_keys, encoded))
-            return get(encoded);
-        return get_unshared(key_to_find);
-    }
-    inline const value_t* get(std::string_view key_to_find, shared_keys_t *shared_keys = nullptr) const noexcept {
-        if (!shared_keys && uses_shared_keys()) {
-            shared_keys = find_shared_keys();
-            assert_precondition(shared_keys || is_disable_necessary_shared_keys_check);
-        }
-        int encoded;
-        if (shared_keys && lookup_shared_key(key_to_find, shared_keys, encoded))
-            return get(encoded);
-        return get_unshared(key_to_find);
-    }
+            const value_t* get(uint32_t index) const noexcept {
+                return a_->get(index + 1);
+            }
 
-    const value_t* get(dict_t::key_t &key_to_find) const noexcept {
-        auto shared_keys = key_to_find._shared_keys;
-        if (!shared_keys && uses_shared_keys()) {
-            shared_keys = find_shared_keys();
-            key_to_find.set_shared_keys(shared_keys);
-            assert_precondition(shared_keys || is_disable_necessary_shared_keys_check);
-        }
-        if (_usually_true(shared_keys != nullptr)) {
-            if (_usually_true(key_to_find._has_numeric_key))
-                return get(key_to_find._numeric_key);
-            if (_usually_false(_count == 0))
+            const value_t* get(const dict_t::key_t &key) const noexcept {
+                auto it = map_.find(key);
+                if (it != map_.end()) {
+                    return get(it->second);
+                }
                 return nullptr;
-            if (lookup_shared_key(key_to_find._raw_str, shared_keys, key_to_find._numeric_key)) {
-                key_to_find._has_numeric_key = true;
-                return get(key_to_find._numeric_key);
             }
-        }
-        const value_t *key = find_key_by_hint(key_to_find);
-        if (!key)
-            key = find_key_by_search(key_to_find);
-        return finish_get(key, key_to_find);
-    }
 
-    bool has_parent() const {
-        return _usually_true(_count > 0) && _usually_false(dict_t::is_magic_parent_key(_first));
-    }
-
-    const dict_t* get_parent() const {
-        return has_parent() ? static_cast<const dict_t*>(deref(second())) : nullptr;
-    }
-
-    static int compare_keys(std::string_view key_to_find, const value_t *key) {
-        if (_usually_true(key->is_int()))
-            return 1;
-        else
-            return key_to_find.compare(key_bytes(key));
-    }
-
-    static int compare_keys(int key_to_find, const value_t *key) {
-        assert_precondition(key->tag() == tag_short || key->tag() == tag_string || key->tag() >= tag_pointer);
-        uint8_t byte0 = key->_byte[0];
-        if (_usually_true(byte0 <= 0x07))
-            return key_to_find - ((byte0 << 8) | key->_byte[1]);
-        else if (_usually_false(byte0 <= 0x0F))
-            return key_to_find - static_cast<int16_t>(0xF0 | (byte0 << 8) | key->_byte[1]);
-        else
-            return -1;
-    }
-
-    static int compare_keys(const value_t *key_to_find, const value_t *key) {
-        if (key_to_find->tag() == tag_string)
-            return compare_keys(key_bytes(key_to_find), key);
-        else
-            return compare_keys(static_cast<int>(key_to_find->as_int()), key);
-    }
-
-private:
-    template <class T, class CMP>
-    inline const value_t* search(T target, CMP comparator) const {
-        const value_t *begin = _first;
-        size_t n = _count;
-        while (n > 0) {
-            size_t mid = n >> 1;
-            const value_t *mid_value = offsetby(begin, static_cast<ptrdiff_t>(mid * 2 * width));
-            int cmp = comparator(target, mid_value);
-            if (_usually_false(cmp == 0))
-                return mid_value;
-            else if (cmp < 0)
-                n = mid;
-            else {
-                begin = offsetby(mid_value, 2*width);
-                n -= mid + 1;
+            const value_t* get(std::string_view key) const noexcept {
+                return get(encode_key_(key));
             }
-        }
-        return nullptr;
-    }
 
-    const value_t* find_key_by_hint(dict_t::key_t &key_to_find) const {
-        if (key_to_find._hint < _count) {
-            const value_t *key  = offsetby(_first, key_to_find._hint * 2 * width);
-            if (compare_keys(key_to_find._raw_str, key) == 0)
-                return key;
-        }
-        return nullptr;
-    }
-
-    const value_t* find_key_by_search(dict_t::key_t &key_to_find) const {
-        auto key = search(key_to_find._raw_str, [](std::string_view target, const value_t *val) {
-                return compare_keys(target, val);
-        });
-        if (!key)
-            return nullptr;
-        key_to_find._hint = static_cast<uint32_t>(index_of(key)) / 2;
-        return key;
-    }
-
-    bool lookup_shared_key(const std::string& key_to_find, shared_keys_t *shared_keys, int &encoded) const noexcept {
-        if (shared_keys->encode(key_to_find, encoded))
-            return true;
-        if (_count == 0)
-            return false;
-        const value_t *v = offsetby(_first, (_count-1)*2*width);
-        do {
-            if (v->is_int()) {
-                if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
-                    shared_keys->refresh();
-                    return shared_keys->encode(key_to_find, encoded);
+            value_slot_t& slot(std::string_view key_str) {
+                set_changed(true);
+                auto key = encode_key_(key_str);
+                auto it = map_.find(key);
+                if (it == map_.end()) {
+                    ++count_;
+                    map_.emplace(key, a_->count());
+                    a_->append(key_str);
+                    a_->append(nullptr);
+                    return a_->slot(a_->count() - 1);
                 }
-                return false;
+                return a_->slot(it->second + 1);
             }
-        } while (--v >= _first);
-        return false;
-    }
 
-
-    bool lookup_shared_key(std::string_view key_to_find, shared_keys_t *shared_keys, int &encoded) const noexcept {
-        if (shared_keys->encode(key_to_find, encoded))
-            return true;
-        if (_count == 0)
-            return false;
-        const value_t *v = offsetby(_first, (_count-1)*2*width);
-        do {
-            if (v->is_int()) {
-                if (shared_keys->is_unknown_key(static_cast<int>(v->as_int()))) {
-                    shared_keys->refresh();
-                    return shared_keys->encode(key_to_find, encoded);
+            void remove(std::string_view str_key) {
+                auto key = encode_key_(str_key);
+                auto it = map_.find(key);
+                if (it != map_.end()) {
+                    --count_;
+                    a_->remove(it->second, 2);
+                    map_.erase(key);
+                    set_changed(true);
                 }
+            }
+
+            void remove_all() {
+                if (count_ == 0) {
+                    return;
+                }
+                a_->resize(0);
+                map_.clear();
+                count_ = 0;
+                set_changed(true);
+            }
+
+        private:
+            dict_t::key_t encode_key_(std::string_view key) const noexcept {
+                return dict_t::key_t{key};
+            }
+        };
+
+        heap_dict_t* heap_dict(const dict_t* dict) {
+            return reinterpret_cast<heap_dict_t*>(internal::heap_collection_t::as_heap_value(dict));
+        }
+
+        heap_dict_t::heap_dict_t(const dict_t *dict)
+            : heap_collection_t(tag_dict) {
+            if (dict) {
+                count_ = dict->count();
+                auto hd = heap_dict(dict);
+                a_ = array_t::new_array(hd->a_);
+                map_ = hd->map_;
+            } else {
+                a_ = array_t::new_array();
+            }
+        }
+
+    } // namespace internal
+
+
+    using namespace internal;
+
+    dict_t::key_t::key_t(std::string_view raw_str)
+        : raw_str_({raw_str.data(), raw_str.size()}) {}
+
+    dict_t::key_t::key_t(const std::string& raw_str)
+        : raw_str_(raw_str) {}
+
+    dict_t::key_t::~key_t() = default;
+
+    std::string_view dict_t::key_t::string() const noexcept {
+        return {raw_str_.data(), raw_str_.size()};
+    }
+
+    int dict_t::key_t::compare(const key_t& k) const noexcept {
+        return raw_str_.compare(k.raw_str_);
+    }
+
+
+    dict_t::iterator::iterator(const dict_t* d) noexcept
+        : source_(d)
+        , count_(d->count())
+        , pos_(0) {
+        set_value_();
+    }
+
+    uint32_t dict_t::iterator::count() const noexcept {
+        return count_;
+    }
+
+    std::string_view dict_t::iterator::key_string() const noexcept {
+        if (key_) {
+            return key()->as_string();
+        }
+        return {};
+    }
+
+    const value_t* dict_t::iterator::key() const noexcept {
+        return key_;
+    }
+
+    const value_t* dict_t::iterator::value() const noexcept {
+        return value_;
+    }
+
+    dict_t::iterator::operator bool() const noexcept {
+        return pos_ < count_;
+    }
+
+    dict_t::iterator& dict_t::iterator::operator++() {
+        ++pos_;
+        set_value_();
+        return *this;
+    }
+
+    dict_t::iterator& dict_t::iterator::operator+=(uint32_t n) {
+        pos_ += n;
+        set_value_();
+        return *this;
+    }
+
+    void dict_t::iterator::set_value_() {
+        if (pos_ < count_) {
+            auto hd = heap_dict(source_);
+            key_ = hd->get_key(2 * pos_);
+            value_ = hd->get(2 * pos_);
+        } else {
+            key_ = nullptr;
+            value_ = nullptr;
+        }
+    }
+
+
+    dict_t::dict_t()
+        : value_t(internal::tag_dict, 0, 0) {}
+
+    retained_t<dict_t> dict_t::new_dict(const dict_t* d, copy_flags flags) {
+        auto hd = retained(new internal::heap_dict_t(d));
+        if (flags) {
+            hd->copy_children(flags);
+        }
+        return hd->dict();
+    }
+
+    const dict_t* dict_t::empty_dict() {
+        static const auto empty_dict_ = new_dict();
+        return empty_dict_.get();
+    }
+
+    uint32_t dict_t::count() const noexcept {
+        return heap_dict(this)->count();
+    }
+
+    bool dict_t::empty() const noexcept {
+        return heap_dict(this)->empty();
+    }
+
+    const value_t* dict_t::get(key_t& key) const noexcept {
+        return heap_dict(this)->get(key);
+    }
+
+    const value_t* dict_t::get(std::string_view key) const noexcept {
+        return heap_dict(this)->get(key);
+    }
+
+    bool dict_t::is_equals(const dict_t* dv) const noexcept {
+        dict_t::iterator i(this);
+        dict_t::iterator j(dv);
+        if (i.count() != j.count()) {
+            return false;
+        }
+        if (shared_keys() == dv->shared_keys()) {
+            for (; i; ++i, ++j) {
+                if (i.key_string() != j.key_string() || !i.value()->is_equal(j.value())) {
+                    return false;
+                }
+            }
+        } else {
+            unsigned n = 0;
+            for (; i; ++i, ++n) {
+                auto dvalue = dv->get(i.key_string());
+                if (!dvalue || !i.value()->is_equal(dvalue)) {
+                    return false;
+                }
+            }
+            if (dv->count() != n) {
                 return false;
             }
-        } while (--v >= _first);
-        return false;
-    }
-
-    static inline std::string_view key_bytes(const value_t *key) {
-        return deref(key)->get_string_bytes();
-    }
-
-    static inline const value_t* next(const value_t *v) {
-        return v->next<WIDE>();
-    }
-
-    static inline const value_t* deref(const value_t *v) {
-        return v->deref<WIDE>();
-    }
-
-    static constexpr size_t width = (WIDE ? 4 : 2);
-};
-
-
-static int compare_keys(const value_t *key_to_find, const value_t *key, bool wide) {
-    if (wide)
-        return dict_impl_t<true>::compare_keys(key_to_find, key);
-    else
-        return dict_impl_t<true>::compare_keys(key_to_find, key);
-}
-
-
-constexpr dict_t::dict_t()
-    : value_t(internal::tag_dict, 0, 0)
-{}
-
-uint32_t dict_t::count() const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->count();
-    array_t::impl imp(this);
-    if (_usually_false(imp._count >= 1 && is_magic_parent_key(imp._first))) {
-        uint32_t c = 0;
-        for (iterator i(this); i; ++i)
-            ++c;
-        return c;
-    } else {
-        return imp._count;
-    }
-}
-
-bool dict_t::empty() const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->empty();
-    return count_is_zero();
-}
-
-const value_t* dict_t::get(std::string_view key) const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->get(key);
-    if (is_wide_array())
-        return dict_impl_t<true>(this).get(key);
-    else
-        return dict_impl_t<false>(this).get(key);
-}
-
-const value_t* dict_t::get(int key) const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->get(key);
-    else if (is_wide_array())
-        return dict_impl_t<true>(this).get(key);
-    else
-        return dict_impl_t<false>(this).get(key);
-}
-
-const value_t* dict_t::get(key_t &key) const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->get(key);
-    else if (is_wide_array())
-        return dict_impl_t<true>(this).get(key);
-    else
-        return dict_impl_t<false>(this).get(key);
-}
-
-const value_t* dict_t::get(const document::impl::key_t &key) const noexcept {
-    if (_usually_false(is_mutable()))
-        return heap_dict()->get(key);
-    else if (key.shared())
-        return get(key.as_int());
-    else
-        return get(key.as_string());
-}
-
-mutable_dict_t* dict_t::as_mutable() const noexcept {
-    return is_mutable() ? reinterpret_cast<mutable_dict_t*>(const_cast<dict_t*>(this)) : nullptr;
-}
-
-heap_dict_t* dict_t::heap_dict() const noexcept {
-    return dynamic_cast<heap_dict_t*>(internal::heap_collection_t::as_heap_value(this));
-}
-
-const dict_t* dict_t::get_parent() const noexcept {
-    if (is_mutable())
-        return heap_dict()->source();
-    else if (is_wide_array())
-        return dict_impl_t<true>(this).get_parent();
-    else
-        return dict_impl_t<false>(this).get_parent();
-}
-
-bool dict_t::is_magic_parent_key(const value_t *v) {
-    return v->_byte[0] == uint8_t((tag_short<<4) | 0x08) && v->_byte[1] == 0;
-}
-
-bool dict_t::is_equals(const dict_t* dv) const noexcept {
-    dict_t::iterator i(this);
-    dict_t::iterator j(dv);
-    if (!this->get_parent() && !dv->get_parent() && i.count() != j.count())
-        return false;
-    if (shared_keys() == dv->shared_keys()) {
-        for (; i; ++i, ++j)
-            if (i.key_string() != j.key_string() || !i.value()->is_equal(j.value()))
-                return false;
-    } else {
-        unsigned n = 0;
-        for (; i; ++i, ++n) {
-            auto dvalue = dv->get(i.key_string());
-            if (!dvalue || !i.value()->is_equal(dvalue))
-                return false;
         }
-        if (dv->count() != n)
-            return false;
+        return true;
     }
-    return true;
-}
 
-EVEN_ALIGNED static constexpr dict_t empty_dict_instance;
-const dict_t* const dict_t::empty_dict = &empty_dict_instance;
-
-
-dict_iterator_t::dict_iterator_t(const dict_t* d) noexcept
-    : dict_iterator_t(d, nullptr)
-{}
-
-dict_iterator_t::dict_iterator_t(const dict_t* d, const shared_keys_t *sk) noexcept
-    : _a(d)
-    , _shared_keys(sk)
-{
-    read();
-    if (_usually_false(_key && dict_t::is_magic_parent_key(_key))) {
-        _parent = std::make_unique<dict_iterator_t>(_value->as_dict());
-        ++(*this);
+    retained_t<dict_t> dict_t::copy(copy_flags f) const {
+        return new_dict(this, f);
     }
-}
 
-dict_iterator_t::dict_iterator_t(const dict_t* d, bool) noexcept
-    : _a(d)
-{
-    read();
-}
-
-shared_keys_t* dict_iterator_t::find_shared_keys() const {
-    return nullptr;
-    /*
-    auto sk = doc_t::shared_keys(_a._first);
-    _shared_keys = sk;
-    assert_precondition(sk || is_disable_necessary_shared_keys_check);
-    return sk;
-    */
-}
-
-std::string_view dict_iterator_t::key_string() const noexcept {
-    auto key_str = _key->as_string();
-    if (key_str.empty() && _key->is_int()) {
-        auto sk = _shared_keys ? _shared_keys : find_shared_keys();
-        if (!sk)
-            return {};
-        key_str = sk->decode(static_cast<int>(_key->as_int()));
+    retained_t<internal::heap_collection_t> dict_t::mutable_copy() const {
+        return new heap_dict_t(this);
     }
-    return key_str;
-}
 
-key_t dict_iterator_t::keyt() const noexcept {
-    if (_key->is_int())
-        return key_t(static_cast<int>(_key->as_int()));
-    else {
-        auto tmp = _key->as_string();
-        return key_t(std::string{tmp.data(),tmp.size()});
+    void dict_t::copy_children(copy_flags flags) const {
+        heap_dict(this)->copy_children(flags);
     }
-}
 
-dict_iterator_t& dict_iterator_t::operator++() {
-    do {
-        if (_key_compare >= 0)
-            ++(*_parent);
-        if (_key_compare <= 0) {
-            _throw_if(_a._count == 0, error_code::out_of_range, "iterating past end of dict");
-            --_a._count;
-            _a._first = offsetby(_a._first, 2*_a._width);
-        }
-        read();
-    } while (_usually_false(_parent && _value && _value->is_undefined()));
-    return *this;
-}
-
-dict_iterator_t& dict_iterator_t::operator += (uint32_t n) {
-    _throw_if(n > _a._count, error_code::out_of_range, "iterating past end of dict");
-    _a._count -= n;
-    _a._first = offsetby(_a._first, 2*_a._width*n);
-    read();
-    return *this;
-}
-
-void dict_iterator_t::read() noexcept {
-    if (_usually_true(_a._count)) {
-        _key   = _a.deref(_a._first);
-        _value = _a.deref(_a.second());
-    } else {
-        _key = _value = nullptr;
+    bool dict_t::is_changed() const {
+        return heap_dict(this)->is_changed();
     }
-    if (_usually_false(_parent != nullptr)) {
-        auto parent_key = _parent->key();
-        if (_usually_false(!_key))
-            _key_compare = parent_key ? 1 : 0;
-        else if (_usually_false(!parent_key))
-            _key_compare = _key ? -1 : 0;
-        else
-            _key_compare = compare_keys(_key, parent_key, (_a._width > size_narrow));
-        if (_key_compare > 0) {
-            _key = parent_key;
-            _value = _parent->value();
-        }
-    }
-}
 
-}
+    void dict_t::remove(std::string_view key) {
+        heap_dict(this)->remove(key);
+    }
+
+    void dict_t::remove_all() {
+        heap_dict(this)->remove_all();
+    }
+
+    dict_t::iterator dict_t::begin() const noexcept {
+        return dict_t::iterator(this);
+    }
+
+    internal::value_slot_t& dict_t::slot(std::string_view key) {
+        return heap_dict(this)->slot(key);
+    }
+
+} // namespace document::impl

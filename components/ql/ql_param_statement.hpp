@@ -1,6 +1,5 @@
 #pragma once
 
-#include <components/document/mutable/mutable_value.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/expressions/msgpack.hpp>
 #include "ql_statement.hpp"

@@ -2,9 +2,8 @@
 
 #include <deque>
 
-#include  "actor-zeta.hpp"
+#include "actor-zeta.hpp"
 #include "clock_test.hpp"
-
 
 namespace core::non_thread_scheduler {
 
@@ -30,4 +29,4 @@ namespace core::non_thread_scheduler {
         clock_test clock_;
     };
 
-}
+} // namespace core::non_thread_scheduler

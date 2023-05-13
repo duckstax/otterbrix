@@ -3,7 +3,6 @@
 #include <iostream>
 #include <utility>
 
-#include "components/document/mutable/mutable_dict.hpp"
 #include "core/pmr.hpp"
 #include <components/index/disk/route.hpp>
 
