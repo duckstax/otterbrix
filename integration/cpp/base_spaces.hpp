@@ -29,6 +29,7 @@ namespace duck_charmer {
 
         log_t log_;
         actor_zeta::scheduler_ptr  scheduler_;
+        actor_zeta::scheduler_ptr  scheduler_dispather_;
         actor_zeta::detail::pmr::memory_resource* resource;
         services::disk::manager_disk_ptr manager_disk_;
         services::wal::manager_wal_ptr manager_wal_;
