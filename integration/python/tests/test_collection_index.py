@@ -1,6 +1,6 @@
 import pytest
 import shutil
-from ottergon import Client, DataBase, Collection, TypeIndex
+from ottergon import Client, DataBase, Collection, TypeIndex, CompareIndex
 
 shutil.rmtree('./wal')
 shutil.rmtree('./disk')
@@ -32,10 +32,10 @@ def insert(collection, num):
 @pytest.fixture()
 def gen_collection(request):
     collection = database[collection_name]
+    collection.create_index(['count'], TypeIndex.SINGLE, CompareIndex.INT64)
+    collection.create_index(['countStr'], TypeIndex.SINGLE, CompareIndex.STR)
     for num in range(1000):
         insert(collection, num)
-    collection.create_index(['count'], TypeIndex.SINGLE)
-    collection.create_index(['countStr'], TypeIndex.SINGLE)
 
     def finalize():
         collection.drop()
