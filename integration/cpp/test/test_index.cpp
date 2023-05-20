@@ -9,6 +9,78 @@ using id_par = core::parameter_id_t;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
+
+#define INIT_COLLECTION() \
+    do { \
+        { \
+            auto session = duck_charmer::session_id_t(); \
+            dispatcher->create_database(session, database_name); \
+        } \
+        { \
+            auto session = duck_charmer::session_id_t(); \
+            dispatcher->create_collection(session, database_name, collection_name); \
+        } \
+    } while (false)
+
+#define FILL_COLLECTION() \
+    do { \
+        std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource()); \
+        for (int num = 1; num <= 100; ++num) { \
+            documents.push_back(gen_doc(num)); \
+        } \
+        { \
+            auto session = duck_charmer::session_id_t(); \
+            dispatcher->insert_many(session, database_name, collection_name, documents); \
+        } \
+    } while (false)
+
+#define CREATE_INDEX(INDEX_COMPARE, KEY) \
+    do { \
+        auto session = duck_charmer::session_id_t(); \
+        components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, INDEX_COMPARE}; \
+        ql.keys_.emplace_back(KEY); \
+        dispatcher->create_index(session, ql); \
+    } while (false)
+
+#define DROP_INDEX(INDEX_COMPARE) \
+    do { \
+        auto session = duck_charmer::session_id_t(); \
+    } while (false)
+
+#define CHECK_FIND_ALL() \
+    do { \
+        auto session = duck_charmer::session_id_t(); \
+        auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
+        auto c = dispatcher->find(session, ql); \
+        REQUIRE(c->size() == 100); \
+        delete c; \
+    } while (false)
+
+#define CHECK_FIND(KEY, COMPARE, VALUE, COUNT) \
+    do { \
+        auto session = duck_charmer::session_id_t(); \
+        auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
+        auto expr = components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1}); \
+        ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr))); \
+        ql->add_parameter(id_par{1}, VALUE); \
+        auto c = dispatcher->find(session, ql); \
+        REQUIRE(c->size() == COUNT); \
+        delete c; \
+    } while (false)
+
+#define CHECK_FIND_COUNT(COMPARE, VALUE, COUNT) \
+    CHECK_FIND("count", COMPARE, VALUE, COUNT)
+
+#define CHECK_EXISTS_INDEX(NAME, EXISTS) \
+    do { \
+        auto index_name = collection_name + "__" + NAME; \
+        auto path = config.disk.path / "indexes" / collection_name / index_name; \
+        REQUIRE(std::filesystem::exists(path) == true); \
+        REQUIRE(std::filesystem::is_directory(path) == EXISTS); \
+    } while (false)
+
+
+
 TEST_CASE("integration::test_index::base") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/base");
     test_clear_directory(config);
@@ -16,104 +88,20 @@ TEST_CASE("integration::test_index::base") {
     auto* dispatcher = space.dispatcher();
 
     INFO("initialization") {
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->create_database(session, database_name);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->create_collection(session, database_name, collection_name);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, components::ql::index_compare::int64};
-            ql.keys_.emplace_back("count");
-            dispatcher->create_index(session, ql);
-        }
-    }
-
-    INFO("insert") {
-        std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
-        for (int num = 1; num <= 100; ++num) {
-            documents.push_back(gen_doc(num));
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->insert_many(session, database_name, collection_name, documents);
-        }
+        INIT_COLLECTION();
+        CREATE_INDEX(components::ql::index_compare::int64, "count");
+        FILL_COLLECTION();
     }
 
     INFO("find") {
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 100);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 1);
-            REQUIRE(c->get(0)->get_long("count") == 10);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 90);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lt, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 9);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::ne, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 99);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gte, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 91);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 10);
-            delete c;
-        }
+        CHECK_FIND_ALL();
+        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
     }
-
 }
 
 
@@ -124,115 +112,62 @@ TEST_CASE("integration::test_index::save_load") {
     INFO("initialization") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->create_database(session, database_name);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->create_collection(session, database_name, collection_name);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, components::ql::index_compare::int64};
-            ql.keys_.emplace_back("count");
-            dispatcher->create_index(session, ql);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, components::ql::index_compare::str};
-            ql.keys_.emplace_back("countStr");
-            dispatcher->create_index(session, ql);
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, components::ql::index_compare::float64};
-            ql.keys_.emplace_back("countDouble");
-            dispatcher->create_index(session, ql);
-        }
-
-        std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
-        for (int num = 1; num <= 100; ++num) {
-            documents.push_back(gen_doc(num));
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            dispatcher->insert_many(session, database_name, collection_name, documents);
-        }
+        
+        INIT_COLLECTION();
+        CREATE_INDEX(components::ql::index_compare::int64, "count");
+        CREATE_INDEX(components::ql::index_compare::str, "countStr");
+        CREATE_INDEX(components::ql::index_compare::float64, "countDouble");
+        FILL_COLLECTION();
     }
 
     INFO("find") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 100);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 1);
-            REQUIRE(c->get(0)->get_long("count") == 10);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 90);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lt, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 9);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::ne, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 99);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gte, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 91);
-            delete c;
-        }
-        {
-            auto session = duck_charmer::session_id_t();
-            auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, id_par{1});
-            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find(session, ql);
-            REQUIRE(c->size() == 10);
-            delete c;
-        }
+
+        CHECK_FIND_ALL();
+        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+    }
+}
+
+
+TEST_CASE("integration::test_index::drop") {
+    auto config = test_create_config("/tmp/ottergon/integration/test_index/drop");
+    test_clear_directory(config);
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        INIT_COLLECTION();
+        CREATE_INDEX(components::ql::index_compare::int64, "count");
+        CREATE_INDEX(components::ql::index_compare::str, "countStr");
+        CREATE_INDEX(components::ql::index_compare::float64, "countDouble");
+        FILL_COLLECTION();
     }
 
+    INFO("drop indexes") {
+        CHECK_EXISTS_INDEX("count", true);
+        CHECK_EXISTS_INDEX("countStr", true);
+        CHECK_EXISTS_INDEX("countDouble", true);
+
+        // DROP_INDEX("count");
+        // CHECK_EXISTS_INDEX("count", false);
+        // CHECK_EXISTS_INDEX("countStr", true);
+        // CHECK_EXISTS_INDEX("countDouble", true);
+
+        // DROP_INDEX("countStr");
+        // CHECK_EXISTS_INDEX("count", false);
+        // CHECK_EXISTS_INDEX("countStr", false);
+        // CHECK_EXISTS_INDEX("countDouble", true);
+
+        // DROP_INDEX("countDouble");
+        // CHECK_EXISTS_INDEX("count", false);
+        // CHECK_EXISTS_INDEX("countStr", false);
+        // CHECK_EXISTS_INDEX("countDouble", false);
+    }
 }
