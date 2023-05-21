@@ -63,6 +63,30 @@ namespace components::ql {
         index_type index_type_;
         index_compare index_compare_;
     };
+
+    struct drop_index_t final : ql_statement_t {
+        drop_index_t(const database_name_t& database, const collection_name_t& collection)
+            : ql_statement_t(statement_type::drop_index, database, collection) {
+        }
+
+        drop_index_t()
+            : ql_statement_t(statement_type::drop_index, {}, {}) {
+        }
+
+        std::string name() const {
+            std::stringstream s;
+            s << collection_ << "_";
+            for (const auto &key : keys_) {
+                s << "_" << key.as_string();
+            }
+            return s.str();
+        }
+
+        ~drop_index_t() final = default;
+
+        keys_base_storage_t keys_;
+    };
+
 } // namespace components::ql
 
 // User defined class template specialization
@@ -112,6 +136,46 @@ namespace msgpack {
                     o.via.array.ptr[3] = msgpack::object(static_cast<uint8_t>(v.index_compare_), o.zone);
                     std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
                     o.via.array.ptr[4] = msgpack::object(tmp, o.zone);
+                }
+            };
+
+
+            template<>
+            struct convert<components::ql::drop_index_t> final {
+                msgpack::object const& operator()(msgpack::object const& o, components::ql::drop_index_t& v) const {
+                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 3) {
+                        throw msgpack::type_error();
+                    }
+                    v.database_ = o.via.array.ptr[0].as<std::string>();
+                    v.collection_ = o.via.array.ptr[1].as<std::string>();
+                    auto data = o.via.array.ptr[2].as<std::vector<std::string>>();
+                    v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
+                    return o;
+                }
+            };
+
+            template<>
+            struct pack<components::ql::drop_index_t> final {
+                template<typename Stream>
+                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::drop_index_t const& v) const {
+                    o.pack_array(3);
+                    o.pack(v.database_);
+                    o.pack(v.collection_);
+                    o.pack(v.keys_);
+                    return o;
+                }
+            };
+
+            template<>
+            struct object_with_zone<components::ql::drop_index_t> final {
+                void operator()(msgpack::object::with_zone& o, components::ql::drop_index_t const& v) const {
+                    o.type = type::ARRAY;
+                    o.via.array.size = 3;
+                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
+                    o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
+                    std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
+                    o.via.array.ptr[2] = msgpack::object(tmp, o.zone);
                 }
             };
 

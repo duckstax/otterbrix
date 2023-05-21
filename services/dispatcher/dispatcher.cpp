@@ -88,6 +88,8 @@ namespace services::dispatcher {
         add_handler(collection::handler_id(collection::route::close_cursor), &dispatcher_t::close_cursor);
         add_handler(collection::handler_id(collection::route::create_index), &dispatcher_t::create_index);
         add_handler(collection::handler_id(collection::route::create_index_finish), &dispatcher_t::create_index_finish);
+        add_handler(collection::handler_id(collection::route::drop_index), &dispatcher_t::drop_index);
+        add_handler(collection::handler_id(collection::route::drop_index_finish), &dispatcher_t::drop_index_finish);
         add_handler(wal::handler_id(wal::route::success), &dispatcher_t::wal_success);
         trace(log_, "dispatcher_t::dispatcher_t finish name:{}", type());
     }
@@ -533,7 +535,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address) {
-        debug(log_, "dispatcher_t::create_index: session:{}, database: {}, collection: {}", session.data(), index.database_, index.collection_);
+        debug(log_, "dispatcher_t::create_index: session:{}, index: {}", session.data(), index.name());
         key_collection_t key(index.database_, index.collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
@@ -547,19 +549,39 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::create_index_finish(components::session::session_id_t &session, const std::string& name, result_create_index& result) {
-        trace(log_, "dispatcher_t::create_index_finish session: {}", session.data());
+        trace(log_, "dispatcher_t::create_index_finish session: {}, index: {}", session.data(), name);
         if (find_session(session_to_address_, session, name).address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
-        } else {
-            auto& s = find_session(session_to_address_, session, name);
-            //actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::create_index), session, s.get<create_index_t>());
         }
-        //if (!check_load_from_wal(session)) {
-            if (find_session(session_to_address_, session, name).address().get() != dispatcher_t::address().get()) {
-                actor_zeta::send(find_session(session_to_address_, session, name).address(), dispatcher_t::address(), collection::handler_id(collection::route::create_index_finish), session, result);
+        if (find_session(session_to_address_, session, name).address().get() != dispatcher_t::address().get()) {
+            actor_zeta::send(find_session(session_to_address_, session, name).address(), dispatcher_t::address(), collection::handler_id(collection::route::create_index_finish), session, result);
+        }
+        remove_session(session_to_address_, session, name);
+    }
+
+    void dispatcher_t::drop_index(components::session::session_id_t &session, components::ql::drop_index_t drop_index, actor_zeta::address_t address) {
+        debug(log_, "dispatcher_t::drop_index: session: {}, index: {}", session.data(), drop_index.name());
+        key_collection_t key(drop_index.database_, drop_index.collection_);
+        auto it_collection = collection_address_book_.find(key);
+        if (it_collection != collection_address_book_.end()) {
+            make_session(session_to_address_, session_key_t{session, drop_index.name()}, session_t(address, drop_index));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::drop_index), session, std::move(drop_index));
+        } else {
+            if (address.get() != dispatcher_t::address().get()) {
+                actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::drop_index_finish), session, result_drop_index());
             }
-            remove_session(session_to_address_, session, name);
-        //}
+        }
+    }
+
+    void dispatcher_t::drop_index_finish(components::session::session_id_t &session, const std::string& name, result_drop_index& result) {
+        trace(log_, "dispatcher_t::drop_index_finish session: {}, index: {}", session.data(), name);
+        if (find_session(session_to_address_, session, name).address().get() == manager_wal_.get()) {
+            wal_success(session, last_wal_id_);
+        }
+        if (find_session(session_to_address_, session, name).address().get() != dispatcher_t::address().get()) {
+            actor_zeta::send(find_session(session_to_address_, session, name).address(), dispatcher_t::address(), collection::handler_id(collection::route::drop_index_finish), session, result);
+        }
+        remove_session(session_to_address_, session, name);
     }
 
     void dispatcher_t::close_cursor(components::session::session_id_t& session) {
@@ -625,6 +647,7 @@ namespace services::dispatcher {
         add_handler(collection::handler_id(collection::route::size), &manager_dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::close_cursor), &manager_dispatcher_t::close_cursor);
         add_handler(collection::handler_id(collection::route::create_index), &manager_dispatcher_t::create_index);
+        add_handler(collection::handler_id(collection::route::drop_index), &manager_dispatcher_t::drop_index);
         add_handler(core::handler_id(core::route::sync), &manager_dispatcher_t::sync);
         trace(log_, "manager_dispatcher_t finish");
     }
@@ -724,8 +747,13 @@ namespace services::dispatcher {
     }
 
     void manager_dispatcher_t::create_index(components::session::session_id_t &session, components::ql::create_index_t index) {
-        trace(log_, "manager_dispatcher_t::create_index session: {} , database: {}, collection name: {} ", session.data(), index.database_, index.collection_);
+        trace(log_, "manager_dispatcher_t::create_index session: {} , index: {}", session.data(), index.name());
         actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::create_index), session, std::move(index), current_message()->sender());
+    }
+
+    void manager_dispatcher_t::drop_index(components::session::session_id_t& session, components::ql::drop_index_t drop_index) {
+        trace(log_, "manager_dispatcher_t::drop_index session: {} , index: {}", session.data(), drop_index.name());
+        actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::drop_index), session, std::move(drop_index), current_message()->sender());
     }
 
     auto manager_dispatcher_t::dispatcher() -> actor_zeta::address_t {

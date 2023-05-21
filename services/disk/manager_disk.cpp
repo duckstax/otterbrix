@@ -153,7 +153,7 @@ namespace services::disk {
             actor_zeta::send(index_agents_.at(index_name)->address(), address(), index::handler_id(index::route::drop), session);
         } else {
             error(log_, "manager_disk: index {} already exists", index_name);
-            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
+            //actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
         }
     }
 
@@ -164,7 +164,7 @@ namespace services::disk {
                 auto command_drop = command.get<command_drop_index_t>();
                 index_agents_.erase(command_drop.index_name);
                 trace(log_, "manager_disk: drop_index_agent : {} : success", command_drop.index_name);
-                actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
+                //actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
             }
             commands_.erase(session);
         }

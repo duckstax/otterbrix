@@ -42,9 +42,12 @@ static const collection_name_t collection_name = "TestCollection";
         dispatcher->create_index(session, ql); \
     } while (false)
 
-#define DROP_INDEX(INDEX_COMPARE) \
+#define DROP_INDEX(KEY) \
     do { \
         auto session = duck_charmer::session_id_t(); \
+        components::ql::drop_index_t ql{database_name, collection_name}; \
+        ql.keys_.emplace_back(KEY); \
+        dispatcher->drop_index(session, ql); \
     } while (false)
 
 #define CHECK_FIND_ALL() \
@@ -75,7 +78,7 @@ static const collection_name_t collection_name = "TestCollection";
     do { \
         auto index_name = collection_name + "__" + NAME; \
         auto path = config.disk.path / "indexes" / collection_name / index_name; \
-        REQUIRE(std::filesystem::exists(path) == true); \
+        REQUIRE(std::filesystem::exists(path) == EXISTS); \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS); \
     } while (false)
 
@@ -148,6 +151,7 @@ TEST_CASE("integration::test_index::drop") {
         CREATE_INDEX(components::ql::index_compare::str, "countStr");
         CREATE_INDEX(components::ql::index_compare::float64, "countDouble");
         FILL_COLLECTION();
+        usleep(1000000); //todo: wait
     }
 
     INFO("drop indexes") {
@@ -155,19 +159,32 @@ TEST_CASE("integration::test_index::drop") {
         CHECK_EXISTS_INDEX("countStr", true);
         CHECK_EXISTS_INDEX("countDouble", true);
 
-        // DROP_INDEX("count");
-        // CHECK_EXISTS_INDEX("count", false);
-        // CHECK_EXISTS_INDEX("countStr", true);
-        // CHECK_EXISTS_INDEX("countDouble", true);
+        DROP_INDEX("count");
+        usleep(100000); //todo: wait
+        CHECK_EXISTS_INDEX("count", false);
+        CHECK_EXISTS_INDEX("countStr", true);
+        CHECK_EXISTS_INDEX("countDouble", true);
 
-        // DROP_INDEX("countStr");
-        // CHECK_EXISTS_INDEX("count", false);
-        // CHECK_EXISTS_INDEX("countStr", false);
-        // CHECK_EXISTS_INDEX("countDouble", true);
+        DROP_INDEX("countStr");
+        usleep(100000); //todo: wait
+        CHECK_EXISTS_INDEX("count", false);
+        CHECK_EXISTS_INDEX("countStr", false);
+        CHECK_EXISTS_INDEX("countDouble", true);
 
-        // DROP_INDEX("countDouble");
-        // CHECK_EXISTS_INDEX("count", false);
-        // CHECK_EXISTS_INDEX("countStr", false);
-        // CHECK_EXISTS_INDEX("countDouble", false);
+        DROP_INDEX("countDouble");
+        usleep(100000); //todo: wait
+        CHECK_EXISTS_INDEX("count", false);
+        CHECK_EXISTS_INDEX("countStr", false);
+        CHECK_EXISTS_INDEX("countDouble", false);
+
+        DROP_INDEX("count");
+        DROP_INDEX("count");
+        DROP_INDEX("count");
+        DROP_INDEX("count");
+        DROP_INDEX("count");
+        usleep(100000); //todo: wait
+        CHECK_EXISTS_INDEX("count", false);
+        CHECK_EXISTS_INDEX("countStr", false);
+        CHECK_EXISTS_INDEX("countDouble", false);
     }
 }

@@ -18,6 +18,10 @@ namespace components::index {
         /// index->find(id,set);
     }
 
+    void drop_index(const index_engine_ptr& ptr, index_t::pointer index) {
+        ptr->drop_index(index);
+    }
+
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs) {
         auto* index = search_index(ptr, id);
         for (const auto& i : docs) {
@@ -81,6 +85,10 @@ namespace components::index {
         return ptr->matching(address);
     }
 
+    auto search_index(const index_engine_ptr& ptr, const std::string& name) -> index_t::pointer {
+        return ptr->matching(name);
+    }
+
     auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr {
         auto size = sizeof(index_engine_t);
         auto align = alignof(index_engine_t);
@@ -115,6 +123,7 @@ namespace components::index {
         , mapper_(resource)
         , index_to_mapper_(resource)
         , index_to_address_(resource)
+        , index_to_name_(resource)
         , storage_(resource) {
     }
 
@@ -124,11 +133,25 @@ namespace components::index {
         mapper_.emplace(keys, d);
         auto new_id = index_to_mapper_.size();
         index_to_mapper_.emplace(new_id, d);
+        index_to_name_.emplace(d->get()->name(), d);
         return uint32_t(new_id);
     }
 
     auto index_engine_t::add_disk_agent(id_index id, actor_zeta::address_t address) -> void {
         index_to_address_.emplace(address, index_to_mapper_.find(id)->second);
+    }
+
+    auto index_engine_t::drop_index(index_t::pointer index) -> void {
+        auto equal = [&index](const index_ptr& ptr) {
+            return index == ptr.get();
+        };
+        if (index->is_disk()) {
+            index_to_address_.erase(index->disk_agent());
+        }
+        index_to_name_.erase(index->name());
+        //index_to_mapper_.erase(index.id); //todo
+        mapper_.erase(index->keys_);
+        storage_.erase(std::remove_if(storage_.begin(), storage_.end(), equal), storage_.end());
     }
 
     actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {
@@ -154,6 +177,14 @@ namespace components::index {
     auto index_engine_t::matching(const actor_zeta::address_t& address) -> index_t::pointer {
         auto it = index_to_address_.find(address);
         if (it != index_to_address_.end()) {
+            return it->second->get();
+        }
+        return nullptr;
+    }
+
+    auto index_engine_t::matching(const std::string& name) -> index_t::pointer {
+        auto it = index_to_name_.find(name);
+        if (it != index_to_name_.end()) {
             return it->second->get();
         }
         return nullptr;

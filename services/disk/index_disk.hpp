@@ -39,6 +39,7 @@ namespace services::disk {
         void drop();
 
     private:
+        std::filesystem::path path_;
         std::unique_ptr<rocksdb::DB> db_;
         std::unique_ptr<base_comparator> comparator_;
     };

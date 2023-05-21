@@ -72,7 +72,6 @@ namespace services::collection {
         }
     }
 
-
     void collection_t::create_index_finish(const session_id_t& session, const std::string& name, const actor_zeta::address_t& index_address) {
         debug(log(), "collection::create_index_finish");
         auto &create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
@@ -80,6 +79,24 @@ namespace services::collection {
         insert(context_->index_engine(), create_index.id_index, context_->storage());
         actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name, result_create_index(true));
         sessions::remove(sessions_, session, name);
+    }
+
+    void collection_t::drop_index(const session_id_t& session, components::ql::drop_index_t& index) {
+        debug(log(), "collection::drop_index: session: {}, index: {}", session.data(), index.name());
+        if (dropped_) {
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(false));
+        } else {
+            auto index_ptr = components::index::search_index(context_->index_engine(), index.name());
+            if (index_ptr) {
+                if (index_ptr->is_disk()) {
+                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session, index_ptr->name());
+                }
+                components::index::drop_index(context_->index_engine(), index_ptr);
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(true));
+            } else {
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(false));
+            }
+        }
     }
 
     void collection_t::index_modify_finish(const session_id_t& session) {

@@ -100,6 +100,8 @@ namespace components::index {
         std::string name_;
         keys_base_storage_t keys_;
         actor_zeta::address_t disk_agent_{actor_zeta::address_t::empty_address()};
+
+        friend class index_engine_t;
     };
 
     using index_ptr = core::pmr::unique_ptr<index_t>;

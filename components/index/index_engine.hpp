@@ -21,8 +21,10 @@ namespace components::index {
         auto matching(id_index id) -> index_t::pointer;
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto matching(const actor_zeta::address_t& address) -> index_t::pointer;
+        auto matching(const std::string& name) -> index_t::pointer;
         auto add_index(const keys_base_storage_t&, index_ptr) -> uint32_t;
         auto add_disk_agent(id_index id, actor_zeta::address_t address) -> void;
+        auto drop_index(index_t::pointer index) -> void;
         auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
@@ -36,11 +38,13 @@ namespace components::index {
         using keys_to_doc_t = std::pmr::map<keys_base_storage_t, base_storage::iterator, comparator_t>;
         using index_to_doc_t = std::pmr::unordered_map<id_index, base_storage::iterator>;
         using index_to_address_t = std::pmr::map<actor_zeta::address_t, base_storage::iterator>;
+        using index_to_name_t = std::pmr::unordered_map<std::string, base_storage::iterator>;
 
         actor_zeta::detail::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
         index_to_doc_t index_to_mapper_;
         index_to_address_t index_to_address_;
+        index_to_name_t index_to_name_;
         base_storage storage_;
     };
 
@@ -50,6 +54,7 @@ namespace components::index {
     auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const actor_zeta::address_t& address) -> index_t::pointer;
+    auto search_index(const index_engine_ptr& ptr, const std::string& name) -> index_t::pointer;
 
     template<class Target, class... Args>
     auto make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
@@ -62,6 +67,8 @@ namespace components::index {
                 std::forward<Args>(args).../*,
                 core::pmr::deleter_t(ptr->resource())*/));
     }
+
+    void drop_index(const index_engine_ptr& ptr, index_t::pointer index);
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);
     void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr> &docs);

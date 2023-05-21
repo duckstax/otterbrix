@@ -20,6 +20,7 @@ namespace services::disk {
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
         add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
         add_handler(handler_id(index::route::find), &index_agent_disk_t::find);
+        add_handler(handler_id(index::route::drop), &index_agent_disk_t::drop);
     }
 
     index_agent_disk_t::~index_agent_disk_t() {

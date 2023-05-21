@@ -131,7 +131,8 @@ namespace services::disk {
     }
 
     index_disk_t::index_disk_t(const path_t& path, components::ql::index_compare compare_type)
-        : db_(nullptr)
+        : path_(path)
+        , db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
         rocksdb::Options options;
         options.OptimizeLevelStyleCompaction();
@@ -226,7 +227,8 @@ namespace services::disk {
     }
 
     void index_disk_t::drop() {
-        //todo: remove directories
+        db_.release();
+        std::filesystem::remove_all(path_);
     }
 
 } // namespace services::disk

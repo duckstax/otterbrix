@@ -34,6 +34,7 @@ namespace services::collection {
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
         add_handler(handler_id(route::create_index), &collection_t::create_index);
         add_handler(handler_id(index::route::success_create), &collection_t::create_index_finish);
+        add_handler(handler_id(route::drop_index), &collection_t::drop_index);
         add_handler(handler_id(index::route::success), &collection_t::index_modify_finish);
         add_handler(handler_id(index::route::success_find), &collection_t::index_find_finish);
     }

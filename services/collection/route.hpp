@@ -18,6 +18,7 @@ namespace services::collection {
         close_cursor,
         drop_collection,
         create_index,
+        drop_index,
 
         create_documents_finish,
         insert_one_finish,
@@ -29,6 +30,7 @@ namespace services::collection {
         size_finish,
         drop_collection_finish,
         create_index_finish,
+        drop_index_finish
     };
 
     constexpr uint64_t handler_id(route type) {

@@ -20,6 +20,7 @@ namespace duck_charmer {
         add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
         add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
+        add_handler(collection::handler_id(collection::route::drop_index_finish), &wrapper_dispatcher_t::drop_index_finish);
     }
 
     wrapper_dispatcher_t::~wrapper_dispatcher_t() {
@@ -206,7 +207,7 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index {
-        trace(log_, "wrapper_dispatcher_t::create_index session: {}, database: {} collection: {} ", session.data(), index.database_, index.collection_);
+        trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), index.name());
         init();
         actor_zeta::send(
             manager_dispatcher_,
@@ -216,6 +217,19 @@ namespace duck_charmer {
             std::move(index));
         wait();
         return std::get<result_create_index>(intermediate_store_);
+    }
+
+    auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> result_drop_index {
+        trace(log_, "wrapper_dispatcher_t::drop_index session: {}, index: {}", session.data(), drop_index.name());
+        init();
+        actor_zeta::send(
+            manager_dispatcher_,
+            address(),
+            collection::handler_id(collection::route::drop_index),
+            session,
+            std::move(drop_index));
+        wait();
+        return std::get<result_drop_index>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -300,6 +314,12 @@ namespace duck_charmer {
     }
 
     auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, result_create_index result) -> void {
+        intermediate_store_ = result;
+        input_session_ = session;
+        notify();
+    }
+
+    auto wrapper_dispatcher_t::drop_index_finish(session_id_t &session, result_drop_index result) -> void {
         intermediate_store_ = result;
         input_session_ = session;
         notify();
