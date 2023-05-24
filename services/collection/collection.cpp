@@ -216,6 +216,9 @@ namespace services::collection {
             return false;
         }
         dropped_ = true;
+        for (const auto& index : context_->index_engine()->indexes()) {
+            actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session_id_t(), index);
+        }
         return true;
     }
 

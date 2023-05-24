@@ -31,6 +31,8 @@ namespace components::index {
         void insert_document(const document_ptr& document, pipeline::context_t *pipeline_context);
         void delete_document(const document_ptr& document, pipeline::context_t *pipeline_context);
 
+        auto indexes() -> std::vector<std::string>;
+
     private:
         using comparator_t = std::less<keys_base_storage_t>;
         using base_storage = std::pmr::list<index_ptr>;

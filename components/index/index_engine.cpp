@@ -216,6 +216,15 @@ namespace components::index {
         }
     }
 
+    auto index_engine_t::indexes() -> std::vector<std::string> {
+        std::vector<std::string> res;
+        res.reserve(storage_.size());
+        for (const auto& index : storage_) {
+            res.emplace_back(index->name());
+        }
+        return res;
+    }
+
     void set_disk_agent(const index_engine_ptr& ptr, id_index id, const actor_zeta::address_t& address) {
         auto* index = search_index(ptr, id);
         if (index) {
