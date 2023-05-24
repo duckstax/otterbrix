@@ -130,10 +130,10 @@ namespace components::index {
     auto index_engine_t::add_index(const keys_base_storage_t& keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
         auto d = storage_.insert(end, std::move(index));
-        mapper_.emplace(keys, d);
+        mapper_.emplace(keys, d->get());
         auto new_id = index_to_mapper_.size();
-        index_to_mapper_.emplace(new_id, d);
-        index_to_name_.emplace(d->get()->name(), d);
+        index_to_mapper_.emplace(new_id, d->get());
+        index_to_name_.emplace(d->get()->name(), d->get());
         return uint32_t(new_id);
     }
 
@@ -159,7 +159,7 @@ namespace components::index {
     }
 
     auto index_engine_t::matching(id_index id) -> index_t::pointer {
-        return index_to_mapper_.find(id)->second->get();
+        return index_to_mapper_.find(id)->second;
     }
 
     auto index_engine_t::size() const -> std::size_t {
@@ -169,7 +169,7 @@ namespace components::index {
     auto index_engine_t::matching(const keys_base_storage_t& query) -> index_t::pointer {
         auto it = mapper_.find(query);
         if (it != mapper_.end()) {
-            return it->second->get();
+            return it->second;
         }
         return nullptr;
     }
@@ -177,7 +177,7 @@ namespace components::index {
     auto index_engine_t::matching(const actor_zeta::address_t& address) -> index_t::pointer {
         auto it = index_to_address_.find(address);
         if (it != index_to_address_.end()) {
-            return it->second->get();
+            return it->second;
         }
         return nullptr;
     }
@@ -185,7 +185,7 @@ namespace components::index {
     auto index_engine_t::matching(const std::string& name) -> index_t::pointer {
         auto it = index_to_name_.find(name);
         if (it != index_to_name_.end()) {
-            return it->second->get();
+            return it->second;
         }
         return nullptr;
     }

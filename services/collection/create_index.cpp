@@ -89,7 +89,7 @@ namespace services::collection {
             auto index_ptr = components::index::search_index(context_->index_engine(), index.name());
             if (index_ptr) {
                 if (index_ptr->is_disk()) {
-                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session, index_ptr->name());
+                    actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session, index.name());
                 }
                 components::index::drop_index(context_->index_engine(), index_ptr);
                 actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(true));

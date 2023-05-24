@@ -162,7 +162,6 @@ namespace services::disk {
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
                 auto command_drop = command.get<command_drop_index_t>();
-                index_agents_.erase(command_drop.index_name);
                 trace(log_, "manager_disk: drop_index_agent : {} : success", command_drop.index_name);
                 //actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
             }

@@ -35,10 +35,10 @@ namespace components::index {
         using comparator_t = std::less<keys_base_storage_t>;
         using base_storage = std::pmr::list<index_ptr>;
 
-        using keys_to_doc_t = std::pmr::map<keys_base_storage_t, base_storage::iterator, comparator_t>;
-        using index_to_doc_t = std::pmr::unordered_map<id_index, base_storage::iterator>;
-        using index_to_address_t = std::pmr::map<actor_zeta::address_t, base_storage::iterator>;
-        using index_to_name_t = std::pmr::unordered_map<std::string, base_storage::iterator>;
+        using keys_to_doc_t = std::pmr::map<keys_base_storage_t, index_t::pointer, comparator_t>;
+        using index_to_doc_t = std::pmr::unordered_map<id_index, index_t::pointer>;
+        using index_to_address_t = std::pmr::map<actor_zeta::address_t, index_t::pointer>;
+        using index_to_name_t = std::pmr::unordered_map<std::string, index_t::pointer>;
 
         actor_zeta::detail::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
