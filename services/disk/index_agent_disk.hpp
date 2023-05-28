@@ -27,7 +27,10 @@ namespace services::disk {
                            const path_t&, const collection_name_t&, const index_name_t&, components::ql::index_compare compare_type, log_t&);
         ~index_agent_disk_t() final;
 
+        const collection_name_t& collection_name() const;
+
         void drop(session_id_t& session);
+        bool is_dropped() const;
 
         void insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
         void remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value);
@@ -37,6 +40,8 @@ namespace services::disk {
         actor_zeta::detail::pmr::memory_resource* resource_;
         log_t log_;
         std::unique_ptr<index_disk_t> index_disk_;
+        const collection_name_t& collection_name_;
+        bool is_dropped_ {false};
     };
 
     using index_agent_disk_ptr = std::unique_ptr<index_agent_disk_t>;

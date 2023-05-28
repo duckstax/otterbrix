@@ -15,7 +15,8 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
         , log_(log.clone())
-        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type)) {
+        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type))
+        , collection_name_(collection_name) {
         trace(log_, "index_agent_disk::create {}", index_name);
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
         add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
@@ -27,10 +28,19 @@ namespace services::disk {
         trace(log_, "delete index_agent_disk_t");
     }
 
+    const collection_name_t& index_agent_disk_t::collection_name() const {
+        return collection_name_;
+    }
+
     void index_agent_disk_t::drop(session_id_t& session) {
         trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
         index_disk_->drop();
+        is_dropped_ = true;
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
+    }
+
+    bool index_agent_disk_t::is_dropped() const {
+        return is_dropped_;
     }
 
     void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {

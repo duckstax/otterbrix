@@ -1,9 +1,14 @@
+import os
 import pytest
 import shutil
 from ottergon import Client, DataBase, Collection, TypeIndex, CompareIndex
 
-shutil.rmtree('./wal')
-shutil.rmtree('./disk')
+if os.path.isdir('./wal'):
+    shutil.rmtree('./wal')
+
+if os.path.isdir('./disk'):
+    shutil.rmtree('./disk')
+
 
 database_name = "TestDatabase"
 collection_name = "TestCollection"

@@ -28,7 +28,8 @@ namespace services::disk {
         : base_manager_disk_t(mr, scheduler)
         , log_(log.clone())
         , config_(std::move(config))
-        , metafile_indexes_(nullptr) {
+        , metafile_indexes_(nullptr)
+        , removed_indexes_(mr) {
         trace(log_, "manager_disk start");
         add_handler(core::handler_id(core::route::sync), &manager_disk_t::sync);
         add_handler(handler_id(route::create_agent), &manager_disk_t::create_agent);
@@ -119,7 +120,25 @@ namespace services::disk {
         auto it = commands_.find(session);
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
-                actor_zeta::send(agent(), address(), command.name(), command);
+                if (command.name() == handler_id(route::remove_collection)) {
+                    const auto& drop_collection = command.get<command_remove_collection_t>();
+                    std::vector<index_agent_disk_t*> indexes;
+                    for (const auto& index : index_agents_) {
+                        if (index.second->collection_name() == drop_collection.collection) {
+                            indexes.push_back(index.second.get());
+                        }
+                    }
+                    if (indexes.empty()) {
+                        actor_zeta::send(agent(), address(), command.name(), command);
+                    } else {
+                        removed_indexes_.emplace(session, std::make_pair(indexes.size(), command));
+                        for (auto *index : indexes) {
+                            actor_zeta::send(index->address(), address(), index::handler_id(index::route::drop), session);
+                        }
+                    }
+                } else {
+                    actor_zeta::send(agent(), address(), command.name(), command);
+                }
             }
             commands_.erase(session);
         }
@@ -128,11 +147,12 @@ namespace services::disk {
 
     void manager_disk_t::create_index_agent(session_id_t& session, const components::ql::create_index_t &index) {
         auto name = index.name();
-        if (index_agents_.contains(name)) {
+        if (index_agents_.contains(name) && !index_agents_.at(name)->is_dropped()) {
             error(log_, "manager_disk: index {} already exists", name);
             actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
         } else {
             trace(log_, "manager_disk: create_index_agent : {}", name);
+            index_agents_.erase(name);
             auto address_agent = spawn_actor<index_agent_disk_t>(
                 [&](index_agent_disk_t* ptr) {
                     index_agents_.insert_or_assign(name, index_agent_disk_ptr(ptr));
@@ -152,7 +172,7 @@ namespace services::disk {
             append_command(commands_, session, command_t(command));
             actor_zeta::send(index_agents_.at(index_name)->address(), address(), index::handler_id(index::route::drop), session);
         } else {
-            error(log_, "manager_disk: index {} already exists", index_name);
+            error(log_, "manager_disk: index {} not exists", index_name);
             //actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
         }
     }
@@ -166,6 +186,13 @@ namespace services::disk {
                 //actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
             }
             commands_.erase(session);
+        } else {
+            auto it_all_drop = removed_indexes_.find(session);
+            if (it_all_drop != removed_indexes_.end()) {
+                if (--it_all_drop->second.first == 0) {
+                    actor_zeta::send(agent(), address(), it_all_drop->second.second.name(), it_all_drop->second.second);
+                }
+            }
         }
     }
 

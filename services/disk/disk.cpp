@@ -106,6 +106,7 @@ namespace services::disk {
 
     bool disk_t::remove_collection(const database_name_t &database, const collection_name_t &collection) {
         std::filesystem::remove_all(path_ / "indexes" / collection);
+        //todo: removed all documents
         return metadata_->remove_collection(database, collection);
     }
 
