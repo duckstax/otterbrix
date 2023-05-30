@@ -65,6 +65,7 @@ namespace services::dispatcher {
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address);
         void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
         void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, const actor_zeta::address_t& collection);
+        void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
         void insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address);
         void insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::pmr::vector<components::document::document_ptr>& documents, actor_zeta::address_t address);
         void insert_one_finish(components::session::session_id_t& session, result_insert_one& result);

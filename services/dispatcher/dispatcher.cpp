@@ -69,6 +69,7 @@ namespace services::dispatcher {
         add_handler(database::handler_id(database::route::drop_collection), &dispatcher_t::drop_collection);
         add_handler(database::handler_id(database::route::drop_collection_finish), &dispatcher_t::drop_collection_finish);
         add_handler(collection::handler_id(collection::route::drop_collection_finish), &dispatcher_t::drop_collection_finish_collection);
+        add_handler(disk::handler_id(disk::route::remove_collection_finish), &dispatcher_t::drop_collection_finish_from_disk);
         add_handler(collection::handler_id(collection::route::insert_one), &dispatcher_t::insert_one);
         add_handler(collection::handler_id(collection::route::insert_many), &dispatcher_t::insert_many);
         add_handler(collection::handler_id(collection::route::insert_one_finish), &dispatcher_t::insert_one_finish);
@@ -319,9 +320,16 @@ namespace services::dispatcher {
             } else {
                 actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::drop_collection), session, components::ql::drop_collection_t(database_name, collection_name));
             }
-            trace(log_, "collection {} dropped", collection_name);
+        } else if (!check_load_from_wal(session)) {
+            actor_zeta::send(find_session(session_to_address_, session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
+            remove_session(session_to_address_, session);
         }
+    }
+
+    void dispatcher_t::drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name) {
+        trace(log_, "drop_collection_finish_from_disk: {}", collection_name);
         if (!check_load_from_wal(session)) {
+            result_drop_collection result{true};
             actor_zeta::send(find_session(session_to_address_, session).address(), dispatcher_t::address(), database::handler_id(database::route::drop_collection_finish), session, result);
             remove_session(session_to_address_, session);
         }

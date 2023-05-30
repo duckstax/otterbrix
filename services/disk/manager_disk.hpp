@@ -70,7 +70,13 @@ namespace services::disk {
         command_storage_t commands_;
         file_ptr metafile_indexes_;
         session_id_t load_session_;
-        std::pmr::unordered_map<session_id_t, std::pair<std::size_t, command_t>> removed_indexes_;
+
+        struct removed_index_t {
+            std::size_t size;
+            command_t command;
+            actor_zeta::address_t sender;
+        };
+        std::pmr::unordered_map<session_id_t, removed_index_t> removed_indexes_;
 
         auto agent() -> actor_zeta::address_t;
         void write_index_(const components::ql::create_index_t &index);
