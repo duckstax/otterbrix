@@ -135,6 +135,7 @@ namespace services::disk {
                         for (auto *index : indexes) {
                             actor_zeta::send(index->address(), address(), index::handler_id(index::route::drop), session);
                         }
+                        remove_all_indexes_from_collection_(drop_collection.collection);
                     }
                 } else {
                     actor_zeta::send(agent(), address(), command.name(), command);
@@ -171,6 +172,7 @@ namespace services::disk {
             command_drop_index_t command{index_name, current_message()->sender()};
             append_command(commands_, session, command_t(command));
             actor_zeta::send(index_agents_.at(index_name)->address(), address(), index::handler_id(index::route::drop), session);
+            remove_index_(index_name);
         } else {
             error(log_, "manager_disk: index {} not exists", index_name);
             //actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
@@ -211,6 +213,15 @@ namespace services::disk {
     }
 
     void manager_disk_t::load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher) {
+        auto indexes = read_indexes_();
+        metafile_indexes_->seek_eof();
+        for (const auto &index : indexes) {
+            actor_zeta::send(dispatcher, address(), collection::handler_id(collection::route::create_index), session, index, dispatcher);
+        }
+    }
+
+    std::vector<components::ql::create_index_t> manager_disk_t::read_indexes_(const collection_name_t& collection_name) const {
+        std::vector<components::ql::create_index_t> res;
         if (metafile_indexes_) {
             constexpr auto count_byte_by_size = sizeof(size_t);
             size_t size;
@@ -225,12 +236,46 @@ namespace services::disk {
                     msgpack::unpacked msg;
                     msgpack::unpack(msg, buf.data(), buf.size());
                     auto index = msg.get().as<components::ql::create_index_t>();
-                    actor_zeta::send(dispatcher, address(), collection::handler_id(collection::route::create_index), session, std::move(index), dispatcher);
+                    if (collection_name.empty() || index.collection_ == collection_name) {
+                        res.push_back(index);
+                    }
                 } else {
                     break;
                 }
             }
-            metafile_indexes_->seek_eof();
+        }
+        return res;
+    }
+
+    std::vector<components::ql::create_index_t> manager_disk_t::read_indexes_() const {
+        return read_indexes_("");
+    }
+
+    void manager_disk_t::remove_index_(const index_name_t& index_name) {
+        if (metafile_indexes_) {
+            auto indexes = read_indexes_();
+            indexes.erase(std::remove_if(indexes.begin(), indexes.end(), [&index_name](const components::ql::create_index_t& index) {
+                              return index.name() == index_name;
+                          }),
+                          indexes.end());
+            metafile_indexes_->clear();
+            for (const auto &index : indexes) {
+                write_index_(index);
+            }
+        }
+    }
+
+    void manager_disk_t::remove_all_indexes_from_collection_(const collection_name_t& collection_name) {
+        if (metafile_indexes_) {
+            auto indexes = read_indexes_();
+            indexes.erase(std::remove_if(indexes.begin(), indexes.end(), [&collection_name](const components::ql::create_index_t& index) {
+                              return index.collection_ == collection_name;
+                          }),
+                          indexes.end());
+            metafile_indexes_->clear();
+            for (const auto &index : indexes) {
+                write_index_(index);
+            }
         }
     }
 

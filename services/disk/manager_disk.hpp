@@ -75,6 +75,10 @@ namespace services::disk {
         auto agent() -> actor_zeta::address_t;
         void write_index_(const components::ql::create_index_t &index);
         void load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher);
+        std::vector<components::ql::create_index_t> read_indexes_(const collection_name_t& collection_name) const;
+        std::vector<components::ql::create_index_t> read_indexes_() const;
+        void remove_index_(const index_name_t& index_name);
+        void remove_all_indexes_from_collection_(const collection_name_t& collection_name);
     };
 
 
