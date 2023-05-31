@@ -130,6 +130,7 @@ namespace services::disk {
                     }
                     if (indexes.empty()) {
                         actor_zeta::send(agent(), address(), command.name(), command);
+                        actor_zeta::send(current_message()->sender(), address(), handler_id(route::remove_collection_finish), session, drop_collection.collection);
                     } else {
                         removed_indexes_.emplace(session, removed_index_t{indexes.size(), command, current_message()->sender()});
                         for (auto *index : indexes) {
