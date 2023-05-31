@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/document/document.hpp>
 #include <services/collection/operators/operator.hpp>
 
 namespace services::collection::operators::aggregate {
@@ -12,9 +13,9 @@ namespace services::collection::operators::aggregate {
         explicit operator_aggregate_t(context_collection_t* collection);
 
     private:
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
-        virtual document_ptr aggregate_impl() = 0;
+        virtual components::document::document_ptr aggregate_impl() = 0;
         virtual std::string key_impl() const = 0;
     };
 

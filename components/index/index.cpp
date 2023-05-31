@@ -2,11 +2,12 @@
 
 namespace components::index {
 
-    index_t::index_t(std::pmr::memory_resource* resource, components::ql::index_type type, const keys_base_storage_t& keys)
+    index_t::index_t(std::pmr::memory_resource* resource, components::ql::index_type type, std::string name, const keys_base_storage_t& keys)
         : resource_(resource)
         , type_(type)
+        , name_(std::move(name))
         , keys_(keys) {
-              assert(resource!= nullptr);
+        assert(resource != nullptr);
     }
 
     index_t::range index_t::find(const value_t& value) const {
@@ -29,8 +30,21 @@ namespace components::index {
         return cend_impl();
     }
 
-    auto index_t::insert(value_t key, doc_t value) -> void {
-        return insert_impl(key, value);
+    auto index_t::insert(value_t key, index_value_t value) -> void {
+        return insert_impl(key, std::move(value));
+    }
+
+    auto index_t::insert(value_t key, const document::document_id_t& id) -> void {
+        return insert_impl(key, {id, nullptr});
+    }
+
+    auto index_t::insert(value_t key, document::document_ptr doc) -> void {
+        auto id = document::get_document_id(doc);
+        return insert_impl(key, {id, std::move(doc)});
+    }
+
+    auto index_t::insert(document::document_ptr doc) -> void {
+        insert_impl(std::move(doc));
     }
 
     auto index_t::remove(value_t key) -> void {
@@ -49,8 +63,32 @@ namespace components::index {
         return type_;
     }
 
-    const document_ptr& index_t::iterator_t::operator*() const {
+    const std::string& index_t::name() const noexcept {
+        return name_;
+    }
+
+    bool index_t::is_disk() const noexcept {
+        return disk_agent_ != actor_zeta::address_t::empty_address();
+    }
+
+    const actor_zeta::address_t& index_t::disk_agent() const noexcept {
+        return disk_agent_;
+    }
+
+    void index_t::set_disk_agent(actor_zeta::address_t address) noexcept {
+        disk_agent_ = std::move(address);
+    }
+
+    void index_t::clean_memory_to_new_elements(std::size_t count) noexcept {
+        clean_memory_to_new_elements_impl(count);
+    }
+
+    index_t::iterator_t::reference index_t::iterator_t::operator*() const {
         return impl_->value_ref();
+    }
+
+    index_t::iterator_t::pointer index_t::iterator_t::operator->() const {
+        return &impl_->value_ref();
     }
 
     index_t::iterator_t& index_t::iterator_t::operator++() {
@@ -70,7 +108,16 @@ namespace components::index {
         : impl_(ptr) {}
 
     index_t::iterator_t::~iterator_t() {
-        //delete impl_; //todo
+        delete impl_;
+    }
+
+    index_t::iterator_t::iterator_t(const iterator_t& other)
+        : impl_(other.impl_->copy()) {}
+
+    index_t::iterator_t& index_t::iterator_t::operator=(const iterator_t& other) {
+        delete impl_;
+        impl_ = other.impl_->copy();
+        return *this;
     }
 
     index_t::~index_t() = default;

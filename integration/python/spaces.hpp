@@ -26,7 +26,6 @@ namespace duck_charmer {
 
     protected:
         spaces();
-        static spaces* instance_;
     };
 
 } // namespace python

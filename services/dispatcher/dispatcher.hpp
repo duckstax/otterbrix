@@ -28,7 +28,7 @@
 
 namespace services::dispatcher {
 
-        class key_collection_t {
+    class key_collection_t {
     public:
         key_collection_t(database_name_t  database, collection_name_t  collection);
         key_collection_t() = delete;
@@ -51,6 +51,7 @@ namespace services::dispatcher {
     class dispatcher_t final : public actor_zeta::basic_async_actor {
     public:
         dispatcher_t(manager_dispatcher_t*, std::pmr::memory_resource *resource, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
+        ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
         void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
@@ -64,6 +65,7 @@ namespace services::dispatcher {
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address);
         void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
         void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, const actor_zeta::address_t& collection);
+        void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
         void insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address);
         void insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::pmr::vector<components::document::document_ptr>& documents, actor_zeta::address_t address);
         void insert_one_finish(components::session::session_id_t& session, result_insert_one& result);
@@ -81,7 +83,9 @@ namespace services::dispatcher {
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address);
         void size_finish(components::session::session_id_t&, result_size& result);
         void create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address);
-        void create_index_finish(components::session::session_id_t &session, result_create_index& result);
+        void create_index_finish(components::session::session_id_t &session, const std::string& name, result_create_index& result);
+        void drop_index(components::session::session_id_t &session, components::ql::drop_index_t drop_index, actor_zeta::address_t address);
+        void drop_index_finish(components::session::session_id_t &session, const std::string& name, result_drop_index& result);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         bool check_load_from_wal(components::session::session_id_t& session);
@@ -157,7 +161,8 @@ namespace services::dispatcher {
         void update_many(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement, components::document::document_ptr& update, bool upsert);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_id_t& session);
-        void create_index(components::session::session_id_t &session, components::ql::create_index_t index);
+        void create_index(components::session::session_id_t& session, components::ql::create_index_t index);
+        void drop_index(components::session::session_id_t& session, components::ql::drop_index_t drop_index);
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;

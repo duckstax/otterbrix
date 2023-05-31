@@ -12,7 +12,7 @@ namespace services::collection::operators {
         , documents_(documents) {
     }
 
-    void operator_insert::on_execute_impl(planner::transaction_context_t*) {
+    void operator_insert::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output() && left_->output()->size() > 0) {
             //todo: error not unique keys
             return;
@@ -21,7 +21,7 @@ namespace services::collection::operators {
         for (const auto &document : documents_) {
             auto id = get_document_id(document);
             context_->storage().insert_or_assign(id, document);
-            context_->index_engine()->insert_document(document);
+            context_->index_engine()->insert_document(document, pipeline_context);
             modified_->append(id);
         }
     }

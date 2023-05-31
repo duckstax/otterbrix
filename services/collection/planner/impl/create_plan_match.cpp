@@ -1,10 +1,27 @@
 #include "create_plan_match.hpp"
 #include <components/expressions/compare_expression.hpp>
 #include <services/collection/operators/scan/full_scan.hpp>
+#include <services/collection/operators/scan/index_scan.hpp>
+#include <services/collection/operators/scan/primary_key_scan.hpp>
 #include <services/collection/operators/scan/transfer_scan.hpp>
 #include <services/collection/operators/merge/operator_merge.hpp>
 
 namespace services::collection::planner::impl {
+
+    bool is_can_index_find_by_predicate(components::expressions::compare_type compare) {
+        using components::expressions::compare_type;
+        return compare == compare_type::eq ||
+               compare == compare_type::ne ||
+               compare == compare_type::gt ||
+               compare == compare_type::lt ||
+               compare == compare_type::gte ||
+               compare == compare_type::lte;
+    }
+
+    bool is_can_primary_key_find_by_predicate(components::expressions::compare_type compare) {
+        using components::expressions::compare_type;
+        return compare == compare_type::eq;
+    }
 
     operators::operator_ptr create_plan_match_(
         context_collection_t* context,
@@ -20,6 +37,12 @@ namespace services::collection::planner::impl {
             }
             op->set_children(std::move(left), std::move(right));
             return op;
+        }
+        //if (is_can_primary_key_find_by_predicate(expr->type()) && expr->key().as_string() == "_id") {
+            //return std::make_unique<operators::primary_key_scan>(context);
+        //}
+        if (is_can_index_find_by_predicate(expr->type()) && search_index(context->index_engine(), {expr->key()})) {
+            return std::make_unique<operators::index_scan>(context, expr, limit);
         }
         auto predicate = operators::predicates::create_predicate(context, expr);
         return std::make_unique<operators::full_scan>(context, std::move(predicate), limit);

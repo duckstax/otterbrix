@@ -138,3 +138,12 @@ result_create_index::result_create_index(result_create_index::result_t success)
 result_create_index::result_t result_create_index::is_success() const {
     return success_;
 }
+
+
+result_drop_index::result_drop_index(result_drop_index::result_t success)
+    : success_(success) {
+}
+
+result_drop_index::result_t result_drop_index::is_success() const {
+    return success_;
+}

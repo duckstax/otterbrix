@@ -1,5 +1,7 @@
 #pragma once
 
+#include <components/document/document.hpp>
+#include <components/index/index.hpp>
 #include <services/collection/operators/aggregate/operator_aggregate.hpp>
 
 namespace services::collection::operators::aggregate {
@@ -11,7 +13,7 @@ namespace services::collection::operators::aggregate {
     private:
         components::index::key_t key_;
 
-        document_ptr aggregate_impl() final;
+        components::document::document_ptr aggregate_impl() final;
         std::string key_impl() const final;
     };
 

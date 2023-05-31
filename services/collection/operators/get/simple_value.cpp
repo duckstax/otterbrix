@@ -11,7 +11,7 @@ namespace services::collection::operators::get {
         , key_(key) {
     }
 
-    document::wrapper_value_t simple_value_t::get_value_impl(const document_ptr& document) {
+    document::wrapper_value_t simple_value_t::get_value_impl(const components::document::document_ptr& document) {
         return get_value_from_document(document, key_);
     }
 

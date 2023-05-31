@@ -17,15 +17,17 @@ namespace oid {
 
     template<class T>
     class oid_t {
-        static constexpr std::uint32_t size = T::size_timestamp + T::size_random + T::size_increment;
         static constexpr std::uint32_t offset_timestamp = 0;
         static constexpr std::uint32_t offset_random = offset_timestamp + T::size_timestamp;
         static constexpr std::uint32_t offset_increment = offset_random + T::size_random;
 
     public:
+        static constexpr std::uint32_t size = T::size_timestamp + T::size_random + T::size_increment;
+
         oid_t();
         explicit oid_t(timestamp_value_t timestamp);
         explicit oid_t(std::string_view str);
+        explicit oid_t(const byte_t* src);
         oid_t(const oid_t& other);
 
         ~oid_t() = default;
@@ -150,6 +152,11 @@ namespace oid {
     template<class T>
     oid_t<T>::oid_t(std::string_view str) {
         init(str);
+    }
+
+    template<class T>
+    oid_t<T>::oid_t(const byte_t* src) {
+        std::memcpy(data_, src, size);
     }
 
     template<class T>

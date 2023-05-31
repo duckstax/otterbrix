@@ -13,7 +13,7 @@ namespace services::collection::operators {
         ids_.push_back(id);
     }
 
-    void primary_key_scan::on_execute_impl(planner::transaction_context_t*) {
+    void primary_key_scan::on_execute_impl(components::pipeline::context_t*) {
         output_ = make_operator_data(context_->resource());
         for (const auto &id : ids_) {
             auto it = context_->storage().find(id);

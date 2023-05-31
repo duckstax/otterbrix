@@ -30,6 +30,10 @@ namespace duck_charmer {
         debug(log_,"wrapper_client::wrapper_client()");
     }
 
+    wrapper_client::~wrapper_client() {
+        trace(log_, "delete wrapper_client");
+    }
+
     auto wrapper_client::database_names() -> py::list {
         py::list tmp;
         for(auto&i:names_){

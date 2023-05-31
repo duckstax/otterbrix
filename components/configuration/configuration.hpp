@@ -13,6 +13,7 @@ namespace configuration {
 
     struct config_wal final {
         std::filesystem::path path {std::filesystem::current_path() / "wal"};
+        bool on {true};
         bool sync_to_disk {true};
     };
 
