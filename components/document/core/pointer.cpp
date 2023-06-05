@@ -37,19 +37,19 @@ const value_t* pointer_t::deref(bool wide) const noexcept {
 
 
 void pointer_t::set_narrow_bytes(uint16_t b) {
-    *reinterpret_cast<uint16_t*>(_byte) = b;
+    *reinterpret_cast<uint16_t*>(byte_) = b;
 }
 
 void pointer_t::set_wide_bytes(uint32_t b) {
-    *reinterpret_cast<uint32_t*>(_byte) = b;
+    *reinterpret_cast<uint32_t*>(byte_) = b;
 }
 
 uint16_t pointer_t::narrow_bytes() const {
-    return *reinterpret_cast<const uint16_t*>(_byte);
+    return *reinterpret_cast<const uint16_t*>(byte_);
 }
 
 uint32_t pointer_t::wide_bytes() const {
-    return *reinterpret_cast<const uint32_t*>(_byte);
+    return *reinterpret_cast<const uint32_t*>(byte_);
 }
 
 const value_t* pointer_t::careful_deref(bool wide, const void* &start, const void* &end) const noexcept {

@@ -5,7 +5,7 @@
 
 namespace core::file {
 
-    file_t::file_t(const path_t &path)
+    file_t::file_t(const path_t& path)
         : fd_(::open(path.c_str(), O_CREAT | O_RDWR, 0777))
         , offset_(0) {
     }
@@ -37,7 +37,7 @@ namespace core::file {
         return data;
     }
 
-    void file_t::read(std::vector<char> &desc, ::size_t size, __off64_t offset) const {
+    void file_t::read(std::vector<char>& desc, ::size_t size, __off64_t offset) const {
         desc.resize(size);
         ::pread(fd_, desc.data(), size, offset);
     }
@@ -47,12 +47,12 @@ namespace core::file {
         ::ftruncate(fd_, offset_);
     }
 
-    void file_t::append(char *data, std::size_t size) {
+    void file_t::append(char* data, std::size_t size) {
         iovec write_data{data, size};
         offset_ += ::pwritev(fd_, &write_data, 1, offset_);
     }
 
-    void file_t::append(std::string &data) {
+    void file_t::append(std::string& data) {
         append(data.data(), data.size());
     }
 

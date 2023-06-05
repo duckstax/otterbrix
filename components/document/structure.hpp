@@ -1,7 +1,6 @@
 #pragma once
 #include <components/document/core/value.hpp>
 #include <components/document/core/array.hpp>
-#include <components/document/mutable/mutable_array.h>
 
 namespace components::document::structure {
 
@@ -19,7 +18,7 @@ namespace components::document::structure {
 
     template <class T>
     void set_attribute(const ::document::impl::value_t *field, attribute attr, T value) {
-        field->as_array()->as_mutable()->set(index_attribute(attr), value);
+        field->as_array()->set(index_attribute(attr), value);
     }
 
 }
