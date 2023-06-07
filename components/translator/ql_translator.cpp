@@ -3,8 +3,9 @@
 #include <components/ql/aggregate.hpp>
 
 #include <components/logical_plan/node_aggregate.hpp>
-#include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
+#include <components/logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
 
 namespace components::translator {
@@ -61,12 +62,10 @@ namespace components::translator {
             case statement_type::find_one: {
                 break;
             }
-            case statement_type::insert_one: {
-                break;
-            }
-            case statement_type::insert_many: {
-                break;
-            }
+            case statement_type::insert_one:
+                return logical_plan::make_node_insert(resource, static_cast<ql::insert_one_t*>(statement));
+            case statement_type::insert_many:
+                return logical_plan::make_node_insert(resource, static_cast<ql::insert_many_t*>(statement));
             case statement_type::delete_one: {
                 break;
             }

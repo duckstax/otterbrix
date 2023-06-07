@@ -2,10 +2,13 @@
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
 #include <components/expressions/aggregate_expression.hpp>
-#include <components/ql/aggregate.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_sort.hpp>
+#include <components/ql/aggregate.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
+#include <components/tests/generaty.hpp>
 #include <components/translator/ql_translator.hpp>
 #include <actor-zeta.hpp>
 
@@ -108,4 +111,40 @@ TEST_CASE("logical_plan::aggregate") {
                                            R"_($group: {_id: "$date", count_4: {$multiply: [#1, "$count"]}}, )_"
                                            R"_($sort: {name: 1, count: -1})_"
                                            R"_(})_");
+}
+
+TEST_CASE("logical_plan::insert") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    {
+        std::pmr::vector<components::document::document_ptr> documents = {};
+        components::ql::insert_many_t insert{database_name, collection_name, documents};
+        auto node = ql_translator(resource, &insert);
+        REQUIRE(node->to_string() == R"_($insert: {$documents: 0})_");
+    }
+    {
+        std::pmr::vector<components::document::document_ptr> documents = {
+            gen_doc(1)
+        };
+        components::ql::insert_many_t insert{database_name, collection_name, documents};
+        auto node = ql_translator(resource, &insert);
+        REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
+    }
+    {
+        std::pmr::vector<components::document::document_ptr> documents = {
+            gen_doc(1),
+            gen_doc(2),
+            gen_doc(3),
+            gen_doc(4),
+            gen_doc(5)
+        };
+        components::ql::insert_many_t insert{database_name, collection_name, documents};
+        auto node = ql_translator(resource, &insert);
+        REQUIRE(node->to_string() == R"_($insert: {$documents: 5})_");
+    }
+    {
+        std::pmr::vector<components::document::document_ptr> documents = {};
+        components::ql::insert_one_t insert{database_name, collection_name, gen_doc(1)};
+        auto node = ql_translator(resource, &insert);
+        REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
+    }
 }

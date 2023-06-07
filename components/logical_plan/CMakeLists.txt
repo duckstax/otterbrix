@@ -3,8 +3,9 @@ project(logical_plan CXX)
 set(SOURCE_${PROJECT_NAME}
         node.cpp
         node_aggregate.cpp
-        node_match.cpp
         node_group.cpp
+        node_insert.cpp
+        node_match.cpp
         node_sort.cpp
 )
 
