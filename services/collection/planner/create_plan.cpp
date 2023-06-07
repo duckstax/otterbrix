@@ -1,6 +1,7 @@
 #include "create_plan.hpp"
 
 #include "impl/create_plan_aggregate.hpp"
+#include "impl/create_plan_insert.hpp"
 #include "impl/create_plan_match.hpp"
 
 namespace services::collection::planner {
@@ -13,7 +14,9 @@ namespace services::collection::planner {
             operators::predicates::limit_t limit) {
         switch (node->type()) {
             case node_type::aggregate_t:
-            return impl::create_plan_aggregate(context, node, std::move(limit));
+                return impl::create_plan_aggregate(context, node, std::move(limit));
+            case node_type::insert_t:
+                return impl::create_plan_insert(context, node);
             case node_type::match_t:
                 return impl::create_plan_match(context, node, std::move(limit));
             case node_type::group_t:

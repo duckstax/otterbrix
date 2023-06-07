@@ -9,6 +9,7 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
         planner/create_plan.cpp
         planner/impl/create_plan_aggregate.cpp
+        planner/impl/create_plan_insert.cpp
         planner/impl/create_plan_match.cpp
 
         operators/operator_data.cpp
