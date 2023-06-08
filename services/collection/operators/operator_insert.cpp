@@ -18,10 +18,12 @@ namespace services::collection::operators {
             return;
         }
         modified_ = make_operator_write_data(context_->resource());
+        output_ = make_operator_data(context_->resource());
         for (const auto &document : documents_) {
             auto id = get_document_id(document);
             context_->storage().insert_or_assign(id, document);
             context_->index_engine()->insert_document(document, pipeline_context);
+            output_->append(document);
             modified_->append(id);
         }
     }

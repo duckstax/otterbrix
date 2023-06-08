@@ -87,8 +87,11 @@ namespace services::collection {
         ~collection_t();
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
-        void insert_one(session_id_t& session_t, document_ptr& document);
-        void insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents);
+
+        auto insert(
+                const components::session::session_id_t& session,
+                const components::logical_plan::node_ptr& logic_plan,
+                components::ql::storage_parameters parameters) -> void;
 
         auto find(
                 const components::session::session_id_t& session,
@@ -138,7 +141,7 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        std::pmr::vector<document_id_t> insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents);
+        std::pmr::vector<document_id_t> insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents); //todo: delete
         std::size_t size_() const;
         bool drop_();
         void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit);

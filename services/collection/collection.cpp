@@ -21,8 +21,7 @@ namespace services::collection {
         , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
-        add_handler(handler_id(route::insert_one), &collection_t::insert_one);
-        add_handler(handler_id(route::insert_many), &collection_t::insert_many);
+        add_handler(handler_id(route::insert), &collection_t::insert);
         add_handler(handler_id(route::find), &collection_t::find);
         add_handler(handler_id(route::find_one), &collection_t::find_one);
         add_handler(handler_id(route::delete_one), &collection_t::delete_one);
@@ -62,37 +61,38 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session, result);
     }
 
-    void collection_t::insert_one(session_id_t& session, document_ptr& document) {
-        trace(log(), "collection_t::insert_one : {}", name_);
+    auto collection_t::insert(
+            const components::session::session_id_t& session,
+            const components::logical_plan::node_ptr& logic_plan,
+            components::ql::storage_parameters parameters) -> void {
+        trace(log(), "collection::insert : {}", name_);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result_insert_one());
+            actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session, nullptr);
         } else {
-            std::pmr::vector<document_ptr> documents(context_->resource());
-            documents.push_back(document);
-            components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
-            auto result = insert_(&pipeline_context, documents);
-            if (!result.empty()) {
-                actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), documents);
-                actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result_insert_one(result.at(0)));
+            auto plan = planner::create_plan(view(), logic_plan, operators::predicates::limit_t::unlimit());
+            if (!plan) {
+                actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session, nullptr);
             } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::insert_one_finish), session, result_insert_one());
+                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
+                plan->on_execute(&pipeline_context);
+                if (plan->is_executed()) {
+                    actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents),
+                                     session, std::string(database_name_), std::string(name_), plan->output()->documents());
+                    actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session,
+                                     result_insert{
+                                         plan->modified()
+                                         ? std::move(plan->modified()->documents())
+                                         : std::pmr::vector<document_id_t>{}
+                                     });
+                } else {
+                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{
+                                               current_message()->sender(),
+                                               std::move(plan),
+                                               std::move(pipeline_context)
+                                           });
+                }
             }
-        }
-    }
-
-    void collection_t::insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents) {
-        trace(log(), "collection_t::insert_many : {}", name_);
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(context_->resource()));
-        } else {
-            components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
-            auto result = insert_(&pipeline_context, documents);
-            if (!result.empty()) {
-                actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), documents);
-            }
-            actor_zeta::send(dispatcher, address(), handler_id(route::insert_many_finish), session, result_insert_many(std::move(result)));
         }
     }
 

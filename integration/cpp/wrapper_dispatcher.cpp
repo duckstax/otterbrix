@@ -1,6 +1,8 @@
 #include "wrapper_dispatcher.hpp"
 #include "route.hpp"
 #include <core/system_command.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
 
 namespace duck_charmer {
 
@@ -12,8 +14,7 @@ namespace duck_charmer {
         add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
         add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
         add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
-        add_handler(collection::handler_id(collection::route::insert_one_finish), &wrapper_dispatcher_t::insert_one_finish);
-        add_handler(collection::handler_id(collection::route::insert_many_finish), &wrapper_dispatcher_t::insert_many_finish);
+        add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
         add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
@@ -80,34 +81,32 @@ namespace duck_charmer {
         return std::get<result_drop_collection>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one &{
+    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
+        auto* ql = new components::ql::insert_one_t{database, collection, document};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_one),
+            collection::handler_id(collection::route::insert),
             session,
-            database,
-            collection,
-            std::move(document));
+            std::move(ql));
         wait();
-        return std::get<result_insert_one>(intermediate_store_);
+        return std::get<result_insert>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many &{
+    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
+        auto* ql = new components::ql::insert_many_t{database, collection, documents};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_many),
+            collection::handler_id(collection::route::insert),
             session,
-            database,
-            collection,
-            std::move(documents));
+            std::move(ql));
         wait();
-        return std::get<result_insert_many>(intermediate_store_);
+        return std::get<result_insert>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
@@ -269,15 +268,8 @@ namespace duck_charmer {
         notify();
     }
 
-    auto wrapper_dispatcher_t::insert_one_finish(session_id_t &session, result_insert_one result) -> void {
-        trace(log_, "wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().is_null() ? 0 : 1);
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::insert_many_finish(session_id_t &session, result_insert_many result) {
-        trace(log_, "wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
+    void wrapper_dispatcher_t::insert_finish(session_id_t &session, result_insert result) {
+        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

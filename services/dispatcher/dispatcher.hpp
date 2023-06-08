@@ -14,6 +14,8 @@
 #include <components/log/log.hpp>
 #include <components/ql/index.hpp>
 #include <components/ql/aggregate.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
 #include <components/logical_plan/node.hpp>
 
 #include <services/collection/result.hpp>
@@ -66,10 +68,8 @@ namespace services::dispatcher {
         void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
         void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, const actor_zeta::address_t& collection);
         void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
-        void insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document, actor_zeta::address_t address);
-        void insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::pmr::vector<components::document::document_ptr>& documents, actor_zeta::address_t address);
-        void insert_one_finish(components::session::session_id_t& session, result_insert_one& result);
-        void insert_many_finish(components::session::session_id_t& session, result_insert_many& result);
+        void insert(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
+        void insert_finish(components::session::session_id_t& session, result_insert& result);
         void find(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement, actor_zeta::address_t address);
         void find_finish(components::session::session_id_t& session, components::cursor::sub_cursor_t* result);
         void find_one(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement, actor_zeta::address_t address);
@@ -108,6 +108,8 @@ namespace services::dispatcher {
 
         std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> create_logic_plan(
                 components::ql::aggregate_statement_raw_ptr statement);
+
+        components::logical_plan::node_ptr create_logic_plan(components::ql::ql_statement_t* statement);
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;
@@ -151,8 +153,7 @@ namespace services::dispatcher {
         void create_database(components::session::session_id_t& session, std::string& name);
         void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
         void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
-        void insert_one(components::session::session_id_t& session, std::string& database_name, std::string& collection, components::document::document_ptr& document);
-        void insert_many(components::session::session_id_t& session, std::string& database_name, std::string& collection, std::pmr::vector<components::document::document_ptr>& documents);
+        void insert(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void find(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement);
         void find_one(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement);
         void delete_one(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement);
