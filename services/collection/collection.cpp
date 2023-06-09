@@ -78,7 +78,10 @@ namespace services::collection {
                 plan->on_execute(&pipeline_context);
                 if (plan->is_executed()) {
                     actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents),
-                                     session, std::string(database_name_), std::string(name_), plan->output()->documents());
+                                     session, std::string(database_name_), std::string(name_),
+                                     plan->output()
+                                     ? plan->output()->documents()
+                                     : std::pmr::vector<document_ptr>{});
                     actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session,
                                      result_insert{
                                          plan->modified()
