@@ -1,4 +1,4 @@
-name: manylinux2014
+name: manylinux2014-wasm
 
 on:
   push:
