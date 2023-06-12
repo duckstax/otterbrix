@@ -241,7 +241,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address) {
+    void dispatcher_t::create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         trace(log_, "dispatcher_t::create_database: session {} , name {}", session.data(), name);
         make_session(session_to_address_, session, session_t(std::move(address), create_database_t(name)));
         actor_zeta::send(manager_database_, dispatcher_t::address(), database::handler_id(database::route::create_database), session, std::move(name));
@@ -264,7 +264,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, const actor_zeta::address_t& address) {
+    void dispatcher_t::create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, const actor_zeta::address_t& address) {
         trace(log_, "dispatcher_t::create_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collections_name);
         make_session(session_to_address_, session, session_t(address, create_collection_t(database_name, collections_name)));
         actor_zeta::send(database_address_book_.at(database_name), dispatcher_t::address(), database::handler_id(database::route::create_collection), session, collections_name, manager_disk_);
@@ -287,7 +287,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address) {
+    void dispatcher_t::drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         trace(log_, "dispatcher_t::drop_collection: session {} , database_name {} , collection_name {}", session.data(), database_name, collection_name);
         auto it_collection = collection_address_book_.find({database_name, collection_name});
         if (it_collection != collection_address_book_.end()) {
@@ -679,19 +679,19 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), core::handler_id(core::route::load), session, current_message()->sender());
     }
 
-    void manager_dispatcher_t::create_database(components::session::session_id_t& session, std::string& name) {
-        trace(log_, "manager_dispatcher_t::create_database session: {} , name: {} ", session.data(), name);
-        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::create_database), session, std::move(name), current_message()->sender());
+    void manager_dispatcher_t::create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::create_database session: {} , name: {} ", session.data(), statement->database_);
+        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::create_database), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name) {
-        trace(log_, "manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
-        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::create_collection), session, std::move(database_name), std::move(collection_name), current_message()->sender());
+    void manager_dispatcher_t::create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::create_collection session: {} , database name: {} , collection name: {} ", session.data(), statement->database_, statement->collection_);
+        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::create_collection), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name) {
-        trace(log_, "manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ", session.data(), database_name, collection_name);
-        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::drop_collection), session, std::move(database_name), std::move(collection_name), current_message()->sender());
+    void manager_dispatcher_t::drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::drop_collection session: {} , database name: {} , collection name: {} ", session.data(), statement->database_, statement->collection_);
+        return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::drop_collection), session, std::move(statement), current_message()->sender());
     }
 
     void manager_dispatcher_t::insert(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {

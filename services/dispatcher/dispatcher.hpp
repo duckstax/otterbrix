@@ -60,11 +60,11 @@ namespace services::dispatcher {
         void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
         void load_create_documents_result(components::session::session_id_t &session);
         void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
-        void create_database(components::session::session_id_t& session, std::string& name, actor_zeta::address_t address);
+        void create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
         void create_database_finish(components::session::session_id_t& session, database::database_create_result, std::string& database_name, const actor_zeta::address_t&);
-        void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collections_name, const actor_zeta::address_t& address);
+        void create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, const actor_zeta::address_t& address);
         void create_collection_finish(components::session::session_id_t& session, database::collection_create_result, std::string& database_name, std::string& collection_name, const actor_zeta::address_t&);
-        void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name, actor_zeta::address_t address);
+        void drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
         void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
         void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, const actor_zeta::address_t& collection);
         void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
@@ -150,9 +150,9 @@ namespace services::dispatcher {
         ///------
         void create(components::session::session_id_t& session, std::string& name);
         void load(components::session::session_id_t &session);
-        void create_database(components::session::session_id_t& session, std::string& name);
-        void create_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
-        void drop_collection(components::session::session_id_t& session, std::string& database_name, std::string& collection_name);
+        void create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
+        void create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
+        void drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void insert(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void find(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement);
         void find_one(components::session::session_id_t& session, components::ql::aggregate_statement_raw_ptr statement);
