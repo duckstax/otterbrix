@@ -1,6 +1,5 @@
 #include "document.hpp"
 
-#include <boost/json/src.hpp>
 #include <boost/json.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>

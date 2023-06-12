@@ -7,7 +7,7 @@ set( ${PROJECT_NAME}_SOURCES
         test_save_load.cpp
 )
 
-find_package(OpenSSL REQUIRED)
+#find_package(OpenSSL REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
@@ -36,16 +36,16 @@ target_link_libraries(
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
         CONAN_PKG::benchmark
-        CONAN_PKG::actor-zeta
+        #CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         CONAN_PKG::libbacktrace
-        CONAN_PKG::openssl
-        OpenSSL::SSL
-        OpenSSL::Crypto
+        #CONAN_PKG::openssl
+        #OpenSSL::SSL
+        #OpenSSL::Crypto
 
 )
 

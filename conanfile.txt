@@ -1,5 +1,5 @@
 [requires]
-boost/1.80.0
+boost/1.82.0
 spdlog/1.9.2
 pybind11/2.10.0
 msgpack-cxx/4.1.1
@@ -13,7 +13,7 @@ zlib/1.2.12
 bzip2/1.0.8
 magic_enum/0.8.1
 
-actor-zeta/1.0.0a7@duckstax/stable
+#actor-zeta/1.0.0a7@duckstax/stable
 
 
 [options]
