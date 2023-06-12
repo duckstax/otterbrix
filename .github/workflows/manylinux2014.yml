@@ -68,13 +68,11 @@ jobs:
 
       - name: Build wheel
         run: |
-          pwd
-          ls
-          
+
           cp integration/python/ottergon/setup.py .
-          cp integration/python/ottergon/MANIFEST.in .
           cp integration/python/ottergon/pyproject.toml .
           cp integration/python/ottergon/get_path.py .
+          touch MANIFEST.in
           
           python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
