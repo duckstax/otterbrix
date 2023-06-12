@@ -1,10 +1,6 @@
 name: manylinux2014
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
+on: [push]
         
 env:
   BUILD_TYPE: Release
