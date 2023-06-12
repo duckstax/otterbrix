@@ -46,39 +46,39 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
         trace(log_, "wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), database);
         init();
-        auto* ql = new components::ql::create_database_t{database};
+        components::ql::create_database_t ql{database};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::create_database),
             session,
-            std::move(ql));
+            &ql);
         wait();
     }
 
     auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void {
         trace(log_, "wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database, collection);
         init();
-        auto* ql = new components::ql::create_collection_t{database, collection};
+        components::ql::create_collection_t ql{database, collection};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::create_collection),
             session,
-            std::move(ql));
+            &ql);
         wait();
     }
 
     auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection {
         trace(log_, "wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
         init();
-        auto* ql = new components::ql::drop_collection_t{database, collection};
+        components::ql::drop_collection_t ql{database, collection};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::drop_collection),
             session,
-            std::move(ql));
+            &ql);
         wait();
         return std::get<result_drop_collection>(intermediate_store_);
     }
