@@ -52,7 +52,7 @@ jobs:
           cp -r ../conan .
           cp ../conanfile-client-wasm.txt .
           conan config install conan
-          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
+          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-client-wasm.txt
 
       - name: build wasm target
         run: |
