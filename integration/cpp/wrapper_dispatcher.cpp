@@ -114,12 +114,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
         trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<components::cursor::cursor_t*>(intermediate_store_);
     }
@@ -127,12 +128,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one & {
         trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find_one),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<result_find_one>(intermediate_store_);
     }
@@ -140,12 +142,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
         trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_one),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
@@ -153,12 +156,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete &{
         trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_many),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
@@ -166,12 +170,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_one),
             session,
-            std::move(condition),
+            ql.get(),
             std::move(update),
             upsert);
         wait();
@@ -181,12 +186,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_many),
             session,
-            std::move(condition),
+            ql.get(),
             std::move(update),
             upsert);
         wait();

@@ -40,6 +40,10 @@ namespace components::ql {
             return type_;
         }
 
+        virtual bool is_parameters() const {
+            return false;
+        }
+
         statement_type type_ {statement_type::unused};
         database_name_t database_;
         collection_name_t collection_;
