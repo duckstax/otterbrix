@@ -613,9 +613,8 @@ namespace services::dispatcher {
     }
 
     components::logical_plan::node_ptr dispatcher_t::create_logic_plan(ql_statement_t* statement) {
-        auto ql = std::unique_ptr<components::ql::ql_statement_t>(statement);
         //todo: cache logical plans
-        return components::translator::ql_translator(resource_, ql.get());
+        return components::translator::ql_translator(resource_, statement);
     }
 
 

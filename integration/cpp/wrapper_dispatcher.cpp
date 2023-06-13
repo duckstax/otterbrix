@@ -86,13 +86,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
-        auto* ql = new components::ql::insert_one_t{database, collection, document};
+        components::ql::insert_one_t ql{database, collection, document};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::insert),
             session,
-            std::move(ql));
+            &ql);
         wait();
         return std::get<result_insert>(intermediate_store_);
     }
@@ -100,13 +100,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
-        auto* ql = new components::ql::insert_many_t{database, collection, documents};
+        components::ql::insert_many_t ql{database, collection, documents};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::insert),
             session,
-            std::move(ql));
+            &ql);
         wait();
         return std::get<result_insert>(intermediate_store_);
     }
