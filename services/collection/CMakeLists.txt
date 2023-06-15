@@ -9,6 +9,7 @@ set(${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
         planner/create_plan.cpp
         planner/impl/create_plan_aggregate.cpp
+        planner/impl/create_plan_delete.cpp
         planner/impl/create_plan_insert.cpp
         planner/impl/create_plan_match.cpp
 
@@ -30,7 +31,6 @@ set(${PROJECT_NAME}_SOURCES
         operators/merge/operator_and.cpp
         operators/merge/operator_or.cpp
         operators/merge/operator_not.cpp
-        operators/predicates/limit.cpp
         operators/predicates/predicate.cpp
         operators/predicates/simple_predicate.cpp
         operators/aggregate/operator_aggregate.cpp

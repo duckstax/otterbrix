@@ -1,6 +1,7 @@
 #include "create_plan.hpp"
 
 #include "impl/create_plan_aggregate.hpp"
+#include "impl/create_plan_delete.hpp"
 #include "impl/create_plan_insert.hpp"
 #include "impl/create_plan_match.hpp"
 
@@ -11,10 +12,12 @@ namespace services::collection::planner {
     operators::operator_ptr create_plan(
             context_collection_t* context,
             const components::logical_plan::node_ptr& node,
-            operators::predicates::limit_t limit) {
+            components::ql::limit_t limit) {
         switch (node->type()) {
             case node_type::aggregate_t:
                 return impl::create_plan_aggregate(context, node, std::move(limit));
+            case node_type::delete_t:
+                return impl::create_plan_delete(context, node);
             case node_type::insert_t:
                 return impl::create_plan_insert(context, node);
             case node_type::match_t:

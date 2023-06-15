@@ -2,12 +2,16 @@
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
 #include <components/expressions/aggregate_expression.hpp>
-#include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_group.hpp>
+#include <components/logical_plan/node_limit.hpp>
+#include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
 #include <components/ql/aggregate.hpp>
+#include <components/ql/aggregate/limit.hpp>
 #include <components/ql/statements/insert_many.hpp>
 #include <components/ql/statements/insert_one.hpp>
+#include <components/ql/statements/delete_many.hpp>
+#include <components/ql/statements/delete_one.hpp>
 #include <components/tests/generaty.hpp>
 #include <components/translator/ql_translator.hpp>
 #include <actor-zeta.hpp>
@@ -146,5 +150,40 @@ TEST_CASE("logical_plan::insert") {
         components::ql::insert_one_t insert{database_name, collection_name, gen_doc(1)};
         auto node = ql_translator(resource, &insert);
         REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
+    }
+}
+
+TEST_CASE("logical_plan::limit") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    {
+        auto limit = components::ql::limit_t::limit_one();
+        auto node_limit = components::logical_plan::make_node_limit(resource, get_name(), limit);
+        REQUIRE(node_limit->to_string() == R"_($limit: 1)_");
+    }
+    {
+        auto limit = components::ql::limit_t::unlimit();
+        auto node_limit = components::logical_plan::make_node_limit(resource, get_name(), limit);
+        REQUIRE(node_limit->to_string() == R"_($limit: -1)_");
+    }
+    {
+        auto limit = components::ql::limit_t(5);
+        auto node_limit = components::logical_plan::make_node_limit(resource, get_name(), limit);
+        REQUIRE(node_limit->to_string() == R"_($limit: 5)_");
+    }
+}
+
+TEST_CASE("logical_plan::delete") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto match = components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
+    components::ql::storage_parameters parameters{};
+    {
+        auto ql_delete = components::ql::delete_many_t(database_name, collection_name, match, parameters);
+        auto node_delete = ql_translator(resource, &ql_delete);
+        REQUIRE(node_delete->to_string() == R"_($delete: {$match: {"key": {$eq: #1}}, $limit: -1})_");
+    }
+    {
+        auto ql_delete = components::ql::delete_one_t(database_name, collection_name, match, parameters);
+        auto node_delete = ql_translator(resource, &ql_delete);
+        REQUIRE(node_delete->to_string() == R"_($delete: {$match: {"key": {$eq: #1}}, $limit: 1})_");
     }
 }

@@ -6,6 +6,8 @@
 #include <components/ql/statements/drop_collection.hpp>
 #include <components/ql/statements/insert_many.hpp>
 #include <components/ql/statements/insert_one.hpp>
+#include <components/ql/statements/delete_many.hpp>
+#include <components/ql/statements/delete_one.hpp>
 
 namespace duck_charmer {
 
@@ -114,7 +116,7 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
         trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
@@ -128,7 +130,7 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one & {
         trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
@@ -142,13 +144,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
         trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        components::ql::delete_one_t ql{condition};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_one),
             session,
-            ql.get());
+            &ql);
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
@@ -156,13 +159,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete &{
         trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        components::ql::delete_many_t ql{condition};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::delete_many),
             session,
-            ql.get());
+            &ql);
         wait();
         return std::get<result_delete>(intermediate_store_);
     }

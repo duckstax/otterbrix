@@ -37,4 +37,15 @@ namespace components::ql {
         return std::make_unique<aggregate_statement>(database, collection);
     }
 
+    const aggregate::match_t& get_match(const aggregate_statement& aggregate) {
+        for (std::size_t i = 0; i < aggregate.count_operators(); ++i) {
+            if (aggregate.type_operator(i) == aggregate::operator_type::match) {
+                return aggregate.get_operator<aggregate::match_t>(i);
+            }
+        }
+
+        static aggregate::match_t null_match;
+        return null_match;
+    }
+
 } // namespace components::ql

@@ -3,7 +3,7 @@
 
 namespace services::collection::operators::merge {
 
-    operator_not_t::operator_not_t(context_collection_t* context, predicates::limit_t limit)
+    operator_not_t::operator_not_t(context_collection_t* context, components::ql::limit_t limit)
         : operator_merge_t(context, limit) {
     }
 

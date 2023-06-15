@@ -26,14 +26,14 @@ namespace services::collection::planner::impl {
     operators::operator_ptr create_plan_match_(
         context_collection_t* context,
         const components::expressions::compare_expression_ptr& expr,
-        operators::predicates::limit_t limit) {
+        components::ql::limit_t limit) {
         if (operators::merge::is_operator_merge(expr)) {
             auto op = operators::merge::create_operator_merge(context, expr, limit);
             operators::operator_ptr left = nullptr;
             operators::operator_ptr right = nullptr;
-            left = create_plan_match_(context, expr->children().at(0), operators::predicates::limit_t::unlimit());
+            left = create_plan_match_(context, expr->children().at(0), components::ql::limit_t::unlimit());
             if (expr->children().size() > 1) { //todo: make if size > 2
-                right = create_plan_match_(context, expr->children().at(1), operators::predicates::limit_t::unlimit());
+                right = create_plan_match_(context, expr->children().at(1), components::ql::limit_t::unlimit());
             }
             op->set_children(std::move(left), std::move(right));
             return op;
@@ -51,7 +51,7 @@ namespace services::collection::planner::impl {
     operators::operator_ptr create_plan_match(
             context_collection_t* context,
             const components::logical_plan::node_ptr& node,
-            operators::predicates::limit_t limit) {
+            components::ql::limit_t limit) {
         if (node->expressions().empty()) {
             return std::make_unique<operators::transfer_scan>(context, limit);
         } else { //todo: other kinds scan

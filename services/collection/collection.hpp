@@ -14,12 +14,12 @@
 #include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
+#include <components/ql/aggregate/limit.hpp>
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
 #include <components/pipeline/context.hpp>
 
-#include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
 #include <utility>
 
@@ -144,8 +144,8 @@ namespace services::collection {
         std::pmr::vector<document_id_t> insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents); //todo: delete
         std::size_t size_() const;
         bool drop_();
-        void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit);
-        void update_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
+        void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const components::ql::limit_t &limit);
+        void update_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update, bool upsert, const components::ql::limit_t &limit);
         void send_update_to_disk_(const session_id_t& session, const result_update& result);
         void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 
