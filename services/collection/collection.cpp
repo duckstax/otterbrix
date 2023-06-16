@@ -268,29 +268,6 @@ namespace services::collection {
         return true;
     }
 
-    void collection_t::delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const components::ql::limit_t &limit) {
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
-        } else {
-            operators::operator_delete deleter(view());
-            auto searcher = planner::create_plan(view(), logic_plan, std::move(limit));
-            if (!searcher) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
-            }
-            deleter.set_children(std::move(searcher));
-            components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
-            deleter.on_execute(&pipeline_context);
-            if (deleter.modified()) {
-                result_delete result(std::move(deleter.modified()->documents()));
-                send_delete_to_disk_(session, result);
-                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result);
-            } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
-            }
-        }
-    }
-
     void collection_t::update_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update,
                                bool upsert, const components::ql::limit_t &limit) {
         auto dispatcher = current_message()->sender();

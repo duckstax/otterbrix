@@ -180,35 +180,27 @@ namespace services::dispatcher {
                     break;
                 }
                 case statement_type::insert_one: {
-                    auto data = std::get<insert_one_t>(record.data);
+                    auto ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;
-                    auto* ql = new components::ql::insert_one_t{data.database_, data.collection_, data.document_};
-                    insert(session_insert, ql, manager_wal_);
+                    insert(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::insert_many: {
-                    auto data = std::get<insert_many_t>(record.data);
+                    auto ql = std::get<insert_many_t>(record.data);
                     components::session::session_id_t session_insert;
-                    auto* ql = new components::ql::insert_many_t{data.database_, data.collection_, data.documents_};
-                    insert(session_insert, ql, manager_wal_);
+                    insert(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_one: {
-                    auto data = std::get<delete_one_t>(record.data);
+                    auto ql = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
-                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
-                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
-                    statement->set_parameters(data.parameters());
-                    delete_one(session_delete, statement.release(), manager_wal_);
+                    delete_one(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_many: {
-                    auto data = std::get<delete_many_t>(record.data);
+                    auto ql = std::get<delete_many_t>(record.data);
                     components::session::session_id_t session_delete;
-                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
-                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
-                    statement->set_parameters(data.parameters());
-                    delete_many(session_delete, statement.release(), manager_wal_);
+                    delete_many(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_one: {
@@ -354,10 +346,10 @@ namespace services::dispatcher {
 
     void dispatcher_t::insert_finish(components::session::session_id_t& session, result_insert& result) {
         trace(log_, "dispatcher_t::insert_finish session: {}", session.data());
-        if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
+        auto& s = find_session(session_to_address_, session);
+        if (s.address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
         } else {
-            auto& s = find_session(session_to_address_, session);
             if (s.type() == statement_type::insert_one) {
                 actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::insert_one), session, s.get<insert_one_t>());
             } else {
@@ -365,7 +357,7 @@ namespace services::dispatcher {
             }
         }
         if (!check_load_from_wal(session)) {
-            actor_zeta::send(find_session(session_to_address_, session).address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, result);
+            actor_zeta::send(s.address(), dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, result);
             remove_session(session_to_address_, session);
         }
     }
@@ -445,10 +437,10 @@ namespace services::dispatcher {
 
     void dispatcher_t::delete_finish(components::session::session_id_t& session, result_delete& result) {
         trace(log_, "dispatcher_t::delete_finish session: {}", session.data());
-        if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
+        auto& s = find_session(session_to_address_, session);
+        if (s.address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
         } else {
-            auto& s = find_session(session_to_address_, session);
             if (s.type() == statement_type::delete_one) {
                 actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::delete_one), session, s.get<delete_one_t>());
             } else {
@@ -456,7 +448,7 @@ namespace services::dispatcher {
             }
         }
         if (!check_load_from_wal(session)) {
-            actor_zeta::send(find_session(session_to_address_, session).address(), dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result);
+            actor_zeta::send(s.address(), dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result);
             remove_session(session_to_address_, session);
         }
     }

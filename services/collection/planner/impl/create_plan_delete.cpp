@@ -17,14 +17,12 @@ namespace services::collection::planner::impl {
             if (child->type() == components::logical_plan::node_type::match_t) {
                 node_match = child;
             } else if (child->type() == components::logical_plan::node_type::limit_t) {
-                node_limit = node;
+                node_limit = child;
             }
         }
 
         auto plan = std::make_unique<operators::operator_delete>(context);
         plan->set_children(create_plan_match(context, node_match, static_cast<components::logical_plan::node_limit_t*>(node_limit.get())->limit()));
-
-        std::cout << "DELETE: " << node->to_string() << std::endl;
 
         return plan;
     }
