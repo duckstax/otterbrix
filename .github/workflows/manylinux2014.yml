@@ -140,7 +140,6 @@ jobs:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
     needs: [ test-wheel, build-info ]
-    # TODO remove second branch condition later
     if: ${{ github.ref_name == 'master' }}
     strategy:
       fail-fast: false
