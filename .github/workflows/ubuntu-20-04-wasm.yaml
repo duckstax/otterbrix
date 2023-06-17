@@ -1,5 +1,5 @@
 name: ubuntu 20.04 wasm
-on: [push]
+#on: [push]
 jobs:
   run:
     name: Run
