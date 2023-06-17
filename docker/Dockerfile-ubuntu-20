@@ -14,7 +14,7 @@ RUN apt update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN    pip3 install --no-cache-dir conan==1.54.0 pytest==6.2.5 cmake && \
+RUN    pip3 install --no-cache-dir conan==1.60.0 pytest==6.2.5 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -25,8 +25,8 @@ RUN    pip3 install --no-cache-dir conan==1.54.0 pytest==6.2.5 cmake && \
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 WORKDIR /app/build
-COPY conanfile.txt ./
-RUN conan install . --build missing -s build_type=Release
+COPY conanfile.txt ./conanfile.txt
+RUN conan install conanfile.txt --build missing -s build_type=Release
 
 WORKDIR /app
 COPY ./integration ./integration
