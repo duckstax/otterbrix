@@ -169,16 +169,6 @@ TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::in
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
-        vec.set_element(i, i);
-        REQUIRE(static_cast<TestType>(i) == vec.element(i));
-    }
-}
-
-TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
-    auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
-    for (std::size_t i = 0; i < vec.size(); ++i) {
         auto init = static_cast<TestType>(i);
         vec.set_element(i, init);
         REQUIRE(init == vec.element(i));
