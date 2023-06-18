@@ -88,7 +88,7 @@ namespace services::collection {
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
 
-        auto insert(
+        auto insert_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
@@ -103,22 +103,12 @@ namespace services::collection {
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto delete_one(
+        auto delete_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto delete_many(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
-        auto update_one(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
-        auto update_many(
+        auto update_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;

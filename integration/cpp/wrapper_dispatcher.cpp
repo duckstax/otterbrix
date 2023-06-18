@@ -94,7 +94,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert),
+            collection::handler_id(collection::route::insert_documents),
             session,
             &ql);
         wait();
@@ -108,7 +108,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert),
+            collection::handler_id(collection::route::insert_documents),
             session,
             &ql);
         wait();
@@ -151,7 +151,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_one),
+            collection::handler_id(collection::route::delete_documents),
             session,
             &ql);
         wait();
@@ -166,7 +166,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_many),
+            collection::handler_id(collection::route::delete_documents),
             session,
             &ql);
         wait();
@@ -181,7 +181,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_one),
+            collection::handler_id(collection::route::update_documents),
             session,
             &ql);
         wait();
@@ -196,7 +196,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_many),
+            collection::handler_id(collection::route::update_documents),
             session,
             &ql);
         wait();

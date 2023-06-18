@@ -6,13 +6,11 @@ namespace services::collection {
 
     enum class route : uint64_t {
         create_documents,
-        insert,
+        insert_documents,
         find,
         find_one,
-        delete_one,
-        delete_many,
-        update_one,
-        update_many,
+        delete_documents,
+        update_documents,
         size,
         close_cursor,
         drop_collection,

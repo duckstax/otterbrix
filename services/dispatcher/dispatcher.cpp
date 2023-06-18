@@ -70,17 +70,15 @@ namespace services::dispatcher {
         add_handler(database::handler_id(database::route::drop_collection_finish), &dispatcher_t::drop_collection_finish);
         add_handler(collection::handler_id(collection::route::drop_collection_finish), &dispatcher_t::drop_collection_finish_collection);
         add_handler(disk::handler_id(disk::route::remove_collection_finish), &dispatcher_t::drop_collection_finish_from_disk);
-        add_handler(collection::handler_id(collection::route::insert), &dispatcher_t::insert);
+        add_handler(collection::handler_id(collection::route::insert_documents), &dispatcher_t::insert_documents);
         add_handler(collection::handler_id(collection::route::insert_finish), &dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find), &dispatcher_t::find);
         add_handler(collection::handler_id(collection::route::find_finish), &dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one), &dispatcher_t::find_one);
         add_handler(collection::handler_id(collection::route::find_one_finish), &dispatcher_t::find_one_finish);
-        add_handler(collection::handler_id(collection::route::delete_one), &dispatcher_t::delete_one);
-        add_handler(collection::handler_id(collection::route::delete_many), &dispatcher_t::delete_many);
+        add_handler(collection::handler_id(collection::route::delete_documents), &dispatcher_t::delete_documents);
         add_handler(collection::handler_id(collection::route::delete_finish), &dispatcher_t::delete_finish);
-        add_handler(collection::handler_id(collection::route::update_one), &dispatcher_t::update_one);
-        add_handler(collection::handler_id(collection::route::update_many), &dispatcher_t::update_many);
+        add_handler(collection::handler_id(collection::route::update_documents), &dispatcher_t::update_documents);
         add_handler(collection::handler_id(collection::route::update_finish), &dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size), &dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::size_finish), &dispatcher_t::size_finish);
@@ -182,37 +180,37 @@ namespace services::dispatcher {
                 case statement_type::insert_one: {
                     auto ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;
-                    insert(session_insert, &ql, manager_wal_);
+                    insert_documents(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::insert_many: {
                     auto ql = std::get<insert_many_t>(record.data);
                     components::session::session_id_t session_insert;
-                    insert(session_insert, &ql, manager_wal_);
+                    insert_documents(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_one: {
                     auto ql = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
-                    delete_one(session_delete, &ql, manager_wal_);
+                    delete_documents(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_many: {
                     auto ql = std::get<delete_many_t>(record.data);
                     components::session::session_id_t session_delete;
-                    delete_many(session_delete, &ql, manager_wal_);
+                    delete_documents(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_one: {
                     auto ql = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
-                    update_one(session_update, &ql, manager_wal_);
+                    update_documents(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_many: {
                     auto ql = std::get<update_many_t>(record.data);
                     components::session::session_id_t session_update;
-                    update_many(session_update, &ql, manager_wal_);
+                    update_documents(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::create_index: {
@@ -321,7 +319,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::insert(components::session::session_id_t& session, ql_statement_t* statement, actor_zeta::address_t address) {
+    void dispatcher_t::insert_documents(components::session::session_id_t& session, ql_statement_t* statement, actor_zeta::address_t address) {
         trace(log_, "dispatcher_t::insert: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key{statement->database_, statement->collection_};
         auto it_collection = collection_address_book_.find(key);
@@ -332,7 +330,7 @@ namespace services::dispatcher {
                 make_session(session_to_address_, session, session_t(std::move(address), *static_cast<insert_many_t*>(statement)));
             }
             auto logic_plan = create_logic_plan(statement).first;
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::insert), session, logic_plan, components::ql::storage_parameters{});
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::insert_documents), session, logic_plan, components::ql::storage_parameters{});
         } else {
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, result_insert(resource_));
         }
@@ -401,28 +399,18 @@ namespace services::dispatcher {
         remove_session(session_to_address_, session);
     }
 
-    void dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
+    void dispatcher_t::delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::delete_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, *static_cast<delete_one_t*>(statement)));
+            if (statement->type() == statement_type::delete_one) {
+                make_session(session_to_address_, session, session_t(address, *static_cast<delete_one_t*>(statement)));
+            } else {
+                make_session(session_to_address_, session, session_t(address, *static_cast<delete_many_t*>(statement)));
+            }
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
-        } else {
-            delete statement;
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
-        }
-    }
-
-    void dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
-        debug(log_, "dispatcher_t::delete_many: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
-        key_collection_t key(statement->database_, statement->collection_);
-        auto it_collection = collection_address_book_.find(key);
-        if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, *static_cast<delete_many_t*>(statement)));
-            auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_many), session, std::move(logic_plan.first), std::move(logic_plan.second));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
@@ -447,28 +435,18 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
+    void dispatcher_t::update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, *static_cast<update_one_t*>(statement)));
+            if (statement->type() == statement_type::update_one) {
+                make_session(session_to_address_, session, session_t(address, *static_cast<update_one_t*>(statement)));
+            } else {
+                make_session(session_to_address_, session, session_t(address, *static_cast<update_many_t*>(statement)));
+            }
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
-        } else {
-            delete statement;
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
-        }
-    }
-
-    void dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
-        debug(log_, "dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
-        key_collection_t key(statement->database_, statement->collection_);
-        auto it_collection = collection_address_book_.find(key);
-        if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, *static_cast<update_many_t*>(statement)));
-            auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, std::move(logic_plan.first), std::move(logic_plan.second));
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
@@ -615,13 +593,11 @@ namespace services::dispatcher {
         add_handler(database::handler_id(database::route::create_database), &manager_dispatcher_t::create_database);
         add_handler(database::handler_id(database::route::create_collection), &manager_dispatcher_t::create_collection);
         add_handler(database::handler_id(database::route::drop_collection), &manager_dispatcher_t::drop_collection);
-        add_handler(collection::handler_id(collection::route::insert), &manager_dispatcher_t::insert);
+        add_handler(collection::handler_id(collection::route::insert_documents), &manager_dispatcher_t::insert_documents);
         add_handler(collection::handler_id(collection::route::find), &manager_dispatcher_t::find);
         add_handler(collection::handler_id(collection::route::find_one), &manager_dispatcher_t::find_one);
-        add_handler(collection::handler_id(collection::route::delete_one), &manager_dispatcher_t::delete_one);
-        add_handler(collection::handler_id(collection::route::delete_many), &manager_dispatcher_t::delete_many);
-        add_handler(collection::handler_id(collection::route::update_one), &manager_dispatcher_t::update_one);
-        add_handler(collection::handler_id(collection::route::update_many), &manager_dispatcher_t::update_many);
+        add_handler(collection::handler_id(collection::route::delete_documents), &manager_dispatcher_t::delete_documents);
+        add_handler(collection::handler_id(collection::route::update_documents), &manager_dispatcher_t::update_documents);
         add_handler(collection::handler_id(collection::route::size), &manager_dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::close_cursor), &manager_dispatcher_t::close_cursor);
         add_handler(collection::handler_id(collection::route::create_index), &manager_dispatcher_t::create_index);
@@ -676,9 +652,9 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), database::handler_id(database::route::drop_collection), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::insert(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
-        trace(log_, "manager_dispatcher_t::insert session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::insert), session, std::move(statement), current_message()->sender());
+    void manager_dispatcher_t::insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::insert_documents session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
+        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::insert_documents), session, std::move(statement), current_message()->sender());
     }
 
     void manager_dispatcher_t::find(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
@@ -691,24 +667,14 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::find_one), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
-        trace(log_, "manager_dispatcher_t::delete_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_one), session, std::move(statement), current_message()->sender());
+    void manager_dispatcher_t::delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::delete_documents session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
+        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_documents), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::delete_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
-        trace(log_, "manager_dispatcher_t::delete_many session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_many), session, std::move(statement), current_message()->sender());
-    }
-
-    void manager_dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
-        trace(log_, "manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_one), session, std::move(statement), current_message()->sender());
-    }
-
-    void manager_dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
-        trace(log_, "manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_many), session, std::move(statement), current_message()->sender());
+    void manager_dispatcher_t::update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
+        trace(log_, "manager_dispatcher_t::update_documents session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
+        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_documents), session, std::move(statement), current_message()->sender());
     }
 
     void manager_dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection) {
