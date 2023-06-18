@@ -168,7 +168,7 @@ namespace services::collection {
         } else {
             auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::limit_one());
             if (!plan) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result_delete(context_->resource()));
+                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
             } else {
                 components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
                 plan->on_execute(&pipeline_context);
@@ -199,7 +199,7 @@ namespace services::collection {
         } else {
             auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
             if (!plan) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result_delete(context_->resource()));
+                actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, result_delete(context_->resource()));
             } else {
                 components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
                 plan->on_execute(&pipeline_context);
@@ -222,38 +222,95 @@ namespace services::collection {
     auto collection_t::update_one(
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
-            components::ql::storage_parameters parameters,
-            const document_ptr& update,
-            bool upsert) -> void {
+            components::ql::storage_parameters parameters) -> void {
         trace(log(), "collection::update_one : {}", name_);
-        update_(session, logic_plan, std::move(parameters), update, upsert, components::ql::limit_t::limit_one());
+        auto dispatcher = current_message()->sender();
+        if (dropped_) {
+            actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+        } else {
+            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
+            if (!plan) {
+                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+            } else {
+                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
+                plan->on_execute(&pipeline_context);
+                if (plan->is_executed()) {
+                    if (plan->output()) {
+                        auto new_id = components::document::get_document_id(plan->output()->documents().front());
+                        result_update result{new_id, context_->resource()};
+                        std::pmr::vector<document_id_t> documents{context_->resource()};
+                        documents.emplace_back(new_id);
+                        actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents),
+                                         session, std::string(database_name_), std::string(name_), documents);
+                        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, std::move(result));
+                    } else {
+                        result_update result{
+                            plan->modified() ? plan->modified()->documents() : std::pmr::vector<document_id_t>{context_->resource()},
+                            plan->modified() ? plan->no_modified()->documents() : std::pmr::vector<document_id_t>{context_->resource()}
+                        };
+                        actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents),
+                                         session, std::string(database_name_), std::string(name_), result.modified_ids());
+                        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, std::move(result));
+                    }
+                } else {
+                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{
+                                               current_message()->sender(),
+                                               std::move(plan),
+                                               std::move(pipeline_context)
+                                           });
+                }
+            }
+        }
     }
 
     auto collection_t::update_many(
             const components::session::session_id_t& session,
             const components::logical_plan::node_ptr& logic_plan,
-            components::ql::storage_parameters parameters,
-            const document_ptr& update,
-            bool upsert) -> void {
+            components::ql::storage_parameters parameters) -> void {
         trace(log(), "collection::update_many : {}", name_);
-        update_(session, logic_plan, std::move(parameters), update, upsert, components::ql::limit_t::unlimit());
+        auto dispatcher = current_message()->sender();
+        if (dropped_) {
+            actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+        } else {
+            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
+            if (!plan) {
+                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
+            } else {
+                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
+                plan->on_execute(&pipeline_context);
+                if (plan->is_executed()) {
+                    if (plan->output()) {
+                        auto new_id = components::document::get_document_id(plan->output()->documents().front());
+                        result_update result{new_id, context_->resource()};
+                        std::pmr::vector<document_id_t> documents{context_->resource()};
+                        documents.emplace_back(new_id);
+                        actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents),
+                                         session, std::string(database_name_), std::string(name_), documents);
+                        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, std::move(result));
+                    } else {
+                        result_update result{
+                            plan->modified() ? plan->modified()->documents() : std::pmr::vector<document_id_t>{context_->resource()},
+                            plan->modified() ? plan->no_modified()->documents() : std::pmr::vector<document_id_t>{context_->resource()}
+                        };
+                        actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents),
+                                         session, std::string(database_name_), std::string(name_), result.modified_ids());
+                        actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, std::move(result));
+                    }
+                } else {
+                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{
+                                               current_message()->sender(),
+                                               std::move(plan),
+                                               std::move(pipeline_context)
+                                           });
+                }
+            }
+        }
     }
 
     void collection_t::drop(const session_id_t& session) {
         trace(log(), "collection::drop : {}", name_);
         auto dispatcher = current_message()->sender();
         actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(database_name_), std::string(name_));
-    }
-
-    std::pmr::vector<document_id_t> collection_t::insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents) {
-        auto searcher = std::make_unique<operators::primary_key_scan>(view());
-        for (const auto &document : documents) {
-            searcher->append(get_document_id(document));
-        }
-        operators::operator_insert inserter(view(), documents);
-        inserter.set_children(std::move(searcher));
-        inserter.on_execute(pipeline_context);
-        return inserter.modified() ? inserter.modified()->documents() : std::pmr::vector<document_id_t>();
     }
 
     std::size_t collection_t::size_() const {
@@ -266,55 +323,6 @@ namespace services::collection {
         }
         dropped_ = true;
         return true;
-    }
-
-    void collection_t::update_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update,
-                               bool upsert, const components::ql::limit_t &limit) {
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
-        } else {
-            operators::operator_update updater(view(), update);
-            auto searcher = planner::create_plan(view(), logic_plan, std::move(limit));
-            if (!searcher) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
-            }
-            updater.set_children(std::move(searcher));
-            components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
-            updater.on_execute(&pipeline_context);
-            if (updater.modified()) {
-                result_update result(std::move(updater.modified()->documents()), std::move(updater.no_modified()->documents()));
-                send_update_to_disk_(session, result);
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
-            } else if (upsert) {
-                result_update result(get_document_id(update), view()->resource());
-                std::pmr::vector<document_ptr> documents(context_->resource());
-                documents.push_back(make_upsert_document(update));
-                insert_(&pipeline_context, documents);
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result);
-            } else {
-                actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session, result_update(context_->resource()));
-            }
-        }
-    }
-
-    void collection_t::send_update_to_disk_(const session_id_t& session, const result_update& result) {
-        std::pmr::vector<document_ptr> update_documents;
-        for (const auto& id : result.modified_ids()) {
-            update_documents.push_back(context_->storage().at(id));
-        }
-        if (!result.upserted_id().is_null()) {
-            update_documents.push_back(context_->storage().at(result.upserted_id()));
-        }
-        if (!update_documents.empty()) {
-            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session, std::string(database_name_), std::string(name_), update_documents);
-        }
-    }
-
-    void collection_t::send_delete_to_disk_(const session_id_t& session, const result_delete& result) {
-        if (!result.empty()) {
-            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::remove_documents), session, std::string(database_name_), std::string(name_), result.deleted_ids());
-        }
     }
 
     void collection_t::close_cursor(session_id_t& session) {

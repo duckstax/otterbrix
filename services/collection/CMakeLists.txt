@@ -12,6 +12,7 @@ set(${PROJECT_NAME}_SOURCES
         planner/impl/create_plan_delete.cpp
         planner/impl/create_plan_insert.cpp
         planner/impl/create_plan_match.cpp
+        planner/impl/create_plan_update.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp

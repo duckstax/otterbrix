@@ -212,7 +212,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          components::ql::limit_t::unlimit()));
@@ -249,7 +249,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          components::ql::limit_t(1)));
@@ -286,7 +286,7 @@ TEST_CASE("operator::update") {
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
                                                          components::ql::limit_t(5)));
@@ -491,7 +491,7 @@ TEST_CASE("operator::index::delete_and_update") {
         }
         {
             auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
-            operator_update update(d(collection)->view(), script_update);
+            operator_update update(d(collection)->view(), script_update, false);
             update.set_children(std::make_unique<index_scan>(d(collection)->view(), cond_check, components::ql::limit_t::unlimit()));
             update.on_execute(&pipeline_context_check);
 

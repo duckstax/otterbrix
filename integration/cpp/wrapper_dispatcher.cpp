@@ -4,10 +4,12 @@
 #include <components/ql/statements/create_collection.hpp>
 #include <components/ql/statements/create_database.hpp>
 #include <components/ql/statements/drop_collection.hpp>
-#include <components/ql/statements/insert_many.hpp>
-#include <components/ql/statements/insert_one.hpp>
 #include <components/ql/statements/delete_many.hpp>
 #include <components/ql/statements/delete_one.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
+#include <components/ql/statements/update_many.hpp>
+#include <components/ql/statements/update_one.hpp>
 
 namespace duck_charmer {
 
@@ -174,15 +176,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        components::ql::update_one_t ql{condition, update, upsert};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_one),
             session,
-            ql.get(),
-            std::move(update),
-            upsert);
+            &ql);
         wait();
         return std::get<result_update>(intermediate_store_);
     }
@@ -190,15 +191,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
-        std::unique_ptr<components::ql::ql_statement_t> ql(condition);
+        components::ql::update_many_t ql{condition, update, upsert};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::update_many),
             session,
-            ql.get(),
-            std::move(update),
-            upsert);
+            &ql);
         wait();
         return std::get<result_update>(intermediate_store_);
     }

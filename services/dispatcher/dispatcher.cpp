@@ -204,21 +204,15 @@ namespace services::dispatcher {
                     break;
                 }
                 case statement_type::update_one: {
-                    auto data = std::get<update_one_t>(record.data);
+                    auto ql = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
-                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
-                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
-                    statement->set_parameters(data.parameters());
-                    update_one(session_update, statement.release(), data.update_, data.upsert_, manager_wal_);
+                    update_one(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_many: {
-                    auto data = std::get<update_many_t>(record.data);
+                    auto ql = std::get<update_many_t>(record.data);
                     components::session::session_id_t session_update;
-                    auto statement = components::ql::make_aggregate_statement(data.database_, data.collection_);
-                    statement->append(components::ql::aggregate::operator_type::match, data.match_);
-                    statement->set_parameters(data.parameters());
-                    update_many(session_update, statement.release(), data.update_, data.upsert_, manager_wal_);
+                    update_many(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::create_index: {
@@ -453,28 +447,28 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+    void dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::update_one: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, update_one_t{static_cast<components::ql::aggregate_statement_raw_ptr>(statement), update, upsert}));
+            make_session(session_to_address_, session, session_t(address, *static_cast<update_one_t*>(statement)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_one), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
         }
     }
 
-    void dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement, components::document::document_ptr& update, bool upsert, actor_zeta::address_t address) {
+    void dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address) {
         debug(log_, "dispatcher_t::update_many: session:{}, database: {}, collection: {}", session.data(), statement->database_, statement->collection_);
         key_collection_t key(statement->database_, statement->collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(address, update_many_t{static_cast<components::ql::aggregate_statement_raw_ptr>(statement), update, upsert}));
+            make_session(session_to_address_, session, session_t(address, *static_cast<update_many_t*>(statement)));
             auto logic_plan = create_logic_plan(statement);
-            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, std::move(logic_plan.first), std::move(logic_plan.second), std::move(update), upsert);
+            actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_many), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
             delete statement;
             actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
@@ -483,10 +477,10 @@ namespace services::dispatcher {
 
     void dispatcher_t::update_finish(components::session::session_id_t& session, result_update& result) {
         trace(log_, "dispatcher_t::update_finish session: {}", session.data());
-        if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
+        auto& s = find_session(session_to_address_, session);
+        if (s.address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
         } else {
-            auto& s = find_session(session_to_address_, session);
             if (s.type() == statement_type::update_one) {
                 actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::update_one), session, s.get<update_one_t>());
             } else {
@@ -494,7 +488,7 @@ namespace services::dispatcher {
             }
         }
         if (!check_load_from_wal(session)) {
-            actor_zeta::send(find_session(session_to_address_, session).address(), dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result);
+            actor_zeta::send(s.address(), dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result);
             remove_session(session_to_address_, session);
         }
     }
@@ -707,14 +701,14 @@ namespace services::dispatcher {
         return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::delete_many), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement, components::document::document_ptr& update, bool upsert) {
+    void manager_dispatcher_t::update_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
         trace(log_, "manager_dispatcher_t::update_one session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_one), session, std::move(statement), std::move(update), upsert, current_message()->sender());
+        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_one), session, std::move(statement), current_message()->sender());
     }
 
-    void manager_dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement, components::document::document_ptr& update, bool upsert) {
+    void manager_dispatcher_t::update_many(components::session::session_id_t& session, components::ql::ql_statement_t* statement) {
         trace(log_, "manager_dispatcher_t::update_many session: {}, database: {}, collection name: {} ", session.data(), statement->database_, statement->collection_);
-        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_many), session, std::move(statement), std::move(update), upsert, current_message()->sender());
+        return actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::update_many), session, std::move(statement), current_message()->sender());
     }
 
     void manager_dispatcher_t::size(components::session::session_id_t& session, std::string& database_name, std::string& collection) {

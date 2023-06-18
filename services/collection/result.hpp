@@ -102,6 +102,7 @@ public:
 
     explicit result_update(std::pmr::memory_resource *resource);
     result_update(result_t&& modified_ids, result_t&& nomodified_ids);
+    result_update(const result_t& modified_ids, const result_t& nomodified_ids);
     result_update(const document_id_t& upserted_id, std::pmr::memory_resource *resource);
     const result_t& modified_ids() const;
     const result_t& nomodified_ids() const;

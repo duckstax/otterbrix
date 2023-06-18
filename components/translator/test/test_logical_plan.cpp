@@ -8,10 +8,12 @@
 #include <components/logical_plan/node_sort.hpp>
 #include <components/ql/aggregate.hpp>
 #include <components/ql/aggregate/limit.hpp>
-#include <components/ql/statements/insert_many.hpp>
-#include <components/ql/statements/insert_one.hpp>
 #include <components/ql/statements/delete_many.hpp>
 #include <components/ql/statements/delete_one.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
+#include <components/ql/statements/update_many.hpp>
+#include <components/ql/statements/update_one.hpp>
 #include <components/tests/generaty.hpp>
 #include <components/translator/ql_translator.hpp>
 #include <actor-zeta.hpp>
@@ -185,5 +187,22 @@ TEST_CASE("logical_plan::delete") {
         auto ql_delete = components::ql::delete_one_t(database_name, collection_name, match, parameters);
         auto node_delete = ql_translator(resource, &ql_delete);
         REQUIRE(node_delete->to_string() == R"_($delete: {$match: {"key": {$eq: #1}}, $limit: 1})_");
+    }
+}
+
+TEST_CASE("logical_plan::update") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto match = components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
+    auto update = document_from_json(R"_({"$set": {"count": 100}})_");
+    components::ql::storage_parameters parameters{};
+    {
+        auto ql_update = components::ql::update_many_t(database_name, collection_name, match, parameters, update, true);
+        auto node_update = ql_translator(resource, &ql_update);
+        REQUIRE(node_update->to_string() == R"_($update: {{"$set":{"count":100}}, $upsert: 1, $match: {"key": {$eq: #1}}, $limit: -1})_");
+    }
+    {
+        auto ql_update = components::ql::update_one_t(database_name, collection_name, match, parameters, update, false);
+        auto node_update = ql_translator(resource, &ql_update);
+        REQUIRE(node_update->to_string() == R"_($update: {{"$set":{"count":100}}, $upsert: 0, $match: {"key": {$eq: #1}}, $limit: 1})_");
     }
 }

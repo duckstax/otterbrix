@@ -94,6 +94,12 @@ result_update::result_update(result_update::result_t&& modified_ids, result_upda
     , upserted_id_(document_id_t::null()) {
 }
 
+result_update::result_update(const result_t &modified_ids, const result_t &nomodified_ids)
+    : modified_ids_(modified_ids)
+    , nomodified_ids_(nomodified_ids)
+    , upserted_id_(document_id_t::null()) {
+}
+
 result_update::result_update(const document_id_t& upserted_id, std::pmr::memory_resource *resource)
     : modified_ids_(resource)
     , nomodified_ids_(resource)
