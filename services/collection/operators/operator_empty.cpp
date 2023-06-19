@@ -7,6 +7,6 @@ namespace services::collection::operators {
         output_ = std::move(data);
     }
 
-    void operator_empty_t::on_execute_impl(planner::transaction_context_t*) {
+    void operator_empty_t::on_execute_impl(components::pipeline::context_t*) {
     }
 } // namespace services::collection::operators

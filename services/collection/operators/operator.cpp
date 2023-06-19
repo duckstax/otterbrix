@@ -1,24 +1,53 @@
 #include "operator.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
+
+    bool is_success(const operator_t::ptr &op) {
+        return !op || op->is_executed();
+    }
 
     operator_t::operator_t(context_collection_t* context, operator_type type)
         : context_(context)
         , type_(type) {
     }
 
-    void operator_t::on_execute(planner::transaction_context_t* transaction_context) {
-        if (state_ == operator_state::created) {
+    void operator_t::on_execute(components::pipeline::context_t* pipeline_context) {
+        if (state_ == operator_state::created || state_ == operator_state::running) {
+            on_prepare_impl();
             state_ = operator_state::running;
             if (left_) {
-                left_->on_execute(transaction_context);
+                left_->on_execute(pipeline_context);
             }
-            if (right_) {
-                right_->on_execute(transaction_context);
+            if (right_ && is_success(left_)) {
+                right_->on_execute(pipeline_context);
             }
-            on_execute_impl(transaction_context);
+            if (is_success(left_) && is_success(right_)) {
+                on_execute_impl(pipeline_context);
+                if (!is_wait_sync_disk()) {
+                    state_ = operator_state::executed;
+                }
+            }
+        } else if (is_wait_sync_disk()) {
+            on_resume_impl(pipeline_context);
             state_ = operator_state::executed;
         }
+    }
+
+    void operator_t::on_resume(components::pipeline::context_t* pipeline_context) {
+        on_execute(pipeline_context);
+    }
+
+    void operator_t::async_wait() {
+        state_ = operator_state::waiting;
+    }
+
+    bool operator_t::is_executed() const {
+        return state_ == operator_state::executed;
+    }
+
+    bool operator_t::is_wait_sync_disk() const {
+        return state_ == operator_state::waiting;
     }
 
     operator_state operator_t::state() const {
@@ -51,6 +80,12 @@ namespace services::collection::operators {
         left_ = nullptr;
         right_ = nullptr;
         output_ = nullptr;
+    }
+
+    void operator_t::on_resume_impl(components::pipeline::context_t*) {
+    }
+
+    void operator_t::on_prepare_impl() {
     }
 
 

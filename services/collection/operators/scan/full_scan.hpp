@@ -11,7 +11,7 @@ namespace services::collection::operators {
         full_scan(context_collection_t* collection, predicates::predicate_ptr predicate, predicates::limit_t limit);
 
     private:
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
         const predicates::predicate_ptr predicate_;
         const predicates::limit_t limit_;

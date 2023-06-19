@@ -1,6 +1,7 @@
 project(serialization)
 
 set(${PROJECT_NAME}_SOURCES
+        stream/byte.cpp
         stream/json.cpp
         serialization.cpp
 )

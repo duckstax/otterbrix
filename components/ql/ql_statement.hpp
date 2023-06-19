@@ -21,6 +21,7 @@ namespace components::ql {
         update_one,
         update_many,
         create_index,
+        drop_index,
         aggregate
     };
 

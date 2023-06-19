@@ -1,4 +1,5 @@
 #include "operator_not.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators::merge {
 
@@ -6,7 +7,7 @@ namespace services::collection::operators::merge {
         : operator_merge_t(context, limit) {
     }
 
-    void operator_not_t::on_merge_impl(planner::transaction_context_t*) {
+    void operator_not_t::on_merge_impl(components::pipeline::context_t*) {
         //todo: optimize merge
         int count = 0;
         if (!limit_.check(count)) {

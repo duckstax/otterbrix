@@ -1,6 +1,7 @@
 #pragma once
 
 #include <services/collection/operators/operator.hpp>
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 
@@ -10,7 +11,7 @@ namespace services::collection::operators {
         operator_insert(context_collection_t* collection, const std::pmr::vector<document_ptr>& documents);
 
     private:
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
         std::pmr::vector<document_ptr> documents_;
     };

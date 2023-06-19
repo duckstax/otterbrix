@@ -28,10 +28,10 @@ namespace services::collection::operators {
         std::pmr::vector<group_value_t> values_;
         std::pmr::vector<operator_data_ptr> input_documents_;
 
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
 
         void create_list_documents();
-        void calc_aggregate_values(planner::transaction_context_t* transaction_context);
+        void calc_aggregate_values(components::pipeline::context_t* pipeline_context);
     };
 
 } // namespace services::collection::operators

@@ -3,7 +3,9 @@
 #include "spaces.hpp"
 
 namespace duck_charmer {
+
     wrapper_database::~wrapper_database() {
+        trace(log_, "delete wrapper_database");
     }
 
     auto wrapper_database::collection_names() -> py::list {

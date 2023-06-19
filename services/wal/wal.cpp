@@ -5,6 +5,7 @@
 
 #include "dto.hpp"
 #include "route.hpp"
+#include "manager_wal_replicate.hpp"
 
 namespace services::wal {
 
@@ -22,7 +23,7 @@ namespace services::wal {
     }
 
 
-    wal_replicate_t::wal_replicate_t(manager_wal_replicate_t*manager, log_t& log, configuration::config_wal config)
+    wal_replicate_t::wal_replicate_t(base_manager_wal_replicate_t*manager, log_t& log, configuration::config_wal config)
         : actor_zeta::basic_async_actor(manager, "wal")
         , log_(log.clone())
         , config_(std::move(config)) {
@@ -63,6 +64,7 @@ namespace services::wal {
     }
 
     wal_replicate_t::~wal_replicate_t() {
+        trace(log_, "delete wal_replicate_t");
     }
 
     size_tt read_size_impl(buffer_t& input, int index_start) {
@@ -276,7 +278,7 @@ namespace services::wal {
 
 
 
-    wal_replicate_without_disk_t::wal_replicate_without_disk_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config)
+    wal_replicate_without_disk_t::wal_replicate_without_disk_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config)
         : wal_replicate_t(manager, log, std::move(config)) {
     }
 

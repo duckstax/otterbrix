@@ -1,43 +1,15 @@
 #pragma once
 
-#include "command.hpp"
-#include "disk.hpp"
-
 #include <core/excutor.hpp>
+#include <core/file/file.hpp>
 #include <configuration/configuration.hpp>
 #include <components/log/log.hpp>
-#include <services/wal/manager_wal_replicate.hpp>
+#include "agent_disk.hpp"
+#include "index_agent_disk.hpp"
 
 namespace services::disk {
 
-    using name_t = std::string;
     using session_id_t = ::components::session::session_id_t;
-
-    class base_manager_disk_t;
-
-    class agent_disk_t final : public actor_zeta::basic_async_actor {
-    public:
-        agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
-
-        auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
-
-        auto append_database(const command_t& command) -> void;
-        auto remove_database(const command_t& command) -> void;
-
-        auto append_collection(const command_t& command) -> void;
-        auto remove_collection(const command_t& command) -> void;
-
-        auto write_documents(const command_t& command) -> void;
-        auto remove_documents(const command_t& command) -> void;
-
-        auto fix_wal_id(wal::id_t wal_id) -> void;
-
-    private:
-        log_t log_;
-        disk_t disk_;
-    };
-
-    using agent_disk_ptr = std::unique_ptr<agent_disk_t>;
 
 
     class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
@@ -67,10 +39,12 @@ namespace services::disk {
         }
 
         manager_disk_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_disk config, log_t& log);
+        ~manager_disk_t();
 
         void create_agent();
 
         auto load(session_id_t& session) -> void;
+        auto load_indexes(session_id_t& session) -> void;
 
         auto append_database(session_id_t& session, const database_name_t& database) -> void;
         auto remove_database(session_id_t& session, const database_name_t& database) -> void;
@@ -83,14 +57,34 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
+        void create_index_agent(session_id_t& session, const components::ql::create_index_t &index);
+        void drop_index_agent(session_id_t& session, const index_name_t &index_name);
+        void drop_index_agent_success(session_id_t& session);
+
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         log_t log_;
         configuration::config_disk config_;
         std::vector<agent_disk_ptr> agents_;
+        index_agent_disk_storage_t index_agents_;
         command_storage_t commands_;
+        file_ptr metafile_indexes_;
+        session_id_t load_session_;
+
+        struct removed_index_t {
+            std::size_t size;
+            command_t command;
+            actor_zeta::address_t sender;
+        };
+        std::pmr::unordered_map<session_id_t, removed_index_t> removed_indexes_;
 
         auto agent() -> actor_zeta::address_t;
+        void write_index_(const components::ql::create_index_t &index);
+        void load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher);
+        std::vector<components::ql::create_index_t> read_indexes_(const collection_name_t& collection_name) const;
+        std::vector<components::ql::create_index_t> read_indexes_() const;
+        void remove_index_(const index_name_t& index_name);
+        void remove_all_indexes_from_collection_(const collection_name_t& collection_name);
     };
 
 
@@ -99,6 +93,7 @@ namespace services::disk {
         manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
+        void create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, components::ql::index_compare);
 
         template<class ...Args>
         auto nothing(Args&&...) -> void {}

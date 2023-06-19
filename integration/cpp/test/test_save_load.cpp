@@ -97,7 +97,6 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 }
             }
         }
-        usleep(100000); //todo: replace by shutdown
     }
 
     SECTION("extending wal") {

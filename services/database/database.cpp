@@ -25,6 +25,7 @@ namespace services::database {
 
     manager_database_t::~manager_database_t() {
         ZoneScoped;
+        trace(log_, "delete manager_database_t");
     }
 
     auto manager_database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -79,6 +80,7 @@ namespace services::database {
 
     database_t::~database_t() {
         ZoneScoped;
+        trace(log_, "delete database_t");
     }
     auto database_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_;

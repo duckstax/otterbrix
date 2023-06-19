@@ -24,6 +24,19 @@ namespace core::file {
         return data;
     }
 
+    std::string file_t::readline(__off64_t& offset, char delimer) const {
+        std::stringstream s;
+        char c;
+        auto size_read = ::pread(fd_, &c, 1, offset);
+        while (size_read > 0 && c != delimer) {
+            s << c;
+            ++offset;
+            size_read = ::pread(fd_, &c, 1, offset);
+        }
+        ++offset;
+        return s.str();
+    }
+
     std::string file_t::readall() const {
         constexpr std::size_t size_buffer = 1024;
         __off64_t pos = 0;
@@ -52,7 +65,19 @@ namespace core::file {
         offset_ += ::pwritev(fd_, &write_data, 1, offset_);
     }
 
+    void file_t::append(void* data, std::size_t size) {
+        append(reinterpret_cast<char*>(data), size);
+    }
+
+    void file_t::append(const void* data, std::size_t size) {
+        append(const_cast<void*>(data), size);
+    }
+
     void file_t::append(std::string& data) {
+        append(data.data(), data.size());
+    }
+
+    void file_t::append(const std::string &data) {
         append(data.data(), data.size());
     }
 

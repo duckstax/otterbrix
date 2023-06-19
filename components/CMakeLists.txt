@@ -16,6 +16,7 @@ else()
     add_subdirectory(serialization)
     add_subdirectory(translator)
     add_subdirectory(session)
+    add_subdirectory(pipeline)
 endif()
 
 if (DEV_MODE)

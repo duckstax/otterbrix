@@ -1,4 +1,5 @@
 #include "command.hpp"
+#include <components/index/disk/route.hpp>
 #include "route.hpp"
 
 namespace services::disk {
@@ -18,6 +19,8 @@ namespace services::disk {
                 return handler_id(route::write_documents);
             } else if constexpr (std::is_same_v<command_type, command_remove_documents_t>) {
                 return handler_id(route::remove_documents);
+            } else if constexpr (std::is_same_v<command_type, command_drop_index_t>) {
+                return handler_id(index::route::drop);
             }
             static_assert(true, "Not valid command type");
         }, command_);

@@ -262,6 +262,7 @@ template <class T>
 
 template <class T, class _ = void>
 struct is_variant_h : std::false_type {};
+
 template <class T>
 struct is_variant_h<T, std::void_t<
                            decltype(std::declval<T>().index()),

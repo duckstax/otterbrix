@@ -20,7 +20,8 @@ namespace services::wal {
     }
 
     void append_payload(buffer_t& storage, char* ptr, size_t size) {
-        storage.insert(std::end(storage), ptr, ptr + size);
+        storage.reserve(storage.size() + size);
+        std::copy(ptr, ptr + size, std::back_inserter(storage));
     }
 
     crc32_t read_crc32(buffer_t& input, int index_start) {

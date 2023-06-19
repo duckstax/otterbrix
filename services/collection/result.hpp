@@ -137,3 +137,16 @@ public:
 private:
     result_t success_{false};
 };
+
+
+class result_drop_index {
+public:
+    using result_t = bool;
+
+    result_drop_index() = default;
+    explicit result_drop_index(result_t success);
+    result_t is_success() const;
+
+private:
+    result_t success_{false};
+};

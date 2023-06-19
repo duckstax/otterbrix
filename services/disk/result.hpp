@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <list>
 #include <actor-zeta.hpp>
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
-#include <services/wal/base.hpp>
+#include <list>
+#include <services/wal/json_base.hpp>
+#include <vector>
 
 namespace services::disk {
 

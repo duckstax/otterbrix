@@ -7,7 +7,6 @@ set(${PROJECT_NAME}_HEADERS
 )
 
 set(${PROJECT_NAME}_SOURCES
-        planner/transaction_context.cpp
         planner/create_plan.cpp
         planner/impl/create_plan_aggregate.cpp
         planner/impl/create_plan_match.cpp
@@ -65,6 +64,7 @@ target_link_libraries(
         rocketjoe::session
         rocketjoe::index
         rocketjoe::logical_plan
+        rocketjoe::pipeline
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

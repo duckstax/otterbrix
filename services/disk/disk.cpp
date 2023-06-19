@@ -25,7 +25,8 @@ namespace services::disk {
 
 
     disk_t::disk_t(const path_t& file_name)
-        : db_(nullptr)
+        : path_(file_name)
+        , db_(nullptr)
         , metadata_(nullptr)
         , file_wal_id_(nullptr) {
         rocksdb::Options options;
@@ -104,6 +105,8 @@ namespace services::disk {
     }
 
     bool disk_t::remove_collection(const database_name_t &database, const collection_name_t &collection) {
+        std::filesystem::remove_all(path_ / "indexes" / collection);
+        //todo: removed all documents
         return metadata_->remove_collection(database, collection);
     }
 

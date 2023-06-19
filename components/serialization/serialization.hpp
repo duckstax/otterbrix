@@ -1,5 +1,6 @@
 #pragma once
-#include <boost/container/pmr/memory_resource.hpp>
+
+#include <core/pmr.hpp>
 #include <components/serialization/stream.hpp>
 #include <components/serialization/traits.hpp>
 
@@ -9,23 +10,44 @@
 namespace components::serialization {
 
     template<class Storage>
-    void serialize(stream::stream<Storage>& ar, uint64_t& t, const unsigned int version) {
-        intermediate_serialize(ar,t,version);
+    void serialize_array(stream::stream<Storage>& ar, std::size_t size, const unsigned int version) {
+
     }
 
     template<class Storage>
-    void serialize(stream::stream<Storage>& ar, std::string& t, const unsigned int version) {
-        intermediate_serialize(ar,t,version);
+    void serialize_map(stream::stream<Storage>& ar, std::size_t size, const unsigned int version) {
+
     }
 
-    template<class Storage, class T>
-    void serialize(stream::stream<Storage>& ar, std::vector<T>& t, const unsigned int version) {
-        intermediate_serialize(ar,t,version);
+
+    template<class Storage, class C>
+    void serialize_array(stream::stream<Storage>& ar, C& t, const unsigned int version) {
+
     }
 
-    template<class Storage, class K, class V>
-    void serialize(stream::stream<Storage>& ar, std::map<K, V>& t, const unsigned int version) {
-        intermediate_serialize(ar,t,version);
+    template<class Storage, class C>
+    void serialize_map(stream::stream<Storage>& ar, C& t, const unsigned int version) {
+
+    }
+
+    template<class Storage>
+    void serialize_string(stream::stream<Storage>& ar, const std::string& t, const unsigned int version) {
+
+    }
+
+    template<class Storage>
+    void serialize_string(stream::stream<Storage>& ar, std::string_view t, const unsigned int version) {
+
+    }
+
+    template<class Storage, class C>
+    void serialize_blob(stream::stream<Storage>& ar, C& t, const unsigned int version) {
+
+    }
+
+    template<class Storage, class C>
+    void serialize_extension(stream::stream<Storage>& ar, C& t, const unsigned int version) {
+
     }
 
 } // namespace components::serialization

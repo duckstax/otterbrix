@@ -5,7 +5,7 @@
 
 #include <core/file/file.hpp>
 #include <filesystem>
-#include <wal/base.hpp>
+#include <wal/json_base.hpp>
 
 namespace rocksdb {
     class DB;
@@ -48,6 +48,7 @@ namespace services::disk {
         wal::id_t wal_id() const;
 
     private:
+        path_t path_;
         db_ptr db_;
         metadata_ptr metadata_;
         file_ptr file_wal_id_;
