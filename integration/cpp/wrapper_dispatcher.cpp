@@ -1,6 +1,15 @@
 #include "wrapper_dispatcher.hpp"
 #include "route.hpp"
 #include <core/system_command.hpp>
+#include <components/ql/statements/create_collection.hpp>
+#include <components/ql/statements/create_database.hpp>
+#include <components/ql/statements/drop_collection.hpp>
+#include <components/ql/statements/delete_many.hpp>
+#include <components/ql/statements/delete_one.hpp>
+#include <components/ql/statements/insert_many.hpp>
+#include <components/ql/statements/insert_one.hpp>
+#include <components/ql/statements/update_many.hpp>
+#include <components/ql/statements/update_one.hpp>
 
 namespace duck_charmer {
 
@@ -12,8 +21,7 @@ namespace duck_charmer {
         add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
         add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
         add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
-        add_handler(collection::handler_id(collection::route::insert_one_finish), &wrapper_dispatcher_t::insert_one_finish);
-        add_handler(collection::handler_id(collection::route::insert_many_finish), &wrapper_dispatcher_t::insert_many_finish);
+        add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
         add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
@@ -41,84 +49,82 @@ namespace duck_charmer {
 
     auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
         trace(log_, "wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), database);
-        /// todo: trace(log_, "type address : {}", manager_dispatcher_->id());
         init();
+        components::ql::create_database_t ql{database};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::create_database),
             session,
-            database);
+            &ql);
         wait();
     }
 
     auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void {
         trace(log_, "wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database, collection);
-        /// todo: trace(log_, "type address : {}", manager_dispatcher_->id());
         init();
+        components::ql::create_collection_t ql{database, collection};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::create_collection),
             session,
-            database,
-            collection);
+            &ql);
         wait();
     }
 
     auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection {
         trace(log_, "wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
         init();
+        components::ql::drop_collection_t ql{database, collection};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             database::handler_id(database::route::drop_collection),
             session,
-            database,
-            collection);
+            &ql);
         wait();
         return std::get<result_drop_collection>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one &{
+    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
+        components::ql::insert_one_t ql{database, collection, document};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_one),
+            collection::handler_id(collection::route::insert_documents),
             session,
-            database,
-            collection,
-            std::move(document));
+            &ql);
         wait();
-        return std::get<result_insert_one>(intermediate_store_);
+        return std::get<result_insert>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many &{
+    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert & {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
+        components::ql::insert_many_t ql{database, collection, documents};
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_many),
+            collection::handler_id(collection::route::insert_documents),
             session,
-            database,
-            collection,
-            std::move(documents));
+            &ql);
         wait();
-        return std::get<result_insert_many>(intermediate_store_);
+        return std::get<result_insert>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
         trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<components::cursor::cursor_t*>(intermediate_store_);
     }
@@ -126,12 +132,13 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one & {
         trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
             collection::handler_id(collection::route::find_one),
             session,
-            std::move(condition));
+            ql.get());
         wait();
         return std::get<result_find_one>(intermediate_store_);
     }
@@ -139,12 +146,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
         trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        components::ql::delete_one_t ql{condition};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_one),
+            collection::handler_id(collection::route::delete_documents),
             session,
-            std::move(condition));
+            &ql);
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
@@ -152,12 +161,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete &{
         trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        components::ql::delete_many_t ql{condition};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_many),
+            collection::handler_id(collection::route::delete_documents),
             session,
-            std::move(condition));
+            &ql);
         wait();
         return std::get<result_delete>(intermediate_store_);
     }
@@ -165,14 +176,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        components::ql::update_one_t ql{condition, update, upsert};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_one),
+            collection::handler_id(collection::route::update_documents),
             session,
-            std::move(condition),
-            std::move(update),
-            upsert);
+            &ql);
         wait();
         return std::get<result_update>(intermediate_store_);
     }
@@ -180,14 +191,14 @@ namespace duck_charmer {
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
         trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
+        components::ql::update_many_t ql{condition, update, upsert};
+        std::unique_ptr<components::ql::ql_statement_t> _(condition);
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_many),
+            collection::handler_id(collection::route::update_documents),
             session,
-            std::move(condition),
-            std::move(update),
-            upsert);
+            &ql);
         wait();
         return std::get<result_update>(intermediate_store_);
     }
@@ -269,15 +280,8 @@ namespace duck_charmer {
         notify();
     }
 
-    auto wrapper_dispatcher_t::insert_one_finish(session_id_t &session, result_insert_one result) -> void {
-        trace(log_, "wrapper_dispatcher_t::insert_one_finish session: {}, result: {} inserted", session.data(), result.inserted_id().is_null() ? 0 : 1);
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::insert_many_finish(session_id_t &session, result_insert_many result) {
-        trace(log_, "wrapper_dispatcher_t::insert_many_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
+    void wrapper_dispatcher_t::insert_finish(session_id_t &session, result_insert result) {
+        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

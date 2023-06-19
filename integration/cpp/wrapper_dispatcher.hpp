@@ -34,8 +34,8 @@ namespace duck_charmer {
         auto create_database(session_id_t &session, const database_name_t &database) -> void;
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
         auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
-        auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert_one&;
-        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert_many&;
+        auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert&;
+        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert&;
         auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t*;
         auto find_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one&;
         auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete&;
@@ -57,8 +57,7 @@ namespace duck_charmer {
         auto create_database_finish(session_id_t &session, services::database::database_create_result result) -> void;
         auto create_collection_finish(session_id_t &session, services::database::collection_create_result result) -> void;
         auto drop_collection_finish(session_id_t &session, result_drop_collection result) -> void;
-        auto insert_one_finish(session_id_t &session, result_insert_one result) -> void;
-        auto insert_many_finish(session_id_t &session, result_insert_many result) -> void;
+        auto insert_finish(session_id_t &session, result_insert result) -> void;
         auto find_finish(session_id_t &session, components::cursor::cursor_t *cursor) -> void;
         auto find_one_finish(session_id_t &session, result_find_one result) -> void;
         auto delete_finish(session_id_t &session, result_delete result) -> void;
@@ -79,8 +78,8 @@ namespace duck_charmer {
         std::condition_variable cv_;
         session_id_t input_session_;
         std::variant<
-            result_insert_one,
-            result_insert_many,
+            null_result,
+            result_insert,
             components::cursor::cursor_t*,
             result_find_one,
             result_size,

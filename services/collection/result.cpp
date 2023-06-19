@@ -1,32 +1,18 @@
 #include "result.hpp"
 
-result_insert_one::result_insert_one()
-    : inserted_id_(result_t::null()) {}
 
-result_insert_one::result_insert_one(const result_insert_one::result_t &id)
-    : inserted_id_(id) {}
-
-const result_insert_one::result_t& result_insert_one::inserted_id() const {
-    return inserted_id_;
-}
-
-bool result_insert_one::empty() const {
-    return inserted_id_.is_null();
-}
-
-
-result_insert_many::result_insert_many(std::pmr::memory_resource *resource)
+result_insert::result_insert(std::pmr::memory_resource *resource)
     : inserted_ids_(resource) {}
 
-result_insert_many::result_insert_many(result_t&& inserted_ids)
+result_insert::result_insert(result_t&& inserted_ids)
     : inserted_ids_(std::move(inserted_ids)) {
 }
 
-const result_insert_many::result_t& result_insert_many::inserted_ids() const {
+const result_insert::result_t& result_insert::inserted_ids() const {
     return inserted_ids_;
 }
 
-bool result_insert_many::empty() const {
+bool result_insert::empty() const {
     return inserted_ids_.empty();
 }
 
@@ -105,6 +91,12 @@ result_update::result_update(std::pmr::memory_resource *resource)
 result_update::result_update(result_update::result_t&& modified_ids, result_update::result_t&& nomodified_ids)
     : modified_ids_(std::move(modified_ids))
     , nomodified_ids_(std::move(nomodified_ids))
+    , upserted_id_(document_id_t::null()) {
+}
+
+result_update::result_update(const result_t &modified_ids, const result_t &nomodified_ids)
+    : modified_ids_(modified_ids)
+    , nomodified_ids_(nomodified_ids)
     , upserted_id_(document_id_t::null()) {
 }
 

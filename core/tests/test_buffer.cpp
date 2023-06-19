@@ -69,17 +69,6 @@ TEST_CASE("copy from raw pointer") {
     REQUIRE(std::pmr::get_default_resource() == buff.memory_resource());
 }
 
-TEST_CASE("copy from raw pointer") {
-    auto* mr = std::pmr::get_default_resource();
-    const auto size = gen_size();
-    std::vector<uint8_t> host_data(size);
-    core::buffer buff(mr, static_cast<void*>(host_data.data()), size);
-    REQUIRE(nullptr != buff.data());
-    REQUIRE(size == buff.size());
-    REQUIRE(size == buff.capacity());
-    REQUIRE(std::pmr::get_default_resource() == buff.memory_resource());
-}
-
 TEST_CASE("copy from nullptr") {
     auto* mr = std::pmr::get_default_resource();
     core::buffer buff(mr, nullptr, 0);
@@ -170,29 +159,6 @@ TEST_CASE("copy capacity larger than size explicit memory resource") {
     REQUIRE(buff.memory_resource()->is_equal(*buff_copy.memory_resource()));
 
     REQUIRE(equal(buff, buff_copy));
-}
-
-TEST_CASE("move constructor") {
-    auto* mr_tmp = std::pmr::get_default_resource();
-    const auto size_tmp = gen_size();
-
-    core::buffer buff(mr_tmp, size_tmp);
-    auto* ptr = buff.data();
-    auto size = buff.size();
-    auto capacity = buff.capacity();
-    auto* mr = buff.memory_resource();
-
-    core::buffer buff_new(std::move(buff));
-    REQUIRE(nullptr != buff_new.data());
-    REQUIRE(ptr == buff_new.data());
-    REQUIRE(size == buff_new.size());
-    REQUIRE(capacity == buff_new.capacity());
-    REQUIRE(mr == buff_new.memory_resource());
-
-    REQUIRE(nullptr == buff.data());
-    REQUIRE(0 == buff.size());
-    REQUIRE(0 == buff.capacity());
-    REQUIRE(nullptr != buff.memory_resource());
 }
 
 TEST_CASE("move constructor") {

@@ -33,7 +33,7 @@ namespace services::collection::operators {
 
     void search_by_index(components::index::index_t* index,
                          const components::expressions::compare_expression_ptr& expr,
-                         const predicates::limit_t& limit,
+                         const components::ql::limit_t& limit,
                          const components::ql::storage_parameters* parameters,
                          operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
@@ -49,7 +49,7 @@ namespace services::collection::operators {
         }
     }
 
-    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, predicates::limit_t limit)
+    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
         , limit_(limit) {

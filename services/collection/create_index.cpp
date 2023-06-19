@@ -76,7 +76,7 @@ namespace services::collection {
         debug(log(), "collection::create_index_finish");
         auto &create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
-        insert(context_->index_engine(), create_index.id_index, context_->storage());
+        components::index::insert(context_->index_engine(), create_index.id_index, context_->storage());
         actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name, result_create_index(true));
         sessions::remove(sessions_, session, name);
     }

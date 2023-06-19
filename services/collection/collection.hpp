@@ -3,8 +3,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <absl/container/btree_map.h>
-
 #include <core/btree/btree.hpp>
 #include <core/pmr.hpp>
 
@@ -14,12 +12,12 @@
 #include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
+#include <components/ql/aggregate/limit.hpp>
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
 #include <components/pipeline/context.hpp>
 
-#include <services/collection/operators/predicates/limit.hpp>
 #include <services/database/database.hpp>
 #include <utility>
 
@@ -87,8 +85,11 @@ namespace services::collection {
         ~collection_t();
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
-        void insert_one(session_id_t& session_t, document_ptr& document);
-        void insert_many(session_id_t& session, std::pmr::vector<document_ptr>& documents);
+
+        auto insert_documents(
+                const components::session::session_id_t& session,
+                const components::logical_plan::node_ptr& logic_plan,
+                components::ql::storage_parameters parameters) -> void;
 
         auto find(
                 const components::session::session_id_t& session,
@@ -100,29 +101,15 @@ namespace services::collection {
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto delete_one(
+        auto delete_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto delete_many(
+        auto update_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;
-
-        auto update_one(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters,
-                const document_ptr& update,
-                bool upsert) -> void;
-
-        auto update_many(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters,
-                const document_ptr& update,
-                bool upsert) -> void;
 
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
@@ -138,13 +125,8 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        std::pmr::vector<document_id_t> insert_(components::pipeline::context_t* pipeline_context, const std::pmr::vector<document_ptr>& documents);
         std::size_t size_() const;
         bool drop_();
-        void delete_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const operators::predicates::limit_t &limit);
-        void update_(const session_id_t& session, const components::logical_plan::node_ptr& logic_plan, components::ql::storage_parameters parameters, const document_ptr& update, bool upsert, const operators::predicates::limit_t &limit);
-        void send_update_to_disk_(const session_id_t& session, const result_update& result);
-        void send_delete_to_disk_(const session_id_t& session, const result_delete& result);
 
         log_t& log() noexcept;
 

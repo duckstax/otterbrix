@@ -1,6 +1,6 @@
 #include "aggregation.hpp"
 
-#include <collection/operators/predicates/limit.hpp>
+#include <components/ql/aggregate/limit.hpp>
 #include <collection/operators/scan/transfer_scan.hpp>
 
 namespace services::collection::operators {
@@ -28,7 +28,7 @@ namespace services::collection::operators {
         if (!left_) {
             operator_ptr executor = match_
                  ? std::move(match_)
-                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, predicates::limit_t::unlimit()));
+                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, components::ql::limit_t::unlimit()));
             if (group_) {
                 group_->set_children(std::move(executor));
                 executor = std::move(group_);

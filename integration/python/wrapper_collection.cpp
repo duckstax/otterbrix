@@ -65,8 +65,8 @@ namespace duck_charmer {
             generate_document_id_if_not_exists(doc);
             auto session_tmp = duck_charmer::session_id_t();
             auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
-            debug(log_, "wrapper_collection::insert_one {} inserted", result.inserted_id().is_null() ? 0 : 1);
-            return result.inserted_id().to_string();
+            debug(log_, "wrapper_collection::insert_one {} inserted", result.inserted_ids().empty() ? 0 : 1);
+            return result.inserted_ids().empty() ? result.inserted_ids().front().to_string() : std::string();
         }
         throw std::runtime_error("wrapper_collection::insert_one");
         return std::string();
