@@ -100,6 +100,7 @@ public:
     using document_id_t = components::document::document_id_t;
     using result_t = std::pmr::vector<document_id_t>;
 
+    result_update() = default;
     explicit result_update(std::pmr::memory_resource *resource);
     result_update(result_t&& modified_ids, result_t&& nomodified_ids);
     result_update(const result_t& modified_ids, const result_t& nomodified_ids);

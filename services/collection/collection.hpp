@@ -3,8 +3,6 @@
 #include <memory>
 #include <unordered_map>
 
-#include <absl/container/btree_map.h>
-
 #include <core/btree/btree.hpp>
 #include <core/pmr.hpp>
 
