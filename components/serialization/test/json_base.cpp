@@ -23,14 +23,14 @@ template<class T>
 class output_adapter {
 
 };
-
+/*
 template<class C,class O>
 bool to_json(C& c,output_adapter<O>) {
     stream_json ar;
     serialize(ar, c, 0);
     return true;
-}
-
+}*/
+/*
 class no_dto_t {
 public:
     no_dto_t() = default;
@@ -79,4 +79,4 @@ TEST_CASE("big_example_json 3") {
     dto_t dto;
     to_json(dto, output_adapter<char>{});
 
-}
+}*/

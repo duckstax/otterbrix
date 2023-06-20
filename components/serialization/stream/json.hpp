@@ -3,7 +3,9 @@
 
 #include <boost/json.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <map>
+#include <variant>
 #include <vector>
 
 namespace components::serialization::stream {
@@ -11,52 +13,56 @@ namespace components::serialization::stream {
     template<>
     class stream<boost::json::value> {
     public:
-        stream() = default;
+        stream()
+            : parent_(boost::json::value()) {}
         ~stream() = default;
 
-        inline std::string data() {
-            return boost::json::value_to<std::string>(value_);
-        }
-
-        inline boost::json::value& value() {
-            return value_;
+        [[nodiscard]] inline std::string data() const {
+            return boost::json::serialize(parent_);
         }
 
         inline boost::json::array& array() {
-            return value_.emplace_array();
+            if (current_.index() == 0) {
+                boost::json::array& reference = parent_.emplace_array();
+                current_ = reference;
+                return reference;
+            } else {
+                boost::json::array& reference = std::get<std::reference_wrapper<boost::json::array>>(current_);
+                return reference;
+            }
         }
 
         inline boost::json::object& object() {
-            return value_.emplace_object();
+            if (current_.index() == 0) {
+                auto& ref = parent_.emplace_object();
+                current_ = ref;
+                return ref;
+            } else {
+                auto& ref = std::get<std::reference_wrapper<boost::json::object>>(current_);
+                return ref;
+            }
         }
 
-        boost::json::value value_;
+        enum class state {
+            init,
+            array,
+            object
+        } state_ = state::init;
+
+        boost::json::value parent_;
+        std::variant<std::monostate, std::reference_wrapper<boost::json::object>, std::reference_wrapper<boost::json::array>> current_;
+        std::size_t size_{0};
     };
 
     using stream_json = stream<boost::json::value>;
 
-    void intermediate_serialize(stream_json& ar, uint64_t& t, const unsigned int version) {
-        ar.value() = t;
-    }
-
-    void intermediate_serialize(stream_json& ar, std::string& t, const unsigned int version) {
-        ar.value() = t;
-    }
-
+    void intermediate_serialize_array(stream_json& ar, std::size_t size, const unsigned int version);
+    void intermediate_serialize_map(stream_json& ar, std::size_t size, const unsigned int version);
+    void intermediate_serialize(stream_json& ar, uint64_t data, const unsigned int version);
+    void intermediate_serialize(stream_json& ar, const std::string& data, const unsigned int version);
     template<class T>
-    void intermediate_serialize(stream_json& ar, std::vector<T>& t, const unsigned int version) {
-        auto& array = ar.array();
-        for (auto& item : t) {
-            array.emplace_back(item);
-        }
-    }
+    void intermediate_serialize(stream_json& ar, const std::vector<T> data, const unsigned int version){
 
-    template<class K, class V>
-    void intermediate_serialize(stream_json& ar, std::map<K, V>& t, const unsigned int version) {
-        auto& object = ar.object();
-        for (auto& [key, value] : t) {
-           /// object.emplace(key, value);
-        }
     }
 
 } // namespace components::serialization::stream
