@@ -8,7 +8,7 @@ namespace components::sql {
     {
     public:
         lexer_t(const char* const query_begin, const char* const query_end);
-        lexer_t(std::string_view query);
+        explicit lexer_t(std::string_view query);
 
         token_t next_token();
 
@@ -16,6 +16,9 @@ namespace components::sql {
         const char* const begin_;
         const char* const end_;
         const char* pos_;
+
+        token_t next_token_();
+        inline bool check_pos_(char c);
     };
 
 } // namespace components::sql

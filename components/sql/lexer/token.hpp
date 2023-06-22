@@ -38,6 +38,7 @@ namespace components::sql {
         double_at,
         arrow,
         concatenation,
+        pipe_mark,
         equals,
         not_equals,
         less,
@@ -52,7 +53,8 @@ namespace components::sql {
         error_multiline_comment_is_not_closed,
         error_single_quote_is_not_closed,
         error_double_quote_is_not_closed,
-        error_back_quote_is_not_closed
+        error_back_quote_is_not_closed,
+        error_single_exclamation_mark
     };
 
 
@@ -63,6 +65,7 @@ namespace components::sql {
 
         token_t() = default;
         token_t(token_type type, const char* begin, const char* end);
+        explicit token_t(token_type type);
 
         std::size_t size() const;
     };

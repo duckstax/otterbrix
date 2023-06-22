@@ -9,6 +9,10 @@ namespace components::sql {
         , end(end) {
     }
 
+    token_t::token_t(token_type type)
+        : token_t(type, nullptr, nullptr) {
+    }
+
     std::size_t token_t::size() const {
         return end - begin;
     }
