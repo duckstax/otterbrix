@@ -4,6 +4,7 @@ add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
         base.cpp
+        json_advanced.cpp
         json_base.cpp
 )
 

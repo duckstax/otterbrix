@@ -1,9 +1,10 @@
 #pragma once
 
-#include <components/serialization/stream.hpp>
+#include <components/serialization/stream/base.hpp>
 #include <components/serialization/traits.hpp>
 #include <core/pmr.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <map>
 #include <vector>
 
@@ -28,15 +29,6 @@ namespace components::serialization {
     void serialize_map(stream::stream<Storage>& ar, std::size_t size) {
         serialize_map(ar, size, 0);
     }
-/*
-    template<class Storage, class C>
-    void serialize_blob(stream::stream<Storage>& ar, C& data, const unsigned int version) {
-    }
-
-    template<class Storage, class C>
-    void serialize_extension(stream::stream<Storage>& ar, C& data, const unsigned int version) {
-    }
-    */
 
     template<class Storage>
     void serialize(stream::stream<Storage>& ar, std::int8_t data, const unsigned int version) {
@@ -78,6 +70,11 @@ namespace components::serialization {
         intermediate_serialize(ar, data, version);
     }
 
+    template<class Storage>
+    void serialize(stream::stream<Storage>& ar, std::uint64_t data) {
+        serialize(ar, data, 0);
+    }
+
     template<class Storage, class T>
     void serialize(stream::stream<Storage>& ar, std::vector<T>& data, const unsigned int version) {
         intermediate_serialize(ar, data, version);
@@ -97,10 +94,10 @@ namespace components::serialization {
     void serialize(stream::stream<Storage>& ar, const std::string& data) {
         serialize(ar, data, 0);
     }
-/*
+
     template<class Storage>
     void serialize(stream::stream<Storage>& ar, std::string_view data,const unsigned int version) {
-
+        intermediate_serialize(ar, data, version);
     }
 
     template<class Storage>
@@ -109,7 +106,14 @@ namespace components::serialization {
     }
 
     template<class Storage, class Key, class Value>
-    void serialize(stream::stream<Storage>& ar, std::map<Key, Value>& data, const unsigned int version) {
-    }*/
+    void serialize(stream::stream<Storage>& ar, const std::map<Key, Value>& data, const unsigned int version) {
+        intermediate_serialize(ar, data, version);
+
+    }
+
+    template<class Storage, class Key, class Value>
+    void serialize(stream::stream<Storage>& ar, const std::map<Key, Value>& data) {
+        serialize(ar, data, 0);
+    }
 
 } // namespace components::serialization
