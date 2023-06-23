@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include "token.hpp"
 
 namespace components::sql {
@@ -9,6 +10,7 @@ namespace components::sql {
     public:
         lexer_t(const char* const query_begin, const char* const query_end);
         explicit lexer_t(std::string_view query);
+        explicit lexer_t(const std::string& query);
 
         token_t next_token();
 

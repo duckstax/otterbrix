@@ -17,6 +17,10 @@ namespace components::sql {
         return end - begin;
     }
 
+    std::string_view token_t::value() const {
+        return std::string_view{begin, size()};
+    }
+
 
     bool is_token_significant(const token_t& token) {
         return token.type != token_type::whitespace

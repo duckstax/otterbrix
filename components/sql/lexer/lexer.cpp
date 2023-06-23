@@ -3,6 +3,23 @@
 
 namespace components::sql {
 
+    namespace {
+
+        inline bool is_word_char(char c) {
+            return c == '_'
+                || std::isalpha(c)
+                || std::isdigit(c);
+        }
+
+        inline bool is_hex_char(char c) {
+            return std::isdigit(c)
+                || (c >= 'a' && c <= 'f')
+                || (c >= 'A' && c <= 'F');
+        }
+
+    } // namespace
+
+
     lexer_t::lexer_t(const char* const query_begin, const char* const query_end)
         : begin_(query_begin)
         , end_(query_end)
@@ -10,6 +27,10 @@ namespace components::sql {
     }
 
     lexer_t::lexer_t(std::string_view query)
+        : lexer_t(query.data(), query.data() + query.size()) {
+    }
+
+    lexer_t::lexer_t(const std::string &query)
         : lexer_t(query.data(), query.data() + query.size()) {
     }
 
@@ -201,9 +222,15 @@ namespace components::sql {
             //todo: impl
         }
 
-        //todo: impl other variants
+        if (is_word_char(*pos_)) {
+            ++pos_;
+            while (pos_ < end_ && is_word_char(*pos_)) {
+                ++pos_;
+            }
+            return token_t{token_type::bare_word, token_begin, pos_};
+        }
 
-        return token_t{};
+        return token_t{token_type::error};
     }
 
     bool lexer_t::check_pos_(char c) {

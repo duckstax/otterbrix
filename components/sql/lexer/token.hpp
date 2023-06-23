@@ -68,6 +68,7 @@ namespace components::sql {
         explicit token_t(token_type type);
 
         std::size_t size() const;
+        std::string_view value() const;
     };
 
 
