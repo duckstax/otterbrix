@@ -18,7 +18,7 @@ namespace components::sql {
         const char* const begin_;
         const char* const end_;
         const char* pos_;
-        token_type prev_token_type_;
+        token_type prev_significant_token_type_;
 
         token_t next_token_();
         inline bool check_pos_(char c);

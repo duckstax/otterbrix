@@ -55,7 +55,8 @@ namespace components::sql {
         error_single_quote_is_not_closed,
         error_double_quote_is_not_closed,
         error_back_quote_is_not_closed,
-        error_single_exclamation_mark
+        error_single_exclamation_mark,
+        error_wrong_number
     };
 
 
