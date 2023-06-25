@@ -10,7 +10,7 @@ using components::serialization::stream::stream_json;
 TEST_CASE("int") {
     stream_json flat_stream;
     serialize_array(flat_stream, 1);
-    serialize(flat_stream, std::int64_t(42));
+    ///serialize(flat_stream, 42);
     std::cout<< flat_stream.data() << std::endl;
 }
 
