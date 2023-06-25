@@ -5,6 +5,7 @@
 namespace components::sql {
 
     enum class token_type {
+        unknow,
         whitespace,
         comment,
 
@@ -59,7 +60,7 @@ namespace components::sql {
 
 
     struct token_t {
-        token_type  type  {token_type::whitespace};
+        token_type  type  {token_type::unknow};
         const char* begin {nullptr};
         const char* end   {nullptr};
 

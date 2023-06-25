@@ -1,5 +1,7 @@
 #include "lexer.hpp"
 #include <cctype>
+#include <algorithm>
+#include <set>
 
 namespace components::sql {
 
@@ -17,13 +19,33 @@ namespace components::sql {
                 || (c >= 'A' && c <= 'F');
         }
 
+        inline bool is_number_separator(const char* pos, const char* end, bool is_hex) {
+            if (*pos != '_') {
+                return false;
+            }
+            return true;
+        }
+
+        inline const char* find_quote(const char* begin, const char* end, char quote) {
+            if (*begin == quote) {
+                return begin;
+            }
+            for (auto it = begin + 1, prev = begin; it < end; ++it, ++prev) {
+                if (*it == quote && *prev != '\\') {
+                    return it;
+                }
+            }
+            return end;
+        }
+
     } // namespace
 
 
     lexer_t::lexer_t(const char* const query_begin, const char* const query_end)
         : begin_(query_begin)
         , end_(query_end)
-        , pos_(begin_) {
+        , pos_(begin_)
+        , prev_token_type_(token_type::unknow) {
     }
 
     lexer_t::lexer_t(std::string_view query)
@@ -39,6 +61,7 @@ namespace components::sql {
             return token_t{token_type::end_query};
         }
         auto token = next_token_();
+        prev_token_type_ = token.type;
         return token;
     }
 
@@ -57,15 +80,15 @@ namespace components::sql {
         }
 
         if (*pos_ == '\'') {
-            //todo: impl find closed quote
+            return create_quote_token_(token_begin, '\'', token_type::string_literal, token_type::error_single_quote_is_not_closed);
         }
 
         if (*pos_ == '"') {
-            //todo: impl find closed quote
+            return create_quote_token_(token_begin, '"', token_type::quoted_identifier, token_type::error_double_quote_is_not_closed);
         }
 
         if (*pos_ == '`') {
-            //todo: impl find closed quote
+            return create_quote_token_(token_begin, '`', token_type::quoted_identifier, token_type::error_back_quote_is_not_closed);
         }
 
         if (*pos_ == '(') {
@@ -98,7 +121,25 @@ namespace components::sql {
         }
 
         if (*pos_ == '.') {
-            //todo: impl
+            ++pos_;
+            if (pos_ >= end_) {
+                return token_t{token_type::dot, token_begin, pos_};
+            }
+            if (!std::isdigit(*pos_)) {
+                return token_t{token_type::dot, token_begin, pos_};
+            }
+            static std::set<token_type> before_types{
+                token_type::bracket_round_close,
+                token_type::bracket_square_open,
+                token_type::bare_word,
+                token_type::quoted_identifier,
+                token_type::number_literal
+            };
+            if (before_types.find(prev_token_type_) != before_types.end()) {
+                return token_t{token_type::dot, token_begin, pos_};
+            }
+
+            //todo: impl digit
         }
 
         if (*pos_ == '+') {
@@ -111,8 +152,7 @@ namespace components::sql {
                 return token_t{token_type::arrow, token_begin, ++pos_};
             }
             if (check_pos_('-')) {
-                //todo: impl find \n to comment
-                return token_t{token_type::comment, token_begin, ++pos_};
+                return create_comment_one_line_(token_begin);
             }
             return token_t{token_type::minus, token_begin, pos_};
         }
@@ -124,10 +164,10 @@ namespace components::sql {
         if (*pos_ == '/') {
             ++pos_;
             if (check_pos_('/')) {
-                //todo: impl find \n to comment
+                return create_comment_one_line_(token_begin);
             }
             if (check_pos_('*')) {
-                //todo: impl find */ to comment
+                return create_comment_multi_line_(token_begin);
             }
             return token_t{token_type::slash, token_begin, pos_};
         }
@@ -135,10 +175,10 @@ namespace components::sql {
         if (*pos_ == '#') {
             ++pos_;
             if (check_pos_(' ')) {
-                //todo: impl find \n to comment
+                return create_comment_one_line_(token_begin);
             }
             if (check_pos_('!')) {
-                //todo: impl find \n to comment
+                return create_comment_one_line_(token_begin);
             }
             return token_t{token_type::error};
         }
@@ -235,6 +275,27 @@ namespace components::sql {
 
     bool lexer_t::check_pos_(char c) {
         return pos_ < end_ && *pos_ == c;
+    }
+
+    token_t lexer_t::create_quote_token_(const char* const token_begin, char quote, token_type type, token_type type_error) {
+        pos_ = find_quote(++pos_, end_, quote);
+        if (pos_ < end_) {
+            return token_t{type, token_begin, ++pos_};
+        }
+        return token_t{type_error};
+    }
+
+    token_t lexer_t::create_comment_one_line_(const char* const token_begin) {
+        pos_ = find_quote(++pos_, end_, '\n');
+        return token_t{token_type::comment, token_begin, pos_};
+    }
+
+    token_t lexer_t::create_comment_multi_line_(const char* const token_begin) {
+        pos_ = find_quote(++pos_, end_, '*');
+        if (++pos_ < end_ && *pos_ == '/') {
+            return token_t{token_type::comment, token_begin, ++pos_};
+        }
+        return token_t{token_type::error_multiline_comment_is_not_closed};
     }
 
 } // namespace components::sql
