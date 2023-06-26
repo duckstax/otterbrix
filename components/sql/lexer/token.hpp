@@ -8,6 +8,7 @@ namespace components::sql {
         unknow,
         whitespace,
         comment,
+        doc,
 
         bare_word,
         number_literal,

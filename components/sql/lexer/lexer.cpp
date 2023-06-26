@@ -87,6 +87,7 @@ namespace components::sql {
         : begin_(query_begin)
         , end_(query_end)
         , pos_(begin_)
+        , prev_token_type_(token_type::unknow)
         , prev_significant_token_type_(token_type::unknow) {
     }
 
@@ -103,6 +104,7 @@ namespace components::sql {
             return token_t{token_type::end_query};
         }
         auto token = next_token_();
+        prev_token_type_ = token.type;
         if (is_token_significant(token)) {
             prev_significant_token_type_ = token.type;
         }
@@ -158,14 +160,10 @@ namespace components::sql {
                     }
                     loop_digits();
                 }
-
-                if (!is_digit(*(pos_ - 1), base)) {
-                    return token_t{token_type::error_wrong_number, token_begin, pos_};
-                }
             }
 
-            if (pos_ < end_ && std::isalpha(*pos_)) {
-                while (pos_ < end_ && std::isalpha(*pos_)) {
+            if (pos_ < end_ && is_word_char(*pos_)) {
+                while (pos_ < end_ && is_word_char(*pos_)) {
                     ++pos_;
                 }
                 return token_t{token_type::error_wrong_number, token_begin, pos_};
@@ -229,11 +227,35 @@ namespace components::sql {
                 token_type::quoted_identifier,
                 token_type::number_literal
             };
-            if (before_types.find(prev_significant_token_type_) != before_types.end()) {
+            if (before_types.find(prev_token_type_) != before_types.end()) {
                 return token_t{token_type::dot, token_begin, pos_};
             }
 
-            //todo: impl digit
+            auto loop_digits = [&]() {
+                auto is_begin_block = false;
+                while (pos_ < end_ && (std::isdigit(*pos_) || is_number_separator(pos_, end_, is_begin_block))) {
+                    ++pos_;
+                    is_begin_block = *pos_ == '_';
+                }
+            };
+
+            loop_digits();
+
+            if (pos_ < end_ && is_exponent(*pos_, number_base::dec)) {
+                ++pos_;
+                if (pos_ < end_ && is_sign(*pos_)) {
+                    ++pos_;
+                }
+                loop_digits();
+            }
+
+            if (pos_ < end_ && std::isalpha(*pos_)) {
+                while (pos_ < end_ && std::isalpha(*pos_)) {
+                    ++pos_;
+                }
+                return token_t{token_type::error_wrong_number, token_begin, pos_};
+            }
+            return token_t{token_type::number_literal, token_begin, pos_};
         }
 
         if (*pos_ == '+') {
@@ -274,6 +296,7 @@ namespace components::sql {
             if (check_pos_('!')) {
                 return create_comment_one_line_(token_begin);
             }
+            pos_ = end_;
             return token_t{token_type::error, token_begin, pos_};
         }
 
@@ -353,10 +376,22 @@ namespace components::sql {
         }
 
         if (*pos_ == '$') {
-            //todo: impl
+            if (pos_ + 1 >= end_) {
+                return token_t{token_type::dollar, token_begin, ++pos_};
+            }
+            auto it = find_char(pos_ + 1, end_, '$');
+            if (it < end_) {
+                pos_ = it;
+                return token_t{token_type::doc, token_begin, ++pos_};
+            } else if (!is_word_char(*(pos_ + 1))) {
+                return token_t{token_type::dollar, token_begin, ++pos_};
+            }
         }
 
-        //todo: hex digits
+        if ((is_number_base_hex(*pos_) || is_number_base_bin(*pos_))
+                && pos_ + 1 < end_ && *(pos_ + 1) == '\'') {
+            return create_hex_or_bin_str(token_begin);
+        }
 
         if (is_word_char(*pos_)) {
             ++pos_;
@@ -387,12 +422,36 @@ namespace components::sql {
     }
 
     token_t lexer_t::create_comment_multi_line_(const char* const token_begin) {
-        //todo: include comments
-        pos_ = find_char(++pos_, end_, '*');
-        if (++pos_ < end_ && *pos_ == '/') {
-            return token_t{token_type::comment, token_begin, ++pos_};
+        auto level = 1;
+        while (pos_ < end_) {
+            pos_ = find_char(++pos_, end_, '*');
+            if (pos_ < end_) {
+                if (pos_ + 1 < end_ && *(pos_ + 1) == '/') {
+                    --level;
+                } else if (*(pos_ - 1) == '/') {
+                    ++level;
+                }
+                ++pos_;
+                if (level <= 0) {
+                    return token_t{token_type::comment, token_begin, ++pos_};
+                }
+            }
         }
         return token_t{token_type::error_multiline_comment_is_not_closed, token_begin, end_};
+    }
+
+    token_t lexer_t::create_hex_or_bin_str(const char* const token_begin) {
+        auto base = is_number_base_hex(*pos_)
+                ? number_base::hex
+                : number_base::bin;
+        pos_ += 2;
+        while (is_digit(*pos_, base)) {
+            ++pos_;
+        }
+        if (pos_ >= end_ || *pos_ != '\'') {
+            return token_t{token_type::error_single_quote_is_not_closed, token_begin, ++pos_};
+        }
+        return token_t{token_type::string_literal, token_begin, ++pos_};
     }
 
 } // namespace components::sql

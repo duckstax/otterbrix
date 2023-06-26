@@ -18,6 +18,7 @@ namespace components::sql {
         const char* const begin_;
         const char* const end_;
         const char* pos_;
+        token_type prev_token_type_;
         token_type prev_significant_token_type_;
 
         token_t next_token_();
@@ -25,6 +26,7 @@ namespace components::sql {
         inline token_t create_quote_token_(const char* const token_begin, char quote, token_type type, token_type type_error);
         inline token_t create_comment_one_line_(const char* const token_begin);
         inline token_t create_comment_multi_line_(const char* const token_begin);
+        inline token_t create_hex_or_bin_str(const char* const token_begin);
     };
 
 } // namespace components::sql
