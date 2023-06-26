@@ -20,7 +20,7 @@
 #include <services/database/forward.hpp>
 #include <services/database/result_database.hpp>
 #include <services/disk/result.hpp>
-#include <services/wal/json_base.hpp>
+#include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
 
 #include "route.hpp"

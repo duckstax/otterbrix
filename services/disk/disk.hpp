@@ -5,7 +5,7 @@
 
 #include <core/file/file.hpp>
 #include <filesystem>
-#include <wal/json_base.hpp>
+#include <wal/base.hpp>
 
 namespace rocksdb {
     class DB;

@@ -4,7 +4,7 @@
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
 #include <list>
-#include <services/wal/json_base.hpp>
+#include <services/wal/base.hpp>
 #include <vector>
 
 namespace services::disk {

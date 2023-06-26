@@ -1,7 +1,7 @@
 #pragma once
 
+#include "base.hpp"
 #include "components/ql/statements.hpp"
-#include "json_base.hpp"
 #include <cstdint>
 #include <msgpack.hpp>
 #include <vector>

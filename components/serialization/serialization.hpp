@@ -106,10 +106,7 @@ namespace components::serialization {
     }
 
     namespace detail{
-        ///template<class Storage,class Contaner>
-        ///void serialize_help(stream::stream<Storage>& ar, const Contaner& data, const unsigned int version){
-        ///    intermediate_serialize(ar,std::size(data),std::begin(data),std::end(data),version,serialization_trait<Contaner>::category);
-        ///}
+
     }
 
     template<class Storage,class Contaner>

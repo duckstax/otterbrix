@@ -11,7 +11,7 @@
 #include <components/session/session.hpp>
 #include <components/ql/statements.hpp>
 
-#include "json_base.hpp"
+#include "base.hpp"
 #include "wal.hpp"
 
 namespace services::wal {
