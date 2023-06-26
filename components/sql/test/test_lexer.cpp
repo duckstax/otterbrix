@@ -26,6 +26,20 @@ TEST_CASE("lexer::base") {
         CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
     }
 
+    SECTION("multiwhitespaces") {
+        std::string query{"SELECT    *   FROM  table;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, "    ");
+        CHECK_NEXT_TOKEN(lexer, token_type::asterisk, "*");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, "   ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "FROM");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, "  ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
     SECTION("word|*|.|;") {
         std::string query{"SELECT * FROM schema.table;"};
         lexer_t lexer{query};
@@ -250,6 +264,409 @@ TEST_CASE("lexer::digits") {
         CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
         CHECK_NEXT_TOKEN(lexer, token_type::error_wrong_number, ".123f");
+    }
+
+}
+
+TEST_CASE("lexer::brackets") {
+
+    SECTION("round brackets") {
+        std::string query{"SELECT (1, 2) FROM table;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_open, "(");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_close, ")");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "FROM");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("square brackets") {
+        std::string query{"SELECT [1, 2] FROM table;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_open, "[");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_close, "]");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "FROM");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("curly brackets") {
+        std::string query{"SELECT {1, 2} FROM table;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_open, "{");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_close, "}");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "FROM");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("mixed brackets") {
+        std::string query{"SELECT {1, [(2), (3)], ({4}, [5])} FROM table;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_open, "{");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_open, "[");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_open, "(");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_close, ")");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_open, "(");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "3");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_close, ")");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_close, "]");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_open, "(");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_open, "{");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "4");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_close, "}");
+        CHECK_NEXT_TOKEN(lexer, token_type::comma, ",");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_open, "[");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "5");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_square_close, "]");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_round_close, ")");
+        CHECK_NEXT_TOKEN(lexer, token_type::bracket_curly_close, "}");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "FROM");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+}
+
+
+TEST_CASE("lexer::operands") {
+
+    SECTION("+") {
+        std::string query{"SELECT 1+2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::plus, "+");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION(" + ") {
+        std::string query{"SELECT 1 + 2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::plus, "+");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("-") {
+        std::string query{"SELECT 1-2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::minus, "-");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("->") {
+        std::string query{"SELECT 1->2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::arrow, "->");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("*") {
+        std::string query{"SELECT 1*2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::asterisk, "*");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("/") {
+        std::string query{"SELECT 1/2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::slash, "/");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("%") {
+        std::string query{"SELECT 1%2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::percent, "%");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("=") {
+        std::string query{"SELECT 1=2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::equals, "=");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("==") {
+        std::string query{"SELECT 1==2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::equals, "==");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("!=") {
+        std::string query{"SELECT 1!=2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::not_equals, "!=");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("! error") {
+        std::string query{"SELECT 1! 2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::error_single_exclamation_mark, "!");
+    }
+
+    SECTION("<") {
+        std::string query{"SELECT 1<2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::less, "<");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("<=") {
+        std::string query{"SELECT 1<=2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::less_or_equals, "<=");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("<>") {
+        std::string query{"SELECT 1<>2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::not_equals, "<>");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION(">") {
+        std::string query{"SELECT 1>2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::greater, ">");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION(">=") {
+        std::string query{"SELECT 1>=2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::greater_or_equals, ">=");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("?") {
+        std::string query{"SELECT 1?2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::question, "?");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION(":") {
+        std::string query{"SELECT 1:2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::colon, ":");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("::") {
+        std::string query{"SELECT 1::2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::double_colon, "::");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("|") {
+        std::string query{"SELECT 1|2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::pipe_mark, "|");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("||") {
+        std::string query{"SELECT 1||2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::concatenation, "||");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("@") {
+        std::string query{"SELECT @doc;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::at, "@");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "doc");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("@@") {
+        std::string query{"SELECT @@doc;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::double_at, "@@");
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "doc");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("\\G") {
+        std::string query{"SELECT 1\\G2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::vertical_delimiter, "\\G");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
+    }
+
+    SECTION("\\ error") {
+        std::string query{"SELECT 1\\2;"};
+        lexer_t lexer{query};
+        CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "SELECT");
+        CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "1");
+        CHECK_NEXT_TOKEN(lexer, token_type::error, "\\");
+        CHECK_NEXT_TOKEN(lexer, token_type::number_literal, "2");
+        CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
+        CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
     }
 
 }
@@ -497,6 +914,11 @@ TEST_CASE("lexer::comments") {
         CHECK_NEXT_TOKEN(lexer, token_type::error_multiline_comment_is_not_closed, "/* comment /* include comment ... */");
     }
 
+}
+
+
+TEST_CASE("lexer::string literals") {
+
     SECTION("hex|bin string literal") {
         std::string query{"SELECT x'123abc', b'10101010' FROM table;"};
         lexer_t lexer{query};
@@ -537,6 +959,11 @@ TEST_CASE("lexer::comments") {
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
         CHECK_NEXT_TOKEN(lexer, token_type::error_single_quote_is_not_closed, "b'10101010 ");
     }
+
+}
+
+
+TEST_CASE("lexer::docs") {
 
     SECTION("$doc$") {
         std::string query{"SELECT * FROM table; $ docs to ... $"};
