@@ -52,7 +52,7 @@ namespace components::serialization::stream {
         ar.size_--;
     }
 
-    void intermediate_serialize(stream_json& ar, const std::string& data, const unsigned int version) {
+    void intermediate_serialize(stream_json& ar, float data, const unsigned int version) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
@@ -60,13 +60,14 @@ namespace components::serialization::stream {
         ar.size_--;
     }
 
-    void intermediate_serialize(stream_json& ar, std::string_view data, const unsigned int version) {
+    void intermediate_serialize(stream_json& ar, double data, const unsigned int version) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
         ar.value_.as_array().emplace_back(data);
         ar.size_--;
     }
+
 
     void intermediate_serialize(stream_json& ar,std::string_view key, bool data, const unsigned int version) {
         boost::ignore_unused(version);

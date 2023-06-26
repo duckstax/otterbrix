@@ -1,8 +1,10 @@
 #include <catch2/catch.hpp>
 #include <components/serialization/serialization.hpp>
 #include <components/serialization/traits.hpp>
-
-
+#include <components/serialization/stream/json.hpp>
+#include <type_traits>
+#include <iostream>
+/*
 template<typename Container>
 using IteratorCategoryOf = typename std::iterator_traits<typename Container::iterator>::iterator_category;
 
@@ -22,24 +24,43 @@ void algorithm(Container &c) {
         c,
         IteratorCategoryOf<Container>());
 }
-
-
-void tag_impl(components::serialization::array_tag){
+ */
+/*
+template<typename Container>
+void tag_impl(Container&&c,components::serialization::array_tag){
     std::cerr << "array_tag\n";
 }
 
-
-void tag_impl(components::serialization::object_tag){
+template<typename Container>
+void tag_impl(Container&&c,components::serialization::object_tag){
     std::cerr << "map_tag\n";
 }
 
 template<class C>
 void tag(C&&c){
-    tag_impl(components::serialization::serialization_trait<C>::tag());
+    using t = std::decay_t<C>;
+    tag_impl(c,typename components::serialization::serialization_trait<t>::category());
 }
 
+*/
 
+
+using components::serialization::serialize;
+using components::serialization::serialize_array;
+using components::serialization::stream::stream_json;
 
 TEST_CASE("iterator") {
-    tag(bool{1});
+
+    stream_json flat_stream;
+    std::vector<int64_t> vector{1,2,3};
+    std::map<int64_t ,int64_t> map = {{1,2},{3,4}};
+    std::string str("42");
+    std::string_view str1("42");
+    serialize_array(flat_stream, 5);
+    serialize(flat_stream, std::int64_t(42));
+    serialize(flat_stream, str);
+    serialize(flat_stream, str1);
+    serialize(flat_stream, vector);
+    serialize(flat_stream, map);
+    std::cout<< flat_stream.data() << std::endl;
 }

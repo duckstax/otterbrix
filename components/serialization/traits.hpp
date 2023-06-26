@@ -286,55 +286,45 @@ namespace components::serialization {
     struct object_tag {};
     struct string_tag {};
     struct pod_tag {};
-    struct number_tag {};
-    struct boolean_tag {};
     struct null_tag {};
 
     template<class C,
-             bool is_sequence_container = typename is_like_sequence_container<C>::value,
-             bool is_associative_container = typename is_like_associative_container<C>::value,
-             bool is_string = typename is_like_string<C>::value,
-             bool is_pod = is_like_pod<C>::value,
-             bool is_number = std::is_arithmetic_v<C>,
-             bool is_bool = std::is_same<C,bool>::value>
+             bool is_sequence_container =  is_like_sequence_container<C>::value,
+             bool is_associative_container =  is_like_associative_container<C>::value,
+             bool is_string =  is_like_string<C>::value,
+             bool is_pod = is_like_pod<C>::value>
     struct serialization_trait_impl;
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, false, false, false, false> {
+    struct serialization_trait_impl<C,false, false, false, false> {
         using category = null_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,true, false, false, false, false, false> {
+    struct serialization_trait_impl<C,true, false, false, false> {
         using category = array_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, true, false, false, false, false> {
+    struct serialization_trait_impl<C,false, true, false, false> {
         using category = object_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, true, false, false, false> {
+    struct serialization_trait_impl<C,false, false, true, false> {
         using category = string_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, false, true, false, false> {
+    struct serialization_trait_impl<C,false, false, false, true> {
         using category = pod_tag;
     };
 
-    template<class C>
-    struct serialization_trait_impl<C,false, false, false, false, true, false> {
-        using category = number_tag;
-    };
-    template<class C>
-    struct serialization_trait_impl<C,false, false, false, false, false,true> {
-        using category = boolean_tag;
-    };
 
     template<class C>
-    struct serialization_trait: serialization_trait_impl<C> {
+    struct serialization_trait {
+        using category = typename serialization_trait_impl<C>::category;
+
     };
 
 } // namespace components::serialization
