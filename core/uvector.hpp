@@ -34,7 +34,7 @@ namespace core {
 
         uvector(std::pmr::memory_resource* resource, std::size_t size)
             : storage_{resource, elements_to_bytes(size)} {
-        }А
+        }
 
         uvector(std::pmr::memory_resource* mr, uvector const& other)
             : storage_{mr, other.storage_} {
