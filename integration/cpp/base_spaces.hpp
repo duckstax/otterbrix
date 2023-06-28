@@ -31,10 +31,10 @@ namespace duck_charmer {
         actor_zeta::scheduler_ptr  scheduler_;
         actor_zeta::scheduler_ptr  scheduler_dispather_;
         actor_zeta::detail::pmr::memory_resource* resource;
+        services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
         services::disk::manager_disk_ptr manager_disk_;
         services::wal::manager_wal_ptr manager_wal_;
         services::database::manager_database_ptr manager_database_;
-        services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
         std::unique_ptr<duck_charmer::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
 
