@@ -74,7 +74,7 @@ jobs:
           cp integration/python/ottergon/get_path.py .
           touch MANIFEST.in
           
-          python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
+          python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel --verbose
@@ -175,8 +175,6 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          pwd
-          ls
           echo "Pretend to upload"
-          #twine upload --skip-existing *
+          twine upload --skip-existing *
         working-directory: ./app
