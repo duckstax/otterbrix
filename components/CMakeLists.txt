@@ -16,6 +16,7 @@ else()
     add_subdirectory(translator)
     add_subdirectory(session)
     add_subdirectory(pipeline)
+    add_subdirectory(sql)
 endif()
 
 if (DEV_MODE)
