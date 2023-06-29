@@ -14,7 +14,7 @@ It contains a set of technologies across different storage types, driving low-la
 ### Python example:
 
 ```bash
-    pip install ottergon==0.4.0 
+    pip install ottergon==0.5.0 
 ```
 
 ```python
