@@ -15,7 +15,8 @@ namespace duck_charmer {
     constexpr static auto name_dispatcher = "dispatcher";
 
     base_spaces::base_spaces(const configuration::config& config)
-        : scheduler_(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter()) {
+        : scheduler_(new actor_zeta::shared_work(1, 1000))
+        , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)) {
         log_ = initialization_logger("python", config.log.path.c_str());
         log_.set_level(config.log.level);
         trace(log_, "spaces::spaces()");
@@ -24,7 +25,11 @@ namespace duck_charmer {
         resource = actor_zeta::detail::pmr::get_default_resource();
 
         trace(log_, "manager_wal start");
-        manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource, scheduler_.get(), config.wal, log_);
+        if (config.wal.on) {
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource, scheduler_.get(), config.wal, log_);
+        } else {
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_empty_t>(resource, scheduler_.get(), log_);
+        }
         trace(log_, "manager_wal finish");
 
         trace(log_, "manager_disk start");
@@ -40,7 +45,7 @@ namespace duck_charmer {
         trace(log_, "manager_database finish");
 
         trace(log_, "manager_dispatcher start");
-        manager_dispatcher_ = actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource, scheduler_.get(), log_);
+        manager_dispatcher_ = actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource, scheduler_dispather_.get(), log_);
         trace(log_, "manager_dispatcher finish");
 
         wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(resource, manager_dispatcher_->address(), log_);
@@ -73,6 +78,7 @@ namespace duck_charmer {
         actor_zeta::send(manager_wal_, actor_zeta::address_t::empty_address(), wal::handler_id(wal::route::create));
         actor_zeta::send(manager_disk_, actor_zeta::address_t::empty_address(), disk::handler_id(disk::route::create_agent));
         manager_dispatcher_->create_dispatcher(name_dispatcher);
+        scheduler_dispather_->start();
         scheduler_->start();
         trace(log_, "spaces::spaces() final");
     }
@@ -87,6 +93,8 @@ namespace duck_charmer {
 
     base_spaces::~base_spaces() {
         trace(log_, "delete spaces");
+        scheduler_->stop();
+        scheduler_dispather_->stop();
     }
 
 } // namespace python

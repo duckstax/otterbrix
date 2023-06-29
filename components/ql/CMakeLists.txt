@@ -2,11 +2,11 @@ project(ql CXX)
 
 set(SOURCE_${PROJECT_NAME}
         aggregate/operator.cpp
-        find.cpp
         ql_param_statement.cpp
         aggregate.cpp
-        aggregate/match.cpp
         aggregate/group.cpp
+        aggregate/limit.cpp
+        aggregate/match.cpp
         aggregate/sort.cpp
         statements/create_collection.cpp
         statements/create_database.cpp

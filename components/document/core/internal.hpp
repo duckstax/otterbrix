@@ -38,7 +38,6 @@ namespace document::impl::internal {
     class pointer_t;
     class heap_value_t;
     class heap_collection_t;
-    class heap_array_t;
     class heap_dict_t;
 
 #ifdef NDEBUG

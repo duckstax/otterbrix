@@ -11,6 +11,7 @@ target_link_libraries(
         rocketjoe::expressions
         rocketjoe::ql
         rocketjoe::logical_plan
+        rocketjoe::test_generaty
         rocketjoe::translator
 )
 

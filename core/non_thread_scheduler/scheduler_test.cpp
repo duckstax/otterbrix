@@ -73,4 +73,4 @@ namespace core::non_thread_scheduler {
     size_t scheduler_test_t::advance_time(actor_zeta::clock::clock_t::duration_type time) {
         return clock_.advance_time(time);
     }
-}
+} // namespace core::non_thread_scheduler

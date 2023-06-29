@@ -1,4 +1,5 @@
 #include "index_scan.hpp"
+#include <components/index/disk/route.hpp>
 #include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
@@ -6,8 +7,8 @@ namespace services::collection::operators {
     using range = components::index::index_t::range;
 
     std::vector<range> search_range_by_index(components::index::index_t* index,
-                                             const components::expressions::compare_expression_ptr &expr,
-                                             const components::ql::storage_parameters *parameters) {
+                                             const components::expressions::compare_expression_ptr& expr,
+                                             const components::ql::storage_parameters* parameters) {
         using components::expressions::compare_type;
         using components::ql::get_parameter;
         auto value = get_parameter(parameters, expr->value());
@@ -31,38 +32,59 @@ namespace services::collection::operators {
     }
 
     void search_by_index(components::index::index_t* index,
-                         const components::expressions::compare_expression_ptr &expr,
-                         const predicates::limit_t &limit,
-                         const components::ql::storage_parameters *parameters,
-                         operator_data_ptr &result) {
+                         const components::expressions::compare_expression_ptr& expr,
+                         const components::ql::limit_t& limit,
+                         const components::ql::storage_parameters* parameters,
+                         operator_data_ptr& result) {
         auto ranges = search_range_by_index(index, expr, parameters);
         int count = 0;
-        for (const auto &range : ranges) {
+        for (const auto& range : ranges) {
             for (auto it = range.first; it != range.second; ++it) {
                 if (!limit.check(count)) {
                     return;
                 }
-                result->append(*it);
+                result->append(it->doc); //todo: check nullptr and get by id
                 ++count;
             }
         }
     }
 
-
-    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, predicates::limit_t limit)
+    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
         , limit_(limit) {
     }
 
-    void index_scan::on_execute_impl(planner::transaction_context_t* transaction_context) {
+    void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
+        trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());
+        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
+        if (index && index->is_disk()) {
+            trace(context_->log(), "index_scan: send query into disk");
+            auto value = components::ql::get_parameter(&pipeline_context->parameters, expr_->value());
+            pipeline_context->send(index->disk_agent(), index::handler_id(index::route::find), value, expr_->type());
+            async_wait();
+        } else {
+            trace(context_->log(), "index_scan: prepare result");
+            if (!limit_.check(0)) {
+                return; //limit = 0
+            }
+            output_ = make_operator_data(context_->resource());
+            if (index) {
+                search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
+            }
+        }
+    }
+
+    void index_scan::on_resume_impl(components::pipeline::context_t* pipeline_context) {
+        trace(context_->log(), "resume index_scan by field \"{}\"", expr_->key().as_string());
+        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
+        trace(context_->log(), "index_scan: prepare result");
         if (!limit_.check(0)) {
             return; //limit = 0
         }
         output_ = make_operator_data(context_->resource());
-        auto* index = components::index::search_index(context_->index_engine(), {expr_->key()});
         if (index) {
-            search_by_index(index, expr_, limit_, transaction_context->parameters, output_);
+            search_by_index(index, expr_, limit_, &pipeline_context->parameters, output_);
         }
     }
 

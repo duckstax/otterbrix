@@ -30,11 +30,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
     }
 
@@ -45,11 +45,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 99);
     }
 
@@ -60,11 +60,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 10);
     }
 
@@ -75,11 +75,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 11);
     }
 
@@ -90,11 +90,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 89);
     }
 
@@ -105,11 +105,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::unlimit());
+                       components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 90);
     }
 
@@ -120,11 +120,11 @@ TEST_CASE("operator::full_scan") {
                                             core::parameter_id_t(1));
         full_scan scan(d(collection)->view(),
                        predicates::create_predicate(d(collection)->view(), cond),
-                       predicates::limit_t::limit_one());
+                       components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
     }
 }
@@ -142,11 +142,11 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t::unlimit()));
+                                                         components::ql::limit_t::unlimit()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        delete_.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->size_test() == 90);
     }
 
@@ -159,11 +159,11 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t::limit_one()));
+                                                         components::ql::limit_t::limit_one()));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        delete_.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->size_test() == 99);
     }
 
@@ -176,11 +176,11 @@ TEST_CASE("operator::delete") {
         operator_delete delete_(d(collection)->view());
         delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t(5)));
+                                                         components::ql::limit_t(5)));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        delete_.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->size_test() == 95);
     }
 }
@@ -193,7 +193,7 @@ TEST_CASE("operator::update") {
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         add_parameter(parameters, core::parameter_id_t(2), 999);
-        planner::transaction_context_t transaction_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(d(collection)->view()->resource(),
                                             compare_type::gt,
@@ -207,21 +207,21 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t::unlimit()));
-        update_.on_execute(&transaction_context);
+                                                         components::ql::limit_t::unlimit()));
+        update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 10);
         }
     }
@@ -230,7 +230,7 @@ TEST_CASE("operator::update") {
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         add_parameter(parameters, core::parameter_id_t(2), 999);
-        planner::transaction_context_t transaction_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(d(collection)->view()->resource(),
                                             compare_type::gt,
@@ -244,21 +244,21 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t(1)));
-        update_.on_execute(&transaction_context);
+                                                         components::ql::limit_t(1)));
+        update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
         }
     }
@@ -267,7 +267,7 @@ TEST_CASE("operator::update") {
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         add_parameter(parameters, core::parameter_id_t(2), 999);
-        planner::transaction_context_t transaction_context(&parameters);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond = make_compare_expression(d(collection)->view()->resource(),
                                             compare_type::gt,
@@ -281,21 +281,21 @@ TEST_CASE("operator::update") {
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update));
+        operator_update update_(d(collection)->view(), std::move(script_update), false);
         update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                          predicates::create_predicate(d(collection)->view(), cond),
-                                                         predicates::limit_t(5)));
-        update_.on_execute(&transaction_context);
+                                                         components::ql::limit_t(5)));
+        update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
                            predicates::create_predicate(d(collection)->view(), cond_check),
-                           predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context);
+                           components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 5);
         }
     }
@@ -306,7 +306,7 @@ TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
     fill_collection(collection);
 
     SECTION("find::eq") {
@@ -314,11 +314,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::eq,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
     }
 
@@ -327,11 +327,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::ne,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 99);
     }
 
@@ -340,11 +340,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::gt,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 10);
     }
 
@@ -353,11 +353,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::gte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 11);
     }
 
@@ -366,11 +366,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::lt,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 89);
     }
 
@@ -379,11 +379,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::lte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::unlimit());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 90);
     }
 
@@ -392,11 +392,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::gt,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t::limit_one());
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
     }
 
@@ -405,11 +405,11 @@ TEST_CASE("operator::index_scan") {
                                             compare_type::gt,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, predicates::limit_t(3));
+        index_scan scan(d(collection)->view(), cond, components::ql::limit_t(3));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
-        planner::transaction_context_t transaction_context(&parameters);
-        scan.on_execute(&transaction_context);
+        components::pipeline::context_t pipeline_context(std::move(parameters));
+        scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 3);
     }
 }
@@ -419,19 +419,19 @@ TEST_CASE("operator::transfer_scan") {
     auto collection = init_collection();
 
     SECTION("all") {
-        transfer_scan scan(d(collection)->view(), predicates::limit_t::unlimit());
+        transfer_scan scan(d(collection)->view(), components::ql::limit_t::unlimit());
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 100);
     }
 
     SECTION("limit") {
-        transfer_scan scan(d(collection)->view(), predicates::limit_t(50));
+        transfer_scan scan(d(collection)->view(), components::ql::limit_t(50));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 50);
     }
 
     SECTION("one") {
-        transfer_scan scan(d(collection)->view(), predicates::limit_t(1));
+        transfer_scan scan(d(collection)->view(), components::ql::limit_t(1));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 1);
     }
@@ -442,7 +442,7 @@ TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
     fill_collection(collection);
 
     SECTION("index_scan after delete") {
@@ -452,10 +452,10 @@ TEST_CASE("operator::index::delete_and_update") {
                                                   core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
         add_parameter(parameters_check, core::parameter_id_t(1), 50);
-        planner::transaction_context_t transaction_context_check(&parameters_check);
+        components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection)->view(), cond_check, predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context_check);
+            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 50);
         }
         {
@@ -465,13 +465,13 @@ TEST_CASE("operator::index::delete_and_update") {
                                                 core::parameter_id_t(1));
             components::ql::storage_parameters parameters;
             add_parameter(parameters, core::parameter_id_t(1), 60);
-            planner::transaction_context_t transaction_context(&parameters);
+            components::pipeline::context_t pipeline_context(std::move(parameters));
             operator_delete delete_(d(collection)->view());
-            delete_.set_children(std::make_unique<index_scan>(d(collection)->view(), cond, predicates::limit_t::unlimit()));
-            delete_.on_execute(&transaction_context);
+            delete_.set_children(std::make_unique<index_scan>(d(collection)->view(), cond, components::ql::limit_t::unlimit()));
+            delete_.on_execute(&pipeline_context);
 
-            index_scan scan(d(collection)->view(), cond_check, predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context_check);
+            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 10);
         }
     }
@@ -483,20 +483,20 @@ TEST_CASE("operator::index::delete_and_update") {
                                                   core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
         add_parameter(parameters_check, core::parameter_id_t(1), 50);
-        planner::transaction_context_t transaction_context_check(&parameters_check);
+        components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection)->view(), cond_check, predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context_check);
+            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 1);
         }
         {
             auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
-            operator_update update(d(collection)->view(), script_update);
-            update.set_children(std::make_unique<index_scan>(d(collection)->view(), cond_check, predicates::limit_t::unlimit()));
-            update.on_execute(&transaction_context_check);
+            operator_update update(d(collection)->view(), script_update, false);
+            update.set_children(std::make_unique<index_scan>(d(collection)->view(), cond_check, components::ql::limit_t::unlimit()));
+            update.on_execute(&pipeline_context_check);
 
-            index_scan scan(d(collection)->view(), cond_check, predicates::limit_t::unlimit());
-            scan.on_execute(&transaction_context_check);
+            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 0);
         }
     }

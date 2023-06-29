@@ -18,6 +18,7 @@ message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 option(DEV_MODE "developer mode" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
+option(APPLICATION_SERVER "application server" OFF)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -127,6 +128,11 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 include_directories(components)
 add_subdirectory(core)
 add_subdirectory(components)
+
+if (APPLICATION_SERVER)
+    set(WASM_OBJECT OFF)
+    set(WASM_BUILD OFF)
+endif ()
 
 if (WASM_BUILD)
     add_subdirectory(wasm)

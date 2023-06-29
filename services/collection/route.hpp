@@ -6,22 +6,19 @@ namespace services::collection {
 
     enum class route : uint64_t {
         create_documents,
-        insert_one,
-        insert_many,
+        insert_documents,
         find,
         find_one,
-        delete_one,
-        delete_many,
-        update_one,
-        update_many,
+        delete_documents,
+        update_documents,
         size,
         close_cursor,
         drop_collection,
         create_index,
+        drop_index,
 
         create_documents_finish,
-        insert_one_finish,
-        insert_many_finish,
+        insert_finish,
         find_finish,
         find_one_finish,
         delete_finish,
@@ -29,6 +26,7 @@ namespace services::collection {
         size_finish,
         drop_collection_finish,
         create_index_finish,
+        drop_index_finish
     };
 
     constexpr uint64_t handler_id(route type) {

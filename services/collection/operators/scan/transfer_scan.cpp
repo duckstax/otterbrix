@@ -4,12 +4,12 @@
 
 namespace services::collection::operators {
 
-    transfer_scan::transfer_scan(context_collection_t* context, predicates::limit_t limit)
+    transfer_scan::transfer_scan(context_collection_t* context, components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , limit_(limit) {
     }
 
-    void transfer_scan::on_execute_impl(planner::transaction_context_t*) {
+    void transfer_scan::on_execute_impl(components::pipeline::context_t*) {
         int count = 0;
         if (!limit_.check(count)) {
             return; //limit = 0

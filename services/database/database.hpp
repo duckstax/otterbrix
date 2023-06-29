@@ -35,7 +35,7 @@ namespace services::database {
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
         ~manager_database_t();
         void create_databases(session_id_t& session, std::vector<database_name_t>& databases);
-        void create(session_id_t& session, database_name_t& name);
+        void create(session_id_t& session, components::ql::ql_statement_t* statement);
 
     private:
         spin_lock lock_;
@@ -55,7 +55,7 @@ namespace services::database {
         ~database_t();
         void create_collections(session_id_t& session, std::vector<collection_name_t>& collections,
                                 actor_zeta::address_t manager_disk);
-        void create(session_id_t& session, collection_name_t& name, actor_zeta::address_t mdisk);
+        void create(session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t mdisk);
         void drop(session_id_t& session, collection_name_t& name);
         const database_name_t& name();
     private:

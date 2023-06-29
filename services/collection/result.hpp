@@ -4,27 +4,17 @@
 #include <vector>
 #include <memory_resource>
 
-class result_insert_one {
+class null_result {
 public:
-    using result_t = components::document::document_id_t;
-
-    result_insert_one();
-    explicit result_insert_one(const result_t &id);
-    const result_t& inserted_id() const;
-    bool empty() const;
-
-private:
-    result_t inserted_id_;
-    //TODO: except or error_code
+    null_result() {}
 };
 
-
-class result_insert_many {
+class result_insert {
 public:
     using result_t = std::pmr::vector<components::document::document_id_t>;
 
-    explicit result_insert_many(std::pmr::memory_resource *resource);
-    explicit result_insert_many(result_t&& inserted_ids);
+    explicit result_insert(std::pmr::memory_resource *resource);
+    explicit result_insert(result_t&& inserted_ids);
     const result_t& inserted_ids() const;
     bool empty() const;
 
@@ -110,8 +100,10 @@ public:
     using document_id_t = components::document::document_id_t;
     using result_t = std::pmr::vector<document_id_t>;
 
+    result_update() = default;
     explicit result_update(std::pmr::memory_resource *resource);
     result_update(result_t&& modified_ids, result_t&& nomodified_ids);
+    result_update(const result_t& modified_ids, const result_t& nomodified_ids);
     result_update(const document_id_t& upserted_id, std::pmr::memory_resource *resource);
     const result_t& modified_ids() const;
     const result_t& nomodified_ids() const;
@@ -132,6 +124,19 @@ public:
 
     result_create_index() = default;
     explicit result_create_index(result_t success);
+    result_t is_success() const;
+
+private:
+    result_t success_{false};
+};
+
+
+class result_drop_index {
+public:
+    using result_t = bool;
+
+    result_drop_index() = default;
+    explicit result_drop_index(result_t success);
     result_t is_success() const;
 
 private:

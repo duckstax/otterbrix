@@ -1,6 +1,5 @@
 #pragma once
 
-#include <components/document/mutable/mutable_value.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/expressions/msgpack.hpp>
 #include "ql_statement.hpp"
@@ -26,6 +25,7 @@ namespace components::ql {
         ql_param_statement_t(statement_type type, database_name_t database, collection_name_t collection);
         ql_param_statement_t() = default;
 
+        bool is_parameters() const override;
         auto parameters() const -> const storage_parameters&;
         auto take_parameters() -> storage_parameters;
         auto set_parameters(const storage_parameters& parameters) -> void;

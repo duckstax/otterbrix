@@ -21,6 +21,7 @@ namespace components::ql {
         update_one,
         update_many,
         create_index,
+        drop_index,
         aggregate
     };
 
@@ -37,6 +38,10 @@ namespace components::ql {
 
         statement_type type() const {
             return type_;
+        }
+
+        virtual bool is_parameters() const {
+            return false;
         }
 
         statement_type type_ {statement_type::unused};

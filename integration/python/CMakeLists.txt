@@ -64,7 +64,6 @@ target_link_libraries(
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
-        CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::libcurl
@@ -74,6 +73,13 @@ target_link_libraries(
         CONAN_PKG::openssl
 
 )
+if (WASM_BUILD)
+    target_link_libraries(
+            ${PROJECT_NAME} PRIVATE
+            ${ROCKETJOE_LIBS}
+            CONAN_PKG::proxy-wasm-cpp-host
+    )
+endif ()
 
 pybind11_extension(${PROJECT_NAME})
 
@@ -89,7 +95,9 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 if(SKBUILD)
     install(DIRECTORY ottergon DESTINATION  . )
     install(TARGETS ${PROJECT_NAME} DESTINATION  ./ottergon )
-    install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
+    if (WASM_BUILD)
+        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
+    endif()
 endif()
 
 if (DEV_MODE)

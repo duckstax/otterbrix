@@ -1,12 +1,13 @@
 #include "operator_and.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators::merge {
 
-    operator_and_t::operator_and_t(context_collection_t* context, predicates::limit_t limit)
+    operator_and_t::operator_and_t(context_collection_t* context, components::ql::limit_t limit)
         : operator_merge_t(context, limit) {
     }
 
-    void operator_and_t::on_merge_impl(planner::transaction_context_t*) {
+    void operator_and_t::on_merge_impl(components::pipeline::context_t*) {
         //todo: optimize merge
         int count = 0;
         if (!limit_.check(count)) {
