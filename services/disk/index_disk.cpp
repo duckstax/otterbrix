@@ -154,8 +154,10 @@ namespace services::disk {
 
     void index_disk_t::insert(const wrapper_value_t& key, const document_id_t& value) {
         auto values = find(key);
-        values.push_back(value);
-        db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
+        if (std::find(values.begin(), values.end(), value) == values.end()) {
+            values.push_back(value);
+            db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
+        }
     }
 
     void index_disk_t::remove(wrapper_value_t key) {
