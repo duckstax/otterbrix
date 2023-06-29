@@ -4,8 +4,13 @@ set(SOURCE_${PROJECT_NAME}
     lexer/lexer.cpp
     lexer/token.cpp
     parser.cpp
+
+    parser/base/parser_mask.cpp
     parser/common/parser_invalid.cpp
+
     parser/database/parser_database.cpp
+    parser/database/impl/parser_database_create.cpp
+    parser/database/impl/parser_database_drop.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
