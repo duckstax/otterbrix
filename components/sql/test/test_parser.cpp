@@ -61,3 +61,14 @@ TEST_CASE("parser::database") {
     }
 
 }
+
+TEST_CASE("parser::insert") {
+
+    SECTION("insert into") {
+        auto ql = sql::parse("INSERT INTO schema.table (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
+        REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "schema");
+        REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
+    }
+
+}

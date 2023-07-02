@@ -2,12 +2,14 @@
 
 #include "parser/common/parser_invalid.hpp"
 #include "parser/database/parser_database.hpp"
+#include "parser/insert/parser_insert.hpp"
 
 namespace components::sql {
 
     ql::variant_statement_t parse(std::string_view query) {
         ql::variant_statement_t result;
         auto ok = database::parse(query, result)
+                || insert::parse(query, result)
                 || invalid::parse(query, result);
         if (!ok) {
             //todo: error

@@ -16,6 +16,7 @@ namespace components::sql::impl {
         mask_element_t(token_type type, const std::string& value, bool optional = false);
 
         static mask_element_t create_value_mask_element();
+        static mask_element_t create_optional_value_mask_element();
     };
 
 

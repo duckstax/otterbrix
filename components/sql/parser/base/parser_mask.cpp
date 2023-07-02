@@ -6,7 +6,7 @@ namespace components::sql::impl {
 
     namespace  {
 
-        inline bool compare_str(const std::string& s1, std::string_view s2) {
+        inline bool compare_str_case_insensitive(const std::string& s1, std::string_view s2) {
             if (s1.size() != s2.size()) {
                 return false;
             }
@@ -26,7 +26,7 @@ namespace components::sql::impl {
 
             return elem.type == token.type
                 && (compare_value_types.find(elem.type) == compare_value_types.end()
-                    || compare_str(elem.value, token.value()));
+                    || compare_str_case_insensitive(elem.value, token.value()));
         }
 
     } // namespace
@@ -39,6 +39,12 @@ namespace components::sql::impl {
 
     mask_element_t mask_element_t::create_value_mask_element() {
         mask_element_t elem{token_type::bare_word, ""};
+        elem.is_value = true;
+        return elem;
+    }
+
+    mask_element_t mask_element_t::create_optional_value_mask_element() {
+        mask_element_t elem{token_type::bare_word, "", true};
         elem.is_value = true;
         return elem;
     }

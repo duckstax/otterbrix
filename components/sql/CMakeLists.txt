@@ -11,6 +11,9 @@ set(SOURCE_${PROJECT_NAME}
     parser/database/parser_database.cpp
     parser/database/impl/parser_database_create.cpp
     parser/database/impl/parser_database_drop.cpp
+
+    parser/insert/parser_insert.cpp
+    parser/insert/impl/parser_insert_into.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
