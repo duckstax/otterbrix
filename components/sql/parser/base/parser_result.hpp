@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <components/sql/lexer/token.hpp>
 
 namespace components::sql {
 
@@ -14,9 +15,10 @@ namespace components::sql {
         bool finished;
         parse_error error;
         std::string what;
+        token_t error_token;
 
         parser_result(bool finished);
-        explicit parser_result(parse_error error, const std::string& what = std::string());
+        parser_result(parse_error error, const token_t& error_token, const std::string& what = std::string());
 
         explicit operator bool() const;
         bool is_error() const;

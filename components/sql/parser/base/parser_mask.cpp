@@ -92,10 +92,11 @@ namespace components::sql::impl {
 
     bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem) {
         auto token = lexer.next_token();
-        while (is_token_end_query(token)) {
+        while (!is_token_end_query(token)) {
             if (equals(elem, token)) {
                 return true;
             }
+            token = lexer.next_token();
         }
         return false;
     }

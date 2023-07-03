@@ -64,18 +64,33 @@ TEST_CASE("parser::database") {
 
 TEST_CASE("parser::insert") {
 
-//    SECTION("insert into with schema") {
-//        auto ql = sql::parse("INSERT INTO schema.table (id, name, count) VALUES (1, 'Name', 1);");
-//        REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
-//        REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "schema");
-//        REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
-//    }
+    SECTION("insert into with schema") {
+        auto ql = sql::parse("INSERT INTO schema.table (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
+        REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "schema");
+        REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
+    }
 
-//    SECTION("insert into without schema") {
-//        auto ql = sql::parse("INSERT INTO table (id, name, count) VALUES (1, 'Name', 1);");
-//        REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
-//        REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
-//        REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
-//    }
+    SECTION("insert into without schema") {
+        auto ql = sql::parse("INSERT INTO table (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
+        REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
+        REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
+    }
+
+    SECTION("insert into error 01") {
+        auto ql = sql::parse("INSERT INTO 5 (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::unused_statement_t>(ql));
+    }
+
+    SECTION("insert into error 02") {
+        auto ql = sql::parse("INSERT INTO schema. (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::unused_statement_t>(ql));
+    }
+
+    SECTION("insert into error 03") {
+        auto ql = sql::parse("INSERT INTO schema.5 (id, name, count) VALUES (1, 'Name', 1);");
+        REQUIRE(std::holds_alternative<ql::unused_statement_t>(ql));
+    }
 
 }

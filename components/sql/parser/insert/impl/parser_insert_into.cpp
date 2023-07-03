@@ -9,8 +9,7 @@ namespace components::sql::insert::impl {
         static mask_t mask_begin({
             mask_element_t(token_type::bare_word, "insert"),
             mask_element_t(token_type::whitespace, ""),
-            mask_element_t(token_type::bare_word, "into"),
-            mask_element_t(token_type::whitespace, ""),
+            mask_element_t(token_type::bare_word, "into")
         });
 
         static const mask_element_t mask_elem_values(token_type::bare_word, "values");
@@ -22,16 +21,34 @@ namespace components::sql::insert::impl {
         }
 
         lexer.save();
-        if (contents_mask_element(lexer, mask_elem_values)) {
+        if (!contents_mask_element(lexer, mask_elem_values)) {
             return false;
         }
         lexer.restore();
 
         auto token = lexer.next_token();
         if (token.type != token_type::bare_word) {
-            //todo: error
-            return false;
+            return parser_result{parse_error::syntax_error, token, "not valid insert query"};
         }
+
+        auto schema = std::string();
+        auto table = std::string(token.value());
+
+        token = lexer.next_token();
+        if (token.type == token_type::dot) {
+            token = lexer.next_token();
+            if (token.type != token_type::bare_word) {
+                return parser_result{parse_error::syntax_error, token, "not valid insert query"};
+            }
+            schema = table;
+            table = std::string(token.value());
+        }
+
+        std::pmr::vector<components::document::document_ptr> documents;
+        //todo: impl documents
+
+        statement = ql::insert_many_t{schema, table, documents};
+        return true;
     }
 
 } // namespace components::sql::insert::impl

@@ -8,10 +8,11 @@ namespace components::sql {
         , error(parse_error::no_error) {
     }
 
-    parser_result::parser_result(parse_error error, const std::string& what)
+    parser_result::parser_result(parse_error error, const token_t& error_token, const std::string& what)
         : finished(true)
         , error(error)
-        , what(what) {
+        , what(what)
+        , error_token(error_token) {
         assert(error != parse_error::no_error);
     }
 
