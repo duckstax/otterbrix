@@ -5,14 +5,17 @@
 #include "parser/database/parser_database.hpp"
 #include "parser/insert/parser_insert.hpp"
 
+#define PARSE(F) if (!ok) ok = F::parse(query, result)
+
 namespace components::sql {
 
     ql::variant_statement_t parse(std::string_view query) {
         ql::variant_statement_t result;
-        auto ok = database::parse(query, result)
-                || insert::parse(query, result)
-                || invalid::parse(query, result);
-        if (ok/*.is_error()*/) {
+        parser_result ok{false};
+        PARSE(database);
+        PARSE(insert);
+        PARSE(invalid);
+        if (ok.is_error()) {
             //todo: error
         }
         return result;
