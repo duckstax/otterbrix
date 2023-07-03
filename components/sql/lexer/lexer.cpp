@@ -87,6 +87,7 @@ namespace components::sql {
         : begin_(query_begin)
         , end_(query_end)
         , pos_(begin_)
+        , saved_pos_(begin_)
         , prev_token_type_(token_type::unknow)
         , prev_significant_token_type_(token_type::unknow) {
     }
@@ -109,6 +110,14 @@ namespace components::sql {
             prev_significant_token_type_ = token.type;
         }
         return token;
+    }
+
+    void lexer_t::save() {
+        saved_pos_ = pos_;
+    }
+
+    void lexer_t::restore() {
+        pos_ = saved_pos_;
     }
 
     token_t lexer_t::next_token_() {

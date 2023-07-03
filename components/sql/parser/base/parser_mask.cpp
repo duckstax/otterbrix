@@ -89,4 +89,15 @@ namespace components::sql::impl {
         return elements_.at(index).value;
     }
 
+
+    bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem) {
+        auto token = lexer.next_token();
+        while (is_token_end_query(token)) {
+            if (equals(elem, token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 } // namespace components::sql::impl

@@ -13,11 +13,14 @@ namespace components::sql {
         explicit lexer_t(const std::string& query);
 
         token_t next_token();
+        void save();
+        void restore();
 
     private:
         const char* const begin_;
         const char* const end_;
         const char* pos_;
+        const char* saved_pos_;
         token_type prev_token_type_;
         token_type prev_significant_token_type_;
 

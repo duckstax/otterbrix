@@ -31,4 +31,7 @@ namespace components::sql::impl {
         std::vector<mask_element_t> elements_;
     };
 
+
+    bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem);
+
 } // namespace components::sql::impl

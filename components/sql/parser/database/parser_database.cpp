@@ -4,9 +4,9 @@
 
 namespace components::sql::database {
 
-    bool parse(std::string_view query, ql::variant_statement_t& statement) {
-        return impl::parseCreate(query, statement)
-            || impl::parseDrop(query, statement);
+    parser_result parse(std::string_view query, ql::variant_statement_t& statement) {
+        return impl::parse_create(query, statement)
+            || impl::parse_drop(query, statement);
     }
 
 } // namespace components::sql::database

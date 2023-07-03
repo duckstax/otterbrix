@@ -6,6 +6,8 @@ set(SOURCE_${PROJECT_NAME}
     parser.cpp
 
     parser/base/parser_mask.cpp
+    parser/base/parser_result.cpp
+
     parser/common/parser_invalid.cpp
 
     parser/database/parser_database.cpp

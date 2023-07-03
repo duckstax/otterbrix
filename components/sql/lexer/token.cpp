@@ -35,6 +35,11 @@ namespace components::sql {
         return token.type == token_type::end_query;
     }
 
+    bool is_token_end_query(const token_t& token) {
+        return token.type == token_type::end_query
+            || token.type == token_type::semicolon;
+    }
+
     std::string_view token_name(token_type type) {
         return magic_enum::enum_name(type);
     }
