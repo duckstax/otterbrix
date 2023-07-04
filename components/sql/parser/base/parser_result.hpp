@@ -2,16 +2,11 @@
 
 #include <string>
 #include <components/sql/lexer/token.hpp>
+#include "parse_error.hpp"
 
-namespace components::sql {
+namespace components::sql::impl {
 
-    enum class parse_error {
-        no_error,
-        syntax_error
-    };
-
-    struct parser_result
-    {
+    struct parser_result {
         bool finished;
         parse_error error;
         std::string what;
@@ -24,4 +19,4 @@ namespace components::sql {
         bool is_error() const;
     };
 
-} // namespace components::sql
+} // namespace components::sql::impl

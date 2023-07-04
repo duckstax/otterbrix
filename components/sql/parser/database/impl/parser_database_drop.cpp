@@ -8,7 +8,7 @@ namespace components::sql::database::impl {
 
     constexpr uint64_t index_name = 4;
 
-    parser_result parse_drop(std::string_view query, ql::variant_statement_t& statement) {
+    components::sql::impl::parser_result parse_drop(std::string_view query, ql::variant_statement_t& statement) {
         static mask_t mask({
             mask_element_t(token_type::bare_word, "drop"),
             mask_element_t(token_type::whitespace, ""),

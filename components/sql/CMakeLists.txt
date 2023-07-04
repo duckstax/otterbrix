@@ -5,6 +5,7 @@ set(SOURCE_${PROJECT_NAME}
     lexer/token.cpp
     parser.cpp
 
+    parser/base/parse_error.cpp
     parser/base/parser_mask.cpp
     parser/base/parser_result.cpp
 

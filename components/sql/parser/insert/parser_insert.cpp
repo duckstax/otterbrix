@@ -5,8 +5,8 @@
 
 namespace components::sql::insert {
 
-    parser_result parse(std::string_view query, ql::variant_statement_t& statement) {
-        parser_result ok{false};
+    components::sql::impl::parser_result parse(std::string_view query, ql::variant_statement_t& statement) {
+        components::sql::impl::parser_result ok{false};
         PARSE(parse_insert_into);
         return ok;
     }

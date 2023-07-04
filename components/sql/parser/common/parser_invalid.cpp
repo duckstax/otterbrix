@@ -2,7 +2,7 @@
 
 namespace components::sql::invalid {
 
-    parser_result parse(std::string_view, ql::variant_statement_t& statement) {
+    components::sql::impl::parser_result parse(std::string_view, ql::variant_statement_t& statement) {
         statement = ql::unused_statement_t{};
         return true;
     }

@@ -1,7 +1,7 @@
 #include "parser_result.hpp"
 #include <cassert>
 
-namespace components::sql {
+namespace components::sql::impl {
 
     parser_result::parser_result(bool finished)
         : finished(finished)
@@ -24,4 +24,4 @@ namespace components::sql {
         return finished;
     }
 
-} // namespace components::sql
+} // namespace components::sql::impl

@@ -5,6 +5,6 @@
 
 namespace components::sql::database::impl {
 
-    parser_result parse_create(std::string_view query, ql::variant_statement_t& statement);
+    components::sql::impl::parser_result parse_create(std::string_view query, ql::variant_statement_t& statement);
 
 } // namespace components::sql::database::impl

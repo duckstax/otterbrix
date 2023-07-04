@@ -5,6 +5,6 @@
 
 namespace components::sql::insert::impl {
 
-    parser_result parse_insert_into(std::string_view query, ql::variant_statement_t& statement);
+    components::sql::impl::parser_result parse_insert_into(std::string_view query, ql::variant_statement_t& statement);
 
 } // namespace components::sql::insert::impl

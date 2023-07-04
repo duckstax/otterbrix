@@ -9,23 +9,36 @@
 
 namespace components::sql {
 
-    ql::variant_statement_t parse(std::string_view query) {
+    parse_result::parse_result(const ql::variant_statement_t& ql)
+        : ql(ql)
+        , error(parse_error::no_error, "") {
+    }
+
+    parse_result::parse_result(const error_t& error)
+        : ql(ql::unused_statement_t{})
+        , error(error) {
+    }
+
+
+    parse_result parse(std::string_view query) {
         ql::variant_statement_t result;
-        parser_result ok{false};
+        components::sql::impl::parser_result ok{false};
         PARSE(database);
         PARSE(insert);
         PARSE(invalid);
         if (ok.is_error()) {
-            //todo: error
+            return parse_result(error_t(ok.error,
+                                        std::string_view(ok.error_token.begin, ok.error_token.size()),
+                                        ok.what));
         }
-        return result;
+        return parse_result(result);
     }
 
-    ql::variant_statement_t parse(const std::string& query) {
+    parse_result parse(const std::string& query) {
         return parse(std::string_view{query});
     }
 
-    ql::variant_statement_t parse(const char* query) {
+    parse_result parse(const char* query) {
         return parse(std::string_view{query});
     }
 

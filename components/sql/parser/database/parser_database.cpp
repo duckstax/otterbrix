@@ -6,8 +6,8 @@
 
 namespace components::sql::database {
 
-    parser_result parse(std::string_view query, ql::variant_statement_t& statement) {
-        parser_result ok{false};
+    components::sql::impl::parser_result parse(std::string_view query, ql::variant_statement_t& statement) {
+        components::sql::impl::parser_result ok{false};
         PARSE(parse_create);
         PARSE(parse_drop);
         return ok;
