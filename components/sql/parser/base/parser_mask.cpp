@@ -29,6 +29,11 @@ namespace components::sql::impl {
                     || compare_str_case_insensitive(elem.value, token.value()));
         }
 
+        inline bool is_integer(std::string_view data) {
+            auto it = std::find(data.begin(), data.end(), '.');
+            return it == data.end();
+        }
+
     } // namespace
 
     mask_element_t::mask_element_t(token_type type, const std::string& value, bool optional)
@@ -47,6 +52,14 @@ namespace components::sql::impl {
         mask_element_t elem{token_type::bare_word, "", true};
         elem.is_value = true;
         return elem;
+    }
+
+    bool operator==(const mask_element_t& elem, const token_t& token) {
+        return equals(elem, token);
+    }
+
+    bool operator!=(const mask_element_t& elem, const token_t& token) {
+        return !(elem == token);
     }
 
 
@@ -99,6 +112,73 @@ namespace components::sql::impl {
             token = lexer.next_token();
         }
         return false;
+    }
+
+    parser_result parse_field_names(lexer_t& lexer, std::vector<std::string>& fields) {
+        auto token = lexer.next_not_whitespace_token();
+        if (token.type != token_type::bracket_round_open) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
+        }
+        token = lexer.next_not_whitespace_token();
+        while (token.type != token_type::bracket_round_close && !is_token_end_query(token)) {
+            if (!is_token_field_name(token)) {
+                return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
+            }
+            fields.push_back(token.value().data());
+            token = lexer.next_not_whitespace_token();
+            if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
+                return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
+            }
+            if (token.type == token_type::bracket_round_close) {
+                break;
+            }
+            token = lexer.next_not_whitespace_token();
+        }
+        if (is_token_end_query(token)) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
+        }
+        if (fields.empty()) {
+            return components::sql::impl::parser_result{parse_error::empty_fields_list, token, "empty fields list"};
+        }
+        return true;
+    }
+
+    parser_result parse_field_values(lexer_t& lexer, std::vector<::document::wrapper_value_t>& values) {
+        values.clear();
+        auto token = lexer.next_not_whitespace_token();
+        if (token.type != token_type::bracket_round_open) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
+        }
+        token = lexer.next_not_whitespace_token();
+        while (token.type != token_type::bracket_round_close && !is_token_end_query(token)) {
+            if (!is_token_field_value(token)) {
+                return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
+            }
+            if (token.type == token_type::string_literal) {
+                values.push_back(::document::wrapper_value_t(token.value()));
+            } else if (token.type == token_type::number_literal) {
+                if (is_integer(token.value())) {
+                    values.push_back(::document::wrapper_value_t(std::atol(token.value().data())));
+                } else {
+                    values.push_back(::document::wrapper_value_t(std::atof(token.value().data())));
+                }
+            }
+            token = lexer.next_not_whitespace_token();
+            if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
+                return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
+            }
+            if (token.type == token_type::bracket_round_close) {
+                break;
+            }
+            token = lexer.next_not_whitespace_token();
+        }
+        if (is_token_end_query(token)) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
+        }
+        if (values.empty()) {
+            return components::sql::impl::parser_result{parse_error::empty_values_list, token, "empty values list"};
+        }
+        return true;
     }
 
 } // namespace components::sql::impl

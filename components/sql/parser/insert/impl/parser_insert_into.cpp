@@ -26,7 +26,7 @@ namespace components::sql::insert::impl {
         }
         lexer.restore();
 
-        auto token = lexer.next_token();
+        auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bare_word) {
             return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid insert query"};
         }
@@ -44,8 +44,42 @@ namespace components::sql::insert::impl {
             table = std::string(token.value());
         }
 
+        std::vector<std::string> fields;
+        auto res = parse_field_names(lexer, fields);
+        if (res.is_error()) {
+            return res;
+        }
+
+        token = lexer.next_not_whitespace_token();
+        if (mask_elem_values != token) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid insert query"};
+        }
+
         std::pmr::vector<components::document::document_ptr> documents;
-        //todo: impl documents
+
+        bool is_first = true;
+        while (is_first || (token = lexer.next_not_whitespace_token()).type == token_type::comma) {
+            std::vector<::document::wrapper_value_t> values;
+            res = parse_field_values(lexer, values);
+            if (res.is_error()) {
+                return res;
+            }
+            if (values.size() != fields.size()) {
+                return components::sql::impl::parser_result{parse_error::not_valid_size_values_list, lexer.next_token(), "not valid insert query"};
+            }
+
+            auto doc = document::make_document();
+            auto it_field = fields.begin();
+            for (auto it_value = values.begin(); it_value < values.end(); ++it_field, ++it_value) {
+                doc->set(*it_field, **it_value);
+            }
+            documents.push_back(doc);
+            is_first = false;
+        }
+
+        if (!is_token_end_query(token)) {
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid insert query"};
+        }
 
         statement = ql::insert_many_t{schema, table, documents};
         return true;

@@ -3,6 +3,7 @@ project(test_sql)
 set(${PROJECT_NAME}_SOURCES
     test_lexer.cpp
     test_parser.cpp
+    test_parser_insert.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

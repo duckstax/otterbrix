@@ -6,7 +6,10 @@ namespace components::sql {
 
     enum class parse_error {
         no_error,
-        syntax_error
+        syntax_error,
+        empty_fields_list,
+        empty_values_list,
+        not_valid_size_values_list
     };
 
     class error_t {

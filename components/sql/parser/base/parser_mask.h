@@ -2,8 +2,10 @@
 
 #include <string>
 #include <vector>
+#include <components/document/wrapper_value.hpp>
 #include <components/sql/lexer/token.hpp>
 #include <components/sql/lexer/lexer.hpp>
+#include "parser_result.hpp"
 
 namespace components::sql::impl {
 
@@ -19,6 +21,9 @@ namespace components::sql::impl {
         static mask_element_t create_optional_value_mask_element();
     };
 
+    bool operator==(const mask_element_t& elem, const token_t& token);
+    bool operator!=(const mask_element_t& elem, const token_t& token);
+
 
     class mask_t {
     public:
@@ -33,5 +38,8 @@ namespace components::sql::impl {
 
 
     bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem);
+
+    parser_result parse_field_names(lexer_t& lexer, std::vector<std::string>& fields);
+    parser_result parse_field_values(lexer_t& lexer, std::vector<::document::wrapper_value_t>& values);
 
 } // namespace components::sql::impl

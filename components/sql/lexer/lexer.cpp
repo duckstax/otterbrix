@@ -100,6 +100,14 @@ namespace components::sql {
         : lexer_t(query.data(), query.data() + query.size()) {
     }
 
+    token_t lexer_t::next_not_whitespace_token() {
+        auto token = next_token();
+        if (token.type == token_type::whitespace) {
+            token = next_token();
+        }
+        return token;
+    }
+
     token_t lexer_t::next_token() {
         if (pos_ >= end_) {
             return token_t{token_type::end_query};

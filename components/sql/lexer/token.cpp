@@ -40,6 +40,16 @@ namespace components::sql {
             || token.type == token_type::semicolon;
     }
 
+    bool is_token_field_name(const token_t& token) {
+        return token.type == token_type::bare_word
+            || token.type == token_type::quoted_identifier;
+    }
+
+    bool is_token_field_value(const token_t& token) {
+        return token.type == token_type::number_literal
+            || token.type == token_type::string_literal;
+    }
+
     std::string_view token_name(token_type type) {
         return magic_enum::enum_name(type);
     }

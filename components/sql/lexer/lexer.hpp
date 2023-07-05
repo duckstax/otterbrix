@@ -12,6 +12,7 @@ namespace components::sql {
         explicit lexer_t(std::string_view query);
         explicit lexer_t(const std::string& query);
 
+        token_t next_not_whitespace_token();
         token_t next_token();
         void save();
         void restore();
