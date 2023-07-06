@@ -58,4 +58,14 @@ namespace components::sql {
         return token_name(token.type);
     }
 
+    std::string_view token_clean_value(const token_t& token) {
+        if (token.type == token_type::string_literal) {
+            return std::string_view{token.value().data() + 1, token.value().size() - 2};
+        }
+        if (token.type == token_type::quoted_identifier) {
+            return std::string_view{token.value().data() + 1, token.value().size() - 2};
+        }
+        return token.value();
+    }
+
 } // namespace components::sql

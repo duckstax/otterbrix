@@ -124,7 +124,7 @@ namespace components::sql::impl {
             if (!is_token_field_name(token)) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
             }
-            fields.push_back(token.value().data());
+            fields.emplace_back(token_clean_value(token));
             token = lexer.next_not_whitespace_token();
             if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
@@ -155,7 +155,7 @@ namespace components::sql::impl {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
             }
             if (token.type == token_type::string_literal) {
-                values.push_back(::document::wrapper_value_t(token.value()));
+                values.push_back(::document::wrapper_value_t(token_clean_value(token)));
             } else if (token.type == token_type::number_literal) {
                 if (is_integer(token.value())) {
                     values.push_back(::document::wrapper_value_t(std::atol(token.value().data())));

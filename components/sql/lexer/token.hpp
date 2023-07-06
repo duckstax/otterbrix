@@ -85,4 +85,6 @@ namespace components::sql {
     std::string_view token_name(token_type type);
     std::string_view token_name(const token_t& token);
 
+    std::string_view token_clean_value(const token_t& token);
+
 } // namespace components::sql
