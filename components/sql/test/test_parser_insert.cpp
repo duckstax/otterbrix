@@ -6,8 +6,10 @@ using namespace components;
 
 TEST_CASE("parser::insert_into") {
 
+    auto* resource = std::pmr::get_default_resource();
+
     SECTION("insert into with schema") {
-        auto ql = sql::parse("INSERT INTO schema.table (id, name, count) VALUES (1, 'Name', 1);").ql;
+        auto ql = sql::parse("INSERT INTO schema.table (id, name, count) VALUES (1, 'Name', 1);", resource).ql;
         REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "schema");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
@@ -19,7 +21,7 @@ TEST_CASE("parser::insert_into") {
     }
 
     SECTION("insert into without schema") {
-        auto ql = sql::parse("INSERT INTO table (id, name, count) VALUES (1, 'Name', 1);").ql;
+        auto ql = sql::parse("INSERT INTO table (id, name, count) VALUES (1, 'Name', 1);", resource).ql;
         REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
@@ -31,7 +33,7 @@ TEST_CASE("parser::insert_into") {
     }
 
     SECTION("insert into with quoted") {
-        auto ql = sql::parse("INSERT INTO table (id, \"name\", `count`) VALUES (1, 'Name', 1);").ql;
+        auto ql = sql::parse("INSERT INTO table (id, \"name\", `count`) VALUES (1, 'Name', 1);", resource).ql;
         REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
@@ -48,7 +50,7 @@ TEST_CASE("parser::insert_into") {
                              "(2, 'Name2', 2), "
                              "(3, 'Name3', 3), "
                              "(4, 'Name4', 4), "
-                             "(5, 'Name5', 5);").ql;
+                             "(5, 'Name5', 5);", resource).ql;
         REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
@@ -65,7 +67,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 01") {
         auto query = "INSERT INTO 5 (id, name, count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "5");
@@ -74,7 +76,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 02") {
         auto query = "INSERT INTO schema. (id, name, count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == " ");
@@ -83,7 +85,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 03") {
         auto query = "INSERT INTO schema.5 (id, name, count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "5");
@@ -92,7 +94,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 04") {
         auto query = "INSERT INTO table (id, name count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "count");
@@ -101,7 +103,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 05") {
         auto query = "INSERT INTO table (id, 5, count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "5");
@@ -110,7 +112,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 06") {
         auto query = "INSERT INTO table (*) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "*");
@@ -119,7 +121,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 07") {
         auto query = "INSERT INTO table () VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::empty_fields_list);
         REQUIRE(res.error.mistake() == ")");
@@ -128,7 +130,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 08") {
         auto query = "INSERT INTO table (id, name, count) SET VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "SET");
@@ -137,7 +139,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 09") {
         auto query = "INSERT INTO table (id, 'name', count) VALUES (1, 'Name', 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "'name'");
@@ -146,7 +148,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 10") {
         auto query = "INSERT INTO table (id, name, count) VALUES (1, Name, 1);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "Name");
@@ -155,7 +157,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 11") {
         auto query = "INSERT INTO table (id, name, count) VALUES ();";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::empty_values_list);
         REQUIRE(res.error.mistake() == ")");
@@ -164,7 +166,7 @@ TEST_CASE("parser::insert_into") {
 
     SECTION("insert into error 12") {
         auto query = "INSERT INTO table (id, name, count) VALUES (1, 'Name', 1, 2);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::not_valid_size_values_list);
         REQUIRE(res.error.mistake() == ";");
@@ -178,7 +180,7 @@ TEST_CASE("parser::insert_into") {
                      "(3, 'Name3', 3), "
                      "(4, 'Name4', 4), "
                      "(5, 'Name5', 5);";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::not_valid_size_values_list);
         REQUIRE(res.error.mistake() == ",");
@@ -192,7 +194,7 @@ TEST_CASE("parser::insert_into") {
                      "(3, 'Name3', 3), "
                      "(4, 'Name4', 4), "
                      "(5, 'Name5', 5), ;";
-        auto res = sql::parse(query);
+        auto res = sql::parse(query, resource);
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == ";");

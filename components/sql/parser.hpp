@@ -13,8 +13,8 @@ namespace components::sql {
         explicit parse_result(const error_t& error);
     };
 
-    parse_result parse(std::string_view query);
-    parse_result parse(const std::string& query);
-    parse_result parse(const char* query);
+    parse_result parse(std::string_view query, std::pmr::memory_resource* resource);
+    parse_result parse(const std::string& query, std::pmr::memory_resource* resource);
+    parse_result parse(const char* query, std::pmr::memory_resource* resource);
 
 } // namespace components::sql

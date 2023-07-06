@@ -5,7 +5,9 @@ using namespace components::sql::impl;
 
 namespace components::sql::insert::impl {
 
-    components::sql::impl::parser_result parse_insert_into(std::string_view query, ql::variant_statement_t& statement) {
+    components::sql::impl::parser_result parse_insert_into(std::string_view query,
+                                                           ql::variant_statement_t& statement,
+                                                           std::pmr::memory_resource* resource) {
         static mask_t mask_begin({
             mask_element_t(token_type::bare_word, "insert"),
             mask_element_t(token_type::whitespace, ""),
@@ -44,7 +46,7 @@ namespace components::sql::insert::impl {
             table = std::string(token.value());
         }
 
-        std::vector<std::string> fields;
+        std::pmr::vector<std::string> fields(resource);
         auto res = parse_field_names(lexer, fields);
         if (res.is_error()) {
             return res;
@@ -55,11 +57,11 @@ namespace components::sql::insert::impl {
             return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid insert query"};
         }
 
-        std::pmr::vector<components::document::document_ptr> documents;
+        std::pmr::vector<components::document::document_ptr> documents(resource);
 
         bool is_first = true;
         while (is_first || (token = lexer.next_not_whitespace_token()).type == token_type::comma) {
-            std::vector<::document::wrapper_value_t> values;
+            std::pmr::vector<::document::wrapper_value_t> values(resource);
             res = parse_field_values(lexer, values);
             if (res.is_error()) {
                 return res;

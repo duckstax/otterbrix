@@ -1,4 +1,5 @@
 #include "parser_mask.h"
+#include <memory_resource>
 #include <numeric>
 #include <set>
 
@@ -114,7 +115,7 @@ namespace components::sql::impl {
         return false;
     }
 
-    parser_result parse_field_names(lexer_t& lexer, std::vector<std::string>& fields) {
+    parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields) {
         auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bracket_round_open) {
             return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid fields list"};
@@ -143,7 +144,7 @@ namespace components::sql::impl {
         return true;
     }
 
-    parser_result parse_field_values(lexer_t& lexer, std::vector<::document::wrapper_value_t>& values) {
+    parser_result parse_field_values(lexer_t& lexer, std::pmr::vector<::document::wrapper_value_t>& values) {
         values.clear();
         auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bracket_round_open) {
