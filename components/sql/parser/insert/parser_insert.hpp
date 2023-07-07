@@ -5,8 +5,8 @@
 
 namespace components::sql::insert {
 
-    components::sql::impl::parser_result parse(std::string_view query,
-                                               ql::variant_statement_t& statement,
-                                               std::pmr::memory_resource* resource);
+    components::sql::impl::parser_result parse(std::pmr::memory_resource* resource,
+                                               std::string_view query,
+                                               ql::variant_statement_t& statement);
 
 } // namespace components::sql::insert

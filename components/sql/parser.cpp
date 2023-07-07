@@ -5,7 +5,7 @@
 #include "parser/database/parser_database.hpp"
 #include "parser/insert/parser_insert.hpp"
 
-#define PARSE(F) if (!ok) ok = F::parse(query, result, resource)
+#define PARSE(F) if (!ok) ok = F::parse(resource, query, result)
 
 namespace components::sql {
 
@@ -20,7 +20,7 @@ namespace components::sql {
     }
 
 
-    parse_result parse(std::string_view query, std::pmr::memory_resource* resource) {
+    parse_result parse(std::pmr::memory_resource* resource, std::string_view query) {
         ql::variant_statement_t result;
         components::sql::impl::parser_result ok{false};
         PARSE(database);
@@ -34,12 +34,12 @@ namespace components::sql {
         return parse_result(result);
     }
 
-    parse_result parse(const std::string& query, std::pmr::memory_resource* resource) {
-        return parse(std::string_view{query}, resource);
+    parse_result parse(std::pmr::memory_resource* resource, const std::string& query) {
+        return parse(resource, std::string_view{query});
     }
 
-    parse_result parse(const char* query, std::pmr::memory_resource* resource) {
-        return parse(std::string_view{query}, resource);
+    parse_result parse(std::pmr::memory_resource* resource, const char* query) {
+        return parse(resource, std::string_view{query});
     }
 
 } // namespace components::sql

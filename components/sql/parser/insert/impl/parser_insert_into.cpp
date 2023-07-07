@@ -5,9 +5,9 @@ using namespace components::sql::impl;
 
 namespace components::sql::insert::impl {
 
-    components::sql::impl::parser_result parse_insert_into(std::string_view query,
-                                                           ql::variant_statement_t& statement,
-                                                           std::pmr::memory_resource* resource) {
+    components::sql::impl::parser_result parse_insert_into(std::pmr::memory_resource* resource,
+                                                           std::string_view query,
+                                                           ql::variant_statement_t& statement) {
         static mask_t mask_begin({
             mask_element_t(token_type::bare_word, "insert"),
             mask_element_t(token_type::whitespace, ""),
