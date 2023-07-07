@@ -78,8 +78,13 @@ namespace components::sql {
     bool is_token_significant(const token_t& token);
     bool is_token_error(const token_t& token);
     bool is_token_end(const token_t& token);
+    bool is_token_end_query(const token_t& token);
+    bool is_token_field_name(const token_t& token);
+    bool is_token_field_value(const token_t& token);
 
     std::string_view token_name(token_type type);
     std::string_view token_name(const token_t& token);
+
+    std::string_view token_clean_value(const token_t& token);
 
 } // namespace components::sql
