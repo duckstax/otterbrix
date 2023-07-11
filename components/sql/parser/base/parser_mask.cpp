@@ -1,4 +1,4 @@
-#include "parser_mask.h"
+#include "parser_mask.hpp"
 #include <memory_resource>
 #include <numeric>
 #include <set>
@@ -115,6 +115,19 @@ namespace components::sql::impl {
         return false;
     }
 
+    document::wrapper_value_t parse_value(const token_t& token) {
+        if (token.type == token_type::string_literal) {
+            return ::document::wrapper_value_t(token_clean_value(token));
+        } else if (token.type == token_type::number_literal) {
+            if (is_integer(token.value())) {
+                return ::document::wrapper_value_t(std::atol(token.value().data()));
+            } else {
+                return ::document::wrapper_value_t(std::atof(token.value().data()));
+            }
+        }
+        return ::document::wrapper_value_t(nullptr);
+    }
+
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields) {
         auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bracket_round_open) {
@@ -155,15 +168,7 @@ namespace components::sql::impl {
             if (!is_token_field_value(token)) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
             }
-            if (token.type == token_type::string_literal) {
-                values.push_back(::document::wrapper_value_t(token_clean_value(token)));
-            } else if (token.type == token_type::number_literal) {
-                if (is_integer(token.value())) {
-                    values.push_back(::document::wrapper_value_t(std::atol(token.value().data())));
-                } else {
-                    values.push_back(::document::wrapper_value_t(std::atof(token.value().data())));
-                }
-            }
+            values.push_back(parse_value(token));
             token = lexer.next_not_whitespace_token();
             if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};

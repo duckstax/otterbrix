@@ -1,5 +1,5 @@
 #include "parser_database_create.hpp"
-#include <components/sql/parser/base/parser_mask.h>
+#include <components/sql/parser/base/parser_mask.hpp>
 
 using components::sql::impl::mask_t;
 using components::sql::impl::mask_element_t;

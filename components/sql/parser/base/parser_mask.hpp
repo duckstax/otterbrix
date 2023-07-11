@@ -39,6 +39,7 @@ namespace components::sql::impl {
 
     bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem);
 
+    ::document::wrapper_value_t parse_value(const token_t& token);
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields);
     parser_result parse_field_values(lexer_t& lexer, std::pmr::vector<::document::wrapper_value_t>& values);
 

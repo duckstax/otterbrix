@@ -9,7 +9,8 @@ namespace components::sql {
         syntax_error,
         empty_fields_list,
         empty_values_list,
-        not_valid_size_values_list
+        not_valid_size_values_list,
+        not_valid_where_condition
     };
 
     class error_t {

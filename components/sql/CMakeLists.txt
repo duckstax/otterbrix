@@ -8,6 +8,7 @@ set(SOURCE_${PROJECT_NAME}
     parser/base/parse_error.cpp
     parser/base/parser_mask.cpp
     parser/base/parser_result.cpp
+    parser/base/parser_where.cpp
 
     parser/common/parser_invalid.cpp
 
@@ -17,6 +18,9 @@ set(SOURCE_${PROJECT_NAME}
 
     parser/insert/parser_insert.cpp
     parser/insert/impl/parser_insert_into.cpp
+
+    parser/select/parser_select.cpp
+    parser/select/impl/parser_select_base.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
@@ -27,6 +31,7 @@ set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
     rocketjoe_${PROJECT_NAME} PUBLIC
     rocketjoe::document
+    rocketjoe::expressions
     rocketjoe::ql
 )
 
