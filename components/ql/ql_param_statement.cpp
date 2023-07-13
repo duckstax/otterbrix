@@ -2,16 +2,6 @@
 
 namespace components::ql {
 
-    template<>
-    void add_parameter(storage_parameters &storage, core::parameter_id_t id, expr_value_t value) {
-        storage.emplace(id, value);
-    }
-
-    template<>
-    void add_parameter(storage_parameters &storage, core::parameter_id_t id, const ::document::impl::value_t* value) {
-        storage.emplace(id, expr_value_t(value));
-    }
-
     const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id) {
         auto it = storage->find(id);
         if (it != storage->end()) {
