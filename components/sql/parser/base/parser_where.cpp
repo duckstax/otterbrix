@@ -112,6 +112,16 @@ namespace components::sql::impl {
                 return parse_where(resource, begin + 1, end - 1, statement);
             }
 
+            if (mask_not == *begin) {
+                auto child = parse_where(resource, begin + 1, end, statement);
+                if (child.error.is_error()) {
+                    return child;
+                }
+                auto expr = expressions::make_compare_union_expression(resource, expressions::compare_type::union_not);
+                expr->append_child(child.expr);
+                return {parser_result{true}, expr};
+            }
+
             if (is_token_field_name(*begin)
                 && is_token_operator(*(begin + 1))
                 && is_token_field_value(*(begin + 2))) {
