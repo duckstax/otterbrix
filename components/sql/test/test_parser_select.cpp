@@ -3,7 +3,22 @@
 
 using namespace components;
 
-TEST_CASE("parser::select_base") {
+#define TEST_SIMPLE_SELECT(QUERY, RESULT, VALUE0)                               \
+    SECTION(QUERY) {                                                            \
+        auto res = sql::parse(resource, QUERY);                                 \
+        auto ql = res.ql;                                                       \
+        REQUIRE(std::holds_alternative<ql::aggregate_statement>(ql));           \
+        auto& agg = std::get<ql::aggregate_statement>(ql);                      \
+        REQUIRE(agg.database_ == "schema");                                     \
+        REQUIRE(agg.collection_ == "table");                                    \
+        std::stringstream s;                                                    \
+        s << agg;                                                               \
+        REQUIRE(s.str() == RESULT);                                             \
+        REQUIRE(agg.parameters().size() == 1);                                  \
+        REQUIRE(agg.parameter(core::parameter_id_t{0})->as_int() == VALUE0);    \
+    }
+
+TEST_CASE("parser::select_from_where") {
 
     auto* resource = std::pmr::get_default_resource();
 
@@ -169,5 +184,33 @@ TEST_CASE("parser::select_base") {
         REQUIRE(agg.parameter(core::parameter_id_t{7})->as_string() == "doc 10");
         REQUIRE(agg.parameter(core::parameter_id_t{8})->as_int() == 2);
     }
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number == 10;",
+                       R"_($aggregate: {$match: {"number": {$eq: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number != 10;",
+                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number <> 10;",
+                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number < 10;",
+                       R"_($aggregate: {$match: {"number": {$lt: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number <= 10;",
+                       R"_($aggregate: {$match: {"number": {$lte: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number > 10;",
+                       R"_($aggregate: {$match: {"number": {$gt: #0}}})_",
+                       10);
+
+    TEST_SIMPLE_SELECT("select * from schema.table where number >= 10;",
+                       R"_($aggregate: {$match: {"number": {$gte: #0}}})_",
+                       10);
 
 }
