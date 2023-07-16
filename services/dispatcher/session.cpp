@@ -25,6 +25,8 @@ statement_type session_t::type() const {
             return statement_type::insert_one;
         } else if constexpr (std::is_same_v<type, insert_many_t>) {
             return statement_type::insert_many;
+        } else if constexpr (std::is_same_v<type, aggregate_statement>) {
+            return statement_type::aggregate;
         } else if constexpr (std::is_same_v<type, delete_one_t>) {
             return statement_type::delete_one;
         } else if constexpr (std::is_same_v<type, delete_many_t>) {

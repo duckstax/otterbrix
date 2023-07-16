@@ -4,6 +4,7 @@
 #include "parser/common/parser_invalid.hpp"
 #include "parser/database/parser_database.hpp"
 #include "parser/insert/parser_insert.hpp"
+#include "parser/select/parser_select.hpp"
 
 #define PARSE(F) if (!ok) ok = F::parse(resource, query, result)
 
@@ -24,6 +25,7 @@ namespace components::sql {
         ql::variant_statement_t result;
         components::sql::impl::parser_result ok{false};
         PARSE(database);
+        PARSE(select);
         PARSE(insert);
         PARSE(invalid);
         if (ok.is_error()) {

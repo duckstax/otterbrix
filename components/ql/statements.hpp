@@ -1,6 +1,7 @@
 #pragma once
 
 #include <variant>
+#include "aggregate.hpp"
 #include "statements/create_database.hpp"
 #include "statements/drop_database.hpp"
 #include "statements/create_collection.hpp"
@@ -23,6 +24,7 @@ namespace components::ql {
         drop_collection_t,
         insert_one_t,
         insert_many_t,
+        aggregate_statement,
         delete_one_t,
         delete_many_t,
         update_one_t,

@@ -1,5 +1,5 @@
 #include "parser_insert_into.hpp"
-#include <components/sql/parser/base/parser_mask.h>
+#include <components/sql/parser/base/parser_mask.hpp>
 
 using namespace components::sql::impl;
 
