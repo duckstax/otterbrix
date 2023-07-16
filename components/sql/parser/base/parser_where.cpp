@@ -15,6 +15,7 @@ namespace components::sql::impl {
         static const mask_element_t mask_not{token_type::bare_word, "not"};
         static const mask_element_t mask_and{token_type::bare_word, "and"};
         static const mask_element_t mask_or{token_type::bare_word, "or"};
+        static const mask_element_t mask_regexp{token_type::bare_word, "regexp"};
 
         inline bool is_token_where_end(const token_t& token) {
             return std::find_if(where_stop_words.begin(), where_stop_words.end(),
@@ -34,7 +35,8 @@ namespace components::sql::impl {
                 || token.type == token_type::less
                 || token.type == token_type::less_or_equals
                 || token.type == token_type::greater
-                || token.type == token_type::greater_or_equals;
+                || token.type == token_type::greater_or_equals
+                || mask_regexp == token;
         }
 
         inline expressions::compare_type get_compare_expression(const token_t& token) {
@@ -51,7 +53,10 @@ namespace components::sql::impl {
                     return expressions::compare_type::gt;
                 case token_type::greater_or_equals:
                     return expressions::compare_type::gte;
-                default: return expressions::compare_type::invalid;
+                default: break;
+            }
+            if (mask_regexp == token) {
+                return expressions::compare_type::regex;
             }
             return expressions::compare_type::invalid;
         }

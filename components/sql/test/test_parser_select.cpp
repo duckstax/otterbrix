@@ -214,4 +214,7 @@ TEST_CASE("parser::select_from_where") {
                        R"_($aggregate: {$match: {$and: [$not: ["number": {$eq: #0}], )_"
                        R"_($not: [$or: ["name": {$eq: #1}, "count": {$eq: #2}]]]}})_");
 
+    TEST_SIMPLE_SELECT("select * from schema.table where name regexp 'pattern';",
+                       R"_($aggregate: {$match: {"name": {$regex: #0}}})_");
+
 }
