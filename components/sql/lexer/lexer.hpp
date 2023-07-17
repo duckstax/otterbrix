@@ -14,6 +14,8 @@ namespace components::sql {
 
         token_t next_not_whitespace_token();
         token_t next_token();
+        token_t current_token() const;
+        token_t current_significant_token() const;
         void save();
         void restore();
 
@@ -22,8 +24,8 @@ namespace components::sql {
         const char* const end_;
         const char* pos_;
         const char* saved_pos_;
-        token_type prev_token_type_;
-        token_type prev_significant_token_type_;
+        token_t prev_token_;
+        token_t prev_significant_token_;
 
         token_t next_token_();
         inline bool check_pos_(char c);

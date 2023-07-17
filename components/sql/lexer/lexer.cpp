@@ -87,9 +87,7 @@ namespace components::sql {
         : begin_(query_begin)
         , end_(query_end)
         , pos_(begin_)
-        , saved_pos_(begin_)
-        , prev_token_type_(token_type::unknow)
-        , prev_significant_token_type_(token_type::unknow) {
+        , saved_pos_(begin_) {
     }
 
     lexer_t::lexer_t(std::string_view query)
@@ -102,7 +100,7 @@ namespace components::sql {
 
     token_t lexer_t::next_not_whitespace_token() {
         auto token = next_token();
-        if (token.type == token_type::whitespace) {
+        if (!is_token_significant(token)) {
             token = next_token();
         }
         return token;
@@ -113,11 +111,19 @@ namespace components::sql {
             return token_t{token_type::end_query};
         }
         auto token = next_token_();
-        prev_token_type_ = token.type;
+        prev_token_ = token;
         if (is_token_significant(token)) {
-            prev_significant_token_type_ = token.type;
+            prev_significant_token_ = token;
         }
         return token;
+    }
+
+    token_t lexer_t::current_token() const {
+        return prev_token_;
+    }
+
+    token_t lexer_t::current_significant_token() const {
+        return prev_significant_token_;
     }
 
     void lexer_t::save() {
@@ -139,7 +145,7 @@ namespace components::sql {
         }
 
         if (std::isdigit(*pos_)) {
-            if (prev_significant_token_type_ == token_type::dot) {
+            if (prev_significant_token_.type == token_type::dot) {
                 ++pos_;
                 while (pos_ < end_ && (std::isdigit(*pos_) || is_number_separator(pos_, end_, false))) {
                     ++pos_;
@@ -244,7 +250,7 @@ namespace components::sql {
                 token_type::quoted_identifier,
                 token_type::number_literal
             };
-            if (before_types.find(prev_token_type_) != before_types.end()) {
+            if (before_types.find(prev_token_.type) != before_types.end()) {
                 return token_t{token_type::dot, token_begin, pos_};
             }
 
