@@ -3,6 +3,7 @@
 #include "parser/base/parser_result.hpp"
 #include "parser/common/parser_invalid.hpp"
 #include "parser/database/parser_database.hpp"
+#include "parser/delete/parser_delete.hpp"
 #include "parser/insert/parser_insert.hpp"
 #include "parser/select/parser_select.hpp"
 
@@ -26,6 +27,7 @@ namespace components::sql {
         components::sql::impl::parser_result ok{false};
         PARSE(database);
         PARSE(select);
+        PARSE(delete_);
         PARSE(insert);
         PARSE(invalid);
         if (ok.is_error()) {

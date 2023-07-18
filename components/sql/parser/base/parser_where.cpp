@@ -127,6 +127,10 @@ namespace components::sql::impl {
                 return {parser_result{true}, expr};
             }
 
+            if (begin + 3 != end) {
+                return {parser_result{parse_error::syntax_error, *(begin + 3), "not valid where condition"}, nullptr};
+            }
+
             if (is_token_field_name(*begin)
                 && is_token_operator(*(begin + 1))
                 && is_token_field_value(*(begin + 2))) {
