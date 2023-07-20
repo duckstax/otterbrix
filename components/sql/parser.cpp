@@ -6,6 +6,7 @@
 #include "parser/delete/parser_delete.hpp"
 #include "parser/insert/parser_insert.hpp"
 #include "parser/select/parser_select.hpp"
+#include "parser/update/parser_update.hpp"
 
 #define PARSE(F) if (!ok) ok = F::parse(resource, query, result)
 
@@ -29,6 +30,7 @@ namespace components::sql {
         PARSE(select);
         PARSE(delete_);
         PARSE(insert);
+        PARSE(update);
         PARSE(invalid);
         if (ok.is_error()) {
             return parse_result(error_t(ok.error,

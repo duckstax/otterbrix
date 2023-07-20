@@ -79,6 +79,9 @@ namespace components::sql {
     bool is_token_error(const token_t& token);
     bool is_token_end(const token_t& token);
     bool is_token_end_query(const token_t& token);
+    bool is_token_bool_value_true(const token_t& token);
+    bool is_token_bool_value_false(const token_t& token);
+    bool is_token_bool_value(const token_t& token);
     bool is_token_field_name(const token_t& token);
     bool is_token_field_value(const token_t& token);
 
