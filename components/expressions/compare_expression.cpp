@@ -61,8 +61,7 @@ namespace components::expressions {
         std::stringstream stream;
         if (type() == compare_type::all_true || type() == compare_type::all_false) {
             stream << type();
-        }
-        else if (is_union()) {
+        } else if (is_union()) {
             stream << type() << ": [";
             for (std::size_t i = 0; i < children().size(); ++i) {
                 if (i > 0) {
