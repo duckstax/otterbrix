@@ -8,6 +8,7 @@ set(SOURCE_${PROJECT_NAME}
     parser/base/parse_error.cpp
     parser/base/parser_mask.cpp
     parser/base/parser_result.cpp
+    parser/base/parser_set.cpp
     parser/base/parser_where.cpp
 
     parser/common/parser_invalid.cpp
@@ -24,6 +25,9 @@ set(SOURCE_${PROJECT_NAME}
 
     parser/select/parser_select.cpp
     parser/select/impl/parser_select_base.cpp
+
+    parser/update/parser_update.cpp
+    parser/update/impl/parser_update_base.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})

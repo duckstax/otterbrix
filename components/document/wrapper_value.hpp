@@ -9,6 +9,9 @@ namespace document {
         explicit wrapper_value_t(const impl::value_t* value)
             : value_(value) {}
 
+        explicit wrapper_value_t(bool value)
+            : value_(impl::new_value(value).detach()) {}
+
         explicit wrapper_value_t(uint64_t value)
             : value_(impl::new_value(value).detach()) {}
 

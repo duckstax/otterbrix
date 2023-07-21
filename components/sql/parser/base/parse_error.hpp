@@ -11,7 +11,8 @@ namespace components::sql {
         empty_values_list,
         not_valid_size_values_list,
         not_valid_where_condition,
-        not_exists_open_round_bracket
+        not_exists_open_round_bracket,
+        not_valid_value
     };
 
     class error_t {

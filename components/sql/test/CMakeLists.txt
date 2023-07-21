@@ -6,6 +6,7 @@ set(${PROJECT_NAME}_SOURCES
     test_parser_insert.cpp
     test_parser_select.cpp
     test_parser_delete.cpp
+    test_parser_update.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

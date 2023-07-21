@@ -124,6 +124,10 @@ namespace components::sql::impl {
             } else {
                 return ::document::wrapper_value_t(std::atof(token.value().data()));
             }
+        } else if (is_token_bool_value_true(token)) {
+            return ::document::wrapper_value_t(true);
+        } else if (is_token_bool_value_false(token)) {
+            return ::document::wrapper_value_t(false);
         }
         return ::document::wrapper_value_t(nullptr);
     }

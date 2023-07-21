@@ -15,6 +15,10 @@ using namespace components;
         s << del.match_;                                                 \
         REQUIRE(s.str() == RESULT);                                      \
         REQUIRE(del.parameters().size() == PARAMS.size());               \
+        for (auto i = 0ul; i < PARAMS.size(); ++i) {                     \
+            REQUIRE(del.parameter(core::parameter_id_t(uint16_t(i)))     \
+                    == PARAMS.at(i));                                    \
+        }                                                                \
     }
 
 #define TEST_NO_VALID_DELETE(QUERY)                                      \
