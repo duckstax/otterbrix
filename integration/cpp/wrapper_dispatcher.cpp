@@ -243,6 +243,67 @@ namespace duck_charmer {
         return std::get<result_drop_index>(intermediate_store_);
     }
 
+    auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &ql) -> result_t {
+        using namespace components::ql;
+
+        trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());
+
+        if (std::holds_alternative<aggregate_statement>(ql)) {
+            auto& agg = std::get<aggregate_statement>(ql);
+            trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), agg.database_, agg.collection_);
+            init();
+            actor_zeta::send(
+                manager_dispatcher_,
+                address(),
+                collection::handler_id(collection::route::find),
+                session,
+                agg);
+            wait();
+            return std::get<components::cursor::cursor_t*>(intermediate_store_);
+
+        } else if (std::holds_alternative<insert_many_t>(ql)) {
+            auto& ins = std::get<insert_many_t>(ql);
+            trace(log_, "wrapper_dispatcher_t::insert session: {}, database: {} collection: {} ", session.data(), ins.database_, ins.collection_);
+            init();
+            actor_zeta::send(
+                manager_dispatcher_,
+                address(),
+                collection::handler_id(collection::route::insert_documents),
+                session,
+                ins);
+            wait();
+            return std::get<result_insert>(intermediate_store_);
+
+        } else if (std::holds_alternative<delete_many_t>(ql)) {
+            auto& del = std::get<delete_many_t>(ql);
+            trace(log_, "wrapper_dispatcher_t::delete session: {}, database: {} collection: {} ", session.data(), del.database_, del.collection_);
+            init();
+            actor_zeta::send(
+                manager_dispatcher_,
+                address(),
+                collection::handler_id(collection::route::delete_documents),
+                session,
+                del);
+            wait();
+            return std::get<result_delete>(intermediate_store_);
+
+        } else if (std::holds_alternative<update_many_t>(ql)) {
+            auto& upd = std::get<update_many_t>(ql);
+            trace(log_, "wrapper_dispatcher_t::update session: {}, database: {} collection: {} ", session.data(), upd.database_, upd.collection_);
+            init();
+            actor_zeta::send(
+                manager_dispatcher_,
+                address(),
+                collection::handler_id(collection::route::update_documents),
+                session,
+                upd);
+            wait();
+            return std::get<result_update>(intermediate_store_);
+        }
+
+        return null_result{};
+    }
+
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         assert("wrapper_dispatcher_t::executor_impl");
         return nullptr;
