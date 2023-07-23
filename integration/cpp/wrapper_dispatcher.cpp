@@ -257,7 +257,7 @@ namespace duck_charmer {
                 address(),
                 collection::handler_id(collection::route::find),
                 session,
-                agg);
+                &agg);
             wait();
             return std::get<components::cursor::cursor_t*>(intermediate_store_);
 
@@ -270,7 +270,7 @@ namespace duck_charmer {
                 address(),
                 collection::handler_id(collection::route::insert_documents),
                 session,
-                ins);
+                &ins);
             wait();
             return std::get<result_insert>(intermediate_store_);
 
@@ -283,7 +283,7 @@ namespace duck_charmer {
                 address(),
                 collection::handler_id(collection::route::delete_documents),
                 session,
-                del);
+                &del);
             wait();
             return std::get<result_delete>(intermediate_store_);
 
@@ -296,7 +296,7 @@ namespace duck_charmer {
                 address(),
                 collection::handler_id(collection::route::update_documents),
                 session,
-                upd);
+                &upd);
             wait();
             return std::get<result_update>(intermediate_store_);
         }
