@@ -10,6 +10,7 @@
 #include <components/ql/statements/insert_one.hpp>
 #include <components/ql/statements/update_many.hpp>
 #include <components/ql/statements/update_one.hpp>
+#include <components/sql/parser.hpp>
 
 namespace duck_charmer {
 
@@ -248,7 +249,7 @@ namespace duck_charmer {
 
         trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());
 
-        return std::visit([&](const auto& ql) {
+        return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
             if constexpr (std::is_same_v<type, aggregate_statement>) {
                 return send_ql<components::cursor::cursor_t*>(session, ql, "find", collection::handler_id(collection::route::find));
@@ -262,6 +263,18 @@ namespace duck_charmer {
                 return result_t{null_result{}};
             }
         }, query);
+    }
+
+    result_t wrapper_dispatcher_t::execute_sql(components::session::session_id_t& session, const std::string& query) {
+        trace(log_, "wrapper_dispatcher_t::execute sql session: {}", session.data());
+        auto parse_result = components::sql::parse(resource(), query);
+        if (parse_result.error) {
+            error(log_, parse_result.error.what());
+            //todo: output pos error in sql-query
+        } else {
+            return execute_ql(session, parse_result.ql);
+        }
+        return null_result{};
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {

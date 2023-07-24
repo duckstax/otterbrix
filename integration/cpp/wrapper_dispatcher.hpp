@@ -47,6 +47,7 @@ namespace duck_charmer {
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index;
         auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> result_drop_index;
         auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query) -> result_t;
+        auto execute_sql(session_id_t& session, const std::string& query) -> result_t;
 
     protected:
 

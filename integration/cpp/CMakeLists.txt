@@ -17,6 +17,7 @@ set(ROCKETJOE_LIBS
         rocketjoe::wal
         rocketjoe::disk
         rocketjoe::locks
+        rocketjoe::sql
 )
 
 

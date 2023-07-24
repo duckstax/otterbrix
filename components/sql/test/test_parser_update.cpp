@@ -23,7 +23,8 @@ using ::document::impl::new_value;
             REQUIRE(upd.parameter(core::parameter_id_t(uint16_t(i)))     \
                     == PARAMS.at(i));                                    \
         }                                                                \
-        components::document::document_view_t view(upd.update_);         \
+        components::document::document_view_t view_set(upd.update_);     \
+        auto view = view_set.get_dict("$set");                           \
         REQUIRE(view.count() == FIELDS.size());                          \
         for (auto f : FIELDS) {                                          \
             REQUIRE(view.get(f.first)->is_equal(f.second));              \
