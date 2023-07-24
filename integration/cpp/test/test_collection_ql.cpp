@@ -12,7 +12,7 @@ using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-TEST_CASE("python::test_collection::ql") {
+TEST_CASE("integration::cpp::test_collection::ql") {
 
     auto config = test_create_config("/tmp/test_collection_ql");
     test_clear_directory(config);
