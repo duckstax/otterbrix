@@ -36,4 +36,14 @@ private:
     result_update result;
 };
 
+
+class PYBIND11_EXPORT wrapper_result final : public boost::intrusive_ref_counter<wrapper_result> {
+public:
+    wrapper_result();
+    wrapper_result(const result_t &src);
+
+private:
+    result_t result;
+};
+
 }

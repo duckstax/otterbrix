@@ -40,4 +40,13 @@ py::object wrapper_result_update::upserted_id() const {
     return py::str(result.upserted_id().to_string());
 }
 
+
+wrapper_result::wrapper_result()
+    : result(null_result{}) {
+}
+
+wrapper_result::wrapper_result(const result_t& src)
+    : result(src) {
+}
+
 }
