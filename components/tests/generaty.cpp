@@ -1,7 +1,7 @@
 #include "generaty.hpp"
 
 document::retained_t<document::impl::array_t> gen_array(int num) {
-    auto array = document::impl::mutable_array_t::new_array();
+    auto array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(num + i);
     }
@@ -9,7 +9,7 @@ document::retained_t<document::impl::array_t> gen_array(int num) {
 }
 
 document::retained_t<document::impl::dict_t> gen_dict(int num) {
-    auto dict = document::impl::mutable_dict_t::new_dict();
+    auto dict = document::impl::dict_t::new_dict();
     dict->set("odd", num % 2 != 0);
     dict->set("even", num % 2 == 0);
     dict->set("three", num % 3 == 0);
@@ -26,7 +26,7 @@ std::string gen_id(int num) {
 }
 
 document_ptr gen_doc(int num) {
-    auto doc = document::impl::mutable_dict_t::new_dict();
+    auto doc = document::impl::dict_t::new_dict();
     doc->set("_id", gen_id(num));
     doc->set("count", num);
     doc->set("countStr", std::to_string(num));
@@ -34,19 +34,19 @@ document_ptr gen_doc(int num) {
     doc->set("countBool", num % 2 != 0);
     doc->set("countArray", gen_array(num));
     doc->set("countDict", gen_dict(num));
-    auto array = document::impl::mutable_array_t::new_array();
+    auto array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
         array->append(gen_array(num + i));
     }
     doc->set("nestedArray", array);
-    array = document::impl::mutable_array_t::new_array();
+    array = document::impl::array_t::new_array();
     for (int i = 0; i < 5; ++i) {
-        auto dict = document::impl::mutable_dict_t::new_dict();
+        auto dict = document::impl::dict_t::new_dict();
         dict->set("number", num + i);
         array->append(dict);
     }
     doc->set("dictArray", array);
-    auto dict = document::impl::mutable_dict_t::new_dict();
+    auto dict = document::impl::dict_t::new_dict();
     for (int i = 0; i < 5; ++i) {
         auto number = std::to_string(num + i);
         dict->set(number, gen_dict(num + i));

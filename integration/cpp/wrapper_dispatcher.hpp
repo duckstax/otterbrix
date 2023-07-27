@@ -29,6 +29,7 @@ namespace duck_charmer {
     public:
         /// blocking method
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
+        ~wrapper_dispatcher_t();
         auto load() -> void;
         auto create_database(session_id_t &session, const database_name_t &database) -> void;
         auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
@@ -43,6 +44,7 @@ namespace duck_charmer {
         auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update&;
         auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index;
+        auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> result_drop_index;
 
     protected:
 
@@ -63,6 +65,7 @@ namespace duck_charmer {
         auto update_finish(session_id_t &session, result_update result) -> void;
         auto size_finish(session_id_t &session, result_size result) -> void;
         auto create_index_finish(session_id_t &session, result_create_index result) -> void;
+        auto drop_index_finish(session_id_t &session, result_drop_index result) -> void;
 
         void init();
         void wait();
@@ -85,6 +88,7 @@ namespace duck_charmer {
             result_update,
             result_drop_collection,
             result_create_index,
+            result_drop_index,
             services::database::database_create_result,
             services::database::collection_create_result>
             intermediate_store_;

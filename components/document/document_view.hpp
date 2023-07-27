@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <components/document/core/dict.hpp>
 #include <components/document/document.hpp>
 
 namespace components::document {

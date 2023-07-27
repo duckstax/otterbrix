@@ -10,7 +10,7 @@
 
 template<typename T>
 CONST constexpr inline const T* offsetby(const T* t, std::ptrdiff_t offset) noexcept {
-    return reinterpret_cast<const T*>(reinterpret_cast<uint8_t*>(const_cast<T*>(t)) + offset);
+    return reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(t) + offset);
 }
 
 template<typename T>

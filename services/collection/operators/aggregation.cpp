@@ -20,20 +20,25 @@ namespace services::collection::operators {
         sort_ = std::move(sort);
     }
 
-    void aggregation::on_execute_impl(planner::transaction_context_t *transaction_context) {
-        operator_ptr executor = match_
-                ? std::move(match_)
-                : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, predicates::limit_t::unlimit()));
-        if (group_) {
-            group_->set_children(std::move(executor));
-            executor = std::move(group_);
+    void aggregation::on_execute_impl(components::pipeline::context_t*) {
+        take_output(left_);
+    }
+
+    void aggregation::on_prepare_impl() {
+        if (!left_) {
+            operator_ptr executor = match_
+                 ? std::move(match_)
+                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, predicates::limit_t::unlimit()));
+            if (group_) {
+                group_->set_children(std::move(executor));
+                executor = std::move(group_);
+            }
+            if (sort_) {
+                sort_->set_children(std::move(executor));
+                executor = std::move(sort_);
+            }
+            set_children(std::move(executor));
         }
-        if (sort_) {
-            sort_->set_children(std::move(executor));
-            executor = std::move(sort_);
-        }
-        executor->on_execute(transaction_context);
-        take_output(executor);
     }
 
 } // namespace services::collection::operators

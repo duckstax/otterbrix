@@ -1,9 +1,14 @@
 #pragma once
 
-#include <services/collection/collection.hpp>
+#include <components/pipeline/context.hpp>
 #include <services/collection/operators/operator_data.hpp>
 #include <services/collection/operators/operator_write_data.hpp>
-#include <services/collection/planner/transaction_context.hpp>
+
+namespace services::collection {
+
+    class context_collection_t;
+
+} // namespace services::collection
 
 namespace services::collection::operators {
 
@@ -21,6 +26,7 @@ namespace services::collection::operators {
     enum class operator_state {
         created,
         running,
+        waiting,
         executed,
         cleared
     };
@@ -35,7 +41,12 @@ namespace services::collection::operators {
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
-        void on_execute(planner::transaction_context_t* transaction_context);
+        void on_execute(components::pipeline::context_t* pipeline_context);
+        void on_resume(components::pipeline::context_t* pipeline_context);
+        void async_wait();
+
+        bool is_executed() const;
+        bool is_wait_sync_disk() const;
 
         operator_state state() const;
         const operator_data_ptr& output() const;
@@ -54,7 +65,9 @@ namespace services::collection::operators {
         operator_write_data_ptr no_modified_ {nullptr};
 
     private:
-        virtual void on_execute_impl(planner::transaction_context_t* transaction_context) = 0;
+        virtual void on_execute_impl(components::pipeline::context_t* pipeline_context) = 0;
+        virtual void on_resume_impl(components::pipeline::context_t* pipeline_context);
+        virtual void on_prepare_impl();
 
         const operator_type type_;
         operator_state state_ {operator_state::created};

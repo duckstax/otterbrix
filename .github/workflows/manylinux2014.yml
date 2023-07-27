@@ -1,10 +1,6 @@
 name: manylinux2014
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
+on: [push]
         
 env:
   BUILD_TYPE: Release
@@ -21,61 +17,10 @@ jobs:
         run: |
           echo 'matrix=[ "3.6", "3.7", "3.8", "3.9", "3.10", "3.11" ]' >> $GITHUB_OUTPUT
 
-  build-wasm:
-    name: Build WASM library
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install system dependencies
-        run: |
-          sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https && \
-          curl -fsSL https://bazel.build/bazel-release.pub.gpg | sudo apt-key add && \
-          echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | sudo tee /etc/apt/sources.list.d/bazel.list && \
-          sudo apt update && 
-          sudo apt install -y bazel bazel-4.1.0 git jq
-
-      - name: conan installation and configuration
-        run: |
-          pip3 install --retries=30 conan==1.54.0
-          conan user
-          conan profile new default --detect --force
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan config set general.parallel_download=$(nproc)
-          conan config set general.cpu_count=$(nproc)
-          conan remote add duckstax http://conan.duckstax.com
-
-      - name: download dependencies
-        run: | 
-          mkdir build && cd build
-          cp -r ../conan .
-          cp ../conanfile-wasm.txt .
-          conan config install conan
-          conan install -pr wasm --profile:build=default --profile:host=wasm -g virtualenv --build missing -s build_type=Release conanfile-wasm.txt
-
-      - name: build wasm target
-        run: |
-          cd build
-          source ./activate.sh  && \
-          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON .. &&\
-          cmake --build . && \
-          source ./deactivate.sh
-
-      - run: |
-          pwd
-          ls
-
-      - name: Save library
-        uses: actions/upload-artifact@v3
-        with:
-          path: build/bin/*.wasm
-          name: wasm-file
-
   build-wheel:
     name: Build native wheel
     runs-on: ubuntu-latest
-    needs: [ build-wasm, build-info ]
+    needs: [build-info ]
     strategy:
       fail-fast: true
       matrix:
@@ -101,7 +46,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.54.0
+          pip3 install --retries=30 conan==1.59.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -114,37 +59,25 @@ jobs:
         run: |
           pwd
           ls
-          conan install . --build missing  \
+          conan install conanfile.txt --build missing  \
           --build fmt \
           --build spdlog  \
           --build rocksdb  \
           -s build_type=Release
 
-      #- run: mkdir -p ./wasm_bin/
-      - uses: actions/download-artifact@v3
-        with:
-          name: wasm-file
-          path: wasm_bin
 
       - name: Build wheel
         run: |
-          pwd
-          ls
-          
+
           cp integration/python/ottergon/setup.py .
-          cp integration/python/ottergon/MANIFEST.in .
           cp integration/python/ottergon/pyproject.toml .
           cp integration/python/ottergon/get_path.py .
+          touch MANIFEST.in
           
           python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
-          conan install . --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
+          conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
           python3 setup.py bdist_wheel --verbose
-          pwd
-          ls
-          ls wasm_bin
-          mkdir -p $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
-          cp wasm_bin/*.wasm $(echo "$(python3 get_path.py )/components/wasm_runner/tests/") 
 
       - name: Repair wheel
         run: |
@@ -207,8 +140,7 @@ jobs:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
     needs: [ test-wheel, build-info ]
-    # TODO remove second branch condition later
-    if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
+    if: ${{ github.ref_name == 'master' }}
     strategy:
       fail-fast: false
       matrix:
@@ -242,7 +174,7 @@ jobs:
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: | 
+        run: |
           pwd
           ls
           echo "Pretend to upload"

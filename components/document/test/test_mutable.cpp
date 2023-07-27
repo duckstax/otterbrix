@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <components/document/support/varint.hpp>
 
 using namespace document;
@@ -10,11 +10,9 @@ using namespace document::impl;
 TEST_CASE("mutable::mutable_array_t") {
 
     SECTION("check type") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
 
         REQUIRE(ma->as_array() == ma);
-        REQUIRE(ma->is_mutable());
-        REQUIRE(ma->as_mutable() == ma);
         REQUIRE(ma->type() == value_type::array);
         REQUIRE_FALSE(ma->is_int());
         REQUIRE_FALSE(ma->is_unsigned());
@@ -33,13 +31,13 @@ TEST_CASE("mutable::mutable_array_t") {
 
     SECTION("set value") {
         constexpr uint32_t size = 17;
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
 
         REQUIRE(ma->count() == 0);
         REQUIRE(ma->empty());
         REQUIRE_FALSE(ma->get(0));
 
-        mutable_array_t::iterator_t i0(ma);
+        array_t::iterator i0(ma);
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(ma->is_changed());
@@ -95,7 +93,7 @@ TEST_CASE("mutable::mutable_array_t") {
         REQUIRE(ma->get(15)->as_int() == 9223372036854775807LL);
         REQUIRE(ma->get(16)->as_int() == -9223372036854775807LL);
 
-        mutable_array_t::iterator_t i1(ma);
+        array_t::iterator i1(ma);
         for (auto type : types) {
             REQUIRE(i1);
             REQUIRE(i1.value() != nullptr);
@@ -120,7 +118,7 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 
     SECTION("to array_t") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
         auto a = ma->as_array();
         REQUIRE(a->type() == value_type::array);
         REQUIRE(a->count() == 0);
@@ -146,29 +144,28 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 
     SECTION("pointer") {
-        auto ma = mutable_array_t::new_array();
+        auto ma = array_t::new_array();
         ma->resize(2);
         ma->set(0, 100);
         ma->set(1, 200);
 
-        auto mb = mutable_array_t::new_array();
+        auto mb = array_t::new_array();
         REQUIRE_FALSE(mb->is_changed());
         mb->append(ma);
         REQUIRE(mb->is_changed());
         REQUIRE(mb->get(0) == ma);
-        REQUIRE(mb->get_mutable_array(0) == ma);
     }
 
     SECTION("copy") {
-        auto ma = mutable_array_t::new_array(2);
+        auto ma = array_t::new_array(2);
         ma->set(0, 100);
         ma->set(1, std::string("dog"));
 
-        auto mb = mutable_array_t::new_array(1);
+        auto mb = array_t::new_array(1);
         mb->set(0, ma);
         REQUIRE(mb->get(0) == ma);
 
-        auto mc = mutable_array_t::new_array(1);
+        auto mc = array_t::new_array(1);
         mc->set(0, mb);
         REQUIRE(mc->get(0) == mb);
 
@@ -189,7 +186,7 @@ TEST_CASE("mutable::mutable_array_t") {
 TEST_CASE("mutable::mutable_dict_t") {
 
     SECTION("check type") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         REQUIRE(md->type() == value_type::dict);
 
         REQUIRE(md->is_mutable());
@@ -208,15 +205,14 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(to_string(md).empty());
         REQUIRE(md->as_array() == nullptr);
         REQUIRE(md->as_dict() == md);
-        REQUIRE(md->as_mutable() == md);
     }
 
     SECTION("set value") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         REQUIRE(md->count() == 0);
         REQUIRE(md->get("key") == nullptr);
 
-        mutable_dict_t::iterator i0(md);
+        dict_t::iterator i0(md);
         REQUIRE_FALSE(i0);
 
         REQUIRE_FALSE(md->is_changed());
@@ -252,7 +248,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->get("foo") == nullptr);
 
         bool found[9] = { };
-        mutable_dict_t::iterator i1(md);
+        dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
             auto key = i1.key_string();
@@ -272,12 +268,12 @@ TEST_CASE("mutable::mutable_dict_t") {
 
         md->remove_all();
         REQUIRE(md->count() == 0);
-        mutable_dict_t::iterator i2(md);
+        dict_t::iterator i2(md);
         REQUIRE_FALSE(i2);
     }
 
     SECTION("to dict_t") {
-        auto md = mutable_dict_t::new_dict();
+        auto md = dict_t::new_dict();
         auto d = md->as_dict();
         REQUIRE(d->type() == value_type::dict);
         REQUIRE(d->count() == 0);
@@ -331,15 +327,15 @@ TEST_CASE("mutable::mutable_dict_t") {
     }
 
     SECTION("copy") {
-        auto ma = mutable_dict_t::new_dict();
+        auto ma = dict_t::new_dict();
         ma->set("a", 100);
         ma->set("b", std::string("dog"));
 
-        auto mb = mutable_dict_t::new_dict();
+        auto mb = dict_t::new_dict();
         mb->set("a", ma);
         REQUIRE(mb->get("a") == ma);
 
-        auto mc = mutable_dict_t::new_dict();
+        auto mc = dict_t::new_dict();
         mc->set("a", mb);
         REQUIRE(mc->get("a") == mb);
 
@@ -361,7 +357,7 @@ TEST_CASE("mutable::mutable_dict_t") {
 TEST_CASE("mutable long string") {
     constexpr uint32_t size = 50;
     const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    auto ma = mutable_array_t::new_array(50);
+    auto ma = array_t::new_array(50);
     for (uint32_t i = 0; i < size; ++i) {
         ma->set(i, std::string(chars, i));
     }

@@ -3,8 +3,9 @@
 #include <cstdint>
 #include <msgpack.hpp>
 #include <vector>
-#include "components/ql/statements.hpp"
+
 #include "base.hpp"
+#include "components/ql/statements.hpp"
 
 namespace services::wal {
 

@@ -84,4 +84,4 @@ namespace core::non_thread_scheduler {
         return true;
     }
 
-}
+} // namespace core::non_thread_scheduler

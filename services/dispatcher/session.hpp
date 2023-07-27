@@ -34,18 +34,47 @@ private:
 };
 
 
-using session_storage_t =  std::unordered_map<components::session::session_id_t, session_t>;
+struct session_key_t {
+    components::session::session_id_t id;
+    std::string name;
+};
 
-template<class ...Args>
-auto make_session(session_storage_t& storage ,components::session::session_id_t session,Args&&...args) -> void {
-    storage.emplace(session,session_t(std::forward<Args>(args)...));
+inline bool operator==(const session_key_t& key1, const session_key_t& key2) {
+    return key1.id == key2.id && key1.name == key2.name;
 }
 
-inline auto find(session_storage_t& storage,components::session::session_id_t session) -> session_t& {
-    auto it = storage.find(session);
+struct session_key_hash {
+    std::size_t operator()(const session_key_t& key) const {
+        return std::hash<components::session::session_id_t>()(key.id);
+    }
+};
+
+using session_storage_t = std::unordered_map<session_key_t, session_t, session_key_hash>;
+
+template<class ...Args>
+auto make_session(session_storage_t& storage, components::session::session_id_t session, Args&&...args) -> void {
+    storage.emplace(session_key_t{session, {}}, session_t(std::forward<Args>(args)...));
+}
+
+template<class ...Args>
+auto make_session(session_storage_t& storage, const session_key_t& session, Args&&...args) -> void {
+    storage.emplace(session, session_t(std::forward<Args>(args)...));
+}
+
+inline auto find_session(session_storage_t& storage, components::session::session_id_t session) -> session_t& {
+    auto it = storage.find(session_key_t{session, {}});
     return  it ->second;
 }
 
-inline  auto remove(session_storage_t& storage,components::session::session_id_t session) -> void  {
-    storage.erase(session);
+inline auto find_session(session_storage_t& storage, components::session::session_id_t session, const std::string& name) -> session_t& {
+    auto it = storage.find(session_key_t{session, name});
+    return  it ->second;
+}
+
+inline auto remove_session(session_storage_t& storage, components::session::session_id_t session) -> void  {
+    storage.erase(session_key_t{session, {}});
+}
+
+inline auto remove_session(session_storage_t& storage, components::session::session_id_t session, const std::string& name) -> void  {
+    storage.erase(session_key_t{session, name});
 }

@@ -39,6 +39,26 @@ PYBIND11_MODULE(ottergon, m) {
         .def("__getitem__", &wrapper_database::create);
 
     py::enum_<index_type>(m, "TypeIndex")
+        .value("SINGLE", index_type::single)
+        .value("COMPOSITE", index_type::composite)
+        .value("MULTIKEY", index_type::multikey)
+        .value("HASHED", index_type::hashed)
+        .value("WILDCARD", index_type::wildcard)
+        .export_values();
+
+    py::enum_<index_compare>(m, "CompareIndex")
+        .value("STR", index_compare::str)
+        .value("INT8", index_compare::int8)
+        .value("INT16", index_compare::int16)
+        .value("INT32", index_compare::int32)
+        .value("INT64", index_compare::int64)
+        .value("UINT8", index_compare::uint8)
+        .value("UINT16", index_compare::uint16)
+        .value("UINT32", index_compare::uint32)
+        .value("UINT64", index_compare::uint64)
+        .value("FLOAT32", index_compare::float32)
+        .value("FLOAT64", index_compare::float64)
+        .value("BOOL8", index_compare::bool8)
         .export_values();
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
@@ -55,7 +75,7 @@ PYBIND11_MODULE(ottergon, m) {
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
-        .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"))
+        .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"), py::arg("compare"))
         ///.def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence())
         ;
 

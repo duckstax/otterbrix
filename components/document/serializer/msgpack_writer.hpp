@@ -2,16 +2,16 @@
 
 #include <cassert>
 
-#include <algorithm> // reverse
-#include <array>     // array
-#include <cmath>     // isnan, isinf
-#include <cstdint>   // uint8_t, uint16_t, uint32_t, uint64_t
-#include <cstring>   // memcpy
-#include <limits>    // numeric_limits
-#include <map>       // map
-#include <string>    // string
-#include <utility>   // move
-#include <vector>    // vector
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstring>
+#include <limits>
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "utils.hpp"
 #include "output_adapters.hpp"

@@ -1,5 +1,4 @@
 #include "wrapper_value.hpp"
-#include <components/document/mutable/mutable_value.hpp>
 
 namespace document {
 

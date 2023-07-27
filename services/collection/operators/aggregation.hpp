@@ -17,7 +17,8 @@ namespace services::collection::operators {
         operator_ptr group_{nullptr};
         operator_ptr sort_{nullptr};
 
-        void on_execute_impl(planner::transaction_context_t* transaction_context) final;
+        void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
+        void on_prepare_impl() final;
     };
 
 } // namespace services::collection::operators

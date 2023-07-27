@@ -24,6 +24,7 @@ namespace py = pybind11;
 namespace duck_charmer {
 
     using components::ql::index_type;
+    using components::ql::index_compare;
 
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
     public:
@@ -42,7 +43,7 @@ namespace duck_charmer {
         wrapper_result_delete delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
-        bool create_index(py::list keys, index_type type);
+        bool create_index(const py::list& keys, index_type type, index_compare compare);
 
     private:
         const std::string name_;

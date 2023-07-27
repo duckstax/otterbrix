@@ -1,4 +1,5 @@
 #include "operator_sort.hpp"
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 
@@ -16,7 +17,7 @@ namespace services::collection::operators {
         }
     }
 
-    void operator_sort_t::on_execute_impl(planner::transaction_context_t*) {
+    void operator_sort_t::on_execute_impl(components::pipeline::context_t*) {
         if (left_ && left_->output()) {
             output_ = make_operator_data(context_->resource());
             for (const auto& document : left_->output()->documents()) {
