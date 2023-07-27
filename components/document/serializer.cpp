@@ -2,8 +2,8 @@
 
 #include <boost/json.hpp>
 
-#include <components/document/mutable/mutable_array.h>
-#include <components/document/mutable/mutable_dict.h>
+#include <components/document/core/array.hpp>
+#include <components/document/core/dict.hpp>
 #include <components/document/document_view.hpp>
 
 
@@ -39,13 +39,13 @@ namespace components::document {
         } else if (item.is_string()) {
             return ::document::impl::new_value(std::string(item.get_string().c_str()));
         } else if (item.is_array()) {
-            auto array = ::document::impl::mutable_array_t::new_array();
+            auto array = ::document::impl::array_t::new_array();
             for (const auto &child : item.get_array()) {
                 array->append(json2value(child));
             }
             return array->as_array();
         } else if (item.is_object()) {
-            auto dict = ::document::impl::mutable_dict_t::new_dict();
+            auto dict = ::document::impl::dict_t::new_dict();
             for (const auto &child : item.get_object()) {
                 dict->set(std::string(child.key()), json2value(child.value()));
             }
