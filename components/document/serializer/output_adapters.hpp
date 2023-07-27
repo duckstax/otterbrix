@@ -12,8 +12,6 @@
     #include <ostream>  // basic_ostream
 #endif  // JSON_NO_IO
 
-//namespace components::document
-//{
 
 /// abstract output adapter interface
 template<typename CharType> struct output_adapter_protocol

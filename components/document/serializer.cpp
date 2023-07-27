@@ -8,7 +8,7 @@
 
 
 namespace components::document {
-
+    
     std::vector<std::uint8_t> to_msgpack(const document_ptr& j) {
         std::vector<std::uint8_t> result;
         to_msgpack(j, result);
@@ -21,6 +21,10 @@ namespace components::document {
 
     void to_msgpack(const document_ptr& j, output_adapter<char> o) {
         binary_writer<document_ptr, char>(o).write_msgpack(j);
+    }
+
+    document_ptr from_msgpack(std::vector<std::uint8_t> msgpackBinaryArray) {
+         return document_from_json(binary_reader(msgpackBinaryArray).msgpack_parse_to_json());
     }
 
     static document_const_value_t json2value(const boost::json::value &item) {

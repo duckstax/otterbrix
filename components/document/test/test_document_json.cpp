@@ -2,6 +2,7 @@
 #include <document/document.hpp>
 #include <document/document_view.hpp>
 #include <components/tests/generaty.hpp>
+#include <components/document/serializer.cpp>
 
 using namespace components::document;
 

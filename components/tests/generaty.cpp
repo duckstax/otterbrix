@@ -55,8 +55,29 @@ document_ptr gen_doc(int num) {
     return make_document(doc);
 }
 
-document_ptr gen_number_doc(int num) {
-    auto array = document::impl::mutable_array_t::new_array();
+document_ptr gen_number_doc(int64_t num) {
+    auto array = document::impl::mutable_array_t::new_array().detach();
     array->append(num);
     return make_document(array);
 }
+
+
+document_ptr gen_special_doc(char type) {
+    auto array = document::impl::mutable_array_t::new_array().detach();
+    switch (type){
+        case 't': //true
+            array->append(document::impl::value_t::true_value);
+            break;
+        case 'f': //false
+            array->append(document::impl::value_t::false_value);
+            break;
+        case 'u': //undefined - abandoned
+            array->append(document::impl::value_t::undefined_value);
+            break;
+        case 'n': //null
+        default:
+            array->append(document::impl::value_t::null_value);
+    }
+    return make_document(array);
+}
+

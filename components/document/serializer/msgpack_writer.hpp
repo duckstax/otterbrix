@@ -25,12 +25,17 @@ template<typename document_ptr, typename CharType>
 class binary_writer {
     using string_t = std::string;
     // using binary_t = byte_container_t;  # document::impl::value_type::data
-    using number_float_t = float;
+    using number_double_t = double;
 
 public:
     explicit binary_writer(output_adapter_t<CharType> adapter)
         : oa(std::move(adapter)) {
         assert(oa);
+    }
+
+    void DEBUG_FUNCTION(int c){
+        //std::cout << ( c >= (std::numeric_limits<std::int32_t>::min)() && c <= (std::numeric_limits<std::int32_t>::max)());
+        return;
     }
 
     void write_simple_datatype(const document::impl::value_t* v) {
@@ -50,61 +55,56 @@ public:
             }
             
             case document::impl::value_type::number: {
-
-                #define numValue v
-
-                if (numValue->is_unsigned()){
-                    if (numValue->as_unsigned() < 128)
-                    // MessagePack does not differentiate between positive
-                    // signed integers and unsigned integers-> Therefore, we used
-                    // the code from the ::value_t::number_unsigned case here->
-                    if (numValue->as_unsigned() < 128) {
-                        // positive fixnum
-                        write_number(static_cast<std::uint8_t>(numValue->as_unsigned()));
-                    } else if (numValue->as_unsigned() <= (std::numeric_limits<std::uint8_t>::max)()) {
+                auto debug = v->as_int();
+                auto debug2 = v->as_unsigned();
+                DEBUG_FUNCTION(v->as_int());
+                if (v->is_unsigned()){
+                    if (v->as_unsigned() <= (std::numeric_limits<std::uint8_t>::max)()) {
                         // uint 8
                         oa->write_character(to_char_type(0xCC));
-                        write_number(static_cast<std::uint8_t>(numValue->as_unsigned()));
-                    } else if (numValue->as_unsigned() <= (std::numeric_limits<std::uint16_t>::max)()) {
+                        write_number(static_cast<std::uint8_t>(v->as_unsigned()));
+                    } else if (v->as_unsigned() <= (std::numeric_limits<std::uint16_t>::max)()) {
                         // uint 16
                         oa->write_character(to_char_type(0xCD));
-                        write_number(static_cast<std::uint16_t>(numValue->as_unsigned()));
-                    } else if (numValue->as_unsigned() <= (std::numeric_limits<std::uint32_t>::max)()) {
+                        write_number(static_cast<std::uint16_t>(v->as_unsigned()));
+                    } else if (v->as_unsigned() <= (std::numeric_limits<std::uint32_t>::max)()) {
                         // uint 32
                         oa->write_character(to_char_type(0xCE));
-                        write_number(static_cast<std::uint32_t>(numValue->as_unsigned()));
-                    } else if (numValue->as_unsigned() <= (std::numeric_limits<std::uint64_t>::max)()) {
+                        write_number(static_cast<std::uint32_t>(v->as_unsigned()));
+                    } else if (v->as_unsigned() <= (std::numeric_limits<std::uint64_t>::max)()) {
                         // uint 64
                         oa->write_character(to_char_type(0xCF));
-                        write_number(static_cast<std::uint64_t>(numValue->as_unsigned()));
+                        write_number(static_cast<std::uint64_t>(v->as_unsigned()));
                     }
-                } else if (numValue->is_int()){
-                    if (numValue->as_int() >= -32) {
-                        // negative fixnum
-                        write_number(static_cast<std::int8_t>(numValue->as_int()));
-                    } else if (numValue->as_int() >= (std::numeric_limits<std::int8_t>::min)() &&
-                               numValue->as_int() <= (std::numeric_limits<std::int8_t>::max)()) {
+                } 
+                else if (v->is_int()){
+                    if (v->as_int() >= -32 && v->as_int() <= 127) {
+                        // fixnum
+                        write_number(static_cast<std::int8_t>(v->as_int()));
+                    } else if ( v->as_int() >= (std::numeric_limits<std::int8_t>::min)() &&
+                                v->as_int() <= (std::numeric_limits<std::int8_t>::max)()) {
                         // int 8
                         oa->write_character(to_char_type(0xD0));
-                        write_number(static_cast<std::int8_t>(numValue->as_int()));
-                    } else if (numValue->as_int() >= (std::numeric_limits<std::int16_t>::min)() &&
-                               numValue->as_int() <= (std::numeric_limits<std::int16_t>::max)()) {
+                        write_number(static_cast<std::int8_t>(v->as_int()));
+                    } else if ( v->as_int() >= (std::numeric_limits<std::int16_t>::min)() &&
+                                v->as_int() <= (std::numeric_limits<std::int16_t>::max)()) {
                         // int 16
                         oa->write_character(to_char_type(0xD1));
-                        write_number(static_cast<std::int16_t>(numValue->as_int()));
-                    } else if (numValue->as_int() >= (std::numeric_limits<std::int32_t>::min)() &&
-                               numValue->as_int() <= (std::numeric_limits<std::int32_t>::max)()) {
+                        write_number(static_cast<std::int16_t>(v->as_int()));
+                    } else if ( v->as_int() >= (std::numeric_limits<std::int32_t>::min)() &&
+                                v->as_int() <= (std::numeric_limits<std::int32_t>::max)()) {
                         // int 32
                         oa->write_character(to_char_type(0xD2));
-                        write_number(static_cast<std::int32_t>(numValue->as_int()));
-                    } else if (numValue->as_int() >= (std::numeric_limits<std::int64_t>::min)() &&
-                               numValue->as_int() <= (std::numeric_limits<std::int64_t>::max)()) {
+                        write_number(static_cast<std::int32_t>(v->as_int()));
+                    } else if ( v->as_int() >= (std::numeric_limits<std::int64_t>::min)() &&
+                                v->as_int() <= (std::numeric_limits<std::int64_t>::max)()) {
                         // int 64
                         oa->write_character(to_char_type(0xD3));
-                        write_number(static_cast<std::int64_t>(numValue->as_int()));
+                        write_number(static_cast<std::int64_t>(v->as_int()));
                     }
-                } else if (numValue->is_double()) {
-                    write_compact_float(numValue->as_double());
+                } 
+                else if (v->is_double()) {
+                    write_double(v->as_double());
                 }
                 break;
             }
@@ -143,6 +143,9 @@ public:
 
     void write_msgpack(const document_ptr& ptr) {
         components::document::document_view_t j(ptr);
+
+        if (!j.is_valid()) return;
+
         switch (j.get_value()->type()) {
             case document::impl::value_type::null:
             case document::impl::value_type::boolean:
@@ -304,23 +307,11 @@ private:
         oa->write_characters(vec.data(), sizeof(NumberType));
     }
 
-    void write_compact_float(const number_float_t n) {
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wfloat-equal"
-#endif
-        if (static_cast<double>(n) >= static_cast<double>(std::numeric_limits<float>::lowest()) &&
-            static_cast<double>(n) <= static_cast<double>((std::numeric_limits<float>::max)()) &&
-            static_cast<double>(static_cast<float>(n)) == static_cast<double>(n)) {
-            oa->write_character(get_msgpack_float_prefix(static_cast<float>(n)));
-            write_number(static_cast<float>(n));
-        } else {
-            oa->write_character(get_msgpack_float_prefix(n));
-            write_number(n);
-        }
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
+    void write_double(const number_double_t n) {
+
+        oa->write_character(get_msgpack_float_prefix(n));
+        write_number(n);
+        
     }
 
 public:
