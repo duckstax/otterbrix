@@ -158,6 +158,11 @@ public:
         return std::get<T>(result_);
     }
 
+    template <typename T>
+    bool is_type() const {
+        return std::holds_alternative<T>(result_);
+    }
+
 private:
     std::variant<
         null_result,

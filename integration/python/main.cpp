@@ -126,7 +126,12 @@ PYBIND11_MODULE(ottergon, m) {
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
 
-    py::class_<wrapper_result, boost::intrusive_ptr<wrapper_result>>(m, "Result");
+    py::class_<wrapper_result, boost::intrusive_ptr<wrapper_result>>(m, "Result")
+        .def_property_readonly("inserted_count", &wrapper_result::inserted_count)
+        .def_property_readonly("modified_count", &wrapper_result::modified_count)
+        .def_property_readonly("deleted_count", &wrapper_result::deleted_count)
+        .def_property_readonly("cursor", &wrapper_result::cursor)
+        ;
 
     m.def("to_aggregate", &test_to_statement);
 
