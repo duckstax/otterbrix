@@ -16,6 +16,7 @@
 #include <components/session/session.hpp>
 #include <components/ql/index.hpp>
 #include <components/ql/aggregate.hpp>
+#include <components/ql/statements.hpp>
 
 #include <services/collection/result.hpp>
 #include <services/database/result_database.hpp>
@@ -45,6 +46,8 @@ namespace duck_charmer {
         auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size;
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index;
         auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> result_drop_index;
+        auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query) -> result_t;
+        auto execute_sql(session_id_t& session, const std::string& query) -> result_t;
 
     protected:
 
@@ -69,6 +72,9 @@ namespace duck_charmer {
         void init();
         void wait();
         void notify();
+
+        template <typename Tres, typename Tql>
+        auto send_ql(session_id_t &session, Tql& ql, std::string_view title, uint64_t handle) -> result_t;
 
         actor_zeta::address_t manager_dispatcher_;
         log_t log_;

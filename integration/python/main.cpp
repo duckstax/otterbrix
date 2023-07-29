@@ -31,7 +31,8 @@ PYBIND11_MODULE(ottergon, m) {
             auto log = spaces::get_instance()->get_log().clone();
             return new wrapper_client(log, dispatcher); }))
         .def("__getitem__", &wrapper_client::get_or_create)
-        .def("database_names", &wrapper_client::database_names);
+        .def("database_names", &wrapper_client::database_names)
+        .def("execute", &wrapper_client::execute, py::arg("query"));
 
     py::class_<wrapper_database, boost::intrusive_ptr<wrapper_database>>(m, "DataBase")
         .def("collection_names", &wrapper_database::collection_names)
@@ -124,6 +125,8 @@ PYBIND11_MODULE(ottergon, m) {
         .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
         .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
         .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
+
+    py::class_<wrapper_result, boost::intrusive_ptr<wrapper_result>>(m, "Result");
 
     m.def("to_aggregate", &test_to_statement);
 

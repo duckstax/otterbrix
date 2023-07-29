@@ -10,6 +10,7 @@
 #include <components/ql/statements/insert_one.hpp>
 #include <components/ql/statements/update_many.hpp>
 #include <components/ql/statements/update_one.hpp>
+#include <components/sql/parser.hpp>
 
 namespace duck_charmer {
 
@@ -243,6 +244,39 @@ namespace duck_charmer {
         return std::get<result_drop_index>(intermediate_store_);
     }
 
+    auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &query) -> result_t {
+        using namespace components::ql;
+
+        trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());
+
+        return std::visit([&](auto& ql) {
+            using type = std::decay_t<decltype(ql)>;
+            if constexpr (std::is_same_v<type, aggregate_statement>) {
+                return send_ql<components::cursor::cursor_t*>(session, ql, "find", collection::handler_id(collection::route::find));
+            } else if constexpr (std::is_same_v<type, insert_many_t>) {
+                return send_ql<result_insert>(session, ql, "insert", collection::handler_id(collection::route::insert_documents));
+            } else if constexpr (std::is_same_v<type, delete_many_t>) {
+                return send_ql<result_delete>(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
+            } else if constexpr (std::is_same_v<type, update_many_t>) {
+                return send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents));
+            } else {
+                return result_t{null_result{}};
+            }
+        }, query);
+    }
+
+    result_t wrapper_dispatcher_t::execute_sql(components::session::session_id_t& session, const std::string& query) {
+        trace(log_, "wrapper_dispatcher_t::execute sql session: {}", session.data());
+        auto parse_result = components::sql::parse(resource(), query);
+        if (parse_result.error) {
+            error(log_, parse_result.error.what());
+            //todo: output pos error in sql-query
+        } else {
+            return execute_ql(session, parse_result.ql);
+        }
+        return null_result{};
+    }
+
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
         assert("wrapper_dispatcher_t::executor_impl");
         return nullptr;
@@ -341,6 +375,21 @@ namespace duck_charmer {
     void wrapper_dispatcher_t::notify() {
         i = 1;
         cv_.notify_all();
+    }
+
+    template <typename Tres, typename Tql>
+    auto wrapper_dispatcher_t::send_ql(session_id_t &session, Tql& ql, std::string_view title, uint64_t handle) -> result_t {
+        trace(log_, "wrapper_dispatcher_t::{} session: {}, database: {} collection: {} ",
+              title, session.data(), ql.database_, ql.collection_);
+        init();
+        actor_zeta::send(
+                    manager_dispatcher_,
+                    address(),
+                    handle,
+                    session,
+                    &ql);
+        wait();
+        return std::get<Tres>(intermediate_store_);
     }
 
 } // namespace python

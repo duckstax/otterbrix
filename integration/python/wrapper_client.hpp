@@ -16,6 +16,7 @@
 
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
+#include "wrapper_result.hpp"
 
 namespace py = pybind11;
 namespace duck_charmer {
@@ -25,6 +26,7 @@ namespace duck_charmer {
         ~wrapper_client();
         wrapper_database_ptr get_or_create(const std::string& name);
         auto database_names() -> py::list;
+        auto execute(const std::string& query) -> wrapper_result;
 
     private:
         std::unordered_map<std::string,wrapper_database_ptr> names_;
