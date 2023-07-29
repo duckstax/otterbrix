@@ -22,11 +22,11 @@ namespace components::serialization::stream {
     } // namespace detail
 
     template<>
-    class stream<boost::json::value> {
+    class output_stream<boost::json::value> {
     public:
-        stream()
+        output_stream()
             : value_(boost::json::value()) {}
-        ~stream() = default;
+        ~output_stream() = default;
 
         [[nodiscard]] inline std::string data() const {
             return boost::json::serialize(value_);
@@ -37,7 +37,7 @@ namespace components::serialization::stream {
         boost::json::value value_;
     };
 
-    using stream_json = stream<boost::json::value>;
+    using output_stream_json = output_stream<boost::json::value>;
 
     namespace detail {
 
@@ -51,23 +51,20 @@ namespace components::serialization::stream {
 
     } // namespace detail
 
-    void intermediate_serialize_array(stream_json& ar, std::size_t size, const unsigned int version);
-    void intermediate_serialize_map(stream_json& ar, std::size_t size, const unsigned int version);
+    void intermediate_serialize_array(output_stream_json& ar, std::size_t size, const unsigned int version);
+    void intermediate_serialize_map(output_stream_json& ar, std::size_t size, const unsigned int version);
 
-    void intermediate_serialize(stream_json& ar, bool data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, uint8_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, int8_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, uint16_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, int16_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, uint32_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, int32_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, uint64_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, int64_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, float data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, double data, const unsigned int version);
+    template<class T>
+    void intermediate_serialize(output_stream_json& ar, T& data, const unsigned int version){
+        boost::ignore_unused(version);
+        assert(ar.size_ > 0);
+        assert(detail::state_t::array == ar.state_);
+        ar.value_.as_array().emplace_back(data);
+        ar.size_--;
+    }
 
     template<class It>
-    void intermediate_serialize(stream_json& ar, size_t size, It first, It last, const unsigned int version, string_tag) {
+    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, string_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
@@ -78,7 +75,7 @@ namespace components::serialization::stream {
     }
 
     template<class It>
-    void intermediate_serialize(stream_json& ar, size_t size, It first, It last, const unsigned int version, array_tag) {
+    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, array_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
@@ -92,7 +89,7 @@ namespace components::serialization::stream {
     }
 
     template<class It> /// map  but not set
-    void intermediate_serialize(stream_json& ar, size_t size, It first, It last, const unsigned int version, object_tag) {
+    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, object_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
@@ -105,20 +102,20 @@ namespace components::serialization::stream {
         ar.size_--;
     }
 
-    void intermediate_serialize(stream_json& ar, std::string_view key, bool data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, uint8_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, int8_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, uint16_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, int16_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, uint32_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, int32_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, uint64_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, int64_t data, const unsigned int version);
-    void intermediate_serialize(stream_json& ar, std::string_view key, const std::string& data, const unsigned int version, string_tag);
-    void intermediate_serialize(stream_json& ar, std::string_view key, std::string_view data, const unsigned int version, string_tag);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, bool data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, uint8_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, int8_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, uint16_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, int16_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, uint32_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, int32_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, uint64_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, int64_t data, const unsigned int version);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, const std::string& data, const unsigned int version, string_tag);
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, std::string_view data, const unsigned int version, string_tag);
 
     template<class T>
-    void intermediate_serialize(stream_json& ar, std::string_view key, const std::vector<T>& data, const unsigned int version, array_tag) {
+    void intermediate_serialize(output_stream_json& ar, std::string_view key, const std::vector<T>& data, const unsigned int version, array_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::object == ar.state_);
@@ -132,7 +129,7 @@ namespace components::serialization::stream {
     }
 
     template<class Key, class Value>
-    void intermediate_serialize(stream_json& ar, std::string_view key1, const std::map<Key, Value>& data, const unsigned int version, object_tag) {
+    void intermediate_serialize(output_stream_json& ar, std::string_view key1, const std::map<Key, Value>& data, const unsigned int version, object_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::object == ar.state_);

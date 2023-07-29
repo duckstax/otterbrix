@@ -7,14 +7,14 @@ namespace components::serialization::stream {
 
 
     template<>
-    class stream<byte_container_t> {
+    class output_stream<byte_container_t> {
     public:
-        stream() = default;
-        ~stream() = default;
+        output_stream() = default;
+        ~output_stream() = default;
 
         byte_container_t value_;
     };
 
-    using stream_byte = stream<byte_container_t>;
+    using stream_byte = output_stream<byte_container_t>;
 
 }

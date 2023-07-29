@@ -8,6 +8,8 @@
 #include <vector>
 #include <string>
 
+#include "stream/base.hpp"
+
 namespace components::serialization {
 
     //
@@ -288,43 +290,55 @@ namespace components::serialization {
     struct pod_tag {};
     struct null_tag {};
 
-    template<class C,
-             bool is_sequence_container =  is_like_sequence_container<C>::value,
-             bool is_associative_container =  is_like_associative_container<C>::value,
-             bool is_string =  is_like_string<C>::value,
-             bool is_pod = is_like_pod<C>::value>
-    struct serialization_trait_impl;
+    template<class C, typename = void>
+    struct category_trait_impl;
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, false, false> {
+    struct category_trait_impl<C,false, false, false, false> {
         using category = null_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,true, false, false, false> {
+    struct category_trait_impl<C,true, false, false, false> {
         using category = array_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, true, false, false> {
+    struct category_trait_impl<C,false, true, false, false> {
         using category = object_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, true, false> {
+    struct category_trait_impl<C,false, false, true, false> {
         using category = string_tag;
     };
 
     template<class C>
-    struct serialization_trait_impl<C,false, false, false, true> {
+    struct category_trait_impl<C,false, false, false, true> {
         using category = pod_tag;
     };
+/*
+    ///  std::true_type
+    struct input_stream_tag {};
+    struct output_stream_tag {};
 
+    template<typename T, typename = void>
+    struct is_like_stream : std::false_type {};
 
-    template<class C>
+    template<class T>
+    struct is_like_stream<stream::input_stream<T>, void> : std::true_type {
+        using stream_type = input_stream_tag;
+    };
+
+    template<class T>
+    struct is_like_stream<stream::output_stream<T>, void> : std::true_type {
+        using stream_type = output_stream_tag;
+    };
+*/
+    template< class stream,class C>
     struct serialization_trait {
-        using category = typename serialization_trait_impl<C>::category;
-
+        using category = typename category_trait_impl<C>::category;
+        ///using stream_type = typename is_like_stream<stream>::stream_type;
     };
 
 } // namespace components::serialization
