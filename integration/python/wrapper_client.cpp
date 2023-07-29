@@ -41,4 +41,10 @@ namespace duck_charmer {
         }
         return tmp;
     }
+
+    wrapper_result wrapper_client::execute(const std::string& query) {
+        debug(log_, "wrapper_client::execute");
+        auto session = duck_charmer::session_id_t();
+        return wrapper_result{session, ptr_->execute_sql(session, query)};
+    }
 }

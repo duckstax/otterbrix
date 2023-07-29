@@ -51,6 +51,17 @@ namespace components::ql {
         storage_parameters values_;
     };
 
+
+    template<>
+    inline void add_parameter(storage_parameters &storage, core::parameter_id_t id, expr_value_t value) {
+        storage.emplace(id, value);
+    }
+
+    template<>
+    inline void add_parameter(storage_parameters &storage, core::parameter_id_t id, const ::document::impl::value_t* value) {
+        storage.emplace(id, expr_value_t(value));
+    }
+
 } // namespace components::ql
 
 

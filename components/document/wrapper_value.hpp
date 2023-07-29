@@ -9,6 +9,25 @@ namespace document {
         explicit wrapper_value_t(const impl::value_t* value)
             : value_(value) {}
 
+        explicit wrapper_value_t(bool value)
+            : value_(impl::new_value(value).detach()) {}
+
+        explicit wrapper_value_t(uint64_t value)
+            : value_(impl::new_value(value).detach()) {}
+
+        explicit wrapper_value_t(int64_t value)
+            : value_(impl::new_value(value).detach()) {}
+
+        explicit wrapper_value_t(double value)
+            : value_(impl::new_value(value).detach()) {}
+
+        explicit wrapper_value_t(const std::string& value)
+            : value_(impl::new_value(value).detach()) {}
+
+        explicit wrapper_value_t(std::string_view value)
+            : value_(impl::new_value(value).detach()) {}
+
+
         bool operator<(const wrapper_value_t& rhs) const {
             return value_->is_lt(rhs.value_);
         }

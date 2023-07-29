@@ -16,6 +16,8 @@ namespace components::ql {
                       const storage_parameters& parameters,
                       const components::document::document_ptr& update,
                       bool upsert);
+        update_many_t(const database_name_t& database,
+                      const collection_name_t& collection);
         explicit update_many_t(components::ql::aggregate_statement_raw_ptr condition,
                                const components::document::document_ptr& update,
                                bool upsert);

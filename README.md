@@ -17,6 +17,21 @@ It contains a set of technologies across different storage types, driving low-la
     pip install ottergon==0.5.0 
 ```
 
+Python SQl example:
+
+```python
+    from ottergon import Client
+
+    client = Client()
+    database = client["MyDatabase"]
+    collection = database["MyCollection"]
+    collection.execute("INSERT INTO MyDatabase.MyCollection (object_name, count ) VALUES ('object value', 1000)")
+    collection.execute("SELECT * FROM MyDatabase.MyCollection WHERE object_name = 'object value' ")
+```
+
+
+Python NoSQl example:
+
 ```python
     from ottergon import Client
 
@@ -24,19 +39,26 @@ It contains a set of technologies across different storage types, driving low-la
     database = client["MyDatabase"]
     collection = database["MyCollection"]
     collection.insert_one({"object_name": "object value", "count": 1000})
-    collection.find_one({"object_name": "object value"})["count"] # 1000
+    collection.find_one({"object_name": "object value"})
 ```
 
-C++ example:
-
+C++ SQL example:
 ```cpp
-    static const auto database = "MyDatabase";
-    static const auto collection = "MyCollection";
     auto config = create_config("/tmp/my_collection");
     spaces_t space(config);
     auto* dispatcher = space.dispatcher();
-    dispatcher->insert_one(database_name, collection_name, {"object_name": "object value", "count": 1000});
-    auto value = dispatcher->find_one(database_name, collection_name, {"object_name": "object value"});
+    dispatcher->execute_sql("INSERT INTO MyDatabase.MyCollection (object_name, count ) VALUES ('object value', 1000)");
+    auto value = dispatcher->execute_sql("SELECT * FROM MyDatabase.MyCollection WHERE object_name = 'object value' ");
+```
+
+C++ NoSQL example:
+
+```cpp
+    auto config = create_config("/tmp/my_collection");
+    spaces_t space(config);
+    auto* dispatcher = space.dispatcher();
+    dispatcher->insert_one("MyDatabase", "MyCollection", {"object_name": "object value", "count": 1000});
+    auto value = dispatcher->find_one("MyDatabase", "MyCollection", {"object_name": "object value"});
 ```
 
 ## Major futures of the project

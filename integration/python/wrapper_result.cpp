@@ -40,4 +40,42 @@ py::object wrapper_result_update::upserted_id() const {
     return py::str(result.upserted_id().to_string());
 }
 
+
+wrapper_result::wrapper_result()
+    : result_(null_result{}) {
+}
+
+wrapper_result::wrapper_result(const components::session::session_id_t& session, const result_t& result)
+    : session_(session)
+    , result_(result) {
+}
+
+std::size_t wrapper_result::inserted_count() const {
+    if (result_.is_type<result_insert>()) {
+        return result_.get<result_insert>().inserted_ids().size();
+    }
+    return 0;
+}
+
+std::size_t wrapper_result::modified_count() const {
+    if (result_.is_type<result_update>()) {
+        return result_.get<result_update>().modified_ids().size();
+    }
+    return 0;
+}
+
+std::size_t wrapper_result::deleted_count() const {
+    if (result_.is_type<result_delete>()) {
+        return result_.get<result_delete>().deleted_ids().size();
+    }
+    return 0;
+}
+
+wrapper_cursor_ptr wrapper_result::cursor() const {
+    if (result_.is_type<components::cursor::cursor_t*>()) {
+        return wrapper_cursor_ptr(new wrapper_cursor(session_, result_.get<components::cursor::cursor_t*>()));
+    }
+    return wrapper_cursor_ptr();
+}
+
 }

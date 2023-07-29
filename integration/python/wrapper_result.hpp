@@ -4,6 +4,7 @@
 #include <pybind11/stl_bind.h>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include "services/collection/result.hpp"
+#include "wrapper_cursor.hpp"
 
 namespace py = pybind11;
 
@@ -34,6 +35,22 @@ public:
 
 private:
     result_update result;
+};
+
+
+class PYBIND11_EXPORT wrapper_result final : public boost::intrusive_ref_counter<wrapper_result> {
+public:
+    wrapper_result();
+    wrapper_result(const duck_charmer::session_id_t& session, const result_t &result);
+
+    std::size_t inserted_count() const;
+    std::size_t modified_count() const;
+    std::size_t deleted_count() const;
+    wrapper_cursor_ptr cursor() const;
+
+private:
+    duck_charmer::session_id_t session_;
+    result_t result_;
 };
 
 }

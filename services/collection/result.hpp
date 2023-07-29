@@ -1,8 +1,11 @@
 #pragma once
-#include "components/document/document_view.hpp"
-#include "components/document/document_id.hpp"
-#include <vector>
+
 #include <memory_resource>
+#include <variant>
+#include <vector>
+#include <components/cursor/cursor.hpp>
+#include <components/document/document_view.hpp>
+#include <components/document/document_id.hpp>
 
 class null_result {
 public:
@@ -141,4 +144,32 @@ public:
 
 private:
     result_t success_{false};
+};
+
+
+class result_t {
+public:
+    template <typename T>
+    result_t(const T& t)
+        : result_(t) {}
+
+    template <typename T>
+    const T& get() const {
+        return std::get<T>(result_);
+    }
+
+    template <typename T>
+    bool is_type() const {
+        return std::holds_alternative<T>(result_);
+    }
+
+private:
+    std::variant<
+        null_result,
+        components::cursor::cursor_t*,
+        result_insert,
+        result_delete,
+        result_update
+    > result_;
+
 };

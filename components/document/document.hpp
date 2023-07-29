@@ -77,6 +77,11 @@ namespace components::document {
         set_(key, value);
     }
 
+    template<>
+    inline void document_t::set(const std::string& key, document_ptr value) {
+        set_(key, value->value_);
+    }
+
     template <class T>
     document_ptr make_document(const std::string &key, T value) {
         auto document = make_document();
