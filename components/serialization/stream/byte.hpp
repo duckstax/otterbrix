@@ -5,7 +5,6 @@
 
 namespace components::serialization::stream {
 
-
     template<>
     class output_stream<byte_container_t> {
     public:
@@ -17,4 +16,4 @@ namespace components::serialization::stream {
 
     using stream_byte = output_stream<byte_container_t>;
 
-}
+} // namespace components::serialization::stream

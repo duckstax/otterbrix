@@ -8,12 +8,4 @@ namespace components::serialization::stream {
     template<class T>
     class output_stream;
 
-    /// anonymous
-
-
-    /// anonym
-
-
-
-
 } // namespace components::serialization::stream
