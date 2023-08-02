@@ -55,7 +55,7 @@ namespace components::serialization::stream {
     void intermediate_serialize_map(output_stream_json& ar, std::size_t size, const unsigned int version);
 
     template<class T>
-    void intermediate_serialize(output_stream_json& ar, T& data, const unsigned int version){
+    void intermediate_serialize(output_stream_json& ar, T& data, const unsigned int version,pod_tag){
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
@@ -63,23 +63,29 @@ namespace components::serialization::stream {
         ar.size_--;
     }
 
-    template<class It>
-    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, string_tag) {
+    template<class Contaner>
+    void intermediate_serialize(output_stream_json& ar,Contaner& data, const unsigned int version, string_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
+        auto size = std::size(data);
+        auto first = std::begin(data);
+        auto last = std::end(data);
         boost::json::string string(ar.value_.get_allocator().resource());
         string.assign(first, last);
         ar.value_.as_array().emplace_back(std::move(string));
         ar.size_--;
     }
 
-    template<class It>
-    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, array_tag) {
+    template<class Contaner>
+    void intermediate_serialize(output_stream_json& ar,Contaner& data, const unsigned int version, array_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
         boost::json::array array(ar.value_.get_allocator().resource());
+        auto size = std::size(data);
+        auto first = std::begin(data);
+        auto last = std::end(data);
         array.reserve(size);
         for (; first != last; ++first) {
             array.emplace_back(*first);
@@ -88,11 +94,14 @@ namespace components::serialization::stream {
         ar.size_--;
     }
 
-    template<class It> /// map  but not set
-    void intermediate_serialize(output_stream_json& ar, size_t size, It first, It last, const unsigned int version, object_tag) {
+    template<class Contaner>
+    void intermediate_serialize(output_stream_json& ar, Contaner& data, const unsigned int version, object_tag) {
         boost::ignore_unused(version);
         assert(ar.size_ > 0);
         assert(detail::state_t::array == ar.state_);
+        auto size = std::size(data);
+        auto first = std::begin(data);
+        auto last = std::end(data);
         boost::json::object object(size, ar.value_.get_allocator().resource());
         for (auto it = first; it != last; ++it) {
             const auto& [key, value] = *it;
@@ -101,7 +110,7 @@ namespace components::serialization::stream {
         ar.value_.as_array().emplace_back(std::move(object));
         ar.size_--;
     }
-
+/*
     void intermediate_serialize(output_stream_json& ar, std::string_view key, bool data, const unsigned int version);
     void intermediate_serialize(output_stream_json& ar, std::string_view key, uint8_t data, const unsigned int version);
     void intermediate_serialize(output_stream_json& ar, std::string_view key, int8_t data, const unsigned int version);
@@ -139,6 +148,6 @@ namespace components::serialization::stream {
         }
         ar.value_.as_object().emplace(key1, object);
         ar.size_--;
-    }
+    }*/
 
 } // namespace components::serialization::stream
