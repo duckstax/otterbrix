@@ -8,7 +8,10 @@ target_link_options( ${PROJECT_NAME}  PRIVATE "SHELL:--no-entry -s STANDALONE_WA
 
 target_link_libraries(
         ${PROJECT_NAME}  PRIVATE
-        #CONAN_PKG::msgpack-cxx CONAN_PKG::proxy-wasm-cpp-sdk CONAN_PKG::quickjs CONAN_PKG::boost
+        CONAN_PKG::msgpack-cxx 
+        #CONAN_PKG::proxy-wasm-cpp-sdk 
+        CONAN_PKG::quickjs 
+        CONAN_PKG::boost
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC "")
