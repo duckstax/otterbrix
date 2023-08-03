@@ -27,19 +27,3 @@ TEST_CASE("example new 1") {
     serialize(flat_stream, map);
     std::cerr << flat_stream.data() << std::endl;
 }
-
-TEST_CASE("example new 2") {
-    components::serialization::stream::output_stream_json flat_stream;
-    std::vector<int64_t> vector{1,2,3};
-    std::map<int64_t ,int64_t> map = {{1,2},{3,4}};
-    std::string str("42");
-    std::string_view str1("42");
-    std::uint64_t number = 42;
-    serialize(flat_stream,serialize_to_array, 5);
-    serialize(flat_stream, number);
-    serialize(flat_stream, str);
-    serialize(flat_stream, str1);
-    serialize(flat_stream, vector);
-    serialize(flat_stream, map);
-    std::cerr << flat_stream.data() << std::endl;
-}

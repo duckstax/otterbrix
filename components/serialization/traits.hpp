@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <iostream>
 #include <limits>
 #include <map>
@@ -19,6 +20,7 @@ namespace components::serialization {
     struct tuple_tag {};
     struct variant_tag {};
     struct pod_tag {};
+    struct number_tag {};
     struct null_tag {};
 
     template<class C, typename = void>
