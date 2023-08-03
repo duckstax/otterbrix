@@ -8,16 +8,20 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+#include <stdexcept>
+
 #include "utils.hpp"
+
 
 template<typename BasicJsonType>
 class json_sax_dom_parser {
 public:
-    using number_integer_t = typename BasicJsonType::number_integer_t;
-    using number_unsigned_t = typename BasicJsonType::number_unsigned_t;
-    using number_float_t = typename BasicJsonType::number_float_t;
-    using string_t = typename BasicJsonType::string_t;
-    using binary_t = typename BasicJsonType::binary_t;
+    using number_integer_t = int32_t;
+    using number_unsigned_t = uint32_t;
+    using number_float_t = float;
+    using string_t = std::string;
+    using binary_t = byte_container_t;
 
     explicit json_sax_dom_parser(BasicJsonType& r, const bool allow_exceptions_ = true)
         : root(r)
@@ -68,7 +72,7 @@ public:
         ref_stack.push_back(handle_value(BasicJsonType::value_t::object));
 
         if (JSON_HEDLEY_UNLIKELY(len != static_cast<std::size_t>(-1) && len > ref_stack.back()->max_size())) {
-            JSON_THROW(out_of_range::create(408, concat("excessive object size: ", std::to_string(len)), ref_stack.back()));
+            JSON_THROW(std::out_of_range("excessive object size: " + std::to_string(len)) + ref_stack.back());
         }
 
         return true;
@@ -96,7 +100,7 @@ public:
         ref_stack.push_back(handle_value(BasicJsonType::value_t::array));
 
         if (JSON_HEDLEY_UNLIKELY(len != static_cast<std::size_t>(-1) && len > ref_stack.back()->max_size())) {
-            JSON_THROW(out_of_range::create(408, concat("excessive array size: ", std::to_string(len)), ref_stack.back()));
+            JSON_THROW(std::out_of_range("excessive array size: " + std::to_string(len)) + ref_stack.back());
         }
 
         return true;
@@ -227,7 +231,8 @@ public:
 
         // check object limit
         if (ref_stack.back() && JSON_HEDLEY_UNLIKELY(len != static_cast<std::size_t>(-1) && len > ref_stack.back()->max_size())) {
-            JSON_THROW(out_of_range::create(408, concat("excessive object size: ", std::to_string(len)), ref_stack.back()));
+            
+             JSON_THROW(std::out_of_range("excessive object size: " + std::to_string(len)) + ref_stack.back());
         }
 
         return true;
@@ -285,7 +290,7 @@ public:
 
         // check array limit
         if (ref_stack.back() && JSON_HEDLEY_UNLIKELY(len != static_cast<std::size_t>(-1) && len > ref_stack.back()->max_size())) {
-            JSON_THROW(out_of_range::create(408, concat("excessive array size: ", std::to_string(len)), ref_stack.back()));
+             JSON_THROW(std::out_of_range("excessive array size: " + std::to_string(len)) + ref_stack.back());
         }
 
         return true;
@@ -448,7 +453,7 @@ public:
         return true;
     }
 
-    bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const detail::exception& /*unused*/) {
+    bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const std::exception& /*unused*/) {
         return false;
     }
 };

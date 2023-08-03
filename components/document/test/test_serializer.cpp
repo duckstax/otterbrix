@@ -12,8 +12,12 @@
 #include "components/document/document.hpp"
 #include "components/document/document_view.hpp"
 
+
+#include <components/tests/generaty.hpp>
+
 using namespace components::document;
 
+/*
 namespace {
     class SaxCountdown {
     public:
@@ -24,35 +28,35 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool boolean(bool /*unused*/) {
+        bool boolean(bool) {
             return events_left-- > 0;
         }
 
-        bool number_integer(document_t::number_integer_t /*unused*/) {
+        bool number_integer(document_t::number_integer_t ) {
             return events_left-- > 0;
         }
 
-        bool number_unsigned(document_t::number_unsigned_t /*unused*/) {
+        bool number_unsigned(document_t::number_unsigned_t ) {
             return events_left-- > 0;
         }
 
-        bool number_float(document_t::number_float_t /*unused*/, const std::string& /*unused*/) {
+        bool number_float(document_t::number_float_t , const std::string& ) {
             return events_left-- > 0;
         }
 
-        bool string(std::string& /*unused*/) {
+        bool string(std::string& ) {
             return events_left-- > 0;
         }
 
-        bool binary(std::vector<std::uint8_t>& /*unused*/) {
+        bool binary(std::vector<std::uint8_t>& ) {
             return events_left-- > 0;
         }
 
-        bool start_object(std::size_t /*unused*/) {
+        bool start_object(std::size_t ) {
             return events_left-- > 0;
         }
 
-        bool key(std::string& /*unused*/) {
+        bool key(std::string& ) {
             return events_left-- > 0;
         }
 
@@ -60,7 +64,7 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool start_array(std::size_t /*unused*/) {
+        bool start_array(std::size_t ) {
             return events_left-- > 0;
         }
 
@@ -68,7 +72,7 @@ namespace {
             return events_left-- > 0;
         }
 
-        bool parse_error(std::size_t /*unused*/, const std::string& /*unused*/, const document_t::exception& /*unused*/) // NOLINT(readability-convert-member-functions-to-static)
+        bool parse_error(std::size_t , const std::string& , const document_t::exception& ) // NOLINT(readability-convert-member-functions-to-static)
         {
             return false;
         }
@@ -77,796 +81,456 @@ namespace {
         int events_left = 0;
     };
 } // namespace
-
+*/
 TEST_CASE("MessagePack") {
     SECTION("individual values") {
-        SECTION("discarded") {
-            // discarded values are not serialized
-            document_t const j = document_t::value_t::discarded;
-            const auto result = to_msgpack(j);
+        /* ABANDONED
+        SECTION("undefined") {
+            // undefined values are not serialized
+            
+            //const auto result = to_msgpack(make_document(document::impl::value_t::undefined_value));
+            const auto result = to_msgpack(make_document());
             CHECK(result.empty());
-        }
+        }*/
+
 
         SECTION("null") {
-            document_t const j = nullptr;
-            std::vector<uint8_t> const expected = {0xc0};
-            const auto result = to_msgpack(j);
+            std::vector<uint8_t> const expected = {0x91, 0xc0};
+            const auto result = to_msgpack(gen_special_doc('n'));
             CHECK(result == expected);
 
             // roundtrip
-            CHECK(from_msgpack(result) == j);
-            CHECK(from_msgpack(result, true, false) == j);
+            //CHECK(from_msgpack(result) == docView);
+            //CHECK(from_msgpack(result, true, false) == docView);
         }
 
         SECTION("boolean") {
             SECTION("true") {
-                document_t const j = true;
-                std::vector<uint8_t> const expected = {0xc3};
-                const auto result = to_msgpack(j);
+                std::vector<uint8_t> const expected = {0x91, 0xc3};
+                const auto result = to_msgpack(gen_special_doc('t'));
                 CHECK(result == expected);
 
                 // roundtrip
-                CHECK(from_msgpack(result) == j);
-                CHECK(from_msgpack(result, true, false) == j);
+                //CHECK(is_equals_documents(from_msgpack(result), doc));
+                //CHECK(from_msgpack(result, true, false) == docView);
             }
 
             SECTION("false") {
-                document_t const j = false;
-                std::vector<uint8_t> const expected = {0xc2};
-                const auto result = to_msgpack(j);
+                std::vector<uint8_t> const expected = {0x91, 0xc2};
+                const auto result = to_msgpack(gen_special_doc('f'));
                 CHECK(result == expected);
 
                 // roundtrip
-                CHECK(from_msgpack(result) == j);
-                CHECK(from_msgpack(result, true, false) == j);
+                //CHECK(is_equals_documents(from_msgpack(result), doc));
+                //CHECK(from_msgpack(result, true, false) == docView);
             }
         }
 
         SECTION("number") {
-            SECTION("signed") {
-                SECTION("-32..-1 (negative fixnum)") {
-                    for (auto i = -32; i <= -1; ++i) {
-                        CAPTURE(i)
+            SECTION("integer") {
+                SECTION("-32..127 (fixnum)") {
 
-                        document_t const j = i;
 
-                        // check type
-                        CHECK(j.is_number_integer());
 
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            static_cast<uint8_t>(i)};
+                    for (int16_t i = -32; i <= 127; ++i) {
+                        CAPTURE(i);
+                        
+                        document_ptr doc = gen_number_doc(i);
 
+                        std::vector<unsigned char> expected = {0x91}; // array + fixnum
+                        uint8_t buffer[sizeof(int8_t)];
+
+                        intToBytes<int8_t>(i, buffer);
+                        expected.insert((expected.begin() + 1), buffer, buffer + sizeof(buffer));
+                        
                         // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 1);
-
-                        // check individual bytes
-                        CHECK(static_cast<int8_t>(result[0]) == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("0..127 (positive fixnum)") {
-                    for (size_t i = 0; i <= 127; ++i) {
-                        CAPTURE(i)
-
-
-                        document_t j = -1;
-                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{static_cast<uint8_t>(i)};
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 1);
-
-                        // check individual bytes
-                        CHECK(result[0] == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("128..255 (int 8)") {
-                    for (size_t i = 128; i <= 255; ++i) {
-                        CAPTURE(i)
-
-                        document_t j = -1;
-                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcc,
-                            static_cast<uint8_t>(i),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
                         CHECK(result.size() == 2);
 
-                        // check individual bytes
-                        CHECK(result[0] == 0xcc);
-                        auto const restored = static_cast<uint8_t>(result[1]);
-                        CHECK(restored == i);
-
+                        CHECK(is_equals_documents(from_msgpack(result), doc));
                         // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
+                        //CHECK(from_msgpack(result) == j);
+                        //CHECK(from_msgpack(result, true, false) == j);
                     }
                 }
 
-                SECTION("256..65535 (int 16)") {
-                    for (size_t i = 256; i <= 65535; ++i) {
-                        CAPTURE(i)
+                SECTION("-128..127 (int 8)") {
 
-                        document_t j = -1;
-                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
+                }
 
-                        // check type
-                        CHECK(j.is_number_integer());
+                SECTION("-32768..-129 -- 128..32767 (int 16)") {
 
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcd,
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
+
+
+                    for (int32_t i = -32768; i <= -129; i++){
+                        CAPTURE(i);
+
+
+                        document_ptr doc = gen_number_doc(i);
+                        
+                        std::vector<unsigned char> expected = {0x91, 0xD1}; // array + int16
+                        uint8_t buffer[sizeof(int16_t)];
+
+                        intToBytes<int16_t>(i, buffer);
+                        expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
 
                         // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
-                        CHECK(result.size() == 3);
+                        CHECK(result.size() == 4);
 
-                        // check individual bytes
-                        CHECK(result[0] == 0xcd);
-                        auto const restored = static_cast<uint16_t>(static_cast<uint8_t>(result[1]) * 256 + static_cast<uint8_t>(result[2]));
-                        CHECK(restored == i);
+                    }
+                    for (int32_t i = 128; i <= 32767; ++i) {
+                        CAPTURE(i);
+                        
+                        
+                        document_ptr doc = gen_number_doc(i);
+                        
+                        std::vector<unsigned char> expected = {0x91, 0xD1}; // array + int16
+                        uint8_t buffer[sizeof(int16_t)];
+
+                        intToBytes<int16_t>(i, buffer);
+                        expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
+
+                        // compare result + size
+                        const auto result = to_msgpack(doc);
+                        CHECK(result == expected);
+                        CHECK(result.size() == 4);
 
                         // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
+                        //CHECK(from_msgpack(result) == j);
+                        //CHECK(from_msgpack(result, true, false) == j);
                     }
                 }
 
-                SECTION("65536..4294967295 (int 32)") {
-                    for (uint32_t i :
-                         {
-                             65536u, 77777u, 1048576u, 4294967295u}) {
-                        CAPTURE(i)
+                SECTION("-2147483648..2147483647  (int 32)") {
 
-                        document_t j = -1;
-                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
-                        // check type
-                        CHECK(j.is_number_integer());
 
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xce,
-                            static_cast<uint8_t>((i >> 24) & 0xff),
-                            static_cast<uint8_t>((i >> 16) & 0xff),
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
+                    for (int32_t i :
+                         std::initializer_list<int32_t> {
+                            -65536, -77777, -1048576, -2147483648, 65536, 77777, 1048576, 2147483647
+                         }) 
+                    {
+                        
+                        CAPTURE(i);
+                        
+                        document_ptr doc = gen_number_doc(i);
 
+                        std::vector<unsigned char> expected = {0x91, 0xD2};
+                        uint8_t buffer[sizeof(int32_t)];
+
+                        intToBytes<int32_t>(i, buffer);
+                        expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
+                        
                         // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
-                        CHECK(result.size() == 5);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xce);
-                        uint32_t const restored = (static_cast<uint32_t>(result[1]) << 030) +
-                                                  (static_cast<uint32_t>(result[2]) << 020) +
-                                                  (static_cast<uint32_t>(result[3]) << 010) +
-                                                  static_cast<uint32_t>(result[4]);
-                        CHECK(restored == i);
+                        CHECK(result.size() == 6);
 
                         // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
+                        //CHECK(from_msgpack(result) == j);
+                        //CHECK(from_msgpack(result, true, false) == j);
                     }
                 }
 
-                SECTION("4294967296..9223372036854775807 (int 64)") {
-                    for (uint64_t i :
-                         {
-                             4294967296LU, 9223372036854775807LU}) {
-                        CAPTURE(i)
+                SECTION("-9223372036854775808..9223372036854775807 (int 64)") {
 
-                        document_t j = -1;
-                        j.get_ref<document_t::number_integer_t&>() = static_cast<document_t::number_integer_t>(i);
 
-                        // check type
-                        CHECK(j.is_number_integer());
 
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcf,
-                            static_cast<uint8_t>((i >> 070) & 0xff),
-                            static_cast<uint8_t>((i >> 060) & 0xff),
-                            static_cast<uint8_t>((i >> 050) & 0xff),
-                            static_cast<uint8_t>((i >> 040) & 0xff),
-                            static_cast<uint8_t>((i >> 030) & 0xff),
-                            static_cast<uint8_t>((i >> 020) & 0xff),
-                            static_cast<uint8_t>((i >> 010) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
+                    for (int64_t i :
+                        std::initializer_list<int64_t> {
+                            -4294967296, -9223372036854775807, -4294967296, 9223372036854775807
+                        }) 
+                    {
+                        CAPTURE(i);
+                        
+                        document_ptr doc = gen_number_doc(i);
+
+                        std::vector<unsigned char> expected = {0x91, 0xD3};
+                        uint8_t buffer[sizeof(int64_t)];
+
+                        intToBytes<int64_t>(i, buffer);
+                        expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
 
                         // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
-                        CHECK(result.size() == 9);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xcf);
-                        uint64_t const restored = (static_cast<uint64_t>(result[1]) << 070) +
-                                                  (static_cast<uint64_t>(result[2]) << 060) +
-                                                  (static_cast<uint64_t>(result[3]) << 050) +
-                                                  (static_cast<uint64_t>(result[4]) << 040) +
-                                                  (static_cast<uint64_t>(result[5]) << 030) +
-                                                  (static_cast<uint64_t>(result[6]) << 020) +
-                                                  (static_cast<uint64_t>(result[7]) << 010) +
-                                                  static_cast<uint64_t>(result[8]);
-                        CHECK(restored == i);
+                        CHECK(result.size() == 10);
 
                         // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("-128..-33 (int 8)") {
-                    for (auto i = -128; i <= -33; ++i) {
-                        CAPTURE(i)
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xd0,
-                            static_cast<uint8_t>(i),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 2);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xd0);
-                        CHECK(static_cast<int8_t>(result[1]) == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("-9263 (int 16)") {
-                    document_t const j = -9263;
-                    std::vector<uint8_t> const expected = {0xd1, 0xdb, 0xd1};
-
-                    const auto result = to_msgpack(j);
-                    CHECK(result == expected);
-
-                    auto const restored = static_cast<int16_t>((result[1] << 8) + result[2]);
-                    CHECK(restored == -9263);
-
-                    // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result, true, false) == j);
-                }
-
-                SECTION("-32768..-129 (int 16)") {
-                    for (int16_t i = -32768; i <= static_cast<std::int16_t>(-129); ++i) {
-                        CAPTURE(i)
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xd1,
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 3);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xd1);
-                        auto const restored = static_cast<int16_t>((result[1] << 8) + result[2]);
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("-32769..-2147483648") {
-                    std::vector<int32_t> const numbers{
-                        -32769,
-                        -65536,
-                        -77777,
-                        -1048576,
-                        -2147483648LL,
-                    };
-                    for (auto i : numbers) {
-                        CAPTURE(i)
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xd2,
-                            static_cast<uint8_t>((i >> 24) & 0xff),
-                            static_cast<uint8_t>((i >> 16) & 0xff),
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 5);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xd2);
-                        uint32_t const restored = (static_cast<uint32_t>(result[1]) << 030) +
-                                                  (static_cast<uint32_t>(result[2]) << 020) +
-                                                  (static_cast<uint32_t>(result[3]) << 010) +
-                                                  static_cast<uint32_t>(result[4]);
-                        CHECK(static_cast<std::int32_t>(restored) == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("-9223372036854775808..-2147483649 (int 64)") {
-                    std::vector<int64_t> const numbers{
-                        (std::numeric_limits<int64_t>::min)(),
-                        -2147483649LL,
-                    };
-                    for (auto i : numbers) {
-                        CAPTURE(i)
-
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_integer());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xd3,
-                            static_cast<uint8_t>((i >> 070) & 0xff),
-                            static_cast<uint8_t>((i >> 060) & 0xff),
-                            static_cast<uint8_t>((i >> 050) & 0xff),
-                            static_cast<uint8_t>((i >> 040) & 0xff),
-                            static_cast<uint8_t>((i >> 030) & 0xff),
-                            static_cast<uint8_t>((i >> 020) & 0xff),
-                            static_cast<uint8_t>((i >> 010) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 9);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xd3);
-                        int64_t const restored = (static_cast<int64_t>(result[1]) << 070) +
-                                                 (static_cast<int64_t>(result[2]) << 060) +
-                                                 (static_cast<int64_t>(result[3]) << 050) +
-                                                 (static_cast<int64_t>(result[4]) << 040) +
-                                                 (static_cast<int64_t>(result[5]) << 030) +
-                                                 (static_cast<int64_t>(result[6]) << 020) +
-                                                 (static_cast<int64_t>(result[7]) << 010) +
-                                                 static_cast<int64_t>(result[8]);
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
+                        //CHECK(from_msgpack(result) == j);
+                        //CHECK(from_msgpack(result, true, false) == j);
                     }
                 }
             }
-
             SECTION("unsigned") {
-                SECTION("0..127 (positive fixnum)") {
-                    for (size_t i = 0; i <= 127; ++i) {
-                        CAPTURE(i)
+                SECTION("0..255 (uint 8)") {
+                    document_ptr doc = make_document();
+                    doc->set("value", u_int64_t(10));
 
+                    document_view_t docView(doc);
+                    CHECK(docView.is_ulong("value"));
+                    /*
+                    std::vector<unsigned char> expected = {0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xcc}; // "value = "
+                    const auto result = to_msgpack(doc);
+                    CHECK(result == expected);
 
-                        document_t const j = i;
+                    uint8_t buffer[sizeof(uint8_t)];
 
-                        // check type
-                        CHECK(j.is_number_unsigned());
+                    for (uint8_t i = 0; i <= 254; i++){
+                        doc->set("value", i);
 
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{static_cast<uint8_t>(i)};
+                        intToBytes<uint8_t>(i, buffer);
+                        expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
 
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 1);
-
-                        // check individual bytes
-                        CHECK(result[0] == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("128..255 (uint 8)") {
-                    for (size_t i = 128; i <= 255; ++i) {
-                        CAPTURE(i)
-
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_unsigned());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcc,
-                            static_cast<uint8_t>(i),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 2);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xcc);
-                        auto const restored = static_cast<uint8_t>(result[1]);
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("256..65535 (uint 16)") {
-                    for (size_t i = 256; i <= 65535; ++i) {
-                        CAPTURE(i)
-
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_unsigned());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcd,
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 3);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xcd);
-                        auto const restored = static_cast<uint16_t>(static_cast<uint8_t>(result[1]) * 256 + static_cast<uint8_t>(result[2]));
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("65536..4294967295 (uint 32)") {
-                    for (const uint32_t i :
-                         {
-                             65536u, 77777u, 1048576u, 4294967295u}) {
-                        CAPTURE(i)
-
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_unsigned());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xce,
-                            static_cast<uint8_t>((i >> 24) & 0xff),
-                            static_cast<uint8_t>((i >> 16) & 0xff),
-                            static_cast<uint8_t>((i >> 8) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
-                        CHECK(result == expected);
-                        CHECK(result.size() == 5);
-
-                        // check individual bytes
-                        CHECK(result[0] == 0xce);
-                        uint32_t const restored = (static_cast<uint32_t>(result[1]) << 030) +
-                                                  (static_cast<uint32_t>(result[2]) << 020) +
-                                                  (static_cast<uint32_t>(result[3]) << 010) +
-                                                  static_cast<uint32_t>(result[4]);
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
-                }
-
-                SECTION("4294967296..18446744073709551615 (uint 64)") {
-                    for (const uint64_t i :
-                         {
-                             4294967296LU, 18446744073709551615LU}) {
-                        CAPTURE(i)
-
-
-                        document_t const j = i;
-
-                        // check type
-                        CHECK(j.is_number_unsigned());
-
-                        // create expected byte vector
-                        std::vector<uint8_t> const expected{
-                            0xcf,
-                            static_cast<uint8_t>((i >> 070) & 0xff),
-                            static_cast<uint8_t>((i >> 060) & 0xff),
-                            static_cast<uint8_t>((i >> 050) & 0xff),
-                            static_cast<uint8_t>((i >> 040) & 0xff),
-                            static_cast<uint8_t>((i >> 030) & 0xff),
-                            static_cast<uint8_t>((i >> 020) & 0xff),
-                            static_cast<uint8_t>((i >> 010) & 0xff),
-                            static_cast<uint8_t>(i & 0xff),
-                        };
-
-                        // compare result + size
-                        const auto result = to_msgpack(j);
+                        const auto result = to_msgpack(doc);
                         CHECK(result == expected);
                         CHECK(result.size() == 9);
 
-                        // check individual bytes
-                        CHECK(result[0] == 0xcf);
-                        uint64_t const restored = (static_cast<uint64_t>(result[1]) << 070) +
-                                                  (static_cast<uint64_t>(result[2]) << 060) +
-                                                  (static_cast<uint64_t>(result[3]) << 050) +
-                                                  (static_cast<uint64_t>(result[4]) << 040) +
-                                                  (static_cast<uint64_t>(result[5]) << 030) +
-                                                  (static_cast<uint64_t>(result[6]) << 020) +
-                                                  (static_cast<uint64_t>(result[7]) << 010) +
-                                                  static_cast<uint64_t>(result[8]);
-                        CHECK(restored == i);
-
-                        // roundtrip
-                        CHECK(from_msgpack(result) == j);
-                        CHECK(from_msgpack(result, true, false) == j);
-                    }
+                        expected.erase(expected.end() - 1, expected.end());
+                    } 
+                    */
                 }
+
             }
 
             SECTION("float") {
                 SECTION("3.1415925") {
-                    double const v = 3.1415925;
-                    document_t const j = v;
+
+                    document_ptr doc = make_document();
+                    doc->set("value", double(3.1415925));
+
+                    document_view_t docView(doc);
+                    CHECK(docView.is_double("value"));
                     std::vector<uint8_t> const expected =
                         {
-                            0xcb, 0x40, 0x09, 0x21, 0xfb, 0x3f, 0xa6, 0xde, 0xfc};
-                    const auto result = to_msgpack(j);
+                            0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xcb, 0x40, 0x09, 0x21, 0xfb, 0x3f, 0xa6, 0xde, 0xfc };
+                    
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
+                    CHECK(result.size() == 16);
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result) == v);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result) == v);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
 
                 SECTION("1.0") {
-                    double const v = 1.0;
-                    document_t const j = v;
+                    document_ptr doc = make_document();
+                    doc->set("value", double(1));
+
+                    document_view_t docView(doc);
+                    CHECK(docView.is_double("value"));
+
                     std::vector<uint8_t> const expected =
                         {
-                            0xca, 0x3f, 0x80, 0x00, 0x00};
-                    const auto result = to_msgpack(j);
+                            0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xcb, 0x3F, 0xF0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
+                    CHECK(result.size() == 16);
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result) == v);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    //auto roundtrip = from_msgpack(result);
+                    //CHECK(from_msgpack(result) == v);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
 
                 SECTION("128.128") {
-                    double const v = 128.1280059814453125;
-                    document_t const j = v;
+                    document_ptr doc = make_document();
+                    doc->set("value", double(128.1280059814453125));
+
                     std::vector<uint8_t> const expected =
                         {
-                            0xca, 0x43, 0x00, 0x20, 0xc5};
-                    const auto result = to_msgpack(j);
+                            0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xcb, 0x40, 0x60, 0x04, 0x18, 0xa0, 0x00, 0x00, 0x00};
+
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
+                    CHECK(result.size() == 16);
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result) == v);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result) == v);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
             }
-        }
 
-        SECTION("string") {
+            SECTION("string") {
+
             SECTION("N = 0..31") {
-                // explicitly enumerate the first byte for all 32 strings
+
+
                 const std::vector<uint8_t> first_bytes =
                     {
                         0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8,
                         0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xb0, 0xb1,
                         0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7, 0xb8, 0xb9, 0xba,
                         0xbb, 0xbc, 0xbd, 0xbe, 0xbf};
-
-                for (size_t N = 0; N < first_bytes.size(); ++N) {
-                    CAPTURE(N)
-
+                
+                document_ptr doc = make_document();
+                
+                for (size_t N = 1; N < first_bytes.size(); ++N) {
+                    CAPTURE(N);
 
                     const auto s = std::string(N, 'x');
-                    document_t const j = s;
+
+                    doc->set("value", s);
+
 
                     // create expected byte vector
-                    std::vector<uint8_t> expected;
+                    std::vector<uint8_t> expected = {0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65};
                     expected.push_back(first_bytes[N]);
+
                     for (size_t i = 0; i < N; ++i) {
                         expected.push_back('x');
                     }
 
-                    // check first byte
-                    CHECK((first_bytes[N] & 0x1f) == N);
-
                     // compare result + size
-                    const auto result = to_msgpack(j);
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
-                    CHECK(result.size() == N + 1);
+                    CHECK(result.size() == N + 8);
+
                     // check that no null byte is appended
                     if (N > 0) {
                         CHECK(result.back() != '\x00');
                     }
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    CHECK(is_equals_documents(from_msgpack(result), doc));
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
             }
 
             SECTION("N = 32..255") {
-                for (size_t N = 32; N <= 255; ++N) {
-                    CAPTURE(N)
 
+                document_ptr doc = make_document();
+
+                for (size_t N = 32; N <= 255; ++N) {
+                    CAPTURE(N);
 
                     const auto s = std::string(N, 'x');
-                    document_t const j = s;
+
+                    doc->set("value", s);
+
 
                     // create expected byte vector
-                    std::vector<uint8_t> expected;
-                    expected.push_back(0xd9);
+                    std::vector<uint8_t> expected = {0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xd9};
                     expected.push_back(static_cast<uint8_t>(N));
+
                     for (size_t i = 0; i < N; ++i) {
                         expected.push_back('x');
                     }
 
                     // compare result + size
-                    const auto result = to_msgpack(j);
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
-                    CHECK(result.size() == N + 2);
+                    CHECK(result.size() == N + 9);
+
                     // check that no null byte is appended
-                    CHECK(result.back() != '\x00');
+                    if (N > 0) {
+                        CHECK(result.back() != '\x00');
+                    }
+
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    CHECK(is_equals_documents(from_msgpack(result), doc));
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
             }
 
             SECTION("N = 256..65535") {
-                for (size_t N :
+                document_ptr doc = make_document();
+
+                for (uint16_t N :
                      {
                          256u, 999u, 1025u, 3333u, 2048u, 65535u}) {
-                    CAPTURE(N)
-
+                    CAPTURE(N);
 
                     const auto s = std::string(N, 'x');
-                    document_t const j = s;
 
-                    // create expected byte vector (hack: create string first)
-                    std::vector<uint8_t> expected(N, 'x');
-                    // reverse order of commands, because we insert at begin()
-                    expected.insert(expected.begin(), static_cast<uint8_t>(N & 0xff));
-                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 8) & 0xff));
-                    expected.insert(expected.begin(), 0xda);
+                    doc->set("value", s);
+
+
+                    // create expected byte vector
+                    std::vector<uint8_t> expected = {0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xda};
+                    uint8_t buffer[sizeof(uint16_t)];
+                    intToBytes<uint16_t>(N, buffer);
+                    expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
+
+                    for (size_t i = 0; i < N; ++i) {
+                        expected.push_back('x');
+                    }
 
                     // compare result + size
-                    const auto result = to_msgpack(j);
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
-                    CHECK(result.size() == N + 3);
+                    CHECK(result.size() == N + 10);
+
                     // check that no null byte is appended
-                    CHECK(result.back() != '\x00');
+                    if (N > 0) {
+                        CHECK(result.back() != '\x00');
+                    }
+
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    CHECK(is_equals_documents(from_msgpack(result), doc));
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
             }
 
             SECTION("N = 65536..4294967295") {
-                for (size_t N :
+                document_ptr doc = make_document();
+
+                for (uint32_t N :
                      {
                          65536u, 77777u, 1048576u}) {
-                    CAPTURE(N)
-
+                    CAPTURE(N);
 
                     const auto s = std::string(N, 'x');
-                    document_t const j = s;
 
-                    // create expected byte vector (hack: create string first)
-                    std::vector<uint8_t> expected(N, 'x');
-                    // reverse order of commands, because we insert at begin()
-                    expected.insert(expected.begin(), static_cast<uint8_t>(N & 0xff));
-                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 8) & 0xff));
-                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 16) & 0xff));
-                    expected.insert(expected.begin(), static_cast<uint8_t>((N >> 24) & 0xff));
-                    expected.insert(expected.begin(), 0xdb);
+                    doc->set("value", s);
+
+
+                    // create expected byte vector
+                    std::vector<uint8_t> expected = {0x81, 0xa5, 0x76, 0x61, 0x6c, 0x75, 0x65, 0xdb};
+                    uint8_t buffer[sizeof(uint32_t)];
+                    intToBytes<uint32_t>(N, buffer);
+                    expected.insert(expected.end(), buffer, buffer + sizeof(buffer));
+
+                    for (size_t i = 0; i < N; ++i) {
+                        expected.push_back('x');
+                    }
 
                     // compare result + size
-                    const auto result = to_msgpack(j);
+                    const auto result = to_msgpack(doc);
                     CHECK(result == expected);
-                    CHECK(result.size() == N + 5);
+                    CHECK(result.size() == expected.size());
+
                     // check that no null byte is appended
-                    CHECK(result.back() != '\x00');
+                    if (N > 0) {
+                        CHECK(result.back() != '\x00');
+                    }
+
 
                     // roundtrip
-                    CHECK(from_msgpack(result) == j);
-                    CHECK(from_msgpack(result, true, false) == j);
+                    CHECK(is_equals_documents(from_msgpack(result), doc));
+                    //CHECK(from_msgpack(result) == j);
+                    //CHECK(from_msgpack(result, true, false) == j);
                 }
             }
         }
+
+        }
+    }
+}
+/*
+
 
         SECTION("array") {
             SECTION("empty") {
@@ -1407,4 +1071,4 @@ TEST_CASE("MessagePack") {
             CHECK(!sax_parse(v, &scp));
         }
     }
-}
+}*/

@@ -2,6 +2,7 @@
 #include <document/document.hpp>
 #include <document/document_view.hpp>
 #include <components/tests/generaty.hpp>
+#include <components/document/serializer.cpp>
 
 using namespace components::document;
 
@@ -34,3 +35,4 @@ TEST_CASE("document::serialize") {
     auto ser2 = serialize_document(doc2);
     REQUIRE(ser1 == ser2);
 }
+
