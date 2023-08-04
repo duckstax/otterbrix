@@ -64,6 +64,27 @@ namespace components::sql::impl {
     }
 
 
+    mask_group_element_t::mask_group_element_t(const std::vector<std::string> &words) {
+        this->words.reserve(words.size());
+        std::transform(words.begin(), words.end(), std::back_inserter(this->words), [](const std::string &word) {
+            return mask_element_t{token_type::bare_word, word};
+        });
+    }
+
+    mask_group_element_t::status mask_group_element_t::check(lexer_t &lexer) const {
+        status res = status::no;
+        for (auto word : words) {
+            auto token = lexer.next_not_whitespace_token();
+            if (word == token) {
+                res = status::error;
+            } else {
+                return res;
+            }
+        }
+        return status::yes;
+    }
+
+
     mask_t::mask_t(const std::vector<mask_element_t>& elements)
         : elements_(elements) {
     }
