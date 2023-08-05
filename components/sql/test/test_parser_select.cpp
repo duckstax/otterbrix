@@ -241,4 +241,7 @@ TEST_CASE("parser::select_from_order_by") {
     TEST_SIMPLE_SELECT("select * from schema.table order by number, count asc, name, value desc;",
                        R"_($aggregate: {$sort: {number: 1, count: 1, name: -1, value: -1}})_");
 
+    TEST_SIMPLE_SELECT("select * from schema.table where number > 10 order by number asc, name desc;",
+                       R"_($aggregate: {$match: {"number": {$gt: #0}}, $sort: {number: 1, name: -1}})_");
+
 }

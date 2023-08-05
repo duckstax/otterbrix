@@ -66,6 +66,9 @@ namespace components::sql::impl {
                 }
             }
         }
+        if (sort.values.empty()) {
+            return parser_result{parse_error::empty_order_by_list, token, "empty order by fields"};
+        }
         return true;
     }
 

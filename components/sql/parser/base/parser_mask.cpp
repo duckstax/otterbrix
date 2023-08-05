@@ -72,13 +72,13 @@ namespace components::sql::impl {
     }
 
     mask_group_element_t::status mask_group_element_t::check(lexer_t &lexer) const {
-        status res = status::no;
-        for (auto word : words) {
+        if (words.front() != lexer.current_significant_token()) {
+            return status::no;
+        }
+        for (auto it = words.begin() + 1; it != words.end(); ++it) {
             auto token = lexer.next_not_whitespace_token();
-            if (word == token) {
-                res = status::error;
-            } else {
-                return res;
+            if (*it != token) {
+                return status::error;
             }
         }
         return status::yes;

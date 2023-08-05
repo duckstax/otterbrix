@@ -53,7 +53,6 @@ namespace components::sql::select::impl {
             auto& agg = std::get<ql::aggregate_statement>(statement);
 
             // where
-            lexer.save();
             token = lexer.next_not_whitespace_token();
             if (mask_elem_where == token) {
                 auto match = ql::aggregate::make_match(nullptr);
@@ -62,15 +61,11 @@ namespace components::sql::select::impl {
                     return res;
                 }
                 agg.append(ql::aggregate::operator_type::match, match);
-            } else {
-                lexer.restore();
             }
 
             // order by
-            lexer.save();
             auto status_order = mask_elem_order.check(lexer);
             if (status_order == mask_group_element_t::status::error) {
-                lexer.restore();
                 return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use order"};
             }
             if (status_order == mask_group_element_t::status::yes) {
