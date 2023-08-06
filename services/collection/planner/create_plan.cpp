@@ -4,6 +4,7 @@
 #include "impl/create_plan_delete.hpp"
 #include "impl/create_plan_insert.hpp"
 #include "impl/create_plan_match.hpp"
+#include "impl/create_plan_sort.hpp"
 #include "impl/create_plan_update.hpp"
 
 namespace services::collection::planner {
@@ -26,7 +27,7 @@ namespace services::collection::planner {
             case node_type::group_t:
                 break;
             case node_type::sort_t:
-                break;
+                return impl::create_plan_sort(context, node);
             case node_type::update_t:
                 return impl::create_plan_update(context, node);
             default:
