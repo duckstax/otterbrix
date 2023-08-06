@@ -69,6 +69,48 @@ TEST_CASE("integration::cpp::test_collection::sql") {
         }
     }
 
+    INFO("find order by") {
+        {
+            auto session = duck_charmer::session_id_t();
+            auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
+                                                        "ORDER BY count;");
+            auto *c = res.get<components::cursor::cursor_t*>();
+            REQUIRE(c->size() == 100);
+            REQUIRE(c->next()->get_long("count") == 0);
+            REQUIRE(c->next()->get_long("count") == 1);
+            REQUIRE(c->next()->get_long("count") == 2);
+            REQUIRE(c->next()->get_long("count") == 3);
+            REQUIRE(c->next()->get_long("count") == 4);
+            delete c;
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
+                                                        "ORDER BY count DESC;");
+            auto *c = res.get<components::cursor::cursor_t*>();
+            REQUIRE(c->size() == 100);
+            REQUIRE(c->next()->get_long("count") == 99);
+            REQUIRE(c->next()->get_long("count") == 98);
+            REQUIRE(c->next()->get_long("count") == 97);
+            REQUIRE(c->next()->get_long("count") == 96);
+            REQUIRE(c->next()->get_long("count") == 95);
+            delete c;
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
+                                                        "ORDER BY name;");
+            auto *c = res.get<components::cursor::cursor_t*>();
+            REQUIRE(c->size() == 100);
+            REQUIRE(c->next()->get_long("count") == 0);
+            REQUIRE(c->next()->get_long("count") == 1);
+            REQUIRE(c->next()->get_long("count") == 10);
+            REQUIRE(c->next()->get_long("count") == 11);
+            REQUIRE(c->next()->get_long("count") == 12);
+            delete c;
+        }
+    }
+
     INFO("delete") {
         {
             auto session = duck_charmer::session_id_t();
