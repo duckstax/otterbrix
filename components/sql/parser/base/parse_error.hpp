@@ -9,6 +9,7 @@ namespace components::sql {
         syntax_error,
         empty_fields_list,
         empty_values_list,
+        empty_order_by_list,
         not_valid_size_values_list,
         not_valid_where_condition,
         not_exists_open_round_bracket,

@@ -7,6 +7,7 @@ set(SOURCE_${PROJECT_NAME}
 
     parser/base/parse_error.cpp
     parser/base/parser_mask.cpp
+    parser/base/parser_orderby.cpp
     parser/base/parser_result.cpp
     parser/base/parser_set.cpp
     parser/base/parser_where.cpp
