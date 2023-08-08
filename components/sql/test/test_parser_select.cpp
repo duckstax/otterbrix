@@ -3,18 +3,26 @@
 
 using namespace components;
 
-#define TEST_SIMPLE_SELECT(QUERY, RESULT)                                       \
-    SECTION(QUERY) {                                                            \
-        auto res = sql::parse(resource, QUERY);                                 \
-        auto ql = res.ql;                                                       \
-        REQUIRE(std::holds_alternative<ql::aggregate_statement>(ql));           \
-        auto& agg = std::get<ql::aggregate_statement>(ql);                      \
-        REQUIRE(agg.database_ == "schema");                                     \
-        REQUIRE(agg.collection_ == "table");                                    \
-        std::stringstream s;                                                    \
-        s << agg;                                                               \
-        REQUIRE(s.str() == RESULT);                                             \
+#define TEST_SIMPLE_SELECT(QUERY, RESULT, PARAMS)                        \
+    SECTION(QUERY) {                                                     \
+        auto res = sql::parse(resource, QUERY);                          \
+        auto ql = res.ql;                                                \
+        REQUIRE(std::holds_alternative<ql::aggregate_statement>(ql));    \
+        auto& agg = std::get<ql::aggregate_statement>(ql);               \
+        REQUIRE(agg.database_ == "schema");                              \
+        REQUIRE(agg.collection_ == "table");                             \
+        std::stringstream s;                                             \
+        s << agg;                                                        \
+        REQUIRE(s.str() == RESULT);                                      \
+        REQUIRE(agg.parameters().size() == PARAMS.size());               \
+        for (auto i = 0ul; i < PARAMS.size(); ++i) {                     \
+            REQUIRE(agg.parameter(core::parameter_id_t(uint16_t(i)))     \
+                    == PARAMS.at(i));                                    \
+        }                                                                \
     }
+
+using v = ::document::wrapper_value_t;
+using vec = std::vector<v>;
 
 TEST_CASE("parser::select_from_where") {
 
@@ -184,38 +192,49 @@ TEST_CASE("parser::select_from_where") {
     }
 
     TEST_SIMPLE_SELECT("select * from schema.table where number == 10;",
-                       R"_($aggregate: {$match: {"number": {$eq: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$eq: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number != 10;",
-                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number <> 10;",
-                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$ne: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number < 10;",
-                       R"_($aggregate: {$match: {"number": {$lt: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$lt: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number <= 10;",
-                       R"_($aggregate: {$match: {"number": {$lte: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$lte: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number > 10;",
-                       R"_($aggregate: {$match: {"number": {$gt: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$gt: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where number >= 10;",
-                       R"_($aggregate: {$match: {"number": {$gte: #0}}})_");
+                       R"_($aggregate: {$match: {"number": {$gte: #0}}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where not(number >= 10);",
-                       R"_($aggregate: {$match: {$not: ["number": {$gte: #0}]}})_");
+                       R"_($aggregate: {$match: {$not: ["number": {$gte: #0}]}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where not number >= 10;",
-                       R"_($aggregate: {$match: {$not: ["number": {$gte: #0}]}})_");
+                       R"_($aggregate: {$match: {$not: ["number": {$gte: #0}]}})_",
+                       vec({v(10l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where not (number = 10) and not(name = 'doc 10' or count = 2);",
                        R"_($aggregate: {$match: {$and: [$not: ["number": {$eq: #0}], )_"
-                       R"_($not: [$or: ["name": {$eq: #1}, "count": {$eq: #2}]]]}})_");
+                       R"_($not: [$or: ["name": {$eq: #1}, "count": {$eq: #2}]]]}})_",
+                       vec({v(10l), v(std::string("doc 10")), v(2l)}));
 
     TEST_SIMPLE_SELECT("select * from schema.table where name regexp 'pattern';",
-                       R"_($aggregate: {$match: {"name": {$regex: #0}}})_");
+                       R"_($aggregate: {$match: {"name": {$regex: #0}}})_",
+                       vec({v(std::string("pattern"))}));
 
 }
 
@@ -224,24 +243,59 @@ TEST_CASE("parser::select_from_order_by") {
     auto* resource = std::pmr::get_default_resource();
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number;",
-                       R"_($aggregate: {$sort: {number: 1}})_");
+                       R"_($aggregate: {$sort: {number: 1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number asc;",
-                       R"_($aggregate: {$sort: {number: 1}})_");
+                       R"_($aggregate: {$sort: {number: 1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number desc;",
-                       R"_($aggregate: {$sort: {number: -1}})_");
+                       R"_($aggregate: {$sort: {number: -1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number, name;",
-                       R"_($aggregate: {$sort: {number: 1, name: 1}})_");
+                       R"_($aggregate: {$sort: {number: 1, name: 1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number asc, name desc;",
-                       R"_($aggregate: {$sort: {number: 1, name: -1}})_");
+                       R"_($aggregate: {$sort: {number: 1, name: -1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table order by number, count asc, name, value desc;",
-                       R"_($aggregate: {$sort: {number: 1, count: 1, name: -1, value: -1}})_");
+                       R"_($aggregate: {$sort: {number: 1, count: 1, name: -1, value: -1}})_",
+                       vec());
 
     TEST_SIMPLE_SELECT("select * from schema.table where number > 10 order by number asc, name desc;",
-                       R"_($aggregate: {$match: {"number": {$gt: #0}}, $sort: {number: 1, name: -1}})_");
+                       R"_($aggregate: {$match: {"number": {$gt: #0}}, $sort: {number: 1, name: -1}})_",
+                       vec({v(10l)}));
 
 }
+
+TEST_CASE("parser::select_from_fields") {
+
+    auto* resource = std::pmr::get_default_resource();
+
+    TEST_SIMPLE_SELECT("select number, name, count from schema.table;",
+                       R"_($aggregate: {$group: {number, name, count}})_",
+                       vec());
+
+    TEST_SIMPLE_SELECT("select number, name as title from schema.table;",
+                       R"_($aggregate: {$group: {number, title: "$name"}})_",
+                       vec());
+
+    TEST_SIMPLE_SELECT("select number, name title from schema.table;",
+                       R"_($aggregate: {$group: {number, title: "$name"}})_",
+                       vec());
+
+    TEST_SIMPLE_SELECT("select number, 10 size, 'title' title, true on, false off from schema.table;",
+                       R"_($aggregate: {$group: {number, size: #0, title: #1, on: #2, off: #3}})_",
+                       vec({v(10l), v(std::string("title")), v(true), v(false)}));
+
+}
+
+//TEST_CASE("parser::select_from_group_by") {
+
+//    auto* resource = std::pmr::get_default_resource();
+
+//}

@@ -2,6 +2,7 @@
 #include <components/sql/parser/base/parser_mask.hpp>
 #include <components/sql/parser/base/parser_orderby.hpp>
 #include <components/sql/parser/base/parser_where.hpp>
+#include <components/sql/parser/select/impl/parser_select_fields.hpp>
 
 using namespace components::sql::impl;
 
@@ -29,28 +30,28 @@ namespace components::sql::select::impl {
         }
         lexer.restore();
 
+        ql::aggregate_statement agg{"", ""};
         token = lexer.next_not_whitespace_token();
-        while (mask_elem_from != token) {
-            //todo: parse field
-            token = lexer.next_not_whitespace_token();
+
+        // fields
+        ql::aggregate::group_t group;
+        auto res = parse_select_fields(resource, lexer, group, agg);
+        if (res.is_error()) {
+            return res;
         }
 
-        auto schema = std::string();
-        auto table = std::string();
         token = lexer.next_not_whitespace_token();
         if (token.type == token_type::bare_word) {
-            table = std::string(token.value());
+            agg.collection_ = std::string(token.value());
             token = lexer.next_token();
             if (token.type == token_type::dot) {
                 token = lexer.next_token();
                 if (token.type != token_type::bare_word) {
                     return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
                 }
-                schema = table;
-                table = std::string(token.value());
+                agg.database_ = agg.collection_;
+                agg.collection_ = std::string(token.value());
             }
-            statement = ql::aggregate_statement{schema, table};
-            auto& agg = std::get<ql::aggregate_statement>(statement);
 
             // where
             token = lexer.next_not_whitespace_token();
@@ -61,6 +62,13 @@ namespace components::sql::select::impl {
                     return res;
                 }
                 agg.append(ql::aggregate::operator_type::match, match);
+            }
+
+            // group by
+            //todo: parse group by
+            //todo: check fields and group by
+            if (!group.fields.empty()) {
+                agg.append(ql::aggregate::operator_type::group, group);
             }
 
             // order by
@@ -88,6 +96,7 @@ namespace components::sql::select::impl {
             return false;
         }
 
+        statement = std::move(agg);
         return true;
     }
 
