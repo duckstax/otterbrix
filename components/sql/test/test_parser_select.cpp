@@ -21,6 +21,32 @@ using namespace components;
         }                                                                \
     }
 
+#define TEST_SELECT_WITHOUT_FROM(QUERY, RESULT, PARAMS)                  \
+    SECTION(QUERY) {                                                     \
+        auto res = sql::parse(resource, QUERY);                          \
+        auto ql = res.ql;                                                \
+        REQUIRE(std::holds_alternative<ql::aggregate_statement>(ql));    \
+        auto& agg = std::get<ql::aggregate_statement>(ql);               \
+        std::stringstream s;                                             \
+        s << agg;                                                        \
+        REQUIRE(s.str() == RESULT);                                      \
+        REQUIRE(agg.parameters().size() == PARAMS.size());               \
+        for (auto i = 0ul; i < PARAMS.size(); ++i) {                     \
+            REQUIRE(agg.parameter(core::parameter_id_t(uint16_t(i)))     \
+                    == PARAMS.at(i));                                    \
+        }                                                                \
+    }
+
+#define TEST_ERROR_SELECT(QUERY, ERROR, TEXT, POS)                       \
+    SECTION(QUERY) {                                                     \
+        auto query = QUERY;                                              \
+        auto res = sql::parse(resource, query);                          \
+        REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql)); \
+        REQUIRE(res.error.error() == ERROR);                             \
+        REQUIRE(res.error.mistake() == TEXT);                            \
+        REQUIRE(res.error.mistake().data() == query + POS);              \
+    }
+
 using v = ::document::wrapper_value_t;
 using vec = std::vector<v>;
 
@@ -294,8 +320,40 @@ TEST_CASE("parser::select_from_fields") {
 
 }
 
-//TEST_CASE("parser::select_from_group_by") {
+TEST_CASE("parser::select_from_fields::errors") {
 
-//    auto* resource = std::pmr::get_default_resource();
+    auto* resource = std::pmr::get_default_resource();
 
-//}
+    TEST_ERROR_SELECT("select number name count from schema.table;",
+                      sql::parse_error::syntax_error, "count", 19);
+
+    TEST_ERROR_SELECT("select number as, name, count from schema.table;",
+                      sql::parse_error::syntax_error, ",", 16);
+
+}
+
+TEST_CASE("parser::select_without_from") {
+
+    auto* resource = std::pmr::get_default_resource();
+
+    TEST_SELECT_WITHOUT_FROM("select 10 number;",
+                             R"_($aggregate: {$group: {number: #0}})_",
+                             vec({v(10l)}));
+
+    TEST_SELECT_WITHOUT_FROM("select 'title' as title;",
+                             R"_($aggregate: {$group: {title: #0}})_",
+                             vec({v(std::string("title"))}));
+
+    TEST_SELECT_WITHOUT_FROM("select 10;",
+                             R"_($aggregate: {$group: {10: #0}})_",
+                             vec({v(10l)}));
+
+    TEST_SELECT_WITHOUT_FROM("select 'title';",
+                             R"_($aggregate: {$group: {title: #0}})_",
+                             vec({v(std::string("title"))}));
+
+    TEST_SELECT_WITHOUT_FROM("select 10, 'title';",
+                             R"_($aggregate: {$group: {10: #0, title: #1}})_",
+                             vec({v(10l), v(std::string("title"))}));
+
+}

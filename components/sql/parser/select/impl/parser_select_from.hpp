@@ -5,7 +5,7 @@
 
 namespace components::sql::select::impl {
 
-    components::sql::impl::parser_result parse_select_base(std::pmr::memory_resource* resource,
+    components::sql::impl::parser_result parse_select_from(std::pmr::memory_resource* resource,
                                                            std::string_view query,
                                                            ql::variant_statement_t& statement);
 

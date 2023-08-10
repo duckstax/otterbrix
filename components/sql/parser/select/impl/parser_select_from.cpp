@@ -1,4 +1,4 @@
-#include "parser_select_base.hpp"
+#include "parser_select_from.hpp"
 #include <components/sql/parser/base/parser_mask.hpp>
 #include <components/sql/parser/base/parser_orderby.hpp>
 #include <components/sql/parser/base/parser_where.hpp>
@@ -8,7 +8,7 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-    components::sql::impl::parser_result parse_select_base(std::pmr::memory_resource* resource,
+    components::sql::impl::parser_result parse_select_from(std::pmr::memory_resource* resource,
                                                            std::string_view query,
                                                            ql::variant_statement_t& statement) {
 
@@ -92,8 +92,7 @@ namespace components::sql::select::impl {
             }
 
         } else {
-            //todo: other variants
-            return false;
+            return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid update query"};
         }
 
         statement = std::move(agg);
