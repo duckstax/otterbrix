@@ -56,8 +56,9 @@ namespace components::sql {
     }
 
     bool is_token_field_name(const token_t& token) {
-        return token.type == token_type::bare_word
-            || token.type == token_type::quoted_identifier;
+        return (token.type == token_type::bare_word
+                || token.type == token_type::quoted_identifier)
+            && !is_token_bool_value(token);
     }
 
     bool is_token_field_value(const token_t& token) {

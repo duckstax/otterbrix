@@ -25,7 +25,9 @@ set(SOURCE_${PROJECT_NAME}
     parser/insert/impl/parser_insert_into.cpp
 
     parser/select/parser_select.cpp
-    parser/select/impl/parser_select_base.cpp
+    parser/select/impl/parser_select_fields.cpp
+    parser/select/impl/parser_select_from.cpp
+    parser/select/impl/parser_select_without_from.cpp
 
     parser/update/parser_update.cpp
     parser/update/impl/parser_update_base.cpp
