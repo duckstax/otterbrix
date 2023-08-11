@@ -42,7 +42,7 @@ namespace components::sql::impl {
             std::pmr::vector<std::string_view> fields(resource);
             while (!is_token_end_query(token) && !is_token_orderby_end(token) && !is_token_orderby_group_end(token)) {
                 if (is_token_field_name(token)) {
-                    fields.push_back(token.value());
+                    fields.push_back(token_clean_value(token));
                 }
                 token = lexer.next_not_whitespace_token();
                 if (token.type == token_type::comma) {

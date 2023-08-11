@@ -10,6 +10,8 @@ namespace components::sql {
         empty_fields_list,
         empty_values_list,
         empty_order_by_list,
+        group_by_less_paramaters,
+        group_by_more_paramaters,
         not_valid_size_values_list,
         not_valid_where_condition,
         not_exists_open_round_bracket,

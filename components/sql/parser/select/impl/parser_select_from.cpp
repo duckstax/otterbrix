@@ -16,6 +16,7 @@ namespace components::sql::select::impl {
         static const mask_element_t mask_elem_from(token_type::bare_word, "from");
         static const mask_element_t mask_elem_where(token_type::bare_word, "where");
         static const mask_group_element_t mask_elem_order({"order", "by"});
+        static const mask_group_element_t mask_elem_group({"group", "by"});
 
         lexer_t lexer(query);
 
