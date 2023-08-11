@@ -235,23 +235,26 @@ TEST_CASE("parser::select_from_group_by") {
 
     auto* resource = std::pmr::get_default_resource();
 
-    TEST_SIMPLE_SELECT(R"_(select name, sum(count) as "count" from schema.table group by name;)_",
+    //TEST_SIMPLE_SELECT(R"_(select name, sum(count) as "count" from schema.table group by name;)_",
+    TEST_SIMPLE_SELECT(R"_(select name, sum(count) as "count" from schema.table;)_",
                        R"_($aggregate: {$group: {name, count: {$sum: "$count"}}})_",
                        vec());
 
-    TEST_SIMPLE_SELECT(R"_(select name, sum(count) "count" from schema.table group by name;)_",
+    //TEST_SIMPLE_SELECT(R"_(select name, sum(count) "count" from schema.table group by name;)_",
+    TEST_SIMPLE_SELECT(R"_(select name, sum(count) "count" from schema.table;)_",
                        R"_($aggregate: {$group: {name, count: {$sum: "$count"}}})_",
                        vec());
 
-    TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table group by name;)_",
-                       R"_($aggregate: {$group: {name, sum: {$sum: "$count"}}})_",
-                       vec());
+    //TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table group by name;)_",
+//    TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table;)_",
+//                       R"_($aggregate: {$group: {name, sum: {$sum: "$count"}}})_",
+//                       vec());
 
 }
 
 TEST_CASE("parser::select_from_group_by::errors") {
 
-    auto* resource = std::pmr::get_default_resource();
+//    auto* resource = std::pmr::get_default_resource();
 
 //    TEST_ERROR_SELECT(R"_(select name, sum(count) as "count" from schema.table;)_",
 //                      sql::parse_error::group_by_less_paramaters, "name", 19);

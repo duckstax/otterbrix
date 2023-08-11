@@ -34,7 +34,7 @@ namespace components::sql::select::impl {
             }) != group_words + size;
         }
 
-        inline expressions::aggregate_type get_aggregate_expression(const token_t& token) {
+        inline expressions::aggregate_type get_aggregate_expression_type(const token_t& token) {
             if (mask_group_sum == token)    return expressions::aggregate_type::sum;
             if (mask_group_count == token)  return expressions::aggregate_type::count;
             if (mask_group_min == token)    return expressions::aggregate_type::min;
@@ -51,7 +51,7 @@ namespace components::sql::select::impl {
             token = lexer.next_not_whitespace_token();
             if (mask_as == token) {
                 token = lexer.next_not_whitespace_token();
-                if (!is_token_field_name(token)) {
+                if (!is_token_field_name(token) || fields_stop_word == token) {
                     return parser_result{parse_error::syntax_error, token, "not valid select query"};
                 }
             }
@@ -65,7 +65,6 @@ namespace components::sql::select::impl {
             if (token.type != token_type::comma && fields_stop_word != token) {
                 return parser_result{parse_error::syntax_error, token, "not valid select query"};
             }
-
             return true;
         }
 
@@ -79,6 +78,9 @@ namespace components::sql::select::impl {
             token = lexer.next_not_whitespace_token();
             if (mask_as == token) {
                 token = lexer.next_not_whitespace_token();
+                if (!is_token_field_name(token) || fields_stop_word == token) {
+                    return parser_result{parse_error::syntax_error, token, "not valid select query"};
+                }
             }
             if (is_token_field_name(token)) {
                 key_name = expressions::key_t{token_clean_value(token)};
@@ -88,6 +90,44 @@ namespace components::sql::select::impl {
             expr->append_param(statement.add_parameter(value));
             append_expr(group, expr);
             if (token.type != token_type::comma && fields_stop_word != token && !is_token_end_query(token)) {
+                return parser_result{parse_error::syntax_error, token, "not valid select query"};
+            }
+            return true;
+        }
+
+        parser_result parse_select_group(std::pmr::memory_resource* resource,
+                                         lexer_t& lexer,
+                                         ql::aggregate::group_t& group) {
+            auto token = lexer.current_significant_token();
+            auto aggregate_type = get_aggregate_expression_type(token);
+            token = lexer.next_not_whitespace_token();
+            if (token.type != token_type::bracket_round_open) {
+                return parser_result{parse_error::not_exists_open_round_bracket, token, "not valid select query"};
+            }
+            token = lexer.next_not_whitespace_token();
+            if (!is_token_field_name(token)) {
+                return parser_result{parse_error::syntax_error, token, "not valid select query"};
+            }
+            expressions::key_t key_value{token_clean_value(token)};
+            token = lexer.next_not_whitespace_token();
+            if (token.type != token_type::bracket_round_close) {
+                return parser_result{parse_error::not_exists_close_round_bracket, token, "not valid select query"};
+            }
+            token = lexer.next_not_whitespace_token();
+            if (mask_as == token) {
+                token = lexer.next_not_whitespace_token();
+                if (!is_token_field_name(token) || fields_stop_word == token) {
+                    return parser_result{parse_error::syntax_error, token, "not valid select query"};
+                }
+            }
+            if (is_token_field_name(token) && fields_stop_word != token) {
+                expressions::key_t key_name{token_clean_value(token)};
+                append_expr(group, expressions::make_aggregate_expression(resource, aggregate_type, key_name, key_value));
+                token = lexer.next_not_whitespace_token();
+            } else {
+                append_expr(group, expressions::make_aggregate_expression(resource, aggregate_type, key_value));
+            }
+            if (token.type != token_type::comma && fields_stop_word != token) {
                 return parser_result{parse_error::syntax_error, token, "not valid select query"};
             }
             return true;
@@ -105,7 +145,10 @@ namespace components::sql::select::impl {
                 //todo: add all fields from structure
                 token = lexer.next_not_whitespace_token();
             } else if (is_token_group_word(token)) {
-                //todo: group
+                auto res = parse_select_group(resource, lexer, group);
+                if (res.is_error()) {
+                    return res;
+                }
             } else if (is_token_field_name(token)) {
                 auto res = parse_select_field(resource, lexer, group);
                 if (res.is_error()) {
