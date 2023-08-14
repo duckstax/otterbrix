@@ -246,9 +246,9 @@ TEST_CASE("parser::select_from_group_by") {
                        vec());
 
     //TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table group by name;)_",
-//    TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table;)_",
-//                       R"_($aggregate: {$group: {name, sum: {$sum: "$count"}}})_",
-//                       vec());
+    TEST_SIMPLE_SELECT(R"_(select name, sum(count) from schema.table;)_",
+                       R"_($aggregate: {$group: {name, sum(count): {$sum: "$count"}}})_",
+                       vec());
 
 }
 
