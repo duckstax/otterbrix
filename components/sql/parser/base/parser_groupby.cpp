@@ -7,8 +7,9 @@ namespace components::sql::impl {
 
     namespace {
 
-        static const std::array<mask_element_t, 1> groupby_stop_words {
-            mask_element_t(token_type::bare_word, "having")
+        static const std::array<mask_element_t, 2> groupby_stop_words {
+            mask_element_t(token_type::bare_word, "having"),
+            mask_element_t(token_type::bare_word, "order")
         };
 
         inline bool is_token_groupby_end(const token_t& token) {

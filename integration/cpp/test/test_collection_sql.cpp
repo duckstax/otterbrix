@@ -198,35 +198,56 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', " << "'Name " << (num % 10 + 1) << "', "
+                query << "('" << gen_id(num + 1) << "', " << "'Name " << (num % 10) << "', "
                       << (num % 20) << ")" << (num == 99 ? ";" : ", ");
             }
             dispatcher->execute_sql(session, query.str());
         }
     }
 
-    INFO("find") {
-        {
-            auto session = duck_charmer::session_id_t();
-            auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
-                                                        R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
-                                                        R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
-                                                        R"_(FROM TestDatabase.TestCollection )_"
-                                                        R"_(GROUP BY name;)_");
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 10);
-            int number = 0;
-            while (auto doc = c->next()) {
-                REQUIRE(doc->get_string("name") == "Name " + std::to_string(number + 1));
-                REQUIRE(doc->get_long("count_") == 10);
-                REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
-                REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
-                REQUIRE(doc->get_long("min_") == number % 20);
-                REQUIRE(doc->get_long("max_") == (number + 10) % 20);
-                ++number;
-            }
-            delete c;
+    INFO("group by") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
+                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                                    R"_(FROM TestDatabase.TestCollection )_"
+                                                    R"_(GROUP BY name;)_");
+        auto *c = res.get<components::cursor::cursor_t*>();
+        REQUIRE(c->size() == 10);
+        int number = 0;
+        while (auto doc = c->next()) {
+            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_long("count_") == 10);
+            REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
+            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_long("min_") == number % 20);
+            REQUIRE(doc->get_long("max_") == (number + 10) % 20);
+            ++number;
         }
+        delete c;
+    }
+
+    INFO("group by with order by") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
+                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                                    R"_(FROM TestDatabase.TestCollection )_"
+                                                    R"_(GROUP BY name )_"
+                                                    R"_(ORDER BY name DESC;)_");
+        auto *c = res.get<components::cursor::cursor_t*>();
+        REQUIRE(c->size() == 10);
+        int number = 9;
+        while (auto doc = c->next()) {
+            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_long("count_") == 10);
+            REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
+            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_long("min_") == number % 20);
+            REQUIRE(doc->get_long("max_") == (number + 10) % 20);
+            --number;
+        }
+        delete c;
     }
 
 }
