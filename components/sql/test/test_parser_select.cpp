@@ -269,31 +269,13 @@ TEST_CASE("parser::select_from_group_by::errors") {
     TEST_ERROR_SELECT(R"_(select name, title, sum(count) from schema.table group by name title;)_",
                       sql::parse_error::syntax_error, "title", 63);
 
-//    TEST_ERROR_SELECT(R"_(select name, sum(count) as "count" from schema.table;)_",
-//                      sql::parse_error::group_by_less_paramaters, "name", 19);
-    SECTION(R"_(select name, sum(count) as "count" from schema.table;)_") {
-        auto query = R"_(select name, sum(count) as "count" from schema.table;)_";
-        auto res = sql::parse(resource, query);
-        REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
-        REQUIRE(res.error.error() == sql::parse_error::group_by_less_paramaters);
-    }
+    TEST_ERROR_SELECT(R"_(select name, sum(count) as "count" from schema.table;)_",
+                      sql::parse_error::group_by_less_paramaters, "name", 7);
 
-//    TEST_ERROR_SELECT(R"_(select name, sum(count) as "count" from schema.table group by name, title;)_",
-//                      sql::parse_error::group_by_more_paramaters, "title", 19);
-    SECTION(R"_(select name, sum(count) as "count" from schema.table group by name, title;)_") {
-        auto query = R"_(select name, sum(count) as "count" from schema.table group by name, title;)_";
-        auto res = sql::parse(resource, query);
-        REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
-        REQUIRE(res.error.error() == sql::parse_error::group_by_more_paramaters);
-    }
+    TEST_ERROR_SELECT(R"_(select name, sum(count) as "count" from schema.table group by name, title;)_",
+                      sql::parse_error::group_by_more_paramaters, "title", 68);
 
-//    TEST_ERROR_SELECT(R"_(select name, title, sum(count) as "count" from schema.table group by name;)_",
-//                      sql::parse_error::group_by_less_paramaters, "title", 19);
-    SECTION(R"_(select name, title, sum(count) as "count" from schema.table group by name;)_") {
-        auto query = R"_(select name, title, sum(count) as "count" from schema.table group by name;)_";
-        auto res = sql::parse(resource, query);
-        REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));
-        REQUIRE(res.error.error() == sql::parse_error::group_by_less_paramaters);
-    }
+    TEST_ERROR_SELECT(R"_(select name, title, sum(count) as "count" from schema.table group by name;)_",
+                      sql::parse_error::group_by_less_paramaters, "title", 13);
 
 }

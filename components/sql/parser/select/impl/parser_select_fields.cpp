@@ -140,7 +140,8 @@ namespace components::sql::select::impl {
     parser_result parse_select_fields(std::pmr::memory_resource* resource,
                                       lexer_t& lexer,
                                       ql::aggregate::group_t& group,
-                                      ql::ql_param_statement_t& statement) {
+                                      ql::ql_param_statement_t& statement,
+                                      std::pmr::set<token_t>& group_fields_select) {
         auto token = lexer.current_significant_token();
         while (fields_stop_word != token && !is_token_end_query(token)) {
             if (token.type == token_type::asterisk) {
@@ -156,6 +157,7 @@ namespace components::sql::select::impl {
                 if (res.is_error()) {
                     return res;
                 }
+                group_fields_select.insert(token);
             } else if (is_token_field_value(token)) {
                 auto res = parse_select_constant(resource, lexer, group, statement);
                 if (res.is_error()) {

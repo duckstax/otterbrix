@@ -37,7 +37,8 @@ namespace components::sql::select::impl {
 
         // fields
         ql::aggregate::group_t group;
-        auto res = parse_select_fields(resource, lexer, group, agg);
+        std::pmr::set<token_t> group_fields_select(resource);
+        auto res = parse_select_fields(resource, lexer, group, agg, group_fields_select);
         if (res.is_error()) {
             return res;
         }
@@ -71,14 +72,14 @@ namespace components::sql::select::impl {
             if (status_group == mask_group_element_t::status::error) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use group"};
             }
-            std::pmr::set<std::string_view> group_fields(resource);
+            std::pmr::set<token_t> group_fields(resource);
             if (status_group == mask_group_element_t::status::yes) {
                 auto res = parse_groupby(lexer, group_fields);
                 if (res.is_error()) {
                     return res;
                 }
             }
-            res = check_groupby(group, group_fields);
+            res = check_groupby(resource, group, group_fields_select, group_fields);
             if (res.is_error()) {
                 return res;
             }

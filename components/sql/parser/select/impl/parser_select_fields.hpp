@@ -10,6 +10,7 @@ namespace components::sql::select::impl {
     components::sql::impl::parser_result parse_select_fields(std::pmr::memory_resource* resource,
                                                              components::sql::lexer_t& lexer,
                                                              components::ql::aggregate::group_t& group,
-                                                             components::ql::ql_param_statement_t& statement);
+                                                             components::ql::ql_param_statement_t& statement,
+                                                             std::pmr::set<token_t>& group_fields_select);
 
 } // namespace components::sql::select::impl
