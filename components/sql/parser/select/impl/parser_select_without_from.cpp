@@ -24,7 +24,8 @@ namespace components::sql::select::impl {
 
         // fields
         ql::aggregate::group_t group;
-        auto res = parse_select_fields(resource, lexer, group, agg);
+        std::pmr::set<token_t> group_fields_select(resource);
+        auto res = parse_select_fields(resource, lexer, group, agg, group_fields_select);
         if (res.is_error()) {
             return res;
         }

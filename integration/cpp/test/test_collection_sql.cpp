@@ -12,9 +12,9 @@ using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-TEST_CASE("integration::cpp::test_collection::sql") {
+TEST_CASE("integration::cpp::test_collection::sql::base") {
 
-    auto config = test_create_config("/tmp/test_collection_ql");
+    auto config = test_create_config("/tmp/test_collection_sql/base");
     test_clear_directory(config);
     config.disk.on = false;
     config.wal.on = false;
@@ -170,6 +170,84 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             REQUIRE(c->size() == 20);
             delete c;
         }
+    }
+
+}
+
+
+TEST_CASE("integration::cpp::test_collection::sql::group_by") {
+
+    auto config = test_create_config("/tmp/test_collection_sql/group_by");
+    test_clear_directory(config);
+    config.disk.on = false;
+    config.wal.on = false;
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        {
+            auto session = duck_charmer::session_id_t();
+            dispatcher->create_database(session, database_name);
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_name);
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            std::stringstream query;
+            query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
+            for (int num = 0; num < 100; ++num) {
+                query << "('" << gen_id(num + 1) << "', " << "'Name " << (num % 10) << "', "
+                      << (num % 20) << ")" << (num == 99 ? ";" : ", ");
+            }
+            dispatcher->execute_sql(session, query.str());
+        }
+    }
+
+    INFO("group by") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
+                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                                    R"_(FROM TestDatabase.TestCollection )_"
+                                                    R"_(GROUP BY name;)_");
+        auto *c = res.get<components::cursor::cursor_t*>();
+        REQUIRE(c->size() == 10);
+        int number = 0;
+        while (auto doc = c->next()) {
+            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_long("count_") == 10);
+            REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
+            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_long("min_") == number % 20);
+            REQUIRE(doc->get_long("max_") == (number + 10) % 20);
+            ++number;
+        }
+        delete c;
+    }
+
+    INFO("group by with order by") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
+                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                                    R"_(FROM TestDatabase.TestCollection )_"
+                                                    R"_(GROUP BY name )_"
+                                                    R"_(ORDER BY name DESC;)_");
+        auto *c = res.get<components::cursor::cursor_t*>();
+        REQUIRE(c->size() == 10);
+        int number = 9;
+        while (auto doc = c->next()) {
+            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_long("count_") == 10);
+            REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
+            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_long("min_") == number % 20);
+            REQUIRE(doc->get_long("max_") == (number + 10) % 20);
+            --number;
+        }
+        delete c;
     }
 
 }

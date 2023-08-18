@@ -1,4 +1,5 @@
 #include "parser_select_from.hpp"
+#include <components/sql/parser/base/parser_groupby.hpp>
 #include <components/sql/parser/base/parser_mask.hpp>
 #include <components/sql/parser/base/parser_orderby.hpp>
 #include <components/sql/parser/base/parser_where.hpp>
@@ -15,7 +16,8 @@ namespace components::sql::select::impl {
         static const mask_element_t mask_elem_select(token_type::bare_word, "select");
         static const mask_element_t mask_elem_from(token_type::bare_word, "from");
         static const mask_element_t mask_elem_where(token_type::bare_word, "where");
-        static const mask_group_element_t mask_elem_order({"order", "by"});
+        static const mask_group_element_t mask_order_by({"order", "by"});
+        static const mask_group_element_t mask_group_by({"group", "by"});
 
         lexer_t lexer(query);
 
@@ -35,7 +37,8 @@ namespace components::sql::select::impl {
 
         // fields
         ql::aggregate::group_t group;
-        auto res = parse_select_fields(resource, lexer, group, agg);
+        std::pmr::set<token_t> group_fields_select(resource);
+        auto res = parse_select_fields(resource, lexer, group, agg, group_fields_select);
         if (res.is_error()) {
             return res;
         }
@@ -65,14 +68,27 @@ namespace components::sql::select::impl {
             }
 
             // group by
-            //todo: parse group by
-            //todo: check fields and group by
+            auto status_group = mask_group_by.check(lexer);
+            if (status_group == mask_group_element_t::status::error) {
+                return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use group"};
+            }
+            std::pmr::set<token_t> group_fields(resource);
+            if (status_group == mask_group_element_t::status::yes) {
+                auto res = parse_groupby(lexer, group_fields);
+                if (res.is_error()) {
+                    return res;
+                }
+            }
+            res = check_groupby(resource, group, group_fields_select, group_fields);
+            if (res.is_error()) {
+                return res;
+            }
             if (!group.fields.empty()) {
                 agg.append(ql::aggregate::operator_type::group, group);
             }
 
             // order by
-            auto status_order = mask_elem_order.check(lexer);
+            auto status_order = mask_order_by.check(lexer);
             if (status_order == mask_group_element_t::status::error) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use order"};
             }
