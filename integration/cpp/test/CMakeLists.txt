@@ -19,7 +19,7 @@ target_link_libraries(
 
         rocketjoe::test_generaty
         rocketjoe::log
-        rocketjoe::database
+        rocketjoe::memory_storage
         rocketjoe::collection
         rocketjoe::cursor
         rocketjoe::session

@@ -19,9 +19,9 @@ namespace duck_charmer {
         , manager_dispatcher_(manager_dispatcher)
         ,log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
-        add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
-        add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
-        add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
+//        add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
+//        add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
+//        add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
         add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);

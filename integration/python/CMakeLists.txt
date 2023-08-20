@@ -27,7 +27,7 @@ set(${PROJECT_NAME}_sources
 
 set(ROCKETJOE_LIBS
         rocketjoe::log
-        rocketjoe::database
+        rocketjoe::memory_storage
         rocketjoe::collection
         rocketjoe::cursor
         rocketjoe::session

@@ -6,7 +6,7 @@
 enum class group_id_t : uint8_t {
     system = 0,
     dispatcher,
-    database,
+    memory_storage,
     collection,
     wal,
     disk,

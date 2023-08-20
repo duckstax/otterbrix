@@ -8,7 +8,6 @@
 #include <components/translator/ql_translator.hpp>
 
 #include <services/collection/route.hpp>
-#include <services/database/database.hpp>
 #include <services/database/route.hpp>
 #include <services/disk/manager_disk.hpp>
 #include <services/disk/route.hpp>

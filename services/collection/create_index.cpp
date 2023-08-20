@@ -40,7 +40,7 @@ namespace services::collection {
     }
 
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
-        debug(log(), "collection::create_index : {} {} {}", name_, name_index_type(index.index_type_), keys_index(index.keys_)); //todo: maybe delete
+        debug(log(), "collection::create_index : {} {} {}", name_.to_string(), name_index_type(index.index_type_), keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
             actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_index_finish), session, result_create_index(false));
         } else {
