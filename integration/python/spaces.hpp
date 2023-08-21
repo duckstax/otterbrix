@@ -8,7 +8,7 @@
 #include <services/dispatcher/dispatcher.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/disk/manager_disk.hpp>
-#include <services/database/database.hpp>
+#include <services/memory_storage/memory_storage.hpp>
 
 #include "integration/cpp/wrapper_dispatcher.hpp"
 #include "integration/cpp/base_spaces.hpp"

@@ -23,9 +23,10 @@ namespace services {
         using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, actor_zeta::address_t>;
 
     public:
-        using address_pack = std::tuple<actor_zeta::address_t>;
+        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
         enum class unpack_rules : uint64_t {
             manager_dispatcher = 0,
+            manager_disk = 1
         };
 
         memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
@@ -40,10 +41,14 @@ namespace services {
     private:
         spin_lock lock_;
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
+        actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
         log_t log_;
         actor_zeta::scheduler_raw e_;
         database_storage_t databases_;
         collection_storage_t collections_;
+
+        bool is_exists_database(const database_name_t& name) const;
+        bool is_exists_collection(const collection_full_name_t& name) const;
 
         void create_database_(components::session::session_id_t& session, components::ql::create_database_t* ql);
         void drop_database_(components::session::session_id_t& session, components::ql::drop_database_t* ql);

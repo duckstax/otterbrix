@@ -2,6 +2,7 @@
 // todo: pmr
 
 #include <string>
+#include <sstream>
 
 using database_name_t = std::string;
 using collection_name_t = std::string;
@@ -10,8 +11,17 @@ struct collection_full_name_t {
     database_name_t database;
     collection_name_t collection;
 
-    inline std::string_view to_string() const {
-        return collection;
+    collection_full_name_t() = default;
+
+    collection_full_name_t(const database_name_t& database, const collection_name_t& collection)
+        : database(database)
+        , collection(collection) {
+    }
+
+    inline std::string to_string() const {
+        std::stringstream s;
+        s << database << "." << collection;
+        return s.str();
     }
 };
 
@@ -23,3 +33,9 @@ inline bool operator<(const collection_full_name_t& c1, const collection_full_na
     return c1.database < c2.database ||
            (c1.database == c2.database && c1.collection < c2.collection);
 }
+
+struct collection_name_hash {
+    inline std::size_t operator()(const collection_full_name_t& key) const {
+        return std::hash<std::string>()(key.database) ^ std::hash<std::string>()(key.collection);
+    }
+};
