@@ -15,6 +15,12 @@ namespace components::ql {
         drop_database_t(drop_database_t&&) = default;
         drop_database_t& operator=(drop_database_t&&) = default;
         ~drop_database_t() final = default;
+
+        std::string to_string() const final {
+            std::stringstream s;
+            s << "drop_database: " << database_;
+            return s.str();
+        }
     };
 
 } // namespace components::ql

@@ -180,9 +180,8 @@ namespace duck_charmer {
 
     bool wrapper_collection::drop() {
         debug(log_, "wrapper_collection::drop: {}", name_);
-        result_drop_collection result;
         auto session_tmp = duck_charmer::session_id_t();
-        result = ptr_->drop_collection(session_tmp, database_, name_);
+        auto result = ptr_->drop_collection(session_tmp, database_, name_);
         debug(log_, "wrapper_collection::drop {}", result.is_success());
         return result.is_success();
     }

@@ -24,6 +24,8 @@ namespace services {
         trace(log_, "memory_storage start thread pool");
         add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
         add_handler(handler_id(route::execute_ql), &memory_storage_t::execute_ql);
+
+        add_handler(collection::handler_id(collection::route::drop_collection_finish), &memory_storage_t::drop_collection_finish_);
     }
 
     memory_storage_t::~memory_storage_t() {
@@ -81,7 +83,7 @@ namespace services {
         trace(log_, "memory_storage_t:create_database {}", ql->database_);
         if (is_exists_database(ql->database_)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, empty_result_t(), "database already exists"));
+                             make_error(ql, "database already exists"));
             return;
         }
         databases_.insert(ql->database_);
@@ -93,7 +95,7 @@ namespace services {
         trace(log_, "memory_storage_t:drop_database {}", ql->database_);
         if (!is_exists_database(ql->database_)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, empty_result_t(), "database not exists"));
+                             make_error(ql, "database not exists"));
             return;
         }
         databases_.erase(ql->database_);
@@ -106,12 +108,12 @@ namespace services {
         trace(log_, "memory_storage_t:create_collection {}", name.to_string());
         if (!is_exists_database(name.database)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, result_address_t(), "database not exists"));
+                             make_error(ql, "database not exists"));
             return;
         }
         if (is_exists_collection(name)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, result_address_t(), "collection already exists"));
+                             make_error(ql, "collection already exists"));
             return;
         }
         auto address = spawn_actor<collection::collection_t>([this, &name](collection::collection_t* ptr) {
@@ -126,17 +128,30 @@ namespace services {
         trace(log_, "memory_storage_t:drop_collection {}", name.to_string());
         if (!is_exists_database(name.database)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, empty_result_t(), "database not exists"));
+                             make_error(ql, "database not exists"));
             return;
         }
         if (!is_exists_collection(name)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, empty_result_t(), "collection not exists"));
+                             make_error(ql, "collection not exists"));
             return;
         }
-        collections_.erase(name);
-        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                         make_result(ql, empty_result_t()));
+        sessions_.emplace(session, session_t{ql, current_message()->sender()});
+        actor_zeta::send(collections_.at(name), address(), collection::handler_id(collection::route::drop_collection), session);
+    }
+
+    void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {
+        const auto &s = sessions_.at(session);
+        collection_full_name_t name(s.ql->database_, s.ql->collection_);
+        if (result.is_success()) {
+            collections_.erase(name);
+            actor_zeta::send(s.sender, this->address(), handler_id(route::execute_ql_finish), session,
+                             make_result(s.ql, empty_result_t()));
+        } else {
+            actor_zeta::send(s.sender, this->address(), handler_id(route::execute_ql_finish), session,
+                             make_error(s.ql, "collection not dropped"));
+        }
+        sessions_.erase(session);
     }
 
 } // namespace services

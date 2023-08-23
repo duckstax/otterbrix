@@ -15,6 +15,12 @@ namespace components::ql {
         create_database_t(create_database_t&&) = default;
         create_database_t& operator=(create_database_t&&) = default;
         ~create_database_t() final = default;
+
+        std::string to_string() const final {
+            std::stringstream s;
+            s << "create_database: " << database_;
+            return s.str();
+        }
     };
 
 } // namespace components::ql

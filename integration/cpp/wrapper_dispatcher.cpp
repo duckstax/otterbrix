@@ -19,9 +19,7 @@ namespace duck_charmer {
         , manager_dispatcher_(manager_dispatcher)
         ,log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
-//        add_handler(database::handler_id(database::route::create_database_finish), &wrapper_dispatcher_t::create_database_finish);
-//        add_handler(database::handler_id(database::route::create_collection_finish), &wrapper_dispatcher_t::create_collection_finish);
-//        add_handler(database::handler_id(database::route::drop_collection_finish), &wrapper_dispatcher_t::drop_collection_finish);
+        add_handler(memory_storage::handler_id(memory_storage::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
         add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
@@ -48,44 +46,24 @@ namespace duck_charmer {
         wait();
     }
 
-    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> void {
-        trace(log_, "wrapper_dispatcher_t::create_database session: {}, database name : {} ", session.data(), database);
-        init();
+    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> services::memory_storage::result_t {
         components::ql::create_database_t ql{database};
-        actor_zeta::send(
-            manager_dispatcher_,
-            address(),
-            database::handler_id(database::route::create_database),
-            session,
-            &ql);
-        wait();
+        return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void {
-        trace(log_, "wrapper_dispatcher_t::create_collection session: {}, database name : {} , collection name : {} ", session.data(), database, collection);
-        init();
+    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session, const database_name_t& database) -> services::memory_storage::result_t {
+        components::ql::drop_database_t ql{database};
+        return send_ql_new(session, &ql);
+    }
+
+    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t {
         components::ql::create_collection_t ql{database, collection};
-        actor_zeta::send(
-            manager_dispatcher_,
-            address(),
-            database::handler_id(database::route::create_collection),
-            session,
-            &ql);
-        wait();
+        return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection {
-        trace(log_, "wrapper_dispatcher_t::drop_collection session: {}, database name: {}, collection name: {} ", session.data(), database, collection);
-        init();
+    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t {
         components::ql::drop_collection_t ql{database, collection};
-        actor_zeta::send(
-            manager_dispatcher_,
-            address(),
-            database::handler_id(database::route::drop_collection),
-            session,
-            &ql);
-        wait();
-        return std::get<result_drop_collection>(intermediate_store_);
+        return send_ql_new(session, &ql);
     }
 
     auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert & {
@@ -295,20 +273,8 @@ namespace duck_charmer {
         notify();
     }
 
-    auto wrapper_dispatcher_t::create_database_finish(session_id_t &session, services::database::database_create_result result) -> void {
-        trace(log_, "wrapper_dispatcher_t::create_database_finish session: {} , result: {} ", session.data(), result.created_);
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    auto wrapper_dispatcher_t::create_collection_finish(session_id_t &session, services::database::collection_create_result result) -> void {
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::drop_collection_finish(session_id_t &session, result_drop_collection result) {
+    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, services::memory_storage::result_t result) {
+        trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result.is_success());
         intermediate_store_ = result;
         input_session_ = session;
         notify();
@@ -375,6 +341,20 @@ namespace duck_charmer {
     void wrapper_dispatcher_t::notify() {
         i = 1;
         cv_.notify_all();
+    }
+
+    services::memory_storage::result_t wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
+        trace(log_, "wrapper_dispatcher_t::send_ql session: {}, {} ", session.data(), ql->to_string());
+        init();
+        actor_zeta::send(
+            manager_dispatcher_,
+            address(),
+            memory_storage::handler_id(memory_storage::route::execute_ql),
+            session,
+            ql);
+        wait();
+
+        return std::get<services::memory_storage::result_t>(intermediate_store_);
     }
 
     template <typename Tres, typename Tql>

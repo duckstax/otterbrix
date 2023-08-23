@@ -8,6 +8,7 @@
 #include <components/ql/base.hpp>
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
+#include <services/collection/result.hpp>
 
 namespace components::ql {
     struct create_database_t;
@@ -19,8 +20,14 @@ namespace components::ql {
 namespace services {
 
     class memory_storage_t final : public actor_zeta::cooperative_supervisor<memory_storage_t> {
+        struct session_t {
+            components::ql::ql_statement_t* ql;
+            actor_zeta::address_t sender;
+        };
+
         using database_storage_t = std::pmr::set<database_name_t>;
         using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, actor_zeta::address_t>;
+        using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
@@ -46,6 +53,7 @@ namespace services {
         actor_zeta::scheduler_raw e_;
         database_storage_t databases_;
         collection_storage_t collections_;
+        session_storage_t sessions_;
 
         bool is_exists_database(const database_name_t& name) const;
         bool is_exists_collection(const collection_full_name_t& name) const;
@@ -54,6 +62,8 @@ namespace services {
         void drop_database_(components::session::session_id_t& session, components::ql::drop_database_t* ql);
         void create_collection_(components::session::session_id_t& session, components::ql::create_collection_t* ql);
         void drop_collection_(components::session::session_id_t& session, components::ql::drop_collection_t* ql);
+
+        void drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result);
     };
 
 } // namespace services

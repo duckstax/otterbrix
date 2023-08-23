@@ -2,6 +2,7 @@ project(memory_storage)
 
 set(${PROJECT_NAME}_SOURCES
     memory_storage.cpp
+    result.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}
