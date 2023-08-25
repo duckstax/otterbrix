@@ -36,6 +36,7 @@ target_link_libraries(
     ottergon_${PROJECT_NAME} PUBLIC
     ottergon::file
     ottergon::document
+    CONAN_PKG::abseil
     CONAN_PKG::spdlog
     CONAN_PKG::rocksdb
     CONAN_PKG::boost
