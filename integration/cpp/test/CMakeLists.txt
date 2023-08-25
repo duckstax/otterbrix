@@ -17,17 +17,17 @@ target_link_libraries(
 
         cpp_ottergon
 
-        rocketjoe::test_generaty
-        rocketjoe::log
-        rocketjoe::database
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
+        ottergon::test_generaty
+        ottergon::log
+        ottergon::database
+        ottergon::collection
+        ottergon::cursor
+        ottergon::session
+        ottergon::document
+        ottergon::dispatcher
+        ottergon::wal
+        ottergon::disk
+        ottergon::locks
 
         CONAN_PKG::spdlog
         CONAN_PKG::msgpack-cxx

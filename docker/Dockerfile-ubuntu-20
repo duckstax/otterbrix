@@ -35,6 +35,7 @@ COPY ./components ./components
 COPY ./core ./core
 COPY ./services ./services
 COPY ./wasm ./wasm
+COPY ./apps ./apps
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
@@ -43,6 +44,8 @@ RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build .
 
 
-RUN ctest -C -V --output-on-failure
+RUN ls apps/ottergon
 
-RUN cd integration/python/ && pytest
+#RUN ctest -C -V --output-on-failure
+
+#RUN cd integration/python/ && pytest

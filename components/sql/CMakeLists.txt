@@ -30,20 +30,20 @@ set(SOURCE_${PROJECT_NAME}
     parser/update/impl/parser_update_base.cpp
 )
 
-add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
-add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+add_library(ottergon_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
+add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-    rocketjoe_${PROJECT_NAME} PUBLIC
-    rocketjoe::document
-    rocketjoe::expressions
-    rocketjoe::ql
+    ottergon_${PROJECT_NAME} PUBLIC
+    ottergon::document
+    ottergon::expressions
+    ottergon::ql
 )
 
 target_include_directories(
-    rocketjoe_${PROJECT_NAME}
+    ottergon_${PROJECT_NAME}
     PUBLIC
 )
 

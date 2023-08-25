@@ -6,18 +6,18 @@ set(${PROJECT_NAME}_sources
       wrapper_dispatcher.cpp
 )
 
-set(ROCKETJOE_LIBS
-        rocketjoe::log
-        rocketjoe::database
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
-        rocketjoe::sql
+set(ottergon_LIBS
+        ottergon::log
+        ottergon::database
+        ottergon::collection
+        ottergon::cursor
+        ottergon::session
+        ottergon::document
+        ottergon::dispatcher
+        ottergon::wal
+        ottergon::disk
+        ottergon::locks
+        ottergon::sql
 )
 
 
@@ -30,7 +30,7 @@ add_library(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME} PUBLIC
-        ${ROCKETJOE_LIBS}
+        ${ottergon_LIBS}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")
@@ -45,19 +45,19 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
             wrapper_dispatcher.cpp
     )
 
-    add_library(rocketjoe_${PROJECT_NAME}
+    add_library(ottergon_${PROJECT_NAME}
             ${${PROJECT_NAME}_headers}
             ${${PROJECT_NAME}_sources}
     )
 
-    add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+    add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
 
-    set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+    set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
     target_link_libraries(
-            rocketjoe_${PROJECT_NAME} PUBLIC
+            ottergon_${PROJECT_NAME} PUBLIC
 
-            ${ROCKETJOE_LIBS}
+            ${ottergon_LIBS}
 
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx
@@ -78,7 +78,7 @@ endif()
 
 if (WASM_BUILD)
     target_link_libraries(
-            rocketjoe_${PROJECT_NAME} PUBLIC
+            ottergon_${PROJECT_NAME} PUBLIC
             CONAN_PKG::proxy-wasm-cpp-host
     )
 endif ()

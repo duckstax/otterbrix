@@ -25,18 +25,18 @@ set(${PROJECT_NAME}_sources
         wrapper_result.cpp
 )
 
-set(ROCKETJOE_LIBS
-        rocketjoe::log
-        rocketjoe::database
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
-        rocketjoe::ql
+set(ottergon_LIBS
+        ottergon::log
+        ottergon::database
+        ottergon::collection
+        ottergon::cursor
+        ottergon::session
+        ottergon::document
+        ottergon::dispatcher
+        ottergon::wal
+        ottergon::disk
+        ottergon::locks
+        ottergon::ql
 )
 
 #SET(PYTHON_EXECUTABLE python3)
@@ -54,7 +54,7 @@ pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${ROCKETJOE_LIBS}
+        ${ottergon_LIBS}
         cpp_ottergon
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
@@ -76,7 +76,7 @@ target_link_libraries(
 if (WASM_BUILD)
     target_link_libraries(
             ${PROJECT_NAME} PRIVATE
-            ${ROCKETJOE_LIBS}
+            ${ottergon_LIBS}
             CONAN_PKG::proxy-wasm-cpp-host
     )
 endif ()

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <magic_enum.hpp>
+#include <core/handler_by_id.hpp>
 #include <services/wal/route.hpp>
 
 constexpr uint64_t unpack_handler_id(group_id_t group, uint64_t input) {

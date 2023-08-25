@@ -18,12 +18,12 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         non_thread_scheduler
-        rocketjoe::log
-        rocketjoe::collection
-        rocketjoe::database
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::test_generaty
+        ottergon::log
+        ottergon::collection
+        ottergon::database
+        ottergon::cursor
+        ottergon::session
+        ottergon::test_generaty
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

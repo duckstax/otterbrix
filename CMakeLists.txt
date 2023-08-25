@@ -140,8 +140,8 @@ else()
     include_directories(services)
     add_subdirectory(services)
     add_subdirectory(integration)
+    add_subdirectory(apps)
 endif ()
-
 
 
 #set(CPACK_GENERATOR "DEB")

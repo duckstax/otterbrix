@@ -10,9 +10,9 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        rocketjoe::log
-        rocketjoe::cursor
-        rocketjoe::session
+        ottergon::log
+        ottergon::cursor
+        ottergon::session
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

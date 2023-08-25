@@ -6,7 +6,7 @@ msgpack-cxx/4.1.1
 date/3.0.1
 catch2/2.13.7
 crc32c/1.1.2
-abseil/20211102.0
+abseil/20220623.0
 rocksdb/6.20.3
 benchmark/1.6.1
 zlib/1.2.12
@@ -25,6 +25,7 @@ actor-zeta:fPIC=True
 cmake
 cmake_find_package
 CMakeDeps
+CMakeToolchain
 #cmake_paths
 
 
