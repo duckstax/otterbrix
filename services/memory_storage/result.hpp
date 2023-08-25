@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory_resource>
 #include <variant>
 #include <actor-zeta.hpp>
 #include <components/ql/ql_statement.hpp>
@@ -22,6 +23,17 @@ namespace services::memory_storage {
 
         result_address_t() = default;
         explicit result_address_t(actor_zeta::address_t&& address);
+    };
+
+    struct result_list_addresses_t {
+        struct res_t {
+            collection_full_name_t name;
+            actor_zeta::address_t address;
+        };
+
+        std::pmr::vector<res_t> addresses;
+
+        explicit result_list_addresses_t(std::pmr::memory_resource *resource);
     };
 
 
@@ -51,7 +63,8 @@ namespace services::memory_storage {
         std::variant<
             error_result_t,
             empty_result_t,
-            result_address_t
+            result_address_t,
+            result_list_addresses_t
         > result_;
         bool is_error_;
     };

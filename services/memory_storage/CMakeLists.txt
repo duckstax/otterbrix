@@ -18,6 +18,7 @@ target_link_libraries(
     rocketjoe::locks
     rocketjoe::session
     rocketjoe::collection
+    rocketjoe::disk
     CONAN_PKG::spdlog
 )
 

@@ -9,6 +9,8 @@
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
 #include <services/collection/result.hpp>
+#include <services/disk/result.hpp>
+#include "result.hpp"
 
 namespace components::ql {
     struct create_database_t;
@@ -23,6 +25,13 @@ namespace services {
         struct session_t {
             components::ql::ql_statement_t* ql;
             actor_zeta::address_t sender;
+            size_t count_answers;
+        };
+
+        struct load_buffer_t {
+            memory_storage::result_list_addresses_t collections;
+
+            explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
 
         using database_storage_t = std::pmr::set<database_name_t>;
@@ -41,6 +50,7 @@ namespace services {
 
         void sync(const address_pack& pack);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
+        void load(components::session::session_id_t &session, const disk::result_load_t &result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
@@ -54,6 +64,7 @@ namespace services {
         database_storage_t databases_;
         collection_storage_t collections_;
         session_storage_t sessions_;
+        std::unique_ptr<load_buffer_t> load_buffer_;
 
         bool is_exists_database(const database_name_t& name) const;
         bool is_exists_collection(const collection_full_name_t& name) const;
@@ -64,6 +75,7 @@ namespace services {
         void drop_collection_(components::session::session_id_t& session, components::ql::drop_collection_t* ql);
 
         void drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result);
+        void create_documents_finish_(components::session::session_id_t& session);
     };
 
 } // namespace services

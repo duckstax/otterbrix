@@ -35,9 +35,7 @@ namespace services::dispatcher {
         trace(log_, "dispatcher_t::dispatcher_t start name:{}", type());
         add_handler(core::handler_id(core::route::load), &dispatcher_t::load);
         add_handler(disk::handler_id(disk::route::load_finish), &dispatcher_t::load_from_disk_result);
-//!        add_handler(database::handler_id(database::route::create_databases_finish), &dispatcher_t::load_create_databases_result);
-//!        add_handler(database::handler_id(database::route::create_collections_finish), &dispatcher_t::load_create_collections_result);
-        add_handler(collection::handler_id(collection::route::create_documents_finish), &dispatcher_t::load_create_documents_result);
+        add_handler(memory_storage::handler_id(memory_storage::route::load_finish), &dispatcher_t::load_from_memory_resource_result);
         add_handler(disk::handler_id(disk::route::remove_collection_finish), &dispatcher_t::drop_collection_finish_from_disk);
         add_handler(wal::handler_id(wal::route::load_finish), &dispatcher_t::load_from_wal_result);
         add_handler(memory_storage::handler_id(memory_storage::route::execute_ql), &dispatcher_t::execute_ql);
@@ -83,38 +81,19 @@ namespace services::dispatcher {
         } else {
             load_count_answers_ = result.count_collections();
             load_result_ = result;
-            //!actor_zeta::send(manager_database_, address(), database::handler_id(database::route::create_databases), session, result.name_databases());
+            actor_zeta::send(memory_storage_, address(), memory_storage::handler_id(memory_storage::route::load), session, result);
         }
     }
 
-    void dispatcher_t::load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::base::address_t> &result) {
-        trace(log_, "dispatcher_t::load_create_databases_result, session: {}", session.data());
-        for (std::size_t i = 0; i < result.size(); ++i) {
-            //!database_address_book_.emplace((*load_result_).at(i).name, result.at(i));
-            //!actor_zeta::send(result.at(i), dispatcher_t::address(), database::handler_id(database::route::create_collections), session, (*load_result_).at(i).name_collections(), manager_disk_);
+    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t &session, const memory_storage::result_t &result) {
+        trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
+        const auto& collections = result.result<memory_storage::result_list_addresses_t>();
+        for (const auto& collection : collections.addresses) {
+            collection_address_book_.emplace(collection.name, collection.address);
         }
-    }
-
-    void dispatcher_t::load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::base::address_t> &result) {
-        trace(log_, "dispatcher_t::load_create_collections_result, session: {}, database: {}", session.data(), database_name);
-        auto it_database = std::find_if((*load_result_).begin(), (*load_result_).end(), [&database_name](const services::disk::result_database_t &database) {
-            return database.name == database_name;
-        });
-        if (it_database != (*load_result_).end()) {
-            for (std::size_t i = 0; i < result.size(); ++i) {
-                collection_address_book_.emplace(collection_full_name_t(database_name, it_database->collections.at(i).name), result.at(i));
-                actor_zeta::send(result.at(i), dispatcher_t::address(), collection::handler_id(collection::route::create_documents), session, it_database->collections.at(i).documents);
-            }
-        }
-    }
-
-    void dispatcher_t::load_create_documents_result(components::session::session_id_t &session) {
-        trace(log_, "dispatcher_t::load_create_documents_result, session: {}, wait answers: {}", session.data(), --load_count_answers_);
-        if (load_count_answers_ == 0) {
-            actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
-            actor_zeta::send(manager_wal_, dispatcher_t::address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
-            load_result_.clear();
-        }
+        actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
+        actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
+        load_result_.clear();
     }
 
     void dispatcher_t::load_from_wal_result(components::session::session_id_t& session, std::vector<services::wal::record_t> &records) {
@@ -128,27 +107,30 @@ namespace services::dispatcher {
         last_wal_id_ = records[load_count_answers_ - 1].id;
         for (const auto &record : records) {
             switch (record.type) {
-//                case statement_type::create_database: {
-//                    auto data = std::get<create_database_t>(record.data);
-//                    components::session::session_id_t session_database;
-//                    create_database(session_database, &data, manager_wal_);
-//                    break;
-//                }
-//                case statement_type::drop_database: {
-//                    break;
-//                }
-//                case statement_type::create_collection: {
-//                    auto data = std::get<create_collection_t>(record.data);
-//                    components::session::session_id_t session_collection;
-//                    create_collection(session_collection, &data, manager_wal_);
-//                    break;
-//                }
-//                case statement_type::drop_collection: {
-//                    auto data = std::get<drop_collection_t>(record.data);
-//                    components::session::session_id_t session_collection;
-//                    drop_collection(session_collection, &data, manager_wal_);
-//                    break;
-//                }
+                case statement_type::create_database: {
+                    auto data = std::get<create_database_t>(record.data);
+                    components::session::session_id_t session_database;
+                    execute_ql(session_database, &data, manager_wal_);
+                    break;
+                }
+                    case statement_type::drop_database: {
+                    auto data = std::get<drop_database_t>(record.data);
+                    components::session::session_id_t session_database;
+                    execute_ql(session_database, &data, manager_wal_);
+                    break;
+                }
+                    case statement_type::create_collection: {
+                    auto data = std::get<create_collection_t>(record.data);
+                    components::session::session_id_t session_collection;
+                    execute_ql(session_collection, &data, manager_wal_);
+                    break;
+                }
+                case statement_type::drop_collection: {
+                    auto data = std::get<drop_collection_t>(record.data);
+                    components::session::session_id_t session_collection;
+                    execute_ql(session_collection, &data, manager_wal_);
+                    break;
+                }
                 case statement_type::insert_one: {
                     auto ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;

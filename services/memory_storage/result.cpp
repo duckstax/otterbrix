@@ -12,6 +12,11 @@ namespace services::memory_storage {
     }
 
 
+    result_list_addresses_t::result_list_addresses_t(std::pmr::memory_resource* resource)
+        : addresses(resource) {
+    }
+
+
     result_t::result_t(components::ql::ql_statement_t* input_statement, error_result_t&& result)
         : input_statement_(input_statement)
         , result_(std::move(result))

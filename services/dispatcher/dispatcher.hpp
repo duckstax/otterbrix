@@ -37,9 +37,7 @@ namespace services::dispatcher {
         ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
-        void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
-        void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
-        void load_create_documents_result(components::session::session_id_t &session);
+        void load_from_memory_resource_result(components::session::session_id_t &session, const memory_storage::result_t &result);
         void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql, actor_zeta::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, const services::memory_storage::result_t& result);
