@@ -58,7 +58,6 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
             ottergon_${PROJECT_NAME} PUBLIC
 
             ${ottergon_LIBS}
-
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx
             CONAN_PKG::date
