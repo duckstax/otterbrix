@@ -67,21 +67,31 @@ namespace services {
     }
 
     void memory_storage_t::load(components::session::session_id_t& session, const disk::result_load_t& result) {
+        trace(log_, "memory_storage_t:load");
         load_buffer_ = std::make_unique<load_buffer_t>(resource());
         auto count_collections = std::accumulate((*result).begin(), (*result).end(), 0ul, [](size_t sum, const disk::result_database_t& database) {
             return sum + database.collections.size();
         });
-        sessions_.emplace(session, session_t{nullptr, current_message()->sender(), count_collections});
+        if (count_collections > 0) {
+            sessions_.emplace(session, session_t{nullptr, current_message()->sender(), count_collections});
+        }
         for (const auto& database : (*result)) {
+            debug(log_, "memory_storage_t:load:create_database: {}", database.name);
             databases_.insert(database.name);
             for (const auto& collection : database.collections) {
+                debug(log_, "memory_storage_t:load:create_collection: {}", collection.name);
                 collection_full_name_t name(database.name, collection.name);
                 auto collection_address = spawn_actor<collection::collection_t>([this, &name](services::collection::collection_t* ptr) {
                     collections_.emplace(name, ptr);
                 }, name, log_, manager_disk_);
                 load_buffer_->collections.addresses.emplace_back(result_list_addresses_t::res_t{name, collection_address});
+                debug(log_, "memory_storage_t:load:fill_documents: {}", collection.documents.size());
                 actor_zeta::send(collection_address, address(), collection::handler_id(collection::route::create_documents), session, collection.documents);
             }
+        }
+        if (count_collections == 0) {
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, make_result(nullptr, load_buffer_->collections));
+            load_buffer_.reset();
         }
     }
 
@@ -168,6 +178,7 @@ namespace services {
     void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {
         const auto &s = sessions_.at(session);
         collection_full_name_t name(s.ql->database_, s.ql->collection_);
+        trace(log_, "memory_storage_t:drop_collection_finish {}", name.to_string());
         if (result.is_success()) {
             collections_.erase(name);
             actor_zeta::send(s.sender, address(), handler_id(route::execute_ql_finish), session, make_result(s.ql, empty_result_t()));
@@ -182,7 +193,9 @@ namespace services {
             return;
         }
         auto &s = sessions_.at(session);
-        if (--s.count_answers == 0) {
+        --s.count_answers;
+        debug(log_, "memory_storage_t:create_documents_finish: {}, rest: {}", session.data(), s.count_answers);
+        if (s.count_answers == 0) {
             actor_zeta::send(s.sender, address(), handler_id(route::load_finish), session, make_result(nullptr, load_buffer_->collections));
             load_buffer_.reset();
             sessions_.erase(session);

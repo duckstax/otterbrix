@@ -79,7 +79,6 @@ namespace services::dispatcher {
             remove_session(session_to_address_, session);
             load_result_.clear();
         } else {
-            load_count_answers_ = result.count_collections();
             load_result_ = result;
             actor_zeta::send(memory_storage_, address(), memory_storage::handler_id(memory_storage::route::load), session, result);
         }
@@ -231,7 +230,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name) {
-        trace(log_, "drop_collection_finish_from_disk: {}", collection_name);
+        trace(log_, "dispatcher_t::drop_collection_finish_from_disk: {}", collection_name);
         if (!check_load_from_wal(session)) {
             result_drop_collection result{true};
             actor_zeta::send(take_session(session), dispatcher_t::address(), memory_storage::handler_id(memory_storage::route::execute_ql_finish), session, result);
