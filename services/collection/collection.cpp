@@ -232,7 +232,7 @@ namespace services::collection {
     void collection_t::drop(const session_id_t& session) {
         trace(log(), "collection::drop : {}", name_.to_string());
         auto dispatcher = current_message()->sender();
-        actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), std::string(name_.database), std::string(name_.collection));
+        actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), name_.database, name_.collection);
     }
 
     std::size_t collection_t::size_() const {
