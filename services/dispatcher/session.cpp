@@ -39,6 +39,8 @@ statement_type session_t::type() const {
             return statement_type::create_index;
         } else if constexpr (std::is_same_v<type, drop_index_t>) {
             return statement_type::drop_index;
+        } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
+            return statement_type::unused;
         }
         static_assert(true, "Not valid command type");
     }, data_);

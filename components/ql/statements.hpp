@@ -30,7 +30,8 @@ namespace components::ql {
         update_one_t,
         update_many_t,
         create_index_t,
-        drop_index_t
+        drop_index_t,
+        ql_statement_t*
         >;
 
 } //namespace components::ql

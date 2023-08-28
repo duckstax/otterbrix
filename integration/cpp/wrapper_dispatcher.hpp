@@ -19,7 +19,7 @@
 #include <components/ql/statements.hpp>
 
 #include <services/collection/result.hpp>
-#include <services/database/result_database.hpp>
+#include <services/memory_storage/result.hpp>
 
 namespace duck_charmer {
 
@@ -32,9 +32,10 @@ namespace duck_charmer {
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
-        auto create_database(session_id_t &session, const database_name_t &database) -> void;
-        auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> void;
-        auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_drop_collection;
+        auto create_database(session_id_t &session, const database_name_t &database) -> services::memory_storage::result_t;
+        auto drop_database(session_id_t &session, const database_name_t &database) -> services::memory_storage::result_t;
+        auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t;
+        auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t;
         auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_insert&;
         auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_insert&;
         auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t*;
@@ -57,9 +58,7 @@ namespace duck_charmer {
     private:
         /// async method
         auto load_finish() -> void;
-        auto create_database_finish(session_id_t &session, services::database::database_create_result result) -> void;
-        auto create_collection_finish(session_id_t &session, services::database::collection_create_result result) -> void;
-        auto drop_collection_finish(session_id_t &session, result_drop_collection result) -> void;
+        auto execute_ql_finish(session_id_t &session, services::memory_storage::result_t result) -> void;
         auto insert_finish(session_id_t &session, result_insert result) -> void;
         auto find_finish(session_id_t &session, components::cursor::cursor_t *cursor) -> void;
         auto find_one_finish(session_id_t &session, result_find_one result) -> void;
@@ -75,6 +74,8 @@ namespace duck_charmer {
 
         template <typename Tres, typename Tql>
         auto send_ql(session_id_t &session, Tql& ql, std::string_view title, uint64_t handle) -> result_t;
+
+        auto send_ql_new(session_id_t &session, components::ql::ql_statement_t* ql) -> services::memory_storage::result_t;
 
         actor_zeta::address_t manager_dispatcher_;
         log_t log_;
@@ -94,8 +95,7 @@ namespace duck_charmer {
             result_drop_collection,
             result_create_index,
             result_drop_index,
-            services::database::database_create_result,
-            services::database::collection_create_result>
+            services::memory_storage::result_t>
             intermediate_store_;
     };
 } // namespace python

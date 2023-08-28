@@ -18,13 +18,16 @@
 #include <components/statistic/statistic.hpp>
 #include <components/pipeline/context.hpp>
 
-#include <services/database/database.hpp>
 #include <utility>
 
 #include "forward.hpp"
 #include "result.hpp"
 #include "route.hpp"
 #include "session/session.hpp"
+
+namespace services {
+    class memory_storage_t;
+}
 
 namespace services::collection {
 
@@ -81,7 +84,7 @@ namespace services::collection {
 
     class collection_t final : public actor_zeta::basic_async_actor {
     public:
-        collection_t(database::database_t*, const std::string& name, log_t& log, actor_zeta::address_t mdisk);
+        collection_t(services::memory_storage_t* memory_storage, const collection_full_name_t& name, log_t& log, actor_zeta::address_t mdisk);
         ~collection_t();
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
@@ -130,9 +133,7 @@ namespace services::collection {
 
         log_t& log() noexcept;
 
-        const std::string name_;
-        const std::string database_name_;
-        actor_zeta::address_t database_;
+        const collection_full_name_t name_;
         actor_zeta::address_t mdisk_;
 
         std::unique_ptr<context_collection_t> context_;

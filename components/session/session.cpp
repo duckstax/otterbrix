@@ -25,6 +25,13 @@ namespace components::session {
             counter_ == other.counter_;
     }
 
+    bool session_id_t::operator<(const session_id_t& other) const {
+        return
+            data_ < other.data_
+            ||
+            (data_ == other.data_ && counter_ < other.counter_);
+    }
+
     std::size_t session_id_t::hash() const {
         return std::hash<uint64_t>{}(data_) ^ std::hash<uint64_t>{}(counter_);
     }

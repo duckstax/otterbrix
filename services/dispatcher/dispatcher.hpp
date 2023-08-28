@@ -19,34 +19,15 @@
 #include <components/logical_plan/node.hpp>
 
 #include <services/collection/result.hpp>
-#include <services/database/forward.hpp>
-#include <services/database/result_database.hpp>
-#include <services/wal/base.hpp>
 #include <services/disk/result.hpp>
+#include <services/memory_storage/result.hpp>
+#include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
 
 #include "route.hpp"
 #include "session.hpp"
 
 namespace services::dispatcher {
-
-    class key_collection_t {
-    public:
-        key_collection_t(database_name_t  database, collection_name_t  collection);
-        key_collection_t() = delete;
-        const database_name_t& database() const;
-        const collection_name_t& collection() const;
-        bool operator==(const key_collection_t& other) const;
-
-        struct hash {
-            std::size_t operator()(const key_collection_t& key) const;
-        };
-
-    private:
-        const database_name_t database_;
-        const collection_name_t collection_;
-    };
-
 
     class manager_dispatcher_t;
 
@@ -56,17 +37,10 @@ namespace services::dispatcher {
         ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
-        void load_create_databases_result(components::session::session_id_t &session, const std::vector<actor_zeta::address_t> &result);
-        void load_create_collections_result(components::session::session_id_t &session, const database_name_t &database_name, const std::vector<actor_zeta::address_t> &result);
-        void load_create_documents_result(components::session::session_id_t &session);
+        void load_from_memory_resource_result(components::session::session_id_t &session, const memory_storage::result_t &result);
         void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
-        void create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void create_database_finish(components::session::session_id_t& session, const database::database_create_result& result);
-        void create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, const actor_zeta::address_t& address);
-        void create_collection_finish(components::session::session_id_t& session, const database::collection_create_result& result);
-        void drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void drop_collection_finish_collection(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name, std::string& collection_name);
-        void drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result, std::string& database_name,std::string& collection_name, const actor_zeta::address_t& collection);
+        void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql, actor_zeta::address_t address);
+        void execute_ql_finish(components::session::session_id_t& session, const services::memory_storage::result_t& result);
         void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
         void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
         void insert_finish(components::session::session_id_t& session, result_insert& result);
@@ -92,13 +66,12 @@ namespace services::dispatcher {
         log_t log_;
         std::pmr::memory_resource *resource_;
         actor_zeta::address_t manager_dispatcher_;
-        actor_zeta::address_t manager_database_;
+        actor_zeta::address_t memory_storage_;
         actor_zeta::address_t manager_wal_;
         actor_zeta::address_t manager_disk_;
         session_storage_t session_to_address_;
         std::unordered_map<components::session::session_id_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
-        std::unordered_map<key_collection_t, actor_zeta::address_t, key_collection_t::hash> collection_address_book_;
-        std::unordered_map<std::string, actor_zeta::address_t> database_address_book_;
+        std::unordered_map<collection_full_name_t, actor_zeta::address_t, collection_name_hash> collection_address_book_;
         disk::result_load_t load_result_;
         components::session::session_id_t load_session_;
         services::wal::id_t last_wal_id_ {0};
@@ -106,6 +79,8 @@ namespace services::dispatcher {
 
         std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> create_logic_plan(
                 components::ql::ql_statement_t* statement);
+
+        actor_zeta::address_t take_session(components::session::session_id_t& session);
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;
@@ -116,13 +91,13 @@ namespace services::dispatcher {
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t>;
 
         enum class unpack_rules : uint64_t {
-            manager_database = 0,
+            memory_storage = 0,
             manager_wal = 1,
             manager_disk = 2
         };
 
         void sync(address_pack& pack) {
-            manager_database_ = std::get<static_cast<uint64_t>(unpack_rules::manager_database)>(pack);
+            memory_storage_ = std::get<static_cast<uint64_t>(unpack_rules::memory_storage)>(pack);
             manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
         }
@@ -146,9 +121,7 @@ namespace services::dispatcher {
         ///------
         void create(components::session::session_id_t& session, std::string& name);
         void load(components::session::session_id_t &session);
-        void create_database(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
-        void create_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
-        void drop_collection(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
+        void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
         void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void find(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void find_one(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
@@ -167,7 +140,7 @@ namespace services::dispatcher {
         spin_lock lock_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
-        actor_zeta::address_t manager_database_ = actor_zeta::address_t::empty_address();
+        actor_zeta::address_t memory_storage_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
         std::vector<dispatcher_ptr> dispatchers_;

@@ -20,7 +20,7 @@ target_link_libraries(
         non_thread_scheduler
         rocketjoe::log
         rocketjoe::collection
-        rocketjoe::database
+        rocketjoe::memory_storage
         rocketjoe::cursor
         rocketjoe::session
         rocketjoe::test_generaty
