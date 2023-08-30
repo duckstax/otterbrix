@@ -8,6 +8,7 @@ set(SOURCE_${PROJECT_NAME}
         aggregate/limit.cpp
         aggregate/match.cpp
         aggregate/sort.cpp
+        join/join.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp
