@@ -2,8 +2,9 @@
 
 namespace services::memory_storage {
 
-    error_result_t::error_result_t(const std::string& what)
-        : what(what) {
+    error_result_t::error_result_t(error_code_t code, const std::string& what)
+        : code(code)
+        , what(what) {
     }
 
 
@@ -30,13 +31,17 @@ namespace services::memory_storage {
         return !is_error_;
     }
 
+    error_code_t result_t::error_code() const {
+        return result<error_result_t>().code;
+    }
+
     const std::string& result_t::error_what() const {
         return result<error_result_t>().what;
     }
 
 
-    result_t make_error(const std::string& error) {
-        return result_t{error_result_t(error)};
+    result_t make_error(error_code_t code, const std::string& error) {
+        return result_t{error_result_t(code, error)};
     }
 
 } // namespace services::memory_storage

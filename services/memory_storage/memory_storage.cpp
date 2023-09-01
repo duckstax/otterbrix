@@ -120,7 +120,7 @@ namespace services {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
         if (is_exists_database(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("database already exists"));
+                             make_error(error_code_t::database_already_exists, "database already exists"));
             return;
         }
         databases_.insert(logical_plan->database_name());
@@ -132,7 +132,7 @@ namespace services {
         trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
         if (!is_exists_database(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("database not exists"));
+                             make_error(error_code_t::database_not_exists, "database not exists"));
             return;
         }
         databases_.erase(logical_plan->database_name());
@@ -144,12 +144,12 @@ namespace services {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full().to_string());
         if (!is_exists_database(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("database not exists"));
+                             make_error(error_code_t::database_not_exists, "database not exists"));
             return;
         }
         if (is_exists_collection(logical_plan->collection_full())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("collection already exists"));
+                             make_error(error_code_t::collection_already_exists, "collection already exists"));
             return;
         }
         auto address = spawn_actor<collection::collection_t>([this, &logical_plan](collection::collection_t* ptr) {
@@ -163,12 +163,12 @@ namespace services {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full().to_string());
         if (!is_exists_database(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("database not exists"));
+                             make_error(error_code_t::database_not_exists, "database not exists"));
             return;
         }
         if (!is_exists_collection(logical_plan->collection_full())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                             make_error("collection not exists"));
+                             make_error(error_code_t::collection_not_exists, "collection not exists"));
             return;
         }
         sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
@@ -182,7 +182,8 @@ namespace services {
             collections_.erase(s.logical_plan->collection_full());
             actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, make_result(empty_result_t()));
         } else {
-            actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, make_error("collection not dropped"));
+            actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session,
+                             make_error(error_code_t::other_error, "collection not dropped"));
         }
         sessions_.erase(session);
     }

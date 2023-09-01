@@ -7,14 +7,23 @@
 
 namespace services::memory_storage {
 
+    enum class error_code_t {
+        database_already_exists,
+        database_not_exists,
+        collection_already_exists,
+        collection_not_exists,
+        other_error
+    };
+
     struct empty_result_t {
     };
 
 
     struct error_result_t {
+        error_code_t code;
         std::string what;
 
-        explicit error_result_t(const std::string& what);
+        explicit error_result_t(error_code_t code, const std::string& what);
     };
 
 
@@ -49,6 +58,7 @@ namespace services::memory_storage {
 
         bool is_error() const;
         bool is_success() const;
+        error_code_t error_code() const;
         const std::string& error_what() const;
 
         template <typename T>
@@ -72,6 +82,6 @@ namespace services::memory_storage {
         return result_t{std::move(result)};
     }
 
-    result_t make_error(const std::string& error);
+    result_t make_error(error_code_t code, const std::string& error);
 
 } // namespace services::memory_storage
