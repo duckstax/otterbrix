@@ -251,3 +251,22 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
     }
 
 }
+
+
+TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
+
+    auto config = test_create_config("/tmp/test_collection_sql/invalid_queries");
+    test_clear_directory(config);
+    config.disk.on = false;
+    config.wal.on = false;
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("not exists database") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        REQUIRE(res.is_type<components::cursor::cursor_t*>());
+        REQUIRE(res.get<components::cursor::cursor_t*>()->size() == 0);
+    }
+
+}
