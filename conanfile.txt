@@ -25,7 +25,6 @@ actor-zeta:fPIC=True
 cmake
 cmake_find_package
 CMakeDeps
-CMakeToolchain
 #cmake_paths
 
 

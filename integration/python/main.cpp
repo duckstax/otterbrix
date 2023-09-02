@@ -25,10 +25,13 @@ PYBIND11_MODULE(ottergon, m) {
     py::class_<wrapper_client>(m, "Client")
         .def(
             py::init([]() {
+            auto config = configuration::config_t::default_config();
+            config.log.name="python";
             auto* spaces = spaces::get_instance();
+            spaces->init(config);
             auto dispatcher = spaces->dispatcher();
             dispatcher->load();
-            auto log = spaces::get_instance()->get_log().clone();
+            auto log = spaces->get_log().clone();
             return new wrapper_client(log, dispatcher); }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)

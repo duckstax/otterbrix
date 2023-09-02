@@ -8,7 +8,7 @@ namespace duck_charmer {
     }
 
     spaces::spaces()
-        : base_spaces(configuration::config::default_config()) {
+        : base_spaces() {
     }
 
 } // namespace python

@@ -40,11 +40,11 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
-    cmake --build .
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DADDRESS_SANITIZER=ON
+RUN cmake --build .  --target all
 
-
-RUN ls apps/ottergon
+WORKDIR /app/build/apps/ottergon-cli
+RUN ./ottergon-cli  "select * from ottergon;"
 
 #RUN ctest -C -V --output-on-failure
 

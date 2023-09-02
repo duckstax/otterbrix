@@ -18,7 +18,8 @@ TEST_CASE("integration::cpp::test_collection::sql") {
     test_clear_directory(config);
     config.disk.on = false;
     config.wal.on = false;
-    test_spaces space(config);
+    test_spaces space;
+    space.init(config);
     auto* dispatcher = space.dispatcher();
 
     INFO("initialization") {

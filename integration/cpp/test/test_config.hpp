@@ -6,23 +6,23 @@
 #include <components/tests/generaty.hpp>
 #include <integration/cpp/base_spaces.hpp>
 
-inline configuration::config test_create_config(const std::filesystem::path &path) {
-    auto config = configuration::config::default_config();
+inline configuration::config_t test_create_config(const std::filesystem::path &path) {
+    auto config = configuration::config_t::default_config();
     config.log.path = path;
     config.disk.path = path;
     config.wal.path = path;
     return config;
 }
 
-inline void test_clear_directory(const configuration::config &config) {
+inline void test_clear_directory(const configuration::config_t &config) {
     std::filesystem::remove_all(config.disk.path);
     std::filesystem::create_directories(config.disk.path);
 }
 
 class test_spaces final : public duck_charmer::base_spaces {
 public:
-    test_spaces(const configuration::config &config)
-        : duck_charmer::base_spaces(config)
+    test_spaces()
+        : duck_charmer::base_spaces()
     {}
 };
 

@@ -54,7 +54,8 @@ TEST_CASE("python::test_save_load::disk") {
     }
 
     SECTION("load") {
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
@@ -79,7 +80,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
 
     SECTION("initialization") {
         test_clear_directory(config);
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
@@ -100,7 +102,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     }
 
     SECTION("extending wal") {
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
@@ -160,7 +163,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     }
 
     SECTION("load") {
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {

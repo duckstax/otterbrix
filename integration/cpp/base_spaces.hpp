@@ -23,10 +23,9 @@ namespace duck_charmer {
         duck_charmer::wrapper_dispatcher_t* dispatcher();
 
         ~base_spaces();
-
+        void init(const configuration::config_t& config);
     protected:
-        explicit base_spaces(const configuration::config& config);
-
+        explicit base_spaces();
         log_t log_;
         actor_zeta::scheduler_ptr  scheduler_;
         actor_zeta::scheduler_ptr  scheduler_dispather_;

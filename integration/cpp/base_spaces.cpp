@@ -14,10 +14,13 @@ namespace duck_charmer {
 
     constexpr static auto name_dispatcher = "dispatcher";
 
-    base_spaces::base_spaces(const configuration::config& config)
+    base_spaces::base_spaces()
         : scheduler_(new actor_zeta::shared_work(1, 1000))
-        , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)) {
-        log_ = initialization_logger("python", config.log.path.c_str());
+        , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)){
+    }
+
+    void base_spaces::init(const configuration::config_t& config) {
+        log_ = initialization_logger(config.log.name, config.log.path.c_str());
         log_.set_level(config.log.level);
         trace(log_, "spaces::spaces()");
 

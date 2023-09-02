@@ -1,23 +1,19 @@
-Ottergon is a development platform for building analytical systems and applications.
-
+#  Ottergon
 [![ubuntu 20.04](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml)
 [![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+#  Ottergon is a development platform for building analytical systems and applications.
 
-The platform is designed to combine supporting analytics and processing transactions. It is a unified data engine to power fast analytics and fast applications.
+### Enjoy easy programming with Ottergon!
 
-It contains a set of technologies across different storage types, driving low-latency access to large datasets and enabling big data systems to process and move data fast. It also offers rich NoSQL/SQL dialects. It is designed to be fast, reliable and easy to use.
+### Installation
 
-## Enjoy easy programming with Ottergon!
-
-## Installation
-
-### Python example:
+#### Python example:
 
 ```bash
     pip install ottergon==0.5.0 
 ```
 
-Python SQl example:
+### Python SQl example:
 
 ```python
     from ottergon import Client
@@ -30,7 +26,7 @@ Python SQl example:
 ```
 
 
-Python NoSQl example:
+### Python NoSQl example:
 
 ```python
     from ottergon import Client
@@ -42,7 +38,7 @@ Python NoSQl example:
     collection.find_one({"object_name": "object value"})
 ```
 
-C++ SQL example:
+### C++ SQL example:
 ```cpp
     auto config = create_config("/tmp/my_collection");
     spaces_t space(config);
@@ -51,7 +47,7 @@ C++ SQL example:
     auto value = dispatcher->execute_sql("SELECT * FROM MyDatabase.MyCollection WHERE object_name = 'object value' ");
 ```
 
-C++ NoSQL example:
+### C++ NoSQL example:
 
 ```cpp
     auto config = create_config("/tmp/my_collection");

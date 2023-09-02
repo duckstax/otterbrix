@@ -13,7 +13,8 @@ using id_par = core::parameter_id_t;
 TEST_CASE("python::test_collection") {
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
-    test_spaces space(config);
+    test_spaces space;
+    space.init(config);
     auto* dispatcher = space.dispatcher();
     dispatcher->load();
 

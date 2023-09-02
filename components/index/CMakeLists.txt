@@ -23,6 +23,7 @@ target_link_libraries(
         ottergon::ql
         ottergon::pipeline
         dl
+        CONAN_PKG::abseil
         CONAN_PKG::boost
 )
 

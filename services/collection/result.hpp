@@ -163,6 +163,11 @@ public:
         return std::holds_alternative<T>(result_);
     }
 
+    template <class Visitor>
+    void visit(Visitor&&visitor) {
+        std::visit(visitor, result_);
+    }
+
 private:
     std::variant<
         null_result,

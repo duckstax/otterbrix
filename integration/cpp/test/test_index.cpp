@@ -87,7 +87,8 @@ static const collection_name_t collection_name = "TestCollection";
 TEST_CASE("integration::test_index::base") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/base");
     test_clear_directory(config);
-    test_spaces space(config);
+    test_spaces space;
+    space.init(config);
     auto* dispatcher = space.dispatcher();
 
     INFO("initialization") {
@@ -113,7 +114,8 @@ TEST_CASE("integration::test_index::save_load") {
     test_clear_directory(config);
 
     INFO("initialization") {
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         
         INIT_COLLECTION();
@@ -124,7 +126,8 @@ TEST_CASE("integration::test_index::save_load") {
     }
 
     INFO("find") {
-        test_spaces space(config);
+        test_spaces space;
+        space.init(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
 
@@ -142,7 +145,8 @@ TEST_CASE("integration::test_index::save_load") {
 TEST_CASE("integration::test_index::drop") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/drop");
     test_clear_directory(config);
-    test_spaces space(config);
+    test_spaces space;
+    space.init(config);
     auto* dispatcher = space.dispatcher();
 
     INFO("initialization") {
