@@ -68,8 +68,10 @@ namespace services {
         session_storage_t sessions_;
         std::unique_ptr<load_buffer_t> load_buffer_;
 
-        bool is_exists_database(const database_name_t& name) const;
-        bool is_exists_collection(const collection_full_name_t& name) const;
+        bool is_exists_database_(const database_name_t& name) const;
+        bool is_exists_collection_(const collection_full_name_t& name) const;
+        bool check_database_(components::session::session_id_t& session, const database_name_t& name);
+        bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
         void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
         void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
