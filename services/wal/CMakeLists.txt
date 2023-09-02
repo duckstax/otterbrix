@@ -20,7 +20,7 @@ add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
 set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        ottergon_${PROJECT_NAME} PRIVATE
+        ottergon_${PROJECT_NAME} PUBLIC
         ottergon::log
         ottergon::ql
         ottergon::locks
