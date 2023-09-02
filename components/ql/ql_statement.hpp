@@ -12,8 +12,6 @@ namespace components::ql {
         drop_database,
         create_collection,
         drop_collection,
-        find,
-        find_one,
         insert_one,
         insert_many,
         delete_one,
