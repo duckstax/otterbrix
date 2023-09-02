@@ -19,7 +19,7 @@ namespace duck_charmer {
         , manager_dispatcher_(manager_dispatcher)
         ,log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
-        add_handler(memory_storage::handler_id(memory_storage::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
+        add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
         add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
         add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
@@ -273,7 +273,7 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, services::memory_storage::result_t result) {
+    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, const services::memory_storage::result_t& result) {
         trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result.is_success());
         intermediate_store_ = result;
         input_session_ = session;
@@ -349,7 +349,7 @@ namespace duck_charmer {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            memory_storage::handler_id(memory_storage::route::execute_ql),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             ql);
         wait();

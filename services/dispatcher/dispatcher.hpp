@@ -79,8 +79,6 @@ namespace services::dispatcher {
 
         std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> create_logic_plan(
                 components::ql::ql_statement_t* statement);
-
-        actor_zeta::address_t take_session(components::session::session_id_t& session);
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;

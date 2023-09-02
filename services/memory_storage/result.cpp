@@ -17,9 +17,8 @@ namespace services::memory_storage {
     }
 
 
-    result_t::result_t(components::ql::ql_statement_t* input_statement, error_result_t&& result)
-        : input_statement_(input_statement)
-        , result_(std::move(result))
+    result_t::result_t(error_result_t&& result)
+        : result_(std::move(result))
         , is_error_(true) {
     }
 
@@ -35,13 +34,9 @@ namespace services::memory_storage {
         return result<error_result_t>().what;
     }
 
-    components::ql::ql_statement_t* result_t::input_statement() const {
-        return input_statement_;
-    }
 
-
-    result_t make_error(components::ql::ql_statement_t* input_statement, const std::string& error) {
-        return result_t{input_statement, error_result_t(error)};
+    result_t make_error(const std::string& error) {
+        return result_t{error_result_t(error)};
     }
 
 } // namespace services::memory_storage

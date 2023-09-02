@@ -58,7 +58,7 @@ namespace duck_charmer {
     private:
         /// async method
         auto load_finish() -> void;
-        auto execute_ql_finish(session_id_t &session, services::memory_storage::result_t result) -> void;
+        auto execute_ql_finish(session_id_t &session, const services::memory_storage::result_t& result) -> void;
         auto insert_finish(session_id_t &session, result_insert result) -> void;
         auto find_finish(session_id_t &session, components::cursor::cursor_t *cursor) -> void;
         auto find_one_finish(session_id_t &session, result_find_one result) -> void;

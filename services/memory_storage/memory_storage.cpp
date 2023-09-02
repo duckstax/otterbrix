@@ -27,7 +27,7 @@ namespace services {
         ZoneScoped;
         trace(log_, "memory_storage start thread pool");
         add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
-        add_handler(handler_id(route::execute_ql), &memory_storage_t::execute_ql);
+        add_handler(handler_id(route::execute_plan), &memory_storage_t::execute_plan);
         add_handler(handler_id(route::load), &memory_storage_t::load);
 
         add_handler(collection::handler_id(collection::route::drop_collection_finish), &memory_storage_t::drop_collection_finish_);
@@ -44,24 +44,26 @@ namespace services {
         manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
     }
 
-    void memory_storage_t::execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql) {
-        using components::ql::statement_type;
+    void memory_storage_t::execute_plan(components::session::session_id_t& session,
+                                        components::logical_plan::node_ptr&& logical_plan,
+                                        components::ql::storage_parameters&&) {
+        using components::logical_plan::node_type;
 
-        switch (ql->type()) {
-        case statement_type::create_database:
-            create_database_(session, static_cast<components::ql::create_database_t*>(ql));
+        switch (logical_plan->type()) {
+        case node_type::create_database_t:
+            create_database_(session, std::move(logical_plan));
             break;
-        case statement_type::drop_database:
-            drop_database_(session, static_cast<components::ql::drop_database_t*>(ql));
+        case node_type::drop_database_t:
+            drop_database_(session, std::move(logical_plan));
             break;
-        case statement_type::create_collection:
-            create_collection_(session, static_cast<components::ql::create_collection_t*>(ql));
+        case node_type::create_collection_t:
+            create_collection_(session, std::move(logical_plan));
             break;
-        case statement_type::drop_collection:
-            drop_collection_(session, static_cast<components::ql::drop_collection_t*>(ql));
+        case node_type::drop_collection_t:
+            drop_collection_(session, std::move(logical_plan));
             break;
         default:
-            assert(false && "not valid ql statement");
+            assert(false && "not valid logical plan");
             break;
         }
     }
@@ -90,7 +92,7 @@ namespace services {
             }
         }
         if (count_collections == 0) {
-            actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, make_result(nullptr, load_buffer_->collections));
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, make_result(load_buffer_->collections));
             load_buffer_.reset();
         }
     }
@@ -114,76 +116,73 @@ namespace services {
         return collections_.contains(name);
     }
 
-    void memory_storage_t::create_database_(components::session::session_id_t& session, components::ql::create_database_t* ql) {
-        trace(log_, "memory_storage_t:create_database {}", ql->database_);
-        if (is_exists_database(ql->database_)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "database already exists"));
+    void memory_storage_t::create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+        trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
+        if (is_exists_database(logical_plan->database_name())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("database already exists"));
             return;
         }
-        databases_.insert(ql->database_);
-        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                         make_result(ql, empty_result_t()));
+        databases_.insert(logical_plan->database_name());
+        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                         make_result(empty_result_t()));
     }
 
-    void memory_storage_t::drop_database_(components::session::session_id_t& session, components::ql::drop_database_t* ql) {
-        trace(log_, "memory_storage_t:drop_database {}", ql->database_);
-        if (!is_exists_database(ql->database_)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "database not exists"));
+    void memory_storage_t::drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+        trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
+        if (!is_exists_database(logical_plan->database_name())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("database not exists"));
             return;
         }
-        databases_.erase(ql->database_);
-        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                         make_result(ql, empty_result_t()));
+        databases_.erase(logical_plan->database_name());
+        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                         make_result(empty_result_t()));
     }
 
-    void memory_storage_t::create_collection_(components::session::session_id_t& session, components::ql::create_collection_t* ql) {
-        collection_full_name_t name(ql->database_, ql->collection_);
-        trace(log_, "memory_storage_t:create_collection {}", name.to_string());
-        if (!is_exists_database(name.database)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "database not exists"));
+    void memory_storage_t::create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+        trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full().to_string());
+        if (!is_exists_database(logical_plan->database_name())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("database not exists"));
             return;
         }
-        if (is_exists_collection(name)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "collection already exists"));
+        if (is_exists_collection(logical_plan->collection_full())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("collection already exists"));
             return;
         }
-        auto address = spawn_actor<collection::collection_t>([this, &name](collection::collection_t* ptr) {
-            collections_.emplace(name, ptr);
-        }, name, log_, manager_disk_);
-        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                         make_result(ql, result_address_t(std::move(address))));
+        auto address = spawn_actor<collection::collection_t>([this, &logical_plan](collection::collection_t* ptr) {
+            collections_.emplace(logical_plan->collection_full(), ptr);
+        }, logical_plan->collection_full(), log_, manager_disk_);
+        actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                         make_result(result_address_t(std::move(address))));
     }
 
-    void memory_storage_t::drop_collection_(components::session::session_id_t& session, components::ql::drop_collection_t* ql) {
-        collection_full_name_t name(ql->database_, ql->collection_);
-        trace(log_, "memory_storage_t:drop_collection {}", name.to_string());
-        if (!is_exists_database(name.database)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "database not exists"));
+    void memory_storage_t::drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+        trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full().to_string());
+        if (!is_exists_database(logical_plan->database_name())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("database not exists"));
             return;
         }
-        if (!is_exists_collection(name)) {
-            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_ql_finish), session,
-                             make_error(ql, "collection not exists"));
+        if (!is_exists_collection(logical_plan->collection_full())) {
+            actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
+                             make_error("collection not exists"));
             return;
         }
-        sessions_.emplace(session, session_t{ql, current_message()->sender(), 1});
-        actor_zeta::send(collections_.at(name), address(), collection::handler_id(collection::route::drop_collection), session);
+        sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+        actor_zeta::send(collections_.at(logical_plan->collection_full()), address(), collection::handler_id(collection::route::drop_collection), session);
     }
 
     void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {
         const auto &s = sessions_.at(session);
-        collection_full_name_t name(s.ql->database_, s.ql->collection_);
-        trace(log_, "memory_storage_t:drop_collection_finish {}", name.to_string());
+        trace(log_, "memory_storage_t:drop_collection_finish {}", s.logical_plan->collection_full().to_string());
         if (result.is_success()) {
-            collections_.erase(name);
-            actor_zeta::send(s.sender, address(), handler_id(route::execute_ql_finish), session, make_result(s.ql, empty_result_t()));
+            collections_.erase(s.logical_plan->collection_full());
+            actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, make_result(empty_result_t()));
         } else {
-            actor_zeta::send(s.sender, address(), handler_id(route::execute_ql_finish), session, make_error(s.ql, "collection not dropped"));
+            actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, make_error("collection not dropped"));
         }
         sessions_.erase(session);
     }
@@ -196,7 +195,7 @@ namespace services {
         --s.count_answers;
         debug(log_, "memory_storage_t:create_documents_finish: {}, rest: {}", session.data(), s.count_answers);
         if (s.count_answers == 0) {
-            actor_zeta::send(s.sender, address(), handler_id(route::load_finish), session, make_result(nullptr, load_buffer_->collections));
+            actor_zeta::send(s.sender, address(), handler_id(route::load_finish), session, make_result(load_buffer_->collections));
             load_buffer_.reset();
             sessions_.erase(session);
         }

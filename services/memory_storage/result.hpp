@@ -39,19 +39,17 @@ namespace services::memory_storage {
 
     class result_t {
     public:
-        explicit result_t(components::ql::ql_statement_t* input_statement, error_result_t&& result);
+        explicit result_t(error_result_t&& result);
 
         template <typename T>
-        explicit result_t(components::ql::ql_statement_t* input_statement, T&& result)
-            : input_statement_(input_statement)
-            , result_(std::move(result))
+        explicit result_t(T&& result)
+            : result_(std::move(result))
             , is_error_(false) {
         }
 
         bool is_error() const;
         bool is_success() const;
         const std::string& error_what() const;
-        components::ql::ql_statement_t* input_statement() const;
 
         template <typename T>
         const T& result() const {
@@ -59,7 +57,6 @@ namespace services::memory_storage {
         }
 
     private:
-        components::ql::ql_statement_t* input_statement_;
         std::variant<
             error_result_t,
             empty_result_t,
@@ -71,10 +68,10 @@ namespace services::memory_storage {
 
 
     template <typename TResult>
-    result_t make_result(components::ql::ql_statement_t* input_statement, const TResult& result) {
-        return result_t{input_statement, std::move(result)};
+    result_t make_result(const TResult& result) {
+        return result_t{std::move(result)};
     }
 
-    result_t make_error(components::ql::ql_statement_t* input_statement, const std::string& error);
+    result_t make_error(const std::string& error);
 
 } // namespace services::memory_storage
