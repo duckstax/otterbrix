@@ -23,6 +23,19 @@ namespace components::sql {
     }
 
 
+    bool operator==(const token_t& token1, const token_t& token2) {
+        return token1.type == token2.type
+            && (token1.type != token_type::bare_word
+                || token_clean_value(token1) == token_clean_value(token2));
+    }
+
+    bool operator<(const token_t& token1, const token_t& token2) {
+        return token1.type < token2.type
+            || (token1.type == token2.type
+                && token_clean_value(token1) < token_clean_value(token2));
+    }
+
+
     bool is_token_significant(const token_t& token) {
         return token.type != token_type::whitespace
             && token.type != token_type::comment;
@@ -56,8 +69,9 @@ namespace components::sql {
     }
 
     bool is_token_field_name(const token_t& token) {
-        return token.type == token_type::bare_word
-            || token.type == token_type::quoted_identifier;
+        return (token.type == token_type::bare_word
+                || token.type == token_type::quoted_identifier)
+            && !is_token_bool_value(token);
     }
 
     bool is_token_field_value(const token_t& token) {

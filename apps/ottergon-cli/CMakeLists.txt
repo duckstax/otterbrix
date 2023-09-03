@@ -6,7 +6,7 @@ add_executable(${PROJECT_NAME} main.cpp)
 
 set(ottergon_LIBS
         ottergon::log
-        ottergon::database
+        ottergon::memory_storage
         ottergon::collection
         ottergon::cursor
         ottergon::session

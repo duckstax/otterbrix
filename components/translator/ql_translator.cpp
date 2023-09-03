@@ -3,7 +3,11 @@
 #include <components/ql/aggregate.hpp>
 
 #include <components/logical_plan/node_aggregate.hpp>
+#include <components/logical_plan/node_create_collection.hpp>
+#include <components/logical_plan/node_create_database.hpp>
 #include <components/logical_plan/node_delete.hpp>
+#include <components/logical_plan/node_drop_collection.hpp>
+#include <components/logical_plan/node_drop_database.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_insert.hpp>
 #include <components/logical_plan/node_match.hpp>
@@ -46,18 +50,14 @@ namespace components::translator {
                 throw std::logic_error("unused statement");
                 break;
             }
-            case statement_type::create_database: {
-                break;
-            }
-            case statement_type::drop_database: {
-                break;
-            }
-            case statement_type::create_collection: {
-                break;
-            }
-            case statement_type::drop_collection: {
-                break;
-            }
+            case statement_type::create_database:
+                return logical_plan::make_node_create_database(resource, static_cast<ql::create_database_t*>(statement));
+            case statement_type::drop_database:
+                return logical_plan::make_node_drop_database(resource, static_cast<ql::drop_database_t*>(statement));
+            case statement_type::create_collection:
+                return logical_plan::make_node_create_collection(resource, static_cast<ql::create_collection_t*>(statement));
+            case statement_type::drop_collection:
+                return logical_plan::make_node_drop_collection(resource, static_cast<ql::drop_collection_t*>(statement));
             case statement_type::find: {
                 break;
             }

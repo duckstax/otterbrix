@@ -15,6 +15,12 @@ namespace components::ql {
         create_collection_t(create_collection_t&&) = default;
         create_collection_t& operator=(create_collection_t&&) = default;
         ~create_collection_t() final = default;
+
+        std::string to_string() const final {
+            std::stringstream s;
+            s << "create_collection: " << database_ << "." << collection_;
+            return s.str();
+        }
     };
 
 } // namespace components::ql

@@ -20,7 +20,7 @@ target_link_libraries(
         non_thread_scheduler
         ottergon::log
         ottergon::collection
-        ottergon::database
+        ottergon::memory_storage
         ottergon::cursor
         ottergon::session
         ottergon::test_generaty

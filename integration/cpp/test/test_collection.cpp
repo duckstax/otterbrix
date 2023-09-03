@@ -190,4 +190,18 @@ TEST_CASE("python::test_collection") {
             REQUIRE(c->get_long("count") == 99);
         }
     }
+
+    INFO("drop_collection") {
+        {
+            auto session = duck_charmer::session_id_t();
+            auto c = dispatcher->drop_collection(session, database_name, collection_name);
+            REQUIRE(c.is_success());
+        }
+        {
+            auto session = duck_charmer::session_id_t();
+            auto c = dispatcher->drop_collection(session, database_name, collection_name);
+            REQUIRE(c.is_error());
+        }
+    }
+
 }

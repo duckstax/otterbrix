@@ -15,6 +15,12 @@ namespace components::ql {
         drop_collection_t(drop_collection_t&&) = default;
         drop_collection_t& operator=(drop_collection_t&&) = default;
         ~drop_collection_t() final = default;
+
+        std::string to_string() const final {
+            std::stringstream s;
+            s << "drop_collection: " << database_ << "." << collection_;
+            return s.str();
+        }
     };
 
 } // namespace components::ql

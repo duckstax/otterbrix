@@ -1,7 +1,7 @@
 #pragma once
 
 #include <services/collection/route.hpp>
-#include <services/database/route.hpp>
+#include <services/memory_storage/route.hpp>
 #include <services/disk/route.hpp>
 #include <services/dispatcher/route.hpp>
 #include <services/wal/route.hpp>
@@ -13,9 +13,9 @@ namespace duck_charmer {
         using services::dispatcher::handler_id;
     }
 
-    namespace database {
-        using services::database::route;
-        using services::database::handler_id;
+    namespace memory_storage {
+        using services::memory_storage::route;
+        using services::memory_storage::handler_id;
     }
 
     namespace collection {

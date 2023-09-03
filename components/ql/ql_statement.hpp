@@ -44,6 +44,12 @@ namespace components::ql {
             return false;
         }
 
+        virtual std::string to_string() const {
+            std::stringstream s;
+            s << "ql: " << database_ << "." << collection_;
+            return s.str();
+        }
+
         statement_type type_ {statement_type::unused};
         database_name_t database_;
         collection_name_t collection_;

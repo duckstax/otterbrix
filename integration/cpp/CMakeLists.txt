@@ -8,7 +8,7 @@ set(${PROJECT_NAME}_sources
 
 set(ottergon_LIBS
         ottergon::log
-        ottergon::database
+        ottergon::memory_storage
         ottergon::collection
         ottergon::cursor
         ottergon::session
