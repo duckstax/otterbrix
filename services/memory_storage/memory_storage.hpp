@@ -8,9 +8,8 @@
 #include <components/logical_plan/node.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <services/collection/result.hpp>
+#include <components/result/result.hpp>
 #include <services/disk/result.hpp>
-#include "result.hpp"
 
 namespace components::ql {
     struct create_database_t;
@@ -29,7 +28,7 @@ namespace services {
         };
 
         struct load_buffer_t {
-            memory_storage::result_list_addresses_t collections;
+            components::result::result_list_addresses_t collections;
 
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
@@ -78,7 +77,7 @@ namespace services {
         void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
         void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
 
-        void drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result);
+        void drop_collection_finish_(components::session::session_id_t& session, components::result::result_drop_collection& result);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 

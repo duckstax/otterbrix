@@ -5,7 +5,7 @@
 #include <components/document/document.hpp>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include <services/collection/result.hpp>
+#include <components/result/result.hpp>
 #include "wrapper_database.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
@@ -106,7 +106,7 @@ namespace duck_charmer {
             debug(log_, "wrapper_collection::update_one {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
             return wrapper_result_update(result);
         }
-        return wrapper_result_update(result_update(ptr_->resource()));
+        return wrapper_result_update(components::result::result_update(ptr_->resource()));
     }
 
     wrapper_result_update wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
@@ -121,7 +121,7 @@ namespace duck_charmer {
             debug(log_, "wrapper_collection::update_many {} modified {} no modified upsert id {}", result.modified_ids().size(), result.nomodified_ids().size(), result.upserted_id().to_string());
             return wrapper_result_update(result);
         }
-        return wrapper_result_update(result_update(ptr_->resource()));
+        return wrapper_result_update(components::result::result_update(ptr_->resource()));
     }
 
     auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
@@ -131,8 +131,8 @@ namespace duck_charmer {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = duck_charmer::session_id_t();
             auto result = ptr_->find(session_tmp, statement.release());
-            debug(log_, "wrapper_collection::find {} records", result->size());
-            return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result));
+            debug(log_, "wrapper_collection::find {} records", result.get<components::cursor::cursor_t*>()->size());
+            return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, result.get<components::cursor::cursor_t*>()));
         }
         throw std::runtime_error("wrapper_collection::find");
         return wrapper_cursor_ptr();
@@ -145,8 +145,12 @@ namespace duck_charmer {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = duck_charmer::session_id_t();
             auto result = ptr_->find_one(session_tmp, statement.release());
-            debug(log_, "wrapper_collection::find_one {}", result.is_find());
-            return from_document(*result);
+            auto& cur = result.get<components::cursor::cursor_t*>();
+            debug(log_, "wrapper_collection::find_one {}", cur->size() > 0);
+            if (cur->size() > 0) {
+                return from_document(*cur->next());
+            }
+            return py::dict();
         }
         throw std::runtime_error("wrapper_collection::find_one");
         return py::dict();
@@ -162,7 +166,7 @@ namespace duck_charmer {
             debug(log_, "wrapper_collection::delete_one {} deleted", result.deleted_ids().size());
             return wrapper_result_delete(result);
         }
-        return wrapper_result_delete(result_delete(ptr_->resource()));
+        return wrapper_result_delete(components::result::result_delete(ptr_->resource()));
     }
 
     wrapper_result_delete wrapper_collection::delete_many(py::object cond) {
@@ -175,7 +179,7 @@ namespace duck_charmer {
             debug(log_, "wrapper_collection::delete_many {} deleted", result.deleted_ids().size());
             return wrapper_result_delete(result);
         }
-        return wrapper_result_delete(result_delete(ptr_->resource()));
+        return wrapper_result_delete(components::result::result_delete(ptr_->resource()));
     }
 
     bool wrapper_collection::drop() {

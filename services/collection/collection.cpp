@@ -9,7 +9,7 @@
 #include <services/collection/operators/operator_update.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 
-using namespace services::collection;
+using namespace components::result;
 
 namespace services::collection {
 
@@ -21,8 +21,6 @@ namespace services::collection {
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::insert_documents), &collection_t::insert_documents);
-        add_handler(handler_id(route::find), &collection_t::find);
-        add_handler(handler_id(route::find_one), &collection_t::find_one);
         add_handler(handler_id(route::delete_documents), &collection_t::delete_documents);
         add_handler(handler_id(route::update_documents), &collection_t::update_documents);
         add_handler(handler_id(route::size), &collection_t::size);
@@ -96,63 +94,63 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::find(
-            const components::session::session_id_t& session,
-            const components::logical_plan::node_ptr& logic_plan,
-            components::ql::storage_parameters parameters) -> void {
-        trace(log(), "collection::find : {}", name_.to_string());
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
-        } else {
-            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
-            if (!plan) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
-            } else {
-                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
-                plan->on_execute(&pipeline_context);
-                if (plan->is_executed()) {
-                    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-                    if (plan->output()) {
-                        for (const auto& document : plan->output()->documents()) {
-                            result.first->second->append(document_view_t(document));
-                        }
-                    }
-                    actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
-                } else {
-                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{current_message()->sender(), std::move(plan), std::move(pipeline_context)});
-                }
-            }
-        }
-    }
+//    auto collection_t::find(
+//            const components::session::session_id_t& session,
+//            const components::logical_plan::node_ptr& logic_plan,
+//            components::ql::storage_parameters parameters) -> void {
+//        trace(log(), "collection::find : {}", name_.to_string());
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
+//        } else {
+//            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
+//            if (!plan) {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, nullptr);
+//            } else {
+//                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
+//                plan->on_execute(&pipeline_context);
+//                if (plan->is_executed()) {
+//                    auto result = cursor_storage_.emplace(session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+//                    if (plan->output()) {
+//                        for (const auto& document : plan->output()->documents()) {
+//                            result.first->second->append(document_view_t(document));
+//                        }
+//                    }
+//                    actor_zeta::send(dispatcher, address(), handler_id(route::find_finish), session, result.first->second.get());
+//                } else {
+//                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{current_message()->sender(), std::move(plan), std::move(pipeline_context)});
+//                }
+//            }
+//        }
+//    }
 
-    auto collection_t::find_one(
-            const components::session::session_id_t& session,
-            const components::logical_plan::node_ptr& logic_plan,
-            components::ql::storage_parameters parameters) -> void {
-        trace(log(), "collection::find_one : {}", name_.to_string());
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
-        } else {
-            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::limit_one());
-            if (!plan) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
-            } else {
-                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
-                plan->on_execute(&pipeline_context);
-                if (plan->is_executed()) {
-                    if (plan->output() && !plan->output()->documents().empty()) {
-                        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(plan->output()->documents().at(0))));
-                    } else {
-                        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
-                    }
-                } else {
-                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{current_message()->sender(), std::move(plan), std::move(pipeline_context)});
-                }
-            }
-        }
-    }
+//    auto collection_t::find_one(
+//            const components::session::session_id_t& session,
+//            const components::logical_plan::node_ptr& logic_plan,
+//            components::ql::storage_parameters parameters) -> void {
+//        trace(log(), "collection::find_one : {}", name_.to_string());
+//        auto dispatcher = current_message()->sender();
+//        if (dropped_) {
+//            actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
+//        } else {
+//            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::limit_one());
+//            if (!plan) {
+//                actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, nullptr);
+//            } else {
+//                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
+//                plan->on_execute(&pipeline_context);
+//                if (plan->is_executed()) {
+//                    if (plan->output() && !plan->output()->documents().empty()) {
+//                        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one(document_view_t(plan->output()->documents().at(0))));
+//                    } else {
+//                        actor_zeta::send(dispatcher, address(), handler_id(route::find_one_finish), session, result_find_one());
+//                    }
+//                } else {
+//                    sessions::make_session(sessions_, session, sessions::suspend_plan_t{current_message()->sender(), std::move(plan), std::move(pipeline_context)});
+//                }
+//            }
+//        }
+//    }
 
     auto collection_t::delete_documents(
             const components::session::session_id_t& session,

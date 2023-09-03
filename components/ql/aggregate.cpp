@@ -32,6 +32,12 @@ namespace components::ql {
         return aggregate_operator_.type(index);
     }
 
+    std::string aggregate_statement::to_string() const {
+        std::stringstream s;
+        s << "aggregate: " << database_ << "." << collection_;
+        return s.str();
+    }
+
 
     aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection) {
         return std::make_unique<aggregate_statement>(database, collection);

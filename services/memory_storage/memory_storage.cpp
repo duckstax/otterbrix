@@ -9,6 +9,8 @@
 #include <services/collection/collection.hpp>
 #include "route.hpp"
 
+using namespace components::result;
+
 namespace services {
 
     using namespace services::memory_storage;
