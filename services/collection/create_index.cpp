@@ -120,7 +120,9 @@ namespace services::collection {
             }
         }
         sessions::remove(sessions_, session);
-        //actor_zeta::send(suspend_plan.client, address(), handler_id(route::find_finish), session, res.first->second.get());
+        auto cursor = new components::cursor::cursor_t(context_->resource());
+        cursor->push(res.first->second.get());
+        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, make_result(cursor));
     }
 
 } // namespace services::collection

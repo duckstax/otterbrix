@@ -34,6 +34,7 @@ namespace services {
 
         add_handler(collection::handler_id(collection::route::drop_collection_finish), &memory_storage_t::drop_collection_finish_);
         add_handler(collection::handler_id(collection::route::create_documents_finish), &memory_storage_t::create_documents_finish_);
+        add_handler(collection::handler_id(collection::route::execute_plan_finish), &memory_storage_t::execute_plan_finish_);
     }
 
     memory_storage_t::~memory_storage_t() {
@@ -47,8 +48,8 @@ namespace services {
     }
 
     void memory_storage_t::execute_plan(components::session::session_id_t& session,
-                                        components::logical_plan::node_ptr&& logical_plan,
-                                        components::ql::storage_parameters&&) {
+                                        components::logical_plan::node_ptr logical_plan,
+                                        components::ql::storage_parameters parameters) {
         using components::logical_plan::node_type;
 
         switch (logical_plan->type()) {
@@ -65,7 +66,7 @@ namespace services {
             drop_collection_(session, std::move(logical_plan));
             break;
         default:
-            assert(false && "not valid logical plan");
+            execute_plan_(session, std::move(logical_plan), std::move(parameters));
             break;
         }
     }
@@ -139,7 +140,7 @@ namespace services {
         return false;
     }
 
-    void memory_storage_t::create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+    void memory_storage_t::create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
         if (is_exists_database_(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
@@ -151,7 +152,7 @@ namespace services {
                          make_result(empty_result_t()));
     }
 
-    void memory_storage_t::drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+    void memory_storage_t::drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
         if (check_database_(session, logical_plan->database_name())) {
             databases_.erase(logical_plan->database_name());
@@ -160,7 +161,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+    void memory_storage_t::create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full().to_string());
         if (check_database_(session, logical_plan->database_name())) {
             if (is_exists_collection_(logical_plan->collection_full())) {
@@ -176,12 +177,34 @@ namespace services {
         }
     }
 
-    void memory_storage_t::drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan) {
+    void memory_storage_t::drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full().to_string());
         if (check_collection_(session, logical_plan->collection_full())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
             actor_zeta::send(collections_.at(logical_plan->collection_full()), address(), collection::handler_id(collection::route::drop_collection), session);
         }
+    }
+
+    void memory_storage_t::execute_plan_(components::session::session_id_t& session,
+                                         components::logical_plan::node_ptr logical_plan,
+                                         components::ql::storage_parameters parameters) {
+        trace(log_, "memory_storage_t:execute_plan {}", logical_plan->collection_full().to_string());
+        if (check_collection_(session, logical_plan->collection_full())) {
+            sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+            actor_zeta::send(collections_.at(logical_plan->collection_full()),
+                             address(),
+                             collection::handler_id(collection::route::execute_plan),
+                             session,
+                             logical_plan,
+                             std::move(parameters));
+        }
+    }
+
+    void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result) {
+        auto &s = sessions_.at(session);
+        debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result.is_success());
+        actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
+        sessions_.erase(session);
     }
 
     void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {

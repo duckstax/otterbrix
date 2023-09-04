@@ -11,9 +11,8 @@ namespace components::pipeline {
         session::session_id_t session;
         ql::storage_parameters parameters;
 
-        context_t() = default;
-        explicit context_t(ql::storage_parameters&& init_parameters);
-        context_t(session::session_id_t session, actor_zeta::address_t address, ql::storage_parameters&& init_parameters);
+        explicit context_t(ql::storage_parameters init_parameters);
+        context_t(session::session_id_t session, actor_zeta::address_t address, ql::storage_parameters init_parameters);
 
         template<typename ...Args>
         bool send(const actor_zeta::address_t& address, uint64_t signal, Args...args) {

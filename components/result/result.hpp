@@ -13,7 +13,9 @@ namespace components::result {
         database_not_exists,
         collection_already_exists,
         collection_not_exists,
+        collection_dropped,
         sql_parse_error,
+        create_phisical_plan_error,
         other_error
     };
 

@@ -9,6 +9,7 @@
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
 #include <components/result/result.hpp>
+#include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 
 namespace components::ql {
@@ -49,8 +50,8 @@ namespace services {
 
         void sync(const address_pack& pack);
         void execute_plan(components::session::session_id_t& session,
-                          components::logical_plan::node_ptr&& logical_plan,
-                          components::ql::storage_parameters&& parameters);
+                          components::logical_plan::node_ptr logical_plan,
+                          components::ql::storage_parameters parameters);
         void load(components::session::session_id_t &session, const disk::result_load_t &result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
@@ -72,10 +73,15 @@ namespace services {
         bool check_database_(components::session::session_id_t& session, const database_name_t& name);
         bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
-        void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
-        void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
-        void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
-        void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr&& logical_plan);
+        void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+
+        void execute_plan_(components::session::session_id_t& session,
+                          components::logical_plan::node_ptr logical_plan,
+                          components::ql::storage_parameters parameters);
+        void execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result);
 
         void drop_collection_finish_(components::session::session_id_t& session, components::result::result_drop_collection& result);
         void create_documents_finish_(components::session::session_id_t& session);
