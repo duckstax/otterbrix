@@ -213,16 +213,16 @@ namespace duck_charmer {
 
         return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
-            if constexpr (std::is_same_v<type, aggregate_statement>) {
-                return send_ql_new(session, &ql);
-//            } else if constexpr (std::is_same_v<type, insert_many_t>) {
-//                return make_result(send_ql<result_insert>(session, ql, "insert", collection::handler_id(collection::route::insert_documents)));
-//            } else if constexpr (std::is_same_v<type, delete_many_t>) {
-//                return make_result(send_ql<result_delete>(session, ql, "delete", collection::handler_id(collection::route::delete_documents)));
-//            } else if constexpr (std::is_same_v<type, update_many_t>) {
-//                return make_result(send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents)));
+            if constexpr (std::is_same_v<type, insert_many_t>) {
+                return send_ql<result_insert>(session, ql, "insert", collection::handler_id(collection::route::insert_documents));
+            } else if constexpr (std::is_same_v<type, delete_many_t>) {
+                return send_ql<result_delete>(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
+            } else if constexpr (std::is_same_v<type, update_many_t>) {
+                return send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents));
+            } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
+                return send_ql_new(session, ql);
             } else {
-                return make_result(empty_result_t());
+                return send_ql_new(session, &ql);
             }
         }, query);
     }
@@ -347,7 +347,7 @@ namespace duck_charmer {
                     session,
                     &ql);
         wait();
-        return std::get<Tres>(intermediate_store_);
+        return make_result(std::get<Tres>(intermediate_store_));
     }
 
 } // namespace python
