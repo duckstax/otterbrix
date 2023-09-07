@@ -7,6 +7,7 @@ static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
 using namespace components;
+using namespace components::result;
 using expressions::compare_type;
 using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
@@ -265,8 +266,20 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
     INFO("not exists database") {
         auto session = duck_charmer::session_id_t();
         auto res = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
-        REQUIRE(res.is_type<components::cursor::cursor_t*>());
-        REQUIRE(res.get<components::cursor::cursor_t*>()->size() == 0);
+        REQUIRE(res.is_error());
+        REQUIRE(res.error_code() == error_code_t::database_not_exists);
+    }
+
+    INFO("create database") {
+        auto session = duck_charmer::session_id_t();
+        dispatcher->execute_sql(session, R"_(CREATE DATABASE TestDatabase;)_");
+    }
+
+    INFO("not exists database") {
+        auto session = duck_charmer::session_id_t();
+        auto res = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        REQUIRE(res.is_error());
+        REQUIRE(res.error_code() == error_code_t::collection_not_exists);
     }
 
 }

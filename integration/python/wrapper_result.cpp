@@ -3,7 +3,7 @@
 
 namespace duck_charmer {
 
-wrapper_result_delete::wrapper_result_delete(const result_delete &src)
+wrapper_result_delete::wrapper_result_delete(const components::result::result_delete &src)
     : deleted_ids_(to_pylist(src.deleted_ids())) {
 }
 
@@ -17,7 +17,7 @@ std::size_t wrapper_result_delete::deleted_count() const {
 }
 
 
-wrapper_result_update::wrapper_result_update(const result_update &src)
+wrapper_result_update::wrapper_result_update(const components::result::result_update &src)
     : result(src) {
 }
 
@@ -42,31 +42,31 @@ py::object wrapper_result_update::upserted_id() const {
 
 
 wrapper_result::wrapper_result()
-    : result_(null_result{}) {
+    : result_(components::result::empty_result_t()) {
 }
 
-wrapper_result::wrapper_result(const components::session::session_id_t& session, const result_t& result)
+wrapper_result::wrapper_result(const components::session::session_id_t& session, const components::result::result_t& result)
     : session_(session)
     , result_(result) {
 }
 
 std::size_t wrapper_result::inserted_count() const {
-    if (result_.is_type<result_insert>()) {
-        return result_.get<result_insert>().inserted_ids().size();
+    if (result_.is_type<components::result::result_insert>()) {
+        return result_.get<components::result::result_insert>().inserted_ids().size();
     }
     return 0;
 }
 
 std::size_t wrapper_result::modified_count() const {
-    if (result_.is_type<result_update>()) {
-        return result_.get<result_update>().modified_ids().size();
+    if (result_.is_type<components::result::result_update>()) {
+        return result_.get<components::result::result_update>().modified_ids().size();
     }
     return 0;
 }
 
 std::size_t wrapper_result::deleted_count() const {
-    if (result_.is_type<result_delete>()) {
-        return result_.get<result_delete>().deleted_ids().size();
+    if (result_.is_type<components::result::result_delete>()) {
+        return result_.get<components::result::result_delete>().deleted_ids().size();
     }
     return 0;
 }

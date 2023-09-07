@@ -17,11 +17,11 @@
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
 #include <components/pipeline/context.hpp>
+#include <components/result/result.hpp>
 
 #include <utility>
 
 #include "forward.hpp"
-#include "result.hpp"
 #include "route.hpp"
 #include "session/session.hpp"
 
@@ -89,17 +89,12 @@ namespace services::collection {
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
 
+        auto execute_plan(
+                const components::session::session_id_t& session,
+                const components::logical_plan::node_ptr& logical_plan,
+                components::ql::storage_parameters parameters) -> void;
+
         auto insert_documents(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
-        auto find(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
-        auto find_one(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,
                 components::ql::storage_parameters parameters) -> void;

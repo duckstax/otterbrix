@@ -12,17 +12,17 @@
 #include <components/ql/statements/update_one.hpp>
 #include <components/sql/parser.hpp>
 
+using namespace components::result;
+
 namespace duck_charmer {
 
     wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")
         , manager_dispatcher_(manager_dispatcher)
-        ,log_(log.clone()) {
+        , log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
         add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
         add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
-        add_handler(collection::handler_id(collection::route::find_finish), &wrapper_dispatcher_t::find_finish);
-        add_handler(collection::handler_id(collection::route::find_one_finish), &wrapper_dispatcher_t::find_one_finish);
         add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
         add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
@@ -46,22 +46,22 @@ namespace duck_charmer {
         wait();
     }
 
-    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> services::memory_storage::result_t {
+    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> result_t {
         components::ql::create_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session, const database_name_t& database) -> services::memory_storage::result_t {
+    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session, const database_name_t& database) -> result_t {
         components::ql::drop_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t {
+    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_t {
         components::ql::create_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> services::memory_storage::result_t {
+    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_t {
         components::ql::drop_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
@@ -94,32 +94,16 @@ namespace duck_charmer {
         return std::get<result_insert>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t* {
+    auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t {
         trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
-        init();
         std::unique_ptr<components::ql::aggregate_statement> ql(condition);
-        actor_zeta::send(
-            manager_dispatcher_,
-            address(),
-            collection::handler_id(collection::route::find),
-            session,
-            ql.get());
-        wait();
-        return std::get<components::cursor::cursor_t*>(intermediate_store_);
+        return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_find_one & {
+    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t {
         trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
-        init();
         std::unique_ptr<components::ql::aggregate_statement> ql(condition);
-        actor_zeta::send(
-            manager_dispatcher_,
-            address(),
-            collection::handler_id(collection::route::find_one),
-            session,
-            ql.get());
-        wait();
-        return std::get<result_find_one>(intermediate_store_);
+        return send_ql_new(session, ql.get());
     }
 
     auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
@@ -229,16 +213,16 @@ namespace duck_charmer {
 
         return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
-            if constexpr (std::is_same_v<type, aggregate_statement>) {
-                return send_ql<components::cursor::cursor_t*>(session, ql, "find", collection::handler_id(collection::route::find));
-            } else if constexpr (std::is_same_v<type, insert_many_t>) {
+            if constexpr (std::is_same_v<type, insert_many_t>) {
                 return send_ql<result_insert>(session, ql, "insert", collection::handler_id(collection::route::insert_documents));
             } else if constexpr (std::is_same_v<type, delete_many_t>) {
                 return send_ql<result_delete>(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
             } else if constexpr (std::is_same_v<type, update_many_t>) {
                 return send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents));
+            } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
+                return send_ql_new(session, ql);
             } else {
-                return result_t{null_result{}};
+                return send_ql_new(session, &ql);
             }
         }, query);
     }
@@ -248,11 +232,11 @@ namespace duck_charmer {
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            //todo: output pos error in sql-query
+            return make_error(error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return null_result{};
+        return make_error(error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -273,7 +257,7 @@ namespace duck_charmer {
         notify();
     }
 
-    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, const services::memory_storage::result_t& result) {
+    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, const result_t& result) {
         trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result.is_success());
         intermediate_store_ = result;
         input_session_ = session;
@@ -282,18 +266,6 @@ namespace duck_charmer {
 
     void wrapper_dispatcher_t::insert_finish(session_id_t &session, result_insert result) {
         trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result.inserted_ids().size());
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    auto wrapper_dispatcher_t::find_finish(session_id_t &session, components::cursor::cursor_t* cursor) -> void {
-        intermediate_store_ = cursor;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::find_one_finish(session_id_t &session, result_find_one result) {
         intermediate_store_ = result;
         input_session_ = session;
         notify();
@@ -343,7 +315,7 @@ namespace duck_charmer {
         cv_.notify_all();
     }
 
-    services::memory_storage::result_t wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
+    result_t wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
         trace(log_, "wrapper_dispatcher_t::send_ql session: {}, {} ", session.data(), ql->to_string());
         init();
         actor_zeta::send(
@@ -354,7 +326,13 @@ namespace duck_charmer {
             ql);
         wait();
 
-        return std::get<services::memory_storage::result_t>(intermediate_store_);
+        auto& result = std::get<result_t>(intermediate_store_);
+        if (result.is_error()) {
+            //todo: handling error
+            std::cerr << result.error_what() << std::endl;
+        }
+
+        return result;
     }
 
     template <typename Tres, typename Tql>
@@ -369,7 +347,7 @@ namespace duck_charmer {
                     session,
                     &ql);
         wait();
-        return std::get<Tres>(intermediate_store_);
+        return make_result(std::get<Tres>(intermediate_store_));
     }
 
 } // namespace python

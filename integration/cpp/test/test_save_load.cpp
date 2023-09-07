@@ -11,6 +11,7 @@ constexpr uint count_documents = 10;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
+using namespace components::result;
 using components::ql::aggregate::operator_type;
 using components::expressions::compare_type;
 using key = components::expressions::key_t;
@@ -29,7 +30,11 @@ result_find_one find_doc(duck_charmer::wrapper_dispatcher_t* dispatcher,
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
     ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
     ql->add_parameter(id_par{1}, gen_id(n_doc));
-    return dispatcher->find_one(session_doc, ql);
+    auto* c = dispatcher->find_one(session_doc, ql).get<components::cursor::cursor_t*>();
+    if (c->size() > 0) {
+        return result_find_one(*c->next());
+    }
+    return result_find_one();
 }
 
 TEST_CASE("python::test_save_load::disk") {
