@@ -18,7 +18,7 @@ set(ottergon_LIBS
         ottergon::disk
         ottergon::locks
         ottergon::sql
-        rocketjoe::result
+        ottergon::result
 )
 
 
