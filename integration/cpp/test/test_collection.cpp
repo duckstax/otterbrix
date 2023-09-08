@@ -84,7 +84,7 @@ TEST_CASE("python::test_collection") {
         {
             auto session = duck_charmer::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-            auto c = dispatcher->find(session, ql);
+            auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             delete c;
         }
@@ -95,7 +95,7 @@ TEST_CASE("python::test_collection") {
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 90);
-            auto c = dispatcher->find(session, ql);
+            auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
         }
@@ -106,7 +106,7 @@ TEST_CASE("python::test_collection") {
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, std::string_view{"9$"});
-            auto c = dispatcher->find(session, ql);
+            auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 10);
             delete c;
         }
@@ -120,7 +120,7 @@ TEST_CASE("python::test_collection") {
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 90);
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
-            auto c = dispatcher->find(session, ql);
+            auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 18);
             delete c;
         }
@@ -138,7 +138,7 @@ TEST_CASE("python::test_collection") {
             ql->add_parameter(id_par{1}, 90);
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
             ql->add_parameter(id_par{3}, 30);
-            auto c = dispatcher->find(session, ql);
+            auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 3);
             delete c;
         }
@@ -147,7 +147,7 @@ TEST_CASE("python::test_collection") {
     INFO("cursor") {
         auto session = duck_charmer::session_id_t();
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
-        auto c = dispatcher->find(session, ql);
+        auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
         REQUIRE(c->size() == 100);
         int count = 0;
         while (c->has_next()) {
@@ -165,8 +165,8 @@ TEST_CASE("python::test_collection") {
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, gen_id(1));
-            auto c = dispatcher->find_one(session, ql);
-            REQUIRE(c->get_long("count") == 1);
+            auto c = dispatcher->find_one(session, ql).get<components::cursor::cursor_t*>();
+            REQUIRE(c->next()->get_long("count") == 1);
         }
         {
             auto session = duck_charmer::session_id_t();
@@ -174,8 +174,8 @@ TEST_CASE("python::test_collection") {
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 10);
-            auto c = dispatcher->find_one(session, ql);
-            REQUIRE(c->get_long("count") == 10);
+            auto c = dispatcher->find_one(session, ql).get<components::cursor::cursor_t*>();
+            REQUIRE(c->next()->get_long("count") == 10);
         }
         {
             auto session = duck_charmer::session_id_t();
@@ -186,8 +186,8 @@ TEST_CASE("python::test_collection") {
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 90);
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
-            auto c = dispatcher->find_one(session, ql);
-            REQUIRE(c->get_long("count") == 99);
+            auto c = dispatcher->find_one(session, ql).get<components::cursor::cursor_t*>();
+            REQUIRE(c->next()->get_long("count") == 99);
         }
     }
 

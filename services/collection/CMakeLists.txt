@@ -2,7 +2,6 @@ project(collection)
 
 set(${PROJECT_NAME}_HEADERS
         collection.hpp
-        result.hpp
         sort.hpp
 )
 
@@ -47,7 +46,6 @@ set(${PROJECT_NAME}_SOURCES
 
         collection.cpp
         create_index.cpp
-        result.cpp
         sort.cpp
 )
 
@@ -69,6 +67,7 @@ target_link_libraries(
         ottergon::index
         ottergon::logical_plan
         ottergon::pipeline
+        ottergon::result
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

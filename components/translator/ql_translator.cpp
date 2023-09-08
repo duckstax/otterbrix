@@ -58,12 +58,6 @@ namespace components::translator {
                 return logical_plan::make_node_create_collection(resource, static_cast<ql::create_collection_t*>(statement));
             case statement_type::drop_collection:
                 return logical_plan::make_node_drop_collection(resource, static_cast<ql::drop_collection_t*>(statement));
-            case statement_type::find: {
-                break;
-            }
-            case statement_type::find_one: {
-                break;
-            }
             case statement_type::insert_one:
                 return logical_plan::make_node_insert(resource, static_cast<ql::insert_one_t*>(statement));
             case statement_type::insert_many:

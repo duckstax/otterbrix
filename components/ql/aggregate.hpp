@@ -30,6 +30,8 @@ namespace components::ql {
             return aggregate_operator_.get<T>(index);
         }
 
+        std::string to_string() const final;
+
     private:
         aggregate::operators_t aggregate_operator_;
     };
