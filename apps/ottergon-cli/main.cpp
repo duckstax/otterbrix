@@ -2,6 +2,7 @@
 
 #include <components/ql/statements.hpp>
 #include <integration/cpp/base_spaces.hpp>
+#include <components/result/result.hpp>
 
 static configuration::config_t create_config(const std::filesystem::path& path) {
     auto config = configuration::config_t::default_config();
@@ -32,6 +33,75 @@ struct overload : Ts ... {
 
 template<class... Ts> overload(Ts...) -> overload<Ts...>;
 
+void show(components::result::result_t&result){
+    result.visit(
+        overload{
+            [](components::result::empty_result_t result) {},
+            [](components::cursor::cursor_t* result) {
+                std::cerr << "start " << std::endl;
+                std::cerr <<" size: " << result->size() << std::endl;
+                for ( const auto&i: (*result)) {
+                    for(const auto&j:i->data()){
+                        std::cout << j.to_json() << std::endl;
+                    }
+                }
+                std::cerr << "stop " << std::endl;
+
+                delete result;
+            },
+            [](components::result::result_insert result) {
+                if (result.empty()) {
+                    std::cout << "inserted ids: 0" << std::endl;
+                } else {
+                    std::cerr << "inserted ids:" << std::endl;
+                    for (auto& i : result.inserted_ids()) {
+                        std::cout << i.to_string() << std::endl;
+                    }
+                }
+            },
+            [](components::result::result_delete result) {
+                if (result.empty()) {
+                    std::cerr << "inserted ids: 0" << std::endl;
+                } else {
+                    std::cerr << "inserted ids:" << std::endl;
+                    for (auto& i : result.deleted_ids()) {
+                        std::cout << i.to_string() << std::endl;
+                    }
+                }
+            },
+            [](components::result::result_update result) {
+                if (result.empty()) {
+                    std::cerr << "inserted ids: 0" << std::endl;
+                } else {
+                    std::cout << "inserted ids:" << std::endl;
+                    for (auto& i : result.modified_ids()) {
+                        std::cerr << i.to_string() << std::endl;
+                    }
+                }
+            },
+            [](components::result::result_create_index result) {
+                if (result.is_success()) {
+                    std::cerr << "index created" << std::endl;
+                } else {
+                    std::cerr << "index not created" << std::endl;
+                }
+            },
+            [](components::result::result_drop_index result) {
+                if (result.is_success()) {
+                    std::cerr << "index dropped" << std::endl;
+                } else {
+                    std::cerr << "index not dropped" << std::endl;
+                }
+            },
+            [](components::result::result_drop_collection result) {
+                if (result.is_success()) {
+                    std::cerr << "collection dropped" << std::endl;
+                } else {
+                    std::cerr << "collection not dropped" << std::endl;
+                }
+            }});
+}
+
 int main(int argc, char** argv) {
     std::vector<std::string> args(argv + 1, argv + argc);
 
@@ -52,72 +122,11 @@ int main(int argc, char** argv) {
     std::cerr << "query: " << args[0] << std::endl;
     auto res = dispatcher->execute_sql(session, args[0]);
 
-    res.visit(
-        overload{
-            [](null_result result) {},
-            [](components::cursor::cursor_t* result) {
-                std::cerr << "start " << std::endl;
-                std::cerr <<" size: " << result->size() << std::endl;
-                for ( const auto&i: (*result)) {
-                    for(const auto&j:i->data()){
-                        std::cout << j.to_json() << std::endl;
-                    }
-                }
-                std::cerr << "stop " << std::endl;
+    if (res.is_success()){
+        show(res);
+    }
 
-                delete result;
-            },
-            [](result_insert result) {
-                if (result.empty()) {
-                    std::cout << "inserted ids: 0" << std::endl;
-                } else {
-                    std::cerr << "inserted ids:" << std::endl;
-                    for (auto& i : result.inserted_ids()) {
-                        std::cout << i.to_string() << std::endl;
-                    }
-                }
-            },
-            [](result_delete result) {
-                if (result.empty()) {
-                    std::cerr << "inserted ids: 0" << std::endl;
-                } else {
-                    std::cerr << "inserted ids:" << std::endl;
-                    for (auto& i : result.deleted_ids()) {
-                        std::cout << i.to_string() << std::endl;
-                    }
-                }
-            },
-            [](result_update result) {
-                if (result.empty()) {
-                    std::cerr << "inserted ids: 0" << std::endl;
-                } else {
-                    std::cout << "inserted ids:" << std::endl;
-                    for (auto& i : result.modified_ids()) {
-                        std::cerr << i.to_string() << std::endl;
-                    }
-                }
-            },
-            [](result_create_index result) {
-                if (result.is_success()) {
-                    std::cerr << "index created" << std::endl;
-                } else {
-                    std::cerr << "index not created" << std::endl;
-                }
-            },
-            [](result_drop_index result) {
-                if (result.is_success()) {
-                    std::cerr << "index dropped" << std::endl;
-                } else {
-                    std::cerr << "index not dropped" << std::endl;
-                }
-            },
-            [](result_drop_collection result) {
-                if (result.is_success()) {
-                    std::cerr << "collection dropped" << std::endl;
-                } else {
-                    std::cerr << "collection not dropped" << std::endl;
-                }
-            }});
+    std::cerr << "error"<< std::endl;
 
     return 0;
 }

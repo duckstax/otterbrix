@@ -17,6 +17,7 @@ set(ottergon_LIBS
         ottergon::locks
         ottergon::ql
         ottergon::sql
+        ottergon::result
 )
 
 target_link_libraries(

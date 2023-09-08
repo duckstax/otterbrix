@@ -214,6 +214,11 @@ namespace components::result {
             return std::get<T>(result_);
         }
 
+        template<class F>
+        void visit(F&&f){
+            std::visit(f,result_);
+        }
+
     private:
         std::variant<
             error_result_t,
