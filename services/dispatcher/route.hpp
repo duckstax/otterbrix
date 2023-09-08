@@ -5,7 +5,9 @@
 namespace services::dispatcher {
 
     enum class route : uint64_t {
-        create
+        create,
+        execute_ql,
+        execute_ql_finish
     };
 
     constexpr uint64_t handler_id(route type) {

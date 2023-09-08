@@ -6,9 +6,8 @@ namespace services::collection {
 
     enum class route : uint64_t {
         create_documents,
+        execute_plan,
         insert_documents,
-        find,
-        find_one,
         delete_documents,
         update_documents,
         size,
@@ -18,9 +17,8 @@ namespace services::collection {
         drop_index,
 
         create_documents_finish,
+        execute_plan_finish,
         insert_finish,
-        find_finish,
-        find_one_finish,
         delete_finish,
         update_finish,
         size_finish,

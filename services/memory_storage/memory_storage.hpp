@@ -5,12 +5,12 @@
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
 #include <components/log/log.hpp>
-#include <components/ql/base.hpp>
-#include <components/ql/ql_statement.hpp>
+#include <components/logical_plan/node.hpp>
+#include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <services/collection/result.hpp>
+#include <components/result/result.hpp>
+#include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
-#include "result.hpp"
 
 namespace components::ql {
     struct create_database_t;
@@ -23,13 +23,13 @@ namespace services {
 
     class memory_storage_t final : public actor_zeta::cooperative_supervisor<memory_storage_t> {
         struct session_t {
-            components::ql::ql_statement_t* ql;
+            components::logical_plan::node_ptr logical_plan;
             actor_zeta::address_t sender;
             size_t count_answers;
         };
 
         struct load_buffer_t {
-            memory_storage::result_list_addresses_t collections;
+            components::result::result_list_addresses_t collections;
 
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
@@ -49,7 +49,9 @@ namespace services {
         ~memory_storage_t();
 
         void sync(const address_pack& pack);
-        void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
+        void execute_plan(components::session::session_id_t& session,
+                          components::logical_plan::node_ptr logical_plan,
+                          components::ql::storage_parameters parameters);
         void load(components::session::session_id_t &session, const disk::result_load_t &result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
@@ -66,15 +68,22 @@ namespace services {
         session_storage_t sessions_;
         std::unique_ptr<load_buffer_t> load_buffer_;
 
-        bool is_exists_database(const database_name_t& name) const;
-        bool is_exists_collection(const collection_full_name_t& name) const;
+        bool is_exists_database_(const database_name_t& name) const;
+        bool is_exists_collection_(const collection_full_name_t& name) const;
+        bool check_database_(components::session::session_id_t& session, const database_name_t& name);
+        bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
-        void create_database_(components::session::session_id_t& session, components::ql::create_database_t* ql);
-        void drop_database_(components::session::session_id_t& session, components::ql::drop_database_t* ql);
-        void create_collection_(components::session::session_id_t& session, components::ql::create_collection_t* ql);
-        void drop_collection_(components::session::session_id_t& session, components::ql::drop_collection_t* ql);
+        void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
 
-        void drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result);
+        void execute_plan_(components::session::session_id_t& session,
+                          components::logical_plan::node_ptr logical_plan,
+                          components::ql::storage_parameters parameters);
+        void execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result);
+
+        void drop_collection_finish_(components::session::session_id_t& session, components::result::result_drop_collection& result);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 

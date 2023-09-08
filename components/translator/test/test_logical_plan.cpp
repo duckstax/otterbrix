@@ -8,8 +8,12 @@
 #include <components/logical_plan/node_sort.hpp>
 #include <components/ql/aggregate.hpp>
 #include <components/ql/aggregate/limit.hpp>
+#include <components/ql/statements/create_collection.hpp>
+#include <components/ql/statements/create_database.hpp>
 #include <components/ql/statements/delete_many.hpp>
 #include <components/ql/statements/delete_one.hpp>
+#include <components/ql/statements/drop_collection.hpp>
+#include <components/ql/statements/drop_database.hpp>
 #include <components/ql/statements/insert_many.hpp>
 #include <components/ql/statements/insert_one.hpp>
 #include <components/ql/statements/update_many.hpp>
@@ -28,6 +32,34 @@ constexpr auto collection_name = "collection";
 
 collection_full_name_t get_name() {
     return {database_name, collection_name};
+}
+
+TEST_CASE("logical_plan::create_database") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    components::ql::create_database_t ql{database_name};
+    auto node = ql_translator(resource, &ql);
+    REQUIRE(node->to_string() == R"_($create_database: database)_");
+}
+
+TEST_CASE("logical_plan::drop_database") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    components::ql::drop_database_t ql{database_name};
+    auto node = ql_translator(resource, &ql);
+    REQUIRE(node->to_string() == R"_($drop_database: database)_");
+}
+
+TEST_CASE("logical_plan::create_collection") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    components::ql::create_collection_t ql{database_name, collection_name};
+    auto node = ql_translator(resource, &ql);
+    REQUIRE(node->to_string() == R"_($create_collection: database.collection)_");
+}
+
+TEST_CASE("logical_plan::drop_collection") {
+    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    components::ql::drop_collection_t ql{database_name, collection_name};
+    auto node = ql_translator(resource, &ql);
+    REQUIRE(node->to_string() == R"_($drop_collection: database.collection)_");
 }
 
 TEST_CASE("logical_plan::match") {
