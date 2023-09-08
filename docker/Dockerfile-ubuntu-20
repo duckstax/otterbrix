@@ -40,11 +40,14 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DADDRESS_SANITIZER=ON
-RUN cmake --build .  --target all
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON #-DADDRESS_SANITIZER=ON
+RUN cmake --build .  --parallel --target all
 
 WORKDIR /app/build/apps/ottergon-cli
 RUN ./ottergon-cli  "select * from ottergon;"
+
+RUN ./ottergon-cli  "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES (1, 'test1', 1);"
+RUN ./ottergon-cli  "SELECT * FROM TestDatabase.TestCollection;"
 
 #RUN ctest -C -V --output-on-failure
 

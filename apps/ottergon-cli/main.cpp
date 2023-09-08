@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
     auto* dispatcher = space.dispatcher();
 
     auto session = duck_charmer::session_id_t();
+    std::cerr << "query: " << args[0] << std::endl;
     auto res = dispatcher->execute_sql(session, args[0]);
 
     res.visit(
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
             [](null_result result) {},
             [](components::cursor::cursor_t* result) {
                 std::cerr << "start " << std::endl;
+                std::cerr <<" size: " << result->size() << std::endl;
                 for ( const auto&i: (*result)) {
                     for(const auto&j:i->data()){
                         std::cout << j.to_json() << std::endl;
@@ -69,7 +71,7 @@ int main(int argc, char** argv) {
                 if (result.empty()) {
                     std::cout << "inserted ids: 0" << std::endl;
                 } else {
-                    std::cout << "inserted ids:" << std::endl;
+                    std::cerr << "inserted ids:" << std::endl;
                     for (auto& i : result.inserted_ids()) {
                         std::cout << i.to_string() << std::endl;
                     }
@@ -77,9 +79,9 @@ int main(int argc, char** argv) {
             },
             [](result_delete result) {
                 if (result.empty()) {
-                    std::cout << "inserted ids: 0" << std::endl;
+                    std::cerr << "inserted ids: 0" << std::endl;
                 } else {
-                    std::cout << "inserted ids:" << std::endl;
+                    std::cerr << "inserted ids:" << std::endl;
                     for (auto& i : result.deleted_ids()) {
                         std::cout << i.to_string() << std::endl;
                     }
@@ -87,33 +89,33 @@ int main(int argc, char** argv) {
             },
             [](result_update result) {
                 if (result.empty()) {
-                    std::cout << "inserted ids: 0" << std::endl;
+                    std::cerr << "inserted ids: 0" << std::endl;
                 } else {
                     std::cout << "inserted ids:" << std::endl;
                     for (auto& i : result.modified_ids()) {
-                        std::cout << i.to_string() << std::endl;
+                        std::cerr << i.to_string() << std::endl;
                     }
                 }
             },
             [](result_create_index result) {
                 if (result.is_success()) {
-                    std::cout << "index created" << std::endl;
+                    std::cerr << "index created" << std::endl;
                 } else {
-                    std::cout << "index not created" << std::endl;
+                    std::cerr << "index not created" << std::endl;
                 }
             },
             [](result_drop_index result) {
                 if (result.is_success()) {
-                    std::cout << "index dropped" << std::endl;
+                    std::cerr << "index dropped" << std::endl;
                 } else {
-                    std::cout << "index not dropped" << std::endl;
+                    std::cerr << "index not dropped" << std::endl;
                 }
             },
             [](result_drop_collection result) {
                 if (result.is_success()) {
-                    std::cout << "collection dropped" << std::endl;
+                    std::cerr << "collection dropped" << std::endl;
                 } else {
-                    std::cout << "collection not dropped" << std::endl;
+                    std::cerr << "collection not dropped" << std::endl;
                 }
             }});
 
