@@ -221,6 +221,8 @@ namespace duck_charmer {
                 return send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents));
             } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
                 return send_ql_new(session, ql);
+            } else if constexpr (std::is_same_v<type, unused_statement_t>) {
+                return make_result(empty_result_t());
             } else {
                 return send_ql_new(session, &ql);
             }

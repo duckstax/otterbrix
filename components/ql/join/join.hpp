@@ -7,14 +7,14 @@
 
 namespace components::ql {
 
-    struct join_t final : ql_base_statement_t {
-        join_type type {join_type::inner};
+    struct join_t final : ql_statement_t {
+        join_type join {join_type::inner};
         aggregate_statement_ptr left;
         aggregate_statement_ptr right;
         std::vector<expressions::expression_ptr> expressions;
 
         join_t() = default;
-        explicit join_t(join_type type);
+        explicit join_t(database_name_t database, collection_name_t collection, join_type join);
     };
 
 } // namespace components::ql

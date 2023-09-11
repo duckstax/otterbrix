@@ -10,6 +10,7 @@
 #include <components/logical_plan/node_drop_database.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_join.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
 #include <components/logical_plan/node_update.hpp>
