@@ -13,6 +13,7 @@
 #include "statements/update_one.hpp"
 #include "statements/update_many.hpp"
 #include "index.hpp"
+#include "join/join.hpp"
 
 namespace components::ql {
 
@@ -31,6 +32,7 @@ namespace components::ql {
         update_many_t,
         create_index_t,
         drop_index_t,
+        join_t,
         ql_statement_t*
         >;
 
