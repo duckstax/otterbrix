@@ -39,6 +39,7 @@
 ```
 
 ### C++ SQL example:
+
 ```cpp
     auto config = create_config("/tmp/my_collection");
     spaces_t space(config);
@@ -75,6 +76,15 @@
 * SQL support
 * Parquet / CSV / ORC
 * Column storage
- 
-## Troubleshooting
-In case you've encountered any issues, please feel free to create them right here on GitHub!
+
+## Getting involved
+
+Even if you do not plan to contribute to duckstax ottergon itself or ottergon
+integrations in other projects, we'd be happy to have you involved:
+
+- Follow our activity on [GitHub issues][1]
+- Contribute code to one of the reference implementations
+
+[1]: https://github.com/duckstax/ottergon/issues
+[2]: https://github.com/duckstax/ottergon/
+

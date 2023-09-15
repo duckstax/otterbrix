@@ -36,7 +36,10 @@ template<class... Ts> overload(Ts...) -> overload<Ts...>;
 void show(components::result::result_t&result){
     result.visit(
         overload{
-            [](components::result::empty_result_t result) {},
+            [](components::result::error_result_t){},
+            [](components::result::empty_result_t) {},
+            [](components::result::result_address_t) {},
+            [](components::result::result_list_addresses_t) {},
             [](components::cursor::cursor_t* result) {
                 std::cerr << "start " << std::endl;
                 std::cerr <<" size: " << result->size() << std::endl;
