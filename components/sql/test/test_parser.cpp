@@ -64,3 +64,43 @@ TEST_CASE("parser::database") {
     }
 
 }
+
+TEST_CASE("parser::table") {
+    auto* resource = std::pmr::get_default_resource();
+
+    SECTION("create") {
+        auto ql = sql::parse(resource, "CREATE TABLE db_name.table_name").ql;
+        REQUIRE(std::holds_alternative<ql::create_collection_t>(ql));
+        REQUIRE(std::get<ql::create_collection_t>(ql).database_ == "db_name");
+        REQUIRE(std::get<ql::create_collection_t>(ql).collection_ == "table_name");
+    }
+
+    SECTION("create;") {
+        auto ql = sql::parse(resource, "CREATE TABLE db_name.table_name;").ql;
+        REQUIRE(std::holds_alternative<ql::create_collection_t>(ql));
+        REQUIRE(std::get<ql::create_collection_t>(ql).database_ == "db_name");
+        REQUIRE(std::get<ql::create_collection_t>(ql).collection_ == "table_name");
+    }
+
+    SECTION("create; ") {
+        auto ql = sql::parse(resource, "CREATE TABLE db_name.table_name;     ").ql;
+        REQUIRE(std::holds_alternative<ql::create_collection_t>(ql));
+        REQUIRE(std::get<ql::create_collection_t>(ql).database_ == "db_name");
+        REQUIRE(std::get<ql::create_collection_t>(ql).collection_ == "table_name");
+    }
+
+    SECTION("create without database") {
+        auto ql = sql::parse(resource, "CREATE TABLE table_name").ql;
+        REQUIRE(std::holds_alternative<ql::create_collection_t>(ql));
+        REQUIRE(std::get<ql::create_collection_t>(ql).database_.empty());
+        REQUIRE(std::get<ql::create_collection_t>(ql).collection_ == "table_name");
+    }
+
+    SECTION("drop") {
+        auto ql = sql::parse(resource, "DROP TABLE db_name.table_name").ql;
+        REQUIRE(std::holds_alternative<ql::drop_collection_t>(ql));
+        REQUIRE(std::get<ql::drop_collection_t>(ql).database_ == "db_name");
+        REQUIRE(std::get<ql::drop_collection_t>(ql).collection_ == "table_name");
+    }
+
+}

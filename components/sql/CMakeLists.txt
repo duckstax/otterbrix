@@ -19,6 +19,10 @@ set(SOURCE_${PROJECT_NAME}
     parser/database/impl/parser_database_create.cpp
     parser/database/impl/parser_database_drop.cpp
 
+    parser/table/parser_table.cpp
+    parser/table/impl/parser_table_create.cpp
+    parser/table/impl/parser_table_drop.cpp
+
     parser/delete/parser_delete.cpp
     parser/delete/impl/parser_delete_base.cpp
 
