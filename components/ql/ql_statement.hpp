@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <components/document/wrapper_value.hpp>
 #include "base.hpp"
@@ -53,6 +54,8 @@ namespace components::ql {
         database_name_t database_;
         collection_name_t collection_;
     };
+
+    using ql_statement_ptr = boost::intrusive_ptr<ql_statement_t>;
 
 
     struct unused_statement_t : public ql_statement_t {

@@ -44,8 +44,8 @@ namespace components::translator {
 
     auto translator_join(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr {
         auto node = new logical_plan::node_join_t{resource, {ql->database_, ql->collection_}, ql->join};
-        node->append_child(translator_aggregate(resource, &ql->left));
-        node->append_child(translator_aggregate(resource, &ql->right));
+        node->append_child(ql_translator(resource, ql->left.get()));
+        node->append_child(ql_translator(resource, ql->right.get()));
         node->append_expressions(ql->expressions);
         return node;
     }

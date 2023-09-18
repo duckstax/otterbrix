@@ -20,11 +20,11 @@ namespace components::logical_plan {
         std::stringstream stream;
         stream << "$join: {";
         stream << "$type: " << magic_enum::enum_name(type_);
-        for (const auto& expr : expressions()) {
-            stream << ", " << expr->to_string();
-        }
         for (const auto& child : children_) {
             stream << ", " << child->to_string();
+        }
+        for (const auto& expr : expressions()) {
+            stream << ", " << expr->to_string();
         }
         stream << "}";
         return stream.str();
