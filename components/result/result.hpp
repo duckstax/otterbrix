@@ -4,7 +4,7 @@
 #include <variant>
 #include <actor-zeta.hpp>
 #include <components/cursor/cursor.hpp>
-#include <components/ql/base.hpp>
+#include <components/base/collection_full_name.hpp>
 
 namespace components::result {
 

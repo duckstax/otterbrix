@@ -6,7 +6,7 @@
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <core/make_intrusive_ptr.hpp>
 #include <components/expressions/expression.hpp>
-#include <components/ql/base.hpp>
+#include <components/base/collection_full_name.hpp>
 #include "forward.hpp"
 
 namespace components::logical_plan {

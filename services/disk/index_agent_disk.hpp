@@ -5,7 +5,7 @@
 #include <core/excutor.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/log/log.hpp>
-#include <components/ql/base.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <components/session/session.hpp>
 #include "index_disk.hpp"
 
