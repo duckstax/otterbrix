@@ -13,7 +13,7 @@ zlib/1.2.12
 bzip2/1.0.8
 magic_enum/0.8.1
 
-actor-zeta/1.0.0a7@duckstax/stable
+actor-zeta/1.0.0a8@duckstax/stable
 
 
 [options]

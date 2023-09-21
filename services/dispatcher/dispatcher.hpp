@@ -30,7 +30,7 @@ namespace services::dispatcher {
 
     class manager_dispatcher_t;
 
-    class dispatcher_t final : public actor_zeta::basic_async_actor {
+    class dispatcher_t final : public  actor_zeta::basic_actor<dispatcher_t> {
     public:
         dispatcher_t(manager_dispatcher_t*, std::pmr::memory_resource *resource, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
         ~dispatcher_t();
@@ -57,7 +57,33 @@ namespace services::dispatcher {
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         bool check_load_from_wal(components::session::session_id_t& session);
 
+        auto make_type() const noexcept -> const char* const;
+
+        actor_zeta::behavior_t behavior();
+
     private:
+        actor_zeta::behavior_t load_;
+        actor_zeta::behavior_t disk_load_finish_;
+        actor_zeta::behavior_t memory_storage_load_finish_;
+        actor_zeta::behavior_t remove_collection_finish_;
+        actor_zeta::behavior_t wal_load_finish_;
+        actor_zeta::behavior_t execute_ql_;
+        actor_zeta::behavior_t execute_plan_finish_;
+        actor_zeta::behavior_t insert_documents_;
+        actor_zeta::behavior_t insert_finish_;
+        actor_zeta::behavior_t delete_documents_;
+        actor_zeta::behavior_t delete_finish_;
+        actor_zeta::behavior_t update_documents_;
+        actor_zeta::behavior_t update_finish_;
+        actor_zeta::behavior_t size_;
+        actor_zeta::behavior_t size_finish_;
+        actor_zeta::behavior_t close_cursor_;
+        actor_zeta::behavior_t create_index_;
+        actor_zeta::behavior_t create_index_finish_;
+        actor_zeta::behavior_t drop_index_;
+        actor_zeta::behavior_t drop_index_finish_;
+        actor_zeta::behavior_t success_;
+        const std::string name_;
         log_t log_;
         std::pmr::memory_resource *resource_;
         actor_zeta::address_t manager_dispatcher_;
@@ -96,11 +122,17 @@ namespace services::dispatcher {
         }
 
         manager_dispatcher_t(
-            actor_zeta::detail::pmr::memory_resource*,
-            actor_zeta::scheduler_raw,
-            log_t& log);
+           std::pmr::memory_resource*,
+           actor_zeta::scheduler_raw,
+           log_t& log);
 
         ~manager_dispatcher_t() override;
+
+        auto make_type() const noexcept -> const char* const;
+
+        actor_zeta::behavior_t behavior();
+
+        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
 
         ///-----
         void create_dispatcher(const std::string& name_dispatcher) {
@@ -124,10 +156,19 @@ namespace services::dispatcher {
         void drop_index(components::session::session_id_t& session, components::ql::drop_index_t drop_index);
 
     protected:
-        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void override;
 
     private:
+        actor_zeta::behavior_t create_;
+        actor_zeta::behavior_t load_;
+        actor_zeta::behavior_t execute_ql_;
+        actor_zeta::behavior_t insert_documents_;
+        actor_zeta::behavior_t delete_documents_;
+        actor_zeta::behavior_t update_documents_;
+        actor_zeta::behavior_t size_;
+        actor_zeta::behavior_t close_cursor_;
+        actor_zeta::behavior_t create_index_;
+        actor_zeta::behavior_t drop_index_;
         spin_lock lock_;
         log_t log_;
         actor_zeta::scheduler_raw e_;

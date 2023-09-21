@@ -26,40 +26,53 @@ namespace services::dispatcher {
         actor_zeta::address_t mdisk,
         log_t& log,
         std::string name)
-        : actor_zeta::basic_async_actor(manager_dispatcher, std::move(name))
+        : actor_zeta::basic_async_actor(manager_dispatcher)
+        ,  load_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::load),this, &dispatcher_t::load))
+        ,  disk_load_finish_(actor_zeta::make_behavior(resource(),disk::handler_id(disk::route::load_finish),this, &dispatcher_t::load_from_disk_result))
+        ,  memory_storage_load_finish_(actor_zeta::make_behavior(resource(),memory_storage::handler_id(memory_storage::route::load_finish),this, &dispatcher_t::load_from_memory_resource_result))
+        ,  remove_collection_finish_(actor_zeta::make_behavior(resource(),disk::handler_id(disk::route::remove_collection_finish),this, &dispatcher_t::drop_collection_finish_from_disk))
+        ,  wal_load_finish_(actor_zeta::make_behavior(resource(),wal::handler_id(wal::route::load_finish),this, &dispatcher_t::load_from_wal_result))
+        ,  execute_ql_(actor_zeta::make_behavior(resource(),handler_id(route::execute_ql),this, &dispatcher_t::execute_ql))
+        ,  execute_plan_finish_(actor_zeta::make_behavior(resource(),memory_storage::handler_id(memory_storage::route::execute_plan_finish),this, &dispatcher_t::execute_ql_finish))
+        ,  insert_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::insert_documents),this, &dispatcher_t::insert_documents))
+        ,  insert_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::insert_finish),this, &dispatcher_t::insert_finish))
+        ,  delete_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::delete_documents),this, &dispatcher_t::delete_documents))
+        ,  delete_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::delete_finish),this, &dispatcher_t::delete_finish))
+        ,  update_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::update_documents),this, &dispatcher_t::update_documents))
+        ,  update_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::update_finish),this, &dispatcher_t::update_finish))
+        ,  size_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::size),this, &dispatcher_t::size))
+        ,  size_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::size_finish),this, &dispatcher_t::size_finish))
+        ,  close_cursor_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::close_cursor),this, &dispatcher_t::close_cursor))
+        ,  create_index_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::create_index),this, &dispatcher_t::create_index))
+        ,  create_index_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::create_index_finish),this, &dispatcher_t::create_index_finish))
+        ,  drop_index_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_index),this, &dispatcher_t::drop_index))
+        ,  drop_index_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_index_finish),this, &dispatcher_t::drop_index_finish))
+        ,  success_(actor_zeta::make_behavior(resource(),wal::handler_id(wal::route::success),this, &dispatcher_t::wal_success))
+        , name_(std::move(name))
         , log_(log.clone())
         , resource_(resource)
         , manager_dispatcher_(manager_dispatcher->address())
         , memory_storage_(std::move(mstorage))
         , manager_wal_(std::move(mwal))
         , manager_disk_(std::move(mdisk)) {
-        trace(log_, "dispatcher_t::dispatcher_t start name:{}", type());
-        add_handler(core::handler_id(core::route::load), &dispatcher_t::load);
-        add_handler(disk::handler_id(disk::route::load_finish), &dispatcher_t::load_from_disk_result);
-        add_handler(memory_storage::handler_id(memory_storage::route::load_finish), &dispatcher_t::load_from_memory_resource_result);
-        add_handler(disk::handler_id(disk::route::remove_collection_finish), &dispatcher_t::drop_collection_finish_from_disk);
-        add_handler(wal::handler_id(wal::route::load_finish), &dispatcher_t::load_from_wal_result);
-        add_handler(handler_id(route::execute_ql), &dispatcher_t::execute_ql);
-        add_handler(memory_storage::handler_id(memory_storage::route::execute_plan_finish), &dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::insert_documents), &dispatcher_t::insert_documents);
-        add_handler(collection::handler_id(collection::route::insert_finish), &dispatcher_t::insert_finish);
-        add_handler(collection::handler_id(collection::route::delete_documents), &dispatcher_t::delete_documents);
-        add_handler(collection::handler_id(collection::route::delete_finish), &dispatcher_t::delete_finish);
-        add_handler(collection::handler_id(collection::route::update_documents), &dispatcher_t::update_documents);
-        add_handler(collection::handler_id(collection::route::update_finish), &dispatcher_t::update_finish);
-        add_handler(collection::handler_id(collection::route::size), &dispatcher_t::size);
-        add_handler(collection::handler_id(collection::route::size_finish), &dispatcher_t::size_finish);
-        add_handler(collection::handler_id(collection::route::close_cursor), &dispatcher_t::close_cursor);
-        add_handler(collection::handler_id(collection::route::create_index), &dispatcher_t::create_index);
-        add_handler(collection::handler_id(collection::route::create_index_finish), &dispatcher_t::create_index_finish);
-        add_handler(collection::handler_id(collection::route::drop_index), &dispatcher_t::drop_index);
-        add_handler(collection::handler_id(collection::route::drop_index_finish), &dispatcher_t::drop_index_finish);
-        add_handler(wal::handler_id(wal::route::success), &dispatcher_t::wal_success);
-        trace(log_, "dispatcher_t::dispatcher_t finish name:{}", type());
+        trace(log_, "dispatcher_t::dispatcher_t start name:{}", make_type());
     }
 
     dispatcher_t::~dispatcher_t() {
         trace(log_, "delete dispatcher_t");
+    }
+
+    auto dispatcher_t::make_type() const noexcept -> const char* const{
+        return name_.c_str();
+    }
+
+    actor_zeta::behavior_t behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                }
+            });
     }
 
     void dispatcher_t::load(components::session::session_id_t &session, actor_zeta::address_t sender) {
@@ -451,28 +464,24 @@ namespace services::dispatcher {
         return {logic_plan, parameters};
     }
 
-
     manager_dispatcher_t::manager_dispatcher_t(
-        actor_zeta::detail::pmr::memory_resource* mr,
+        std::pmr::memory_resource* resource,
         actor_zeta::scheduler_raw scheduler,
         log_t& log)
-        : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
+        : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(resource)
+        , create_(actor_zeta::make_behavior(resource(),handler_id(route::create), this, &manager_dispatcher_t::create))
+        , load_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::load), this, &manager_dispatcher_t::load))
+        , execute_ql_(actor_zeta::make_behavior(resource(),handler_id(route::execute_ql), this, &manager_dispatcher_t::execute_ql))
+        , insert_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::insert_documents), this, &manager_dispatcher_t::insert_documents))
+        , delete_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::delete_documents), this, &manager_dispatcher_t::delete_documents))
+        , update_documents_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::update_documents), this, &manager_dispatcher_t::update_documents))
+        , size_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::size), this, &manager_dispatcher_t::size))
+        , close_cursor_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::close_cursor), this, &manager_dispatcher_t::close_cursor))
+        , create_index_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::create_index), this, &manager_dispatcher_t::create_index))
+        , drop_index_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_index), this, &manager_dispatcher_t::drop_index))
+        , sync_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::sync), this, &manager_dispatcher_t::sync))
         , log_(log.clone())
         , e_(scheduler) {
-        ZoneScoped;
-        trace(log_, "manager_dispatcher_t::manager_dispatcher_t ");
-        add_handler(handler_id(route::create), &manager_dispatcher_t::create);
-        add_handler(core::handler_id(core::route::load), &manager_dispatcher_t::load);
-        add_handler(handler_id(route::execute_ql), &manager_dispatcher_t::execute_ql);
-        add_handler(collection::handler_id(collection::route::insert_documents), &manager_dispatcher_t::insert_documents);
-        add_handler(collection::handler_id(collection::route::delete_documents), &manager_dispatcher_t::delete_documents);
-        add_handler(collection::handler_id(collection::route::update_documents), &manager_dispatcher_t::update_documents);
-        add_handler(collection::handler_id(collection::route::size), &manager_dispatcher_t::size);
-        add_handler(collection::handler_id(collection::route::close_cursor), &manager_dispatcher_t::close_cursor);
-        add_handler(collection::handler_id(collection::route::create_index), &manager_dispatcher_t::create_index);
-        add_handler(collection::handler_id(collection::route::drop_index), &manager_dispatcher_t::drop_index);
-        add_handler(core::handler_id(core::route::sync), &manager_dispatcher_t::sync);
-        trace(log_, "manager_dispatcher_t finish");
     }
 
     manager_dispatcher_t::~manager_dispatcher_t() {
@@ -480,16 +489,72 @@ namespace services::dispatcher {
         trace(log_, "delete manager_dispatcher_t");
     }
 
-    auto manager_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_;
-    }
-
     //NOTE: behold thread-safety!
     auto manager_dispatcher_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
         ZoneScoped;
         std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
-        execute(this, current_message());
+        behavior()(current_message());
+    }
+
+    auto manager_dispatcher_t::make_type() const noexcept -> const char* const {
+        return "manager_dispatcher";
+    }
+
+    auto manager_dispatcher_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
+        return e_;
+    }
+
+    actor_zeta::behavior_t manager_dispatcher_t::behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                    case handler_id(route::create): {
+                        create_(msg);
+                        break;
+                    }
+                    case core::handler_id(core::route::load): {
+                        load_(msg);
+                        break;
+                    }
+                    case handler_id(route::execute_ql): {
+                        execute_ql_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::insert_documents): {
+                        insert_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::delete_documents): {
+                        delete_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::update_documents): {
+                        update_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::size): {
+                        size_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::close_cursor): {
+                        close_cursor_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::create_index): {
+                        create_index_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::drop_index): {
+                        drop_index_(msg);
+                        break;
+                    }
+                    case core::handler_id(core::route::sync):{
+                        break;
+                    }
+                }
+            });
     }
 
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
@@ -531,8 +596,7 @@ namespace services::dispatcher {
         actor_zeta::send(dispatcher(), address(), collection::handler_id(collection::route::size), session, std::move(database_name), std::move(collection), current_message()->sender());
     }
 
-    void manager_dispatcher_t::close_cursor(components::session::session_id_t&) {
-    }
+    void manager_dispatcher_t::close_cursor(components::session::session_id_t&) {}
 
     void manager_dispatcher_t::create_index(components::session::session_id_t &session, components::ql::create_index_t index) {
         trace(log_, "manager_dispatcher_t::create_index session: {} , index: {}", session.data(), index.name());
