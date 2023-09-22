@@ -26,8 +26,8 @@ TEST_CASE("parser::join") {
 
     auto* resource = std::pmr::get_default_resource();
 
-    TEST_SIMPLE_JOIN(R"_(select * from col1 join col2 on;)_",
-                     R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}})_",
+    TEST_SIMPLE_JOIN(R"_(select * from col1 join col2 on col1.id = col2.id_col1;)_",
+                     R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
                      vec());
 
 }

@@ -6,6 +6,7 @@ set(SOURCE_${PROJECT_NAME}
         aggregate_expression.cpp
         scalar_expression.cpp
         sort_expression.cpp
+        join_expression.cpp
 )
 
 add_library(rocketjoe_${PROJECT_NAME}

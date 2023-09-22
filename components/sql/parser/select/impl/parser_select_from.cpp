@@ -122,6 +122,10 @@ namespace components::sql::select::impl {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
             }
             token = lexer.next_not_whitespace_token();
+            res = parse_join_on(resource, lexer, *join);
+            if (res.is_error()) {
+                return res;
+            }
         }
 
         // where
