@@ -230,23 +230,31 @@ namespace components::sql::impl {
     }
 
     parser_result parse_join_on(std::pmr::memory_resource* resource, lexer_t& lexer, ql::join_t& join) {
-        expressions::join_expression_field left;
-        expressions::join_expression_field right;
-        auto res = parse_join_on_expression(resource, lexer, left);
-        if (res.is_error()) {
-            return res;
-        }
         auto token = lexer.current_significant_token();
-        auto compare = get_compare_expression(token);
-        if (compare == expressions::compare_type::invalid) {
-            return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+        while (!is_token_end_query(token) && !is_token_join_end(token)) {
+            expressions::join_expression_field left;
+            expressions::join_expression_field right;
+            auto res = parse_join_on_expression(resource, lexer, left);
+            if (res.is_error()) {
+                return res;
+            }
+            token = lexer.current_significant_token();
+            auto compare = get_compare_expression(token);
+            if (compare == expressions::compare_type::invalid) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            token = lexer.next_not_whitespace_token();
+            res = parse_join_on_expression(resource, lexer, right);
+            if (res.is_error()) {
+                return res;
+            }
+            join.expressions.push_back(expressions::make_join_expression(resource, compare, std::move(left), std::move(right)));
+            token = lexer.current_significant_token();
+            if (!is_token_end_query(token) && !is_token_join_end(token) && !is_token_join_on_end(token)) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            token = lexer.next_not_whitespace_token();
         }
-        token = lexer.next_not_whitespace_token();
-        res = parse_join_on_expression(resource, lexer, right);
-        if (res.is_error()) {
-            return res;
-        }
-        join.expressions.push_back(expressions::make_join_expression(resource, compare, std::move(left), std::move(right)));
         return true;
     }
 
