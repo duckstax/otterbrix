@@ -14,6 +14,7 @@ namespace components::sql::impl {
         };
 
         static const std::vector<mask_element_t> join_stop_words {
+            mask_element_t{token_type::bare_word, "join"},
             mask_element_t{token_type::bare_word, "where"},
             mask_element_t{token_type::bare_word, "group"},
             mask_element_t{token_type::bare_word, "order"},
@@ -253,7 +254,9 @@ namespace components::sql::impl {
             if (!is_token_end_query(token) && !is_token_join_end(token) && !is_token_join_on_end(token)) {
                 return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
             }
-            token = lexer.next_not_whitespace_token();
+            if (is_token_join_on_end(token)) {
+                token = lexer.next_not_whitespace_token();
+            }
         }
         return true;
     }

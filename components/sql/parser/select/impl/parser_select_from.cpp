@@ -101,30 +101,35 @@ namespace components::sql::select::impl {
         // join
         ql::join_ptr join = nullptr;
         token = lexer.next_not_whitespace_token();
-        ql::join_ptr sub_join = nullptr;
-        res = parse_join_type(lexer, sub_join);
-        if (res.is_error()) {
-            return res;
-        }
-        if (sub_join) {
-            sub_join->left = join
-                    ? static_cast<ql::ql_statement_ptr>(join)
-                    : static_cast<ql::ql_statement_ptr>(agg);
-            sub_join->right = ql::make_aggregate("", "");
-            lexer.next_not_whitespace_token();
-            res = parse_table_name(lexer, sub_join);
+        while (true) {
+            token = lexer.current_significant_token();
+            ql::join_ptr sub_join = nullptr;
+            res = parse_join_type(lexer, sub_join);
             if (res.is_error()) {
                 return res;
             }
-            join = sub_join;
-            token = lexer.next_not_whitespace_token();
-            if (mask_elem_on != token) {
-                return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
-            }
-            token = lexer.next_not_whitespace_token();
-            res = parse_join_on(resource, lexer, *join);
-            if (res.is_error()) {
-                return res;
+            if (sub_join) {
+                sub_join->left = join
+                        ? static_cast<ql::ql_statement_ptr>(join)
+                        : static_cast<ql::ql_statement_ptr>(agg);
+                sub_join->right = ql::make_aggregate("", "");
+                lexer.next_not_whitespace_token();
+                res = parse_table_name(lexer, sub_join);
+                if (res.is_error()) {
+                    return res;
+                }
+                join = sub_join;
+                token = lexer.next_not_whitespace_token();
+                if (mask_elem_on != token) {
+                    return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
+                }
+                token = lexer.next_not_whitespace_token();
+                res = parse_join_on(resource, lexer, *join);
+                if (res.is_error()) {
+                    return res;
+                }
+            } else {
+                break;
             }
         }
 

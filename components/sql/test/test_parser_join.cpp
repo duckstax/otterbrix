@@ -34,4 +34,10 @@ TEST_CASE("parser::join") {
                      R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1], $eq: [.col1.name, .col2.name]})_",
                      vec());
 
+    TEST_SIMPLE_JOIN(R"_(select * from col1 join col2 on col1.id = col2.id_col1 )_"
+                     R"_(join col3 on col1.id = col3.id_col1 and col2.id = col3.id_col2;)_",
+                     R"_($join: {$type: inner, $join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]}, )_"
+                     R"_($aggregate: {}, $eq: [.col1.id, .col3.id_col1], $eq: [.col2.id, .col3.id_col2]})_",
+                     vec());
+
 }
