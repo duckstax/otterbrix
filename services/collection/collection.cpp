@@ -18,20 +18,22 @@ namespace services::collection {
         , name_(name)
         , mdisk_(std::move(mdisk))
         , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
-        , cursor_storage_(context_->resource()) {
-        add_handler(handler_id(route::create_documents), &collection_t::create_documents);
-        add_handler(handler_id(route::insert_documents), &collection_t::insert_documents);
-        add_handler(handler_id(route::delete_documents), &collection_t::delete_documents);
-        add_handler(handler_id(route::update_documents), &collection_t::update_documents);
-        add_handler(handler_id(route::execute_plan), &collection_t::execute_plan);
-        add_handler(handler_id(route::size), &collection_t::size);
-        add_handler(handler_id(route::drop_collection), &collection_t::drop);
-        add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
-        add_handler(handler_id(route::create_index), &collection_t::create_index);
-        add_handler(handler_id(index::route::success_create), &collection_t::create_index_finish);
-        add_handler(handler_id(route::drop_index), &collection_t::drop_index);
-        add_handler(handler_id(index::route::success), &collection_t::index_modify_finish);
-        add_handler(handler_id(index::route::success_find), &collection_t::index_find_finish);
+        , cursor_storage_(context_->resource())
+        , create_documents_(resource(),handler_id(route::create_documents),this, &collection_t::create_documents))
+        , insert_documents_(resource(),handler_id(route::insert_documents),this, &collection_t::insert_documents))
+        , delete_documents_(resource(),handler_id(route::delete_documents),this, &collection_t::delete_documents))
+        , update_documents_(resource(),handler_id(route::update_documents),this, &collection_t::update_documents))
+        , execute_plan_(resource(),handler_id(route::execute_plan),this, &collection_t::execute_plan))
+        , size_(resource(),handler_id(route::size),this, &collection_t::size))
+        , drop_collection_(resource(),handler_id(route::drop_collection),this, &collection_t::drop))
+        , close_cursor_(resource(),handler_id(route::close_cursor),this, &collection_t::close_cursor))
+        , create_index_(resource(),handler_id(route::create_index),this, &collection_t::create_index))
+        , success_create_(resource(),handler_id(index::route::success_create),this, &collection_t::create_index_finish))
+        , drop_index_(resource(),handler_id(route::drop_index),this, &collection_t::drop_index))
+        , success_(resource(),handler_id(index::route::success),this, &collection_t::index_modify_finish))
+        , success_find_(resource(),handler_id(index::route::success_find),this, &collection_t::index_find_finish)
+    {
+
     }
 
     collection_t::~collection_t() {

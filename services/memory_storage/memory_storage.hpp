@@ -58,6 +58,14 @@ namespace services {
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
 
     private:
+        actor_zeta::behavior_t sync_;
+        actor_zeta::behavior_t execute_plan_;
+        actor_zeta::behavior_t load_;
+
+        actor_zeta::behavior_t drop_collection_finish_;
+        actor_zeta::behavior_t create_documents_finish_;
+        actor_zeta::behavior_t execute_plan_finish_;
+
         spin_lock lock_;
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};

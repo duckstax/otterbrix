@@ -13,15 +13,16 @@ namespace services::disk {
                                            components::ql::index_compare compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
+              insert_(handler_id(index::route::insert), &index_agent_disk_t::insert);
+    remove_(handler_id(index::route::remove), &index_agent_disk_t::remove);
+    find_(handler_id(index::route::find), &index_agent_disk_t::find);
+    drop_(handler_id(index::route::drop), &index_agent_disk_t::drop);
         , resource_(resource)
         , log_(log.clone())
         , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type))
         , collection_name_(collection_name) {
         trace(log_, "index_agent_disk::create {}", index_name);
-        add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
-        add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
-        add_handler(handler_id(index::route::find), &index_agent_disk_t::find);
-        add_handler(handler_id(index::route::drop), &index_agent_disk_t::drop);
+
     }
 
     index_agent_disk_t::~index_agent_disk_t() {

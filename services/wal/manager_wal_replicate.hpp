@@ -64,6 +64,21 @@ namespace services::wal {
         void create_index(session_id_t& session, components::ql::create_index_t& data);
 
     private:
+        actor_zeta::behavior_t create_;
+        actor_zeta::behavior_t load_;
+        actor_zeta::behavior_t create_database_;
+        actor_zeta::behavior_t drop_database_;
+        actor_zeta::behavior_t create_collection_;
+        actor_zeta::behavior_t drop_collection_;
+        actor_zeta::behavior_t insert_one_;
+        actor_zeta::behavior_t insert_many_;
+        actor_zeta::behavior_t delete_one_;
+        actor_zeta::behavior_t delete_many_;
+        actor_zeta::behavior_t update_one_;
+        actor_zeta::behavior_t update_many_;
+        actor_zeta::behavior_t core_sync_;
+        actor_zeta::behavior_t create_index_;
+
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
         actor_zeta::address_t manager_dispatcher_ = actor_zeta::address_t::empty_address();
         configuration::config_wal config_;
@@ -82,6 +97,21 @@ namespace services::wal {
 
         template<class ...Args>
         auto nothing(Args&&...) -> void {}
+
+        actor_zeta::behavior_t create_;
+        actor_zeta::behavior_t load_;
+        actor_zeta::behavior_t create_database_;
+        actor_zeta::behavior_t drop_database_;
+        actor_zeta::behavior_t create_collection_;
+        actor_zeta::behavior_t drop_collection_;
+        actor_zeta::behavior_t insert_one_;
+        actor_zeta::behavior_t insert_many_;
+        actor_zeta::behavior_t delete_one_;
+        actor_zeta::behavior_t delete_many_;
+        actor_zeta::behavior_t update_one_;
+        actor_zeta::behavior_t update_many_;
+        actor_zeta::behavior_t core_sync_;
+        actor_zeta::behavior_t create_index_;
     };
 
 } //namespace services::wal

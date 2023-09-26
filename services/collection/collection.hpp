@@ -123,6 +123,20 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
+        actor_zeta::behavior_t create_documents_;
+        actor_zeta::behavior_t insert_documents_;
+        actor_zeta::behavior_t delete_documents_;
+        actor_zeta::behavior_t update_documents_;
+        actor_zeta::behavior_t execute_plan_;
+        actor_zeta::behavior_t size_;
+        actor_zeta::behavior_t drop_collection_;
+        actor_zeta::behavior_t close_cursor_;
+        actor_zeta::behavior_t create_index_;
+        actor_zeta::behavior_t success_create_;
+        actor_zeta::behavior_t drop_index_;
+        actor_zeta::behavior_t success_;
+        actor_zeta::behavior_t success_find_;
+
         std::size_t size_() const;
         bool drop_();
 

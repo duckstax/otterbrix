@@ -37,6 +37,10 @@ namespace services::disk {
         void find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare);
 
     private:
+        actor_zeta::behavior_t insert_;
+        actor_zeta::behavior_t remove_;
+        actor_zeta::behavior_t find_;
+        actor_zeta::behavior_t drop_;
         actor_zeta::detail::pmr::memory_resource* resource_;
         log_t log_;
         std::unique_ptr<index_disk_t> index_disk_;

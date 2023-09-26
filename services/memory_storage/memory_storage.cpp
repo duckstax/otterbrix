@@ -25,16 +25,13 @@ namespace services {
         , log_(log.clone())
         , e_(scheduler)
         , databases_(resource)
-        , collections_(resource) {
-        ZoneScoped;
-        trace(log_, "memory_storage start thread pool");
-        add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
-        add_handler(handler_id(route::execute_plan), &memory_storage_t::execute_plan);
-        add_handler(handler_id(route::load), &memory_storage_t::load);
-
-        add_handler(collection::handler_id(collection::route::drop_collection_finish), &memory_storage_t::drop_collection_finish_);
-        add_handler(collection::handler_id(collection::route::create_documents_finish), &memory_storage_t::create_documents_finish_);
-        add_handler(collection::handler_id(collection::route::execute_plan_finish), &memory_storage_t::execute_plan_finish_);
+        , collections_(resource)
+        , sync_(resource(),core::handler_id(core::route::sync),this, &memory_storage_t::sync)
+        , execute_plan_(resource(),handler_id(route::execute_plan),this &memory_storage_t::execute_plan)
+        , load_(resource(),handler_id(route::load),this &memory_storage_t::load)
+        , drop_collection_finish_(resource(),collection::handler_id(collection::route::drop_collection_finish),this &memory_storage_t::drop_collection_finish_)
+        , create_documents_finish_(resource(),collection::handler_id(collection::route::create_documents_finish),this &memory_storage_t::create_documents_finish_)
+        , execute_plan_finish_(resource(),collection::handler_id(collection::route::execute_plan_finish),this &memory_storage_t::execute_plan_finish_) {
     }
 
     memory_storage_t::~memory_storage_t() {

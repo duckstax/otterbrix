@@ -54,6 +54,19 @@ namespace services::wal {
         size_tt read_size(size_t start_index) const;
         buffer_t read(size_t start_index, size_t finish_index) const;
 
+        actor_zeta::behavior_t  load_;
+        actor_zeta::behavior_t create_database_;
+        actor_zeta::behavior_t drop_database_;
+        actor_zeta::behavior_t create_collection_;
+        actor_zeta::behavior_t drop_collection_;
+        actor_zeta::behavior_t insert_one_;
+        actor_zeta::behavior_t insert_many_;
+        actor_zeta::behavior_t delete_one_;
+        actor_zeta::behavior_t delete_many_;
+        actor_zeta::behavior_t update_one_;
+        actor_zeta::behavior_t update_many_;
+        actor_zeta::behavior_t create_index_;
+
         log_t log_;
         configuration::config_wal config_;
         atomic_id_t id_{0};

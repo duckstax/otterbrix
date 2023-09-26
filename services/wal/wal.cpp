@@ -26,19 +26,20 @@ namespace services::wal {
     wal_replicate_t::wal_replicate_t(base_manager_wal_replicate_t*manager, log_t& log, configuration::config_wal config)
         : actor_zeta::basic_async_actor(manager, "wal")
         , log_(log.clone())
-        , config_(std::move(config)) {
-        add_handler(handler_id(route::load), &wal_replicate_t::load);
-        add_handler(handler_id(route::create_database), &wal_replicate_t::create_database);
-        add_handler(handler_id(route::drop_database), &wal_replicate_t::drop_database);
-        add_handler(handler_id(route::create_collection), &wal_replicate_t::create_collection);
-        add_handler(handler_id(route::drop_collection), &wal_replicate_t::drop_collection);
-        add_handler(handler_id(route::insert_one), &wal_replicate_t::insert_one);
-        add_handler(handler_id(route::insert_many), &wal_replicate_t::insert_many);
-        add_handler(handler_id(route::delete_one), &wal_replicate_t::delete_one);
-        add_handler(handler_id(route::delete_many), &wal_replicate_t::delete_many);
-        add_handler(handler_id(route::update_one), &wal_replicate_t::update_one);
-        add_handler(handler_id(route::update_many), &wal_replicate_t::update_many);
-        add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
+        , config_(std::move(config))
+        , load_(resource(),handler_id(route::load),this, &wal_replicate_t::load))
+        , create_database_(resource(),handler_id(route::create_database),this, &wal_replicate_t::create_database))
+        , drop_database_(resource(),handler_id(route::drop_database),this, &wal_replicate_t::drop_database))
+        , create_collection_(resource(), handler_id(route::create_collection),this, &wal_replicate_t::create_collection))
+        , drop_collection_(resource(), handler_id(route::drop_collection),this, &wal_replicate_t::drop_collection))
+        , insert_one_(resource(), handler_id(route::insert_one),this, &wal_replicate_t::insert_one))
+        , insert_many_(resource(), handler_id(route::insert_many),this, &wal_replicate_t::insert_many))
+        , delete_one_(resource(), handler_id(route::delete_one),this, &wal_replicate_t::delete_one))
+        , delete_many_(resource(), handler_id(route::delete_many),this, &wal_replicate_t::delete_many))
+        , update_one_(resource(), handler_id(route::update_one),this, &wal_replicate_t::update_one))
+        , update_many_(resource(), handler_id(route::update_many),this, &wal_replicate_t::update_many))
+        , create_index_(resource(), handler_id(route::create_index),this, &wal_replicate_t::create_index))
+        {
         if (config_.sync_to_disk) {
             if (!file_exist_(config_.path)) {
                 std::filesystem::create_directory(config_.path);
