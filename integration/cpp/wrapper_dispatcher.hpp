@@ -27,7 +27,7 @@ namespace duck_charmer {
     class wrapper_dispatcher_t final : public actor_zeta::cooperative_supervisor<wrapper_dispatcher_t> {
     public:
         /// blocking method
-        wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
+        wrapper_dispatcher_t(actor_zeta::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
         auto create_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
@@ -50,7 +50,7 @@ namespace duck_charmer {
 
     protected:
 
-        auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;
+        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* final;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
 
     private:

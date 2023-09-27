@@ -30,13 +30,13 @@ std::string debug(const T& value) {
 }
 
 TEST_CASE("aggregate::match") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto *resource = actor_zeta::pmr::get_default_resource();
     auto match = make_match(make_compare_expression(resource, compare_type::eq, key("key"), parameter_id_t(1)));
     REQUIRE(debug(match) == R"_($match: {"key": {$eq: #1}})_");
 }
 
 TEST_CASE("aggregate::group") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto *resource = actor_zeta::pmr::get_default_resource();
     {
         group_t group;
         auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
@@ -75,7 +75,7 @@ TEST_CASE("aggregate::sort") {
 }
 
 TEST_CASE("aggregate") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto *resource = actor_zeta::pmr::get_default_resource();
     SECTION("aggregate::only_match") {
         aggregate_statement aggregate("database", "collection");
         aggregate.append(operator_type::match, make_match(make_compare_expression(resource, compare_type::eq, key("key"), parameter_id_t(1))));

@@ -82,7 +82,7 @@ namespace services::collection {
         storage_t storage_;
     };
 
-    class collection_t final : public actor_zeta::basic_async_actor {
+    class collection_t final : public actor_zeta::basic_actor<collection_t> {
     public:
         collection_t(services::memory_storage_t* memory_storage, const collection_full_name_t& name, log_t& log, actor_zeta::address_t mdisk);
         ~collection_t();
@@ -137,7 +137,7 @@ namespace services::collection {
         actor_zeta::behavior_t success_;
         actor_zeta::behavior_t success_find_;
 
-        std::size_t size_() const;
+        std::size_t size_impl_() const;
         bool drop_();
 
         log_t& log() noexcept;

@@ -4,7 +4,6 @@
 #include <variant>
 
 #include <actor-zeta.hpp>
-#include <actor-zeta/detail/memory_resource.hpp>
 
 #include <core/spinlock/spinlock.hpp>
 #include <core/excutor.hpp>

@@ -39,7 +39,7 @@ private:
 
 template <bool on_wal, bool on_disk>
 void init_collection(const collection_name_t& collection_name) {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto* resource = actor_zeta::pmr::get_default_resource();
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
     auto session = duck_charmer::session_id_t();
     dispatcher->create_database(session, database_name);
@@ -88,7 +88,7 @@ aggregate_statement_raw_ptr create_aggregate(const collection_name_t& collection
     aggregate::match_t match;
     if (!key.empty()) {
         aggregate->add_parameter(core::parameter_id_t{1}, value);
-        match.query = make_compare_expression(actor_zeta::detail::pmr::get_default_resource(), compare,
+        match.query = make_compare_expression(actor_zeta::pmr::get_default_resource(), compare,
                                               components::expressions::key_t{key}, core::parameter_id_t{1});
     }
     aggregate->append(aggregate::operator_type::match, match);

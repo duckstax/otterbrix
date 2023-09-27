@@ -20,18 +20,55 @@ namespace services {
     }
 
 
-    memory_storage_t::memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log)
-        : actor_zeta::cooperative_supervisor<memory_storage_t>(resource, "memory_storage")
+    memory_storage_t::memory_storage_t(actor_zeta::pmr::memory_resource* o_resource, actor_zeta::scheduler_raw scheduler, log_t& log)
+        : actor_zeta::cooperative_supervisor<memory_storage_t>(o_resource)
         , log_(log.clone())
         , e_(scheduler)
-        , databases_(resource)
-        , collections_(resource)
+        , databases_(o_resource)
+        , collections_(o_resource)
         , sync_(resource(),core::handler_id(core::route::sync),this, &memory_storage_t::sync)
         , execute_plan_(resource(),handler_id(route::execute_plan),this &memory_storage_t::execute_plan)
         , load_(resource(),handler_id(route::load),this &memory_storage_t::load)
-        , drop_collection_finish_(resource(),collection::handler_id(collection::route::drop_collection_finish),this &memory_storage_t::drop_collection_finish_)
-        , create_documents_finish_(resource(),collection::handler_id(collection::route::create_documents_finish),this &memory_storage_t::create_documents_finish_)
-        , execute_plan_finish_(resource(),collection::handler_id(collection::route::execute_plan_finish),this &memory_storage_t::execute_plan_finish_) {
+        , drop_collection_finish_(resource(),collection::handler_id(collection::route::drop_collection_finish),this &memory_storage_t::drop_collection_finish)
+        , create_documents_finish_(resource(),collection::handler_id(collection::route::create_documents_finish),this &memory_storage_t::create_documents_finish)
+        , execute_plan_finish_(resource(),collection::handler_id(collection::route::execute_plan_finish),this &memory_storage_t::execute_plan_finish) {
+    }
+
+    actor_zeta::behavior_t memory_storage_t::behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                    case core::handler_id(core::route::sync): {
+                        sync_(msg);
+                        break;
+                    }
+                    case handler_id(route::execute_plan): {
+                        execute_plan_(msg);
+                        break;
+                    }
+                    case handler_id(route::load): {
+                        load_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::drop_collection_finish): {
+                        drop_collection_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::create_documents_finish): {
+                        create_documents_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::execute_plan_finish): {
+                        execute_plan_finish_(msg);
+                        break;
+                    }
+                }
+            });
+    }
+
+    auto memory_storage_t::make_type() const noexcept -> const char* const{
+        return "memory_storage";
     }
 
     memory_storage_t::~memory_storage_t() {
@@ -51,19 +88,19 @@ namespace services {
 
         switch (logical_plan->type()) {
         case node_type::create_database_t:
-            create_database_(session, std::move(logical_plan));
+            create_database(session, std::move(logical_plan));
             break;
         case node_type::drop_database_t:
-            drop_database_(session, std::move(logical_plan));
+            drop_database(session, std::move(logical_plan));
             break;
         case node_type::create_collection_t:
-            create_collection_(session, std::move(logical_plan));
+            create_collection(session, std::move(logical_plan));
             break;
         case node_type::drop_collection_t:
-            drop_collection_(session, std::move(logical_plan));
+            drop_collection(session, std::move(logical_plan));
             break;
         default:
-            execute_plan_(session, std::move(logical_plan), std::move(parameters));
+            execute_plan_start(session, std::move(logical_plan), std::move(parameters));
             break;
         }
     }
@@ -97,7 +134,7 @@ namespace services {
         }
     }
 
-    actor_zeta::scheduler::scheduler_abstract_t *memory_storage_t::scheduler_impl() noexcept {
+    actor_zeta::scheduler::scheduler_abstract_t *memory_storage_t::make_scheduler() noexcept {
         return e_;
     }
 
@@ -105,19 +142,19 @@ namespace services {
         ZoneScoped;
         std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
-        execute(this, current_message());
+        behavior()(current_message());
     }
 
-    bool memory_storage_t::is_exists_database_(const database_name_t& name) const {
+    bool memory_storage_t::is_exists_database(const database_name_t& name) const {
         return databases_.find(name) != databases_.end();
     }
 
-    bool memory_storage_t::is_exists_collection_(const collection_full_name_t& name) const {
+    bool memory_storage_t::is_exists_collection(const collection_full_name_t& name) const {
         return collections_.contains(name);
     }
 
-    bool memory_storage_t::check_database_(components::session::session_id_t& session, const database_name_t& name) {
-        if (!is_exists_database_(name)) {
+    bool memory_storage_t::check_database(components::session::session_id_t& session, const database_name_t& name) {
+        if (!is_exists_database(name)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
                              make_error(error_code_t::database_not_exists, "database not exists"));
             return false;
@@ -125,9 +162,9 @@ namespace services {
         return true;
     }
 
-    bool memory_storage_t::check_collection_(components::session::session_id_t& session, const collection_full_name_t& name) {
-        if (check_database_(session, name.database)) {
-            if (!is_exists_collection_(name)) {
+    bool memory_storage_t::check_collection(components::session::session_id_t& session, const collection_full_name_t& name) {
+        if (check_database(session, name.database)) {
+            if (!is_exists_collection(name)) {
                 actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
                                  make_error(error_code_t::collection_not_exists, "collection not exists"));
                 return false;
@@ -137,9 +174,9 @@ namespace services {
         return false;
     }
 
-    void memory_storage_t::create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
+    void memory_storage_t::create_database(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
-        if (is_exists_database_(logical_plan->database_name())) {
+        if (is_exists_database(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
                              make_error(error_code_t::database_already_exists, "database already exists"));
             return;
@@ -149,19 +186,19 @@ namespace services {
                          make_result(empty_result_t()));
     }
 
-    void memory_storage_t::drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
+    void memory_storage_t::drop_database(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
-        if (check_database_(session, logical_plan->database_name())) {
+        if (check_database(session, logical_plan->database_name())) {
             databases_.erase(logical_plan->database_name());
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
                              make_result(empty_result_t()));
         }
     }
 
-    void memory_storage_t::create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
+    void memory_storage_t::create_collection(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full().to_string());
-        if (check_database_(session, logical_plan->database_name())) {
-            if (is_exists_collection_(logical_plan->collection_full())) {
+        if (check_database(session, logical_plan->database_name())) {
+            if (is_exists_collection(logical_plan->collection_full())) {
                 actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
                                  make_error(error_code_t::collection_already_exists, "collection already exists"));
                 return;
@@ -174,19 +211,19 @@ namespace services {
         }
     }
 
-    void memory_storage_t::drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
+    void memory_storage_t::drop_collection(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full().to_string());
-        if (check_collection_(session, logical_plan->collection_full())) {
+        if (check_collection(session, logical_plan->collection_full())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
             actor_zeta::send(collections_.at(logical_plan->collection_full()), address(), collection::handler_id(collection::route::drop_collection), session);
         }
     }
 
-    void memory_storage_t::execute_plan_(components::session::session_id_t& session,
+    void memory_storage_t::execute_plan_start(components::session::session_id_t& session,
                                          components::logical_plan::node_ptr logical_plan,
                                          components::ql::storage_parameters parameters) {
         trace(log_, "memory_storage_t:execute_plan {}", logical_plan->collection_full().to_string());
-        if (check_collection_(session, logical_plan->collection_full())) {
+        if (check_collection(session, logical_plan->collection_full())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
             actor_zeta::send(collections_.at(logical_plan->collection_full()),
                              address(),
@@ -197,14 +234,14 @@ namespace services {
         }
     }
 
-    void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result) {
+    void memory_storage_t::execute_plan_finish(components::session::session_id_t& session, components::result::result_t result) {
         auto &s = sessions_.at(session);
         debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result.is_success());
         actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
         sessions_.erase(session);
     }
 
-    void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {
+    void memory_storage_t::drop_collection_finish(components::session::session_id_t& session, result_drop_collection& result) {
         const auto &s = sessions_.at(session);
         trace(log_, "memory_storage_t:drop_collection_finish {}", s.logical_plan->collection_full().to_string());
         if (result.is_success()) {
@@ -217,7 +254,7 @@ namespace services {
         sessions_.erase(session);
     }
 
-    void memory_storage_t::create_documents_finish_(components::session::session_id_t& session) {
+    void memory_storage_t::create_documents_finish(components::session::session_id_t& session) {
         if (!sessions_.contains(session)) {
             return;
         }

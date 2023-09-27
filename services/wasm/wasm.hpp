@@ -20,7 +20,7 @@ namespace services::wasm {
     }
 
 
-    class wasm_runner_t final : public actor_zeta::basic_async_actor {
+    class wasm_runner_t final : public actor_zeta::basic_actor<wasm_runner_t> {
     public:
         template<class Manager>
         wasm_runner_t(Manager* env)

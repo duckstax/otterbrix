@@ -9,12 +9,12 @@ namespace services::disk {
 
     using components::document::document_id_t;
 
-    base_manager_disk_t::base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
+    base_manager_disk_t::base_manager_disk_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_disk_t>(mr, "manager_disk")
         , e_(scheduler) {
     }
 
-    auto base_manager_disk_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
+    auto base_manager_disk_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_;
     }
 
@@ -24,7 +24,7 @@ namespace services::disk {
     }
 
 
-    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, configuration::config_disk config, log_t& log)
+    manager_disk_t::manager_disk_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, configuration::config_disk config, log_t& log)
         : base_manager_disk_t(mr, scheduler)
         , log_(log.clone())
         , config_(std::move(config))
@@ -283,7 +283,7 @@ namespace services::disk {
     }
 
 
-    manager_disk_empty_t::manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
+    manager_disk_empty_t::manager_disk_empty_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : base_manager_disk_t(mr, scheduler) {
         add_handler(core::handler_id(core::route::sync), &manager_disk_empty_t::nothing<std::tuple<actor_zeta::address_t, actor_zeta::address_t>>);
         add_handler(handler_id(route::create_agent), &manager_disk_empty_t::nothing<>);

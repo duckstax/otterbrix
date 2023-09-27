@@ -20,13 +20,13 @@ namespace services::dispatcher {
 
     dispatcher_t::dispatcher_t(
         manager_dispatcher_t* manager_dispatcher,
-        std::pmr::memory_resource *resource,
+        std::pmr::memory_resource *o_resource,
         actor_zeta::address_t mstorage,
         actor_zeta::address_t mwal,
         actor_zeta::address_t mdisk,
         log_t& log,
         std::string name)
-        : actor_zeta::basic_async_actor(manager_dispatcher)
+        : actor_zeta::basic_actor<dispatcher_t>(manager_dispatcher)
         ,  load_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::load),this, &dispatcher_t::load))
         ,  disk_load_finish_(actor_zeta::make_behavior(resource(),disk::handler_id(disk::route::load_finish),this, &dispatcher_t::load_from_disk_result))
         ,  memory_storage_load_finish_(actor_zeta::make_behavior(resource(),memory_storage::handler_id(memory_storage::route::load_finish),this, &dispatcher_t::load_from_memory_resource_result))
@@ -50,7 +50,7 @@ namespace services::dispatcher {
         ,  success_(actor_zeta::make_behavior(resource(),wal::handler_id(wal::route::success),this, &dispatcher_t::wal_success))
         , name_(std::move(name))
         , log_(log.clone())
-        , resource_(resource)
+        , resource_(o_resource)
         , manager_dispatcher_(manager_dispatcher->address())
         , memory_storage_(std::move(mstorage))
         , manager_wal_(std::move(mwal))
@@ -66,11 +66,97 @@ namespace services::dispatcher {
         return name_.c_str();
     }
 
-    actor_zeta::behavior_t behavior() {
+    actor_zeta::behavior_t dispatcher_t::behavior() {
         return actor_zeta::make_behavior(
             resource(),
             [this](actor_zeta::message* msg) -> void {
                 switch (msg->command()) {
+                    case core::handler_id(core::route::load): {
+                        load_(msg);
+                        break;
+                    }
+
+                    case disk::handler_id(disk::route::load_finish): {
+                        disk_load_finish_(msg);
+                        break;
+                    }
+                    case memory_storage::handler_id(memory_storage::route::load_finish): {
+                        memory_storage_load_finish_(msg);
+                        break;
+                    }
+                    case disk::handler_id(disk::route::remove_collection_finish): {
+                        disk_load_finish_(msg);
+                        break;
+                    }
+                    case wal::handler_id(wal::route::load_finish): {
+                        wal_load_finish_(msg);
+                        break;
+                    }
+                    case handler_id(route::execute_ql): {
+                        execute_ql_(msg);
+                        break;
+                    }
+                    case memory_storage::handler_id(memory_storage::route::execute_plan_finish): {
+                        execute_plan_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::insert_documents): {
+                        insert_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::insert_finish): {
+                        insert_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::delete_documents): {
+                        delete_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::delete_finish): {
+                        delete_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::update_documents): {
+                        update_documents_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::update_finish): {
+                        update_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::size): {
+                        size_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::size_finish): {
+                        size_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::close_cursor): {
+                        close_cursor_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::create_index): {
+                        create_index_(msg);
+                        break;
+                    }
+
+                    case collection::handler_id(collection::route::create_index_finish): {
+                        create_index_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::drop_index): {
+                        drop_index_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::drop_index_finish): {
+                        drop_index_finish_(msg);
+                        break;
+                    }
+                    case wal::handler_id(wal::route::success): {
+                        success_(msg);
+                        break;
+                    }
                 }
             });
     }

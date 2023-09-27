@@ -55,7 +55,7 @@ namespace services::collection {
         auto dispatcher = current_message()->sender();
         auto result = dropped_
                           ? result_size()
-                          : result_size(size_());
+                          : result_size(size_impl_());
         actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session, result);
     }
 
@@ -218,7 +218,7 @@ namespace services::collection {
         actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session, result_drop_collection(drop_()), name_.database, name_.collection);
     }
 
-    std::size_t collection_t::size_() const {
+    std::size_t collection_t::size_impl_() const {
         return static_cast<size_t>(context_->storage().size());
     }
 
@@ -252,7 +252,7 @@ namespace services::collection {
 #ifdef DEV_MODE
 
     std::size_t collection_t::size_test() const {
-        return size_();
+        return size_impl_();
     }
 
 #endif

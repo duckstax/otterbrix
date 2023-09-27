@@ -16,7 +16,7 @@ using namespace components::result;
 
 namespace duck_charmer {
 
-    wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
+    wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")
         , manager_dispatcher_(manager_dispatcher)
         , log_(log.clone()) {
@@ -239,7 +239,7 @@ namespace duck_charmer {
         return make_error(error_code_t::sql_parse_error, "not valid sql");
     }
 
-    auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
+    auto wrapper_dispatcher_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
         assert("wrapper_dispatcher_t::executor_impl");
         return nullptr;
     }

@@ -17,7 +17,7 @@ namespace services::wal {
 
     class base_manager_wal_replicate_t;
 
-    class wal_replicate_t : public actor_zeta::basic_async_actor {
+    class wal_replicate_t : public actor_zeta::basic_actor<wal_replicate_t> {
         using session_id_t = components::session::session_id_t;
         using address_t = actor_zeta::address_t;
         using file_ptr = std::unique_ptr<core::file::file_t>;

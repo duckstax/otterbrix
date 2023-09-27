@@ -15,7 +15,7 @@ namespace services::disk {
 
     class base_manager_disk_t;
 
-    class agent_disk_t final : public actor_zeta::basic_async_actor {
+    class agent_disk_t final : public actor_zeta::basic_actor<agent_disk_t> {
     public:
         agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
         ~agent_disk_t();

@@ -6,12 +6,12 @@
 
 namespace services::wal {
 
-    base_manager_wal_replicate_t::base_manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
+    base_manager_wal_replicate_t::base_manager_wal_replicate_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t>(mr, "manager_wal")
         , e_(scheduler) {
     }
 
-    auto base_manager_wal_replicate_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
+    auto base_manager_wal_replicate_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
         return e_;
     }
 
@@ -21,7 +21,7 @@ namespace services::wal {
         execute(this,current_message());
     }
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler,
+    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler,
                                                      configuration::config_wal config, log_t& log)
         : base_manager_wal_replicate_t(mr, scheduler)
         , config_(std::move(config))
@@ -121,7 +121,7 @@ namespace services::wal {
         actor_zeta::send(dispatchers_[0]->address(), address(), handler_id(route::create_index), session, current_message()->sender(), std::move(data));
     }
 
-    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, log_t& log)
+    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(actor_zeta::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, log_t& log)
         : base_manager_wal_replicate_t(mr, scheduler)
     , create_(resource(),handler_id(route::create),this, &manager_wal_replicate_empty_t::nothing<>))
     , load_(resource(),handler_id(route::load),this, &manager_wal_replicate_empty_t::nothing<session_id_t&, services::wal::id_t>))

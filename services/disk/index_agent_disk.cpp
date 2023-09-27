@@ -6,7 +6,7 @@
 namespace services::disk {
 
     index_agent_disk_t::index_agent_disk_t(base_manager_disk_t* manager,
-                                           actor_zeta::detail::pmr::memory_resource* resource,
+                                           actor_zeta::pmr::memory_resource* resource,
                                            const path_t& path_db,
                                            const collection_name_t& collection_name,
                                            const index_name_t& index_name,

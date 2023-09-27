@@ -17,7 +17,7 @@ namespace components::index {
 
     struct index_engine_t final {
     public:
-        explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
+        explicit index_engine_t(actor_zeta::pmr::memory_resource* resource);
         auto matching(id_index id) -> index_t::pointer;
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto matching(const actor_zeta::address_t& address) -> index_t::pointer;
@@ -26,7 +26,7 @@ namespace components::index {
         auto add_disk_agent(id_index id, actor_zeta::address_t address) -> void;
         auto drop_index(index_t::pointer index) -> void;
         auto size() const -> std::size_t;
-        actor_zeta::detail::pmr::memory_resource* resource() noexcept;
+        actor_zeta::pmr::memory_resource* resource() noexcept;
 
         void insert_document(const document_ptr& document, pipeline::context_t *pipeline_context);
         void delete_document(const document_ptr& document, pipeline::context_t *pipeline_context);
@@ -42,7 +42,7 @@ namespace components::index {
         using index_to_address_t = std::pmr::map<actor_zeta::address_t, index_t::pointer>;
         using index_to_name_t = std::pmr::unordered_map<std::string, index_t::pointer>;
 
-        actor_zeta::detail::pmr::memory_resource* resource_;
+        actor_zeta::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
         index_to_doc_t index_to_mapper_;
         index_to_address_t index_to_address_;
@@ -52,7 +52,7 @@ namespace components::index {
 
     using index_engine_ptr = core::pmr::unique_ptr<index_engine_t>;
 
-    auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr;
+    auto make_index_engine(actor_zeta::pmr::memory_resource* resource) -> index_engine_ptr;
     auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const actor_zeta::address_t& address) -> index_t::pointer;

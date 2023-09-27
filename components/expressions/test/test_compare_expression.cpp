@@ -6,7 +6,7 @@ using namespace components::expressions;
 using key = components::expressions::key_t;
 
 TEST_CASE("expression::compare::equals") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto *resource = actor_zeta::pmr::get_default_resource();
     auto expr1 = make_compare_expression(resource, compare_type::eq, key("name"), core::parameter_id_t(1));
     auto expr2 = make_compare_expression(resource, compare_type::eq, key("name"), core::parameter_id_t(1));
     auto expr3 = make_compare_expression(resource, compare_type::ne, key("name"), core::parameter_id_t(1));
@@ -34,7 +34,7 @@ TEST_CASE("expression::compare::equals") {
 }
 
 TEST_CASE("expression::compare::to_string") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto *resource = actor_zeta::pmr::get_default_resource();
     auto expr = make_compare_expression(resource, compare_type::eq, key("count"), core::parameter_id_t(1));
     REQUIRE(expr->to_string() == R"("count": {$eq: #1})");
 

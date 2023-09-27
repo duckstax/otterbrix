@@ -13,7 +13,7 @@ auto thread_pool_deleter = [](actor_zeta::scheduler_abstract_t* ptr) {
     delete ptr;
 };
 
-using actor_zeta::detail::pmr::memory_resource;
+using actor_zeta::pmr::memory_resource;
 
 class supervisor_lite final : public actor_zeta::cooperative_supervisor<supervisor_lite> {
 public:
@@ -35,7 +35,7 @@ public:
     ~supervisor_lite() override = default;
 
 protected:
-    auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final { return e_.get(); }
+    auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* final { return e_.get(); }
 
     auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final {
         set_current_message(std::move(msg));
@@ -55,7 +55,7 @@ private:
 };
 
 TEST_CASE("rpc call style") {
-    auto* mr_ptr = actor_zeta::detail::pmr::get_default_resource();
+    auto* mr_ptr = actor_zeta::pmr::get_default_resource();
     auto supervisor = actor_zeta::spawn_supervisor<supervisor_lite>(mr_ptr);
     actor_zeta::send(supervisor.get(), actor_zeta::address_t::empty_address(), supervisor_lite::system_command::any_method);
     std::this_thread::sleep_for(std::chrono::seconds(180));

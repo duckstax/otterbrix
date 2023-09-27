@@ -15,7 +15,7 @@
 using namespace services::wal;
 using namespace components::ql;
 using namespace components::expressions;
-using actor_zeta::detail::pmr::get_default_resource;
+using actor_zeta::pmr::get_default_resource;
 
 constexpr auto database_name = "test_database";
 constexpr auto collection_name = "test_collection";
@@ -42,7 +42,7 @@ test_wal create_test_wal(const std::filesystem::path &path) {
     static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
-    actor_zeta::detail::pmr::memory_resource *resource = actor_zeta::detail::pmr::get_default_resource();
+    actor_zeta::pmr::memory_resource *resource = actor_zeta::pmr::get_default_resource();
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
     configuration::config_wal config;

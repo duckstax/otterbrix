@@ -15,7 +15,7 @@ namespace services::disk {
 
     class base_manager_disk_t;
 
-    class index_agent_disk_t final : public actor_zeta::basic_async_actor {
+    class index_agent_disk_t final : public actor_zeta::basic_actor<index_agent_disk_t> {
 
         using path_t = std::filesystem::path;
         using session_id_t = ::components::session::session_id_t;
@@ -23,7 +23,7 @@ namespace services::disk {
         using wrapper_value_t = document::wrapper_value_t;
 
     public:
-        index_agent_disk_t(base_manager_disk_t*, actor_zeta::detail::pmr::memory_resource* resource,
+        index_agent_disk_t(base_manager_disk_t*, actor_zeta::pmr::memory_resource* resource,
                            const path_t&, const collection_name_t&, const index_name_t&, components::ql::index_compare compare_type, log_t&);
         ~index_agent_disk_t() final;
 
@@ -41,7 +41,7 @@ namespace services::disk {
         actor_zeta::behavior_t remove_;
         actor_zeta::behavior_t find_;
         actor_zeta::behavior_t drop_;
-        actor_zeta::detail::pmr::memory_resource* resource_;
+        actor_zeta::pmr::memory_resource* resource_;
         log_t log_;
         std::unique_ptr<index_disk_t> index_disk_;
         const collection_name_t& collection_name_;
