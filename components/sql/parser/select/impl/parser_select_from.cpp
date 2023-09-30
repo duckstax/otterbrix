@@ -114,7 +114,7 @@ namespace components::sql::select::impl {
                         : static_cast<ql::ql_statement_ptr>(agg);
                 sub_join->right = ql::make_aggregate("", "");
                 lexer.next_not_whitespace_token();
-                res = parse_table_name(lexer, sub_join);
+                res = parse_table_name(lexer, sub_join->right);
                 if (res.is_error()) {
                     return res;
                 }
