@@ -65,6 +65,9 @@ namespace services {
         case node_type::drop_collection_t:
             drop_collection_(session, std::move(logical_plan));
             break;
+        case node_type::join_t:
+            join_(session, std::move(logical_plan), std::move(parameters));
+            break;
         default:
             execute_plan_(session, std::move(logical_plan), std::move(parameters));
             break;
@@ -185,12 +188,35 @@ namespace services {
         }
     }
 
+    void memory_storage_t::join_(components::session::session_id_t& session,
+                                 components::logical_plan::node_ptr logical_plan,
+                                 components::ql::storage_parameters parameters) {
+        trace(log_, "memory_storage_t:join {}", logical_plan->collection_full().to_string());
+        sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 0});
+        for (const auto& child : logical_plan->children()) {
+            switch (child->type()) {
+                case components::logical_plan::node_type::join_t:
+                    join_(session, child, parameters);
+                    break;
+                case components::logical_plan::node_type::aggregate_t:
+                    execute_plan_(session, child, parameters);
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     void memory_storage_t::execute_plan_(components::session::session_id_t& session,
                                          components::logical_plan::node_ptr logical_plan,
                                          components::ql::storage_parameters parameters) {
         trace(log_, "memory_storage_t:execute_plan {}", logical_plan->collection_full().to_string());
         if (check_collection_(session, logical_plan->collection_full())) {
-            sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+            if (sessions_.contains(session)) {
+                ++sessions_.at(session).count_answers;
+            } else {
+                sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+            }
             actor_zeta::send(collections_.at(logical_plan->collection_full()),
                              address(),
                              collection::handler_id(collection::route::execute_plan),
@@ -202,9 +228,24 @@ namespace services {
 
     void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result) {
         auto &s = sessions_.at(session);
-        debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result.is_success());
-        actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
-        sessions_.erase(session);
+        if (--s.count_answers == 0) {
+            switch (s.logical_plan->type()) {
+                case components::logical_plan::node_type::join_t:
+                    debug(log_, "memory_storage_t:join_finish: {}", session.data());
+                    //todo: make join results
+                    actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
+                    sessions_.erase(session);
+                    break;
+                case components::logical_plan::node_type::aggregate_t:
+                    debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result.is_success());
+                    actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
+                    sessions_.erase(session);
+                    break;
+                default:
+                    sessions_.erase(session);
+                    break;
+            }
+        }
     }
 
     void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, result_drop_collection& result) {
