@@ -31,7 +31,7 @@ namespace services::dispatcher {
 
     class dispatcher_t final : public  actor_zeta::basic_actor<dispatcher_t> {
     public:
-        dispatcher_t(manager_dispatcher_t*, std::pmr::memory_resource *resource, actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t, log_t& log, std::string name);
+        dispatcher_t(manager_dispatcher_t*, actor_zeta::address_t&, actor_zeta::address_t&, actor_zeta::address_t&, log_t& log);
         ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
@@ -82,9 +82,7 @@ namespace services::dispatcher {
         actor_zeta::behavior_t drop_index_;
         actor_zeta::behavior_t drop_index_finish_;
         actor_zeta::behavior_t success_;
-        const std::string name_;
         log_t log_;
-        std::pmr::memory_resource *resource_;
         actor_zeta::address_t manager_dispatcher_;
         actor_zeta::address_t memory_storage_;
         actor_zeta::address_t manager_wal_;
@@ -143,7 +141,7 @@ namespace services::dispatcher {
                 std::string(name_dispatcher));
         }
         ///------
-        void create(components::session::session_id_t& session, std::string& name);
+        void create(components::session::session_id_t& session);
         void load(components::session::session_id_t &session);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
         void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
@@ -168,6 +166,7 @@ namespace services::dispatcher {
         actor_zeta::behavior_t close_cursor_;
         actor_zeta::behavior_t create_index_;
         actor_zeta::behavior_t drop_index_;
+        actor_zeta::behavior_t sync_;
         spin_lock lock_;
         log_t log_;
         actor_zeta::scheduler_raw e_;

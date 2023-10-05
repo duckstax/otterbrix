@@ -20,18 +20,18 @@ namespace services {
     }
 
 
-    memory_storage_t::memory_storage_t(actor_zeta::pmr::memory_resource* o_resource, actor_zeta::scheduler_raw scheduler, log_t& log)
+    memory_storage_t::memory_storage_t(std::pmr::memory_resource* o_resource, actor_zeta::scheduler_raw scheduler, log_t& log)
         : actor_zeta::cooperative_supervisor<memory_storage_t>(o_resource)
         , log_(log.clone())
         , e_(scheduler)
-        , databases_(o_resource)
-        , collections_(o_resource)
-        , sync_(resource(),core::handler_id(core::route::sync),this, &memory_storage_t::sync)
-        , execute_plan_(resource(),handler_id(route::execute_plan),this &memory_storage_t::execute_plan)
-        , load_(resource(),handler_id(route::load),this &memory_storage_t::load)
-        , drop_collection_finish_(resource(),collection::handler_id(collection::route::drop_collection_finish),this &memory_storage_t::drop_collection_finish)
-        , create_documents_finish_(resource(),collection::handler_id(collection::route::create_documents_finish),this &memory_storage_t::create_documents_finish)
-        , execute_plan_finish_(resource(),collection::handler_id(collection::route::execute_plan_finish),this &memory_storage_t::execute_plan_finish) {
+        , databases_(resource())
+        , collections_(resource())
+        , sync_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::sync),this, &memory_storage_t::sync))
+        , execute_plan_(actor_zeta::make_behavior(resource(),handler_id(route::execute_plan),this, &memory_storage_t::execute_plan))
+        , load_(actor_zeta::make_behavior(resource(),handler_id(route::load),this, &memory_storage_t::load))
+        , drop_collection_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_collection_finish),this, &memory_storage_t::drop_collection_finish))
+        , create_documents_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::create_documents_finish),this, &memory_storage_t::create_documents_finish))
+        , execute_plan_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::execute_plan_finish),this, &memory_storage_t::execute_plan_finish)) {
     }
 
     actor_zeta::behavior_t memory_storage_t::behavior() {
@@ -120,7 +120,7 @@ namespace services {
             for (const auto& collection : database.collections) {
                 debug(log_, "memory_storage_t:load:create_collection: {}", collection.name);
                 collection_full_name_t name(database.name, collection.name);
-                auto collection_address = spawn_actor<collection::collection_t>([this, &name](services::collection::collection_t* ptr) {
+                auto collection_address = spawn_actor([this, &name](services::collection::collection_t* ptr) {
                     collections_.emplace(name, ptr);
                 }, name, log_, manager_disk_);
                 load_buffer_->collections.addresses.emplace_back(result_list_addresses_t::res_t{name, collection_address});
@@ -203,7 +203,7 @@ namespace services {
                                  make_error(error_code_t::collection_already_exists, "collection already exists"));
                 return;
             }
-            auto address = spawn_actor<collection::collection_t>([this, &logical_plan](collection::collection_t* ptr) {
+            auto address = spawn_actor([this, &logical_plan](collection::collection_t* ptr) {
                 collections_.emplace(logical_plan->collection_full(), ptr);
             }, logical_plan->collection_full(), log_, manager_disk_);
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,

@@ -14,30 +14,95 @@ using namespace components::result;
 namespace services::collection {
 
     collection_t::collection_t(services::memory_storage_t* memory_storage, const collection_full_name_t& name, log_t& log, actor_zeta::address_t mdisk)
-        : actor_zeta::basic_async_actor(memory_storage, std::string(name.to_string()))
+        : actor_zeta::basic_actor<collection_t>(memory_storage)
         , name_(name)
         , mdisk_(std::move(mdisk))
         , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
         , cursor_storage_(context_->resource())
-        , create_documents_(resource(),handler_id(route::create_documents),this, &collection_t::create_documents))
-        , insert_documents_(resource(),handler_id(route::insert_documents),this, &collection_t::insert_documents))
-        , delete_documents_(resource(),handler_id(route::delete_documents),this, &collection_t::delete_documents))
-        , update_documents_(resource(),handler_id(route::update_documents),this, &collection_t::update_documents))
-        , execute_plan_(resource(),handler_id(route::execute_plan),this, &collection_t::execute_plan))
-        , size_(resource(),handler_id(route::size),this, &collection_t::size))
-        , drop_collection_(resource(),handler_id(route::drop_collection),this, &collection_t::drop))
-        , close_cursor_(resource(),handler_id(route::close_cursor),this, &collection_t::close_cursor))
-        , create_index_(resource(),handler_id(route::create_index),this, &collection_t::create_index))
-        , success_create_(resource(),handler_id(index::route::success_create),this, &collection_t::create_index_finish))
-        , drop_index_(resource(),handler_id(route::drop_index),this, &collection_t::drop_index))
-        , success_(resource(),handler_id(index::route::success),this, &collection_t::index_modify_finish))
-        , success_find_(resource(),handler_id(index::route::success_find),this, &collection_t::index_find_finish)
+        , create_documents_(actor_zeta::make_behavior(resource(),handler_id(route::create_documents),this, &collection_t::create_documents))
+        , insert_documents_(actor_zeta::make_behavior(resource(),handler_id(route::insert_documents),this, &collection_t::insert_documents))
+        , delete_documents_(actor_zeta::make_behavior(resource(),handler_id(route::delete_documents),this, &collection_t::delete_documents))
+        , update_documents_(actor_zeta::make_behavior(resource(),handler_id(route::update_documents),this, &collection_t::update_documents))
+        , execute_plan_(actor_zeta::make_behavior(resource(),handler_id(route::execute_plan),this, &collection_t::execute_plan))
+        , size_(actor_zeta::make_behavior(resource(),handler_id(route::size),this, &collection_t::size))
+        , drop_collection_(actor_zeta::make_behavior(resource(),handler_id(route::drop_collection),this, &collection_t::drop))
+        , close_cursor_(actor_zeta::make_behavior(resource(),handler_id(route::close_cursor),this, &collection_t::close_cursor))
+        , create_index_(actor_zeta::make_behavior(resource(),handler_id(route::create_index),this, &collection_t::create_index))
+        , success_create_(actor_zeta::make_behavior(resource(),handler_id(index::route::success_create),this, &collection_t::create_index_finish))
+        , drop_index_(actor_zeta::make_behavior(resource(),handler_id(route::drop_index),this, &collection_t::drop_index))
+        , success_(actor_zeta::make_behavior(resource(),handler_id(index::route::success),this, &collection_t::index_modify_finish))
+        , success_find_(actor_zeta::make_behavior(resource(),handler_id(index::route::success_find),this, &collection_t::index_find_finish))
     {
 
     }
 
     collection_t::~collection_t() {
         trace(log(), "delete collection_t");
+    }
+
+    auto collection_t::make_type() const noexcept -> const char* const{
+        return name_.to_string().c_str();
+    }
+
+    actor_zeta::behavior_t collection_t::behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                    case handler_id(route::create_documents): {
+                        create_documents_(msg);
+                        break;
+                    }
+                    case handler_id(route::insert_documents): {
+                        insert_documents_(msg);
+                        break;
+                    }
+                    case handler_id(route::delete_documents): {
+                        delete_documents_(msg);
+                        break;
+                    }
+                    case handler_id(route::update_documents): {
+                        update_documents_(msg);
+                        break;
+                    }
+                    case handler_id(route::execute_plan): {
+                        execute_plan_(msg);
+                        break;
+                    }
+                    case handler_id(route::size): {
+                        size_(msg);
+                        break;
+                    }
+                    case handler_id(route::drop_collection): {
+                        drop_collection_(msg);
+                        break;
+                    }
+                    case handler_id(route::close_cursor): {
+                        close_cursor_(msg);
+                        break;
+                    }
+                    case handler_id(route::create_index): {
+                        create_index_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::success_create): {
+                        success_create_(msg);
+                        break;
+                    }
+                    case handler_id(route::drop_index): {
+                        drop_index_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::success): {
+                        success_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::success_find): {
+                        success_find_(msg);
+                        break;
+                    }
+                }
+            });
     }
 
     void collection_t::create_documents(components::session::session_id_t& session, std::pmr::vector<document_ptr>& documents) {

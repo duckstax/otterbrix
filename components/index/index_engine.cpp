@@ -89,7 +89,7 @@ namespace components::index {
         return ptr->matching(name);
     }
 
-    auto make_index_engine(actor_zeta::pmr::memory_resource* resource) -> index_engine_ptr {
+    auto make_index_engine(std::pmr::memory_resource* resource) -> index_engine_ptr {
         auto size = sizeof(index_engine_t);
         auto align = alignof(index_engine_t);
         auto* buffer = resource->allocate(size, align);
@@ -118,7 +118,7 @@ namespace components::index {
         return components::index::value_t(nullptr);
     }
 
-    index_engine_t::index_engine_t(actor_zeta::pmr::memory_resource* resource)
+    index_engine_t::index_engine_t(std::pmr::memory_resource* resource)
         : resource_(resource)
         , mapper_(resource)
         , index_to_mapper_(resource)
@@ -154,7 +154,7 @@ namespace components::index {
         storage_.erase(std::remove_if(storage_.begin(), storage_.end(), equal), storage_.end());
     }
 
-    actor_zeta::pmr::memory_resource* index_engine_t::resource() noexcept {
+    std::pmr::memory_resource* index_engine_t::resource() noexcept {
         return resource_;
     }
 

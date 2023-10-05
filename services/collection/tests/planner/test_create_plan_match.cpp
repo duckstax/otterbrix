@@ -19,7 +19,7 @@ collection_full_name_t get_name() {
 
 TEST_CASE("create_plan::match") {
     auto collection = init_collection();
-    auto* resource = actor_zeta::pmr::get_default_resource();
+    auto* resource = std::pmr::get_default_resource();
     {
         auto match = components::ql::aggregate::make_match(nullptr);
         auto node_match = make_node_match(resource, get_name(), match);

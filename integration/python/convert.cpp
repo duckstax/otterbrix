@@ -321,7 +321,7 @@ components::ql::aggregate::sort_t parse_sort(const py::handle& condition) {
 }
 
 auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
-    auto *resource = actor_zeta::pmr::get_default_resource(); //todo
+    auto *resource = std::pmr::get_default_resource(); //todo
     auto is_sequence = py::isinstance<py::sequence>(source);
 
     if (!is_sequence) {

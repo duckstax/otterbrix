@@ -24,21 +24,21 @@ namespace services::wal {
 
 
     wal_replicate_t::wal_replicate_t(base_manager_wal_replicate_t*manager, log_t& log, configuration::config_wal config)
-        : actor_zeta::basic_async_actor(manager, "wal")
+        : actor_zeta::basic_actor<wal_replicate_t>(manager)
         , log_(log.clone())
         , config_(std::move(config))
-        , load_(resource(),handler_id(route::load),this, &wal_replicate_t::load))
-        , create_database_(resource(),handler_id(route::create_database),this, &wal_replicate_t::create_database))
-        , drop_database_(resource(),handler_id(route::drop_database),this, &wal_replicate_t::drop_database))
-        , create_collection_(resource(), handler_id(route::create_collection),this, &wal_replicate_t::create_collection))
-        , drop_collection_(resource(), handler_id(route::drop_collection),this, &wal_replicate_t::drop_collection))
-        , insert_one_(resource(), handler_id(route::insert_one),this, &wal_replicate_t::insert_one))
-        , insert_many_(resource(), handler_id(route::insert_many),this, &wal_replicate_t::insert_many))
-        , delete_one_(resource(), handler_id(route::delete_one),this, &wal_replicate_t::delete_one))
-        , delete_many_(resource(), handler_id(route::delete_many),this, &wal_replicate_t::delete_many))
-        , update_one_(resource(), handler_id(route::update_one),this, &wal_replicate_t::update_one))
-        , update_many_(resource(), handler_id(route::update_many),this, &wal_replicate_t::update_many))
-        , create_index_(resource(), handler_id(route::create_index),this, &wal_replicate_t::create_index))
+        , load_(actor_zeta::make_behavior(resource(),handler_id(route::load),this, &wal_replicate_t::load))
+        , create_database_(actor_zeta::make_behavior(resource(),handler_id(route::create_database),this, &wal_replicate_t::create_database))
+        , drop_database_(actor_zeta::make_behavior(resource(),handler_id(route::drop_database),this, &wal_replicate_t::drop_database))
+        , create_collection_(actor_zeta::make_behavior(resource(), handler_id(route::create_collection),this, &wal_replicate_t::create_collection))
+        , drop_collection_(actor_zeta::make_behavior(resource(), handler_id(route::drop_collection),this, &wal_replicate_t::drop_collection))
+        , insert_one_(actor_zeta::make_behavior(resource(), handler_id(route::insert_one),this, &wal_replicate_t::insert_one))
+        , insert_many_(actor_zeta::make_behavior(resource(), handler_id(route::insert_many),this, &wal_replicate_t::insert_many))
+        , delete_one_(actor_zeta::make_behavior(resource(), handler_id(route::delete_one),this, &wal_replicate_t::delete_one))
+        , delete_many_(actor_zeta::make_behavior(resource(), handler_id(route::delete_many),this, &wal_replicate_t::delete_many))
+        , update_one_(actor_zeta::make_behavior(resource(), handler_id(route::update_one),this, &wal_replicate_t::update_one))
+        , update_many_(actor_zeta::make_behavior(resource(), handler_id(route::update_many),this, &wal_replicate_t::update_many))
+        , create_index_(actor_zeta::make_behavior(resource(), handler_id(route::create_index),this, &wal_replicate_t::create_index))
         {
         if (config_.sync_to_disk) {
             if (!file_exist_(config_.path)) {
@@ -48,6 +48,62 @@ namespace services::wal {
             file_->seek_eof();
             init_id();
         }
+    }
+    actor_zeta::behavior_t wal_replicate_t::behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                    case handler_id(route::load):{
+                        load_(msg);
+                        break;
+                    }
+                    case handler_id(route::create_database):{
+                        create_database_(msg);
+                        break;
+                    }
+                    case handler_id(route::drop_database):{
+                        drop_database_(msg);
+                        break;
+                    }
+                    case handler_id(route::create_collection):{
+                        create_collection_(msg);
+                        break;
+                    }
+                    case handler_id(route::drop_collection):{
+                        drop_collection_(msg);
+                        break;
+                    }
+                    case handler_id(route::insert_one):{
+                        insert_one_(msg);
+                        break;
+                    }
+                    case handler_id(route::insert_many):{
+                        insert_many_(msg);
+                        break;
+                    }
+                    case handler_id(route::delete_one):{
+                        delete_one_(msg);
+                        break;
+                    }
+                    case handler_id(route::delete_many):{
+                        delete_many_(msg);
+                        break;
+                    }
+                    case handler_id(route::update_one):{
+                        update_one_(msg);
+                        break;
+                    }
+                    case handler_id(route::update_many):{
+                        update_many_(msg);
+                        break;
+                    }
+                    case handler_id(route::create_index):{
+                        create_index_(msg);
+                        break;
+                    }
+                }
+            });
     }
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
@@ -275,6 +331,11 @@ namespace services::wal {
     buffer_t wal_replicate_t::test_read(size_t start_index, size_t finish_index) const {
         return read(start_index, finish_index);
     }
+
+    auto wal_replicate_t::make_type() const noexcept -> const char* const {
+        return "wal";
+    }
+
 #endif
 
 

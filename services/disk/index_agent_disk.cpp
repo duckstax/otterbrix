@@ -5,28 +5,55 @@
 
 namespace services::disk {
 
-    index_agent_disk_t::index_agent_disk_t(base_manager_disk_t* manager,
-                                           actor_zeta::pmr::memory_resource* resource,
+    index_agent_disk_t::index_agent_disk_t(manager_disk_t* manager,
                                            const path_t& path_db,
                                            const collection_name_t& collection_name,
                                            const index_name_t& index_name,
                                            components::ql::index_compare compare_type,
                                            log_t& log)
-        : actor_zeta::basic_async_actor(manager, index_name)
-              insert_(handler_id(index::route::insert), &index_agent_disk_t::insert);
-    remove_(handler_id(index::route::remove), &index_agent_disk_t::remove);
-    find_(handler_id(index::route::find), &index_agent_disk_t::find);
-    drop_(handler_id(index::route::drop), &index_agent_disk_t::drop);
-        , resource_(resource)
+        : actor_zeta::basic_actor<index_agent_disk_t>(manager)
+        , insert_(actor_zeta::make_behavior(resource(), handler_id(index::route::insert), this, &index_agent_disk_t::insert))
+        , remove_(actor_zeta::make_behavior(resource(), handler_id(index::route::remove), this, &index_agent_disk_t::remove))
+        , find_(actor_zeta::make_behavior(resource(), handler_id(index::route::find), this, &index_agent_disk_t::find))
+        , drop_(actor_zeta::make_behavior(resource(), handler_id(index::route::drop), this, &index_agent_disk_t::drop))
         , log_(log.clone())
         , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type))
         , collection_name_(collection_name) {
         trace(log_, "index_agent_disk::create {}", index_name);
-
     }
 
     index_agent_disk_t::~index_agent_disk_t() {
         trace(log_, "delete index_agent_disk_t");
+    }
+
+    auto index_agent_disk_t::make_type() const noexcept -> const char* const{
+        return "index_agent_disk";
+    }
+
+    actor_zeta::behavior_t index_agent_disk_t::behavior(){
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+                    case handler_id(index::route::insert):{
+                        insert_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::remove):{
+                        remove_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::find):{
+                        find_(msg);
+                        break;
+                    }
+                    case handler_id(index::route::drop):{
+                        drop_(msg);
+                        break;
+                    }
+                }
+            }
+        );
     }
 
     const collection_name_t& index_agent_disk_t::collection_name() const {
@@ -60,7 +87,7 @@ namespace services::disk {
         using components::expressions::compare_type;
 
         trace(log_, "index_agent_disk_t::find, session: {}", session.data());
-        index_disk_t::result res{resource_};
+        index_disk_t::result res{resource()};
         switch (compare) {
             case compare_type::eq:
                 index_disk_->find(value, res);

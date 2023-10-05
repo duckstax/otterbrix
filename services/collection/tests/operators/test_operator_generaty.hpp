@@ -5,12 +5,30 @@
 #include <services/memory_storage/memory_storage.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/operators/operator_insert.hpp>
+#include <actor-zeta/spawn.hpp>
 
 using namespace services;
 using namespace services::collection;
 
 struct context_t final {
-    using collection_ptr = actor_zeta::intrusive_ptr<collection_t>;
+
+    context_t(log_t& log)
+        : resource(std::pmr::get_default_resource())
+        , memory_storage_(actor_zeta::spawn_supervisor<memory_storage_t>(resource, scheduler_.get(), log))
+        , collection_([this](auto&log ) {
+            collection_full_name_t name;
+            name.database = "TestDatabase";
+            name.collection = "TestCollection";
+            auto allocate_byte = sizeof(collection_t);
+            auto allocate_byte_alignof = alignof(collection_t);
+            void* buffer = resource->allocate(allocate_byte, allocate_byte_alignof);
+            auto* collection = new (buffer) collection_t(memory_storage_.get(), name, log, actor_zeta::address_t::empty_address());
+            return std::unique_ptr<collection_t,actor_zeta::deleter>(collection,actor_zeta::deleter(resource));
+        }(log)){
+        scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
+    }
+
+    ~context_t() {}
 
     collection_t* operator->() const noexcept {
         return collection_.get();
@@ -20,31 +38,16 @@ struct context_t final {
         return *(collection_);
     }
 
-    ~context_t() {}
-
     actor_zeta::scheduler_ptr scheduler_;
-    actor_zeta::pmr::memory_resource* resource;
-    std::unique_ptr<memory_storage_t> memory_storage_;
-    std::unique_ptr<collection_t> collection_;
+    std::pmr::memory_resource* resource;
+    std::unique_ptr<memory_storage_t,actor_zeta::deleter> memory_storage_;
+    std::unique_ptr<collection_t,actor_zeta::deleter> collection_;
 };
 
 using context_ptr = std::unique_ptr<context_t>;
 
 inline context_ptr make_context(log_t& log) {
-    auto context = std::make_unique<context_t>();
-    context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    context->resource = actor_zeta::pmr::get_default_resource();
-    context->memory_storage_ = actor_zeta::spawn_supervisor<memory_storage_t>(context->resource, context->scheduler_.get(), log);
-
-    collection_full_name_t name;
-    name.database = "TestDatabase";
-    name.collection = "TestCollection";
-    auto allocate_byte = sizeof(collection_t);
-    auto allocate_byte_alignof = alignof(collection_t);
-    void* buffer = context->resource->allocate(allocate_byte, allocate_byte_alignof);
-    auto* collection = new (buffer) collection_t(context->memory_storage_.get(), name, log, actor_zeta::address_t::empty_address());
-    context->collection_.reset(collection);
-    return context;
+    return std::make_unique<context_t>(log);
 }
 
 inline collection_t* d(context_ptr& ptr) {

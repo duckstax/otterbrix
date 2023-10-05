@@ -45,9 +45,9 @@ namespace services {
             manager_disk = 1
         };
 
-        memory_storage_t(actor_zeta::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
+        memory_storage_t(std::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
         ~memory_storage_t();
-        actor_zeta::behavior_t behavior();
+
         void sync(const address_pack& pack);
         void execute_plan(components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
@@ -55,15 +55,15 @@ namespace services {
         void load(components::session::session_id_t &session, const disk::result_load_t &result);
 
         actor_zeta::scheduler_abstract_t* make_scheduler() noexcept;
-        void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
-
         auto make_type() const noexcept -> const char* const;
+        actor_zeta::behavior_t behavior();
 
     private:
+        void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
+
         actor_zeta::behavior_t sync_;
         actor_zeta::behavior_t execute_plan_;
         actor_zeta::behavior_t load_;
-
         actor_zeta::behavior_t drop_collection_finish_;
         actor_zeta::behavior_t create_documents_finish_;
         actor_zeta::behavior_t execute_plan_finish_;

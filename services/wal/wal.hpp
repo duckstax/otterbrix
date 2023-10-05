@@ -37,7 +37,8 @@ namespace services::wal {
         void update_many(session_id_t& session, address_t& sender, components::ql::update_many_t& data);
         void create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data);
         ~wal_replicate_t() override;
-
+        auto make_type() const noexcept -> const char* const;
+        actor_zeta::behavior_t behavior();
     private:
         void send_success(session_id_t& session, address_t& sender);
 

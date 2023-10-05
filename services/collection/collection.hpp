@@ -122,6 +122,9 @@ namespace services::collection {
 
         context_collection_t* extract();
 
+        auto make_type() const noexcept -> const char* const;
+        actor_zeta::behavior_t behavior();
+
     private:
         actor_zeta::behavior_t create_documents_;
         actor_zeta::behavior_t insert_documents_;

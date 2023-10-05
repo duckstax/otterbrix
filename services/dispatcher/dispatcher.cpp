@@ -20,12 +20,10 @@ namespace services::dispatcher {
 
     dispatcher_t::dispatcher_t(
         manager_dispatcher_t* manager_dispatcher,
-        std::pmr::memory_resource *o_resource,
-        actor_zeta::address_t mstorage,
-        actor_zeta::address_t mwal,
-        actor_zeta::address_t mdisk,
-        log_t& log,
-        std::string name)
+        actor_zeta::address_t& mstorage,
+        actor_zeta::address_t& mwal,
+        actor_zeta::address_t& mdisk,
+        log_t& log)
         : actor_zeta::basic_actor<dispatcher_t>(manager_dispatcher)
         ,  load_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::load),this, &dispatcher_t::load))
         ,  disk_load_finish_(actor_zeta::make_behavior(resource(),disk::handler_id(disk::route::load_finish),this, &dispatcher_t::load_from_disk_result))
@@ -48,13 +46,11 @@ namespace services::dispatcher {
         ,  drop_index_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_index),this, &dispatcher_t::drop_index))
         ,  drop_index_finish_(actor_zeta::make_behavior(resource(),collection::handler_id(collection::route::drop_index_finish),this, &dispatcher_t::drop_index_finish))
         ,  success_(actor_zeta::make_behavior(resource(),wal::handler_id(wal::route::success),this, &dispatcher_t::wal_success))
-        , name_(std::move(name))
         , log_(log.clone())
-        , resource_(o_resource)
         , manager_dispatcher_(manager_dispatcher->address())
-        , memory_storage_(std::move(mstorage))
-        , manager_wal_(std::move(mwal))
-        , manager_disk_(std::move(mdisk)) {
+        , memory_storage_(mstorage)
+        , manager_wal_(mwal)
+        , manager_disk_(mdisk) {
         trace(log_, "dispatcher_t::dispatcher_t start name:{}", make_type());
     }
 
@@ -63,7 +59,7 @@ namespace services::dispatcher {
     }
 
     auto dispatcher_t::make_type() const noexcept -> const char* const{
-        return name_.c_str();
+        return "dispatcher_t";
     }
 
     actor_zeta::behavior_t dispatcher_t::behavior() {
@@ -351,7 +347,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement).first;
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::insert_documents), session, logic_plan, components::ql::storage_parameters{});
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, result_insert(resource_));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, result_insert(resource()));
         }
     }
 
@@ -386,7 +382,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource_));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, result_delete(resource()));
         }
     }
 
@@ -421,7 +417,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource_));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, result_update(resource()));
         }
     }
 
@@ -543,7 +539,7 @@ namespace services::dispatcher {
     std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> dispatcher_t::create_logic_plan(
             ql_statement_t* statement) {
         //todo: cache logical plans
-        auto logic_plan = components::translator::ql_translator(resource_, statement);
+        auto logic_plan = components::translator::ql_translator(resource(), statement);
         auto parameters = statement->is_parameters()
                 ? static_cast<components::ql::ql_param_statement_t*>(statement)->take_parameters()
                 : components::ql::storage_parameters{};
@@ -551,10 +547,10 @@ namespace services::dispatcher {
     }
 
     manager_dispatcher_t::manager_dispatcher_t(
-        std::pmr::memory_resource* resource,
+        std::pmr::memory_resource* resource_ptr,
         actor_zeta::scheduler_raw scheduler,
         log_t& log)
-        : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(resource)
+        : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(resource_ptr)
         , create_(actor_zeta::make_behavior(resource(),handler_id(route::create), this, &manager_dispatcher_t::create))
         , load_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::load), this, &manager_dispatcher_t::load))
         , execute_ql_(actor_zeta::make_behavior(resource(),handler_id(route::execute_ql), this, &manager_dispatcher_t::execute_ql))
@@ -643,13 +639,13 @@ namespace services::dispatcher {
             });
     }
 
-    void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
-        trace(log_, "manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
-        auto target = spawn_actor<dispatcher_t>(
-            [this, name](dispatcher_t* ptr) {
+    void manager_dispatcher_t::create(components::session::session_id_t& session) {
+        trace(log_, "manager_dispatcher_t::create session: {} ", session.data());
+        auto target = spawn_actor(
+            [this](dispatcher_t* ptr) {
                 dispatchers_.emplace_back(dispatcher_ptr(ptr));
             },
-            resource(), memory_storage_, manager_wal_, manager_disk_, log_, std::string(name));
+            memory_storage_, manager_wal_, manager_disk_, log_);
     }
 
     void manager_dispatcher_t::load(components::session::session_id_t &session) {

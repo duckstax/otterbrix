@@ -3,9 +3,9 @@
 #include <components/cursor/cursor.hpp>
 
 TEST_CASE("cursor::sort") {
-    components::cursor::cursor_t cursor(actor_zeta::pmr::get_default_resource());
+    components::cursor::cursor_t cursor(std::pmr::get_default_resource());
     for (int i = 0; i < 10; ++i) {
-        auto *sub_cursor = new components::cursor::sub_cursor_t(actor_zeta::pmr::get_default_resource(), actor_zeta::address_t::empty_address());
+        auto *sub_cursor = new components::cursor::sub_cursor_t(std::pmr::get_default_resource(), actor_zeta::address_t::empty_address());
         for (int j = 0; j < 10; ++j) {
             sub_cursor->append(document_view_t(gen_doc(10 * i + j + 1)));
         }

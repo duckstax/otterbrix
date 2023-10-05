@@ -9,7 +9,7 @@ using namespace components::index;
 
 class dummy final : public index_t {
 public:
-    explicit dummy(actor_zeta::pmr::memory_resource* resource, const keys_base_storage_t& keys)
+    explicit dummy(std::pmr::memory_resource* resource, const keys_base_storage_t& keys)
         : index_t(resource, components::ql::index_type::single, keys) {
     }
 
@@ -30,7 +30,7 @@ private:
 };
 
 TEST_CASE("base index created") {
-    actor_zeta::pmr::memory_resource* resource = actor_zeta::pmr::get_default_resource();
+    std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     auto index_engine = make_index_engine(resource);
     auto one_id = make_index<dummy>(index_engine, {"1"});
     auto two_id = make_index<dummy>(index_engine, {"1", "2"});

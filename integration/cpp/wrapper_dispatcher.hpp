@@ -27,7 +27,7 @@ namespace duck_charmer {
     class wrapper_dispatcher_t final : public actor_zeta::cooperative_supervisor<wrapper_dispatcher_t> {
     public:
         /// blocking method
-        wrapper_dispatcher_t(actor_zeta::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
+        wrapper_dispatcher_t(std::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
         auto create_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
@@ -48,12 +48,22 @@ namespace duck_charmer {
         auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query) -> components::result::result_t;
         auto execute_sql(session_id_t& session, const std::string& query) -> components::result::result_t;
 
+        actor_zeta::behavior_t behavior();
+        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
+        auto make_type() const noexcept -> const char* const;
     protected:
-
-        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* final;
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
 
     private:
+        actor_zeta::behavior_t  load_finish_;
+        actor_zeta::behavior_t  execute_ql_finish_;
+        actor_zeta::behavior_t  insert_finish_;
+        actor_zeta::behavior_t  delete_finish_;
+        actor_zeta::behavior_t  update_finish_;
+        actor_zeta::behavior_t  size_finish_;
+        actor_zeta::behavior_t  create_index_finish_;
+        actor_zeta::behavior_t  drop_index_finish_;
+
         /// async method
         auto load_finish() -> void;
         auto execute_ql_finish(session_id_t &session, const components::result::result_t& result) -> void;

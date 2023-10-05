@@ -16,18 +16,33 @@ using namespace components::result;
 
 namespace duck_charmer {
 
-    wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
-        : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")
+    wrapper_dispatcher_t::wrapper_dispatcher_t(std::pmr::memory_resource* mr, actor_zeta::address_t manager_dispatcher, log_t& log)
+        : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr)
+        , load_finish_(actor_zeta::make_behavior(resource(), core::handler_id(core::route::load_finish), this, &wrapper_dispatcher_t::load_finish))
+        , execute_ql_finish_(actor_zeta::make_behavior(resource(), dispatcher::handler_id(dispatcher::route::execute_ql_finish), this, &wrapper_dispatcher_t::execute_ql_finish))
+        , insert_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::insert_finish), this, &wrapper_dispatcher_t::insert_finish))
+        , delete_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::delete_finish), this, &wrapper_dispatcher_t::delete_finish))
+        , update_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::update_finish), this, &wrapper_dispatcher_t::update_finish))
+        , size_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::size_finish), this, &wrapper_dispatcher_t::size_finish))
+        , create_index_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::create_index_finish), this, &wrapper_dispatcher_t::create_index_finish))
+        , drop_index_finish_(actor_zeta::make_behavior(resource(), collection::handler_id(collection::route::drop_index_finish), this, &wrapper_dispatcher_t::drop_index_finish))
         , manager_dispatcher_(manager_dispatcher)
         , log_(log.clone()) {
-        add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
-        add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
-        add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
-        add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
-        add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
-        add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
-        add_handler(collection::handler_id(collection::route::drop_index_finish), &wrapper_dispatcher_t::drop_index_finish);
+    }
+
+    actor_zeta::behavior_t wrapper_dispatcher_t::behavior() {
+        return actor_zeta::make_behavior(
+            resource(),
+            [this](actor_zeta::message* msg) -> void {
+                switch (msg->command()) {
+
+                }
+            }
+        );
+    }
+
+    auto wrapper_dispatcher_t::make_type() const noexcept -> const char* const{
+        return "wrapper_dispatcher";
     }
 
     wrapper_dispatcher_t::~wrapper_dispatcher_t() {
@@ -249,7 +264,7 @@ namespace duck_charmer {
         auto tmp = std::move(msg);
         trace(log_, "wrapper_dispatcher_t::enqueue_base msg type: {}", tmp->command().integer_value());
         set_current_message(std::move(tmp));
-        execute(this,current_message());
+        behavior()(current_message());
     }
 
     auto wrapper_dispatcher_t::load_finish() -> void {

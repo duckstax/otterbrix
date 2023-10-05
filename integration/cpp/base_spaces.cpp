@@ -22,7 +22,7 @@ namespace duck_charmer {
         trace(log_, "spaces::spaces()");
 
         ///scheduler_.reset(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter());
-        resource = actor_zeta::pmr::get_default_resource();
+        resource = std::pmr::get_default_resource();
 
         trace(log_, "manager_wal start");
         if (config.wal.on) {

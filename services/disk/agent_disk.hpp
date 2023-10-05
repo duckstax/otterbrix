@@ -9,7 +9,7 @@
 #include <services/wal/manager_wal_replicate.hpp>
 
 namespace services::disk {
-
+    class manager_disk_t;
     using name_t = std::string;
     using session_id_t = ::components::session::session_id_t;
 
@@ -17,7 +17,8 @@ namespace services::disk {
 
     class agent_disk_t final : public actor_zeta::basic_actor<agent_disk_t> {
     public:
-        agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
+        agent_disk_t(manager_disk_t*, const path_t& path_db, log_t& log);
+
         ~agent_disk_t();
 
         auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
@@ -33,7 +34,12 @@ namespace services::disk {
 
         auto fix_wal_id(wal::id_t wal_id) -> void;
 
+        auto make_type() const noexcept -> const char* const;
+
+        actor_zeta::behavior_t behavior();
+
     private:
+        const name_t name_;
         actor_zeta::behavior_t  load_;
         actor_zeta::behavior_t  append_database_;
         actor_zeta::behavior_t  remove_database_;

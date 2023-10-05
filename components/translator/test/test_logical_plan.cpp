@@ -35,42 +35,42 @@ collection_full_name_t get_name() {
 }
 
 TEST_CASE("logical_plan::create_database") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     components::ql::create_database_t ql{database_name};
     auto node = ql_translator(resource, &ql);
     REQUIRE(node->to_string() == R"_($create_database: database)_");
 }
 
 TEST_CASE("logical_plan::drop_database") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     components::ql::drop_database_t ql{database_name};
     auto node = ql_translator(resource, &ql);
     REQUIRE(node->to_string() == R"_($drop_database: database)_");
 }
 
 TEST_CASE("logical_plan::create_collection") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     components::ql::create_collection_t ql{database_name, collection_name};
     auto node = ql_translator(resource, &ql);
     REQUIRE(node->to_string() == R"_($create_collection: database.collection)_");
 }
 
 TEST_CASE("logical_plan::drop_collection") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     components::ql::drop_collection_t ql{database_name, collection_name};
     auto node = ql_translator(resource, &ql);
     REQUIRE(node->to_string() == R"_($drop_collection: database.collection)_");
 }
 
 TEST_CASE("logical_plan::match") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     auto match = components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
     auto node_match = make_node_match(resource, get_name(), match);
     REQUIRE(node_match->to_string() == R"_($match: {"key": {$eq: #1}})_");
 }
 
 TEST_CASE("logical_plan::group") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     {
         components::ql::aggregate::group_t group;
         auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
@@ -103,7 +103,7 @@ TEST_CASE("logical_plan::group") {
 }
 
 TEST_CASE("logical_plan::sort") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     {
         components::ql::aggregate::sort_t sort;
         components::ql::aggregate::append_sort(sort, key("key"), sort_order::asc);
@@ -122,7 +122,7 @@ TEST_CASE("logical_plan::sort") {
 TEST_CASE("logical_plan::aggregate") {
     using components::ql::aggregate::operator_type;
 
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     components::ql::aggregate_statement aggregate(database_name, collection_name);
 
     aggregate.append(operator_type::match, components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1))));
@@ -152,7 +152,7 @@ TEST_CASE("logical_plan::aggregate") {
 }
 
 TEST_CASE("logical_plan::insert") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     {
         std::pmr::vector<components::document::document_ptr> documents = {};
         components::ql::insert_many_t insert{database_name, collection_name, documents};
@@ -188,7 +188,7 @@ TEST_CASE("logical_plan::insert") {
 }
 
 TEST_CASE("logical_plan::limit") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     {
         auto limit = components::ql::limit_t::limit_one();
         auto node_limit = components::logical_plan::make_node_limit(resource, get_name(), limit);
@@ -207,7 +207,7 @@ TEST_CASE("logical_plan::limit") {
 }
 
 TEST_CASE("logical_plan::delete") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     auto match = components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
     components::ql::storage_parameters parameters{};
     {
@@ -223,7 +223,7 @@ TEST_CASE("logical_plan::delete") {
 }
 
 TEST_CASE("logical_plan::update") {
-    auto *resource = actor_zeta::pmr::get_default_resource();
+    auto *resource = std::pmr::get_default_resource();
     auto match = components::ql::aggregate::make_match(make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
     auto update = document_from_json(R"_({"$set": {"count": 100}})_");
     components::ql::storage_parameters parameters{};
