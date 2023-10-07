@@ -64,7 +64,9 @@ namespace ottergon {
             auto doc = to_document(document);
             generate_document_id_if_not_exists(doc);
             auto session_tmp = ottergon::session_id_t();
-            auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
+            auto result_variant = ptr_->insert_one(session_tmp, database_, name_, doc);
+            assert(result_variant.is_type<components::result::result_insert>() && "wrapper_collection::insert_one result error");
+            auto& result = result_variant.get<components::result::result_insert>();
             debug(log_, "wrapper_collection::insert_one {} inserted", result.inserted_ids().empty() ? 0 : 1);
             return result.inserted_ids().empty() ? result.inserted_ids().front().to_string() : std::string();
         }
@@ -82,7 +84,9 @@ namespace ottergon {
                 docs.push_back(std::move(doc));
             }
             auto session_tmp = ottergon::session_id_t();
-            auto result = ptr_->insert_many(session_tmp, database_, name_, docs);
+            auto result_variant = ptr_->insert_many(session_tmp, database_, name_, docs);
+            assert(result_variant.is_type<components::result::result_insert>() && "wrapper_collection::insert_many result error");
+            auto& result = result_variant.get<components::result::result_insert>();
             debug(log_, "wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
             py::list list;
             for (const auto& id : result.inserted_ids()) {

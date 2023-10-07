@@ -51,6 +51,7 @@ namespace services::wal {
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
+            trace(log_, "wal_replicate_t::send_success session {}", session.data());
             actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(id_));
         }
     }
@@ -136,13 +137,13 @@ namespace services::wal {
         send_success(session, sender);
     }
 
-    void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, components::ql::insert_one_t& data) {
+    void wal_replicate_t::insert_one(session_id_t& session, address_t& sender, components::ql::insert_one_t data) {
         trace(log_, "wal_replicate_t::insert_one {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);
     }
 
-    void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, components::ql::insert_many_t& data) {
+    void wal_replicate_t::insert_many(session_id_t& session, address_t& sender, components::ql::insert_many_t data) {
         trace(log_, "wal_replicate_t::insert_many {}::{}, session: {}", data.database_, data.collection_, session.data());
         write_data_(data);
         send_success(session, sender);

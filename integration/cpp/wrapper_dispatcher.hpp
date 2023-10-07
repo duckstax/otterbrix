@@ -34,8 +34,8 @@ namespace ottergon {
         [[deprecated]] auto drop_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
         [[deprecated]] auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
         [[deprecated]] auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
-        [[deprecated]] auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> components::result::result_insert&;
-        [[deprecated]] auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> components::result::result_insert&;
+        [[deprecated]] auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> components::result::result_t&;
+        [[deprecated]] auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> components::result::result_t&;
         [[deprecated]] auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
         [[deprecated]] auto find_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
         [[deprecated]] auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;

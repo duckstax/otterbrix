@@ -25,6 +25,11 @@ public:
         return std::get<T>(data_);
     }
 
+    template <typename T>
+    bool is_type() const {
+        return std::holds_alternative<T>(data_);
+    }
+
     components::ql::statement_type type() const;
 
 private:
@@ -63,13 +68,21 @@ auto make_session(session_storage_t& storage, const session_key_t& session, Args
 
 inline auto find_session(session_storage_t& storage, components::session::session_id_t session) -> session_t& {
     auto it = storage.find(session_key_t{session, {}});
+    assert(it != std::end(storage) && "it != std::end(storage)");
     return  it ->second;
+}
+
+inline auto is_session_exist(session_storage_t& storage, components::session::session_id_t session) -> bool {
+    auto it = storage.find(session_key_t{session, {}});
+    return it != std::end(storage);
 }
 
 inline auto find_session(session_storage_t& storage, components::session::session_id_t session, const std::string& name) -> session_t& {
     auto it = storage.find(session_key_t{session, name});
+    assert(it != std::end(storage) && "it != std::end(session_storage)");
     return  it ->second;
 }
+
 
 inline auto remove_session(session_storage_t& storage, components::session::session_id_t session) -> void  {
     storage.erase(session_key_t{session, {}});

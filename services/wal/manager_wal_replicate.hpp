@@ -13,6 +13,7 @@
 
 #include "base.hpp"
 #include "wal.hpp"
+#include "route.hpp"
 
 namespace services::wal {
 
@@ -55,8 +56,8 @@ namespace services::wal {
         void drop_database(session_id_t& session, components::ql::drop_database_t& data);
         void create_collection(session_id_t& session, components::ql::create_collection_t& data);
         void drop_collection(session_id_t& session, components::ql::drop_collection_t& data);
-        void insert_one(session_id_t& session, components::ql::insert_one_t& data);
-        void insert_many(session_id_t& session, components::ql::insert_many_t& data);
+        void insert_one(session_id_t& session, components::ql::insert_one_t data);
+        void insert_many(session_id_t& session, components::ql::insert_many_t data);
         void delete_one(session_id_t& session, components::ql::delete_one_t& data);
         void delete_many(session_id_t& session, components::ql::delete_many_t& data);
         void update_one(session_id_t& session, components::ql::update_one_t& data);
@@ -79,6 +80,11 @@ namespace services::wal {
 
     public:
         manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
+
+        template<class T>
+        auto always_success(session_id_t& session, T&&) -> void {
+            actor_zeta::send(current_message()->sender(), address(), services::wal::handler_id(services::wal::route::success), session, services::wal::id_t(0));
+        }
 
         template<class ...Args>
         auto nothing(Args&&...) -> void {}

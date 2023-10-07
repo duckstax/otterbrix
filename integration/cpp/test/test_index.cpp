@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 #include "test_config.hpp"
+#include <unistd.h>
 
 using components::ql::aggregate::operator_type;
 using components::expressions::compare_type;
@@ -9,6 +10,7 @@ using id_par = core::parameter_id_t;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
+constexpr int kDocuments = 100;
 
 #define INIT_COLLECTION() \
     do { \
@@ -25,12 +27,26 @@ static const collection_name_t collection_name = "TestCollection";
 #define FILL_COLLECTION() \
     do { \
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource()); \
-        for (int num = 1; num <= 100; ++num) { \
+        for (int num = 1; num <= kDocuments; ++num) { \
             documents.push_back(gen_doc(num)); \
         } \
         { \
             auto session = ottergon::session_id_t(); \
             dispatcher->insert_many(session, database_name, collection_name, documents); \
+        } \
+    } while (false)
+
+#define FILL_COLLECTION_INSERT_ONE() \
+    do { \
+        std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource()); \
+        for (int num = 1; num <= kDocuments; ++num) { \
+            documents.push_back(gen_doc(num)); \
+        } \
+        { \
+            auto session = duck_charmer::session_id_t(); \
+            for (size_t num = 0; num < documents.size(); ++num) { \
+                dispatcher->insert_one(session, database_name, collection_name, documents.at(num)); \
+            } \
         } \
     } while (false)
 
@@ -55,7 +71,7 @@ static const collection_name_t collection_name = "TestCollection";
         auto session = ottergon::session_id_t(); \
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
         auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
-        REQUIRE(c->size() == 100); \
+        REQUIRE(c->size() == kDocuments); \
         delete c; \
     } while (false)
 
@@ -83,7 +99,6 @@ static const collection_name_t collection_name = "TestCollection";
     } while (false)
 
 
-
 TEST_CASE("integration::test_index::base") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/base");
     test_clear_directory(config);
@@ -106,7 +121,6 @@ TEST_CASE("integration::test_index::base") {
         CHECK_FIND_COUNT(compare_type::lte, 10, 10);
     }
 }
-
 
 TEST_CASE("integration::test_index::save_load") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/save_load");
@@ -137,7 +151,6 @@ TEST_CASE("integration::test_index::save_load") {
         CHECK_FIND_COUNT(compare_type::lte, 10, 10);
     }
 }
-
 
 TEST_CASE("integration::test_index::drop") {
     auto config = test_create_config("/tmp/ottergon/integration/test_index/drop");
