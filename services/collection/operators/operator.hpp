@@ -48,7 +48,8 @@ namespace services::collection::operators {
         bool is_executed() const;
         bool is_wait_sync_disk() const;
 
-        operator_state state() const;
+        [[nodiscard]] operator_state state() const noexcept;
+        [[nodiscard]] operator_type type() const noexcept;
         const operator_data_ptr& output() const;
         const operator_write_data_ptr& modified() const;
         const operator_write_data_ptr& no_modified() const;

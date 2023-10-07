@@ -26,7 +26,7 @@ namespace services::collection::planner::impl {
                 break;
             }
         }
-        return std::move(op);
+        return op;
     }
 
 }
