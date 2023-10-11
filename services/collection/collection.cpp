@@ -78,19 +78,17 @@ namespace services::collection {
                                    sessions::suspend_plan_t{sender, std::move(plan), std::move(pipeline_context)});
             return;
         }
-        //todo: only find
-        if (plan->type() == operators::operator_type::match) {
-            auto cursor = cursor_storage_.emplace(
-                session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-            if (plan->output()) {
-                for (const auto& document : plan->output()->documents()) {
-                    cursor.first->second->append(document_view_t(document));
-                }
+        // todo: only find
+        auto cursor = cursor_storage_.emplace(
+            session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+        if (plan->output()) {
+            for (const auto& document : plan->output()->documents()) {
+                cursor.first->second->append(document_view_t(document));
             }
-            auto result = new components::cursor::cursor_t(context_->resource());
-            result->push(cursor.first->second.get());
-            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, make_result(result));
         }
+        auto result = new components::cursor::cursor_t(context_->resource());
+        result->push(cursor.first->second.get());
+        actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, make_result(result));
         //end: only find
     }
 
