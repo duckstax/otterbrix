@@ -21,7 +21,7 @@ size_t size_of_var_int(uint64_t n) {
 }
 
 size_t put_uvar_int(void *buf, uint64_t n) {
-    uint8_t* dst = static_cast<uint8_t*>(buf);
+    auto* dst = static_cast<uint8_t*>(buf);
     while (n >= 0x80) {
         *dst++ = (n & 0xFF) | 0x80;
         n >>= 7;

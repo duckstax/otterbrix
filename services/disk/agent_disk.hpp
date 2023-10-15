@@ -13,8 +13,6 @@ namespace services::disk {
     using name_t = std::string;
     using session_id_t = ::components::session::session_id_t;
 
-    class base_manager_disk_t;
-
     class agent_disk_t final : public actor_zeta::basic_actor<agent_disk_t> {
     public:
         agent_disk_t(manager_disk_t*, const path_t& path_db, log_t& log);

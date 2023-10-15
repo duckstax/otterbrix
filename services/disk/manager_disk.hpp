@@ -11,7 +11,8 @@ namespace services::disk {
 
     using session_id_t = ::components::session::session_id_t;
 
-    using manager_disk_ptr = std::unique_ptr<base_manager_disk_t>;
+    class manager_disk_t;
+    using manager_disk_ptr = std::unique_ptr<manager_disk_t,actor_zeta::deleter>;
 
     class manager_disk_t final: public actor_zeta::cooperative_supervisor<manager_disk_t> {
     public:
@@ -105,9 +106,7 @@ namespace services::disk {
         auto load(session_id_t& session) -> void;
         void create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, components::ql::index_compare);
         auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
-        auto make_type() const noexcept -> const char* const {
-            return "manager_disk";
-        }
+        auto make_type() const noexcept -> const char* const;
         actor_zeta::behavior_t behavior();
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
     private:

@@ -20,6 +20,7 @@ target_link_libraries(
     rocketjoe::result
     rocketjoe::session
     CONAN_PKG::spdlog
+    actor #CONAN_PKG::actor-zeta
 )
 
 target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC

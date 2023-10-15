@@ -16,21 +16,7 @@
 
 namespace services::wal {
 
-    class base_manager_wal_replicate_t : public actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t> {
-    public:
-        auto make_type() const noexcept -> const char* const;
-        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
-    protected:
-        base_manager_wal_replicate_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
-
-    private:
-        actor_zeta::scheduler_raw e_;
-    };
-
-    using manager_wal_ptr = std::unique_ptr<base_manager_wal_replicate_t>;
-
-
-    class manager_wal_replicate_t final : public base_manager_wal_replicate_t {
+    class manager_wal_replicate_t final : public actor_zeta::cooperative_supervisor<manager_wal_replicate_t> {
         using session_id_t = components::session::session_id_t;
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
@@ -62,8 +48,11 @@ namespace services::wal {
         void create_index(session_id_t& session, components::ql::create_index_t& data);
 
         actor_zeta::behavior_t behavior();
+        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* ;
+        auto make_type() const noexcept -> const char* const;
 
     private:
+        actor_zeta::scheduler_raw e_;
         actor_zeta::behavior_t create_;
         actor_zeta::behavior_t load_;
         actor_zeta::behavior_t create_database_;
@@ -90,14 +79,17 @@ namespace services::wal {
     };
 
 
-    class manager_wal_replicate_empty_t final : public base_manager_wal_replicate_t {
+    class manager_wal_replicate_empty_t final : public actor_zeta::cooperative_supervisor<manager_wal_replicate_empty_t> {
         using session_id_t = components::session::session_id_t;
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
     public:
         manager_wal_replicate_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
         actor_zeta::behavior_t behavior();
+        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* ;
+        auto make_type() const noexcept -> const char* const ;
     private:
         auto enqueue_impl(actor_zeta::message_ptr, actor_zeta::execution_unit*) -> void final;
+        actor_zeta::scheduler_raw e_;
     };
 
 } //namespace services::wal

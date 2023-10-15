@@ -6,22 +6,10 @@
 
 namespace services::wal {
 
-    base_manager_wal_replicate_t::base_manager_wal_replicate_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
-        : actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t>(mr)
-        , e_(scheduler) {
-    }
-
-    auto base_manager_wal_replicate_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
-        return e_;
-    }
-
-    auto base_manager_wal_replicate_t::make_type() const noexcept -> const char* const {
-        return "manager_wal";
-    }
-
     manager_wal_replicate_t::manager_wal_replicate_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler,
                                                      configuration::config_wal config, log_t& log)
-        : base_manager_wal_replicate_t(mr, scheduler)
+        : actor_zeta::cooperative_supervisor<manager_wal_replicate_t>(mr)
+        , e_(scheduler)
         , config_(std::move(config))
         , log_(log.clone())
         , create_(actor_zeta::make_behavior(resource(),handler_id(route::create),this, &manager_wal_replicate_t::create_wal_worker))
@@ -39,6 +27,14 @@ namespace services::wal {
         , core_sync_(actor_zeta::make_behavior(resource(),core::handler_id(core::route::sync),this, &manager_wal_replicate_t::sync))
         , create_index_(actor_zeta::make_behavior(resource(),handler_id(route::create_index),this, &manager_wal_replicate_t::create_index)) {
         trace(log_, "manager_wal_replicate_t");
+    }
+
+    auto manager_wal_replicate_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
+        return e_;
+    }
+
+    auto manager_wal_replicate_t::make_type() const noexcept -> const char* const {
+        return "manager_wal";
     }
 
     manager_wal_replicate_t::~manager_wal_replicate_t() {
@@ -191,8 +187,21 @@ namespace services::wal {
     }
 
     manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler, log_t& log)
-        : base_manager_wal_replicate_t(mr, scheduler){
+        : actor_zeta::cooperative_supervisor<manager_wal_replicate_empty_t>(mr)
+        , e_(scheduler){
         trace(log, "manager_wal_replicate_empty_t");
+    }
+
+    auto manager_wal_replicate_empty_t::enqueue_impl(actor_zeta::message_ptr, actor_zeta::execution_unit*) -> void {
+
+    }
+
+    auto manager_wal_replicate_empty_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
+        return e_;
+    }
+
+    auto manager_wal_replicate_empty_t::make_type() const noexcept -> const char* const {
+        return "manager_wal";
     }
 
     actor_zeta::behavior_t manager_wal_replicate_empty_t::behavior() {

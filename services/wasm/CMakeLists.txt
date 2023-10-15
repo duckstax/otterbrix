@@ -22,7 +22,7 @@ target_link_libraries(
         rocketjoe::log
         rocketjoe::wasm_runner
         CONAN_PKG::spdlog
-        CONAN_PKG::actor-zeta
+        actor #CONAN_PKG::actor-zeta
         CONAN_PKG::openssl
 )
 

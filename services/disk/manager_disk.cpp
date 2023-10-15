@@ -110,6 +110,10 @@ namespace services::disk {
         behavior()(current_message());
     }
 
+    auto manager_disk_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*{
+        return e_;
+    }
+
     manager_disk_t::~manager_disk_t() {
         trace(log_, "delete manager_disk_t");
     }
@@ -340,8 +344,8 @@ namespace services::disk {
 
 
     manager_disk_empty_t::manager_disk_empty_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
-        : e_(scheduler)
-        , actor_zeta::cooperative_supervisor<manager_disk_empty_t>(mr) {}
+        : actor_zeta::cooperative_supervisor<manager_disk_empty_t>(mr)
+        , e_(scheduler){}
 
     auto manager_disk_empty_t::load(session_id_t& session) -> void {
         auto result = result_load_t::empty();
@@ -350,6 +354,14 @@ namespace services::disk {
 
     void manager_disk_empty_t::create_index_agent(session_id_t& session, const collection_name_t&, const index_name_t&, components::ql::index_compare) {
         actor_zeta::send(current_message()->sender(), address(), handler_id(index::route::success_create), session, actor_zeta::address_t::empty_address());
+    }
+
+    auto manager_disk_empty_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*{
+        return e_;
+    }
+
+    auto manager_disk_empty_t::make_type() const noexcept -> const char* const {
+        return "manager_disk";
     }
 
     actor_zeta::behavior_t manager_disk_empty_t::behavior() {

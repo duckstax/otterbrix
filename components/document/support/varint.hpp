@@ -23,7 +23,7 @@ size_t _get_uvar_int32(std::string_view buf, uint32_t *n NONNULL);
 static inline size_t get_uvar_int(std::string_view buf, uint64_t *n NONNULL) {
     if (_usually_false(buf.size() == 0))
         return 0;
-    uint8_t byte = buf[0];
+    auto byte = static_cast<uint8_t>( buf[0]);
     if (_usually_true(byte < 0x80)) {
         *n = byte;
         return 1;
@@ -34,7 +34,7 @@ static inline size_t get_uvar_int(std::string_view buf, uint64_t *n NONNULL) {
 static inline size_t get_uvar_int32(std::string_view buf, uint32_t *n NONNULL) {
     if (_usually_false(buf.size() == 0))
         return 0;
-    uint8_t byte = buf[0];
+    auto byte = static_cast<uint8_t>(buf[0]);
     if (_usually_true(byte < 0x80)) {
         *n = byte;
         return 1;

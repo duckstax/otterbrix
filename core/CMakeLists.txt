@@ -13,3 +13,5 @@ endif ()
 if (DEV_MODE)
     add_subdirectory(tests)
 endif ()
+
+add_library(actor actor.cpp)

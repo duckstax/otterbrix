@@ -178,6 +178,4 @@ namespace services::dispatcher {
         auto dispatcher() -> actor_zeta::address_t;
     };
 
-    using manager_dispatcher_ptr = std::unique_ptr<manager_dispatcher_t>;
-
 } // namespace services::dispatcher

@@ -63,7 +63,7 @@ target_link_libraries(
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
-        CONAN_PKG::actor-zeta
+        actor #CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
         CONAN_PKG::libcurl

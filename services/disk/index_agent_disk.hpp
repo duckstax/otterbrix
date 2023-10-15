@@ -10,10 +10,8 @@
 #include "index_disk.hpp"
 
 namespace services::disk {
-    class manager_disk_t;
+    struct manager_disk_t;
     using index_name_t = std::string;
-
-    struct base_manager_disk_t;
 
     class index_agent_disk_t final : public actor_zeta::basic_actor<index_agent_disk_t> {
 

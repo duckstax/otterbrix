@@ -20,7 +20,7 @@ target_link_libraries(
 
         CONAN_PKG::catch2
         CONAN_PKG::crc32c
-        CONAN_PKG::actor-zeta
+        actor #CONAN_PKG::actor-zeta
         CONAN_PKG::boost
 )
 

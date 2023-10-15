@@ -10,12 +10,11 @@
 #include <core/file/file.hpp>
 #include <configuration/configuration.hpp>
 
+#include "forward.hpp"
 #include "dto.hpp"
 #include "record.hpp"
 
 namespace services::wal {
-
-    class base_manager_wal_replicate_t;
 
     class wal_replicate_t : public actor_zeta::basic_actor<wal_replicate_t> {
         using session_id_t = components::session::session_id_t;
@@ -23,8 +22,8 @@ namespace services::wal {
         using file_ptr = std::unique_ptr<core::file::file_t>;
 
     public:
-        wal_replicate_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
-        virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
+        wal_replicate_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(session_id_t& session, address_t& sender, components::ql::create_database_t& data);
         void drop_database(session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
         void create_collection(session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
@@ -91,8 +90,8 @@ namespace services::wal {
         using address_t = actor_zeta::address_t;
 
     public:
-        wal_replicate_without_disk_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
-        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) final;
+        wal_replicate_without_disk_t(manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) ;
     private:
         void write_buffer(buffer_t&) final;
         void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const final;
