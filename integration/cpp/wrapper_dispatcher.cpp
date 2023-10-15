@@ -35,10 +35,40 @@ namespace duck_charmer {
             resource(),
             [this](actor_zeta::message* msg) -> void {
                 switch (msg->command()) {
-
+                    case core::handler_id(core::route::load_finish): {
+                        load_finish_(msg);
+                        break;
+                    }
+                    case dispatcher::handler_id(dispatcher::route::execute_ql_finish): {
+                        execute_ql_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::insert_finish): {
+                        insert_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::delete_finish): {
+                        delete_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::update_finish): {
+                        update_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::size_finish): {
+                        size_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::create_index_finish): {
+                        create_index_finish_(msg);
+                        break;
+                    }
+                    case collection::handler_id(collection::route::drop_index_finish): {
+                        drop_index_finish_(msg);
+                        break;
+                    }
                 }
-            }
-        );
+            });
     }
 
     auto wrapper_dispatcher_t::make_type() const noexcept -> const char* const{
