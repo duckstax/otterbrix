@@ -50,8 +50,12 @@ namespace services::collection::operators {
         return state_ == operator_state::waiting;
     }
 
-    operator_state operator_t::state() const {
+    operator_state operator_t::state() const noexcept {
         return state_;
+    }
+
+    operator_type operator_t::type() const noexcept {
+        return type_;
     }
 
     const operator_data_ptr& operator_t::output() const {
