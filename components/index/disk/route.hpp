@@ -18,7 +18,7 @@ namespace services::index {
         error
     };
 
-    constexpr uint64_t handler_id(route type) {
+    constexpr auto handler_id(route type) {
         return handler_id(group_id_t::index, type);
     }
 

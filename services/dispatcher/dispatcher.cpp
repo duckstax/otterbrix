@@ -633,6 +633,7 @@ namespace services::dispatcher {
                         break;
                     }
                     case core::handler_id(core::route::sync):{
+                        sync_(msg);
                         break;
                     }
                 }

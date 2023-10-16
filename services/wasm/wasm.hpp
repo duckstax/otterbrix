@@ -15,7 +15,7 @@ namespace services::wasm {
         load_code
     };
 
-    inline uint64_t handler_id(route type) {
+    inline auto handler_id(route type) {
         return handler_id(group_id_t::wasm, type);
     }
 

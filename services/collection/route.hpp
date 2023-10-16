@@ -27,7 +27,7 @@ namespace services::collection {
         drop_index_finish
     };
 
-    constexpr uint64_t handler_id(route type) {
+    constexpr auto handler_id(route type) {
         return handler_id(group_id_t::collection, type);
     }
 

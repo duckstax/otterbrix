@@ -10,7 +10,7 @@ namespace services::dispatcher {
         execute_ql_finish
     };
 
-    constexpr uint64_t handler_id(route type) {
+    constexpr auto handler_id(route type) {
         return handler_id(group_id_t::dispatcher, type);
     }
 
