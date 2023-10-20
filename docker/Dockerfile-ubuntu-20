@@ -40,7 +40,7 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 WORKDIR /app/build
 
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
-    cmake --build .
+    cmake --build . --target all -- -j $(nproc)
 
 
 RUN ctest -C -V --output-on-failure
