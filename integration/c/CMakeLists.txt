@@ -29,7 +29,8 @@ add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_sources})
 
 
 target_link_libraries(
-        ${PROJECT_NAME} PUBLIC
+        ${PROJECT_NAME} PRIVATE
+        cpp_ottergon
         ${ROCKETJOE_LIBS}
 )
 
