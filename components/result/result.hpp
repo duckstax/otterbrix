@@ -19,12 +19,21 @@ namespace components::result {
         other_error
     };
 
-
-    struct empty_result_t {
+    enum class result_type_t: uint64_t {
+        error= 0,
+        empty,
+        result_address,
+        result_list_addresses,
+        result,
+        result_insert,
+        result_delete,
+        result_update
     };
 
 
-    struct error_result_t {
+    struct empty_result_t final {};
+
+    struct error_result_t final {
         error_code_t code;
         std::string what;
 
@@ -32,7 +41,7 @@ namespace components::result {
     };
 
 
-    struct result_address_t {
+    struct result_address_t final {
         actor_zeta::address_t address{actor_zeta::address_t::empty_address()};
 
         result_address_t() = default;
@@ -40,7 +49,7 @@ namespace components::result {
     };
 
 
-    struct result_list_addresses_t {
+    struct result_list_addresses_t final {
         struct res_t {
             collection_full_name_t name;
             actor_zeta::address_t address;
@@ -52,7 +61,7 @@ namespace components::result {
     };
 
 
-    struct result_insert {
+    struct result_insert final {
     public:
         using result_t = std::pmr::vector<components::document::document_id_t>;
 
@@ -67,7 +76,7 @@ namespace components::result {
     };
 
 
-    struct result_find {
+    struct result_find final {
     public:
         using result_t = std::pmr::vector<components::document::document_view_t>;
 
@@ -81,7 +90,7 @@ namespace components::result {
     };
 
 
-    struct result_find_one {
+    struct result_find_one final {
     public:
         using result_t = components::document::document_view_t;
 
@@ -97,7 +106,7 @@ namespace components::result {
     };
 
 
-    struct result_size {
+    struct result_size final {
     public:
         using result_t = std::size_t;
 
@@ -110,7 +119,7 @@ namespace components::result {
     };
 
 
-    struct result_drop_collection {
+    struct result_drop_collection final {
     public:
         using result_t = bool;
 
@@ -123,7 +132,7 @@ namespace components::result {
     };
 
 
-    struct result_delete {
+    struct result_delete final {
     public:
         using result_t = std::pmr::vector<components::document::document_id_t>;
 
@@ -138,7 +147,7 @@ namespace components::result {
     };
 
 
-    struct result_update {
+    struct result_update final {
     public:
         using document_id_t = components::document::document_id_t;
         using result_t = std::pmr::vector<document_id_t>;
@@ -161,7 +170,7 @@ namespace components::result {
     };
 
 
-    struct result_create_index {
+    struct result_create_index final {
     public:
         using result_t = bool;
 
@@ -174,7 +183,7 @@ namespace components::result {
     };
 
 
-    class result_drop_index {
+    class result_drop_index final {
     public:
         using result_t = bool;
 
@@ -187,17 +196,17 @@ namespace components::result {
     };
 
 
-    class result_t {
+    class result_t final {
     public:
         result_t();
-
-        explicit result_t(error_result_t result);
-
-        template <typename T>
-        explicit result_t(T result)
-            : result_(std::move(result))
-            , is_error_(false) {
-        }
+        explicit result_t(error_result_t);
+        explicit result_t(empty_result_t);
+        explicit result_t(result_address_t);
+        explicit result_t(result_list_addresses_t);
+        explicit result_t(components::cursor::cursor_t*);
+        explicit result_t(result_insert);
+        explicit result_t(result_delete);
+        explicit result_t(result_update);
 
         bool is_error() const;
         bool is_success() const;
@@ -205,7 +214,7 @@ namespace components::result {
         const std::string& error_what() const;
 
         template <typename T>
-        bool is_type() const {
+        [[nodiscard]] bool is_type() const {
             return std::holds_alternative<T>(result_);
         }
 
@@ -214,7 +223,10 @@ namespace components::result {
             return std::get<T>(result_);
         }
 
+        [[nodiscard]] result_type_t result_type () const noexcept ;
+
     private:
+        result_type_t result_type_;
         std::variant<
             error_result_t,
             empty_result_t,
