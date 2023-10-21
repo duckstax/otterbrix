@@ -159,13 +159,57 @@ namespace components::result {
 
 
     result_t::result_t()
-        : result_(empty_result_t())
+        : result_type_(result_type_t::empty)
+        , result_(empty_result_t())
         , is_error_(false) {
     }
 
     result_t::result_t(error_result_t result)
-        : result_(std::move(result))
+        : result_type_(result_type_t::error)
+        , result_(std::move(result))
         , is_error_(true) {
+    }
+
+    result_t::result_t(result_address_t result)
+        : result_type_(result_type_t::result_address)
+        , result_(std::move(result))
+        , is_error_(false) {
+    }
+
+    result_t::result_t(result_list_addresses_t result)
+        : result_type_(result_type_t::result_list_addresses)
+        , result_(std::move(result))
+        , is_error_(false) {
+    }
+
+    result_t::result_t(components::cursor::cursor_t* result)
+        : result_type_(result_type_t::result)
+        , result_(result)
+        , is_error_(false) {
+    }
+
+    result_t::result_t(result_insert result)
+        : result_type_(result_type_t::result_insert)
+        , result_(std::move(result))
+        , is_error_(false) {
+    }
+
+    result_t::result_t(result_delete result)
+        : result_type_(result_type_t::result_delete)
+        , result_(std::move(result))
+        , is_error_(false) {
+    }
+
+    result_t::result_t(result_update result)
+        : result_type_(result_type_t::result_update )
+        , result_(std::move(result))
+        , is_error_(false) {
+    }
+
+    result_t::result_t(empty_result_t result)
+        : result_type_(result_type_t::empty )
+        , result_(std::move(result))
+        , is_error_(false) {
     }
 
     bool result_t::is_error() const {
@@ -178,6 +222,10 @@ namespace components::result {
 
     error_code_t result_t::error_code() const {
         return get<error_result_t>().code;
+    }
+
+    result_type_t result_t::result_type () const noexcept {
+        return result_type_;
     }
 
     const std::string& result_t::error_what() const {

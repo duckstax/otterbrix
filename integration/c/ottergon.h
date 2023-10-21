@@ -17,7 +17,7 @@ typedef struct string_view_t {
 
 struct config_log_t {
     string_view_t path;
-    ///level_t level;
+    ////level_t level;
 };
 
 struct config_wal_t {
