@@ -27,7 +27,7 @@ jobs:
           githubToken: ${{ github.token }}
 
           run: |
-            sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
+            apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
             pip install conan==1.60.0 pytest==6.2.5
             conan user
             conan profile new default --detect --force
