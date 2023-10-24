@@ -26,7 +26,7 @@ jobs:
           # Not required, but speeds up builds
           githubToken: ${{ github.token }}
 
-          run: |
+          setup: |
             apt update && apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
             pip install conan==1.60.0 pytest==6.2.5
             conan user
@@ -38,6 +38,8 @@ jobs:
             mkdir build && cd build
             cp ../conanfile.txt .
             conan install . --build missing -s build_type=Release
+
+          run: |
             cd build
             cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
