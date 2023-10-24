@@ -8,15 +8,15 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        operating-system: [ubuntu-20.04]
+        operating-system: [ubuntu-22.04]
         python-version: [3.8]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - uses: uraimo/run-on-arch-action@v2
         with:
-            arch: aarch64
-            distro: ubuntu20.04
+          arch: aarch64
+          distro: ubuntu20.04
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
