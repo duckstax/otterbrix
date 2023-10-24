@@ -1,6 +1,6 @@
 name: manylinux2014
 
-on: [push]
+#on: [push]
         
 env:
   BUILD_TYPE: Release
