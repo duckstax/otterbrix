@@ -1,0 +1,59 @@
+name: ubuntu 20.04 arm64
+on: [push]
+jobs:
+  run:
+    name: Run
+    runs-on: ${{ matrix.operating-system }}
+    strategy:
+      matrix:
+        operating-system: [ubuntu-20.04]
+        python-version: [3.8]
+    steps:
+      - name: Checkout
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v2
+        with:
+          arch: aarch64
+          distro: ubuntu20.04
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install system dependencies
+        run: |
+          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
+
+      - name: conan installation and configuration
+        run: |
+          pip install conan==1.60.0 pytest==6.2.5
+          conan user
+          conan profile new default --detect --force
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan config set general.parallel_download=$(nproc)
+          conan config set general.cpu_count=$(nproc)
+          conan remote add duckstax http://conan.duckstax.com
+
+      - name: download dependencies
+        run: |
+          mkdir build && cd build
+          cp ../conanfile.txt .
+          conan install . --build missing -s build_type=Release
+
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          cd build
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+          cmake --build .
+
+      - name: Test
+        run: |
+          cd build
+          ctest -C -V --output-on-failure
+
+      - name: PyTest
+        run: |
+          cd build/integration/python/
+          pytest
