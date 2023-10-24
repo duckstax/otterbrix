@@ -3,29 +3,31 @@ name: ubuntu 20.04 arm64
 on: [push]
 
 jobs:
-  run:
-    name: Run
-    runs-on: ${{ matrix.operating-system }}
+  build_job:
+    # The host should always be linux
+    runs-on: ubuntu-22.04
+    name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
+
     strategy:
       matrix:
-        operating-system: [ubuntu-22.04]
-        python-version: [3.8]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - uses: uraimo/run-on-arch-action@v2
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
-          githubToken: ${{ github.token }}
+        include:
+          - arch: aarch64
+            distro: ubuntu20.04
 
-          uses: actions/setup-python@v4
-          with:
-            python-version: ${{ matrix.python-version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build artifact
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+
+          # Not required, but speeds up builds
+          githubToken: ${{ github.token }}
 
           run: |
             sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
-
             pip install conan==1.60.0 pytest==6.2.5
             conan user
             conan profile new default --detect --force
@@ -33,17 +35,11 @@ jobs:
             conan config set general.parallel_download=$(nproc)
             conan config set general.cpu_count=$(nproc)
             conan remote add duckstax http://conan.duckstax.com
-
             mkdir build && cd build
             cp ../conanfile.txt .
             conan install . --build missing -s build_type=Release
-
             cd build
             cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
-
             cd build
             ctest -C -V --output-on-failure
-
-            cd build/integration/python/
-            pytest
