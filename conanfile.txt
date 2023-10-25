@@ -1,17 +1,17 @@
 [requires]
-boost/1.80.0@duckstax/stable
-spdlog/1.12.0@duckstax/stable
-pybind11/2.10.0@duckstax/stable
-msgpack-cxx/4.1.1@duckstax/stable
-date/3.0.1@duckstax/stable
-catch2/2.13.7@duckstax/stable
-crc32c/1.1.2@duckstax/stable
-abseil/20211102.0@duckstax/stable
-rocksdb/6.20.3@duckstax/stable
-benchmark/1.6.1@duckstax/stable
-zlib/1.2.12@duckstax/stable
-bzip2/1.0.8@duckstax/stable
-magic_enum/0.8.1@duckstax/stable
+boost/1.80.0@duckstax/_
+spdlog/1.12.0@duckstax/_
+pybind11/2.10.0@duckstax/_
+msgpack-cxx/4.1.1@duckstax/_
+date/3.0.1@duckstax/_
+catch2/2.13.7@duckstax/_
+crc32c/1.1.2@duckstax/_
+abseil/20211102.0@duckstax/_
+rocksdb/6.20.3@duckstax/_
+benchmark/1.6.1@duckstax/_
+zlib/1.2.12@duckstax/_
+bzip2/1.0.8@duckstax/_
+magic_enum/0.8.1@duckstax/_
 
 actor-zeta/1.0.0a7@duckstax/stable
 
