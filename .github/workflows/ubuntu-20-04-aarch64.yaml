@@ -38,7 +38,8 @@ jobs:
             conan config set general.cpu_count=$(nproc)
             conan remote add duckstax http://conan.duckstax.com --insert 0
             
-            mkdir build && cd build
+            mkdir build
+            cd build
             cp ../conanfile.txt .
             conan install . --build missing -s build_type=Release
             cd build
