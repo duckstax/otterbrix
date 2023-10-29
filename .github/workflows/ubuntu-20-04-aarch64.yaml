@@ -47,5 +47,4 @@ jobs:
             
             cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
-            cd build
             ctest -C -V --output-on-failure
