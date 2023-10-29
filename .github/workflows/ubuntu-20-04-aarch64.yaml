@@ -39,10 +39,12 @@ jobs:
             conan remote add duckstax http://conan.duckstax.com --insert 0
             
             mkdir build
+            pwd
+            ls
             cd build
             cp ../conanfile.txt .
             conan install . --build missing -s build_type=Release
-            cd build
+            
             cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
             cmake --build .
             cd build
