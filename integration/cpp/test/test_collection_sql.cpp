@@ -42,6 +42,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
                       << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto res = dispatcher->execute_sql(session, query.str());
+            assert(res.is_type<result_insert>() && "[integration::cpp::test_collection::sql] -> [INFO(\"insert\")]: #1 type in not (result_insert)");
             auto r = res.get<result_insert>();
             REQUIRE(r.inserted_ids().size() == 100);
         }
@@ -55,6 +56,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
         {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"find\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             delete c;
@@ -63,6 +65,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"find\")]: #2 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
@@ -74,6 +77,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"delete\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
@@ -82,6 +86,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "DELETE FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
+            assert(res.is_type<result_delete>() && "[integration::cpp::test_collection::sql] -> [INFO(\"delete\")]: #2 type in not (result_delete)");
             auto r = res.get<result_delete>();
             REQUIRE(r.deleted_ids().size() == 9);
         }
@@ -89,6 +94,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"delete\")]: #3 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
@@ -100,6 +106,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count < 20;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"update\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;
@@ -109,6 +116,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto res = dispatcher->execute_sql(session, "UPDATE TestDatabase.TestCollection "
                                                         "SET count = 1000 "
                                                         "WHERE count < 20;");
+            assert(res.is_type<result_update>() && "[integration::cpp::test_collection::sql] -> [INFO(\"delete\")]: #2 type in not (result_update)");
             auto r = res.get<result_update>();
             REQUIRE(r.modified_ids().size() == 20);
         }
@@ -116,6 +124,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count < 20;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"update\")]: #3 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
@@ -124,6 +133,7 @@ TEST_CASE("integration::cpp::test_collection::sql") {
             auto session = duck_charmer::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count == 1000;");
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::sql] -> [INFO(\"update\")]: #4 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;

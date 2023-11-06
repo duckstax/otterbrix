@@ -40,30 +40,35 @@ namespace services::disk {
     }
 
     auto agent_disk_t::append_database(const command_t& command) -> void {
+        assert(std::holds_alternative<command_append_database_t>(command) && "[agent_disk_t::append_database]: variant command holds the alternative command_append_database_t");
         auto& cmd = command.get<command_append_database_t>();
         trace(log_, "agent_disk::append_database , database : {}", cmd.database);
         disk_.append_database(cmd.database);
     }
 
     auto agent_disk_t::remove_database(const command_t& command) -> void {
+        assert(std::holds_alternative<command_remove_database_t>(command) && "[agent_disk_t::remove_database]: variant command holds the alternative command_remove_database_t");
         auto& cmd = command.get<command_remove_database_t>();
         trace(log_, "agent_disk::remove_database , database : {}", cmd.database);
         disk_.remove_database(cmd.database);
     }
 
     auto agent_disk_t::append_collection(const command_t& command) -> void {
+        assert(std::holds_alternative<command_append_collection_t>(command) && "[agent_disk_t::append_collection]: variant command holds the alternative command_append_collection_t");
         auto& cmd = command.get<command_append_collection_t>();
         trace(log_, "agent_disk::append_collection , database : {} , collection : {}", cmd.database, cmd.collection);
         disk_.append_collection(cmd.database, cmd.collection);
     }
 
     auto agent_disk_t::remove_collection(const command_t& command) -> void {
+        assert(std::holds_alternative<command_remove_collection_t>(command) && "[agent_disk_t::remove_collection]: variant command holds the alternative command_remove_collection_t");
         auto& cmd = command.get<command_remove_collection_t>();
         trace(log_, "agent_disk::remove_collection , database : {} , collection : {}", cmd.database, cmd.collection);
         disk_.remove_collection(cmd.database, cmd.collection);
     }
 
     auto agent_disk_t::write_documents(const command_t& command) -> void {
+        assert(std::holds_alternative<command_write_documents_t>(command) && "[agent_disk_t::write_documents]: variant command holds the alternative command_write_documents_t");
         auto& write_command = command.get<command_write_documents_t>();
         trace(log_, "agent_disk::write_documents , database : {} , collection : {} , {} documents", write_command.database, write_command.collection, write_command.documents.size());
         for (const auto& document : write_command.documents) {
@@ -75,6 +80,7 @@ namespace services::disk {
     }
 
     auto agent_disk_t::remove_documents(const command_t& command) -> void {
+        assert(std::holds_alternative<command_remove_documents_t>(command) && "[agent_disk_t::remove_documents]: variant command holds the alternative command_remove_documents_t");
         auto& remove_command = command.get<command_remove_documents_t>();
         trace(log_, "agent_disk::remove_documents , database : {} , collection : {} , {} documents", remove_command.database, remove_command.collection, remove_command.documents.size());
         for (const auto& id : remove_command.documents) {

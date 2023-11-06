@@ -121,6 +121,7 @@ namespace services::disk {
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
                 if (command.name() == handler_id(route::remove_collection)) {
+                    assert(std::holds_alternative<command_remove_collection_t>(command) && "[manager_disk_t::flush]: variant command holds the alternative command_remove_collection_t");
                     const auto& drop_collection = command.get<command_remove_collection_t>();
                     std::vector<index_agent_disk_t*> indexes;
                     for (const auto& index : index_agents_) {
@@ -183,6 +184,7 @@ namespace services::disk {
         auto it = commands_.find(session);
         if (it != commands_.end()) {
             for (const auto& command : commands_.at(session)) {
+                assert(std::holds_alternative<command_drop_index_t>(command) && "[manager_disk_t::drop_index_agent_success]: variant command holds the alternative command_drop_index_t");
                 auto command_drop = command.get<command_drop_index_t>();
                 trace(log_, "manager_disk: drop_index_agent : {} : success", command_drop.index_name);
                 //actor_zeta::send(command_drop.address, address(), index::handler_id(index::route::success), session);
@@ -193,6 +195,7 @@ namespace services::disk {
             if (it_all_drop != removed_indexes_.end()) {
                 if (--it_all_drop->second.size == 0) {
                     actor_zeta::send(agent(), address(), it_all_drop->second.command.name(), it_all_drop->second.command);
+                    assert(std::holds_alternative<command_remove_collection_t>(it_all_drop->second.command) && "[manager_disk_t::drop_index_agent_success]: variant command holds the alternative command_remove_collection_t");
                     const auto& drop_collection = it_all_drop->second.command.get<command_remove_collection_t>();
                     remove_all_indexes_from_collection_(drop_collection.collection);
                     actor_zeta::send(it_all_drop->second.sender, address(), handler_id(route::remove_collection_finish), session, drop_collection.collection);

@@ -42,6 +42,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             auto session = duck_charmer::session_id_t();
             components::ql::variant_statement_t ql{ins};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<result_insert>() && "[integration::cpp::test_collection::ql] -> [INFO(\"insert\")]: [ql::insert_many_t] type in not (result_insert)");
             auto r = res.get<result_insert>();
             REQUIRE(r.inserted_ids().size() == 100);
         }
@@ -57,6 +58,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             components::ql::aggregate_statement agg{database_name, collection_name};
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"find\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             delete c;
@@ -69,6 +71,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"find\")]: #2 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
@@ -84,6 +87,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"delete\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
@@ -95,6 +99,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             del.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{del};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<result_delete>() && "[integration::cpp::test_collection::ql] -> [INFO(\"delete\")]: #2 type in not (result_delete)");
             auto r = res.get<result_delete>();
             REQUIRE(r.deleted_ids().size() == 9);
         }
@@ -106,6 +111,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"delete\")]: #3 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
@@ -121,6 +127,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"update\")]: #1 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;
@@ -137,6 +144,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             upd.update_ = make_document(upd_value);
             components::ql::variant_statement_t ql{upd};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<result_update>() && "[integration::cpp::test_collection::ql] -> [INFO(\"update\")]: #2 type in not (result_update)");
             auto r = res.get<result_update>();
             REQUIRE(r.modified_ids().size() == 20);
         }
@@ -148,6 +156,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"update\")]: #3 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
@@ -160,6 +169,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 1000);
             components::ql::variant_statement_t ql{agg};
             auto res = dispatcher->execute_ql(session, ql);
+            assert(res.is_type<components::cursor::cursor_t*>() && "[integration::cpp::test_collection::ql] -> [INFO(\"update\")]: #4 type in not (components::cursor::cursor_t*)");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;

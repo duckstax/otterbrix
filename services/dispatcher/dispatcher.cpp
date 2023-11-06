@@ -157,6 +157,7 @@ namespace services::dispatcher {
         for (const auto &record : records) {
             switch (record.type) {
                 case statement_type::create_database: {
+                    assert(std::holds_alternative<create_database_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_database] variant record.data holds the alternative");
                     auto data = std::get<create_database_t>(record.data);
                     components::session::session_id_t session_database;
                     create_database(session_database, &data, manager_wal_);
@@ -166,54 +167,63 @@ namespace services::dispatcher {
                     break;
                 }
                 case statement_type::create_collection: {
+                    assert(std::holds_alternative<create_collection_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_collection] variant record.data holds the alternative");
                     auto data = std::get<create_collection_t>(record.data);
                     components::session::session_id_t session_collection;
                     create_collection(session_collection, &data, manager_wal_);
                     break;
                 }
                 case statement_type::drop_collection: {
+                    assert(std::holds_alternative<drop_collection_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::drop_collection] variant record.data holds the alternative");
                     auto data = std::get<drop_collection_t>(record.data);
                     components::session::session_id_t session_collection;
                     drop_collection(session_collection, &data, manager_wal_);
                     break;
                 }
                 case statement_type::insert_one: {
+                    assert(std::holds_alternative<insert_one_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::insert_one] variant record.data holds the alternative");
                     auto ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;
                     insert_documents(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::insert_many: {
+                    assert(std::holds_alternative<insert_many_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::insert_many] variant record.data holds the alternative");
                     auto ql = std::get<insert_many_t>(record.data);
                     components::session::session_id_t session_insert;
                     insert_documents(session_insert, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_one: {
+                    assert(std::holds_alternative<delete_one_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::delete_one] variant record.data holds the alternative");
                     auto ql = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
                     delete_documents(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::delete_many: {
+                    assert(std::holds_alternative<delete_many_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::delete_many] variant record.data holds the alternative");
                     auto ql = std::get<delete_many_t>(record.data);
                     components::session::session_id_t session_delete;
                     delete_documents(session_delete, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_one: {
+                    assert(std::holds_alternative<update_one_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::update_one] variant record.data holds the alternative");
                     auto ql = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
                     update_documents(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::update_many: {
+                    assert(std::holds_alternative<update_many_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::update_many] variant record.data holds the alternative");
                     auto ql = std::get<update_many_t>(record.data);
                     components::session::session_id_t session_update;
                     update_documents(session_update, &ql, manager_wal_);
                     break;
                 }
                 case statement_type::create_index: {
+                    assert(std::holds_alternative<create_index_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_index] variant record.data holds the alternative");
                     auto data = std::get<create_index_t>(record.data);
                     components::session::session_id_t session_create_index;
                     create_index(session_create_index, std::move(data), manager_wal_);

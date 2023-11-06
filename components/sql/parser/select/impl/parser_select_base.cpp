@@ -48,6 +48,7 @@ namespace components::sql::select::impl {
                 table = std::string(token.value());
             }
             statement = ql::aggregate_statement{schema, table};
+            assert(std::holds_alternative<ql::aggregate_statement>(statement) && "[components::sql::impl::parser_result parse_select_base]: [ql::aggregate_statement] variant statement holds the alternative");
             auto& agg = std::get<ql::aggregate_statement>(statement);
 
             token = lexer.next_not_whitespace_token();
