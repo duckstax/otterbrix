@@ -1,5 +1,7 @@
 project(example)
 
+add_definitions(-DDEV_MODE)
+
 include_directories(
         ${PROJECT_SOURCE_DIR}
 )
