@@ -7,19 +7,19 @@ set(${PROJECT_NAME}_sources
       ottergon.cpp
 )
 
-set(ROCKETJOE_LIBS
-        rocketjoe::log
-        rocketjoe::memory_storage
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
-        rocketjoe::sql
-        rocketjoe::result
+set(ottergon_LIBS
+        ottergon::log
+        ottergon::memory_storage
+        ottergon::collection
+        ottergon::cursor
+        ottergon::session
+        ottergon::document
+        ottergon::dispatcher
+        ottergon::wal
+        ottergon::disk
+        ottergon::locks
+        ottergon::sql
+        ottergon::result
 )
 
 
@@ -32,7 +32,7 @@ add_library(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME} PUBLIC
-        ${ROCKETJOE_LIBS}
+        ${ottergon_LIBS}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")
@@ -41,7 +41,7 @@ add_library(${PROJECT_NAME}_shared SHARED ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME}_shared PRIVATE
-        ${ROCKETJOE_LIBS}
+        ${ottergon_LIBS}
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
@@ -83,7 +83,7 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
     target_link_libraries(
             ottergon_${PROJECT_NAME} PUBLIC
 
-            ${ROCKETJOE_LIBS}
+            ${ottergon_LIBS}
 
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx

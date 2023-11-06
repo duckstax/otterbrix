@@ -22,24 +22,24 @@ set(${PROJECT_NAME}_SOURCES
 )
 
 
-add_library(rocketjoe_${PROJECT_NAME}
+add_library(ottergon_${PROJECT_NAME}
             ${${PROJECT_NAME}_SOURCES}
 )
 
 
-add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PUBLIC
+        ottergon_${PROJECT_NAME} PUBLIC
         CONAN_PKG::msgpack-cxx
         CONAN_PKG::boost
         dl
 )
 
 target_include_directories(
-        rocketjoe_${PROJECT_NAME}
+        ottergon_${PROJECT_NAME}
         PUBLIC
         core
         json

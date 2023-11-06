@@ -16,7 +16,7 @@ set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME
 
 target_link_libraries(
         ottergon_${PROJECT_NAME} PRIVATE
-        rocketjoe::log
+        ottergon::log
 )
 
 target_include_directories(

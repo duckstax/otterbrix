@@ -2,11 +2,7 @@
 #include <catch2/catch.hpp>
 
 #include <integration/cpp/ottergon.hpp>
-
 #include "components/tests/generaty.hpp"
-
-static const auto database_name = "TestDatabase";
-static const auto collection_name = "TestCollection";
 
 using namespace components;
 using namespace components::result;
