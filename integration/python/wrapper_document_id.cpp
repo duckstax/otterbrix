@@ -5,7 +5,7 @@
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace duck_charmer {
+namespace ottergon {
 
     wrapper_document_id::wrapper_document_id()
         : id_(document_id_t()) {}

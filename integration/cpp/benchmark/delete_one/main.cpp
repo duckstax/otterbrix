@@ -3,7 +3,7 @@
 void delete_one(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = ottergon::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {

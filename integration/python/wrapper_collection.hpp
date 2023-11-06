@@ -21,7 +21,7 @@
 #include "wrapper_result.hpp"
 
 namespace py = pybind11;
-namespace duck_charmer {
+namespace ottergon {
 
     using components::ql::index_type;
     using components::ql::index_compare;

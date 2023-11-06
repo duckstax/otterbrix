@@ -19,7 +19,7 @@
 #include <components/ql/statements.hpp>
 #include <components/result/result.hpp>
 
-namespace duck_charmer {
+namespace ottergon {
 
     using components::session::session_id_t;
     using components::document::document_ptr;
@@ -30,19 +30,19 @@ namespace duck_charmer {
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* , actor_zeta::address_t,log_t &log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
-        auto create_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
-        auto drop_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
-        auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
-        auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
-        auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> components::result::result_insert&;
-        auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> components::result::result_insert&;
-        auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
-        auto find_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
-        auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
-        auto delete_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
-        auto update_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
-        auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
-        auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_size;
+        [[deprecated]] auto create_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
+        [[deprecated]] auto drop_database(session_id_t &session, const database_name_t &database) -> components::result::result_t;
+        [[deprecated]] auto create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
+        [[deprecated]] auto drop_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_t;
+        [[deprecated]] auto insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> components::result::result_insert&;
+        [[deprecated]] auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> components::result::result_insert&;
+        [[deprecated]] auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
+        [[deprecated]] auto find_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
+        [[deprecated]] auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
+        [[deprecated]] auto delete_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
+        [[deprecated]] auto update_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
+        [[deprecated]] auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
+        [[deprecated]] auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_size;
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> components::result::result_create_index;
         auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> components::result::result_drop_index;
         auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query) -> components::result::result_t;

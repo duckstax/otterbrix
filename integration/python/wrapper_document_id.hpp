@@ -6,7 +6,7 @@
 
 namespace py = pybind11;
 
-namespace duck_charmer {
+namespace ottergon {
 
     class PYBIND11_EXPORT wrapper_document_id final : public boost::intrusive_ref_counter<wrapper_document_id> {
 

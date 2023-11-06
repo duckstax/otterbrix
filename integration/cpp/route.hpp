@@ -6,7 +6,7 @@
 #include <services/dispatcher/route.hpp>
 #include <services/wal/route.hpp>
 
-namespace duck_charmer {
+namespace ottergon {
 
     namespace dispatcher {
         using services::dispatcher::route;

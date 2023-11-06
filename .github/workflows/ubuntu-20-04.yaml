@@ -1,5 +1,7 @@
 name: ubuntu 20.04
-#on: [push]
+
+on: [push]
+
 jobs:
   run:
     name: Run

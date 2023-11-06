@@ -1,7 +1,15 @@
 Ottergon is an open-source framework for developing conventional and analytical applications.
 
+## Stable Arch
+
 [![ubuntu 20.04](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml)
+
 [![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+
+## Experemental Arch
+
+[![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+
 
 Ottergon is an open-source framework for developing conventional and analytical applications. 
 By adding the Ottergon module to their applications, developers unlock the ability to quickly process unstructured and loosely structured data.

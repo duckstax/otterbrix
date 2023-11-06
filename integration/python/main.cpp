@@ -19,7 +19,7 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-using namespace duck_charmer;
+using namespace ottergon;
 
 PYBIND11_MODULE(ottergon, m) {
     py::class_<wrapper_client>(m, "Client")

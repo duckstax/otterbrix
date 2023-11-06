@@ -14,7 +14,7 @@
 
 using namespace components::result;
 
-namespace duck_charmer {
+namespace ottergon {
 
     wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")

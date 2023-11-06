@@ -13,11 +13,11 @@ static const collection_name_t collection_name = "TestCollection";
 #define INIT_COLLECTION() \
     do { \
         { \
-            auto session = duck_charmer::session_id_t(); \
+            auto session = ottergon::session_id_t(); \
             dispatcher->create_database(session, database_name); \
         } \
         { \
-            auto session = duck_charmer::session_id_t(); \
+            auto session = ottergon::session_id_t(); \
             dispatcher->create_collection(session, database_name, collection_name); \
         } \
     } while (false)
@@ -29,14 +29,14 @@ static const collection_name_t collection_name = "TestCollection";
             documents.push_back(gen_doc(num)); \
         } \
         { \
-            auto session = duck_charmer::session_id_t(); \
+            auto session = ottergon::session_id_t(); \
             dispatcher->insert_many(session, database_name, collection_name, documents); \
         } \
     } while (false)
 
 #define CREATE_INDEX(INDEX_COMPARE, KEY) \
     do { \
-        auto session = duck_charmer::session_id_t(); \
+        auto session = ottergon::session_id_t(); \
         components::ql::create_index_t ql{database_name, collection_name, components::ql::index_type::single, INDEX_COMPARE}; \
         ql.keys_.emplace_back(KEY); \
         dispatcher->create_index(session, ql); \
@@ -44,7 +44,7 @@ static const collection_name_t collection_name = "TestCollection";
 
 #define DROP_INDEX(KEY) \
     do { \
-        auto session = duck_charmer::session_id_t(); \
+        auto session = ottergon::session_id_t(); \
         components::ql::drop_index_t ql{database_name, collection_name}; \
         ql.keys_.emplace_back(KEY); \
         dispatcher->drop_index(session, ql); \
@@ -52,7 +52,7 @@ static const collection_name_t collection_name = "TestCollection";
 
 #define CHECK_FIND_ALL() \
     do { \
-        auto session = duck_charmer::session_id_t(); \
+        auto session = ottergon::session_id_t(); \
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
         auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
         REQUIRE(c->size() == 100); \
@@ -61,7 +61,7 @@ static const collection_name_t collection_name = "TestCollection";
 
 #define CHECK_FIND(KEY, COMPARE, VALUE, COUNT) \
     do { \
-        auto session = duck_charmer::session_id_t(); \
+        auto session = ottergon::session_id_t(); \
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
         auto expr = components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1}); \
         ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr))); \

@@ -1,5 +1,7 @@
 name: ubuntu 22.04
-# on: [push]
+
+on: [push]
+
 jobs:
   run:
     name: Run
