@@ -5,19 +5,19 @@ set(${PROJECT_NAME}_sources
         main.cpp
 )
 
-set(ROCKETJOE_LIBS
-        rocketjoe::log
-        rocketjoe::memory_storage
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
-        rocketjoe::sql
-        rocketjoe::result
+set(ottergon_LIBS
+        ottergon::log
+        ottergon::memory_storage
+        ottergon::collection
+        ottergon::cursor
+        ottergon::session
+        ottergon::document
+        ottergon::dispatcher
+        ottergon::wal
+        ottergon::disk
+        ottergon::locks
+        ottergon::sql
+        ottergon::result
 )
 
 
@@ -31,7 +31,7 @@ add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_sources})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         cpp_ottergon
-        ${ROCKETJOE_LIBS}
+        ${ottergon_LIBS}
 )
 
 #set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")

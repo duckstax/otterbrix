@@ -15,7 +15,7 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         CONAN_PKG::benchmark
         cpp_ottergon
-        rocketjoe::test_generaty
+        ottergon::test_generaty
 )
 
 file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

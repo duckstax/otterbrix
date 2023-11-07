@@ -24,18 +24,18 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
 
     INFO("initialization") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             dispatcher->create_database(session, database_name);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             dispatcher->create_collection(session, database_name, collection_name);
         }
     }
 
     INFO("insert") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
@@ -47,21 +47,21 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             REQUIRE(r.inserted_ids().size() == 100);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
         }
     }
 
     INFO("find") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection;");
             auto *c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -72,7 +72,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
 
     INFO("find order by") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "ORDER BY count;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -85,7 +85,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "ORDER BY count DESC;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -98,7 +98,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "ORDER BY name;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -114,7 +114,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
 
     INFO("delete") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -122,14 +122,14 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "DELETE FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
             auto r = res.get<result_delete>();
             REQUIRE(r.deleted_ids().size() == 9);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count > 90;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -140,7 +140,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
 
     INFO("update") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count < 20;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -148,7 +148,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "UPDATE TestDatabase.TestCollection "
                                                         "SET count = 1000 "
                                                         "WHERE count < 20;");
@@ -156,7 +156,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             REQUIRE(r.modified_ids().size() == 20);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count < 20;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -164,7 +164,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             delete c;
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             auto res = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
                                                         "WHERE count == 1000;");
             auto *c = res.get<components::cursor::cursor_t*>();
@@ -187,15 +187,15 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
 
     INFO("initialization") {
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             dispatcher->create_database(session, database_name);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             dispatcher->create_collection(session, database_name, collection_name);
         }
         {
-            auto session = duck_charmer::session_id_t();
+            auto session = ottergon::session_id_t();
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
@@ -207,7 +207,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
     }
 
     INFO("group by") {
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
                                                     R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                                     R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
@@ -229,7 +229,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
     }
 
     INFO("group by with order by") {
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         auto res = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
                                                     R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                                     R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
@@ -264,19 +264,19 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
     auto* dispatcher = space.dispatcher();
 
     INFO("not exists database") {
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         auto res = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(res.is_error());
         REQUIRE(res.error_code() == error_code_t::database_not_exists);
     }
 
     INFO("create database") {
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         dispatcher->execute_sql(session, R"_(CREATE DATABASE TestDatabase;)_");
     }
 
     INFO("not exists database") {
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         auto res = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(res.is_error());
         REQUIRE(res.error_code() == error_code_t::collection_not_exists);

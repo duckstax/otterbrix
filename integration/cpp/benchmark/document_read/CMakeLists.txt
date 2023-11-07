@@ -10,8 +10,8 @@ add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         CONAN_PKG::benchmark
-        rocketjoe::document
-        rocketjoe::test_generaty
+        ottergon::document
+        ottergon::test_generaty
 )
 
 file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

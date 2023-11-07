@@ -34,7 +34,7 @@ public:
 
 private:
     std::atomic_bool close_;
-    duck_charmer::session_id_t session_;
+    ottergon::session_id_t session_;
     pointer ptr_;
     actor_zeta::address_t dispatcher_;
 
