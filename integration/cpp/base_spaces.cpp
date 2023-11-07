@@ -8,13 +8,13 @@
 #include <services/wal/manager_wal_replicate.hpp>
 #include "route.hpp"
 
-namespace duck_charmer {
+namespace ottergon {
 
     using services::dispatcher::manager_dispatcher_t;
 
     constexpr static auto name_dispatcher = "dispatcher";
 
-    base_spaces::base_spaces(const configuration::config& config)
+    base_ottergon_t::base_ottergon_t(const configuration::config& config)
         : scheduler_(new actor_zeta::shared_work(1, 1000))
         , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)) {
         log_ = initialization_logger("python", config.log.path.c_str());
@@ -83,15 +83,15 @@ namespace duck_charmer {
         trace(log_, "spaces::spaces() final");
     }
 
-    log_t& base_spaces::get_log() {
+    log_t& base_ottergon_t::get_log() {
         return log_;
     }
 
-    wrapper_dispatcher_t* base_spaces::dispatcher() {
+    wrapper_dispatcher_t* base_ottergon_t::dispatcher() {
         return wrapper_dispatcher_.get();
     }
 
-    base_spaces::~base_spaces() {
+    base_ottergon_t::~base_ottergon_t() {
         trace(log_, "delete spaces");
         scheduler_->stop();
         scheduler_dispather_->stop();

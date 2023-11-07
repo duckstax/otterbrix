@@ -8,25 +8,25 @@ list(APPEND CURRENT_${TARGET_HEADERS}
         log.cpp
 )
 
-add_library(rocketjoe_${CURRENT_TARGET}
+add_library(ottergon_${CURRENT_TARGET}
             ${CURRENT_${TARGET_HEADERS}}
             ${CURRENT_${TARGET_HEADERS}}
 )
 
 
-add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
+add_library(ottergon::${CURRENT_TARGET} ALIAS ottergon_${CURRENT_TARGET})
 
-set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
+set_property(TARGET ottergon_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
 target_link_libraries(
-        rocketjoe_${CURRENT_TARGET} PUBLIC
+        ottergon_${CURRENT_TARGET} PUBLIC
         CONAN_PKG::spdlog
         CONAN_PKG::boost
         CONAN_PKG::fmt
 )
 
 target_include_directories(
-        rocketjoe_${CURRENT_TARGET}
+        ottergon_${CURRENT_TARGET}
         PUBLIC
         "../../../"
 )
@@ -36,7 +36,7 @@ if(DEV_MODE)
 endif()
 
 install(TARGETS
-        rocketjoe_${CURRENT_TARGET}
+        ottergon_${CURRENT_TARGET}
 
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib

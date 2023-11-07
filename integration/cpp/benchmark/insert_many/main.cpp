@@ -3,7 +3,7 @@
 void insert_many(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = ottergon::session_id_t();
     dispatcher->create_database(session, database_name);
     dispatcher->create_collection(session, database_name, collection_name);
     state.ResumeTiming();

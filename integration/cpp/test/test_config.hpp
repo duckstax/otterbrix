@@ -19,10 +19,10 @@ inline void test_clear_directory(const configuration::config &config) {
     std::filesystem::create_directories(config.disk.path);
 }
 
-class test_spaces final : public duck_charmer::base_spaces {
+class test_spaces final : public ottergon::base_ottergon_t {
 public:
     test_spaces(const configuration::config &config)
-        : duck_charmer::base_spaces(config)
+        : ottergon::base_ottergon_t(config)
     {}
 };
 

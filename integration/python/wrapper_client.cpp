@@ -12,11 +12,11 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-namespace duck_charmer {
+namespace ottergon {
 
     wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
         debug(log_,"wrapper_client::get_or_create name database: {}", name);
-        auto session_tmp = duck_charmer::session_id_t();
+        auto session_tmp = ottergon::session_id_t();
         ptr_->create_database(session_tmp, name);
         auto result = wrapper_database_ptr(new wrapper_database(name, ptr_, log_));
         debug(log_,"wrapper_client::get_or_create return wrapper_database_ptr");
@@ -44,7 +44,7 @@ namespace duck_charmer {
 
     wrapper_result wrapper_client::execute(const std::string& query) {
         debug(log_, "wrapper_client::execute");
-        auto session = duck_charmer::session_id_t();
+        auto session = ottergon::session_id_t();
         return wrapper_result{session, ptr_->execute_sql(session, query)};
     }
 }

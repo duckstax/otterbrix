@@ -5,7 +5,7 @@
 void create_databases(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = ottergon::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
@@ -20,7 +20,7 @@ BENCHMARK(create_databases)->Arg(1)->Arg(10)->Arg(20)->Arg(100);
 void create_collections(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = ottergon::session_id_t();
     dispatcher->create_database(session, database_name);
     state.ResumeTiming();
     for (auto _ : state) {

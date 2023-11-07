@@ -2,7 +2,7 @@
 #include "forward.hpp"
 #include "spaces.hpp"
 
-namespace duck_charmer {
+namespace ottergon {
 
     wrapper_database::~wrapper_database() {
         trace(log_, "delete wrapper_database");
@@ -19,7 +19,7 @@ namespace duck_charmer {
     bool wrapper_database::drop_collection(const std::string& collection_name) {
         debug(log_,"wrapper_database::drop_collection: {}", collection_name);
         collections_.erase(collection_name);
-        auto session_tmp = duck_charmer::session_id_t();
+        auto session_tmp = ottergon::session_id_t();
         auto result = ptr_->drop_collection(session_tmp, name_, collection_name);
         debug(log_,"wrapper_database::drop_collection {}", result.is_success());
         return result.is_success();
@@ -27,7 +27,7 @@ namespace duck_charmer {
 
     wrapper_collection_ptr wrapper_database::create(const std::string& collection_name) {
         debug(log_,"wrapper_database::create name collection: {}", collection_name);
-        auto session_tmp = duck_charmer::session_id_t();
+        auto session_tmp = ottergon::session_id_t();
         ptr_->create_collection(session_tmp, name_, collection_name);
         auto result = wrapper_collection_ptr(new wrapper_collection(collection_name, name_, ptr_, log_));
         debug(log_,"wrapper_client::get_or_create return wrapper_database_ptr");

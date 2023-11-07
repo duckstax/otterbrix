@@ -15,7 +15,7 @@ target_link_libraries(
         CONAN_PKG::catch2
         CONAN_PKG::boost
         ottergon::assert
-        rocketjoe::log
+        ottergon::log
         ${CMAKE_THREAD_LIBS_INIT}
 )
 
