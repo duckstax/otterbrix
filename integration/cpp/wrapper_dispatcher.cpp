@@ -77,6 +77,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_insert>(intermediate_store_) && "[wrapper_dispatcher_t::insert_one]: return variant intermediate_store_ holds the alternative result_insert");
         return std::get<result_insert>(intermediate_store_);
     }
 
@@ -91,6 +92,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_insert>(intermediate_store_) && "[wrapper_dispatcher_t::insert_many]: return variant intermediate_store_ holds the alternative result_insert");
         return std::get<result_insert>(intermediate_store_);
     }
 
@@ -118,6 +120,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_delete>(intermediate_store_) && "[wrapper_dispatcher_t::delete_one]: return variant intermediate_store_ holds the alternative result_delete");
         return std::get<result_delete>(intermediate_store_);
     }
 
@@ -133,6 +136,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_delete>(intermediate_store_) && "[wrapper_dispatcher_t::delete_many]: return variant intermediate_store_ holds the alternative result_delete");
         return std::get<result_delete>(intermediate_store_);
     }
 
@@ -148,6 +152,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_update>(intermediate_store_) && "[wrapper_dispatcher_t::update_one]: return variant intermediate_store_ holds the alternative result_update");
         return std::get<result_update>(intermediate_store_);
     }
 
@@ -163,6 +168,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
+        assert(std::holds_alternative<result_update>(intermediate_store_) && "[wrapper_dispatcher_t::update_many]: return variant intermediate_store_ holds the alternative result_update");
         return std::get<result_update>(intermediate_store_);
     }
 
@@ -177,6 +183,7 @@ namespace ottergon {
             database,
             collection);
         wait();
+        assert(std::holds_alternative<result_size>(intermediate_store_) && "[wrapper_dispatcher_t::size]: return variant intermediate_store_ holds the alternative result_size");
         return std::get<result_size>(intermediate_store_);
     }
 
@@ -190,6 +197,7 @@ namespace ottergon {
             session,
             std::move(index));
         wait();
+        assert(std::holds_alternative<result_create_index>(intermediate_store_) && "[wrapper_dispatcher_t::create_index]: return variant intermediate_store_ holds the alternative result_create_index");
         return std::get<result_create_index>(intermediate_store_);
     }
 
@@ -203,6 +211,7 @@ namespace ottergon {
             session,
             std::move(drop_index));
         wait();
+        assert(std::holds_alternative<result_drop_index>(intermediate_store_) && "[wrapper_dispatcher_t::drop_index]: return variant intermediate_store_ holds the alternative result_drop_index");
         return std::get<result_drop_index>(intermediate_store_);
     }
 
@@ -325,7 +334,7 @@ namespace ottergon {
             session,
             ql);
         wait();
-
+        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::send_ql_new]: return variant intermediate_store_ holds the alternative result_t");
         auto& result = std::get<result_t>(intermediate_store_);
         if (result.is_error()) {
             //todo: handling error
@@ -347,6 +356,7 @@ namespace ottergon {
                     session,
                     &ql);
         wait();
+        assert(std::holds_alternative<Tres>(intermediate_store_) && "[wrapper_dispatcher_t::send_ql]: return variant intermediate_store_ holds the alternative Tres");
         return make_result(std::get<Tres>(intermediate_store_));
     }
 

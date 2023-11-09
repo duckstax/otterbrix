@@ -43,6 +43,7 @@ namespace components::sql::delete_::impl {
             table = std::string(token.value());
         }
         statement = ql::delete_many_t{schema, table};
+        assert(std::holds_alternative<ql::delete_many_t>(statement) && "[components::sql::impl::parser_result parse_delete_base]: [ql::delete_many_t] variant statement holds the alternative");
         auto& del = std::get<ql::delete_many_t>(statement);
 
         token = lexer.next_not_whitespace_token();

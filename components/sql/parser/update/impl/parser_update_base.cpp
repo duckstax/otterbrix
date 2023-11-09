@@ -51,6 +51,7 @@ namespace components::sql::update::impl {
         }
 
         statement = ql::update_many_t{schema, table};
+        assert(std::holds_alternative<ql::update_many_t>(statement) && "[components::sql::impl::parser_result parse_update_base]: [ql::update_many_t] variant statement holds the alternative");
         auto& upd = std::get<ql::update_many_t>(statement);
 
         auto res = parse_set(resource, lexer, upd.update_);

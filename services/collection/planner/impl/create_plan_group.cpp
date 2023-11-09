@@ -49,24 +49,28 @@ namespace services::collection::planner::impl {
                     break;
                 }
                 case aggregate_type::sum: {
+                    assert(std::holds_alternative<components::expressions::key_t>(expr->params().front()) && "[add_group_aggregate] aggregate_type::sum:  variant intermediate_store_ holds the alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
                     group->add_value(expr->key().as_string(),
                                      std::make_unique<operators::aggregate::operator_sum_t>(context, field));
                     break;
                 }
                 case aggregate_type::avg: {
+                    assert(std::holds_alternative<components::expressions::key_t>(expr->params().front()) && "[add_group_aggregate] aggregate_type::avg:  variant intermediate_store_ holds the alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
                     group->add_value(expr->key().as_string(),
                                      std::make_unique<operators::aggregate::operator_avg_t>(context, field));
                     break;
                 }
                 case aggregate_type::min: {
+                    assert(std::holds_alternative<components::expressions::key_t>(expr->params().front()) && "[add_group_aggregate] aggregate_type::min:  variant intermediate_store_ holds the alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
                     group->add_value(expr->key().as_string(),
                                      std::make_unique<operators::aggregate::operator_min_t>(context, field));
                     break;
                 }
                 case aggregate_type::max: {
+                    assert(std::holds_alternative<components::expressions::key_t>(expr->params().front()) && "[add_group_aggregate] aggregate_type::max:  variant intermediate_store_ holds the alternative components::expressions::key_t");
                     auto field = std::get<components::expressions::key_t>(expr->params().front());
                     group->add_value(expr->key().as_string(),
                                      std::make_unique<operators::aggregate::operator_max_t>(context, field));
