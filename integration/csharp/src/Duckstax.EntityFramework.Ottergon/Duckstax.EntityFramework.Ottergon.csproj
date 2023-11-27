@@ -14,4 +14,8 @@
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="7.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Duckstax.Ottergon\Duckstax.Ottergon.csproj" />
+    </ItemGroup>
+
 </Project>
