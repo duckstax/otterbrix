@@ -334,7 +334,6 @@ nbdist/
 *.sig
 
 pkg/
-src/
 ### Xcode template
 # Xcode
 #
