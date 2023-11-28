@@ -42,9 +42,9 @@ namespace ottergon {
         return tmp;
     }
 
-    wrapper_result wrapper_client::execute(const std::string& query) {
+    wrapper_cursor_ptr wrapper_client::execute(const std::string& query) {
         debug(log_, "wrapper_client::execute");
         auto session = ottergon::session_id_t();
-        return wrapper_result{session, ptr_->execute_sql(session, query)};
+        return wrapper_cursor_ptr(new wrapper_cursor{session, ptr_->execute_sql(session, query)});
     }
 }

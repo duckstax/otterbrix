@@ -21,8 +21,8 @@ namespace ottergon {
         collections_.erase(collection_name);
         auto session_tmp = ottergon::session_id_t();
         auto result = ptr_->drop_collection(session_tmp, name_, collection_name);
-        debug(log_,"wrapper_database::drop_collection {}", result.is_success());
-        return result.is_success();
+        debug(log_,"wrapper_database::drop_collection {}", result->is_success());
+        return result->is_success();
     }
 
     wrapper_collection_ptr wrapper_database::create(const std::string& collection_name) {

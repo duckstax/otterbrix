@@ -116,23 +116,6 @@ PYBIND11_MODULE(ottergon, m) {
         //.def("_order", &wrapper_cursor::_order)
         .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none());
 
-    py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")
-        .def_property_readonly("raw_result", &wrapper_result_delete::raw_result)
-        .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count);
-
-    py::class_<wrapper_result_update, boost::intrusive_ptr<wrapper_result_update>>(m, "UpdateResult")
-        .def_property_readonly("raw_result", &wrapper_result_update::raw_result)
-        .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
-        .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
-        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
-
-    py::class_<wrapper_result, boost::intrusive_ptr<wrapper_result>>(m, "Result")
-        .def_property_readonly("inserted_count", &wrapper_result::inserted_count)
-        .def_property_readonly("modified_count", &wrapper_result::modified_count)
-        .def_property_readonly("deleted_count", &wrapper_result::deleted_count)
-        .def_property_readonly("cursor", &wrapper_result::cursor)
-        ;
-
     m.def("to_aggregate", &test_to_statement);
 
 }

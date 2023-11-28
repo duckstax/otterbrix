@@ -17,7 +17,6 @@
 #include <components/ql/statements/insert_many.hpp>
 #include <components/ql/statements/insert_one.hpp>
 #include <components/logical_plan/node.hpp>
-#include <components/result/result.hpp>
 
 #include <services/disk/result.hpp>
 #include <services/wal/base.hpp>
@@ -36,23 +35,23 @@ namespace services::dispatcher {
         ~dispatcher_t();
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
-        void load_from_memory_resource_result(components::session::session_id_t &session, const components::result::result_t &result);
+        void load_from_memory_resource_result(components::session::session_id_t &session, const components::cursor::list_addresses_t& collections);
         void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql, actor_zeta::address_t address);
-        void execute_ql_finish(components::session::session_id_t& session, const components::result::result_t& result);
+        void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
         void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void insert_finish(components::session::session_id_t& session, components::result::result_insert& result);
+        void insert_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void delete_finish(components::session::session_id_t& session, components::result::result_delete& result);
+        void delete_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void update_finish(components::session::session_id_t& session, components::result::result_update& result);
+        void update_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address);
-        void size_finish(components::session::session_id_t&, components::result::result_size& result);
+        void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr cursor);
         void create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address);
-        void create_index_finish(components::session::session_id_t &session, const std::string& name, components::result::result_create_index& result);
+        void create_index_finish(components::session::session_id_t &session, const std::string& name, components::cursor::cursor_t_ptr cursor);
         void drop_index(components::session::session_id_t &session, components::ql::drop_index_t drop_index, actor_zeta::address_t address);
-        void drop_index_finish(components::session::session_id_t &session, const std::string& name, components::result::result_drop_index& result);
+        void drop_index_finish(components::session::session_id_t &session, const std::string& name, components::cursor::cursor_t_ptr cursor);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         bool check_load_from_wal(components::session::session_id_t& session);

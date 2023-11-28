@@ -17,7 +17,7 @@ target_link_libraries(
     ottergon::collection
     ottergon::disk
     ottergon::locks
-    ottergon::result
+    ottergon::cursor
     ottergon::session
     CONAN_PKG::spdlog
 )

@@ -3,8 +3,6 @@
 #include <integration/cpp/base_spaces.hpp>
 
 namespace {
-    using result_type_t = components::result::result_type_t;
-
     configuration::config create_config() { return configuration::config::default_config(); }
 
     struct spaces_t final : public ottergon::base_ottergon_t {
@@ -47,40 +45,9 @@ extern "C" result_set_t* execute_sql(ottergon_ptr ptr, string_view_t query_raw) 
     assert(query_raw.data != nullptr);
     auto session = ottergon::session_id_t();
     std::string query(query_raw.data, query_raw.size);
-    auto res = pod_space->space->dispatcher()->execute_sql(session, query);
-    if (res.is_success()) {
-        switch (res.result_type()) {
-            case result_type_t::empty: {
-                return nullptr;
-            }
-            case result_type_t::result_address: {
-                auto r = res.get<components::result::result_address_t>();
-                return nullptr;
-            }
-            case result_type_t::result_list_addresses: {
-                auto r = res.get<components::result::result_list_addresses_t>();
-                return nullptr;
-            }
-            case result_type_t::result: {
-                auto r = res.get<components::cursor::cursor_t*>();
-                return nullptr;
-            }
-            case result_type_t::result_insert: {
-                auto r = res.get<components::result::result_insert>();
-                return nullptr;
-            }
-            case result_type_t::result_delete: {
-                auto r = res.get<components::result::result_delete>();
-                return nullptr;
-            }
-            case result_type_t::result_update: {
-                auto r = res.get<components::result::result_update>();
-                return nullptr;
-            }
-            default: {
-                assert(false);
-            }
-        }
+    auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
+    if (!cursor->is_error()) {
+        return nullptr;
     } else {
         assert(false);
     }

@@ -17,7 +17,6 @@
 #include <components/session/session.hpp>
 #include <components/statistic/statistic.hpp>
 #include <components/pipeline/context.hpp>
-#include <components/result/result.hpp>
 
 #include <utility>
 

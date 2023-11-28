@@ -13,7 +13,7 @@ namespace {
         return ptr;
     }
 
-    auto base_execute_sql(ottergon::base_ottergon_t* ptr, const std::string& query) -> components::result::result_t {
+    auto base_execute_sql(ottergon::base_ottergon_t* ptr, const std::string& query) -> components::cursor::cursor_t_ptr {
         assert(ptr != nullptr);
         assert(!query.empty());
         auto session = ottergon::session_id_t();
@@ -28,7 +28,7 @@ namespace ottergon {
 
     auto make_ottergon(configuration::config cfg) -> ottergon_ptr { return base_make_ottergon(cfg); }
 
-    auto execute_sql(const ottergon_ptr& ptr, const std::string& query) -> components::result::result_t {
+    auto execute_sql(const ottergon_ptr& ptr, const std::string& query) -> components::cursor::cursor_t_ptr {
         return base_execute_sql(ptr.get(), query);
     }
 } // namespace ottergon

@@ -16,5 +16,5 @@ namespace ottergon {
 
    auto make_ottergon() -> ottergon_ptr;
    auto make_ottergon(configuration::config) -> ottergon_ptr;
-   auto execute_sql(const ottergon_ptr& ottergon, const std::string& query) -> components::result::result_t;
+   auto execute_sql(const ottergon_ptr& ottergon, const std::string& query) -> components::cursor::cursor_t_ptr;
 }

@@ -2,6 +2,18 @@
 #include <boost/json.hpp>
 namespace components::cursor {
 
+    error_t::error_t() : type(error_code_t::none), what() {
+    }
+
+    error_t::error_t(error_code_t type) : type(type), what() {
+    }
+
+    error_t::error_t(error_code_t type, const std::string& what) : type(type), what(what) {
+    }
+
+    list_addresses_t::list_addresses_t(std::pmr::memory_resource* resource) : addresses(resource) {
+    }
+
     void cursor_t::push(sub_cursor_t* sub_cursor) {
         size_ += sub_cursor->size();
         sub_cursor_.emplace_back(sub_cursor);
@@ -35,6 +47,18 @@ namespace components::cursor {
         return sorted_.empty()
                    ? get_unsorted(index)
                    : get_sorted(index);
+    }
+
+    bool cursor_t::is_success() const {
+        return success_;
+    }
+
+    bool cursor_t::is_error() const {
+        return error_.type != error_code_t::none;
+    }
+
+    error_t cursor_t::error() const {
+        return error_;
     }
 
     void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
@@ -74,9 +98,31 @@ namespace components::cursor {
         return nullptr;
     }
 
+    cursor_t::cursor_t()
+        : error_()
+        , success_(true) {}
+
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
         : sub_cursor_(resource)
-        , sorted_(resource) {}
+        , sorted_(resource)
+        , error_()
+        , success_(true) {}
+        
+    cursor_t::cursor_t(const error_t& error)
+        : error_(error)
+        , success_(false) {}
+
+    cursor_t::cursor_t(error_code_t type)
+        : error_(type)
+        , success_(false) {}
+
+    cursor_t::cursor_t(error_code_t type, const std::string& what)
+        : error_(type, what)
+        , success_(false) {}
+
+    cursor_t::cursor_t(bool success)
+        : error_(success ? error_code_t::none : error_code_t::other_error)
+        , success_(success) {}
 
     actor_zeta::address_t& sub_cursor_t::address() {
         return collection_;

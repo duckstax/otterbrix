@@ -54,9 +54,8 @@ static const collection_name_t collection_name = "TestCollection";
     do { \
         auto session = ottergon::session_id_t(); \
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
-        auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
-        REQUIRE(c->size() == 100); \
-        delete c; \
+        auto cur = dispatcher->find(session, ql); \
+        REQUIRE(cur->size() == 100); \
     } while (false)
 
 #define CHECK_FIND(KEY, COMPARE, VALUE, COUNT) \
@@ -66,9 +65,8 @@ static const collection_name_t collection_name = "TestCollection";
         auto expr = components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1}); \
         ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr))); \
         ql->add_parameter(id_par{1}, VALUE); \
-        auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
-        REQUIRE(c->size() == COUNT); \
-        delete c; \
+        auto cur = dispatcher->find(session, ql); \
+        REQUIRE(cur->size() == COUNT); \
     } while (false)
 
 #define CHECK_FIND_COUNT(COMPARE, VALUE, COUNT) \

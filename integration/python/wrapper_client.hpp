@@ -16,7 +16,7 @@
 
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
-#include "wrapper_result.hpp"
+#include "wrapper_cursor.hpp"
 
 namespace py = pybind11;
 namespace ottergon {
@@ -26,7 +26,7 @@ namespace ottergon {
         ~wrapper_client();
         wrapper_database_ptr get_or_create(const std::string& name);
         auto database_names() -> py::list;
-        auto execute(const std::string& query) -> wrapper_result;
+        auto execute(const std::string& query) -> wrapper_cursor_ptr;
 
     private:
         std::unordered_map<std::string,wrapper_database_ptr> names_;
