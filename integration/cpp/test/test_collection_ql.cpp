@@ -146,7 +146,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 1000);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
-            REQUIRE(c->size() == 20);
+            REQUIRE(cur->size() == 20);
         }
     }
 

@@ -99,7 +99,9 @@ namespace components::cursor {
     }
 
     cursor_t::cursor_t()
-        : error_()
+        : sub_cursor_(std::pmr::null_memory_resource())
+        , sorted_(std::pmr::null_memory_resource())
+        , error_()
         , success_(true) {}
 
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
@@ -109,19 +111,27 @@ namespace components::cursor {
         , success_(true) {}
         
     cursor_t::cursor_t(const error_t& error)
-        : error_(error)
+        : sub_cursor_(std::pmr::null_memory_resource())
+        , sorted_(std::pmr::null_memory_resource())
+        , error_(error)
         , success_(false) {}
 
     cursor_t::cursor_t(error_code_t type)
-        : error_(type)
+        : sub_cursor_(std::pmr::null_memory_resource())
+        , sorted_(std::pmr::null_memory_resource())
+        , error_(type)
         , success_(false) {}
 
     cursor_t::cursor_t(error_code_t type, const std::string& what)
-        : error_(type, what)
+        : sub_cursor_(std::pmr::null_memory_resource())
+        , sorted_(std::pmr::null_memory_resource())
+        , error_(type, what)
         , success_(false) {}
 
     cursor_t::cursor_t(bool success)
-        : error_(success ? error_code_t::none : error_code_t::other_error)
+        : sub_cursor_(std::pmr::null_memory_resource())
+        , sorted_(std::pmr::null_memory_resource())
+        , error_(success ? error_code_t::none : error_code_t::other_error)
         , success_(success) {}
 
     actor_zeta::address_t& sub_cursor_t::address() {

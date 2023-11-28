@@ -188,12 +188,12 @@ TEST_CASE("python::test_collection") {
         {
             auto session = ottergon::session_id_t();
             auto cur = dispatcher->drop_collection(session, database_name, collection_name);
-            REQUIRE(cur.is_success());
+            REQUIRE(cur->is_success());
         }
         {
             auto session = ottergon::session_id_t();
             auto cur = dispatcher->drop_collection(session, database_name, collection_name);
-            REQUIRE(cur.is_error());
+            REQUIRE(cur->is_error());
         }
     }
 

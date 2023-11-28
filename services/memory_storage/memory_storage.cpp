@@ -43,9 +43,9 @@ namespace services {
     }
 
     void memory_storage_t::sync(const address_pack& pack) {
-        //assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_dispatcher)");
+        assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_dispatcher)");
         manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
-        //assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_disk)");
+        assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_disk)");
         manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
     }
 
