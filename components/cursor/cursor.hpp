@@ -20,6 +20,11 @@ namespace components::cursor {
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
+    enum class operation_status_t {
+        success = 1,
+        failure = 0
+    };
+
     enum class error_code_t {
         none = 0,
         database_already_exists,
@@ -36,7 +41,6 @@ namespace components::cursor {
         error_code_t type;
         std::string what;
 
-        explicit error_t();
         explicit error_t(error_code_t type);
         explicit error_t(error_code_t type, const std::string& what);
     };
@@ -67,9 +71,9 @@ namespace components::cursor {
 
     class cursor_t : public boost::intrusive_ref_counter<cursor_t> {
     public:
-        cursor_t(std::pmr::memory_resource* resource);
-        cursor_t(const error_t& error);
-        cursor_t(bool success);
+        explicit cursor_t(std::pmr::memory_resource* resource);
+        explicit cursor_t(std::pmr::memory_resource* resource, const error_t& error);
+        explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
@@ -78,8 +82,8 @@ namespace components::cursor {
         data_ptr next();
         data_ptr get() const;
         data_ptr get(std::size_t index) const;
-        bool is_success() const;
-        bool is_error() const;
+        bool is_success() const noexcept;
+        bool is_error() const noexcept;
         error_t error() const;
         void sort(std::function<bool(data_ptr, data_ptr)> sorter);
 
@@ -98,8 +102,9 @@ namespace components::cursor {
 
     using cursor_t_ptr = boost::intrusive_ptr<cursor_t>;
 
-    cursor_t_ptr make_error(error_code_t type, const std::string& what = std::string());
-    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, actor_zeta::address_t collection);
-    cursor_t_ptr make_from_sub_cursor(sub_cursor_t* sub);
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status);
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource);
+    cursor_t_ptr make_error(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
+    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, sub_cursor_t* sub);
 
 } // namespace components::cursor

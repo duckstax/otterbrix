@@ -124,7 +124,7 @@ namespace services {
     bool memory_storage_t::check_database_(components::session::session_id_t& session, const database_name_t& name) {
         if (!is_exists_database_(name)) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            make_error(error_code_t::database_not_exists, "database not exists"));
+                            make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::database_not_exists, "database not exists"));
             return false;
         }
         return true;
@@ -134,7 +134,7 @@ namespace services {
         if (check_database_(session, name.database)) {
             if (!is_exists_collection_(name)) {
                 actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                                make_error(error_code_t::collection_not_exists, "collection not exists"));
+                                make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_not_exists, "collection not exists"));
                 return false;
             }
             return true;
@@ -146,12 +146,12 @@ namespace services {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
         if (is_exists_database_(logical_plan->database_name())) {
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            make_error(error_code_t::database_already_exists, "database already exists"));
+                            make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::database_already_exists, "database already exists"));
             return;
         }
         databases_.insert(logical_plan->database_name());
         actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            cursor_t_ptr(new cursor_t(true)));
+                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::success));
     }
 
     void memory_storage_t::drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan) {
@@ -159,7 +159,7 @@ namespace services {
         if (check_database_(session, logical_plan->database_name())) {
             databases_.erase(logical_plan->database_name());
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            cursor_t_ptr(new cursor_t(true)));
+                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::success));
         }
     }
 
@@ -168,14 +168,14 @@ namespace services {
         if (check_database_(session, logical_plan->database_name())) {
             if (is_exists_collection_(logical_plan->collection_full())) {
                 actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            make_error(error_code_t::collection_already_exists, "collection already exists"));
+                            make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_already_exists, "collection already exists"));
                 return;
             }
             auto address = spawn_actor<collection::collection_t>([this, &logical_plan](collection::collection_t* ptr) {
                 collections_.emplace(logical_plan->collection_full(), ptr);
             }, logical_plan->collection_full(), log_, manager_disk_);
             actor_zeta::send(current_message()->sender(), this->address(), handler_id(route::execute_plan_finish), session,
-                            make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), address));
+                            make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), new sub_cursor_t(actor_zeta::detail::pmr::get_default_resource(), address)));
         }
     }
 
@@ -215,10 +215,10 @@ namespace services {
         if (result->is_success()) {
             collections_.erase(s.logical_plan->collection_full());
             actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session,
-                            cursor_t_ptr{new cursor_t(true)});
+                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::success));
         } else {
             actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session,
-                            make_error(error_code_t::other_error, "collection not dropped"));
+                            make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::other_error, "collection not dropped"));
         }
         sessions_.erase(session);
     }

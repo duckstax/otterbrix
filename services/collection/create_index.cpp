@@ -44,7 +44,8 @@ namespace services::collection {
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
         debug(log(), "collection::create_index : {} {} {}", name_.to_string(), name_index_type(index.index_type_), keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
-            actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_index_finish), session, make_error(error_code_t::collection_dropped));
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_index_finish), session,
+                             make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped));
         } else {
             switch (index.index_type_) {
 
@@ -79,14 +80,16 @@ namespace services::collection {
         auto &create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
         components::index::insert(context_->index_engine(), create_index.id_index, context_->storage());
-        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name, cursor_t_ptr{new cursor_t(true)});
+        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name,
+                         make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::success));
         sessions::remove(sessions_, session, name);
     }
 
     void collection_t::drop_index(const session_id_t& session, components::ql::drop_index_t& index) {
         debug(log(), "collection::drop_index: session: {}, index: {}", session.data(), index.name());
         if (dropped_) {
-            actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), make_error(error_code_t::collection_dropped));
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                             make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped));
         } else {
             auto index_ptr = components::index::search_index(context_->index_engine(), index.name());
             if (index_ptr) {
@@ -94,9 +97,11 @@ namespace services::collection {
                     actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session, index.name());
                 }
                 components::index::drop_index(context_->index_engine(), index_ptr);
-                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), cursor_t_ptr{new cursor_t(true)});
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                                 make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::success));
             } else {
-                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), make_error(error_code_t::collection_not_exists));
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                                 make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_not_exists));
             }
         }
     }
@@ -120,7 +125,7 @@ namespace services::collection {
             }
         }
         sessions::remove(sessions_, session);
-        auto cursor = make_from_sub_cursor(context_->resource(), address());
+        auto cursor = make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), new sub_cursor_t(context_->resource(), address()));
         cursor->push(res.first->second.get());
         actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, cursor);
     }

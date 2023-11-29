@@ -2,9 +2,6 @@
 #include <boost/json.hpp>
 namespace components::cursor {
 
-    error_t::error_t() : type(error_code_t::none), what() {
-    }
-
     error_t::error_t(error_code_t type) : type(type), what() {
     }
 
@@ -49,11 +46,11 @@ namespace components::cursor {
                    : get_sorted(index);
     }
 
-    bool cursor_t::is_success() const {
+    bool cursor_t::is_success() const noexcept {
         return success_;
     }
 
-    bool cursor_t::is_error() const {
+    bool cursor_t::is_error() const noexcept {
         return error_.type != error_code_t::none;
     }
 
@@ -101,20 +98,20 @@ namespace components::cursor {
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
         : sub_cursor_(resource)
         , sorted_(resource)
-        , error_()
+        , error_(error_code_t::none)
         , success_(true) {}
 
-    cursor_t::cursor_t(const error_t& error)
-        : sub_cursor_(actor_zeta::detail::pmr::get_default_resource())
-        , sorted_(actor_zeta::detail::pmr::get_default_resource())
+    cursor_t::cursor_t(std::pmr::memory_resource* resource, const error_t& error)
+        : sub_cursor_(resource)
+        , sorted_(resource)
         , error_(error)
         , success_(false) {}
 
-    cursor_t::cursor_t(bool success)
-        : sub_cursor_(actor_zeta::detail::pmr::get_default_resource())
-        , sorted_(actor_zeta::detail::pmr::get_default_resource())
+    cursor_t::cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status)
+        : sub_cursor_(resource)
+        , sorted_(resource)
         , error_(error_code_t::none)
-        , success_(success) {}
+        , success_(op_status == operation_status_t::success) {}
 
     actor_zeta::address_t& sub_cursor_t::address() {
         return collection_;
@@ -137,19 +134,21 @@ namespace components::cursor {
         data_.push_back(data);
     }
 
-    
-    cursor_t_ptr make_error(error_code_t type, const std::string& what) {
-        return cursor_t_ptr{new cursor_t(error_t(type, what))};
+
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status) {
+        return cursor_t_ptr{new cursor_t(resource, op_status)};
     }
 
-    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, actor_zeta::address_t collection) {
-        auto cursor = cursor_t_ptr{new cursor_t(resource)};
-        cursor->push(new sub_cursor_t(resource, collection));
-        return cursor;
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource) {
+        return cursor_t_ptr{new cursor_t(resource)};
+    }
+
+    cursor_t_ptr make_error(std::pmr::memory_resource* resource, error_code_t type, const std::string& what) {
+        return cursor_t_ptr{new cursor_t(resource, error_t(type, what))};
     }
     
-    cursor_t_ptr make_from_sub_cursor(sub_cursor_t* sub) {
-        auto cursor = cursor_t_ptr{new cursor_t(sub->data().get_allocator().resource())};
+    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, sub_cursor_t* sub) {
+        auto cursor = cursor_t_ptr{new cursor_t(resource)};
         cursor->push(sub);
         return cursor;
     }

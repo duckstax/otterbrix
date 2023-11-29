@@ -232,11 +232,11 @@ namespace ottergon {
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            return make_error(error_code_t::sql_parse_error, parse_result.error.what().data());
+            return make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return make_error(error_code_t::sql_parse_error, "not valid sql");
+        return make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
