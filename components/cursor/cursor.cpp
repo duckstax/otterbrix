@@ -98,40 +98,22 @@ namespace components::cursor {
         return nullptr;
     }
 
-    cursor_t::cursor_t()
-        : sub_cursor_(std::pmr::null_memory_resource())
-        , sorted_(std::pmr::null_memory_resource())
-        , error_()
-        , success_(true) {}
-
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
         : sub_cursor_(resource)
         , sorted_(resource)
         , error_()
         , success_(true) {}
-        
+
     cursor_t::cursor_t(const error_t& error)
-        : sub_cursor_(std::pmr::null_memory_resource())
-        , sorted_(std::pmr::null_memory_resource())
+        : sub_cursor_(actor_zeta::detail::pmr::get_default_resource())
+        , sorted_(actor_zeta::detail::pmr::get_default_resource())
         , error_(error)
         , success_(false) {}
 
-    cursor_t::cursor_t(error_code_t type)
-        : sub_cursor_(std::pmr::null_memory_resource())
-        , sorted_(std::pmr::null_memory_resource())
-        , error_(type)
-        , success_(false) {}
-
-    cursor_t::cursor_t(error_code_t type, const std::string& what)
-        : sub_cursor_(std::pmr::null_memory_resource())
-        , sorted_(std::pmr::null_memory_resource())
-        , error_(type, what)
-        , success_(false) {}
-
     cursor_t::cursor_t(bool success)
-        : sub_cursor_(std::pmr::null_memory_resource())
-        , sorted_(std::pmr::null_memory_resource())
-        , error_(success ? error_code_t::none : error_code_t::other_error)
+        : sub_cursor_(actor_zeta::detail::pmr::get_default_resource())
+        , sorted_(actor_zeta::detail::pmr::get_default_resource())
+        , error_(error_code_t::none)
         , success_(success) {}
 
     actor_zeta::address_t& sub_cursor_t::address() {
@@ -153,6 +135,23 @@ namespace components::cursor {
 
     void sub_cursor_t::append(data_t data) {
         data_.push_back(data);
+    }
+
+    
+    cursor_t_ptr make_error(error_code_t type, const std::string& what) {
+        return cursor_t_ptr{new cursor_t(error_t(type, what))};
+    }
+
+    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, actor_zeta::address_t collection) {
+        auto cursor = cursor_t_ptr{new cursor_t(resource)};
+        cursor->push(new sub_cursor_t(resource, collection));
+        return cursor;
+    }
+    
+    cursor_t_ptr make_from_sub_cursor(sub_cursor_t* sub) {
+        auto cursor = cursor_t_ptr{new cursor_t(sub->data().get_allocator().resource())};
+        cursor->push(sub);
+        return cursor;
     }
 
 } // namespace components::cursor

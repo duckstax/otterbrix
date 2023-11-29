@@ -31,11 +31,10 @@ cursor_t_ptr find_doc(ottergon::wrapper_dispatcher_t* dispatcher,
     ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
     ql->add_parameter(id_par{1}, gen_id(n_doc));
     auto cur = dispatcher->find_one(session_doc, ql);
-    if (cur->size() > 0) {
+    if (cur->is_success()) {
         cur->next();
-        return cur;
     }
-    return cursor_t_ptr(new cursor_t());
+    return cur;
 }
 
 TEST_CASE("python::test_save_load::disk") {

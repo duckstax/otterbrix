@@ -43,7 +43,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                       << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
-            REQUIRE(cur->begin()->get()->size() == 100);
+            REQUIRE(cur->size() == 100);
         }
         {
             auto session = ottergon::session_id_t();

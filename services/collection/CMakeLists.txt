@@ -67,7 +67,6 @@ target_link_libraries(
         ottergon::index
         ottergon::logical_plan
         ottergon::pipeline
-        ottergon::result
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

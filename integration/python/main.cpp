@@ -6,7 +6,6 @@
 #include "wrapper_database.hpp"
 #include "wrapper_document.hpp"
 #include "wrapper_document_id.hpp"
-#include "wrapper_result.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators

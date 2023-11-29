@@ -2,6 +2,7 @@
 #include <variant>
 #include <components/ql/statements.hpp>
 #include "test_config.hpp"
+#include <iostream>
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
@@ -43,7 +44,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             auto session = ottergon::session_id_t();
             components::ql::variant_statement_t ql{ins};
             auto cur = dispatcher->execute_ql(session, ql);
-            REQUIRE(cur->begin()->get()->size() == 100);
+            REQUIRE(cur->size() == 100);
         }
         {
             auto session = ottergon::session_id_t();

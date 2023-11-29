@@ -77,7 +77,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> cursor_t_ptr {
@@ -91,7 +91,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
@@ -118,7 +118,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
@@ -133,7 +133,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
@@ -148,7 +148,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
@@ -163,7 +163,7 @@ namespace ottergon {
             session,
             &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> cursor_t_ptr {
@@ -177,7 +177,7 @@ namespace ottergon {
             database,
             collection);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> cursor_t_ptr {
@@ -190,7 +190,7 @@ namespace ottergon {
             session,
             std::move(index));
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> cursor_t_ptr {
@@ -203,7 +203,7 @@ namespace ottergon {
             session,
             std::move(drop_index));
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &query) -> cursor_t_ptr {
@@ -232,11 +232,11 @@ namespace ottergon {
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            return cursor_t_ptr(new cursor_t(error_code_t::sql_parse_error, parse_result.error.what().data()));
+            return make_error(error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return cursor_t_ptr(new cursor_t(error_code_t::sql_parse_error, "not valid sql"));
+        return make_error(error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -330,7 +330,7 @@ namespace ottergon {
             std::cerr << intermediate_store_->error().what << std::endl;
         }
 
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
     template <typename Tql>
@@ -345,7 +345,7 @@ namespace ottergon {
                     session,
                     &ql);
         wait();
-        return intermediate_store_;
+        return std::move(intermediate_store_);
     }
 
 } // namespace python

@@ -19,7 +19,6 @@ set(ottergon_LIBS
         ottergon::disk
         ottergon::locks
         ottergon::sql
-        ottergon::result
 )
 
 

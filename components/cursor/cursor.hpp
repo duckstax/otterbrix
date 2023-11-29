@@ -67,11 +67,8 @@ namespace components::cursor {
 
     class cursor_t : public boost::intrusive_ref_counter<cursor_t> {
     public:
-        explicit cursor_t();
         cursor_t(std::pmr::memory_resource* resource);
         cursor_t(const error_t& error);
-        cursor_t(error_code_t type);
-        cursor_t(error_code_t type, const std::string& what);
         cursor_t(bool success);
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
@@ -100,5 +97,9 @@ namespace components::cursor {
     };
 
     using cursor_t_ptr = boost::intrusive_ptr<cursor_t>;
+
+    cursor_t_ptr make_error(error_code_t type, const std::string& what = std::string());
+    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, actor_zeta::address_t collection);
+    cursor_t_ptr make_from_sub_cursor(sub_cursor_t* sub);
 
 } // namespace components::cursor
