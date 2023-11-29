@@ -327,7 +327,7 @@ namespace ottergon {
         wait();
         if (intermediate_store_->is_error()) {
             //todo: handling error
-            std::cerr << intermediate_store_->error().what << std::endl;
+            std::cerr << intermediate_store_->get_error().what << std::endl;
         }
 
         return std::move(intermediate_store_);

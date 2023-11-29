@@ -54,7 +54,7 @@ namespace components::cursor {
         return error_.type != error_code_t::none;
     }
 
-    error_t cursor_t::error() const {
+    error_t cursor_t::get_error() const {
         return error_;
     }
 

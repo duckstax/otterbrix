@@ -84,7 +84,7 @@ namespace components::cursor {
         data_ptr get(std::size_t index) const;
         bool is_success() const noexcept;
         bool is_error() const noexcept;
-        error_t error() const;
+        error_t get_error() const;
         void sort(std::function<bool(data_ptr, data_ptr)> sorter);
 
     private:

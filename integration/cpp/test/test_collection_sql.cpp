@@ -240,7 +240,7 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = ottergon::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->error().type == error_code_t::database_not_exists);
+        REQUIRE(cur->get_error().type == error_code_t::database_not_exists);
     }
 
     INFO("create database") {
@@ -252,7 +252,7 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = ottergon::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->error().type == error_code_t::collection_not_exists);
+        REQUIRE(cur->get_error().type == error_code_t::collection_not_exists);
     }
 
 }
