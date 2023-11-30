@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+## IGNORE_PATTERN="what_to_ignore"
+## filelist=$(git diff --cached --name-only --ignore-submodules --diff-filter=ACM | grep -v $IGNORE_PATTERN )
+filelist=$(git diff --cached --name-only --ignore-submodules --diff-filter=ACM)
+
+echo "Files to check :" ${filelist}
+python3 scripts/tools/code-fromat.py --check ${filelist}
+
+rc=$?;
+if [[ $rc != 0 ]]; then
+  echo -e "You have unformatted code. To format the code you may use the command: 'scripts/format.sh' "
+fi
+
+exit $rc
