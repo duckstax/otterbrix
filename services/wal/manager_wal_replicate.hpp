@@ -56,8 +56,8 @@ namespace services::wal {
         void drop_database(session_id_t& session, components::ql::drop_database_t& data);
         void create_collection(session_id_t& session, components::ql::create_collection_t& data);
         void drop_collection(session_id_t& session, components::ql::drop_collection_t& data);
-        void insert_one(session_id_t& session, components::ql::insert_one_t data);
-        void insert_many(session_id_t& session, components::ql::insert_many_t data);
+        void insert_one(session_id_t& session, components::ql::insert_one_t& data);
+        void insert_many(session_id_t& session, components::ql::insert_many_t& data);
         void delete_one(session_id_t& session, components::ql::delete_one_t& data);
         void delete_many(session_id_t& session, components::ql::delete_many_t& data);
         void update_one(session_id_t& session, components::ql::update_one_t& data);

@@ -88,12 +88,12 @@ namespace services::wal {
         actor_zeta::send(dispatchers_[0]->address(), address(), handler_id(route::drop_collection), session, current_message()->sender(), std::move(data));
     }
 
-    void manager_wal_replicate_t::insert_one(session_id_t& session, components::ql::insert_one_t data) {
+    void manager_wal_replicate_t::insert_one(session_id_t& session, components::ql::insert_one_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_one");
         actor_zeta::send(dispatchers_[0]->address(), address(), handler_id(route::insert_one), session, current_message()->sender(), std::move(data));
     }
 
-    void manager_wal_replicate_t::insert_many(session_id_t& session, components::ql::insert_many_t data) {
+    void manager_wal_replicate_t::insert_many(session_id_t& session, components::ql::insert_many_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_many");
         actor_zeta::send(dispatchers_[0]->address(), address(), handler_id(route::insert_many), session, current_message()->sender(), std::move(data));
     }

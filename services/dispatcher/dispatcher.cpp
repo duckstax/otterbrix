@@ -89,7 +89,7 @@ namespace services::dispatcher {
         load_result_.clear();
     }
 
-    void dispatcher_t::load_from_wal_result(components::session::session_id_t& session, std::vector<services::wal::record_t> in_records) {
+    void dispatcher_t::load_from_wal_result(components::session::session_id_t& session, std::vector<services::wal::record_t>& in_records) {
         // TODO think what to do with records
         records_ = std::move(in_records);
         load_count_answers_ = records_.size();
@@ -180,7 +180,7 @@ namespace services::dispatcher {
                     assert(std::holds_alternative<create_index_t>(record.data) && "[dispatcher_t::load_from_wal_result]: [ case: statement_type::create_index] variant record.data holds the alternative create_index_t");
                     auto& data = std::get<create_index_t>(record.data);
                     components::session::session_id_t session_create_index;
-                    create_index(session_create_index, std::move(data), manager_wal_);
+                    create_index(session_create_index, data, manager_wal_);
                     break;
                 }
                 default:
