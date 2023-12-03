@@ -272,6 +272,7 @@ namespace services::dispatcher {
         if (!check_load_from_wal(session)) {
             actor_zeta::send(s.address(), dispatcher_t::address(), handler_id(route::execute_ql_finish), session, result);
             remove_session(session_to_address_, session);
+            result_storage_.erase(session);
         }
     }
 
