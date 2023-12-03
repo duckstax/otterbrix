@@ -11,6 +11,8 @@ inline configuration::config test_create_config(const std::filesystem::path &pat
     config.log.path = path;
     config.disk.path = path;
     config.wal.path = path;
+    // To change log level
+    // config.log.level =log_t::level::trace;
     return config;
 }
 

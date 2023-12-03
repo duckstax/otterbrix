@@ -43,9 +43,7 @@ namespace services {
     }
 
     void memory_storage_t::sync(const address_pack& pack) {
-        assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_dispatcher)");
         manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
-        assert(std::holds_alternative<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack) && "[memory_storage_t::sync]: variant pack holds the alternative static_cast<uint64_t>(unpack_rules::manager_disk)");
         manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
     }
 
@@ -190,16 +188,19 @@ namespace services {
     void memory_storage_t::execute_plan_(components::session::session_id_t& session,
                                          components::logical_plan::node_ptr logical_plan,
                                          components::ql::storage_parameters parameters) {
-        trace(log_, "memory_storage_t:execute_plan {}", logical_plan->collection_full().to_string());
-        if (check_collection_(session, logical_plan->collection_full())) {
-            sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-            actor_zeta::send(collections_.at(logical_plan->collection_full()),
-                             address(),
-                             collection::handler_id(collection::route::execute_plan),
-                             session,
-                             logical_plan,
-                             std::move(parameters));
+        trace(log_, "memory_storage_t:execute_plan_ {}, sesion: {}", logical_plan->collection_full().to_string(), session.data());
+        if (!check_collection_(session, logical_plan->collection_full())) {
+            trace(log_, "memory_storage_t:execute_plan_ collection not found {}, sesion: {}",
+                logical_plan->collection_full().to_string(), session.data());
+            return;
         }
+        sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
+        actor_zeta::send(collections_.at(logical_plan->collection_full()),
+                         address(),
+                         collection::handler_id(collection::route::execute_plan),
+                         session,
+                         logical_plan,
+                         std::move(parameters));
     }
 
     void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result) {

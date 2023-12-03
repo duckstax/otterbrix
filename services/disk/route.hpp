@@ -15,7 +15,6 @@ namespace services::disk {
 
         append_collection,
         remove_collection,
-        remove_collection_finish,
 
         write_documents,
         remove_documents,

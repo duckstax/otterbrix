@@ -13,6 +13,7 @@
 
 #include "base.hpp"
 #include "wal.hpp"
+#include "route.hpp"
 
 namespace services::wal {
 
@@ -79,6 +80,11 @@ namespace services::wal {
 
     public:
         manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
+
+        template<class T>
+        auto always_success(session_id_t& session, T&&) -> void {
+            actor_zeta::send(current_message()->sender(), address(), services::wal::handler_id(services::wal::route::success), session, services::wal::id_t(0));
+        }
 
         template<class ...Args>
         auto nothing(Args&&...) -> void {}
