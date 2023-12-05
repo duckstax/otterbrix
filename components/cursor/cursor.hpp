@@ -76,6 +76,7 @@ namespace components::cursor {
         explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
+        std::size_t sub_size(size_t sub_cursor_index) const;
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
         bool has_next() const;

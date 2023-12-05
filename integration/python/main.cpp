@@ -108,9 +108,13 @@ PYBIND11_MODULE(ottergon, m) {
         .def("__iter__", &wrapper_cursor::iter)
         .def("__next__", &wrapper_cursor::next)
         .def("count", &wrapper_cursor::size)
+        .def("sub_count", &wrapper_cursor::sub_size)
         .def("close", &wrapper_cursor::close)
         .def("hasNext", &wrapper_cursor::has_next)
         .def("next", &wrapper_cursor::next)
+        .def("is_success", &wrapper_cursor::is_success)
+        .def("is_error", &wrapper_cursor::is_error)
+        .def("get_error", &wrapper_cursor::get_error)
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
         .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none());

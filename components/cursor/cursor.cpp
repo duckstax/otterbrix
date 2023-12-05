@@ -19,6 +19,10 @@ namespace components::cursor {
     std::size_t cursor_t::size() const {
         return size_;
     }
+    
+    std::size_t cursor_t::sub_size(size_t sub_cursor_index) const {
+        return sub_cursor_[sub_cursor_index]->size();
+    }
 
     std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator cursor_t::begin() {
         return sub_cursor_.begin();

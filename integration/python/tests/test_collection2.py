@@ -221,9 +221,9 @@ def test_regex(gen_collection):
 
 
 def test_update_one_set(gen_collection):
-    cu = gen_collection['collection'].update_one({'count': 3}, {'$set': {'countStr': 'three'}})
-    print(cu.raw_result)
-    assert len(cu.raw_result) == 1
+    c = gen_collection['collection'].update_one({'count': 3}, {'$set': {'countStr': 'three'}})
+    assert len(c) == 1
+    c.close()
     c = gen_collection['collection'].find_one({'count': 3})
     assert c['countStr'] == 'three'
 
@@ -279,60 +279,72 @@ def test_or(gen_collection):
 
 
 def test_delete_one(gen_collection):
-    result = gen_collection['collection'].delete_one({'countBool': True})
-    assert result.deleted_count == 1
+    c = gen_collection['collection'].delete_one({'countBool': True})
+    assert c.count() == 1
+    c.close()
     c = gen_collection['collection'].find({})
     assert c.count() == 99
-    result = gen_collection['collection'].delete_one({'countBool': True})
-    assert result.deleted_count == 1
+    c.close()
+    c = gen_collection['collection'].delete_one({'countBool': True})
+    assert c.count() == 1
+    c.close()
     c = gen_collection['collection'].find({})
     assert c.count() == 98
+    c.close()
 
 
 def test_delete_all(gen_collection):
-    result = gen_collection['collection'].delete_many({})
-    assert result.deleted_count == 100
+    c = gen_collection['collection'].delete_many({})
+    assert c.count() == 100
+    c.close()
     c = gen_collection['collection'].find({})
     assert c.count() == 0
+    c.close()
 
 
 def test_delete_many(gen_collection):
-    result = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
-    assert result.deleted_count == 50
+    c = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+    assert c.count() == 50
+    c.close()
     c = gen_collection['collection'].find({})
     assert c.count() == 50
+    c.close()
 
 
 def test_update_one(gen_collection):
-    result = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr': '500'}})
-    assert result.modified_count == 1
+    c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr': '500'}})
+    assert c.count() == 1
+    c.close()
     c = gen_collection['collection'].find({'count': {'$eq': 50}})
     c.next()
     assert c['countStr'] == '500'
+    c.close()
 
 
 def test_update_many(gen_collection):
-    result = gen_collection['collection'].update_many({'count': {'$gte': 50}}, {'$inc': {'count': 100}})
-    assert result.modified_count == 50
+    c = gen_collection['collection'].update_many({'count': {'$gte': 50}}, {'$inc': {'count': 100}})
+    assert c.count() == 50
+    c.close()
     assert gen_collection['collection'].find({'count': {'$gt': 100}}).count() == 50
 
 
 def test_update_with_add_new_field(gen_collection):
     assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 0
-    result = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr2': '500'}})
-    assert result.modified_count == 1
+    c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr2': '500'}})
+    assert c.count() == 1
+    c.close()
     assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 1
 
 
 def test_update_with_upsert(gen_collection):
-    result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
-    assert result.modified_count == 0
-    assert result.matched_count == 0
-    assert result.upserted_id == '000000000000000000000000'
+    c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
+    assert c.sub_count(0) == 0
+    assert c.sub_count(1) == 100
+    c.close()
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
 
-    result = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
-    assert result.modified_count == 0
-    assert result.matched_count == 0
-    assert result.upserted_id != '000000000000000000000000'
+    c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
+    assert c.sub_count(0) == 1
+    assert c.sub_count(1) == 101
+    c.close()
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1

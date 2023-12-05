@@ -25,7 +25,7 @@ namespace ottergon {
         , database_(database)
         , ptr_(ptr)
         , log_(log.clone()) {
-        debug(log_, "wrapper_collection");
+        trace(log_, "wrapper_collection");
     }
 
     wrapper_collection::~wrapper_collection() {
@@ -43,6 +43,7 @@ namespace ottergon {
     }
 
     pybind11::list wrapper_collection::insert(const py::handle& documents) {
+        trace(log_, "wrapper_collection::insert");
         if (py::isinstance<py::dict>(documents)) {
             py::list result;
             auto id = insert_one(documents);
@@ -64,8 +65,8 @@ namespace ottergon {
             generate_document_id_if_not_exists(doc);
             auto session_tmp = ottergon::session_id_t();
             auto cur = ptr_->insert_one(session_tmp, database_, name_, doc);
-            debug(log_, "wrapper_collection::insert_one {} inserted", cur->begin()->get()->size());
-            return cur->begin()->get()->size() > 0 ? cur->get()->id().to_string() : std::string();
+            debug(log_, "wrapper_collection::insert_one {} inserted", cur->size());
+            return cur->sub_size(0) > 0 ? cur->get()->id().to_string() : std::string();
         }
         throw std::runtime_error("wrapper_collection::insert_one");
         return std::string();
@@ -82,7 +83,7 @@ namespace ottergon {
             }
             auto session_tmp = ottergon::session_id_t();
             auto cur = ptr_->insert_many(session_tmp, database_, name_, docs);
-            debug(log_, "wrapper_collection::insert_many {} inserted", cur->begin()->get()->size());
+            debug(log_, "wrapper_collection::insert_many {} inserted", cur->size());
             py::list list;
             for (const auto& doc : cur->begin()->get()->data()) {
                 list.append(doc.id().to_string());
@@ -102,7 +103,11 @@ namespace ottergon {
             generate_document_id_if_not_exists(update);
             auto session_tmp = ottergon::session_id_t();
             auto cur = ptr_->update_one(session_tmp, statement.release(), std::move(update), upsert);
-            debug(log_, "wrapper_collection::update_one {} modified {} no modified upsert id {}", cur->begin()->get()->size(), (cur->begin() + 1)->get()->size(), cur->get()->id().to_string());
+            if (cur->is_success()) {
+                debug(log_, "wrapper_collection::update_one {} modified, {} no modified", cur->sub_size(0), cur->sub_size(1));
+            } else {
+                debug(log_, "wrapper_collection::update_one failed");
+            }
             return wrapper_cursor_ptr{new wrapper_cursor{ottergon::session_id_t(), cur}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{ottergon::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
@@ -117,7 +122,7 @@ namespace ottergon {
             generate_document_id_if_not_exists(update);
             auto session_tmp = ottergon::session_id_t();
             auto cur = ptr_->update_many(session_tmp, statement.release(), std::move(update), upsert);
-            debug(log_, "wrapper_collection::update_many {} modified {} no modified upsert id {}", cur->begin()->get()->size(), (cur->begin() + 1)->get()->size(), cur->get()->id().to_string());
+            debug(log_, "wrapper_collection::update_many {} modified {} no modified upsert id {}", cur->sub_size(0), cur->sub_size(1), cur->get()->id().to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{ottergon::session_id_t(), cur}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{ottergon::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
@@ -181,7 +186,7 @@ namespace ottergon {
     }
 
     bool wrapper_collection::drop() {
-        debug(log_, "wrapper_collection::drop: {}", name_);
+        trace(log_, "wrapper_collection::drop: {}", name_);
         auto session_tmp = ottergon::session_id_t();
         auto cur = ptr_->drop_collection(session_tmp, database_, name_);
         debug(log_, "wrapper_collection::drop {}", cur->is_success());
@@ -202,7 +207,7 @@ namespace ottergon {
     }
     */
     bool wrapper_collection::create_index(const py::list& keys, index_type type, index_compare compare) {
-        debug(log_, "wrapper_collection::create_index: {}", name_);
+        trace(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = ottergon::session_id_t();
         components::ql::create_index_t index(database_, name_, type, compare);
         for (const auto &key : keys) {

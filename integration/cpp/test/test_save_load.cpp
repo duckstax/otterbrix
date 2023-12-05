@@ -191,5 +191,4 @@ TEST_CASE("python::test_save_load::disk+wal") {
             }
         }
     }
-
 }

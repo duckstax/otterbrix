@@ -265,7 +265,7 @@ namespace ottergon {
     }
 
     void wrapper_dispatcher_t::insert_finish(session_id_t &session, cursor_t_ptr result) {
-        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result->begin()->get()->size());
+        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result->sub_size(0));
         intermediate_store_ = result;
         input_session_ = session;
         notify();
