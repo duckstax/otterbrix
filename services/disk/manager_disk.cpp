@@ -130,7 +130,6 @@ namespace services::disk {
                     }
                     if (indexes.empty()) {
                         actor_zeta::send(agent(), address(), command.name(), command);
-                        actor_zeta::send(current_message()->sender(), address(), handler_id(route::remove_collection_finish), session, drop_collection.collection);
                     } else {
                         removed_indexes_.emplace(session, removed_index_t{indexes.size(), command, current_message()->sender()});
                         for (auto *index : indexes) {
@@ -195,7 +194,6 @@ namespace services::disk {
                     actor_zeta::send(agent(), address(), it_all_drop->second.command.name(), it_all_drop->second.command);
                     const auto& drop_collection = it_all_drop->second.command.get<command_remove_collection_t>();
                     remove_all_indexes_from_collection_(drop_collection.collection);
-                    actor_zeta::send(it_all_drop->second.sender, address(), handler_id(route::remove_collection_finish), session, drop_collection.collection);
                 }
             }
         }

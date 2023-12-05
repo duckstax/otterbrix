@@ -37,12 +37,9 @@ namespace services::dispatcher {
         void load(components::session::session_id_t &session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t &session, const services::disk::result_load_t &result);
         void load_from_memory_resource_result(components::session::session_id_t &session, const components::result::result_t &result);
-        void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
+        void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t>& records);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql, actor_zeta::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, const components::result::result_t& result);
-        void drop_collection_finish_from_disk(components::session::session_id_t& session, std::string& collection_name);
-        void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void insert_finish(components::session::session_id_t& session, components::result::result_insert& result);
         void delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
         void delete_finish(components::session::session_id_t& session, components::result::result_delete& result);
         void update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
@@ -67,6 +64,7 @@ namespace services::dispatcher {
         session_storage_t session_to_address_;
         std::unordered_map<components::session::session_id_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
         std::unordered_map<collection_full_name_t, actor_zeta::address_t, collection_name_hash> collection_address_book_;
+        std::unordered_map<components::session::session_id_t, components::result::result_t> result_storage_; // to be able return result from wal_success
         disk::result_load_t load_result_;
         components::session::session_id_t load_session_;
         services::wal::id_t last_wal_id_ {0};
@@ -74,6 +72,8 @@ namespace services::dispatcher {
 
         std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters> create_logic_plan(
                 components::ql::ql_statement_t* statement);
+        // TODO figure out what to do with records
+        std::vector<services::wal::record_t> records_;
     };
 
     using dispatcher_ptr = std::unique_ptr<dispatcher_t>;
@@ -115,7 +115,6 @@ namespace services::dispatcher {
         void create(components::session::session_id_t& session, std::string& name);
         void load(components::session::session_id_t &session);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
-        void insert_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);

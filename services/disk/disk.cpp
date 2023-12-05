@@ -81,6 +81,7 @@ namespace services::disk {
             id_documents.push_back(it->key().ToString());
         }
         delete it;
+
         return id_documents;
     }
 

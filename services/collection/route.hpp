@@ -7,7 +7,6 @@ namespace services::collection {
     enum class route : uint64_t {
         create_documents,
         execute_plan,
-        insert_documents,
         delete_documents,
         update_documents,
         size,
@@ -18,7 +17,6 @@ namespace services::collection {
 
         create_documents_finish,
         execute_plan_finish,
-        insert_finish,
         delete_finish,
         update_finish,
         size_finish,

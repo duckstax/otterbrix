@@ -51,6 +51,7 @@ namespace services::wal {
 
     void wal_replicate_t::send_success(session_id_t& session, address_t& sender) {
         if (sender) {
+            trace(log_, "wal_replicate_t::send_success session {}", session.data());
             actor_zeta::send(sender, address(), handler_id(route::success), session, services::wal::id_t(id_));
         }
     }

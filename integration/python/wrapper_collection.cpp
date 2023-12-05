@@ -64,7 +64,13 @@ namespace otterbrix {
             auto doc = to_document(document);
             generate_document_id_if_not_exists(doc);
             auto session_tmp = otterbrix::session_id_t();
-            auto result = ptr_->insert_one(session_tmp, database_, name_, doc);
+            auto result_variant = ptr_->insert_one(session_tmp, database_, name_, doc);
+            if(result_variant.is_error()){
+                debug(log_, "wrapper_collection::insert_one has result error while insert");
+                throw std::runtime_error("wrapper_collection::insert_one error_result");
+            }
+            assert(result_variant.is_type<components::result::result_insert>() && "wrapper_collection::insert_one result error");
+            auto& result = result_variant.get<components::result::result_insert>();
             debug(log_, "wrapper_collection::insert_one {} inserted", result.inserted_ids().empty() ? 0 : 1);
             return result.inserted_ids().empty() ? result.inserted_ids().front().to_string() : std::string();
         }
@@ -81,8 +87,15 @@ namespace otterbrix {
                 generate_document_id_if_not_exists(doc);
                 docs.push_back(std::move(doc));
             }
+
             auto session_tmp = otterbrix::session_id_t();
-            auto result = ptr_->insert_many(session_tmp, database_, name_, docs);
+            auto result_variant = ptr_->insert_many(session_tmp, database_, name_, docs);
+            if(result_variant.is_error()){
+                debug(log_, "wrapper_collection::insert_many has result error while insert");
+                throw std::runtime_error("wrapper_collection::insert_many error_result");
+            }
+            assert(result_variant.is_type<components::result::result_insert>() && "wrapper_collection::insert_many result error");
+            auto& result = result_variant.get<components::result::result_insert>();
             debug(log_, "wrapper_collection::insert_many {} inserted", result.inserted_ids().size());
             py::list list;
             for (const auto& id : result.inserted_ids()) {

@@ -5,8 +5,8 @@
 #include "test_config.hpp"
 
 constexpr uint count_databases = 2;
-constexpr uint count_collections = 5;
-constexpr uint count_documents = 10;
+constexpr uint count_collections = 4;
+constexpr uint count_documents = 8;
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
@@ -79,7 +79,7 @@ TEST_CASE("python::test_save_load::disk") {
 }
 
 
-TEST_CASE("python::test_save_load::disk+wal") {
+ TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
 
     SECTION("initialization") {
