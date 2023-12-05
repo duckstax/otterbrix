@@ -1,4 +1,4 @@
-project(test_ottergon)
+project(test_otterbrix)
 
 add_definitions(-DDEV_MODE)
 
@@ -15,19 +15,19 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
 
-        cpp_ottergon
+        cpp_otterbrix
 
-        ottergon::test_generaty
-        ottergon::log
-        ottergon::memory_storage
-        ottergon::collection
-        ottergon::cursor
-        ottergon::session
-        ottergon::document
-        ottergon::dispatcher
-        ottergon::wal
-        ottergon::disk
-        ottergon::locks
+        otterbrix::test_generaty
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
 
         CONAN_PKG::spdlog
         CONAN_PKG::msgpack-cxx

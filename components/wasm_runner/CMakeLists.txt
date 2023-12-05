@@ -8,18 +8,18 @@ list(APPEND ${PROJECT_NAME}_SOURCES
         wasm.cpp
 )
 
-add_library(ottergon_${PROJECT_NAME}
+add_library(otterbrix_${PROJECT_NAME}
             ${${PROJECT_NAME}_HEADERS}
             ${${PROJECT_NAME}_SOURCES}
 )
 
-add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
+add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        ottergon_${PROJECT_NAME} PUBLIC
-        ottergon::log
+        otterbrix_${PROJECT_NAME} PUBLIC
+        otterbrix::log
         CONAN_PKG::spdlog
         CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
@@ -27,7 +27,7 @@ target_link_libraries(
         CONAN_PKG::openssl
 )
 
-target_include_directories(ottergon_${PROJECT_NAME} PUBLIC "")
+target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC "")
 
 if (DEV_MODE)
     add_subdirectory(tests)

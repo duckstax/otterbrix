@@ -1,5 +1,5 @@
 import pytest
-from ottergon import to_aggregate
+from otterbrix import to_aggregate
 
 
 def test_convert_aggregate_match():

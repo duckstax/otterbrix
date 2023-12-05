@@ -1,6 +1,6 @@
 import pytest
 import time
-from ottergon import ObjectId
+from otterbrix import ObjectId
 
 
 def test_generate():

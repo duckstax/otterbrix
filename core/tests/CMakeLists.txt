@@ -14,8 +14,8 @@ target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         CONAN_PKG::catch2
         CONAN_PKG::boost
-        ottergon::assert
-        ottergon::log
+        otterbrix::assert
+        otterbrix::log
         ${CMAKE_THREAD_LIBS_INIT}
 )
 

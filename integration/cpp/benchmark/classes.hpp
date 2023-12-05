@@ -23,7 +23,7 @@ inline configuration::config create_config() {
 }
 
 template <bool on_wal, bool on_disk>
-class test_spaces final : public ottergon::base_ottergon_t {
+class test_spaces final : public otterbrix::base_otterbrix_t {
 public:
     static test_spaces &get() {
         static test_spaces<on_wal, on_disk> spaces_;
@@ -32,7 +32,7 @@ public:
 
 private:
     test_spaces()
-        : ottergon::base_ottergon_t(create_config<on_wal, on_disk>())
+        : otterbrix::base_otterbrix_t(create_config<on_wal, on_disk>())
     {}
 };
 
@@ -41,7 +41,7 @@ template <bool on_wal, bool on_disk>
 void init_collection(const collection_name_t& collection_name) {
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     dispatcher->create_database(session, database_name);
     dispatcher->create_collection(session, database_name, collection_name);
     std::pmr::vector<document_ptr> docs(resource);
@@ -54,7 +54,7 @@ void init_collection(const collection_name_t& collection_name) {
 template <bool on_wal, bool on_disk>
 void create_index(const collection_name_t& collection_name) {
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     create_index_t ql{database_name, collection_name, index_type::single, index_compare::int64};
     ql.keys_.emplace_back("count");
     dispatcher->create_index(session, ql);
@@ -68,7 +68,7 @@ void init_spaces() {
 }
 
 template <bool on_wal, bool on_disk>
-ottergon::wrapper_dispatcher_t* wr_dispatcher() {
+otterbrix::wrapper_dispatcher_t* wr_dispatcher() {
     return test_spaces<on_wal, on_disk>::get().dispatcher();
 }
 

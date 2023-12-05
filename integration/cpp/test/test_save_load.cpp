@@ -21,11 +21,11 @@ uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
     return 10000 * n_db + 100 * n_col + n_doc;
 }
 
-result_find_one find_doc(ottergon::wrapper_dispatcher_t* dispatcher,
+result_find_one find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                          const database_name_t &db_name,
                          const collection_name_t &col_name,
                          int n_doc) {
-    auto session_doc = ottergon::session_id_t();
+    auto session_doc = otterbrix::session_id_t();
     auto *ql = new components::ql::aggregate_statement{db_name, col_name};
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
     ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
@@ -65,7 +65,7 @@ TEST_CASE("python::test_save_load::disk") {
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents);
@@ -88,16 +88,16 @@ TEST_CASE("python::test_save_load::disk+wal") {
         auto* dispatcher = space.dispatcher();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
-            auto session_db = ottergon::session_id_t();
+            auto session_db = otterbrix::session_id_t();
             dispatcher->create_database(session_db, db_name);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
                 auto col_name = collection_name + "_" + std::to_string(n_col);
-                auto session_col = ottergon::session_id_t();
+                auto session_col = otterbrix::session_id_t();
                 dispatcher->create_collection(session_col, db_name, col_name);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
                     auto doc = gen_doc(int(n_doc));
                     doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                    auto session_doc = ottergon::session_id_t();
+                    auto session_doc = otterbrix::session_id_t();
                     dispatcher->insert_one(session_doc, db_name, col_name, doc);
                 }
             }
@@ -117,7 +117,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 uint n_doc = count_documents + 1;
                 auto doc = gen_doc(int(n_doc));
                 doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 auto address = actor_zeta::address_t::empty_address();
                 components::ql::insert_one_t insert_one(db_name, col_name, doc);
                 wal.insert_one(session, address, insert_one);
@@ -171,7 +171,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(*size == count_documents - 3);

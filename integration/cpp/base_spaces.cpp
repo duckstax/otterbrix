@@ -8,13 +8,13 @@
 #include <services/wal/manager_wal_replicate.hpp>
 #include "route.hpp"
 
-namespace ottergon {
+namespace otterbrix {
 
     using services::dispatcher::manager_dispatcher_t;
 
     constexpr static auto name_dispatcher = "dispatcher";
 
-    base_ottergon_t::base_ottergon_t(const configuration::config& config)
+    base_otterbrix_t::base_otterbrix_t(const configuration::config& config)
         : scheduler_(new actor_zeta::shared_work(1, 1000))
         , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)) {
         log_ = initialization_logger("python", config.log.path.c_str());
@@ -83,15 +83,15 @@ namespace ottergon {
         trace(log_, "spaces::spaces() final");
     }
 
-    log_t& base_ottergon_t::get_log() {
+    log_t& base_otterbrix_t::get_log() {
         return log_;
     }
 
-    wrapper_dispatcher_t* base_ottergon_t::dispatcher() {
+    wrapper_dispatcher_t* base_otterbrix_t::dispatcher() {
         return wrapper_dispatcher_.get();
     }
 
-    base_ottergon_t::~base_ottergon_t() {
+    base_otterbrix_t::~base_otterbrix_t() {
         trace(log_, "delete spaces");
         scheduler_->stop();
         scheduler_dispather_->stop();

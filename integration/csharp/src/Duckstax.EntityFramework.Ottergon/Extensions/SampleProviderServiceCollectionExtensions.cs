@@ -1,15 +1,15 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Extensions;
+﻿namespace Duckstax.EntityFramework.otterbrix.Extensions;
 
-using Duckstax.EntityFramework.Ottergon.Diagnostics.Internal;
-using Duckstax.EntityFramework.Ottergon.Infrastructure;
-using Duckstax.EntityFramework.Ottergon.Infrastructure.Internal;
-using Duckstax.EntityFramework.Ottergon.Metadata.Conventions;
-using Duckstax.EntityFramework.Ottergon.Metadata.Internal;
-using Duckstax.EntityFramework.Ottergon.Migrations;
-using Duckstax.EntityFramework.Ottergon.Migrations.Internal;
-using Duckstax.EntityFramework.Ottergon.Query.Internal;
-using Duckstax.EntityFramework.Ottergon.Storage.Internal;
-using Duckstax.EntityFramework.Ottergon.Update.Internal;
+using Duckstax.EntityFramework.otterbrix.Diagnostics.Internal;
+using Duckstax.EntityFramework.otterbrix.Infrastructure;
+using Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
+using Duckstax.EntityFramework.otterbrix.Metadata.Conventions;
+using Duckstax.EntityFramework.otterbrix.Metadata.Internal;
+using Duckstax.EntityFramework.otterbrix.Migrations;
+using Duckstax.EntityFramework.otterbrix.Migrations.Internal;
+using Duckstax.EntityFramework.otterbrix.Query.Internal;
+using Duckstax.EntityFramework.otterbrix.Storage.Internal;
+using Duckstax.EntityFramework.otterbrix.Update.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -35,7 +35,7 @@ public static class SampleProviderServiceCollectionExtensions
         return serviceCollection.AddDbContext<TContext>((_, options) =>
         {
             optionsAction?.Invoke(options);
-            options.UseOttergonProvider(sampleProviderOptionsAction);
+            options.UseotterbrixProvider(sampleProviderOptionsAction);
         });
     }
 
@@ -51,7 +51,7 @@ public static class SampleProviderServiceCollectionExtensions
             .TryAdd<IDatabaseProvider, DatabaseProvider<SampleProviderOptionsExtension>>()
             .TryAdd<IRelationalTypeMappingSource, SampleProviderTypeMappingSource>()
             .TryAdd<ISqlGenerationHelper, SampleProviderSqlGenerationHelper>()
-            .TryAdd<IRelationalAnnotationProvider, OttergonAnnotationProvider>()
+            .TryAdd<IRelationalAnnotationProvider, otterbrixAnnotationProvider>()
             .TryAdd<IModelValidator, SampleProviderModelValidator>()
             .TryAdd<IProviderConventionSetBuilder, SampleProviderConventionSetBuilder>()
             .TryAdd<IModificationCommandBatchFactory, SampleProviderModificationCommandBatchFactory>()

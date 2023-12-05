@@ -1,4 +1,4 @@
-project(ottergon)
+project(otterbrix)
 
 set(${PROJECT_NAME}_headers
         convert.hpp
@@ -25,18 +25,18 @@ set(${PROJECT_NAME}_sources
         wrapper_result.cpp
 )
 
-set(ottergon_LIBS
-        ottergon::log
-        ottergon::memory_storage
-        ottergon::collection
-        ottergon::cursor
-        ottergon::session
-        ottergon::document
-        ottergon::dispatcher
-        ottergon::wal
-        ottergon::disk
-        ottergon::locks
-        ottergon::ql
+set(otterbrix_LIBS
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
+        otterbrix::ql
 )
 
 #SET(PYTHON_EXECUTABLE python3)
@@ -54,8 +54,8 @@ pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${ottergon_LIBS}
-        cpp_ottergon
+        ${otterbrix_LIBS}
+        cpp_otterbrix
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
@@ -76,7 +76,7 @@ target_link_libraries(
 if (WASM_BUILD)
     target_link_libraries(
             ${PROJECT_NAME} PRIVATE
-            ${ottergon_LIBS}
+            ${otterbrix_LIBS}
             CONAN_PKG::proxy-wasm-cpp-host
     )
 endif ()
@@ -93,10 +93,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 #target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 if(SKBUILD)
-    install(DIRECTORY ottergon DESTINATION  . )
-    install(TARGETS ${PROJECT_NAME} DESTINATION  ./ottergon )
+    install(DIRECTORY otterbrix DESTINATION  . )
+    install(TARGETS ${PROJECT_NAME} DESTINATION  ./otterbrix )
     if (WASM_BUILD)
-        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
+        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./otterbrix )
     endif()
 endif()
 

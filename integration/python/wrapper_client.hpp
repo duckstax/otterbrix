@@ -19,7 +19,7 @@
 #include "wrapper_result.hpp"
 
 namespace py = pybind11;
-namespace ottergon {
+namespace otterbrix {
     class PYBIND11_EXPORT wrapper_client final : public boost::intrusive_ref_counter<wrapper_client> {
     public:
         wrapper_client(log_t& log, wrapper_dispatcher_t* dispatcher);

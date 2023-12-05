@@ -78,10 +78,10 @@ COPY ./services ./services
 COPY ./wasm ./wasm
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
-RUN cp integration/python/ottergon/* .
-#RUN cp integration/python/ottergon/MANIFEST.in .
-#RUN cp integration/python/ottergon/pyproject.toml .
-#RUN cp integration/python/ottergon/get_path.py .
+RUN cp integration/python/otterbrix/* .
+#RUN cp integration/python/otterbrix/MANIFEST.in .
+#RUN cp integration/python/otterbrix/pyproject.toml .
+#RUN cp integration/python/otterbrix/get_path.py .
 RUN mkdir -p /app/wasm_bin/
 COPY --from=build_wasm /app/build/bin/*.wasm /app/wasm_bin/
 RUN ls
@@ -95,7 +95,7 @@ RUN   PYBIN=(/opt/python/*/bin) && \
           mkdir -p $(echo "./$(${BIN}/python3 get_path.py )") && \
           conan install . -s build_type=Release -if=$(echo "./$(${BIN}/python3 get_path.py )") && \
           ${BIN}/python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON && \
-          #${BIN}/python3 -m pip install --no-index --find-links . dist/ottergon-*.whl  && \
+          #${BIN}/python3 -m pip install --no-index --find-links . dist/otterbrix-*.whl  && \
           cp /app/wasm_bin/*.wasm $(echo "./$(${BIN}/python3 get_path.py )/components/wasm_runner/tests/") && \
           cd $(echo "./$(${BIN}/python3 get_path.py )") && \
           ctest  -C --output-on-failure && \
@@ -105,7 +105,7 @@ RUN   PYBIN=(/opt/python/*/bin) && \
       done
 
 WORKDIR /app
-RUN for whl in dist/ottergon*.whl; do \
+RUN for whl in dist/otterbrix*.whl; do \
         auditwheel repair ${whl} -w ./work/dist/  &&\
         rm ${whl}; \
     done
@@ -121,10 +121,10 @@ RUN apt update && \
 
 WORKDIR /app
 
-COPY --from=build_wheel /app/work/dist/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /app/ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+COPY --from=build_wheel /app/work/dist/otterbrix-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl /app/otterbrix-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 COPY ./integration  ./integration
 
-RUN pip3 install ./ottergon-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+RUN pip3 install ./otterbrix-1.0.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 RUN python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
-RUN python3 -c "from ottergon import Client, DataBase, Collection"
+RUN python3 -c "from otterbrix import Client, DataBase, Collection"
 RUN pytest

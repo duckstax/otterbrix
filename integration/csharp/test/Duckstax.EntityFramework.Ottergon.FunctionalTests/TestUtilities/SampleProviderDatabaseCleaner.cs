@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Scaffolding.Metadata;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Microsoft.Extensions.Logging;
 
-namespace Duckstax.EntityFramework.Ottergon.FunctionalTests.TestUtilities;
+namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
 
 public class SampleProviderDatabaseCleaner : RelationalDatabaseCleaner
 {
