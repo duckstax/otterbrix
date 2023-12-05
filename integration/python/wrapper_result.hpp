@@ -8,7 +8,7 @@
 
 namespace py = pybind11;
 
-namespace ottergon {
+namespace otterbrix {
 
 class PYBIND11_EXPORT wrapper_result_delete final : public boost::intrusive_ref_counter<wrapper_result_delete> {
 public:
@@ -41,7 +41,7 @@ private:
 class PYBIND11_EXPORT wrapper_result final : public boost::intrusive_ref_counter<wrapper_result> {
 public:
     wrapper_result();
-    wrapper_result(const ottergon::session_id_t& session, const components::result::result_t &result);
+    wrapper_result(const otterbrix::session_id_t& session, const components::result::result_t &result);
 
     std::size_t inserted_count() const;
     std::size_t modified_count() const;
@@ -49,7 +49,7 @@ public:
     wrapper_cursor_ptr cursor() const;
 
 private:
-    ottergon::session_id_t session_;
+    otterbrix::session_id_t session_;
     components::result::result_t result_;
 };
 

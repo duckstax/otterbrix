@@ -10,10 +10,10 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ottergon::log
-        ottergon::document
-        ottergon::test_generaty
-        ottergon::cursor
+        otterbrix::log
+        otterbrix::document
+        otterbrix::test_generaty
+        otterbrix::cursor
         CONAN_PKG::boost
 )
 

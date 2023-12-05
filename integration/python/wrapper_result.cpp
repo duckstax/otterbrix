@@ -1,7 +1,7 @@
 #include "wrapper_result.hpp"
 #include "convert.hpp"
 
-namespace ottergon {
+namespace otterbrix {
 
 wrapper_result_delete::wrapper_result_delete(const components::result::result_delete &src)
     : deleted_ids_(to_pylist(src.deleted_ids())) {

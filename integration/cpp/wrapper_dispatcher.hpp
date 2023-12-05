@@ -19,7 +19,7 @@
 #include <components/ql/statements.hpp>
 #include <components/result/result.hpp>
 
-namespace ottergon {
+namespace otterbrix {
 
     using components::session::session_id_t;
     using components::document::document_ptr;

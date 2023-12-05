@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Migrations.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Migrations.Internal;
 
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Sqlite.Migrations.Internal;

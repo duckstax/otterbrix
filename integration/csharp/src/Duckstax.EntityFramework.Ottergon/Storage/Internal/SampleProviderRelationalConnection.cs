@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Storage.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Storage.Internal;
 
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore;

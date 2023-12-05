@@ -1,23 +1,23 @@
-project(c_ottergon C CXX)
+project(c_otterbrix C CXX)
 
 
 set(${PROJECT_NAME}_sources
         main.cpp
 )
 
-set(ottergon_LIBS
-        ottergon::log
-        ottergon::memory_storage
-        ottergon::collection
-        ottergon::cursor
-        ottergon::session
-        ottergon::document
-        ottergon::dispatcher
-        ottergon::wal
-        ottergon::disk
-        ottergon::locks
-        ottergon::sql
-        ottergon::result
+set(otterbrix_LIBS
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
+        otterbrix::sql
+        otterbrix::result
 )
 
 
@@ -30,11 +30,11 @@ add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        cpp_ottergon
-        ${ottergon_LIBS}
+        cpp_otterbrix
+        ${otterbrix_LIBS}
 )
 
-#set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")
+#set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "otterbrix")
 
 if (DEV_MODE)
     add_subdirectory(test)

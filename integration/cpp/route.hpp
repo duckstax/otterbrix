@@ -6,7 +6,7 @@
 #include <services/dispatcher/route.hpp>
 #include <services/wal/route.hpp>
 
-namespace ottergon {
+namespace otterbrix {
 
     namespace dispatcher {
         using services::dispatcher::route;

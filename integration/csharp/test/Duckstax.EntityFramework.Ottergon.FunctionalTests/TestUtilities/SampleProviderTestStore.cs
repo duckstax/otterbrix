@@ -7,10 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Duckstax.EntityFramework.Ottergon.FunctionalTests.TestUtilities;
+namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
 
-using Duckstax.EntityFramework.Ottergon.Extensions;
-using Duckstax.EntityFramework.Ottergon.Infrastructure;
+using Duckstax.EntityFramework.otterbrix.Extensions;
+using Duckstax.EntityFramework.otterbrix.Infrastructure;
 
 public class SampleProviderTestStore : RelationalTestStore
 {
@@ -30,7 +30,7 @@ public class SampleProviderTestStore : RelationalTestStore
         => context.Database.EnsureClean();
 
     public override DbContextOptionsBuilder AddProviderOptions(DbContextOptionsBuilder builder)
-        => builder.UseOttergonProvider(builder => AddOptions(builder));
+        => builder.UseotterbrixProvider(builder => AddOptions(builder));
 
 
     public static void AddOptions(SampleProviderDbContextOptionsBuilder builder)

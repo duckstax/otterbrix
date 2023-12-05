@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Infrastructure.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;

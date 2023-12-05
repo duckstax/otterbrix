@@ -19,15 +19,15 @@ TEST_CASE("python::test_collection") {
 
     INFO("initialization") {
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             dispatcher->create_database(session, database_name);
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             dispatcher->create_collection(session, database_name, collection_name);
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             REQUIRE(*dispatcher->size(session, database_name, collection_name) == 0);
         }
     }
@@ -36,15 +36,15 @@ TEST_CASE("python::test_collection") {
         for (int num = 0; num < 50; ++num) {
             {
                 auto doc = gen_doc(num);
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
             {
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 REQUIRE(*dispatcher->size(session, database_name, collection_name) == static_cast<std::size_t>(num) + 1);
             }
         }
-        auto session = ottergon::session_id_t();
+        auto session = otterbrix::session_id_t();
         REQUIRE(*dispatcher->size(session, database_name, collection_name) == 50);
     }
 
@@ -54,11 +54,11 @@ TEST_CASE("python::test_collection") {
             documents.push_back(gen_doc(num));
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             dispatcher->insert_many(session, database_name, collection_name, documents);
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
         }
     }
@@ -67,21 +67,21 @@ TEST_CASE("python::test_collection") {
         for (int num = 0; num < 100; ++num) {
             {
                 auto doc = gen_doc(num);
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
             {
-                auto session = ottergon::session_id_t();
+                auto session = otterbrix::session_id_t();
                 REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
             }
         }
-        auto session = ottergon::session_id_t();
+        auto session = otterbrix::session_id_t();
         REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
     }
 
     INFO("find") {
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
@@ -89,7 +89,7 @@ TEST_CASE("python::test_collection") {
         }
 
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
@@ -100,7 +100,7 @@ TEST_CASE("python::test_collection") {
         }
 
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::regex, key{"countStr"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
@@ -111,7 +111,7 @@ TEST_CASE("python::test_collection") {
         }
 
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1}));
@@ -125,7 +125,7 @@ TEST_CASE("python::test_collection") {
         }
 
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr_and = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             auto expr_or = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
@@ -144,7 +144,7 @@ TEST_CASE("python::test_collection") {
     }
 
     INFO("cursor") {
-        auto session = ottergon::session_id_t();
+        auto session = otterbrix::session_id_t();
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
         auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>();
         REQUIRE(c->size() == 100);
@@ -159,7 +159,7 @@ TEST_CASE("python::test_collection") {
 
     INFO("find_one") {
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
@@ -168,7 +168,7 @@ TEST_CASE("python::test_collection") {
             REQUIRE(c->next()->get_long("count") == 1);
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
@@ -177,7 +177,7 @@ TEST_CASE("python::test_collection") {
             REQUIRE(c->next()->get_long("count") == 10);
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1}));
@@ -192,12 +192,12 @@ TEST_CASE("python::test_collection") {
 
     INFO("drop_collection") {
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto c = dispatcher->drop_collection(session, database_name, collection_name);
             REQUIRE(c.is_success());
         }
         {
-            auto session = ottergon::session_id_t();
+            auto session = otterbrix::session_id_t();
             auto c = dispatcher->drop_collection(session, database_name, collection_name);
             REQUIRE(c.is_error());
         }

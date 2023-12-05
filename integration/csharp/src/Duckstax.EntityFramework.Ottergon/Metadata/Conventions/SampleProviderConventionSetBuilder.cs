@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Metadata.Conventions;
+﻿namespace Duckstax.EntityFramework.otterbrix.Metadata.Conventions;
 
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;

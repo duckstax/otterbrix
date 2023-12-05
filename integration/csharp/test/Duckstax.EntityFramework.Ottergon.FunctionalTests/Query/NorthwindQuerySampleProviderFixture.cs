@@ -1,15 +1,15 @@
-﻿using Duckstax.EntityFramework.Ottergon.FunctionalTests.TestModels.Northwind;
-using Duckstax.EntityFramework.Ottergon.FunctionalTests.TestUtilities;
+﻿using Duckstax.EntityFramework.otterbrix.FunctionalTests.TestModels.Northwind;
+using Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.TestModels.Northwind;
 using Microsoft.EntityFrameworkCore.TestUtilities;
 
-namespace Duckstax.EntityFramework.Ottergon.FunctionalTests.Query;
+namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.Query;
 
-using Duckstax.EntityFramework.Ottergon.FunctionalTests.TestModels.Northwind;
-using Duckstax.EntityFramework.Ottergon.FunctionalTests.TestUtilities;
+using Duckstax.EntityFramework.otterbrix.FunctionalTests.TestModels.Northwind;
+using Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
 
 public class NorthwindQuerySampleProviderFixture<TModelCustomizer> : NorthwindQueryRelationalFixture<TModelCustomizer>
         where TModelCustomizer : IModelCustomizer, new()

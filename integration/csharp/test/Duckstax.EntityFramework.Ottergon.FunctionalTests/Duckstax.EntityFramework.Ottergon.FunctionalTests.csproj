@@ -71,7 +71,7 @@
 	  </Reference>
 -->
 
-	  <ProjectReference Include="..\..\src\Duckstax.EntityFramework.Ottergon\Duckstax.EntityFramework.Ottergon.csproj" />
+	  <ProjectReference Include="..\..\src\Duckstax.EntityFramework.otterbrix\Duckstax.EntityFramework.otterbrix.csproj" />
 
 	  <ProjectReference Include="..\..\src\EFCore.SampleProvider\EFCore.SampleProvider.csproj" />
   </ItemGroup>

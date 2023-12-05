@@ -1,15 +1,15 @@
-namespace Duckstax.Ottergon.Tests;
+namespace Duckstax.otterbrix.Tests;
 
-using Duckstax.EntityFramework.Ottergon;
+using Duckstax.EntityFramework.otterbrix;
 
 public class Tests
 {
-    private OttergonWrapper wrapper { get; set; }
+    private otterbrixWrapper wrapper { get; set; }
 
     [SetUp]
     public void Setup()
     {
-        this.wrapper = new OttergonWrapper();
+        this.wrapper = new otterbrixWrapper();
     }
 
     [Test]

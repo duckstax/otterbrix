@@ -1,4 +1,4 @@
-#include "ottergon.h"
+#include "otterbrix.h"
 
 #include <integration/cpp/base_spaces.hpp>
 
@@ -7,12 +7,12 @@ namespace {
 
     configuration::config create_config() { return configuration::config::default_config(); }
 
-    struct spaces_t final : public ottergon::base_ottergon_t {
+    struct spaces_t final : public otterbrix::base_otterbrix_t {
     public:
         spaces_t(spaces_t& other) = delete;
         void operator=(const spaces_t&) = delete;
         spaces_t(const configuration::config& config)
-            : base_ottergon_t(config) {}
+            : base_otterbrix_t(config) {}
     };
 } // namespace
 
@@ -21,7 +21,7 @@ struct pod_space_t {
     std::unique_ptr<spaces_t> space;
 };
 
-extern "C" ottergon_ptr create(const config_t* cfg) {
+extern "C" otterbrix_ptr create(const config_t* cfg) {
     assert(cfg != nullptr);
     auto config = create_config();
     auto pod_space = std::make_unique<pod_space_t>();
@@ -31,7 +31,7 @@ extern "C" ottergon_ptr create(const config_t* cfg) {
     ;
 }
 
-extern "C" void destroy(ottergon_ptr ptr) {
+extern "C" void destroy(otterbrix_ptr ptr) {
     assert(ptr != nullptr);
     auto* spaces = reinterpret_cast<pod_space_t*>(ptr);
     assert(spaces->state == state_t::created);
@@ -40,12 +40,12 @@ extern "C" void destroy(ottergon_ptr ptr) {
     delete spaces;
 }
 
-extern "C" result_set_t* execute_sql(ottergon_ptr ptr, string_view_t query_raw) {
+extern "C" result_set_t* execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     assert(ptr != nullptr);
     auto pod_space = reinterpret_cast<pod_space_t*>(ptr);
     assert(pod_space->state == state_t::created);
     assert(query_raw.data != nullptr);
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto res = pod_space->space->dispatcher()->execute_sql(session, query);
     if (res.is_success()) {

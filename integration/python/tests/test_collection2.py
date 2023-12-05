@@ -1,6 +1,6 @@
 import copy
 import pytest
-from ottergon import Client, DataBase, Collection
+from otterbrix import Client, DataBase, Collection
 
 database_name = "TestDatabase"
 collection_name = "TestCollection"

@@ -21,7 +21,7 @@ void only_find_all(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_wal, on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
@@ -35,7 +35,7 @@ void only_find_eq(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_wal, on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
@@ -49,7 +49,7 @@ void only_find_gt(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_wal, on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
@@ -63,7 +63,7 @@ void delete_insert_update_one(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = wr_dispatcher<on_wal, on_disk>();
     collection_name_t collection_name = get_collection_name<on_index>();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     for (auto _ : state) {
         for (int i = 1; i <= 50; ++i) {

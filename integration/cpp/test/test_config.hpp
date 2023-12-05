@@ -21,10 +21,10 @@ inline void test_clear_directory(const configuration::config &config) {
     std::filesystem::create_directories(config.disk.path);
 }
 
-class test_spaces final : public ottergon::base_ottergon_t {
+class test_spaces final : public otterbrix::base_otterbrix_t {
 public:
     test_spaces(const configuration::config &config)
-        : ottergon::base_ottergon_t(config)
+        : otterbrix::base_otterbrix_t(config)
     {}
 };
 

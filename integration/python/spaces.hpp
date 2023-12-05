@@ -15,9 +15,9 @@
 
 #include <core/excutor.hpp>
 
-namespace ottergon {
+namespace otterbrix {
 
-    class PYBIND11_EXPORT spaces final : public base_ottergon_t {
+    class PYBIND11_EXPORT spaces final : public base_otterbrix_t {
     public:
         spaces(spaces& other) = delete;
         void operator=(const spaces&) = delete;

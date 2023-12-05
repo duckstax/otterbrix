@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Metadata.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Metadata.Internal;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Sqlite.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Sqlite.Storage.Internal;
 
-public class OttergonAnnotationProvider : RelationalAnnotationProvider
+public class otterbrixAnnotationProvider : RelationalAnnotationProvider
 {
     private readonly SqliteAnnotationProvider sqliteAnnotationProvider;
 
@@ -17,7 +17,7 @@ public class OttergonAnnotationProvider : RelationalAnnotationProvider
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    public OttergonAnnotationProvider(RelationalAnnotationProviderDependencies dependencies)
+    public otterbrixAnnotationProvider(RelationalAnnotationProviderDependencies dependencies)
     : base(dependencies)
     {
         sqliteAnnotationProvider = new(dependencies);
