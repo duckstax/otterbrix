@@ -338,13 +338,11 @@ def test_update_with_add_new_field(gen_collection):
 
 def test_update_with_upsert(gen_collection):
     c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
-    assert c.sub_count(0) == 0
-    assert c.sub_count(1) == 100
+    assert c.count() == 0
     c.close()
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
 
     c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
-    assert c.sub_count(0) == 1
-    assert c.sub_count(1) == 101
+    assert c.count() == 1
     c.close()
     assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1

@@ -108,7 +108,6 @@ PYBIND11_MODULE(ottergon, m) {
         .def("__iter__", &wrapper_cursor::iter)
         .def("__next__", &wrapper_cursor::next)
         .def("count", &wrapper_cursor::size)
-        .def("sub_count", &wrapper_cursor::sub_size)
         .def("close", &wrapper_cursor::close)
         .def("hasNext", &wrapper_cursor::has_next)
         .def("next", &wrapper_cursor::next)

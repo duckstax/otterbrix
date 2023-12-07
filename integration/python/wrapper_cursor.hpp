@@ -24,7 +24,6 @@ public:
     wrapper_cursor &next();
     wrapper_cursor &iter();
     std::size_t size();
-    std::size_t sub_size(size_t sub_cursor_index);
     py::object get(py::object key);
     bool is_success() const noexcept;
     bool is_error() const noexcept;

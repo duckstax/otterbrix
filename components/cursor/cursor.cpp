@@ -19,10 +19,6 @@ namespace components::cursor {
     std::size_t cursor_t::size() const {
         return size_;
     }
-    
-    std::size_t cursor_t::sub_size(size_t sub_cursor_index) const {
-        return sub_cursor_[sub_cursor_index]->size();
-    }
 
     std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator cursor_t::begin() {
         return sub_cursor_.begin();
@@ -48,6 +44,10 @@ namespace components::cursor {
         return sorted_.empty()
                    ? get_unsorted(index)
                    : get_sorted(index);
+    }
+
+    actor_zeta::address_t cursor_t::get_address(std::size_t sub_cursor_index) const {
+        return sub_cursor_[sub_cursor_index]->address();
     }
 
     bool cursor_t::is_success() const noexcept {
@@ -147,14 +147,7 @@ namespace components::cursor {
         return cursor_t_ptr{new cursor_t(resource)};
     }
 
-    cursor_t_ptr make_error(std::pmr::memory_resource* resource, error_code_t type, const std::string& what) {
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what) {
         return cursor_t_ptr{new cursor_t(resource, error_t(type, what))};
     }
-    
-    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, sub_cursor_t* sub) {
-        auto cursor = cursor_t_ptr{new cursor_t(resource)};
-        cursor->push(sub);
-        return cursor;
-    }
-
 } // namespace components::cursor

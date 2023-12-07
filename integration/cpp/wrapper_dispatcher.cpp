@@ -232,11 +232,11 @@ namespace ottergon {
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            return make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, parse_result.error.what().data());
+            return make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return make_error(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, "not valid sql");
+        return make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -265,7 +265,7 @@ namespace ottergon {
     }
 
     void wrapper_dispatcher_t::insert_finish(session_id_t &session, cursor_t_ptr result) {
-        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result->sub_size(0));
+        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result->size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

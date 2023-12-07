@@ -134,7 +134,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session, "UPDATE TestDatabase.TestCollection "
                                                         "SET count = 1000 "
                                                         "WHERE count < 20;");
-            REQUIRE(cur->sub_size(0) == 20);
+            REQUIRE(cur->size() == 20);
         }
         {
             auto session = ottergon::session_id_t();

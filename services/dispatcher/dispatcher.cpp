@@ -210,7 +210,7 @@ namespace services::dispatcher {
             }
 
             if (ql->type() == statement_type::create_collection) {
-                collection_address_book_.emplace(collection_full_name_t(ql->database_, ql->collection_), result->begin()->get()->address());
+                collection_address_book_.emplace(collection_full_name_t(ql->database_, ql->collection_), result->get_address(0));
                 actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::append_collection), session, ql->database_, ql->collection_);
                 if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
                     wal_success(session, last_wal_id_);
@@ -262,8 +262,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement).first;
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::insert_documents), session, logic_plan, components::ql::storage_parameters{});
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session,
-                             make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), new sub_cursor_t(resource_, address)));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::insert_finish), session, make_cursor(resource_));
         }
     }
 
@@ -298,8 +297,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::delete_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session,
-                             make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), new sub_cursor_t(resource_, address)));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::delete_finish), session, make_cursor(resource_));
         }
     }
 
@@ -334,8 +332,7 @@ namespace services::dispatcher {
             auto logic_plan = create_logic_plan(statement);
             actor_zeta::send(it_collection->second, dispatcher_t::address(), collection::handler_id(collection::route::update_documents), session, std::move(logic_plan.first), std::move(logic_plan.second));
         } else {
-            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session,
-                             make_from_sub_cursor(actor_zeta::detail::pmr::get_default_resource(), new sub_cursor_t(resource_, address)));
+            actor_zeta::send(address, dispatcher_t::address(), collection::handler_id(collection::route::update_finish), session, make_cursor(resource_));
         }
     }
 

@@ -127,7 +127,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             upd.update_ = make_document(upd_value);
             components::ql::variant_statement_t ql{upd};
             auto cur = dispatcher->execute_ql(session, ql);
-            REQUIRE(cur->sub_size(0) == 20);
+            REQUIRE(cur->size() == 20);
         }
         {
             auto session = ottergon::session_id_t();

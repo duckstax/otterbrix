@@ -76,13 +76,13 @@ namespace components::cursor {
         explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
         void push(sub_cursor_t* sub_cursor);
         std::size_t size() const;
-        std::size_t sub_size(size_t sub_cursor_index) const;
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator end();
         bool has_next() const;
         data_ptr next();
         data_ptr get() const;
         data_ptr get(std::size_t index) const;
+        actor_zeta::address_t get_address(std::size_t sub_cursor_index) const;
         bool is_success() const noexcept;
         bool is_error() const noexcept;
         error_t get_error() const;
@@ -105,7 +105,5 @@ namespace components::cursor {
 
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status);
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource);
-    cursor_t_ptr make_error(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
-    cursor_t_ptr make_from_sub_cursor(std::pmr::memory_resource* resource, sub_cursor_t* sub);
-
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
 } // namespace components::cursor

@@ -33,9 +33,6 @@ wrapper_cursor &wrapper_cursor::iter() {
 std::size_t wrapper_cursor::size() {
     return ptr_->size();
 }
-std::size_t wrapper_cursor::sub_size(size_t sub_cursor_index) {
-    return ptr_->sub_size(sub_cursor_index);
-}
 
 py::object wrapper_cursor::get(py::object key) {
     if (py::isinstance<py::str>(key)) {
