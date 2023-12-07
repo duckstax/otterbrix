@@ -38,10 +38,10 @@ namespace otterbrix {
         [[deprecated]] auto insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> components::result::result_t&;
         [[deprecated]] auto find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
         [[deprecated]] auto find_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t;
-        [[deprecated]] auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
-        [[deprecated]] auto delete_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_delete&;
-        [[deprecated]] auto update_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
-        [[deprecated]] auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_update&;
+        [[deprecated]] auto delete_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t&;
+        [[deprecated]] auto delete_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::result::result_t&;
+        [[deprecated]] auto update_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_t&;
+        [[deprecated]] auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::result::result_t&;
         [[deprecated]] auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::result::result_size;
         auto create_index(session_id_t &session, components::ql::create_index_t index) -> components::result::result_create_index;
         auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> components::result::result_drop_index;
