@@ -12,11 +12,11 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         non_thread_scheduler
-        ottergon::ql
-        ottergon::log
-        ottergon::session
-        ottergon::wal
-        ottergon::test_generaty
+        otterbrix::ql
+        otterbrix::log
+        otterbrix::session
+        otterbrix::wal
+        otterbrix::test_generaty
 
         CONAN_PKG::catch2
         CONAN_PKG::crc32c

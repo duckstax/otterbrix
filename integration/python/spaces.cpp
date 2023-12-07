@@ -1,6 +1,6 @@
 #include "spaces.hpp"
 
-namespace ottergon {
+namespace otterbrix {
 
     spaces* spaces::get_instance() {
         static spaces instance;
@@ -8,7 +8,7 @@ namespace ottergon {
     }
 
     spaces::spaces()
-        : base_ottergon_t(configuration::config::default_config()) {
+        : base_otterbrix_t(configuration::config::default_config()) {
     }
 
 } // namespace python

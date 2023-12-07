@@ -3,7 +3,7 @@
 #include <components/session/session.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 
-namespace ottergon {
+namespace otterbrix {
     using components::session::session_id_t;
 
     class wrapper_collection;

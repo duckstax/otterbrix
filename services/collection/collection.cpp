@@ -21,7 +21,6 @@ namespace services::collection {
         , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
-        add_handler(handler_id(route::insert_documents), &collection_t::insert_documents);
         add_handler(handler_id(route::delete_documents), &collection_t::delete_documents);
         add_handler(handler_id(route::update_documents), &collection_t::update_documents);
         add_handler(handler_id(route::execute_plan), &collection_t::execute_plan);
@@ -68,7 +67,7 @@ namespace services::collection {
     auto collection_t::execute_plan(const components::session::session_id_t& session,
                                     const components::logical_plan::node_ptr& logical_plan,
                                     components::ql::storage_parameters parameters) -> void {
-        trace(log(), "collection::execute_plan : {}", name_.to_string());
+        trace(log(), "collection::execute_plan : {}, session {}", name_.to_string(), session.data());
         auto sender = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session,
@@ -88,62 +87,40 @@ namespace services::collection {
                                    sessions::suspend_plan_t{sender, std::move(plan), std::move(pipeline_context)});
             return;
         }
-        // todo: only find
-        auto sub_cursor = cursor_storage_.emplace(
-            session, std::make_unique<sub_cursor_t>(context_->resource(), address()));
-        if (plan->output()) {
-            for (const auto& document : plan->output()->documents()) {
-                sub_cursor.first->second->append(document_view_t(document));
-            }
-            if (plan->output()->documents().size() > 0) {
-                auto cursor = make_cursor(context_->resource());
-                cursor->push(sub_cursor.first->second.get());
-                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
-            } else {
-                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session,
-                                 make_cursor(actor_zeta::detail::pmr::get_default_resource(), operation_status_t::failure));
-            }
-        }
-        //end: only find
-    }
 
-    auto collection_t::insert_documents(const components::session::session_id_t& session,
-                                        const components::logical_plan::node_ptr& logic_plan,
-                                        components::ql::storage_parameters parameters) -> void {
-        trace(log(), "collection::insert : {}", name_.to_string());
-        auto dispatcher = current_message()->sender();
-        if (dropped_) {
-            actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session, nullptr);
-        } else {
-            auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
-            if (!plan) {
-                actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session, nullptr);
+        if (plan->type() == operators::operator_type::insert) {
+            trace(log(), "collection::execute_plan : operators::operator_type::insert");
+            actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session,
+                             std::string(name_.database), std::string(name_.collection),
+                             plan->output() ? plan->output()->documents()
+                                            : std::pmr::vector<document_ptr>{context_->resource()});
+
+            auto cursor = make_cursor(context_->resource());
+            sub_cursor_t* sub_cursor;
+            if (plan->modified()) {
+                sub_cursor = new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), address());
+                for (const auto& doc : plan->modified()->documents()) {
+                    sub_cursor->append(document_view_t(context_->storage().at(doc)));
+                }
             } else {
-                components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
-                plan->on_execute(&pipeline_context);
-                if (plan->is_executed()) {
-                    actor_zeta::send(mdisk_, address(), disk::handler_id(disk::route::write_documents), session,
-                                     std::string(name_.database), std::string(name_.collection),
-                                     plan->output() ? plan->output()->documents()
-                                                    : std::pmr::vector<document_ptr>{context_->resource()});
-                    if(plan->modified()) {
-                        auto* sub_cursor = new sub_cursor_t(std::move(plan->modified()->documents()).get_allocator().resource(), address());
-                        for(const auto& id : plan->modified()->documents()) {
-                            sub_cursor->append(document_view_t(context_->storage().at(id)));
-                        }
-                        auto cursor = make_cursor(actor_zeta::detail::pmr::get_default_resource());
-                        cursor->push(sub_cursor);
-                        actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session, cursor);
-                    } else {
-                        actor_zeta::send(dispatcher, address(), handler_id(route::insert_finish), session,
-                                         make_cursor(actor_zeta::detail::pmr::get_default_resource()));
-                    }
-                } else {
-                    sessions::make_session(sessions_, session,
-                                           sessions::suspend_plan_t{current_message()->sender(), std::move(plan),
-                                                                    std::move(pipeline_context)});
+                sub_cursor = new sub_cursor_t(context_->resource(), address());
+            }
+            cursor->push(sub_cursor);
+            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+        } else {
+            //todo: only find
+            trace(log(), "collection::execute_plan : operators::operator_type::agreggate");
+            auto cursor = cursor_storage_.emplace(
+                session, std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+            if (plan->output()) {
+                for (const auto& document : plan->output()->documents()) {
+                    cursor.first->second->append(document_view_t(document));
                 }
             }
+            auto c = make_cursor(context_->resource());
+            c->push(cursor.first->second.get());
+            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, c);
+            //end: only find
         }
     }
 

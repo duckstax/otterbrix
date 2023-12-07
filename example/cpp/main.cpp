@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
-#include <integration/cpp/ottergon.hpp>
+#include <integration/cpp/otterbrix.hpp>
 #include "components/tests/generaty.hpp"
 
 using namespace components;
@@ -29,9 +29,9 @@ TEST_CASE("example::sql::base") {
     clear_directory(config);
     config.disk.on = false;
     config.wal.on = false;
-    ottergon::ottergon_ptr ottergon;
+    otterbrix::otterbrix_ptr otterbrix;
 
-    INFO("initialization") { ottergon = ottergon::make_ottergon(config); }
+    INFO("initialization") { otterbrix = otterbrix::make_otterbrix(config); }
 
     INFO("insert") {
         {
@@ -41,7 +41,7 @@ TEST_CASE("example::sql::base") {
                 query << "('" << gen_id(num + 1) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
-            auto res = execute_sql(ottergon, query.str());
+            auto res = execute_sql(otterbrix, query.str());
             auto r = res.get<result_insert>();
             REQUIRE(r.inserted_ids().size() == 100);
         }
@@ -49,13 +49,13 @@ TEST_CASE("example::sql::base") {
 
     INFO("select") {
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
@@ -64,7 +64,7 @@ TEST_CASE("example::sql::base") {
 
     INFO("select order by") {
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection ORDER BY count;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 0);
@@ -75,7 +75,7 @@ TEST_CASE("example::sql::base") {
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 99);
@@ -86,7 +86,7 @@ TEST_CASE("example::sql::base") {
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection ORDER BY name;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY name;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 0);
@@ -100,18 +100,18 @@ TEST_CASE("example::sql::base") {
 
     INFO("delete") {
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 9);
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "DELETE FROM TestDatabase.TestCollection WHERE count > 90;");
+            auto res = execute_sql(otterbrix, "DELETE FROM TestDatabase.TestCollection WHERE count > 90;");
             auto r = res.get<result_delete>();
             REQUIRE(r.deleted_ids().size() == 9);
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
@@ -120,24 +120,24 @@ TEST_CASE("example::sql::base") {
 
     INFO("update") {
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "UPDATE TestDatabase.TestCollection SET count = 1000 WHERE count < 20;");
+            auto res = execute_sql(otterbrix, "UPDATE TestDatabase.TestCollection SET count = 1000 WHERE count < 20;");
             auto r = res.get<result_update>();
             REQUIRE(r.modified_ids().size() == 20);
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 0);
             delete c;
         }
         {
-            auto res = execute_sql(ottergon, "SELECT * FROM TestDatabase.TestCollection WHERE count == 1000;");
+            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count == 1000;");
             auto* c = res.get<components::cursor::cursor_t*>();
             REQUIRE(c->size() == 20);
             delete c;
@@ -150,10 +150,10 @@ TEST_CASE("example::sql::group_by") {
     clear_directory(config);
     config.disk.on = false;
     config.wal.on = false;
-    ottergon::ottergon_ptr ottergon;
+    otterbrix::otterbrix_ptr otterbrix;
 
     INFO("initialization") {
-        { ottergon = ottergon::make_ottergon(config); }
+        { otterbrix = otterbrix::make_otterbrix(config); }
         {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
@@ -161,12 +161,12 @@ TEST_CASE("example::sql::group_by") {
                 query << "('" << gen_id(num + 1) << "', "
                       << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
             }
-            execute_sql(ottergon, query.str());
+            execute_sql(otterbrix, query.str());
         }
     }
 
     INFO("group by") {
-        auto res = execute_sql(ottergon, R"_(SELECT name, COUNT(count) AS count_, )_"
+        auto res = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
                                          R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                          R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
                                          R"_(FROM TestDatabase.TestCollection )_"
@@ -187,7 +187,7 @@ TEST_CASE("example::sql::group_by") {
     }
 
     INFO("group by with order by") {
-        auto res = execute_sql(ottergon, R"_(SELECT name, COUNT(count) AS count_, )_"
+        auto res = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
                                          R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                          R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
                                          R"_(FROM TestDatabase.TestCollection )_"
@@ -214,18 +214,18 @@ TEST_CASE("example::sql::invalid_queries") {
     clear_directory(config);
     config.disk.on = false;
     config.wal.on = false;
-    auto ottergon = ottergon::make_ottergon(config);
+    auto otterbrix = otterbrix::make_otterbrix(config);
 
     INFO("not exists database") {
-        auto res = execute_sql(ottergon, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        auto res = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(res.is_error());
         REQUIRE(res.error_code() == error_code_t::database_not_exists);
     }
 
-    INFO("create database") { execute_sql(ottergon, R"_(CREATE DATABASE TestDatabase;)_"); }
+    INFO("create database") { execute_sql(otterbrix, R"_(CREATE DATABASE TestDatabase;)_"); }
 
     INFO("not exists database") {
-        auto res = execute_sql(ottergon, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        auto res = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(res.is_error());
         REQUIRE(res.error_code() == error_code_t::collection_not_exists);
     }

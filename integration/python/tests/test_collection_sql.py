@@ -1,5 +1,5 @@
 import pytest
-from ottergon import Client
+from otterbrix import Client
 
 client = Client()
 client["schema"]["table"] # todo: create collection

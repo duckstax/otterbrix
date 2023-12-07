@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Update.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Update.Internal;
 
 using Microsoft.EntityFrameworkCore.Update;
 

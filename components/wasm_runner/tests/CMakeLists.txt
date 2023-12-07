@@ -9,8 +9,8 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ottergon::log
-        ottergon::wasm_runner
+        otterbrix::log
+        otterbrix::wasm_runner
         CONAN_PKG::spdlog
         CONAN_PKG::catch2
         CONAN_PKG::proxy-wasm-cpp-host

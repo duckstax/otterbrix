@@ -12,7 +12,7 @@
 #include <components/document/document_view.hpp>
 
 namespace py = pybind11;
-namespace ottergon {
+namespace otterbrix {
 class PYBIND11_EXPORT wrapper_document final : public boost::intrusive_ref_counter<wrapper_document> {
 public:
     using type_t = components::document::document_view_t;

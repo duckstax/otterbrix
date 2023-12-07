@@ -27,18 +27,18 @@ namespace services {
 
 } // namespace services
 
-namespace ottergon {
+namespace otterbrix {
 
-    class base_ottergon_t {
+    class base_otterbrix_t {
     public:
-        base_ottergon_t(base_ottergon_t& other) = delete;
-        void operator=(const base_ottergon_t&) = delete;
+        base_otterbrix_t(base_otterbrix_t& other) = delete;
+        void operator=(const base_otterbrix_t&) = delete;
 
         log_t& get_log();
-        ottergon::wrapper_dispatcher_t* dispatcher();
-        ~base_ottergon_t();
+        otterbrix::wrapper_dispatcher_t* dispatcher();
+        ~base_otterbrix_t();
     protected:
-        explicit base_ottergon_t(const configuration::config& config);
+        explicit base_otterbrix_t(const configuration::config& config);
         log_t log_;
         actor_zeta::scheduler_ptr scheduler_;
         actor_zeta::scheduler_ptr scheduler_dispather_;
@@ -47,7 +47,7 @@ namespace ottergon {
         services::disk::manager_disk_ptr manager_disk_;
         services::wal::manager_wal_ptr manager_wal_;
         services::memory_storage_ptr memory_storage_;
-        std::unique_ptr<ottergon::wrapper_dispatcher_t> wrapper_dispatcher_;
+        std::unique_ptr<otterbrix::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
 
-} // namespace ottergon
+} // namespace otterbrix

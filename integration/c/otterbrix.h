@@ -1,5 +1,5 @@
-#ifndef OTTERGON_OTTERGON_H
-#define OTTERGON_OTTERGON_H
+#ifndef otterbrix_otterbrix_H
+#define otterbrix_otterbrix_H
 
 #include <cstdint>
 #include <cstdlib>
@@ -48,16 +48,16 @@ typedef struct result_set_t {
 
 } result_set_t;
 
-typedef void* ottergon_ptr;
+typedef void* otterbrix_ptr;
 
-ottergon_ptr create(const config_t*);
+otterbrix_ptr create(const config_t*);
 
-void destroy(ottergon_ptr);
+void destroy(otterbrix_ptr);
 
-result_set_t* execute_sql(ottergon_ptr, string_view_t query);
+result_set_t* execute_sql(otterbrix_ptr, string_view_t query);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif //OTTERGON_OTTERGON_H
+#endif //otterbrix_otterbrix_H

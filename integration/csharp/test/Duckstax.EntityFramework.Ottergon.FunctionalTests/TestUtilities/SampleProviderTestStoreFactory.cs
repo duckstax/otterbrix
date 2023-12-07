@@ -1,6 +1,6 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.FunctionalTests.TestUtilities
+﻿namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities
 {
-    using Duckstax.EntityFramework.Ottergon.Extensions;
+    using Duckstax.EntityFramework.otterbrix.Extensions;
     using Microsoft.EntityFrameworkCore.TestUtilities;
     using Microsoft.Extensions.DependencyInjection;
 

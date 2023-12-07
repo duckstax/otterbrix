@@ -1,12 +1,13 @@
-project(cpp_ottergon)
+project(cpp_otterbrix)
 
 
 set(${PROJECT_NAME}_sources
       base_spaces.cpp
       wrapper_dispatcher.cpp
-      ottergon.cpp
+      otterbrix.cpp
 )
 
+<<<<<<< HEAD
 set(ottergon_LIBS
         ottergon::log
         ottergon::memory_storage
@@ -19,6 +20,21 @@ set(ottergon_LIBS
         ottergon::disk
         ottergon::locks
         ottergon::sql
+=======
+set(otterbrix_LIBS
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
+        otterbrix::sql
+        otterbrix::result
+>>>>>>> upstream/develop
 )
 
 
@@ -31,16 +47,16 @@ add_library(${PROJECT_NAME} ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME} PUBLIC
-        ${ottergon_LIBS}
+        ${otterbrix_LIBS}
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "ottergon")
+set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "otterbrix")
 
 add_library(${PROJECT_NAME}_shared SHARED ${${PROJECT_NAME}_sources})
 
 target_link_libraries(
         ${PROJECT_NAME}_shared PRIVATE
-        ${ottergon_LIBS}
+        ${otterbrix_LIBS}
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
@@ -58,7 +74,7 @@ target_link_libraries(
         CONAN_PKG::openssl
 )
 
-#set_target_properties({PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME "cpp_ottergon_shared")
+#set_target_properties({PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME "cpp_otterbrix_shared")
 
 
 if (DEV_MODE OR ALLOW_BENCHMARK)
@@ -70,19 +86,19 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
             wrapper_dispatcher.cpp
     )
 
-    add_library(ottergon_${PROJECT_NAME}
+    add_library(otterbrix_${PROJECT_NAME}
             ${${PROJECT_NAME}_headers}
             ${${PROJECT_NAME}_sources}
     )
 
-    add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
+    add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-    set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+    set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
     target_link_libraries(
-            ottergon_${PROJECT_NAME} PUBLIC
+            otterbrix_${PROJECT_NAME} PUBLIC
 
-            ${ottergon_LIBS}
+            ${otterbrix_LIBS}
 
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx
@@ -103,7 +119,7 @@ endif()
 
 if (WASM_BUILD)
     target_link_libraries(
-            ottergon_${PROJECT_NAME} PUBLIC
+            otterbrix_${PROJECT_NAME} PUBLIC
             CONAN_PKG::proxy-wasm-cpp-host
     )
 endif ()

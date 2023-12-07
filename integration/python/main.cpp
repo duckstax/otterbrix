@@ -18,9 +18,9 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-using namespace ottergon;
+using namespace otterbrix;
 
-PYBIND11_MODULE(ottergon, m) {
+PYBIND11_MODULE(otterbrix, m) {
     py::class_<wrapper_client>(m, "Client")
         .def(
             py::init([]() {

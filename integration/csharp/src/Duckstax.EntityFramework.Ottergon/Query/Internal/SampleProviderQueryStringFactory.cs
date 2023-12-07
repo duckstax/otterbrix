@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Query.Internal;
+﻿namespace Duckstax.EntityFramework.otterbrix.Query.Internal;
 
 using System.Data.Common;
 using Microsoft.EntityFrameworkCore.Query;

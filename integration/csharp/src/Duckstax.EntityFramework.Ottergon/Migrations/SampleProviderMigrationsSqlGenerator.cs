@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Migrations;
+﻿namespace Duckstax.EntityFramework.otterbrix.Migrations;
 
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;

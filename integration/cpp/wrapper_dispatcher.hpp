@@ -18,7 +18,7 @@
 #include <components/ql/aggregate.hpp>
 #include <components/ql/statements.hpp>
 
-namespace ottergon {
+namespace otterbrix {
 
     using components::session::session_id_t;
     using components::document::document_ptr;

@@ -13,7 +13,7 @@ static constexpr int count_delete_many = 100;
 void work(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = ottergon::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     int n_state = 0;
     for (auto _ : state) {

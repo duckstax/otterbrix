@@ -1,6 +1,6 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Infrastructure;
+﻿namespace Duckstax.EntityFramework.otterbrix.Infrastructure;
 
-using Duckstax.EntityFramework.Ottergon.Infrastructure.Internal;
+using Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 

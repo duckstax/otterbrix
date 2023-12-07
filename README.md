@@ -1,35 +1,35 @@
-Ottergon is an open-source framework for developing conventional and analytical applications.
+Otterbrix is an open-source framework for developing conventional and analytical applications.
 
 ## Stable Arch
 
-[![ubuntu 20.04](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml)
+[![ubuntu 20.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu_20_04.yaml)
 
-[![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+[![manylinux2014](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml)
 
 ## Experemental Arch
 
-[![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+[![manylinux2014](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml)
 
 
-Ottergon is an open-source framework for developing conventional and analytical applications. 
-By adding the Ottergon module to their applications, developers unlock the ability to quickly process unstructured and loosely structured data.
+Otterbrix is an open-source framework for developing conventional and analytical applications. 
+By adding the otterbrix module to their applications, developers unlock the ability to quickly process unstructured and loosely structured data.
 
-Ottergon seamlessly integrates with column-oriented memory format and can represent both flat and hierarchical data for efficient analytical operations.
+otterbrix seamlessly integrates with column-oriented memory format and can represent both flat and hierarchical data for efficient analytical operations.
 
-## Enjoy easy programming with Ottergon!
+## Enjoy easy programming with otterbrix!
 
 ## Installation
 
 ### Python example:
 
 ```bash
-    pip install ottergon==0.5.0 
+    pip install otterbrix==0.5.0 
 ```
 
 Python SQl example:
 
 ```python
-    from ottergon import Client
+    from otterbrix import Client
 
     client = Client()
     database = client["MyDatabase"]
@@ -42,7 +42,7 @@ Python SQl example:
 Python NoSQl example:
 
 ```python
-    from ottergon import Client
+    from otterbrix import Client
 
     client = Client()
     database = client["MyDatabase"]

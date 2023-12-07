@@ -14,7 +14,7 @@
 
 using namespace components::cursor;
 
-namespace ottergon {
+namespace otterbrix {
 
     wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,actor_zeta::address_t manager_dispatcher,log_t &log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr,"wrapper_dispatcher")
@@ -22,7 +22,6 @@ namespace ottergon {
         , log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
         add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::insert_finish), &wrapper_dispatcher_t::insert_finish);
         add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
         add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
@@ -73,7 +72,7 @@ namespace ottergon {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -87,7 +86,7 @@ namespace ottergon {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::insert_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -213,9 +212,7 @@ namespace ottergon {
 
         return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
-            if constexpr (std::is_same_v<type, insert_many_t>) {
-                return send_ql(session, ql, "insert", collection::handler_id(collection::route::insert_documents));
-            } else if constexpr (std::is_same_v<type, delete_many_t>) {
+            if constexpr (std::is_same_v<type, delete_many_t>) {
                 return send_ql(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
             } else if constexpr (std::is_same_v<type, update_many_t>) {
                 return send_ql(session, ql, "update", collection::handler_id(collection::route::update_documents));
@@ -259,13 +256,6 @@ namespace ottergon {
 
     void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, cursor_t_ptr result) {
         trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result->is_success());
-        intermediate_store_ = result;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::insert_finish(session_id_t &session, cursor_t_ptr result) {
-        trace(log_, "wrapper_dispatcher_t::insert_finish session: {}, result: {} inserted", session.data(), result->size());
         intermediate_store_ = result;
         input_session_ = session;
         notify();

@@ -20,7 +20,7 @@
 #include "integration/cpp/wrapper_dispatcher.hpp"
 
 namespace py = pybind11;
-namespace ottergon {
+namespace otterbrix {
 
     using components::ql::index_type;
     using components::ql::index_compare;

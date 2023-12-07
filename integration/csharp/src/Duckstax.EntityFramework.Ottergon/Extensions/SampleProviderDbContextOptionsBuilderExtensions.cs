@@ -1,13 +1,13 @@
-﻿namespace Duckstax.EntityFramework.Ottergon.Extensions;
+﻿namespace Duckstax.EntityFramework.otterbrix.Extensions;
 
-using Duckstax.EntityFramework.Ottergon.Infrastructure;
-using Duckstax.EntityFramework.Ottergon.Infrastructure.Internal;
+using Duckstax.EntityFramework.otterbrix.Infrastructure;
+using Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 public static class SampleProviderDbContextOptionsBuilderExtensions
 {
-    public static DbContextOptionsBuilder UseOttergonProvider(
+    public static DbContextOptionsBuilder UseotterbrixProvider(
         this DbContextOptionsBuilder optionsBuilder,
         Action<SampleProviderDbContextOptionsBuilder>? mySqlOptionsAction = null)
     {

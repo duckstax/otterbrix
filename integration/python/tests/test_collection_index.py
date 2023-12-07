@@ -1,7 +1,7 @@
 import os
 import pytest
 import shutil
-from ottergon import Client, DataBase, Collection, TypeIndex, CompareIndex
+from otterbrix import Client, DataBase, Collection, TypeIndex, CompareIndex
 
 if os.path.isdir('./wal'):
     shutil.rmtree('./wal')

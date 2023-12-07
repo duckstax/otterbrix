@@ -93,11 +93,6 @@ namespace services::collection {
                 const components::logical_plan::node_ptr& logical_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto insert_documents(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
         auto delete_documents(
                 const components::session::session_id_t& session,
                 const components::logical_plan::node_ptr& logic_plan,

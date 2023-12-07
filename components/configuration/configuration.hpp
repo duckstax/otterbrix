@@ -32,4 +32,4 @@ namespace configuration {
         }
     };
 
-} // namespace ottergon
+} // namespace otterbrix

@@ -49,30 +49,30 @@ set(${PROJECT_NAME}_SOURCES
         sort.cpp
 )
 
-add_library(ottergon_${PROJECT_NAME}
+add_library(otterbrix_${PROJECT_NAME}
         ${${PROJECT_NAME}_HEADERS}
         ${${PROJECT_NAME}_SOURCES}
 )
 
 
-add_library(ottergon::${PROJECT_NAME} ALIAS ottergon_${PROJECT_NAME})
+add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-set_property(TARGET ottergon_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        ottergon_${PROJECT_NAME} PUBLIC
-        ottergon::document
-        ottergon::cursor
-        ottergon::session
-        ottergon::index
-        ottergon::logical_plan
-        ottergon::pipeline
+        otterbrix_${PROJECT_NAME} PUBLIC
+        otterbrix::document
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::index
+        otterbrix::logical_plan
+        otterbrix::pipeline
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost
 )
 
-target_include_directories(ottergon_${PROJECT_NAME} PUBLIC
+target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
 )
 
 if (DEV_MODE)
