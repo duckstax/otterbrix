@@ -5,20 +5,6 @@ set(${PROJECT_NAME}_sources
         main.cpp
 )
 
-<<<<<<< HEAD
-set(ottergon_LIBS
-        ottergon::log
-        ottergon::memory_storage
-        ottergon::collection
-        ottergon::cursor
-        ottergon::session
-        ottergon::document
-        ottergon::dispatcher
-        ottergon::wal
-        ottergon::disk
-        ottergon::locks
-        ottergon::sql
-=======
 set(otterbrix_LIBS
         otterbrix::log
         otterbrix::memory_storage
@@ -31,8 +17,6 @@ set(otterbrix_LIBS
         otterbrix::disk
         otterbrix::locks
         otterbrix::sql
-        otterbrix::result
->>>>>>> upstream/develop
 )
 
 

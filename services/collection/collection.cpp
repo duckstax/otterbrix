@@ -52,13 +52,13 @@ namespace services::collection {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session,
-                             make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped));
+                             make_cursor(context_->resource(), error_code_t::collection_dropped));
         } else {
             auto* sub_cursor = new sub_cursor_t(context_->resource(), address());
             for (const auto& doc : context_->storage()) {
                 sub_cursor->append(document_view_t(doc.second));
             }
-            auto cursor = make_cursor(actor_zeta::detail::pmr::get_default_resource());
+            auto cursor = make_cursor(context_->resource());
             cursor->push(sub_cursor);
             actor_zeta::send(dispatcher, address(), handler_id(route::size_finish), session, cursor);
         }
@@ -71,13 +71,13 @@ namespace services::collection {
         auto sender = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped, "collection dropped"));
+                            make_cursor(context_->resource(), error_code_t::collection_dropped, "collection dropped"));
             return;
         }
         auto plan = planner::create_plan(view(), logical_plan, components::ql::limit_t::unlimit());
         if (!plan) {
             actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
+                            make_cursor(context_->resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
         components::pipeline::context_t pipeline_context{session, address(), parameters};
@@ -117,9 +117,14 @@ namespace services::collection {
                     cursor.first->second->append(document_view_t(document));
                 }
             }
-            auto c = make_cursor(context_->resource());
-            c->push(cursor.first->second.get());
-            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, c);
+            if (cursor.first->second.get()->size() == 0) {
+                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session,
+                                make_cursor(context_->resource(), operation_status_t::failure));
+            } else {
+                auto c = make_cursor(context_->resource());
+                c->push(cursor.first->second.get());
+                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, c);
+            }
             //end: only find
         }
     }
@@ -131,13 +136,13 @@ namespace services::collection {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped));
+                            make_cursor(context_->resource(), error_code_t::collection_dropped));
             return;
         }
         auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::limit_one());
         if (!plan) {
             actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::create_phisical_plan_error));
+                            make_cursor(context_->resource(), error_code_t::create_phisical_plan_error));
             return;
         }
         components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
@@ -155,7 +160,7 @@ namespace services::collection {
         for(const auto& id : plan->modified()->documents()) {
             sub_cursor->append(document_view_t(nullptr));
         }
-        auto cursor = make_cursor(actor_zeta::detail::pmr::get_default_resource());
+        auto cursor = make_cursor(context_->resource());
         cursor->push(sub_cursor);
         actor_zeta::send(dispatcher, address(), handler_id(route::delete_finish), session, cursor);
     }
@@ -167,14 +172,14 @@ namespace services::collection {
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::collection_dropped));
+                            make_cursor(context_->resource(), error_code_t::collection_dropped));
             return;
         }
 
         auto plan = planner::create_plan(view(), logic_plan, components::ql::limit_t::unlimit());
         if (!plan) {
             actor_zeta::send(dispatcher, address(), handler_id(route::update_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), error_code_t::create_phisical_plan_error));
+                            make_cursor(context_->resource(), error_code_t::create_phisical_plan_error));
             return;
         }
         components::pipeline::context_t pipeline_context{session, address(), std::move(parameters)};
@@ -224,7 +229,7 @@ namespace services::collection {
         trace(log(), "collection::drop : {}", name_.to_string());
         auto dispatcher = current_message()->sender();
         actor_zeta::send(dispatcher, address(), handler_id(route::drop_collection_finish), session,
-                            make_cursor(actor_zeta::detail::pmr::get_default_resource(), drop_() ? operation_status_t::success : operation_status_t::failure),
+                            make_cursor(context_->resource(), drop_() ? operation_status_t::success : operation_status_t::failure),
                             name_.database, name_.collection);
     }
 

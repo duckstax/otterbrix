@@ -86,7 +86,6 @@ TEST_CASE("python::test_collection") {
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->size() == 100);
         }
-
         {
             auto session = otterbrix::session_id_t();
             auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
@@ -137,7 +136,6 @@ TEST_CASE("python::test_collection") {
             REQUIRE(cur->size() == 3);
         }
     }
-
     INFO("cursor") {
         auto session = otterbrix::session_id_t();
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name};
@@ -150,7 +148,6 @@ TEST_CASE("python::test_collection") {
         }
         REQUIRE(count == 100);
     }
-
     INFO("find_one") {
         {
             auto session = otterbrix::session_id_t();
@@ -183,7 +180,6 @@ TEST_CASE("python::test_collection") {
             REQUIRE(cur->next()->get_long("count") == 99);
         }
     }
-
     INFO("drop_collection") {
         {
             auto session = otterbrix::session_id_t();
@@ -196,5 +192,4 @@ TEST_CASE("python::test_collection") {
             REQUIRE(cur->is_error());
         }
     }
-
 }

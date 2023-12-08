@@ -16,5 +16,5 @@ namespace otterbrix {
 
    auto make_otterbrix() -> otterbrix_ptr;
    auto make_otterbrix(configuration::config) -> otterbrix_ptr;
-   auto execute_sql(const otterbrix_ptr& otterbrix, const std::string& query) -> components::result::result_t;
+   auto execute_sql(const otterbrix_ptr& otterbrix, const std::string& query) -> components::cursor::cursor_t_ptr;
 }

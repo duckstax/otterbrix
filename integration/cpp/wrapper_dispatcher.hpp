@@ -56,7 +56,6 @@ namespace otterbrix {
         /// async method
         auto load_finish() -> void;
         auto execute_ql_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto insert_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
         auto delete_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
         auto update_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
         auto size_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
