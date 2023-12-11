@@ -94,16 +94,6 @@ namespace services::collection {
                 const components::logical_plan::node_ptr& logical_plan,
                 components::ql::storage_parameters parameters) -> void;
 
-        auto delete_documents(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
-        auto update_documents(
-                const components::session::session_id_t& session,
-                const components::logical_plan::node_ptr& logic_plan,
-                components::ql::storage_parameters parameters) -> void;
-
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
 
@@ -118,6 +108,15 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
+        void find_document_impl(const components::session::session_id_t& session, const actor_zeta::address_t& sender,
+                                        operators::operator_ptr plan);
+        void update_document_impl(const components::session::session_id_t& session, const actor_zeta::address_t& sender,
+                                        operators::operator_ptr plan);
+        void insert_document_impl(const components::session::session_id_t& session, const actor_zeta::address_t& sender,
+                                        operators::operator_ptr plan);
+        void delete_document_impl(const components::session::session_id_t& session, const actor_zeta::address_t& sender,
+                                        operators::operator_ptr plan);
+
         std::size_t size_() const;
         bool drop_();
 

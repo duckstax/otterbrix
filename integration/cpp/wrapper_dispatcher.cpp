@@ -22,8 +22,6 @@ namespace otterbrix {
         , log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
         add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
-        add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
         add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
         add_handler(collection::handler_id(collection::route::drop_index_finish), &wrapper_dispatcher_t::drop_index_finish);
@@ -107,7 +105,7 @@ namespace otterbrix {
         return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete & {
+    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t & {
         trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::delete_one_t ql{condition};
@@ -115,15 +113,15 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_delete>(intermediate_store_) && "[wrapper_dispatcher_t::delete_one]: return variant intermediate_store_ holds the alternative result_delete");
-        return std::get<result_delete>(intermediate_store_);
+        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::delete_one]: return variant intermediate_store_ holds the alternative result_t");
+        return std::get<result_t>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_delete &{
+    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t &{
         trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::delete_many_t ql{condition};
@@ -131,15 +129,15 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_delete>(intermediate_store_) && "[wrapper_dispatcher_t::delete_many]: return variant intermediate_store_ holds the alternative result_delete");
-        return std::get<result_delete>(intermediate_store_);
+        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::delete_many]: return variant intermediate_store_ holds the alternative result_t");
+        return std::get<result_t>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
+    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_t & {
         trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::update_one_t ql{condition, update, upsert};
@@ -147,15 +145,15 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_update>(intermediate_store_) && "[wrapper_dispatcher_t::update_one]: return variant intermediate_store_ holds the alternative result_update");
-        return std::get<result_update>(intermediate_store_);
+        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::update_one]: return variant intermediate_store_ holds the alternative result_t");
+        return std::get<result_t>(intermediate_store_);
     }
 
-    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_update & {
+    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_t & {
         trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::update_many_t ql{condition, update, upsert};
@@ -163,12 +161,12 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_update>(intermediate_store_) && "[wrapper_dispatcher_t::update_many]: return variant intermediate_store_ holds the alternative result_update");
-        return std::get<result_update>(intermediate_store_);
+        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::update_many]: return variant intermediate_store_ holds the alternative result_t");
+        return std::get<result_t>(intermediate_store_);
     }
 
     auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size {
@@ -221,11 +219,7 @@ namespace otterbrix {
 
         return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
-            if constexpr (std::is_same_v<type, delete_many_t>) {
-                return send_ql<result_delete>(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
-            } else if constexpr (std::is_same_v<type, update_many_t>) {
-                return send_ql<result_update>(session, ql, "update", collection::handler_id(collection::route::update_documents));
-            } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
+            if constexpr (std::is_same_v<type, ql_statement_t*>) {
                 return send_ql_new(session, ql);
             } else {
                 return send_ql_new(session, &ql);
