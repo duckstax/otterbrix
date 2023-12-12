@@ -71,13 +71,8 @@ endif ()
 #############################################################################################
 #clang tools
 
-option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
-
-if(ADDRESS_SANITIZER)
-    include(cmake/address_sanitizer.cmake)
-endif()
-
-include(cmake/clang-format.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(Sanitizers REQUIRED)
 
 #clang tools
 #############################################################################################
