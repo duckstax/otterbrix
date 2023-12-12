@@ -22,8 +22,6 @@ namespace otterbrix {
         , log_(log.clone()) {
         add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
         add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish), &wrapper_dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::delete_finish), &wrapper_dispatcher_t::delete_finish);
-        add_handler(collection::handler_id(collection::route::update_finish), &wrapper_dispatcher_t::update_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
         add_handler(collection::handler_id(collection::route::create_index_finish), &wrapper_dispatcher_t::create_index_finish);
         add_handler(collection::handler_id(collection::route::drop_index_finish), &wrapper_dispatcher_t::drop_index_finish);
@@ -113,7 +111,7 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -128,7 +126,7 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::delete_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -143,7 +141,7 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -158,7 +156,7 @@ namespace otterbrix {
         actor_zeta::send(
             manager_dispatcher_,
             address(),
-            collection::handler_id(collection::route::update_documents),
+            dispatcher::handler_id(dispatcher::route::execute_ql),
             session,
             &ql);
         wait();
@@ -212,11 +210,7 @@ namespace otterbrix {
 
         return std::visit([&](auto& ql) {
             using type = std::decay_t<decltype(ql)>;
-            if constexpr (std::is_same_v<type, delete_many_t>) {
-                return send_ql(session, ql, "delete", collection::handler_id(collection::route::delete_documents));
-            } else if constexpr (std::is_same_v<type, update_many_t>) {
-                return send_ql(session, ql, "update", collection::handler_id(collection::route::update_documents));
-            } else if constexpr (std::is_same_v<type, ql_statement_t*>) {
+            if constexpr (std::is_same_v<type, ql_statement_t*>) {
                 return send_ql_new(session, ql);
             } else {
                 return send_ql_new(session, &ql);

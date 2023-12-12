@@ -114,11 +114,11 @@ namespace otterbrix {
             generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_one(session_tmp, statement.release(), std::move(update), upsert);
-            if (cur->is_success()) {
-                debug(log_, "wrapper_collection::update_one {} modified,", cur->size());
-            } else {
-                debug(log_, "wrapper_collection::update_one failed");
+            if (cur->is_error()) {
+                debug(log_, "wrapper_collection::update_one has result error while update");
+                throw std::runtime_error("wrapper_collection::update_one error_result");
             }
+            debug(log_, "wrapper_collection::update_one {} modified, upsert id {}", cur->size(), cur->size() == 0 ? "none" : cur->get()->id().to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
@@ -133,7 +133,11 @@ namespace otterbrix {
             generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_many(session_tmp, statement.release(), std::move(update), upsert);
-            debug(log_, "wrapper_collection::update_many {} modified, upsert id {}", cur->size(), cur->get()->id().to_string());
+            if (cur->is_error()) {
+                debug(log_, "wrapper_collection::update_many has result error while update");
+                throw std::runtime_error("wrapper_collection::update_many error_result");
+            }
+            debug(log_, "wrapper_collection::update_one {} modified, upsert id {}", cur->size(), cur->size() == 0 ? "none" : cur->get()->id().to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
         return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
@@ -177,6 +181,10 @@ namespace otterbrix {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_one(session_tmp, statement.release());
+            if(cur->is_error()){
+                debug(log_, "wrapper_collection::delete_one has result error while delete");
+                throw std::runtime_error("wrapper_collection::delete_one error_result");
+            }
             debug(log_, "wrapper_collection::delete_one {} deleted", cur->size());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
@@ -190,6 +198,10 @@ namespace otterbrix {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_many(session_tmp, statement.release());
+            if(cur->is_error()){
+                debug(log_, "wrapper_collection::delete_many has result error while delete");
+                throw std::runtime_error("wrapper_collection::delete_many error_result");
+            }
             debug(log_, "wrapper_collection::delete_many {} deleted", cur->size());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }

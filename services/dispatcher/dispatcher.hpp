@@ -39,10 +39,6 @@ namespace services::dispatcher {
         void load_from_wal_result(components::session::session_id_t &session, std::vector<services::wal::record_t> &records);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql, actor_zeta::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-        void delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void delete_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-        void update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement, actor_zeta::address_t address);
-        void update_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection, actor_zeta::address_t address);
         void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr cursor);
         void create_index(components::session::session_id_t &session, components::ql::create_index_t index, actor_zeta::address_t address);
@@ -114,8 +110,6 @@ namespace services::dispatcher {
         void create(components::session::session_id_t& session, std::string& name);
         void load(components::session::session_id_t &session);
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
-        void delete_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
-        void update_documents(components::session::session_id_t& session, components::ql::ql_statement_t* statement);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_id_t& session);
         void create_index(components::session::session_id_t& session, components::ql::create_index_t index);
