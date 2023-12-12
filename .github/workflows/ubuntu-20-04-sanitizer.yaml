@@ -1,4 +1,4 @@
-name: ubuntu 20.04
+name: ubuntu 20.04 sanitizer
 
 on: [pull_request]
 
