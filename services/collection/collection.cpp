@@ -201,9 +201,13 @@ namespace services::collection {
                 cursor.first->second->append(document_view_t(document));
             }
         }
-        auto result = make_cursor(context_->resource());
-        result->push(cursor.first->second.get());
-        actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, result);
+        if (cursor.first->second.get()->size() == 0) {
+            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, make_cursor(context_->resource(), operation_status_t::failure));
+        } else {
+            auto result = make_cursor(context_->resource(), operation_status_t::failure);
+            result->push(cursor.first->second.get());
+            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, result);
+        }
     }
 
     void collection_t::drop(const session_id_t& session) {
