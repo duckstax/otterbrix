@@ -67,8 +67,8 @@ TEST_CASE("python::test_save_load::disk") {
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
                 auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
-                auto cur = dispatcher->size(session, db_name, col_name);
-                REQUIRE(cur->size() == count_documents);
+                auto size = dispatcher->size(session, db_name, col_name);
+                REQUIRE(size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
                     REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                 }
@@ -173,8 +173,8 @@ TEST_CASE("python::test_save_load::disk") {
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
                 auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
-                auto cur = dispatcher->size(session, db_name, col_name);
-                REQUIRE(cur->size() == count_documents - 3);
+                auto size = dispatcher->size(session, db_name, col_name);
+                REQUIRE(size == count_documents - 3);
 
                 REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 1)->is_success());
                 REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 2)->is_success());

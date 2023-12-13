@@ -8,7 +8,8 @@ namespace services::memory_storage {
         execute_plan,
         execute_plan_finish,
         load,
-        load_finish
+        load_finish,
+        create_collection_finish
     };
 
     constexpr uint64_t handler_id(route type) {

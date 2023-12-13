@@ -49,7 +49,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 100);
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
         }
     }
 

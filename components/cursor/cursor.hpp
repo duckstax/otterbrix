@@ -82,7 +82,6 @@ namespace components::cursor {
         data_ptr next();
         data_ptr get() const;
         data_ptr get(std::size_t index) const;
-        actor_zeta::address_t get_address(std::size_t sub_cursor_index) const;
         bool is_success() const noexcept;
         bool is_error() const noexcept;
         error_t get_error() const;

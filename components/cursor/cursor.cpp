@@ -46,10 +46,6 @@ namespace components::cursor {
                    : get_sorted(index);
     }
 
-    actor_zeta::address_t cursor_t::get_address(std::size_t sub_cursor_index) const {
-        return sub_cursor_[sub_cursor_index]->address();
-    }
-
     bool cursor_t::is_success() const noexcept {
         return success_;
     }

@@ -74,7 +74,7 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> cursor_t_ptr {
@@ -88,7 +88,7 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
@@ -115,7 +115,7 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
@@ -130,7 +130,7 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
@@ -145,7 +145,7 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
@@ -160,10 +160,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> size_t {
         trace(log_, "wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
         actor_zeta::send(
@@ -174,10 +174,10 @@ namespace otterbrix {
             database,
             collection);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(size_store_);
     }
 
-    auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> bool {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), index.name());
         init();
         actor_zeta::send(
@@ -187,10 +187,10 @@ namespace otterbrix {
             session,
             std::move(index));
         wait();
-        return std::move(intermediate_store_);
+        return std::move(bool_store_);
     }
 
-    auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> bool {
         trace(log_, "wrapper_dispatcher_t::drop_index session: {}, index: {}", session.data(), drop_index.name());
         init();
         actor_zeta::send(
@@ -200,7 +200,7 @@ namespace otterbrix {
             session,
             std::move(drop_index));
         wait();
-        return std::move(intermediate_store_);
+        return std::move(bool_store_);
     }
 
     auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &query) -> cursor_t_ptr {
@@ -248,39 +248,39 @@ namespace otterbrix {
         notify();
     }
 
-    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, cursor_t_ptr result) {
-        trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result->is_success());
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, cursor_t_ptr cursor) {
+        trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), cursor->is_success());
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    void wrapper_dispatcher_t::delete_finish(session_id_t &session, cursor_t_ptr result) {
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::delete_finish(session_id_t &session, cursor_t_ptr cursor) {
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    void wrapper_dispatcher_t::update_finish(session_id_t &session, cursor_t_ptr result) {
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::update_finish(session_id_t &session, cursor_t_ptr cursor) {
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::size_finish(session_id_t &session, cursor_t_ptr result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::size_finish(session_id_t &session, size_t size) -> void {
+        size_store_ = size;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, cursor_t_ptr result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, bool success) -> void {
+        bool_store_ = success;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::drop_index_finish(session_id_t &session, cursor_t_ptr result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::drop_index_finish(session_id_t &session, bool success) -> void {
+        bool_store_ = success;
         input_session_ = session;
         notify();
     }
@@ -309,12 +309,12 @@ namespace otterbrix {
             session,
             ql);
         wait();
-        if (intermediate_store_->is_error()) {
+        if (cursor_store_->is_error()) {
             //todo: handling error
-            std::cerr << intermediate_store_->get_error().what << std::endl;
+            std::cerr << cursor_store_->get_error().what << std::endl;
         }
 
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
     template <typename Tql>
@@ -329,7 +329,7 @@ namespace otterbrix {
                     session,
                     &ql);
         wait();
-        return std::move(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
 } // namespace python

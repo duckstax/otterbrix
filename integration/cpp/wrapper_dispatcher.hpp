@@ -41,9 +41,9 @@ namespace otterbrix {
         [[deprecated]] auto delete_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_one(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto update_many(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> components::cursor::cursor_t_ptr;
-        auto create_index(session_id_t &session, components::ql::create_index_t index) -> components::cursor::cursor_t_ptr;
-        auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> size_t;
+        auto create_index(session_id_t &session, components::ql::create_index_t index) -> bool;
+        auto drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> bool;
         auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query) -> components::cursor::cursor_t_ptr;
         auto execute_sql(session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
 
@@ -58,9 +58,9 @@ namespace otterbrix {
         auto execute_ql_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
         auto delete_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
         auto update_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto size_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto create_index_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto drop_index_finish(session_id_t &session, components::cursor::cursor_t_ptr cursor) -> void;
+        auto size_finish(session_id_t &session, size_t size) -> void;
+        auto create_index_finish(session_id_t &session, bool success) -> void;
+        auto drop_index_finish(session_id_t &session, bool success) -> void;
 
         void init();
         void wait();
@@ -78,6 +78,8 @@ namespace otterbrix {
         spin_lock input_mtx_;
         std::condition_variable cv_;
         session_id_t input_session_;
-        components::cursor::cursor_t_ptr intermediate_store_;
+        components::cursor::cursor_t_ptr cursor_store_;
+        size_t size_store_;
+        bool bool_store_;
     };
 } // namespace python

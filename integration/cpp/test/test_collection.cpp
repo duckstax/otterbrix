@@ -28,7 +28,7 @@ TEST_CASE("python::test_collection") {
         }
         {
             auto session = otterbrix::session_id_t();
-            REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 0);
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 0);
         }
     }
 
@@ -41,11 +41,11 @@ TEST_CASE("python::test_collection") {
             }
             {
                 auto session = otterbrix::session_id_t();
-                REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == static_cast<std::size_t>(num) + 1);
+                REQUIRE(dispatcher->size(session, database_name, collection_name) == static_cast<std::size_t>(num) + 1);
             }
         }
         auto session = otterbrix::session_id_t();
-        REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 50);
+        REQUIRE(dispatcher->size(session, database_name, collection_name) == 50);
     }
 
     INFO("many_insert") {
@@ -59,7 +59,7 @@ TEST_CASE("python::test_collection") {
         }
         {
             auto session = otterbrix::session_id_t();
-            REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 100);
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
         }
     }
 
@@ -72,11 +72,11 @@ TEST_CASE("python::test_collection") {
             }
             {
                 auto session = otterbrix::session_id_t();
-                REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 100);
+                REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
             }
         }
         auto session = otterbrix::session_id_t();
-        REQUIRE(dispatcher->size(session, database_name, collection_name)->size() == 100);
+        REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
     }
 
     INFO("find") {

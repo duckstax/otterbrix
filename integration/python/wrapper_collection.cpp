@@ -39,7 +39,7 @@ namespace otterbrix {
     std::size_t wrapper_collection::size() {
         trace(log_, "wrapper_collection::size");
         auto session_tmp = otterbrix::session_id_t();
-        return ptr_->size(session_tmp, database_, name_)->size();
+        return ptr_->size(session_tmp, database_, name_);
     }
 
     pybind11::list wrapper_collection::insert(const py::handle& documents) {
@@ -236,9 +236,9 @@ namespace otterbrix {
         for (const auto &key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }
-        auto cur = ptr_->create_index(session_tmp, index);
-        debug(log_, "wrapper_collection::create_index {}", cur->is_success());
-        return cur->is_success();
+        bool is_success = ptr_->create_index(session_tmp, index);
+        debug(log_, "wrapper_collection::create_index {}", is_success);
+        return is_success;
     }
 
 } // namespace otterbrix
