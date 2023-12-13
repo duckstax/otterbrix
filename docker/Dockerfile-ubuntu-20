@@ -40,7 +40,7 @@ COPY ./CMakeLists.txt ./CMakeLists.txt
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  -DSANITIZE_ADDRESS=ON && \
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build . --target all -- -j $(nproc)
 
 
