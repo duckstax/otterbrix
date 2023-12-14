@@ -70,7 +70,7 @@ constexpr int kDocuments = 100;
     do { \
         auto session = otterbrix::session_id_t(); \
         auto *ql = new components::ql::aggregate_statement{database_name, collection_name}; \
-        auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
+        auto c = dispatcher->find(session, ql); \
         REQUIRE(c->size() == kDocuments); \
     } while (false)
 
@@ -81,7 +81,7 @@ constexpr int kDocuments = 100;
         auto expr = components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1}); \
         ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr))); \
         ql->add_parameter(id_par{1}, VALUE); \
-        auto c = dispatcher->find(session, ql).get<components::cursor::cursor_t*>(); \
+        auto c = dispatcher->find(session, ql); \
         REQUIRE(c->size() == COUNT); \
     } while (false)
 
