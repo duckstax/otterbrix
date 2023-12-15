@@ -14,10 +14,7 @@ using namespace components::cursor;
 namespace services {
 
     using namespace services::memory_storage;
-
-    std::pmr::memory_resource* default_resource(){
-        return std::pmr::get_default_resource();
-    }
+    using namespace core::pmr;
 
     memory_storage_t::load_buffer_t::load_buffer_t(std::pmr::memory_resource* resource)
         : collections(resource) {
