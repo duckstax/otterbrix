@@ -10,7 +10,8 @@ using components::ql::index_type;
 using components::index::make_index;
 using components::index::single_field_index_t;
 
-using namespace components::result;
+using namespace components::cursor;
+using namespace core::pmr;
 
 namespace services::collection {
 
@@ -44,7 +45,8 @@ namespace services::collection {
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
         debug(log(), "collection::create_index : {} {} {}", name_.to_string(), name_index_type(index.index_type_), keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
-            actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_index_finish), session, result_create_index(false));
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_index_finish), session,
+                             make_cursor(default_resource(), error_code_t::collection_dropped));
         } else {
             switch (index.index_type_) {
 
@@ -79,14 +81,16 @@ namespace services::collection {
         auto &create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
         components::index::insert(context_->index_engine(), create_index.id_index, context_->storage());
-        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name, result_create_index(true));
+        actor_zeta::send(create_index.client, address(), handler_id(route::create_index_finish), session, name,
+                         make_cursor(default_resource(), operation_status_t::success));
         sessions::remove(sessions_, session, name);
     }
 
     void collection_t::drop_index(const session_id_t& session, components::ql::drop_index_t& index) {
         debug(log(), "collection::drop_index: session: {}, index: {}", session.data(), index.name());
         if (dropped_) {
-            actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(false));
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                             make_cursor(default_resource(), error_code_t::collection_dropped));
         } else {
             auto index_ptr = components::index::search_index(context_->index_engine(), index.name());
             if (index_ptr) {
@@ -94,9 +98,11 @@ namespace services::collection {
                     actor_zeta::send(mdisk_, address(), index::handler_id(index::route::drop), session, index.name());
                 }
                 components::index::drop_index(context_->index_engine(), index_ptr);
-                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(true));
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                                 make_cursor(default_resource(), operation_status_t::success));
             } else {
-                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(), result_drop_index(false));
+                actor_zeta::send(current_message()->sender(), address(), handler_id(route::drop_index_finish), session, index.name(),
+                                 make_cursor(default_resource(), error_code_t::collection_not_exists));
             }
         }
     }
@@ -120,9 +126,9 @@ namespace services::collection {
             }
         }
         sessions::remove(sessions_, session);
-        auto cursor = new components::cursor::cursor_t(context_->resource());
+        auto cursor = make_cursor(default_resource());
         cursor->push(res.first->second.get());
-        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, make_result(cursor));
+        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, cursor);
     }
 
 } // namespace services::collection

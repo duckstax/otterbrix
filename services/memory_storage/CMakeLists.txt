@@ -17,7 +17,7 @@ target_link_libraries(
     otterbrix::collection
     otterbrix::disk
     otterbrix::locks
-    otterbrix::result
+    otterbrix::cursor
     otterbrix::session
     CONAN_PKG::spdlog
 )

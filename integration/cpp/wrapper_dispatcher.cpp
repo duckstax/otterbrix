@@ -12,7 +12,7 @@
 #include <components/ql/statements/update_one.hpp>
 #include <components/sql/parser.hpp>
 
-using namespace components::result;
+using namespace components::cursor;
 
 namespace otterbrix {
 
@@ -43,27 +43,27 @@ namespace otterbrix {
         wait();
     }
 
-    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> result_t {
+    auto wrapper_dispatcher_t::create_database(session_id_t &session, const database_name_t &database) -> cursor_t_ptr {
         components::ql::create_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session, const database_name_t& database) -> result_t {
+    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session, const database_name_t& database) -> cursor_t_ptr {
         components::ql::drop_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_t {
+    auto wrapper_dispatcher_t::create_collection(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> cursor_t_ptr {
         components::ql::create_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_t {
+    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> cursor_t_ptr {
         components::ql::drop_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> result_t & {
+    auto wrapper_dispatcher_t::insert_one(session_id_t &session, const database_name_t &database, const collection_name_t &collection, document_ptr &document) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_one session: {}, collection name: {} ", session.data(), collection);
         init();
         components::ql::insert_one_t ql{database, collection, document};
@@ -74,11 +74,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::insert_one]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> result_t & {
+    auto wrapper_dispatcher_t::insert_many(session_id_t &session, const database_name_t &database, const collection_name_t &collection, std::pmr::vector<document_ptr> &documents) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::insert_many session: {}, collection name: {} ", session.data(), collection);
         init();
         components::ql::insert_many_t ql{database, collection, documents};
@@ -89,23 +88,22 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::insert_many]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t {
+    auto wrapper_dispatcher_t::find(session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t {
+    auto wrapper_dispatcher_t::find_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         std::unique_ptr<components::ql::aggregate_statement> ql(condition);
         return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t & {
+    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::delete_one_t ql{condition};
@@ -117,11 +115,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::delete_one]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> result_t &{
+    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::delete_many_t ql{condition};
@@ -133,11 +130,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::delete_many]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_t & {
+    auto wrapper_dispatcher_t::update_one(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::update_one session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::update_one_t ql{condition, update, upsert};
@@ -149,11 +145,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::update_one]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> result_t & {
+    auto wrapper_dispatcher_t::update_many(components::session::session_id_t &session, components::ql::aggregate_statement_raw_ptr condition, document_ptr update, bool upsert) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::update_many session: {}, database: {} collection: {} ", session.data(), condition->database_, condition->collection_);
         init();
         components::ql::update_many_t ql{condition, update, upsert};
@@ -165,11 +160,10 @@ namespace otterbrix {
             session,
             &ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::update_many]: return variant intermediate_store_ holds the alternative result_t");
-        return std::get<result_t>(intermediate_store_);
+        return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> result_size {
+    auto wrapper_dispatcher_t::size(session_id_t &session, const database_name_t &database, const collection_name_t &collection) -> size_t {
         trace(log_, "wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
         init();
         actor_zeta::send(
@@ -180,11 +174,10 @@ namespace otterbrix {
             database,
             collection);
         wait();
-        assert(std::holds_alternative<result_size>(intermediate_store_) && "[wrapper_dispatcher_t::size]: return variant intermediate_store_ holds the alternative result_size");
-        return std::get<result_size>(intermediate_store_);
+        return std::move(size_store_);
     }
 
-    auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> result_create_index {
+    auto wrapper_dispatcher_t::create_index(session_id_t &session, components::ql::create_index_t index) -> bool {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), index.name());
         init();
         actor_zeta::send(
@@ -194,11 +187,10 @@ namespace otterbrix {
             session,
             std::move(index));
         wait();
-        assert(std::holds_alternative<result_create_index>(intermediate_store_) && "[wrapper_dispatcher_t::create_index]: return variant intermediate_store_ holds the alternative result_create_index");
-        return std::get<result_create_index>(intermediate_store_);
+        return std::move(bool_store_);
     }
 
-    auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> result_drop_index {
+    auto wrapper_dispatcher_t::drop_index(session_id_t &session, components::ql::drop_index_t drop_index) -> bool {
         trace(log_, "wrapper_dispatcher_t::drop_index session: {}, index: {}", session.data(), drop_index.name());
         init();
         actor_zeta::send(
@@ -208,11 +200,10 @@ namespace otterbrix {
             session,
             std::move(drop_index));
         wait();
-        assert(std::holds_alternative<result_drop_index>(intermediate_store_) && "[wrapper_dispatcher_t::drop_index]: return variant intermediate_store_ holds the alternative result_drop_index");
-        return std::get<result_drop_index>(intermediate_store_);
+        return std::move(bool_store_);
     }
 
-    auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &query) -> result_t {
+    auto wrapper_dispatcher_t::execute_ql(session_id_t &session, components::ql::variant_statement_t &query) -> cursor_t_ptr {
         using namespace components::ql;
 
         trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());
@@ -227,16 +218,16 @@ namespace otterbrix {
         }, query);
     }
 
-    result_t wrapper_dispatcher_t::execute_sql(components::session::session_id_t& session, const std::string& query) {
+    cursor_t_ptr wrapper_dispatcher_t::execute_sql(components::session::session_id_t& session, const std::string& query) {
         trace(log_, "wrapper_dispatcher_t::execute sql session: {}", session.data());
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            return make_error(error_code_t::sql_parse_error, parse_result.error.what().data());
+            return make_cursor(std::pmr::get_default_resource(), error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return make_error(error_code_t::sql_parse_error, "not valid sql");
+        return make_cursor(std::pmr::get_default_resource(), error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
@@ -257,39 +248,39 @@ namespace otterbrix {
         notify();
     }
 
-    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, const result_t& result) {
-        trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), result.is_success());
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, cursor_t_ptr cursor) {
+        trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), cursor->is_success());
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    void wrapper_dispatcher_t::delete_finish(session_id_t &session, result_delete result) {
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::delete_finish(session_id_t &session, cursor_t_ptr cursor) {
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    void wrapper_dispatcher_t::update_finish(session_id_t &session, result_update result) {
-        intermediate_store_ = result;
+    void wrapper_dispatcher_t::update_finish(session_id_t &session, cursor_t_ptr cursor) {
+        cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::size_finish(session_id_t &session, result_size result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::size_finish(session_id_t &session, size_t size) -> void {
+        size_store_ = size;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, result_create_index result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::create_index_finish(session_id_t &session, bool success) -> void {
+        bool_store_ = success;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::drop_index_finish(session_id_t &session, result_drop_index result) -> void {
-        intermediate_store_ = result;
+    auto wrapper_dispatcher_t::drop_index_finish(session_id_t &session, bool success) -> void {
+        bool_store_ = success;
         input_session_ = session;
         notify();
     }
@@ -308,7 +299,7 @@ namespace otterbrix {
         cv_.notify_all();
     }
 
-    result_t wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
+    cursor_t_ptr wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
         trace(log_, "wrapper_dispatcher_t::send_ql session: {}, {} ", session.data(), ql->to_string());
         init();
         actor_zeta::send(
@@ -318,18 +309,16 @@ namespace otterbrix {
             session,
             ql);
         wait();
-        assert(std::holds_alternative<result_t>(intermediate_store_) && "[wrapper_dispatcher_t::send_ql_new]: return variant intermediate_store_ holds the alternative result_t");
-        auto& result = std::get<result_t>(intermediate_store_);
-        if (result.is_error()) {
+        if (cursor_store_->is_error()) {
             //todo: handling error
-            std::cerr << result.error_what() << std::endl;
+            std::cerr << cursor_store_->get_error().what << std::endl;
         }
 
-        return result;
+        return std::move(cursor_store_);
     }
 
-    template <typename Tres, typename Tql>
-    auto wrapper_dispatcher_t::send_ql(session_id_t &session, Tql& ql, std::string_view title, uint64_t handle) -> result_t {
+    template <typename Tql>
+    auto wrapper_dispatcher_t::send_ql(session_id_t &session, Tql& ql, std::string_view title, uint64_t handle) -> cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::{} session: {}, database: {} collection: {} ",
               title, session.data(), ql.database_, ql.collection_);
         init();
@@ -340,8 +329,7 @@ namespace otterbrix {
                     session,
                     &ql);
         wait();
-        assert(std::holds_alternative<Tres>(intermediate_store_) && "[wrapper_dispatcher_t::send_ql]: return variant intermediate_store_ holds the alternative Tres");
-        return make_result(std::get<Tres>(intermediate_store_));
+        return std::move(cursor_store_);
     }
 
 } // namespace python

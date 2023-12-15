@@ -15,8 +15,7 @@ namespace py = pybind11;
 
 class PYBIND11_EXPORT  wrapper_cursor  final : public boost::intrusive_ref_counter<wrapper_cursor> {
 public:
-    using type = components::cursor::cursor_t;
-    using pointer = type*;
+    using pointer = components::cursor::cursor_t_ptr;
 
     wrapper_cursor(components::session::session_id_t session, pointer cursor);
 
@@ -26,6 +25,9 @@ public:
     wrapper_cursor &iter();
     std::size_t size();
     py::object get(py::object key);
+    bool is_success() const noexcept;
+    bool is_error() const noexcept;
+    py::tuple get_error() const;
     std::string print();
     wrapper_cursor &sort(py::object sorter, py::object order);
 

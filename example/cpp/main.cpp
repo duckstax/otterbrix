@@ -5,7 +5,7 @@
 #include "components/tests/generaty.hpp"
 
 using namespace components;
-using namespace components::result;
+using namespace components::cursor;
 using expressions::compare_type;
 using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
@@ -41,106 +41,83 @@ TEST_CASE("example::sql::base") {
                 query << "('" << gen_id(num + 1) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
-            auto res = execute_sql(otterbrix, query.str());
-            auto r = res.get<result_insert>();
-            REQUIRE(r.inserted_ids().size() == 100);
+            auto c = execute_sql(otterbrix, query.str());
+            REQUIRE(c->size() == 100);
         }
     }
 
     INFO("select") {
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection;");
             REQUIRE(c->size() == 100);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             REQUIRE(c->size() == 9);
-            delete c;
         }
     }
 
     INFO("select order by") {
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count;");
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 0);
             REQUIRE(c->next()->get_long("count") == 1);
             REQUIRE(c->next()->get_long("count") == 2);
             REQUIRE(c->next()->get_long("count") == 3);
             REQUIRE(c->next()->get_long("count") == 4);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;");
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 99);
             REQUIRE(c->next()->get_long("count") == 98);
             REQUIRE(c->next()->get_long("count") == 97);
             REQUIRE(c->next()->get_long("count") == 96);
             REQUIRE(c->next()->get_long("count") == 95);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY name;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection ORDER BY name;");
             REQUIRE(c->size() == 100);
             REQUIRE(c->next()->get_long("count") == 0);
             REQUIRE(c->next()->get_long("count") == 1);
             REQUIRE(c->next()->get_long("count") == 10);
             REQUIRE(c->next()->get_long("count") == 11);
             REQUIRE(c->next()->get_long("count") == 12);
-            delete c;
         }
     }
 
     INFO("delete") {
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             REQUIRE(c->size() == 9);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "DELETE FROM TestDatabase.TestCollection WHERE count > 90;");
-            auto r = res.get<result_delete>();
-            REQUIRE(r.deleted_ids().size() == 9);
+            auto c = execute_sql(otterbrix, "DELETE FROM TestDatabase.TestCollection WHERE count > 90;");
+            REQUIRE(c->size() == 9);
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count > 90;");
             REQUIRE(c->size() == 0);
-            delete c;
         }
     }
 
     INFO("update") {
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
             REQUIRE(c->size() == 20);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "UPDATE TestDatabase.TestCollection SET count = 1000 WHERE count < 20;");
-            auto r = res.get<result_update>();
-            REQUIRE(r.modified_ids().size() == 20);
+            auto c = execute_sql(otterbrix, "UPDATE TestDatabase.TestCollection SET count = 1000 WHERE count < 20;");
+            REQUIRE(c->size() == 20);
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count < 20;");
             REQUIRE(c->size() == 0);
-            delete c;
         }
         {
-            auto res = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count == 1000;");
-            auto* c = res.get<components::cursor::cursor_t*>();
+            auto c = execute_sql(otterbrix, "SELECT * FROM TestDatabase.TestCollection WHERE count == 1000;");
             REQUIRE(c->size() == 20);
-            delete c;
         }
     }
 }
@@ -166,12 +143,11 @@ TEST_CASE("example::sql::group_by") {
     }
 
     INFO("group by") {
-        auto res = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
+        auto c = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
                                          R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                          R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
                                          R"_(FROM TestDatabase.TestCollection )_"
                                          R"_(GROUP BY name;)_");
-        auto* c = res.get<components::cursor::cursor_t*>();
         REQUIRE(c->size() == 10);
         int number = 0;
         while (auto doc = c->next()) {
@@ -183,17 +159,15 @@ TEST_CASE("example::sql::group_by") {
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             ++number;
         }
-        delete c;
     }
 
     INFO("group by with order by") {
-        auto res = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
+        auto c = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
                                          R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
                                          R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
                                          R"_(FROM TestDatabase.TestCollection )_"
                                          R"_(GROUP BY name )_"
                                          R"_(ORDER BY name DESC;)_");
-        auto* c = res.get<components::cursor::cursor_t*>();
         REQUIRE(c->size() == 10);
         int number = 9;
         while (auto doc = c->next()) {
@@ -205,7 +179,6 @@ TEST_CASE("example::sql::group_by") {
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             --number;
         }
-        delete c;
     }
 }
 
@@ -217,16 +190,16 @@ TEST_CASE("example::sql::invalid_queries") {
     auto otterbrix = otterbrix::make_otterbrix(config);
 
     INFO("not exists database") {
-        auto res = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
-        REQUIRE(res.is_error());
-        REQUIRE(res.error_code() == error_code_t::database_not_exists);
+        auto c = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        REQUIRE(c->is_error());
+        REQUIRE(c->get_error().type == error_code_t::database_not_exists);
     }
 
     INFO("create database") { execute_sql(otterbrix, R"_(CREATE DATABASE TestDatabase;)_"); }
 
     INFO("not exists database") {
-        auto res = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
-        REQUIRE(res.is_error());
-        REQUIRE(res.error_code() == error_code_t::collection_not_exists);
+        auto c = execute_sql(otterbrix, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
+        REQUIRE(c->is_error());
+        REQUIRE(c->get_error().type == error_code_t::collection_not_exists);
     }
 }

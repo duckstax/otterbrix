@@ -2,6 +2,15 @@
 #include <boost/json.hpp>
 namespace components::cursor {
 
+    error_t::error_t(error_code_t type) : type(type), what() {
+    }
+
+    error_t::error_t(error_code_t type, const std::string& what) : type(type), what(what) {
+    }
+
+    list_addresses_t::list_addresses_t(std::pmr::memory_resource* resource) : addresses(resource) {
+    }
+
     void cursor_t::push(sub_cursor_t* sub_cursor) {
         size_ += sub_cursor->size();
         sub_cursor_.emplace_back(sub_cursor);
@@ -35,6 +44,18 @@ namespace components::cursor {
         return sorted_.empty()
                    ? get_unsorted(index)
                    : get_sorted(index);
+    }
+
+    bool cursor_t::is_success() const noexcept {
+        return success_;
+    }
+
+    bool cursor_t::is_error() const noexcept {
+        return error_.type != error_code_t::none;
+    }
+
+    error_t cursor_t::get_error() const {
+        return error_;
     }
 
     void cursor_t::sort(std::function<bool(data_ptr, data_ptr)> sorter) {
@@ -76,7 +97,21 @@ namespace components::cursor {
 
     cursor_t::cursor_t(std::pmr::memory_resource* resource)
         : sub_cursor_(resource)
-        , sorted_(resource) {}
+        , sorted_(resource)
+        , error_(error_code_t::none)
+        , success_(true) {}
+
+    cursor_t::cursor_t(std::pmr::memory_resource* resource, const error_t& error)
+        : sub_cursor_(resource)
+        , sorted_(resource)
+        , error_(error)
+        , success_(false) {}
+
+    cursor_t::cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status)
+        : sub_cursor_(resource)
+        , sorted_(resource)
+        , error_(error_code_t::none)
+        , success_(op_status == operation_status_t::success) {}
 
     actor_zeta::address_t& sub_cursor_t::address() {
         return collection_;
@@ -99,4 +134,16 @@ namespace components::cursor {
         data_.push_back(data);
     }
 
+
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status) {
+        return cursor_t_ptr{new cursor_t(resource, op_status)};
+    }
+
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource) {
+        return cursor_t_ptr{new cursor_t(resource)};
+    }
+
+    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what) {
+        return cursor_t_ptr{new cursor_t(resource, error_t(type, what))};
+    }
 } // namespace components::cursor

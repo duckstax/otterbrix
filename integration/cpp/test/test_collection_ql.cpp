@@ -2,12 +2,13 @@
 #include <variant>
 #include <components/ql/statements.hpp>
 #include "test_config.hpp"
+#include <iostream>
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
 using namespace components;
-using namespace components::result;
+using namespace components::cursor;
 using expressions::compare_type;
 using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
@@ -43,13 +44,12 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         {
             auto session = otterbrix::session_id_t();
             components::ql::variant_statement_t ql{ins};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto r = res.get<result_insert>();
-            REQUIRE(r.inserted_ids().size() == 100);
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 100);
         }
         {
             auto session = otterbrix::session_id_t();
-            REQUIRE(*dispatcher->size(session, database_name, collection_name) == 100);
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
         }
     }
 
@@ -58,10 +58,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             auto session = otterbrix::session_id_t();
             components::ql::aggregate_statement agg{database_name, collection_name};
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 100);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 100);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -70,10 +68,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 9);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 9);
         }
     }
 
@@ -85,10 +81,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 9);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 9);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -96,9 +90,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             del.match_.query = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, id_par{1});
             del.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{del};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto r = res.get<result_delete>();
-            REQUIRE(r.deleted_ids().size() == 9);
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 9);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -107,10 +100,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 0);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 0);
         }
     }
 
@@ -122,10 +113,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 20);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 20);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -138,9 +127,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             upd_value->set("$set", value);
             upd.update_ = make_document(upd_value);
             components::ql::variant_statement_t ql{upd};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto r = res.get<result_update>();
-            REQUIRE(r.modified_ids().size() == 20);
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 20);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -149,10 +137,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 0);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 0);
         }
         {
             auto session = otterbrix::session_id_t();
@@ -161,10 +147,8 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             agg.add_parameter(id_par{1}, 1000);
             components::ql::variant_statement_t ql{agg};
-            auto res = dispatcher->execute_ql(session, ql);
-            auto *c = res.get<components::cursor::cursor_t*>();
-            REQUIRE(c->size() == 20);
-            delete c;
+            auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->size() == 20);
         }
     }
 

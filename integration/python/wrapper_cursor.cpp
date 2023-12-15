@@ -1,7 +1,6 @@
 #include "wrapper_cursor.hpp"
 #include "convert.hpp"
 #include "integration/cpp/route.hpp"
-#include <components/result/result.hpp>
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -43,6 +42,62 @@ py::object wrapper_cursor::get(py::object key) {
         return get_(key.cast<std::size_t>());
     }
     return py::object();
+}
+
+bool wrapper_cursor::is_success() const noexcept {
+    return ptr_->is_success();
+}
+
+bool wrapper_cursor::is_error() const noexcept {
+    return ptr_->is_error();
+}
+
+py::tuple wrapper_cursor::get_error() const {
+    using error_code_t = components::cursor::error_code_t;
+
+    py::str type;
+    switch (ptr_->get_error().type)
+    {
+    case error_code_t::none :
+        type = "none";
+        break;
+    
+    case error_code_t::database_already_exists :
+        type = "database_already_exists";
+        break;
+    
+    case error_code_t::database_not_exists :
+        type = "database_not_exists";
+        break;
+    
+    case error_code_t::collection_already_exists :
+        type = "collection_already_exists";
+        break;
+
+    case error_code_t::collection_not_exists :
+        type = "collection_not_exists";
+        break;
+    
+    case error_code_t::collection_dropped :
+        type = "collection_dropped";
+        break;
+    
+    case error_code_t::sql_parse_error :
+        type = "sql_parse_error";
+        break;
+    
+    case error_code_t::create_phisical_plan_error :
+        type = "create_phisical_plan_error";
+        break;
+    
+    case error_code_t::other_error :
+        type = "other_error";
+        break;
+    
+    default:
+        break;
+    }
+    return py::make_tuple(type, ptr_->get_error().what);
 }
 
 std::string wrapper_cursor::print() {

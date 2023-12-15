@@ -67,7 +67,6 @@ target_link_libraries(
         otterbrix::index
         otterbrix::logical_plan
         otterbrix::pipeline
-        otterbrix::result
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost

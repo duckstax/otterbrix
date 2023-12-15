@@ -18,7 +18,6 @@
 #include "forward.hpp"
 #include "wrapper_cursor.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
-#include "wrapper_result.hpp"
 
 namespace py = pybind11;
 namespace otterbrix {
@@ -35,12 +34,12 @@ namespace otterbrix {
         py::list insert(const py::handle& documents);
         std::string insert_one(const py::handle& document);
         py::list insert_many(const py::handle& documents);
-        wrapper_result_update update_one(py::object cond, py::object fields, bool upsert = false);
-        wrapper_result_update update_many(py::object cond, py::object fields, bool upsert = false);
+        wrapper_cursor_ptr update_one(py::object cond, py::object fields, bool upsert = false);
+        wrapper_cursor_ptr update_many(py::object cond, py::object fields, bool upsert = false);
         auto find(py::object cond) -> wrapper_cursor_ptr;
         auto find_one(py::object cond) -> py::dict;
-        wrapper_result_delete delete_one(py::object cond);
-        wrapper_result_delete delete_many(py::object cond);
+        wrapper_cursor_ptr delete_one(py::object cond);
+        wrapper_cursor_ptr delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
         bool create_index(const py::list& keys, index_type type, index_compare compare);

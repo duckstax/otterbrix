@@ -11,7 +11,7 @@ constexpr uint count_documents = 8;
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
-using namespace components::result;
+using namespace components::cursor;
 using components::ql::aggregate::operator_type;
 using components::expressions::compare_type;
 using key = components::expressions::key_t;
@@ -21,7 +21,7 @@ uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
     return 10000 * n_db + 100 * n_col + n_doc;
 }
 
-result_find_one find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
+cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                          const database_name_t &db_name,
                          const collection_name_t &col_name,
                          int n_doc) {
@@ -30,11 +30,11 @@ result_find_one find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
     ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
     ql->add_parameter(id_par{1}, gen_id(n_doc));
-    auto* c = dispatcher->find_one(session_doc, ql).get<components::cursor::cursor_t*>();
-    if (c->size() > 0) {
-        return result_find_one(*c->next());
+    auto cur = dispatcher->find_one(session_doc, ql);
+    if (cur->is_success()) {
+        cur->next();
     }
-    return result_find_one();
+    return cur;
 }
 
 TEST_CASE("python::test_save_load::disk") {
@@ -68,9 +68,9 @@ TEST_CASE("python::test_save_load::disk") {
                 auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
-                REQUIRE(*size == count_documents);
+                REQUIRE(size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
                 }
             }
         }
@@ -174,22 +174,21 @@ TEST_CASE("python::test_save_load::disk") {
                 auto session = otterbrix::session_id_t();
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 auto size = dispatcher->size(session, db_name, col_name);
-                REQUIRE(*size == count_documents - 3);
+                REQUIRE(size == count_documents - 3);
 
-                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 1).is_find());
-                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 2).is_find());
-                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 3).is_find());
-                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 4).is_find());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 1)->is_success());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 2)->is_success());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 3)->is_success());
+                REQUIRE_FALSE(find_doc(dispatcher, db_name, col_name, 4)->is_success());
 
-                REQUIRE(find_doc(dispatcher, db_name, col_name, 5)->get_ulong("count") == 0);
+                REQUIRE(find_doc(dispatcher, db_name, col_name, 5)->get()->get_ulong("count") == 0);
 
                 for (uint n_doc = 6; n_doc <= count_documents + 1; ++n_doc) {
                     auto doc_find = find_doc(dispatcher, db_name, col_name, int(n_doc));
-                    REQUIRE(doc_find->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
-                    REQUIRE(doc_find->get_ulong("count") == 1000);
+                    REQUIRE(doc_find->get()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(doc_find->get()->get_ulong("count") == 1000);
                 }
             }
         }
     }
-
 }

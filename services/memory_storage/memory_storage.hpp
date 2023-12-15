@@ -8,7 +8,7 @@
 #include <components/logical_plan/node.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <components/result/result.hpp>
+#include <components/cursor/cursor.hpp>
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 
@@ -29,7 +29,7 @@ namespace services {
         };
 
         struct load_buffer_t {
-            components::result::result_list_addresses_t collections;
+            components::cursor::list_addresses_t collections;
 
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
@@ -81,9 +81,9 @@ namespace services {
         void execute_plan_(components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
                           components::ql::storage_parameters parameters);
-        void execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result);
+        void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
-        void drop_collection_finish_(components::session::session_id_t& session, components::result::result_drop_collection& result);
+        void drop_collection_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 
