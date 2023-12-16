@@ -21,7 +21,11 @@ namespace services::collection::operators::merge {
     using operator_merge_ptr = std::unique_ptr<operator_merge_t>;
 
     bool is_operator_merge(const components::expressions::compare_expression_ptr& expr);
-    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::expressions::compare_type& type, components::ql::limit_t limit);
-    operator_merge_ptr create_operator_merge(context_collection_t* context, const components::expressions::compare_expression_ptr& expr, components::ql::limit_t limit);
+    operator_merge_ptr create_operator_merge(context_collection_t* context,
+                                             const components::expressions::compare_type& type,
+                                             components::ql::limit_t limit);
+    operator_merge_ptr create_operator_merge(context_collection_t* context,
+                                             const components::expressions::compare_expression_ptr& expr,
+                                             components::ql::limit_t limit);
 
 } // namespace services::collection::operators::merge

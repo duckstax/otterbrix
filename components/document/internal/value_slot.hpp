@@ -17,11 +17,11 @@ namespace document::impl::internal {
         value_slot_t();
         value_slot_t(nullptr_t);
         ~value_slot_t();
-        value_slot_t(internal::heap_collection_t *md);
-        value_slot_t(const value_slot_t &other) noexcept;
-        value_slot_t& operator= (const value_slot_t &other) noexcept;
-        value_slot_t(value_slot_t &&other) noexcept;
-        value_slot_t& operator= (value_slot_t &&other) noexcept;
+        value_slot_t(internal::heap_collection_t* md);
+        value_slot_t(const value_slot_t& other) noexcept;
+        value_slot_t& operator=(const value_slot_t& other) noexcept;
+        value_slot_t(value_slot_t&& other) noexcept;
+        value_slot_t& operator=(value_slot_t&& other) noexcept;
 
         bool empty() const PURE;
         explicit operator bool() const PURE;
@@ -39,9 +39,18 @@ namespace document::impl::internal {
         void set(std::string_view s);
         void set_value(const value_t* v);
 
-        template <class T> void set(const T* t)                    { set_value(t); }
-        template <class T> void set(const retained_t<T> &t)        { set_value(t); }
-        template <class T> void set(const retained_const_t<T> &t)  { set_value(t); }
+        template<class T>
+        void set(const T* t) {
+            set_value(t);
+        }
+        template<class T>
+        void set(const retained_t<T>& t) {
+            set_value(t);
+        }
+        template<class T>
+        void set(const retained_const_t<T>& t) {
+            set_value(t);
+        }
 
         void copy_value(copy_flags flags);
 
@@ -57,12 +66,12 @@ namespace document::impl::internal {
         const value_t* pointer() const noexcept PURE;
         const value_t* as_pointer() const noexcept PURE;
         const value_t* inline_pointer() const noexcept PURE;
-        void set_pointer(const value_t *v);
+        void set_pointer(const value_t* v);
         void set_inline(internal::tags tag, int tiny);
 
         void release_value();
         void set_value(internal::tags ag, int tiny, std::string_view bytes);
-        template <class INT>
+        template<class INT>
         void set_int(INT i) {
             if (i < 2048 && (!std::numeric_limits<INT>::is_signed || int64_t(i) > -2048)) {
                 set_inline(internal::tag_short, (i >> 8) & 0x0F);
@@ -71,7 +80,7 @@ namespace document::impl::internal {
                 uint8_t buf[8];
                 auto size = put_int_of_length(buf, int64_t(i), !std::numeric_limits<INT>::is_signed);
                 set_value(internal::tag_int,
-                          int(size-1) | (std::numeric_limits<INT>::is_signed ? 0 : 0x08),
+                          int(size - 1) | (std::numeric_limits<INT>::is_signed ? 0 : 0x08),
                           std::string_view(reinterpret_cast<char*>(buf), size));
             }
         }
@@ -96,4 +105,4 @@ namespace document::impl::internal {
         };
     };
 
-}
+} // namespace document::impl::internal

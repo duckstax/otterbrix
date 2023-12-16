@@ -5,15 +5,15 @@
 #include <boost/filesystem.hpp>
 #include <log/log.hpp>
 
+#include <components/ql/statements.hpp>
+#include <components/session/session.hpp>
+#include <configuration/configuration.hpp>
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
-#include <configuration/configuration.hpp>
-#include <components/session/session.hpp>
-#include <components/ql/statements.hpp>
 
 #include "base.hpp"
-#include "wal.hpp"
 #include "route.hpp"
+#include "wal.hpp"
 
 namespace services::wal {
 
@@ -31,24 +31,23 @@ namespace services::wal {
 
     using manager_wal_ptr = std::unique_ptr<base_manager_wal_replicate_t>;
 
-
     class manager_wal_replicate_t final : public base_manager_wal_replicate_t {
         using session_id_t = components::session::session_id_t;
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t {
-            manager_disk = 0,
-            manager_dispatcher = 1
-        };
+        enum class unpack_rules : uint64_t { manager_disk = 0, manager_dispatcher = 1 };
 
         void sync(address_pack& pack) {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
             manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
         }
 
-        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, configuration::config_wal, log_t&);
+        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,
+                                actor_zeta::scheduler_raw,
+                                configuration::config_wal,
+                                log_t&);
         ~manager_wal_replicate_t() final;
         void create_wal_worker();
         void load(session_id_t& session, services::wal::id_t wal_id);
@@ -73,7 +72,6 @@ namespace services::wal {
         std::vector<wal_replicate_ptr> dispatchers_;
     };
 
-
     class manager_wal_replicate_empty_t final : public base_manager_wal_replicate_t {
         using session_id_t = components::session::session_id_t;
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
@@ -83,10 +81,14 @@ namespace services::wal {
 
         template<class T>
         auto always_success(session_id_t& session, T&&) -> void {
-            actor_zeta::send(current_message()->sender(), address(), services::wal::handler_id(services::wal::route::success), session, services::wal::id_t(0));
+            actor_zeta::send(current_message()->sender(),
+                             address(),
+                             services::wal::handler_id(services::wal::route::success),
+                             session,
+                             services::wal::id_t(0));
         }
 
-        template<class ...Args>
+        template<class... Args>
         auto nothing(Args&&...) -> void {}
     };
 

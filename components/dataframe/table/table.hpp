@@ -18,7 +18,7 @@ namespace components::dataframe::table {
 
         table_t(table_t const& other);
         table_t(std::vector<std::unique_ptr<column::column_t>>&& columns);
-        table_t(std::pmr::memory_resource* mr,table_view view);
+        table_t(std::pmr::memory_resource* mr, table_view view);
 
         [[nodiscard]] size_type num_columns() const noexcept { return _columns.size(); }
         [[nodiscard]] size_type num_rows() const noexcept { return _num_rows; }
@@ -31,8 +31,7 @@ namespace components::dataframe::table {
         template<typename InputIterator>
         table_view select(InputIterator begin, InputIterator end) const {
             std::vector<column::column_view> columns(std::distance(begin, end));
-            std::transform(
-                begin, end, columns.begin(), [this](auto index) { return _columns.at(index)->view(); });
+            std::transform(begin, end, columns.begin(), [this](auto index) { return _columns.at(index)->view(); });
             return table_view(columns);
         }
 

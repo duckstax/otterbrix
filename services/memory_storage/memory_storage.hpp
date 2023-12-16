@@ -1,14 +1,14 @@
 #pragma once
 
-#include <memory_resource>
-#include <core/btree/btree.hpp>
-#include <core/excutor.hpp>
-#include <core/spinlock/spinlock.hpp>
+#include <components/cursor/cursor.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <components/cursor/cursor.hpp>
+#include <core/btree/btree.hpp>
+#include <core/excutor.hpp>
+#include <core/spinlock/spinlock.hpp>
+#include <memory_resource>
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 
@@ -17,7 +17,7 @@ namespace components::ql {
     struct drop_database_t;
     struct create_collection_t;
     struct drop_collection_t;
-}
+} // namespace components::ql
 
 namespace services {
 
@@ -40,19 +40,18 @@ namespace services {
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
-        enum class unpack_rules : uint64_t {
-            manager_dispatcher = 0,
-            manager_disk = 1
-        };
+        enum class unpack_rules : uint64_t { manager_dispatcher = 0, manager_disk = 1 };
 
-        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
+        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
+                         actor_zeta::scheduler_raw scheduler,
+                         log_t& log);
         ~memory_storage_t();
 
         void sync(const address_pack& pack);
         void execute_plan(components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
                           components::ql::storage_parameters parameters);
-        void load(components::session::session_id_t &session, const disk::result_load_t &result);
+        void load(components::session::session_id_t& session, const disk::result_load_t& result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
@@ -73,17 +72,22 @@ namespace services {
         bool check_database_(components::session::session_id_t& session, const database_name_t& name);
         bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
-        void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void create_database_(components::session::session_id_t& session,
+                              components::logical_plan::node_ptr logical_plan);
+        void drop_database_(components::session::session_id_t& session,
+                            components::logical_plan::node_ptr logical_plan);
+        void create_collection_(components::session::session_id_t& session,
+                                components::logical_plan::node_ptr logical_plan);
+        void drop_collection_(components::session::session_id_t& session,
+                              components::logical_plan::node_ptr logical_plan);
 
         void execute_plan_(components::session::session_id_t& session,
-                          components::logical_plan::node_ptr logical_plan,
-                          components::ql::storage_parameters parameters);
+                           components::logical_plan::node_ptr logical_plan,
+                           components::ql::storage_parameters parameters);
         void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
-        void drop_collection_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
+        void drop_collection_finish_(components::session::session_id_t& session,
+                                     components::cursor::cursor_t_ptr cursor);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 

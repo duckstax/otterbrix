@@ -10,9 +10,7 @@ namespace document::impl {
     namespace internal {
 
         struct key_hash {
-            size_t operator()(const dict_t::key_t& key) const {
-                return std::hash<std::string_view>{}(key.string());
-            }
+            size_t operator()(const dict_t::key_t& key) const { return std::hash<std::string_view>{}(key.string()); }
         };
 
         struct key_eq {
@@ -21,40 +19,27 @@ namespace document::impl {
             }
         };
 
-
         class heap_dict_t : public heap_collection_t {
             retained_t<array_t> a_;
             std::unordered_map<dict_t::key_t, uint32_t, key_hash, key_eq> map_;
-            uint32_t count_ {0};
+            uint32_t count_{0};
 
         public:
-            explicit heap_dict_t(const dict_t *dict = nullptr);
+            explicit heap_dict_t(const dict_t* dict = nullptr);
 
-            dict_t* dict() const {
-                return reinterpret_cast<dict_t*>(const_cast<value_t*>(as_value()));
-            }
+            dict_t* dict() const { return reinterpret_cast<dict_t*>(const_cast<value_t*>(as_value())); }
 
-            uint32_t count() const {
-                return count_;
-            }
+            uint32_t count() const { return count_; }
 
-            bool empty() const {
-                return count_ == 0;
-            }
+            bool empty() const { return count_ == 0; }
 
-            void copy_children(copy_flags flags) {
-                a_->copy_children(flags);
-            }
+            void copy_children(copy_flags flags) { a_->copy_children(flags); }
 
-            const value_t* get_key(uint32_t index) const noexcept {
-                return a_->get(index);
-            }
+            const value_t* get_key(uint32_t index) const noexcept { return a_->get(index); }
 
-            const value_t* get(uint32_t index) const noexcept {
-                return a_->get(index + 1);
-            }
+            const value_t* get(uint32_t index) const noexcept { return a_->get(index + 1); }
 
-            const value_t* get(const dict_t::key_t &key) const noexcept {
+            const value_t* get(const dict_t::key_t& key) const noexcept {
                 auto it = map_.find(key);
                 if (it != map_.end()) {
                     return get(it->second);
@@ -62,9 +47,7 @@ namespace document::impl {
                 return nullptr;
             }
 
-            const value_t* get(std::string_view key) const noexcept {
-                return get(encode_key_(key));
-            }
+            const value_t* get(std::string_view key) const noexcept { return get(encode_key_(key)); }
 
             value_slot_t& slot(std::string_view key_str) {
                 set_changed(true);
@@ -102,16 +85,14 @@ namespace document::impl {
             }
 
         private:
-            dict_t::key_t encode_key_(std::string_view key) const noexcept {
-                return dict_t::key_t{key};
-            }
+            dict_t::key_t encode_key_(std::string_view key) const noexcept { return dict_t::key_t{key}; }
         };
 
         heap_dict_t* heap_dict(const dict_t* dict) {
             return reinterpret_cast<heap_dict_t*>(internal::heap_collection_t::as_heap_value(dict));
         }
 
-        heap_dict_t::heap_dict_t(const dict_t *dict)
+        heap_dict_t::heap_dict_t(const dict_t* dict)
             : heap_collection_t(tag_dict) {
             if (dict) {
                 count_ = dict->count();
@@ -125,7 +106,6 @@ namespace document::impl {
 
     } // namespace internal
 
-
     using namespace internal;
 
     dict_t::key_t::key_t(std::string_view raw_str)
@@ -136,14 +116,9 @@ namespace document::impl {
 
     dict_t::key_t::~key_t() = default;
 
-    std::string_view dict_t::key_t::string() const noexcept {
-        return {raw_str_.data(), raw_str_.size()};
-    }
+    std::string_view dict_t::key_t::string() const noexcept { return {raw_str_.data(), raw_str_.size()}; }
 
-    int dict_t::key_t::compare(const key_t& k) const noexcept {
-        return raw_str_.compare(k.raw_str_);
-    }
-
+    int dict_t::key_t::compare(const key_t& k) const noexcept { return raw_str_.compare(k.raw_str_); }
 
     dict_t::iterator::iterator(const dict_t* d) noexcept
         : source_(d)
@@ -152,9 +127,7 @@ namespace document::impl {
         set_value_();
     }
 
-    uint32_t dict_t::iterator::count() const noexcept {
-        return count_;
-    }
+    uint32_t dict_t::iterator::count() const noexcept { return count_; }
 
     std::string_view dict_t::iterator::key_string() const noexcept {
         if (key_) {
@@ -163,17 +136,11 @@ namespace document::impl {
         return {};
     }
 
-    const value_t* dict_t::iterator::key() const noexcept {
-        return key_;
-    }
+    const value_t* dict_t::iterator::key() const noexcept { return key_; }
 
-    const value_t* dict_t::iterator::value() const noexcept {
-        return value_;
-    }
+    const value_t* dict_t::iterator::value() const noexcept { return value_; }
 
-    dict_t::iterator::operator bool() const noexcept {
-        return pos_ < count_;
-    }
+    dict_t::iterator::operator bool() const noexcept { return pos_ < count_; }
 
     dict_t::iterator& dict_t::iterator::operator++() {
         ++pos_;
@@ -198,7 +165,6 @@ namespace document::impl {
         }
     }
 
-
     dict_t::dict_t()
         : value_t(internal::tag_dict, 0, 0) {}
 
@@ -215,21 +181,13 @@ namespace document::impl {
         return empty_dict_.get();
     }
 
-    uint32_t dict_t::count() const noexcept {
-        return heap_dict(this)->count();
-    }
+    uint32_t dict_t::count() const noexcept { return heap_dict(this)->count(); }
 
-    bool dict_t::empty() const noexcept {
-        return heap_dict(this)->empty();
-    }
+    bool dict_t::empty() const noexcept { return heap_dict(this)->empty(); }
 
-    const value_t* dict_t::get(key_t& key) const noexcept {
-        return heap_dict(this)->get(key);
-    }
+    const value_t* dict_t::get(key_t& key) const noexcept { return heap_dict(this)->get(key); }
 
-    const value_t* dict_t::get(std::string_view key) const noexcept {
-        return heap_dict(this)->get(key);
-    }
+    const value_t* dict_t::get(std::string_view key) const noexcept { return heap_dict(this)->get(key); }
 
     bool dict_t::is_equals(const dict_t* dv) const noexcept {
         dict_t::iterator i(this);
@@ -258,36 +216,20 @@ namespace document::impl {
         return true;
     }
 
-    retained_t<dict_t> dict_t::copy(copy_flags f) const {
-        return new_dict(this, f);
-    }
+    retained_t<dict_t> dict_t::copy(copy_flags f) const { return new_dict(this, f); }
 
-    retained_t<internal::heap_collection_t> dict_t::mutable_copy() const {
-        return new heap_dict_t(this);
-    }
+    retained_t<internal::heap_collection_t> dict_t::mutable_copy() const { return new heap_dict_t(this); }
 
-    void dict_t::copy_children(copy_flags flags) const {
-        heap_dict(this)->copy_children(flags);
-    }
+    void dict_t::copy_children(copy_flags flags) const { heap_dict(this)->copy_children(flags); }
 
-    bool dict_t::is_changed() const {
-        return heap_dict(this)->is_changed();
-    }
+    bool dict_t::is_changed() const { return heap_dict(this)->is_changed(); }
 
-    void dict_t::remove(std::string_view key) {
-        heap_dict(this)->remove(key);
-    }
+    void dict_t::remove(std::string_view key) { heap_dict(this)->remove(key); }
 
-    void dict_t::remove_all() {
-        heap_dict(this)->remove_all();
-    }
+    void dict_t::remove_all() { heap_dict(this)->remove_all(); }
 
-    dict_t::iterator dict_t::begin() const noexcept {
-        return dict_t::iterator(this);
-    }
+    dict_t::iterator dict_t::begin() const noexcept { return dict_t::iterator(this); }
 
-    internal::value_slot_t& dict_t::slot(std::string_view key) {
-        return heap_dict(this)->slot(key);
-    }
+    internal::value_slot_t& dict_t::slot(std::string_view key) { return heap_dict(this)->slot(key); }
 
 } // namespace document::impl

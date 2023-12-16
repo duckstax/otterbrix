@@ -1,12 +1,12 @@
+#include "test_operator_generaty.hpp"
 #include <catch2/catch.hpp>
+#include <services/collection/operators/aggregate/operator_avg.hpp>
+#include <services/collection/operators/aggregate/operator_count.hpp>
+#include <services/collection/operators/aggregate/operator_sum.hpp>
+#include <services/collection/operators/get/simple_value.hpp>
 #include <services/collection/operators/operator_group.hpp>
 #include <services/collection/operators/operator_sort.hpp>
 #include <services/collection/operators/scan/transfer_scan.hpp>
-#include <services/collection/operators/get/simple_value.hpp>
-#include <services/collection/operators/aggregate/operator_count.hpp>
-#include <services/collection/operators/aggregate/operator_sum.hpp>
-#include <services/collection/operators/aggregate/operator_avg.hpp>
-#include "test_operator_generaty.hpp"
 
 using namespace components;
 using namespace services::collection::operators;
@@ -65,7 +65,7 @@ TEST_CASE("operator::group::sort") {
         sort->on_execute(nullptr);
         REQUIRE(sort->output()->size() == 8);
 
-        auto check = [](const document_ptr &doc, bool is1, bool is2, bool is3) {
+        auto check = [](const document_ptr& doc, bool is1, bool is2, bool is3) {
             REQUIRE(document_view_t(doc).get_bool("even") == is1);
             REQUIRE(document_view_t(doc).get_bool("three") == is2);
             REQUIRE(document_view_t(doc).get_bool("five") == is3);

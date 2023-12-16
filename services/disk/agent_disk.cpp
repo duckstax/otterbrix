@@ -1,7 +1,7 @@
 #include "agent_disk.hpp"
 #include "manager_disk.hpp"
-#include "route.hpp"
 #include "result.hpp"
+#include "route.hpp"
 
 namespace services::disk {
 
@@ -20,18 +20,16 @@ namespace services::disk {
         add_handler(handler_id(route::fix_wal_id), &agent_disk_t::fix_wal_id);
     }
 
-    agent_disk_t::~agent_disk_t() {
-        trace(log_, "delete agent_disk_t");
-    }
+    agent_disk_t::~agent_disk_t() { trace(log_, "delete agent_disk_t"); }
 
     auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
         trace(log_, "agent_disk::load , session : {}", session.data());
         result_load_t result(disk_.databases(), disk_.wal_id());
-        for (auto &database : *result) {
+        for (auto& database : *result) {
             database.set_collection(disk_.collections(database.name));
-            for (auto &collection : database.collections) {
+            for (auto& collection : database.collections) {
                 auto id_documents = disk_.load_list_documents(database.name, collection.name);
-                for (const auto &id : id_documents) {
+                for (const auto& id : id_documents) {
                     collection.documents.push_back(disk_.load_document(id));
                 }
             }
@@ -65,7 +63,11 @@ namespace services::disk {
 
     auto agent_disk_t::write_documents(const command_t& command) -> void {
         auto& write_command = command.get<command_write_documents_t>();
-        trace(log_, "agent_disk::write_documents , database : {} , collection : {} , {} documents", write_command.database, write_command.collection, write_command.documents.size());
+        trace(log_,
+              "agent_disk::write_documents , database : {} , collection : {} , {} documents",
+              write_command.database,
+              write_command.collection,
+              write_command.documents.size());
         for (const auto& document : write_command.documents) {
             auto id = components::document::get_document_id(document);
             if (!id.is_null()) {
@@ -76,7 +78,11 @@ namespace services::disk {
 
     auto agent_disk_t::remove_documents(const command_t& command) -> void {
         auto& remove_command = command.get<command_remove_documents_t>();
-        trace(log_, "agent_disk::remove_documents , database : {} , collection : {} , {} documents", remove_command.database, remove_command.collection, remove_command.documents.size());
+        trace(log_,
+              "agent_disk::remove_documents , database : {} , collection : {} , {} documents",
+              remove_command.database,
+              remove_command.collection,
+              remove_command.documents.size());
         for (const auto& id : remove_command.documents) {
             disk_.remove_document(remove_command.database, remove_command.collection, id);
         }

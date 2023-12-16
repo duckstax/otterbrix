@@ -3,15 +3,14 @@
 #include <memory>
 #include <memory_resource>
 
-#include <dataframe/type_dispatcher.hpp>
 #include <dataframe/column/make.hpp>
 #include <dataframe/detail/bitmask.hpp>
 #include <dataframe/detail/cast.hpp>
+#include <dataframe/type_dispatcher.hpp>
 
 namespace components::dataframe::dictionary {
 
-    data_type get_indices_type_for_size(size_type keys_size)
-    {
+    data_type get_indices_type_for_size(size_type keys_size) {
         if (keys_size <= std::numeric_limits<uint8_t>::max()) {
             return data_type{type_id::uint8};
         }
@@ -24,9 +23,15 @@ namespace components::dataframe::dictionary {
     namespace {
         struct dispatch_create_indices {
             template<typename IndexType, std::enable_if_t<is_index_type<IndexType>()>* = nullptr>
-            std::unique_ptr<column::column_t> operator()(std::pmr::memory_resource* resource, column::column_view const& indices) {
+            std::unique_ptr<column::column_t> operator()(std::pmr::memory_resource* resource,
+                                                         column::column_view const& indices) {
                 assertion_exception_msg(std::is_unsigned<IndexType>(), "indices must be an unsigned type");
-                column::column_view indices_view{indices.type(), indices.size(), indices.data<IndexType>(), nullptr, 0, indices.offset()};
+                column::column_view indices_view{indices.type(),
+                                                 indices.size(),
+                                                 indices.data<IndexType>(),
+                                                 nullptr,
+                                                 0,
+                                                 indices.offset()};
                 return std::make_unique<column::column_t>(resource, indices_view);
             }
             template<typename IndexType, std::enable_if_t<!is_index_type<IndexType>()>* = nullptr>
@@ -36,7 +41,8 @@ namespace components::dataframe::dictionary {
         };
     } // namespace
 
-    std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource, column::column_view const& keys_column,
+    std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource,
+                                                             column::column_view const& keys_column,
                                                              column::column_view const& indices_column) {
         assertion_exception_msg(!keys_column.has_nulls(), "keys column must not have nulls");
         if (keys_column.is_empty()) {
@@ -63,7 +69,8 @@ namespace components::dataframe::dictionary {
                                                   std::move(children));
     }
 
-    std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource, std::unique_ptr<column::column_t> keys_column,
+    std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource,
+                                                             std::unique_ptr<column::column_t> keys_column,
                                                              std::unique_ptr<column::column_t> indices_column,
                                                              core::buffer&& null_mask,
                                                              size_type null_count) {
@@ -99,8 +106,9 @@ namespace components::dataframe::dictionary {
 
     } // namespace
 
-    std::unique_ptr<column::column_t> make_dictionary_column(
-        std::pmr::memory_resource* resource, std::unique_ptr<column::column_t> keys, std::unique_ptr<column::column_t> indices) {
+    std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource,
+                                                             std::unique_ptr<column::column_t> keys,
+                                                             std::unique_ptr<column::column_t> indices) {
         assertion_exception_msg(!keys->has_nulls(), "keys column must not have nulls");
 
         // signed integer data can be used directly in the unsigned indices column
@@ -115,8 +123,12 @@ namespace components::dataframe::dictionary {
         auto indices_column = [&] {
             // If the types match, then just commandeer the column's data buffer.
             if (new_type.id() == indices_type) {
-                return std::make_unique<column::column_t>(
-                    resource, new_type, indices_size, std::move(*(contents.data.release())), core::buffer{resource}, 0);
+                return std::make_unique<column::column_t>(resource,
+                                                          new_type,
+                                                          indices_size,
+                                                          std::move(*(contents.data.release())),
+                                                          core::buffer{resource},
+                                                          0);
             }
             // If the new type does not match, then convert the data.
             column::column_view cast_view{data_type{indices_type}, indices_size, contents.data->data()};

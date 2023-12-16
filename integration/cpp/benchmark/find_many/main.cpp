@@ -9,12 +9,14 @@ void find_many(benchmark::State& state) {
         for (int i = 0; i < state.range(0); ++i) {
             dispatcher->find(session, database_name, collection_name, make_document());
             dispatcher->find(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(i)));
-            dispatcher->find(session, database_name, collection_name, make_condition("id_", "$eq", std::to_string(size_collection - i)));
+            dispatcher->find(session,
+                             database_name,
+                             collection_name,
+                             make_condition("id_", "$eq", std::to_string(size_collection - i)));
         }
     }
 }
 BENCHMARK(find_many)->Arg(1)->Arg(10)->Arg(20)->Arg(100);
-
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);

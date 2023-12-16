@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
 #include <ctime>
-
+#include <string>
 
 namespace components::session {
 
@@ -20,12 +19,11 @@ namespace components::session {
         std::uint64_t counter_;
     };
 
-}
+} // namespace components::session
 
 namespace std {
-    template<> struct hash<components::session::session_id_t>{
-        std::size_t operator()(components::session::session_id_t const& s) const noexcept {
-            return s.hash();
-        }
+    template<>
+    struct hash<components::session::session_id_t> {
+        std::size_t operator()(components::session::session_id_t const& s) const noexcept { return s.hash(); }
     };
-}
+} // namespace std

@@ -1,34 +1,27 @@
 #include "aggregation.hpp"
 
-#include <components/ql/aggregate/limit.hpp>
 #include <collection/operators/scan/transfer_scan.hpp>
+#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::operators {
 
     aggregation::aggregation(context_collection_t* context)
         : read_only_operator_t(context, operator_type::aggregate) {}
 
-    void aggregation::set_match(operator_ptr&& match) {
-        match_ = std::move(match);
-    }
+    void aggregation::set_match(operator_ptr&& match) { match_ = std::move(match); }
 
-    void aggregation::set_group(operator_ptr&& group) {
-        group_ = std::move(group);
-    }
+    void aggregation::set_group(operator_ptr&& group) { group_ = std::move(group); }
 
-    void aggregation::set_sort(operator_ptr&& sort) {
-        sort_ = std::move(sort);
-    }
+    void aggregation::set_sort(operator_ptr&& sort) { sort_ = std::move(sort); }
 
-    void aggregation::on_execute_impl(components::pipeline::context_t*) {
-        take_output(left_);
-    }
+    void aggregation::on_execute_impl(components::pipeline::context_t*) { take_output(left_); }
 
     void aggregation::on_prepare_impl() {
         if (!left_) {
-            operator_ptr executor = match_
-                 ? std::move(match_)
-                 : static_cast<operator_ptr>(std::make_unique<transfer_scan>(context_, components::ql::limit_t::unlimit()));
+            operator_ptr executor =
+                match_ ? std::move(match_)
+                       : static_cast<operator_ptr>(
+                             std::make_unique<transfer_scan>(context_, components::ql::limit_t::unlimit()));
             if (group_) {
                 group_->set_children(std::move(executor));
                 executor = std::move(group_);

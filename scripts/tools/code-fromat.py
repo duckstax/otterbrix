@@ -46,6 +46,8 @@ class Clang:
     if not clang_cmd:
       print("Can't find clang binary")
       sys.exit(1)
+      
+    print(f"Found clang-format: {clang_cmd}")
 
     return clang_cmd
 

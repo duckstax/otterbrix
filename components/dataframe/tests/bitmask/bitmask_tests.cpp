@@ -505,12 +505,12 @@ TEST_CASE("test non zero offset") {
 }
 
 std::ostream& operator<<(std::ostream& stream, std::pmr::vector<bool> const& bits) {
-    for (auto _bit : bits)
-        stream << int(_bit);
+    for (auto _bit : bits) stream << int(_bit);
     return stream;
 }
 
-void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type const* bitmask, // Device Ptr
+void expect_bitmask_equal(std::pmr::memory_resource* resource,
+                          bitmask_type const* bitmask, // Device Ptr
                           size_type start_bit,
                           std::pmr::vector<bool> const& expect) {
     core::uvector<bool> result(resource, expect.size());
@@ -518,14 +518,13 @@ void expect_bitmask_equal(std::pmr::memory_resource* resource, bitmask_type cons
     std::transform(counting_iter + start_bit,
                    counting_iter + start_bit + size_type(expect.size()),
                    result.begin(),
-                   [bitmask](size_type element_index) {
-                       return detail::is_set_bit(bitmask, element_index);
-                   });
+                   [bitmask](size_type element_index) { return detail::is_set_bit(bitmask, element_index); });
     auto vector_result = core::make_vector(resource, result);
     REQUIRE_THAT(vector_result, Catch::Equals(expect));
 }
 
-void test_set_null_range(std::pmr::memory_resource* resource, size_type size,
+void test_set_null_range(std::pmr::memory_resource* resource,
+                         size_type size,
                          size_type begin,
                          size_type end,
                          bool valid) {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <components/ql/ql_param_statement.hpp>
-#include <components/ql/aggregate/match.hpp>
-#include <components/sql/lexer/lexer.hpp>
 #include "parser_result.hpp"
+#include <components/ql/aggregate/match.hpp>
+#include <components/ql/ql_param_statement.hpp>
+#include <components/sql/lexer/lexer.hpp>
 
 namespace components::sql::impl {
 

@@ -4,8 +4,8 @@ namespace components::ql {
 
     delete_one_t::~delete_one_t() = default;
 
-    delete_one_t::delete_one_t(const database_name_t &database,
-                               const collection_name_t &collection,
+    delete_one_t::delete_one_t(const database_name_t& database,
+                               const collection_name_t& collection,
                                const aggregate::match_t& match,
                                const storage_parameters& parameters)
         : ql_param_statement_t(statement_type::delete_one, database, collection)

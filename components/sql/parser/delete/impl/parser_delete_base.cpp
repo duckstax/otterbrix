@@ -6,10 +6,8 @@ using namespace components::sql::impl;
 
 namespace components::sql::delete_::impl {
 
-    components::sql::impl::parser_result parse_delete_base(std::pmr::memory_resource* resource,
-                                                           std::string_view query,
-                                                           ql::variant_statement_t& statement) {
-
+    components::sql::impl::parser_result
+    parse_delete_base(std::pmr::memory_resource* resource, std::string_view query, ql::variant_statement_t& statement) {
         static const mask_element_t mask_elem_delete(token_type::bare_word, "delete");
         static const mask_element_t mask_elem_from(token_type::bare_word, "from");
         static const mask_element_t mask_elem_where(token_type::bare_word, "where");
@@ -43,7 +41,9 @@ namespace components::sql::delete_::impl {
             table = std::string(token.value());
         }
         statement = ql::delete_many_t{schema, table};
-        assert(std::holds_alternative<ql::delete_many_t>(statement) && "[components::sql::impl::parser_result parse_delete_base]: [ql::delete_many_t] variant statement holds the alternative");
+        assert(std::holds_alternative<ql::delete_many_t>(statement) &&
+               "[components::sql::impl::parser_result parse_delete_base]: [ql::delete_many_t] variant statement holds "
+               "the alternative");
         auto& del = std::get<ql::delete_many_t>(statement);
 
         token = lexer.next_not_whitespace_token();

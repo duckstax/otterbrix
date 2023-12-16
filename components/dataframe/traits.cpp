@@ -31,9 +31,7 @@ namespace components::dataframe {
         };
     } // namespace
 
-    bool is_equality_comparable(data_type type) {
-        return type_dispatcher(type, unary_equality_comparable_functor{});
-    }
+    bool is_equality_comparable(data_type type) { return type_dispatcher(type, unary_equality_comparable_functor{}); }
 
     struct is_numeric_impl {
         template<typename T>
@@ -78,9 +76,7 @@ namespace components::dataframe {
         }
     };
 
-    bool is_floating_point(data_type type) {
-        return type_dispatcher(type, is_floating_point_impl{});
-    }
+    bool is_floating_point(data_type type) { return type_dispatcher(type, is_floating_point_impl{}); }
 
     struct is_boolean_impl {
         template<typename T>
@@ -173,8 +169,7 @@ namespace components::dataframe {
 
             template<typename ToType, std::enable_if_t<not is_compound<ToType>()>* = nullptr>
             constexpr bool operator()() {
-                if (not std::is_trivially_copyable_v<FromType> ||
-                    not std::is_trivially_copyable_v<ToType>) {
+                if (not std::is_trivially_copyable_v<FromType> || not std::is_trivially_copyable_v<ToType>) {
                     return false;
                 }
                 constexpr auto from_size = sizeof(device_storage_type_t<FromType>);

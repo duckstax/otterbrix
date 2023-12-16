@@ -13,11 +13,14 @@ namespace components::dataframe::column {
 
     // Empty column of specified type
     std::unique_ptr<column_t> make_empty_column(std::pmr::memory_resource* resource, data_type type) {
-        assertion_exception_msg(type.id() == type_id::empty || !is_nested(type), "make_empty_column is invalid to call on nested types");
+        assertion_exception_msg(type.id() == type_id::empty || !is_nested(type),
+                                "make_empty_column is invalid to call on nested types");
         return std::make_unique<column_t>(resource, type, 0, core::buffer(resource), core::buffer(resource));
     }
 
-    std::unique_ptr<column_t> make_empty_column(std::pmr::memory_resource* resource, type_id id) { return make_empty_column(resource, data_type{id}); }
+    std::unique_ptr<column_t> make_empty_column(std::pmr::memory_resource* resource, type_id id) {
+        return make_empty_column(resource, data_type{id});
+    }
 
     std::unique_ptr<column_t> make_strings_column(std::pmr::memory_resource* resource,
                                                   size_type num_strings,
@@ -28,14 +31,12 @@ namespace components::dataframe::column {
         //todo: impl
     }
 
-    std::unique_ptr<column_t> make_structs_column(
-        std::pmr::memory_resource* resource,
-        size_type num_rows,
-        std::vector<std::unique_ptr<column_t>>&& child_columns,
-        size_type null_count,
-        core::buffer&& null_mask) {
-        assertion_exception_msg(null_count <= 0 || !null_mask.is_empty(),
-                                "Struct column with nulls must be nullable.");
+    std::unique_ptr<column_t> make_structs_column(std::pmr::memory_resource* resource,
+                                                  size_type num_rows,
+                                                  std::vector<std::unique_ptr<column_t>>&& child_columns,
+                                                  size_type null_count,
+                                                  core::buffer&& null_mask) {
+        assertion_exception_msg(null_count <= 0 || !null_mask.is_empty(), "Struct column with nulls must be nullable.");
 
         assertion_exception_msg(std::all_of(child_columns.begin(),
                                             child_columns.end(),

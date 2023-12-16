@@ -1,8 +1,8 @@
 #pragma once
 
 #include <boost/intrusive/list_hook.hpp>
-#include <memory_resource>
 #include <components/document/document.hpp>
+#include <memory_resource>
 
 namespace services::collection::operators {
 
@@ -31,4 +31,4 @@ namespace services::collection::operators {
         return std::make_unique<operator_data_t>(resource);
     }
 
-}
+} // namespace services::collection::operators

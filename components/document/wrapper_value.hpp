@@ -27,42 +27,23 @@ namespace document {
         explicit wrapper_value_t(std::string_view value)
             : value_(impl::new_value(value).detach()) {}
 
+        bool operator<(const wrapper_value_t& rhs) const { return value_->is_lt(rhs.value_); }
 
-        bool operator<(const wrapper_value_t& rhs) const {
-            return value_->is_lt(rhs.value_);
-        }
+        bool operator>(const wrapper_value_t& rhs) const { return rhs < *this; }
 
-        bool operator>(const wrapper_value_t& rhs) const {
-            return rhs < *this;
-        }
+        bool operator<=(const wrapper_value_t& rhs) const { return value_->is_lte(rhs.value_); }
 
-        bool operator<=(const wrapper_value_t& rhs) const {
-            return value_->is_lte(rhs.value_);
-        }
+        bool operator>=(const wrapper_value_t& rhs) const { return rhs <= *this; }
 
-        bool operator>=(const wrapper_value_t& rhs) const {
-            return rhs <= *this;
-        }
+        bool operator==(const wrapper_value_t& rhs) const { return value_->is_equal(rhs.value_); }
 
-        bool operator==(const wrapper_value_t& rhs) const {
-            return value_->is_equal(rhs.value_);
-        }
+        bool operator!=(const wrapper_value_t& rhs) const { return !(*this == rhs); }
 
-        bool operator!=(const wrapper_value_t& rhs) const {
-            return !(*this == rhs);
-        }
+        const impl::value_t* operator*() const { return value_; }
 
-        const impl::value_t* operator*() const {
-            return value_;
-        }
+        const impl::value_t* operator->() const { return value_; }
 
-        const impl::value_t* operator->() const {
-            return value_;
-        }
-
-        explicit operator bool() const {
-            return value_ != nullptr;
-        }
+        explicit operator bool() const { return value_ != nullptr; }
 
     private:
         const impl::value_t* value_;

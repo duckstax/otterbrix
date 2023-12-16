@@ -16,7 +16,7 @@ void document_write(benchmark::State& state) {
     double value_double{100.001};
     std::string value_str{"100.001"};
 
-    auto f = [&](const std::string &key) {
+    auto f = [&](const std::string& key) {
         doc->set(key, nullptr);
         doc->set(key, value_bool);
         doc->set(key, value_int);
@@ -34,7 +34,6 @@ void document_write(benchmark::State& state) {
     }
 }
 BENCHMARK(document_write)->Arg(10000);
-
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);

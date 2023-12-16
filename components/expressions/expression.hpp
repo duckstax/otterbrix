@@ -1,8 +1,8 @@
 #pragma once
 
+#include "forward.hpp"
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include "forward.hpp"
 
 namespace components::expressions {
 
@@ -35,9 +35,7 @@ namespace components::expressions {
     using expression_ptr = boost::intrusive_ptr<expression_i>;
 
     struct expression_hash final {
-        size_t operator()(const expression_ptr& node) const {
-            return node->hash();
-        }
+        size_t operator()(const expression_ptr& node) const { return node->hash(); }
     };
 
     struct expression_equal final {

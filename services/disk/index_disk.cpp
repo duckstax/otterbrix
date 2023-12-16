@@ -14,9 +14,7 @@ namespace services::disk {
         comparator() = default;
 
     private:
-        int Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const final {
-            return a.compare(b);
-        }
+        int Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const final { return a.compare(b); }
 
         rocksdb::Slice slice(const T& value) const {
             return rocksdb::Slice{reinterpret_cast<const char*>(&value), sizeof(T)};
@@ -26,9 +24,7 @@ namespace services::disk {
             return rocksdb::Slice{value->as_string()};
         }
 
-        const char* Name() const final {
-            return "comparator";
-        }
+        const char* Name() const final { return "comparator"; }
 
         void FindShortestSeparator(std::string*, const rocksdb::Slice&) const final {}
 
@@ -42,9 +38,12 @@ namespace services::disk {
 
     template<>
     int comparator<std::string>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
-        if (a.empty() && b.empty()) return 0;
-        if (!a.data()) return -1;
-        if (!b.data()) return 1;
+        if (a.empty() && b.empty())
+            return 0;
+        if (!a.data())
+            return -1;
+        if (!b.data())
+            return 1;
         return a.compare(b);
     }
 
@@ -70,12 +69,12 @@ namespace services::disk {
         return 0;
     }
 
-#define ADD_TYPE_SLICE(TYPE, FUNC)                                                         \
-    template<>                                                                             \
-    rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const { \
-        static TYPE v;                                                                     \
-        v = TYPE(value->FUNC());                                                           \
-        return slice(v);                                                                   \
+#define ADD_TYPE_SLICE(TYPE, FUNC)                                                                                     \
+    template<>                                                                                                         \
+    rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const {                             \
+        static TYPE v;                                                                                                 \
+        v = TYPE(value->FUNC());                                                                                       \
+        return slice(v);                                                                                               \
     }
 
     ADD_TYPE_SLICE(int8_t, as_int)
@@ -121,10 +120,11 @@ namespace services::disk {
     }
 
     rocksdb::Slice to_slice(const index_disk_t::result& values) {
-        return rocksdb::Slice{reinterpret_cast<const char*>(values.data()), values.size() * components::document::document_id_t::size};
+        return rocksdb::Slice{reinterpret_cast<const char*>(values.data()),
+                              values.size() * components::document::document_id_t::size};
     }
 
-    void from_slice(const rocksdb::Slice &slice, index_disk_t::result &docs) {
+    void from_slice(const rocksdb::Slice& slice, index_disk_t::result& docs) {
         auto size = docs.size();
         docs.resize(size + slice.size() / components::document::document_id_t::size);
         std::memcpy(docs.data() + size, slice.data(), slice.size());
@@ -160,9 +160,7 @@ namespace services::disk {
         }
     }
 
-    void index_disk_t::remove(wrapper_value_t key) {
-        db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key));
-    }
+    void index_disk_t::remove(wrapper_value_t key) { db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key)); }
 
     void index_disk_t::remove(const wrapper_value_t& key, const document_id_t& doc) {
         auto values = find(key);
@@ -176,7 +174,7 @@ namespace services::disk {
         }
     }
 
-    void index_disk_t::find(const wrapper_value_t& value, result &res) const {
+    void index_disk_t::find(const wrapper_value_t& value, result& res) const {
         rocksdb::PinnableSlice slice;
         auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
@@ -190,7 +188,7 @@ namespace services::disk {
         return res;
     }
 
-    void index_disk_t::lower_bound(const wrapper_value_t& value, result &res) const {
+    void index_disk_t::lower_bound(const wrapper_value_t& value, result& res) const {
         rocksdb::ReadOptions options;
         auto upper_bound = comparator_->slice(value);
         options.iterate_upper_bound = &upper_bound;
@@ -207,7 +205,7 @@ namespace services::disk {
         return res;
     }
 
-    void index_disk_t::upper_bound(const wrapper_value_t& value, result &res) const {
+    void index_disk_t::upper_bound(const wrapper_value_t& value, result& res) const {
         rocksdb::ReadOptions options;
         auto lower_bound = comparator_->slice(value);
         options.iterate_lower_bound = &lower_bound;

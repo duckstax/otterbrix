@@ -4,8 +4,8 @@ namespace components::ql {
 
     update_one_t::~update_one_t() = default;
 
-    update_one_t::update_one_t(const database_name_t &database,
-                               const collection_name_t &collection,
+    update_one_t::update_one_t(const database_name_t& database,
+                               const collection_name_t& collection,
                                const aggregate::match_t& match,
                                const storage_parameters& parameters,
                                const components::document::document_ptr& update,

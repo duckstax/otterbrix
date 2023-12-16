@@ -3,13 +3,10 @@
 
 namespace components::logical_plan {
 
-    node_match_t::node_match_t(std::pmr::memory_resource *resource, const collection_full_name_t& collection)
-        : node_t(resource, node_type::match_t, collection) {
-    }
+    node_match_t::node_match_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection)
+        : node_t(resource, node_type::match_t, collection) {}
 
-    hash_t node_match_t::hash_impl() const {
-        return 0;
-    }
+    hash_t node_match_t::hash_impl() const { return 0; }
 
     std::string node_match_t::to_string_impl() const {
         std::stringstream stream;
@@ -27,8 +24,9 @@ namespace components::logical_plan {
         return stream.str();
     }
 
-
-    node_ptr make_node_match(std::pmr::memory_resource *resource, const collection_full_name_t& collection, const ql::aggregate::match_t& match) {
+    node_ptr make_node_match(std::pmr::memory_resource* resource,
+                             const collection_full_name_t& collection,
+                             const ql::aggregate::match_t& match) {
         auto node = new node_match_t{resource, collection};
         if (match.query) {
             node->append_expression(match.query);
@@ -36,4 +34,4 @@ namespace components::logical_plan {
         return node;
     }
 
-}
+} // namespace components::logical_plan

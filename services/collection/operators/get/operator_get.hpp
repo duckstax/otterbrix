@@ -21,4 +21,4 @@ namespace services::collection::operators::get {
 
     using operator_get_ptr = std::unique_ptr<operator_get_t>;
 
-} // namespace services::operators::get
+} // namespace services::collection::operators::get

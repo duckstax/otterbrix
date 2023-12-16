@@ -25,39 +25,27 @@ namespace core {
         scalar() = delete;
 
         explicit scalar(std::pmr::memory_resource* mr)
-            : _storage{mr, 1} {
-        }
+            : _storage{mr, 1} {}
 
-        explicit scalar(
-            std::pmr::memory_resource* mr,
-            value_type const& initial_value)
+        explicit scalar(std::pmr::memory_resource* mr, value_type const& initial_value)
             : _storage{mr, 1} {
             set_value(initial_value);
         }
 
         scalar(std::pmr::memory_resource* mr, scalar const& other)
-            : _storage{mr, other._storage} {
-        }
+            : _storage{mr, other._storage} {}
 
-        [[nodiscard]] value_type value() const {
-            return _storage.front_element();
-        }
+        [[nodiscard]] value_type value() const { return _storage.front_element(); }
 
-        void set_value(value_type const& value) {
-            _storage.set_element(0, value);
-        }
+        void set_value(value_type const& value) { _storage.set_element(0, value); }
 
         void set_value(value_type&&) = delete;
 
-        void set_value_to_zero() {
-            _storage.set_element_to_zero(value_type{0});
-        }
+        void set_value_to_zero() { _storage.set_element_to_zero(value_type{0}); }
 
         [[nodiscard]] pointer data() noexcept { return static_cast<pointer>(_storage.data()); }
 
-        [[nodiscard]] const_pointer data() const noexcept {
-            return static_cast<const_pointer>(_storage.data());
-        }
+        [[nodiscard]] const_pointer data() const noexcept { return static_cast<const_pointer>(_storage.data()); }
 
     private:
         uvector<T> _storage;

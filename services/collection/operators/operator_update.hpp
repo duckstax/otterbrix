@@ -16,4 +16,4 @@ namespace services::collection::operators {
         bool upsert_;
     };
 
-} // namespace services::operators
+} // namespace services::collection::operators

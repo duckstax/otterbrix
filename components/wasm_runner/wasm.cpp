@@ -16,9 +16,7 @@ namespace components::wasm_runner {
     wasm_vm_integration_t::wasm_vm_integration_t()
         : log_(get_logger()) {}
 
-    auto wasm_vm_integration_t::clone() -> WasmVmIntegration* {
-        return new wasm_vm_integration_t;
-    }
+    auto wasm_vm_integration_t::clone() -> WasmVmIntegration* { return new wasm_vm_integration_t; }
 
     auto wasm_vm_integration_t::getLogLevel() -> LogLevel {
         auto log_level = LogLevel::info;
@@ -55,16 +53,14 @@ namespace components::wasm_runner {
         return log_level;
     }
 
-    auto wasm_vm_integration_t::error(string_view message) -> void {
-        ::error(log_,message);
-    }
+    auto wasm_vm_integration_t::error(string_view message) -> void { ::error(log_, message); }
 
-    auto wasm_vm_integration_t::trace(string_view message) -> void {
-        ::trace(log_,message);
-    }
+    auto wasm_vm_integration_t::trace(string_view message) -> void { ::trace(log_, message); }
 
-    auto wasm_vm_integration_t::getNullVmFunction(string_view /*function_name*/, bool /*returns_word*/,
-                                                  int /*number_of_arguments*/, NullPlugin* /*plugin*/,
+    auto wasm_vm_integration_t::getNullVmFunction(string_view /*function_name*/,
+                                                  bool /*returns_word*/,
+                                                  int /*number_of_arguments*/,
+                                                  NullPlugin* /*plugin*/,
                                                   void* /*ptr_to_function_return*/) -> bool {
         return false;
     }
@@ -84,27 +80,27 @@ namespace components::wasm_runner {
 
         switch (static_cast<log_t::level>(log_level)) {
             case log_t::level::trace:
-                trace(log_,message);
+                trace(log_, message);
 
                 break;
             case log_t::level::debug:
-                debug(log_,message);
+                debug(log_, message);
 
                 break;
             case log_t::level::info:
-                info(log_,message);
+                info(log_, message);
 
                 break;
             case log_t::level::warn:
-                warn(log_,message);
+                warn(log_, message);
 
                 break;
             case log_t::level::err:
-                ::error(log_,message);
+                ::error(log_, message);
 
                 break;
             case log_t::level::critical:
-                critical(log_,message);
+                critical(log_, message);
                 break;
             default:
                 status = WasmResult::BadArgument;
@@ -115,9 +111,7 @@ namespace components::wasm_runner {
         return status;
     }
 
-    auto wasm_context_t::getLogLevel() -> uint32_t {
-        return static_cast<uint32_t>(log_.get_level());
-    }
+    auto wasm_context_t::getLogLevel() -> uint32_t { return static_cast<uint32_t>(log_.get_level()); }
 
     auto wasm_context_t::getProperty(string_view path, string* result) -> WasmResult {
         auto status = WasmResult::NotFound;
@@ -141,17 +135,18 @@ namespace components::wasm_runner {
         return chrono::duration_cast<chrono::nanoseconds>(chrono::system_clock::now().time_since_epoch()).count();
     }
 
-    wasm_t::wasm_t(unique_ptr<WasmVm> vm, string_view vm_id,
-                   string_view vm_configuration, string_view vm_key,
-                   unordered_map<string, string> envs, AllowedCapabilitiesMap allowed_capabilities)
+    wasm_t::wasm_t(unique_ptr<WasmVm> vm,
+                   string_view vm_id,
+                   string_view vm_configuration,
+                   string_view vm_key,
+                   unordered_map<string, string> envs,
+                   AllowedCapabilitiesMap allowed_capabilities)
         : WasmBase(move(vm), vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities)) {}
 
     wasm_t::wasm_t(const shared_ptr<WasmHandleBase>& wasm, const WasmVmFactory& factory)
         : WasmBase(wasm, factory) {}
 
-    auto wasm_t::createVmContext() -> ContextBase* {
-        return new wasm_context_t(this);
-    }
+    auto wasm_t::createVmContext() -> ContextBase* { return new wasm_context_t(this); }
 
     auto wasm_t::createRootContext(const shared_ptr<PluginBase>& plugin) -> ContextBase* {
         return new wasm_context_t(this, plugin);
@@ -177,18 +172,29 @@ namespace components::wasm_runner {
         , plugin_(nullptr)
         , wasm_(nullptr) {}
 
-    auto wasm_manager_t::initialize(string_view plugin_name, string_view plugin_id,
-                                    string_view plugin_vm_id, string_view plugin_configuration,
-                                    bool fail_open, string_view vm_id,
-                                    string_view vm_configuration, unordered_map<string, string> envs,
-                                    AllowedCapabilitiesMap allowed_capabilities, const string& code,
+    auto wasm_manager_t::initialize(string_view plugin_name,
+                                    string_view plugin_id,
+                                    string_view plugin_vm_id,
+                                    string_view plugin_configuration,
+                                    bool fail_open,
+                                    string_view vm_id,
+                                    string_view vm_configuration,
+                                    unordered_map<string, string> envs,
+                                    AllowedCapabilitiesMap allowed_capabilities,
+                                    const string& code,
                                     bool allow_precompiled) -> void {
         if (!plugin_) {
-            plugin_ = create_plugin_and_initialize(plugin_name, plugin_id, plugin_vm_id, plugin_configuration, fail_open);
+            plugin_ =
+                create_plugin_and_initialize(plugin_name, plugin_id, plugin_vm_id, plugin_configuration, fail_open);
         }
 
         if (!wasm_) {
-            wasm_ = create_wasm_and_load_code(vm_id, vm_configuration, move(envs), move(allowed_capabilities), code, allow_precompiled);
+            wasm_ = create_wasm_and_load_code(vm_id,
+                                              vm_configuration,
+                                              move(envs),
+                                              move(allowed_capabilities),
+                                              code,
+                                              allow_precompiled);
         }
     }
 
@@ -210,24 +216,44 @@ namespace components::wasm_runner {
         return getOrCreateThreadLocalPlugin(wasm_, plugin_, wasm_clone_factory, plugin_factory);
     }
 
-    auto wasm_manager_t::copy_data(const std::string &key, const std::vector<uint8_t> &data) -> void {
-        wasm_->wasm()->vm_context()->setSharedData(key, std::string_view(reinterpret_cast<const char*>(data.data()), data.size()), 0);
+    auto wasm_manager_t::copy_data(const std::string& key, const std::vector<uint8_t>& data) -> void {
+        wasm_->wasm()->vm_context()->setSharedData(
+            key,
+            std::string_view(reinterpret_cast<const char*>(data.data()), data.size()),
+            0);
     }
 
-    auto wasm_manager_t::create_plugin(string_view plugin_name, string_view plugin_id,
-                                       string_view plugin_vm_id, string_view plugin_configuration,
-                                       string_view plugin_key, string_view engine,
+    auto wasm_manager_t::create_plugin(string_view plugin_name,
+                                       string_view plugin_id,
+                                       string_view plugin_vm_id,
+                                       string_view plugin_configuration,
+                                       string_view plugin_key,
+                                       string_view engine,
                                        bool fail_open) const -> unique_ptr<PluginBase> {
-        return make_unique<PluginBase>(plugin_name, plugin_id, plugin_vm_id, engine, plugin_configuration, fail_open, plugin_key);
+        return make_unique<PluginBase>(plugin_name,
+                                       plugin_id,
+                                       plugin_vm_id,
+                                       engine,
+                                       plugin_configuration,
+                                       fail_open,
+                                       plugin_key);
     }
 
-    auto wasm_manager_t::create_plugin_and_initialize(string_view plugin_name, string_view plugin_id,
-                                                      string_view plugin_vm_id, string_view plugin_configuration,
+    auto wasm_manager_t::create_plugin_and_initialize(string_view plugin_name,
+                                                      string_view plugin_id,
+                                                      string_view plugin_vm_id,
+                                                      string_view plugin_configuration,
                                                       bool fail_open) const -> unique_ptr<PluginBase> {
         boost::uuids::random_generator uuid_generator;
         auto plugin_key = to_string(uuid_generator());
 
-        return create_plugin(plugin_name, plugin_id, plugin_vm_id, plugin_configuration, plugin_key, to_string(engine_), fail_open);
+        return create_plugin(plugin_name,
+                             plugin_id,
+                             plugin_vm_id,
+                             plugin_configuration,
+                             plugin_key,
+                             to_string(engine_),
+                             fail_open);
     }
 
     auto wasm_manager_t::create_vm_integration() const -> unique_ptr<WasmVmIntegration> {
@@ -253,30 +279,34 @@ namespace components::wasm_runner {
         return vm;
     }
 
-    auto wasm_manager_t::create_wasm(string_view vm_id, string_view vm_configuration,
-                                     string_view vm_key, unordered_map<string, string> envs,
+    auto wasm_manager_t::create_wasm(string_view vm_id,
+                                     string_view vm_configuration,
+                                     string_view vm_key,
+                                     unordered_map<string, string> envs,
                                      AllowedCapabilitiesMap allowed_capabilities) const -> unique_ptr<WasmBase> {
         return make_unique<wasm_t>(new_vm(), vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities));
     }
 
     auto wasm_manager_t::clone_wasm(shared_ptr<WasmHandleBase> wasm) const -> unique_ptr<WasmBase> {
-        return make_unique<wasm_t>(move(wasm), [this]() {
-            return new_vm();
-        });
+        return make_unique<wasm_t>(move(wasm), [this]() { return new_vm(); });
     }
 
-    auto wasm_manager_t::create_wasm_and_load_code(string_view vm_id, string_view vm_configuration,
-                                                   unordered_map<string, string> envs, AllowedCapabilitiesMap allowed_capabilities,
-                                                   const string& code, bool allow_precompiled) const -> shared_ptr<WasmHandleBase> {
+    auto wasm_manager_t::create_wasm_and_load_code(string_view vm_id,
+                                                   string_view vm_configuration,
+                                                   unordered_map<string, string> envs,
+                                                   AllowedCapabilitiesMap allowed_capabilities,
+                                                   const string& code,
+                                                   bool allow_precompiled) const -> shared_ptr<WasmHandleBase> {
         boost::uuids::random_generator uuid_generator;
         auto vm_key = to_string(uuid_generator());
 
-        auto wasm_factory = [this, vm_id, vm_configuration, envs = move(envs),
-                             allowed_capabilities = move(allowed_capabilities)](auto vm_key) {
-            auto wasm = create_wasm(vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities));
+        auto wasm_factory =
+            [this, vm_id, vm_configuration, envs = move(envs), allowed_capabilities = move(allowed_capabilities)](
+                auto vm_key) {
+                auto wasm = create_wasm(vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities));
 
-            return make_shared<WasmHandleBase>(move(wasm));
-        };
+                return make_shared<WasmHandleBase>(move(wasm));
+            };
 
         auto wasm_clone_factory = [this](auto wasm) {
             auto wasm_clone = clone_wasm(move(wasm));

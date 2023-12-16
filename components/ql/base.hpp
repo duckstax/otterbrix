@@ -1,8 +1,8 @@
 #pragma once
 // todo: pmr
 
-#include <string>
 #include <sstream>
+#include <string>
 
 using database_name_t = std::string;
 using collection_name_t = std::string;
@@ -15,8 +15,7 @@ struct collection_full_name_t {
 
     collection_full_name_t(const database_name_t& database, const collection_name_t& collection)
         : database(database)
-        , collection(collection) {
-    }
+        , collection(collection) {}
 
     inline std::string to_string() const {
         std::stringstream s;
@@ -30,8 +29,7 @@ inline bool operator==(const collection_full_name_t& c1, const collection_full_n
 }
 
 inline bool operator<(const collection_full_name_t& c1, const collection_full_name_t& c2) {
-    return c1.database < c2.database ||
-           (c1.database == c2.database && c1.collection < c2.collection);
+    return c1.database < c2.database || (c1.database == c2.database && c1.collection < c2.collection);
 }
 
 struct collection_name_hash {

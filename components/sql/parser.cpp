@@ -8,20 +8,19 @@
 #include "parser/select/parser_select.hpp"
 #include "parser/update/parser_update.hpp"
 
-#define PARSE(F) if (!ok) ok = F::parse(resource, query, result)
+#define PARSE(F)                                                                                                       \
+    if (!ok)                                                                                                           \
+    ok = F::parse(resource, query, result)
 
 namespace components::sql {
 
     parse_result::parse_result(const ql::variant_statement_t& ql)
         : ql(ql)
-        , error(parse_error::no_error, "") {
-    }
+        , error(parse_error::no_error, "") {}
 
     parse_result::parse_result(const error_t& error)
         : ql(ql::unused_statement_t{})
-        , error(error) {
-    }
-
+        , error(error) {}
 
     parse_result parse(std::pmr::memory_resource* resource, std::string_view query) {
         ql::variant_statement_t result;
@@ -33,9 +32,8 @@ namespace components::sql {
         PARSE(update);
         PARSE(invalid);
         if (ok.is_error()) {
-            return parse_result(error_t(ok.error,
-                                        std::string_view(ok.error_token.begin, ok.error_token.size()),
-                                        ok.what));
+            return parse_result(
+                error_t(ok.error, std::string_view(ok.error_token.begin, ok.error_token.size()), ok.what));
         }
         return parse_result(result);
     }

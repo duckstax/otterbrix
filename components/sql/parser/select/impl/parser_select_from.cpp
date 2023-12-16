@@ -9,10 +9,8 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-    components::sql::impl::parser_result parse_select_from(std::pmr::memory_resource* resource,
-                                                           std::string_view query,
-                                                           ql::variant_statement_t& statement) {
-
+    components::sql::impl::parser_result
+    parse_select_from(std::pmr::memory_resource* resource, std::string_view query, ql::variant_statement_t& statement) {
         static const mask_element_t mask_elem_select(token_type::bare_word, "select");
         static const mask_element_t mask_elem_from(token_type::bare_word, "from");
         static const mask_element_t mask_elem_where(token_type::bare_word, "where");
@@ -50,7 +48,9 @@ namespace components::sql::select::impl {
             if (token.type == token_type::dot) {
                 token = lexer.next_token();
                 if (token.type != token_type::bare_word) {
-                    return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
+                    return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                                token,
+                                                                "not valid select query"};
                 }
                 agg.database_ = agg.collection_;
                 agg.collection_ = std::string(token.value());
@@ -70,7 +70,9 @@ namespace components::sql::select::impl {
             // group by
             auto status_group = mask_group_by.check(lexer);
             if (status_group == mask_group_element_t::status::error) {
-                return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use group"};
+                return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                            lexer.next_not_whitespace_token(),
+                                                            "invalid use group"};
             }
             std::pmr::set<token_t> group_fields(resource);
             if (status_group == mask_group_element_t::status::yes) {
@@ -90,7 +92,9 @@ namespace components::sql::select::impl {
             // order by
             auto status_order = mask_order_by.check(lexer);
             if (status_order == mask_group_element_t::status::error) {
-                return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use order"};
+                return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                            lexer.next_not_whitespace_token(),
+                                                            "invalid use order"};
             }
             if (status_order == mask_group_element_t::status::yes) {
                 ql::aggregate::sort_t sort;

@@ -5,9 +5,8 @@ namespace services::collection::operators::aggregate {
 
     constexpr auto key_result_ = "count";
 
-    operator_count_t::operator_count_t(context_collection_t *context)
-        : operator_aggregate_t(context) {
-    }
+    operator_count_t::operator_count_t(context_collection_t* context)
+        : operator_aggregate_t(context) {}
 
     document_ptr operator_count_t::aggregate_impl() {
         if (left_ && left_->output()) {
@@ -16,8 +15,6 @@ namespace services::collection::operators::aggregate {
         return components::document::make_document(key_result_, 0);
     }
 
-    std::string operator_count_t::key_impl() const {
-        return key_result_;
-    }
+    std::string operator_count_t::key_impl() const { return key_result_; }
 
 } // namespace services::collection::operators::aggregate

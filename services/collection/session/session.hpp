@@ -1,10 +1,10 @@
 #pragma once
 
-#include <variant>
-#include <components/session/session.hpp>
-#include "session_type.hpp"
 #include "create_index.hpp"
+#include "session_type.hpp"
 #include "suspend_plan.hpp"
+#include <components/session/session.hpp>
+#include <variant>
 
 namespace services::collection::sessions {
 
@@ -13,27 +13,20 @@ namespace services::collection::sessions {
         template<class T>
         explicit session_t(T&& statement)
             : type_(statement.type())
-            , data_(std::move(statement))
-        {}
+            , data_(std::move(statement)) {}
 
         template<class T>
         T& get() {
             return std::get<T>(data_);
         }
 
-        type_t type() const {
-            return type_;
-        }
+        type_t type() const { return type_; }
 
     private:
         type_t type_;
 
-        std::variant<
-            create_index_t,
-            suspend_plan_t
-            > data_;
+        std::variant<create_index_t, suspend_plan_t> data_;
     };
-
 
     struct session_key_t {
         components::session::session_id_t id;
@@ -58,7 +51,10 @@ namespace services::collection::sessions {
     }
 
     template<typename T>
-    void make_session(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name, T&& statement) {
+    void make_session(sessions_storage_t& storage,
+                      components::session::session_id_t session,
+                      const std::string& session_name,
+                      T&& statement) {
         storage.emplace(session_key_t{session, session_name}, session_t{statement});
     }
 
@@ -67,7 +63,8 @@ namespace services::collection::sessions {
         return it->second;
     }
 
-    inline session_t& find(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
+    inline session_t&
+    find(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
         auto it = storage.find(session_key_t{session, session_name});
         return it->second;
     }
@@ -76,7 +73,8 @@ namespace services::collection::sessions {
         storage.erase(session_key_t{session, {}});
     }
 
-    inline void remove(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
+    inline void
+    remove(sessions_storage_t& storage, components::session::session_id_t session, const std::string& session_name) {
         storage.erase(session_key_t{session, session_name});
     }
 

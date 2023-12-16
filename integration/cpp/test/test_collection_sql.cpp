@@ -1,7 +1,7 @@
-#include <catch2/catch.hpp>
-#include <variant>
-#include <components/ql/statements.hpp>
 #include "test_config.hpp"
+#include <catch2/catch.hpp>
+#include <components/ql/statements.hpp>
+#include <variant>
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
@@ -14,7 +14,6 @@ using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
 TEST_CASE("integration::cpp::test_collection::sql::base") {
-
     auto config = test_create_config("/tmp/test_collection_sql/base");
     test_clear_directory(config);
     config.disk.on = false;
@@ -39,8 +38,8 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', " << "'Name " << num << "', "
-                      << num << ")" << (num == 99 ? ";" : ", ");
+                query << "('" << gen_id(num + 1) << "', "
+                      << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->size() == 100);
@@ -59,8 +58,9 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count > 90;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
             REQUIRE(cur->size() == 9);
         }
     }
@@ -68,8 +68,9 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
     INFO("find order by") {
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "ORDER BY count;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "ORDER BY count;");
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 0);
             REQUIRE(cur->next()->get_long("count") == 1);
@@ -79,8 +80,9 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "ORDER BY count DESC;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "ORDER BY count DESC;");
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 99);
             REQUIRE(cur->next()->get_long("count") == 98);
@@ -90,8 +92,9 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "ORDER BY name;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "ORDER BY name;");
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 0);
             REQUIRE(cur->next()->get_long("count") == 1);
@@ -104,20 +107,23 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
     INFO("delete") {
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count > 90;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
             REQUIRE(cur->size() == 9);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "DELETE FROM TestDatabase.TestCollection "
-                                                        "WHERE count > 90;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "DELETE FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
             REQUIRE(cur->size() == 9);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count > 90;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
             REQUIRE(cur->size() == 0);
         }
     }
@@ -125,36 +131,37 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
     INFO("update") {
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count < 20;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count < 20;");
             REQUIRE(cur->size() == 20);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "UPDATE TestDatabase.TestCollection "
-                                                        "SET count = 1000 "
-                                                        "WHERE count < 20;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "UPDATE TestDatabase.TestCollection "
+                                               "SET count = 1000 "
+                                               "WHERE count < 20;");
             REQUIRE(cur->size() == 20);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count < 20;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count < 20;");
             REQUIRE(cur->size() == 0);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection "
-                                                        "WHERE count == 1000;");
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count == 1000;");
             REQUIRE(cur->size() == 20);
         }
     }
-
 }
 
-
 TEST_CASE("integration::cpp::test_collection::sql::group_by") {
-
     auto config = test_create_config("/tmp/test_collection_sql/group_by");
     test_clear_directory(config);
     config.disk.on = false;
@@ -176,8 +183,8 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', " << "'Name " << (num % 10) << "', "
-                      << (num % 20) << ")" << (num == 99 ? ";" : ", ");
+                query << "('" << gen_id(num + 1) << "', "
+                      << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
             }
             dispatcher->execute_sql(session, query.str());
         }
@@ -185,11 +192,12 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
 
     INFO("group by") {
         auto session = otterbrix::session_id_t();
-        auto cur = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
-                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
-                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
-                                                    R"_(FROM TestDatabase.TestCollection )_"
-                                                    R"_(GROUP BY name;)_");
+        auto cur = dispatcher->execute_sql(session,
+                                           R"_(SELECT name, COUNT(count) AS count_, )_"
+                                           R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                           R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                           R"_(FROM TestDatabase.TestCollection )_"
+                                           R"_(GROUP BY name;)_");
         REQUIRE(cur->size() == 10);
         int number = 0;
         while (auto doc = cur->next()) {
@@ -205,12 +213,13 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
 
     INFO("group by with order by") {
         auto session = otterbrix::session_id_t();
-        auto cur = dispatcher->execute_sql(session, R"_(SELECT name, COUNT(count) AS count_, )_"
-                                                    R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
-                                                    R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
-                                                    R"_(FROM TestDatabase.TestCollection )_"
-                                                    R"_(GROUP BY name )_"
-                                                    R"_(ORDER BY name DESC;)_");
+        auto cur = dispatcher->execute_sql(session,
+                                           R"_(SELECT name, COUNT(count) AS count_, )_"
+                                           R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                                           R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                                           R"_(FROM TestDatabase.TestCollection )_"
+                                           R"_(GROUP BY name )_"
+                                           R"_(ORDER BY name DESC;)_");
         REQUIRE(cur->size() == 10);
         int number = 9;
         while (auto doc = cur->next()) {
@@ -223,12 +232,9 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             --number;
         }
     }
-
 }
 
-
 TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
-
     auto config = test_create_config("/tmp/test_collection_sql/invalid_queries");
     test_clear_directory(config);
     config.disk.on = false;
@@ -254,5 +260,4 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         REQUIRE(cur->is_error());
         REQUIRE(cur->get_error().type == error_code_t::collection_not_exists);
     }
-
 }

@@ -12,10 +12,9 @@ namespace services::collection::planner {
 
     using components::logical_plan::node_type;
 
-    operators::operator_ptr create_plan(
-            context_collection_t* context,
-            const components::logical_plan::node_ptr& node,
-            components::ql::limit_t limit) {
+    operators::operator_ptr create_plan(context_collection_t* context,
+                                        const components::logical_plan::node_ptr& node,
+                                        components::ql::limit_t limit) {
         switch (node->type()) {
             case node_type::aggregate_t:
                 return impl::create_plan_aggregate(context, node, std::move(limit));
@@ -37,4 +36,4 @@ namespace services::collection::planner {
         return nullptr;
     }
 
-}
+} // namespace services::collection::planner

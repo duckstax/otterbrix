@@ -1,9 +1,9 @@
 #pragma once
 
-#include <components/document/document.hpp>
-#include <components/document/document_view.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
+#include <components/document/document.hpp>
+#include <components/document/document_view.hpp>
 #include <msgpack.hpp>
 
 using ::document::impl::array_t;
@@ -39,7 +39,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const value_t* value) {
     }
 }
 
-const value_t *to_structure_(const msgpack::object &msg_object);
+const value_t* to_structure_(const msgpack::object& msg_object);
 void to_msgpack_(const value_t* value, msgpack::object& o);
 
 // User defined class template specialization
@@ -49,7 +49,8 @@ namespace msgpack {
 
             template<>
             struct convert<components::document::document_ptr> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::document::document_ptr& v) const {
+                msgpack::object const& operator()(msgpack::object const& o,
+                                                  components::document::document_ptr& v) const {
                     if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
@@ -61,7 +62,8 @@ namespace msgpack {
             template<>
             struct pack<components::document::document_ptr> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::document::document_ptr const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           components::document::document_ptr const& v) const {
                     to_msgpack_(o, components::document::document_view_t(v).get_value());
                     return o;
                 }

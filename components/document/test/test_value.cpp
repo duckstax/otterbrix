@@ -1,14 +1,13 @@
 #include <catch2/catch.hpp>
-#include <components/document/support/varint.hpp>
-#include <components/document/core/pointer.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
+#include <components/document/core/pointer.hpp>
+#include <components/document/support/varint.hpp>
 
 using namespace document;
 using document::impl::value_type;
 
 TEST_CASE("value_t") {
-
     SECTION("Var int read") {
         uint8_t buf[100];
         uint64_t result;
@@ -87,5 +86,4 @@ TEST_CASE("value_t") {
         auto dst = start->deref<false>();
         REQUIRE(reinterpret_cast<ptrdiff_t>(dst) - reinterpret_cast<ptrdiff_t>(&data[0]) == 0L);
     }
-
 }

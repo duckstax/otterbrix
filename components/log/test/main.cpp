@@ -5,5 +5,4 @@ int main() {
     auto l = otterbrix::get_logger();
     l.info("test log");
     return 0;
-
 }

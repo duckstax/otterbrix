@@ -1,8 +1,8 @@
 #pragma once
 
-#include <components/ql/aggregate/forward.hpp>
 #include <components/expressions/expression.hpp>
 #include <components/expressions/msgpack.hpp>
+#include <components/ql/aggregate/forward.hpp>
 
 namespace components::ql::aggregate {
 
@@ -13,15 +13,13 @@ namespace components::ql::aggregate {
 
     match_t make_match(expressions::expression_ptr&& query);
 
-
-    template <class OStream>
-    OStream &operator<<(OStream& stream, const match_t& match) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const match_t& match) {
         stream << "$match: {" << match.query->to_string() << "}";
         return stream;
     }
 
 } // namespace components::ql::aggregate
-
 
 // User defined class template specialization
 namespace msgpack {
@@ -30,7 +28,8 @@ namespace msgpack {
 
             template<>
             struct convert<components::ql::aggregate::match_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::aggregate::match_t& v) const {
+                msgpack::object const& operator()(msgpack::object const& o,
+                                                  components::ql::aggregate::match_t& v) const {
                     v.query = o.as<components::expressions::expression_ptr>();
                     return o;
                 }
@@ -39,7 +38,8 @@ namespace msgpack {
             template<>
             struct pack<components::ql::aggregate::match_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::aggregate::match_t const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           components::ql::aggregate::match_t const& v) const {
                     o.pack(v.query);
                     return o;
                 }

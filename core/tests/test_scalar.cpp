@@ -21,9 +21,8 @@ struct gen_scalar final {
         return distribution(generator);
     }
 
-    template<
-        typename U = T,
-        std::enable_if_t<(std::is_integral<U>::value && not std::is_same<U, bool>::value), bool> = true>
+    template<typename U = T,
+             std::enable_if_t<(std::is_integral<U>::value && not std::is_same<U, bool>::value), bool> = true>
     U random_value() {
         static std::uniform_int_distribution<U> distribution{std::numeric_limits<T>::lowest(),
                                                              std::numeric_limits<T>::max()};
@@ -39,13 +38,29 @@ struct gen_scalar final {
     }
 };
 
-TEMPLATE_TEST_CASE("unitialized", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("unitialized",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::scalar<TestType> scalar(mr);
     REQUIRE(nullptr != scalar.data());
 }
 
-TEMPLATE_TEST_CASE("initialValue", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("initialValue",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
@@ -54,7 +69,15 @@ TEMPLATE_TEST_CASE("initialValue", "[scalar][template]", bool, std::int8_t, std:
     REQUIRE(gen.value == scalar.value());
 }
 
-TEMPLATE_TEST_CASE("const ptr data", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("const ptr data",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
@@ -63,7 +86,15 @@ TEMPLATE_TEST_CASE("const ptr data", "[scalar][template]", bool, std::int8_t, st
     REQUIRE(nullptr != data);
 }
 
-TEMPLATE_TEST_CASE("copy ctor", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("copy ctor",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
@@ -77,7 +108,15 @@ TEMPLATE_TEST_CASE("copy ctor", "[scalar][template]", bool, std::int8_t, std::in
     REQUIRE(copy.value() == scalar.value());
 }
 
-TEMPLATE_TEST_CASE("move ctor", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("move ctor",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
@@ -95,7 +134,15 @@ TEMPLATE_TEST_CASE("move ctor", "[scalar][template]", bool, std::int8_t, std::in
     REQUIRE(nullptr == scalar.data());
 }
 
-TEMPLATE_TEST_CASE("set value", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("set value",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
@@ -108,7 +155,15 @@ TEMPLATE_TEST_CASE("set value", "[scalar][template]", bool, std::int8_t, std::in
     REQUIRE(expected == scalar.value());
 }
 
-TEMPLATE_TEST_CASE("set value to zero", "[scalar][template]", bool, std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double) {
+TEMPLATE_TEST_CASE("set value to zero",
+                   "[scalar][template]",
+                   bool,
+                   std::int8_t,
+                   std::int16_t,
+                   std::int32_t,
+                   std::int64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;

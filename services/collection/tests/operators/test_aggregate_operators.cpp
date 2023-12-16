@@ -1,13 +1,13 @@
+#include "test_operator_generaty.hpp"
 #include <catch2/catch.hpp>
 #include <components/document/support/varint.hpp>
 #include <components/expressions/compare_expression.hpp>
-#include <services/collection/operators/scan/full_scan.hpp>
-#include <services/collection/operators/aggregate/operator_count.hpp>
-#include <services/collection/operators/aggregate/operator_min.hpp>
-#include <services/collection/operators/aggregate/operator_max.hpp>
-#include <services/collection/operators/aggregate/operator_sum.hpp>
 #include <services/collection/operators/aggregate/operator_avg.hpp>
-#include "test_operator_generaty.hpp"
+#include <services/collection/operators/aggregate/operator_count.hpp>
+#include <services/collection/operators/aggregate/operator_max.hpp>
+#include <services/collection/operators/aggregate/operator_min.hpp>
+#include <services/collection/operators/aggregate/operator_sum.hpp>
+#include <services/collection/operators/scan/full_scan.hpp>
 
 using namespace components::expressions;
 using namespace services::collection::operators;
@@ -29,7 +29,10 @@ TEST_CASE("operator::aggregate::count") {
     }
 
     SECTION("count::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::lte, key("count"), core::parameter_id_t(1));
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lte,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_count_t count(d(collection)->view());
         count.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                        predicates::create_predicate(d(collection)->view(), cond),
@@ -56,7 +59,10 @@ TEST_CASE("operator::aggregate::min") {
     }
 
     SECTION("min::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::gt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_min_t min_(d(collection)->view(), key("count"));
         min_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                       predicates::create_predicate(d(collection)->view(), cond),
@@ -83,7 +89,10 @@ TEST_CASE("operator::aggregate::max") {
     }
 
     SECTION("max::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_max_t max_(d(collection)->view(), key("count"));
         max_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                       predicates::create_predicate(d(collection)->view(), cond),
@@ -110,7 +119,10 @@ TEST_CASE("operator::aggregate::sum") {
     }
 
     SECTION("sum::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_sum_t sum_(d(collection)->view(), key("count"));
         sum_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                       predicates::create_predicate(d(collection)->view(), cond),
@@ -137,7 +149,10 @@ TEST_CASE("operator::aggregate::avg") {
     }
 
     SECTION("avg::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        auto cond = make_compare_expression(d(collection)->view()->resource(),
+                                            compare_type::lt,
+                                            key("count"),
+                                            core::parameter_id_t(1));
         operator_avg_t avg_(d(collection)->view(), key("count"));
         avg_.set_children(std::make_unique<full_scan>(d(collection)->view(),
                                                       predicates::create_predicate(d(collection)->view(), cond),

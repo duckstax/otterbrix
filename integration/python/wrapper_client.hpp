@@ -29,9 +29,9 @@ namespace otterbrix {
         auto execute(const std::string& query) -> wrapper_cursor_ptr;
 
     private:
-        std::unordered_map<std::string,wrapper_database_ptr> names_;
+        std::unordered_map<std::string, wrapper_database_ptr> names_;
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
         mutable log_t log_;
     };
-}
+} // namespace otterbrix
