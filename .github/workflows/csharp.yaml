@@ -63,11 +63,10 @@ jobs:
             with:
               dotnet-version: ${{ matrix.dotnet-version }}
 
-          - name: Install dependencies
-            run: dotnet restore
-
           - name: Test with dotnet
-            run: dotnet test --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}"
+            run: |
+              cd integration/csharp/
+              dotnet test --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}"
 
           - name: Upload dotnet test results
             uses: actions/upload-artifact@v3
