@@ -1,6 +1,6 @@
 name: dotnet package
 
-#on: [pull_request]
+on: [push]
 
 jobs:
   run:
