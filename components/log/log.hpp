@@ -26,71 +26,69 @@ public:
     auto context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> void;
     auto is_valid() noexcept -> bool;
 
-    inline spdlog::logger *operator->() const noexcept {
-        return logger_.get();
-    }
+    inline spdlog::logger* operator->() const noexcept { return logger_.get(); }
 
 private:
     std::shared_ptr<spdlog::logger> logger_;
 };
 
 template<typename S, typename... Args>
-auto info(log_t &log, const S &format_str, Args &&... args) -> void {
+auto info(log_t& log, const S& format_str, Args&&... args) -> void {
     log->info(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S, typename... Args>
-auto debug(log_t &log, const S &format_str, Args &&... args) -> void {
+auto debug(log_t& log, const S& format_str, Args&&... args) -> void {
     log->debug(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S, typename... Args>
-auto warn(log_t &log, const S &format_str, Args &&... args) -> void {
+auto warn(log_t& log, const S& format_str, Args&&... args) -> void {
     log->warn(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S, typename... Args>
-auto error(log_t &log, const S &format_str, Args &&... args) -> void {
+auto error(log_t& log, const S& format_str, Args&&... args) -> void {
     log->error(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S, typename... Args>
-auto critical(log_t &log, const S &format_str, Args &&... args) -> void {
+auto critical(log_t& log, const S& format_str, Args&&... args) -> void {
     log->critical(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S, typename... Args>
-auto trace(log_t &log, const S &format_str, Args &&... args) -> void {
+auto trace(log_t& log, const S& format_str, Args&&... args) -> void {
     log->trace(fmt::format(format_str, std::forward<Args>(args)...));
 }
 
 template<typename S>
-auto info(log_t &log, const S &format_str) -> void {
+auto info(log_t& log, const S& format_str) -> void {
     log->info(format_str);
 }
 
 template<typename S>
-auto debug(log_t &log, const S &format_str) -> void {
+auto debug(log_t& log, const S& format_str) -> void {
     log->debug(format_str);
 }
 
 template<typename S>
-auto warn(log_t &log, const S &format_str) -> void {
+auto warn(log_t& log, const S& format_str) -> void {
     log->warn(format_str);
 }
 
 template<typename S>
-auto error(log_t &log, const S &format_str) -> void {
+auto error(log_t& log, const S& format_str) -> void {
     log->error(format_str);
 }
 
 template<typename S>
-auto critical(log_t &log, const S &format_str) -> void {
+auto critical(log_t& log, const S& format_str) -> void {
     log->critical(format_str);
 }
 
 template<typename S>
-auto trace(log_t &log, const S &format_str) -> void {
+auto trace(log_t& log, const S& format_str) -> void {
     log->trace(format_str);
 }
 

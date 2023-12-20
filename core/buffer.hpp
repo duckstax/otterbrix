@@ -24,18 +24,14 @@ namespace core {
             allocate(size);
         }
 
-        buffer(
-            std::pmr::memory_resource* mr,
-            void const* source_data,
-            std::size_t size)
+        buffer(std::pmr::memory_resource* mr, void const* source_data, std::size_t size)
             : mr_{mr} {
             allocate(size);
             copy(source_data, size);
         }
 
         buffer(std::pmr::memory_resource* mr, buffer const& other)
-            : buffer{mr, other.data(), other.size()} {
-        }
+            : buffer{mr, other.data(), other.size()} {}
 
         buffer(buffer&& other) noexcept
             : data_{other.data_}
@@ -143,8 +139,8 @@ namespace core {
             }
         }
 
-        template <class stream_t>
-        friend stream_t& operator<<(stream_t &stream, const buffer& buf) {
+        template<class stream_t>
+        friend stream_t& operator<<(stream_t& stream, const buffer& buf) {
             if (!buf.data_) {
                 stream << "{NULL_BITMASK}";
                 return stream;

@@ -2,7 +2,6 @@
 #include <dataframe/table/table_view.hpp>
 #include <dataframe/types.hpp>
 
-
 #include <algorithm>
 #include <cassert>
 #include <vector>
@@ -46,20 +45,15 @@ namespace components::dataframe::table {
     }
 
     table_view::table_view(std::vector<table_view> const& views)
-        : table_view{concatenate_column_views(views)} {
-    }
+        : table_view{concatenate_column_views(views)} {}
 
     mutable_table_view::mutable_table_view(std::vector<mutable_table_view> const& views)
-        : mutable_table_view{concatenate_column_views(views)} {
-    }
+        : mutable_table_view{concatenate_column_views(views)} {}
 
-    table_view scatter_columns(table_view const& source,
-                               std::vector<size_type> const& map,
-                               table_view const& target) {
+    table_view scatter_columns(table_view const& source, std::vector<size_type> const& map, table_view const& target) {
         std::vector<column::column_view> updated_columns(target.begin(), target.end());
         // scatter(updated_table.begin(),updated_table.end(),indices.begin(),updated_columns.begin());
-        for (size_type idx = 0; idx < source.num_columns(); ++idx)
-            updated_columns[map[idx]] = source.column(idx);
+        for (size_type idx = 0; idx < source.num_columns(); ++idx) updated_columns[map[idx]] = source.column(idx);
         return table_view{updated_columns};
     }
 
@@ -100,7 +94,9 @@ namespace components::dataframe::table {
                                                                      mutable_table_view const& rhs);
 
         bool has_nested_columns(table_view const& table) {
-            return std::any_of(table.begin(), table.end(), [](column::column_view const& col) { return is_nested(col.type()); });
+            return std::any_of(table.begin(), table.end(), [](column::column_view const& col) {
+                return is_nested(col.type());
+            });
         }
 
     } // namespace detail

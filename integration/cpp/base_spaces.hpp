@@ -37,6 +37,7 @@ namespace otterbrix {
         log_t& get_log();
         otterbrix::wrapper_dispatcher_t* dispatcher();
         ~base_otterbrix_t();
+
     protected:
         explicit base_otterbrix_t(const configuration::config& config);
         log_t log_;

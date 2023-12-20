@@ -4,11 +4,12 @@
 
 namespace services::collection::operators {
 
-    full_scan::full_scan(context_collection_t* context, predicates::predicate_ptr predicate, components::ql::limit_t limit)
+    full_scan::full_scan(context_collection_t* context,
+                         predicates::predicate_ptr predicate,
+                         components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , predicate_(std::move(predicate))
-        , limit_(limit) {
-    }
+        , limit_(limit) {}
 
     void full_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(), "full_scan");

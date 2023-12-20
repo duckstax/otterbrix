@@ -15,4 +15,4 @@ namespace services::collection::operators {
         const components::ql::limit_t limit_;
     };
 
-} // namespace services::operators
+} // namespace services::collection::operators

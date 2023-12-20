@@ -1,8 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
-#include <integration/cpp/otterbrix.hpp>
 #include "components/tests/generaty.hpp"
+#include <integration/cpp/otterbrix.hpp>
 
 using namespace components;
 using namespace components::cursor;
@@ -143,11 +143,12 @@ TEST_CASE("example::sql::group_by") {
     }
 
     INFO("group by") {
-        auto c = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
-                                         R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
-                                         R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
-                                         R"_(FROM TestDatabase.TestCollection )_"
-                                         R"_(GROUP BY name;)_");
+        auto c = execute_sql(otterbrix,
+                             R"_(SELECT name, COUNT(count) AS count_, )_"
+                             R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                             R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                             R"_(FROM TestDatabase.TestCollection )_"
+                             R"_(GROUP BY name;)_");
         REQUIRE(c->size() == 10);
         int number = 0;
         while (auto doc = c->next()) {
@@ -162,12 +163,13 @@ TEST_CASE("example::sql::group_by") {
     }
 
     INFO("group by with order by") {
-        auto c = execute_sql(otterbrix, R"_(SELECT name, COUNT(count) AS count_, )_"
-                                         R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
-                                         R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
-                                         R"_(FROM TestDatabase.TestCollection )_"
-                                         R"_(GROUP BY name )_"
-                                         R"_(ORDER BY name DESC;)_");
+        auto c = execute_sql(otterbrix,
+                             R"_(SELECT name, COUNT(count) AS count_, )_"
+                             R"_(SUM(count) AS sum_, AVG(count) AS avg_, )_"
+                             R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
+                             R"_(FROM TestDatabase.TestCollection )_"
+                             R"_(GROUP BY name )_"
+                             R"_(ORDER BY name DESC;)_");
         REQUIRE(c->size() == 10);
         int number = 9;
         while (auto doc = c->next()) {

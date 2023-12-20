@@ -37,15 +37,9 @@ typedef struct config_t {
     config_disk_t disk;
 } config_t;
 
-typedef enum state_t {
-    init,
-    created,
-    destroyed
-} state_t;
-
+typedef enum state_t { init, created, destroyed } state_t;
 
 typedef struct result_set_t {
-
 } result_set_t;
 
 typedef void* otterbrix_ptr;

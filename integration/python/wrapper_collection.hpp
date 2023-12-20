@@ -16,18 +16,18 @@
 #include <components/ql/index.hpp>
 
 #include "forward.hpp"
-#include "wrapper_cursor.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
+#include "wrapper_cursor.hpp"
 
 namespace py = pybind11;
 namespace otterbrix {
 
-    using components::ql::index_type;
     using components::ql::index_compare;
+    using components::ql::index_type;
 
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
     public:
-        wrapper_collection(const std::string& name, const std::string &database, wrapper_dispatcher_t*, log_t& log);
+        wrapper_collection(const std::string& name, const std::string& database, wrapper_dispatcher_t*, log_t& log);
         ~wrapper_collection();
         std::string print();
         std::size_t size();
@@ -51,4 +51,4 @@ namespace otterbrix {
         mutable log_t log_;
     };
 
-}
+} // namespace otterbrix

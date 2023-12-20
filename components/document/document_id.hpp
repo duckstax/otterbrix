@@ -2,8 +2,8 @@
 
 #include <cstdint>
 
-#include <oid/oid.hpp>
 #include <memory>
+#include <oid/oid.hpp>
 
 namespace components::document {
 
@@ -15,4 +15,4 @@ namespace components::document {
 
     using document_id_t = oid::oid_t<document_id_size>;
 
-}
+} // namespace components::document

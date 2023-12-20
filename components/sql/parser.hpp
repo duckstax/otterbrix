@@ -1,7 +1,7 @@
 #pragma once
 
-#include <components/ql/statements.hpp>
 #include "parser/base/parse_error.hpp"
+#include <components/ql/statements.hpp>
 
 namespace components::sql {
 

@@ -20,8 +20,6 @@ namespace services::collection {
         drop_index_finish
     };
 
-    constexpr uint64_t handler_id(route type) {
-        return handler_id(group_id_t::collection, type);
-    }
+    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::collection, type); }
 
 } // namespace services::collection

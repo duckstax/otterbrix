@@ -18,15 +18,14 @@ namespace otterbrix {
 
     std::string wrapper_document_id::value_of() const {
         auto tmp = id_.to_string();
-        return {tmp.data(),tmp.size()};
+        return {tmp.data(), tmp.size()};
     }
 
     std::string wrapper_document_id::to_string() const {
-        return fmt::format("ObjectId({})",id_.to_string()); //std::string("ObjectId(\"") + id_.to_string() + std::string("\")");
+        return fmt::format("ObjectId({})",
+                           id_.to_string()); //std::string("ObjectId(\"") + id_.to_string() + std::string("\")");
     }
 
-    oid::timestamp_value_t wrapper_document_id::get_timestamp() const {
-        return id_.get_timestamp();
-    }
+    oid::timestamp_value_t wrapper_document_id::get_timestamp() const { return id_.get_timestamp(); }
 
-} // namespace python
+} // namespace otterbrix

@@ -3,20 +3,20 @@
 
 namespace services::disk {
 
-    metadata_t::metadata_ptr metadata_t::open(const path_t &file_name) {
+    metadata_t::metadata_ptr metadata_t::open(const path_t& file_name) {
         return std::unique_ptr<metadata_t>(new metadata_t(file_name));
     }
 
     metadata_t::databases_t metadata_t::databases() const {
         databases_t names;
         names.reserve(data_.size());
-        for (const auto &it : data_) {
+        for (const auto& it : data_) {
             names.emplace_back(it.first);
         }
         return names;
     }
 
-    const metadata_t::collections_t &metadata_t::collections(const database_name_t& database) const {
+    const metadata_t::collections_t& metadata_t::collections(const database_name_t& database) const {
         auto it = data_.find(database);
         if (it != data_.end()) {
             return it->second;
@@ -25,7 +25,7 @@ namespace services::disk {
         return empty;
     }
 
-    bool metadata_t::is_exists_database(const database_name_t &database) const {
+    bool metadata_t::is_exists_database(const database_name_t& database) const {
         return data_.find(database) != data_.end();
     }
 
@@ -56,7 +56,8 @@ namespace services::disk {
         return false;
     }
 
-    bool metadata_t::append_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
+    bool
+    metadata_t::append_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
         if (!is_exists_collection(database, collection)) {
             auto it = data_.find(database);
             if (it != data_.end()) {
@@ -70,7 +71,8 @@ namespace services::disk {
         return false;
     }
 
-    bool metadata_t::remove_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
+    bool
+    metadata_t::remove_collection(const database_name_t& database, const collection_name_t& collection, bool is_flush) {
         auto it = data_.find(database);
         if (it != data_.end()) {
             auto it_collection = std::remove(it->second.begin(), it->second.end(), collection);
@@ -85,7 +87,7 @@ namespace services::disk {
         return false;
     }
 
-    metadata_t::metadata_t(const path_t &file_name)
+    metadata_t::metadata_t(const path_t& file_name)
         : file_(file_name) {
         std::string data = file_.readall();
         std::size_t pos_new_line = 0;

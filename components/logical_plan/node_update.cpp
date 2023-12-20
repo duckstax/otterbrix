@@ -1,7 +1,7 @@
 #include "node_update.hpp"
-#include <sstream>
 #include "node_limit.hpp"
 #include "node_match.hpp"
+#include <sstream>
 
 namespace components::logical_plan {
 
@@ -18,17 +18,11 @@ namespace components::logical_plan {
         append_child(make_node_limit(resource, collection, limit));
     }
 
-    const document::document_ptr &node_update_t::update() const {
-        return update_;
-    }
+    const document::document_ptr& node_update_t::update() const { return update_; }
 
-    bool node_update_t::upsert() const {
-        return upsert_;
-    }
+    bool node_update_t::upsert() const { return upsert_; }
 
-    hash_t node_update_t::hash_impl() const {
-        return 0;
-    }
+    hash_t node_update_t::hash_impl() const { return 0; }
 
     std::string node_update_t::to_string_impl() const {
         std::stringstream stream;
@@ -48,17 +42,23 @@ namespace components::logical_plan {
         return stream.str();
     }
 
-    node_ptr make_node_update(std::pmr::memory_resource* resource,
-                              ql::update_many_t *ql) {
-        auto node = new node_update_t{resource, {ql->database_, ql->collection_}, ql->match_,
-                                      components::ql::limit_t::unlimit(), ql->update_, ql->upsert_};
+    node_ptr make_node_update(std::pmr::memory_resource* resource, ql::update_many_t* ql) {
+        auto node = new node_update_t{resource,
+                                      {ql->database_, ql->collection_},
+                                      ql->match_,
+                                      components::ql::limit_t::unlimit(),
+                                      ql->update_,
+                                      ql->upsert_};
         return node;
     }
 
-    node_ptr make_node_update(std::pmr::memory_resource* resource,
-                              ql::update_one_t *ql) {
-        auto node = new node_update_t{resource, {ql->database_, ql->collection_}, ql->match_,
-                                      components::ql::limit_t::limit_one(), ql->update_, ql->upsert_};
+    node_ptr make_node_update(std::pmr::memory_resource* resource, ql::update_one_t* ql) {
+        auto node = new node_update_t{resource,
+                                      {ql->database_, ql->collection_},
+                                      ql->match_,
+                                      components::ql::limit_t::limit_one(),
+                                      ql->update_,
+                                      ql->upsert_};
         return node;
     }
 

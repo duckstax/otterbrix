@@ -21,7 +21,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
+          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https clang-format-12
+          pip3 install termcolor
 
       - name: conan installation and configuration
         run: |
@@ -38,6 +39,11 @@ jobs:
           mkdir build && cd build
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
+
+      - name: Check
+        run: |
+          chmod +x scripts/CI/run-check-formatting.sh
+          scripts/CI/run-check-formatting.sh
 
       - name: build
         env:

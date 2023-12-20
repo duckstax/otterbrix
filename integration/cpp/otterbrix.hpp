@@ -12,9 +12,9 @@ namespace otterbrix {
             : base_otterbrix_t(config) {}
     };
 
-   using otterbrix_ptr = std::unique_ptr<otterbrix_t>;
+    using otterbrix_ptr = std::unique_ptr<otterbrix_t>;
 
-   auto make_otterbrix() -> otterbrix_ptr;
-   auto make_otterbrix(configuration::config) -> otterbrix_ptr;
-   auto execute_sql(const otterbrix_ptr& otterbrix, const std::string& query) -> components::cursor::cursor_t_ptr;
-}
+    auto make_otterbrix() -> otterbrix_ptr;
+    auto make_otterbrix(configuration::config) -> otterbrix_ptr;
+    auto execute_sql(const otterbrix_ptr& otterbrix, const std::string& query) -> components::cursor::cursor_t_ptr;
+} // namespace otterbrix

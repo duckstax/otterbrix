@@ -16,8 +16,7 @@ namespace components::ql {
                       const storage_parameters& parameters,
                       const components::document::document_ptr& update,
                       bool upsert);
-        update_many_t(const database_name_t& database,
-                      const collection_name_t& collection);
+        update_many_t(const database_name_t& database, const collection_name_t& collection);
         explicit update_many_t(components::ql::aggregate_statement_raw_ptr condition,
                                const components::document::document_ptr& update,
                                bool upsert);
@@ -74,7 +73,9 @@ namespace msgpack {
                 void operator()(msgpack::object::with_zone& o, components::ql::update_many_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 4;
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
                     o.via.array.ptr[2] = msgpack::object(v.match_, o.zone);

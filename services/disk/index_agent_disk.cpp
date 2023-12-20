@@ -1,7 +1,7 @@
 #include "index_agent_disk.hpp"
-#include <components/index/disk/route.hpp>
 #include "manager_disk.hpp"
 #include "result.hpp"
+#include <components/index/disk/route.hpp>
 
 namespace services::disk {
 
@@ -24,13 +24,9 @@ namespace services::disk {
         add_handler(handler_id(index::route::drop), &index_agent_disk_t::drop);
     }
 
-    index_agent_disk_t::~index_agent_disk_t() {
-        trace(log_, "delete index_agent_disk_t");
-    }
+    index_agent_disk_t::~index_agent_disk_t() { trace(log_, "delete index_agent_disk_t"); }
 
-    const collection_name_t& index_agent_disk_t::collection_name() const {
-        return collection_name_;
-    }
+    const collection_name_t& index_agent_disk_t::collection_name() const { return collection_name_; }
 
     void index_agent_disk_t::drop(session_id_t& session) {
         trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
@@ -39,9 +35,7 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
-    bool index_agent_disk_t::is_dropped() const {
-        return is_dropped_;
-    }
+    bool index_agent_disk_t::is_dropped() const { return is_dropped_; }
 
     void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
@@ -55,7 +49,9 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
     }
 
-    void index_agent_disk_t::find(session_id_t& session, const wrapper_value_t& value, components::expressions::compare_type compare) {
+    void index_agent_disk_t::find(session_id_t& session,
+                                  const wrapper_value_t& value,
+                                  components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 
         trace(log_, "index_agent_disk_t::find, session: {}", session.data());
@@ -85,7 +81,11 @@ namespace services::disk {
             default:
                 break;
         }
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success_find), session, res);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success_find),
+                         session,
+                         res);
     }
 
 } //namespace services::disk

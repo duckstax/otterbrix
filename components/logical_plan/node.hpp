@@ -1,13 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <memory_resource>
+#include "forward.hpp"
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <core/make_intrusive_ptr.hpp>
 #include <components/expressions/expression.hpp>
 #include <components/ql/base.hpp>
-#include "forward.hpp"
+#include <core/make_intrusive_ptr.hpp>
+#include <memory_resource>
+#include <vector>
 
 namespace components::logical_plan {
 
@@ -45,7 +45,7 @@ namespace components::logical_plan {
         std::pmr::vector<node_ptr> children_;
         std::pmr::vector<expression_ptr> expressions_;
 
-        node_t(std::pmr::memory_resource *resource, node_type type, const collection_full_name_t& collection);
+        node_t(std::pmr::memory_resource* resource, node_type type, const collection_full_name_t& collection);
 
     private:
         virtual hash_t hash_impl() const = 0;
@@ -53,19 +53,15 @@ namespace components::logical_plan {
     };
 
     struct node_hash final {
-        size_t operator()(const node_ptr& node) const {
-            return node->hash();
-        }
+        size_t operator()(const node_ptr& node) const { return node->hash(); }
     };
 
     struct node_equal final {
-        size_t operator()(const node_ptr& lhs, const node_ptr& rhs) const {
-            return lhs == rhs || *lhs == *rhs;
-        }
+        size_t operator()(const node_ptr& lhs, const node_ptr& rhs) const { return lhs == rhs || *lhs == *rhs; }
     };
 
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const node_ptr& node) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const node_ptr& node) {
         stream << node->to_string();
         return stream;
     }

@@ -25,7 +25,7 @@ namespace components::dataframe::lists {
         using column_view::null_mask;
         using column_view::offset;
         using column_view::size;
-        static_assert(std::is_same_v<offset_type, size_type>,"offset_type is expected to be the same as size_type.");
+        static_assert(std::is_same_v<offset_type, size_type>, "offset_type is expected to be the same as size_type.");
         using offset_iterator = offset_type const*;
 
         [[nodiscard]] column_view parent() const;
@@ -35,8 +35,6 @@ namespace components::dataframe::lists {
         [[nodiscard]] offset_iterator offsets_begin() const noexcept {
             return offsets().begin<offset_type>() + offset();
         }
-        [[nodiscard]] offset_iterator offsets_end() const noexcept {
-            return offsets_begin() + size() + 1;
-        }
+        [[nodiscard]] offset_iterator offsets_end() const noexcept { return offsets_begin() + size() + 1; }
     };
 } // namespace components::dataframe::lists

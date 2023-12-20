@@ -1,8 +1,8 @@
+#include "test_config.hpp"
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
 #include <services/wal/wal.hpp>
-#include "test_config.hpp"
 
 constexpr uint count_databases = 2;
 constexpr uint count_collections = 4;
@@ -12,22 +12,23 @@ static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 
 using namespace components::cursor;
-using components::ql::aggregate::operator_type;
 using components::expressions::compare_type;
+using components::ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
-uint gen_doc_number(uint n_db, uint n_col, uint n_doc) {
-    return 10000 * n_db + 100 * n_col + n_doc;
-}
+uint gen_doc_number(uint n_db, uint n_col, uint n_doc) { return 10000 * n_db + 100 * n_col + n_doc; }
 
 cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
-                         const database_name_t &db_name,
-                         const collection_name_t &col_name,
-                         int n_doc) {
+                      const database_name_t& db_name,
+                      const collection_name_t& col_name,
+                      int n_doc) {
     auto session_doc = otterbrix::session_id_t();
-    auto *ql = new components::ql::aggregate_statement{db_name, col_name};
-    auto expr = components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"_id"}, id_par{1});
+    auto* ql = new components::ql::aggregate_statement{db_name, col_name};
+    auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                 compare_type::eq,
+                                                                 key{"_id"},
+                                                                 id_par{1});
     ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
     ql->add_parameter(id_par{1}, gen_id(n_doc));
     auto cur = dispatcher->find_one(session_doc, ql);
@@ -70,16 +71,15 @@ TEST_CASE("python::test_save_load::disk") {
                 auto size = dispatcher->size(session, db_name, col_name);
                 REQUIRE(size == count_documents);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get()->get_ulong("number") == gen_doc_number(n_db, n_col, n_doc));
+                    REQUIRE(find_doc(dispatcher, db_name, col_name, int(n_doc))->get()->get_ulong("number") ==
+                            gen_doc_number(n_db, n_col, n_doc));
                 }
             }
         }
     }
-
 }
 
-
- TEST_CASE("python::test_save_load::disk+wal") {
+TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
 
     SECTION("initialization") {
@@ -124,7 +124,10 @@ TEST_CASE("python::test_save_load::disk") {
 
                 {
                     auto match = components::ql::aggregate::make_match(
-                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                        components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::eq,
+                                                                         key{"count"},
+                                                                         core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 1);
                     components::ql::delete_one_t delete_one(db_name, col_name, match, params);
@@ -132,9 +135,16 @@ TEST_CASE("python::test_save_load::disk") {
                 }
 
                 {
-                    auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
-                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gte, key{"count"}, core::parameter_id_t{1}));
-                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(), compare_type::lte, key{"count"}, core::parameter_id_t{2}));
+                    auto expr = components::expressions::make_compare_union_expression(dispatcher->resource(),
+                                                                                       compare_type::union_and);
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                                        compare_type::gte,
+                                                                                        key{"count"},
+                                                                                        core::parameter_id_t{1}));
+                    expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                                        compare_type::lte,
+                                                                                        key{"count"},
+                                                                                        core::parameter_id_t{2}));
                     auto match = components::ql::aggregate::make_match(expr);
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 2);
@@ -145,19 +155,37 @@ TEST_CASE("python::test_save_load::disk") {
 
                 {
                     auto match = components::ql::aggregate::make_match(
-                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::eq, key{"count"}, core::parameter_id_t{1}));
+                        components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::eq,
+                                                                         key{"count"},
+                                                                         core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
-                    components::ql::update_one_t update_one(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 0}})"), false);
+                    components::ql::update_one_t update_one(
+                        db_name,
+                        col_name,
+                        match,
+                        params,
+                        components::document::document_from_json(R"({"$set": {"count": 0}})"),
+                        false);
                     wal.update_one(session, address, update_one);
                 }
 
                 {
                     auto match = components::ql::aggregate::make_match(
-                                components::expressions::make_compare_expression(dispatcher->resource(), compare_type::gt, key{"count"}, core::parameter_id_t{1}));
+                        components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::gt,
+                                                                         key{"count"},
+                                                                         core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
-                    components::ql::update_many_t update_many(db_name, col_name, match, params, components::document::document_from_json(R"({"$set": {"count": 1000}})"), false);
+                    components::ql::update_many_t update_many(
+                        db_name,
+                        col_name,
+                        match,
+                        params,
+                        components::document::document_from_json(R"({"$set": {"count": 1000}})"),
+                        false);
                     wal.update_many(session, address, update_many);
                 }
             }

@@ -22,7 +22,7 @@ inline std::ptrdiff_t diff_pointer(const void* bigger, const void* smaller) noex
     return reinterpret_cast<const uint8_t*>(bigger) - reinterpret_cast<const uint8_t*>(smaller);
 }
 
-template <class T>
+template<class T>
 constexpr const uint8_t* to_const_uint8_t(const T* t) {
     return reinterpret_cast<const uint8_t*>(t);
 }

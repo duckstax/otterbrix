@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace components::logical_plan {
 
     enum class node_type : uint8_t {
@@ -21,19 +23,10 @@ namespace components::logical_plan {
         union_t
     };
 
-    enum class visitation : uint8_t {
-        visit_inputs,
-        do_not_visit_inputs
-    };
+    enum class visitation : uint8_t { visit_inputs, do_not_visit_inputs };
 
-    enum class input_side : uint8_t {
-        left,
-        right
-    };
+    enum class input_side : uint8_t { left, right };
 
-    enum class expression_iteration : uint8_t {
-        continue_t,
-        break_t
-    };
+    enum class expression_iteration : uint8_t { continue_t, break_t };
 
 } // namespace components::logical_plan

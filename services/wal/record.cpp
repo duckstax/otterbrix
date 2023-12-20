@@ -3,9 +3,7 @@
 
 namespace services::wal {
 
-    bool record_t::is_valid() const {
-        return size > 0;
-    }
+    bool record_t::is_valid() const { return size > 0; }
 
     void record_t::set_data(msgpack::object& object) {
         using namespace components::ql;

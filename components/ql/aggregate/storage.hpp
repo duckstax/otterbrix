@@ -6,8 +6,8 @@
 
 #include "group.hpp"
 #include "match.hpp"
-#include "sort.hpp"
 #include "merge.hpp"
+#include "sort.hpp"
 
 namespace components::ql::aggregate {
 
@@ -17,8 +17,7 @@ namespace components::ql::aggregate {
 
         template<class Target>
         operator_storage_t(Target&& target)
-            : storage_(std::forward<Target>(target)) {
-        }
+            : storage_(std::forward<Target>(target)) {}
 
         template<class Target>
         const Target& get() const {
@@ -26,12 +25,7 @@ namespace components::ql::aggregate {
         }
 
     private:
-        std::variant<
-            aggregate::group_t,
-            aggregate::match_t,
-            aggregate::sort_t,
-            aggregate::merge_t>
-            storage_;
+        std::variant<aggregate::group_t, aggregate::match_t, aggregate::sort_t, aggregate::merge_t> storage_;
     };
 
 } // namespace components::ql::aggregate

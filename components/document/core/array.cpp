@@ -1,7 +1,7 @@
 #include "array.hpp"
-#include <vector>
 #include <components/document/internal/heap.hpp>
 #include <components/document/support/varint.hpp>
+#include <vector>
 
 namespace document::impl {
 
@@ -17,17 +17,11 @@ namespace document::impl {
 
             explicit heap_array_t(const array_t* array);
 
-            array_t* array() const {
-                return reinterpret_cast<array_t*>(const_cast<value_t*>(as_value()));
-            }
+            array_t* array() const { return reinterpret_cast<array_t*>(const_cast<value_t*>(as_value())); }
 
-            uint32_t count() const {
-                return uint32_t(items_.size());
-            }
+            uint32_t count() const { return uint32_t(items_.size()); }
 
-            bool empty() const {
-                return items_.empty();
-            }
+            bool empty() const { return items_.empty(); }
 
             const value_t* get(uint32_t index) {
                 if (index >= count()) {
@@ -106,25 +100,15 @@ namespace document::impl {
         set_value_();
     }
 
-    uint32_t array_t::iterator::count() const noexcept {
-        return count_;
-    }
+    uint32_t array_t::iterator::count() const noexcept { return count_; }
 
-    const value_t* array_t::iterator::value() const noexcept {
-        return value_;
-    }
+    const value_t* array_t::iterator::value() const noexcept { return value_; }
 
-    array_t::iterator::operator const value_t*() const noexcept {
-        return value_;
-    }
+    array_t::iterator::operator const value_t*() const noexcept { return value_; }
 
-    const value_t* array_t::iterator::operator->() const noexcept {
-        return value_;
-    }
+    const value_t* array_t::iterator::operator->() const noexcept { return value_; }
 
-    array_t::iterator::operator bool() const noexcept {
-        return pos_ < count_;
-    }
+    array_t::iterator::operator bool() const noexcept { return pos_ < count_; }
 
     array_t::iterator& array_t::iterator::operator++() {
         ++pos_;
@@ -146,7 +130,6 @@ namespace document::impl {
         }
     }
 
-
     retained_t<array_t> array_t::new_array(uint32_t initial_count) {
         return (new internal::heap_array_t(initial_count))->array();
     }
@@ -167,56 +150,30 @@ namespace document::impl {
     array_t::array_t()
         : value_t(tag_array, 0, 0) {}
 
-    uint32_t array_t::count() const noexcept {
-        return heap_array(this)->count();
-    }
+    uint32_t array_t::count() const noexcept { return heap_array(this)->count(); }
 
-    bool array_t::empty() const noexcept {
-        return heap_array(this)->empty();
-    }
+    bool array_t::empty() const noexcept { return heap_array(this)->empty(); }
 
-    const value_t* array_t::get(uint32_t index) const noexcept {
-        return heap_array(this)->get(index);
-    }
+    const value_t* array_t::get(uint32_t index) const noexcept { return heap_array(this)->get(index); }
 
-    array_iterator_t array_t::begin() const noexcept {
-        return iterator(this);
-    }
+    array_iterator_t array_t::begin() const noexcept { return iterator(this); }
 
-    retained_t<array_t> array_t::copy(copy_flags f) const {
-        return new_array(this, f);
-    }
+    retained_t<array_t> array_t::copy(copy_flags f) const { return new_array(this, f); }
 
-    retained_t<internal::heap_collection_t> array_t::mutable_copy() const {
-        return new heap_array_t(this);
-    }
+    retained_t<internal::heap_collection_t> array_t::mutable_copy() const { return new heap_array_t(this); }
 
-    void array_t::copy_children(copy_flags flags) const {
-        heap_array(this)->copy_children(flags);
-    }
+    void array_t::copy_children(copy_flags flags) const { heap_array(this)->copy_children(flags); }
 
-    bool array_t::is_changed() const {
-        return heap_array(this)->is_changed();
-    }
+    bool array_t::is_changed() const { return heap_array(this)->is_changed(); }
 
-    void array_t::resize(uint32_t new_size) {
-        heap_array(this)->resize(new_size);
-    }
+    void array_t::resize(uint32_t new_size) { heap_array(this)->resize(new_size); }
 
-    void array_t::insert(uint32_t where, uint32_t n) {
-        heap_array(this)->insert(where, n);
-    }
+    void array_t::insert(uint32_t where, uint32_t n) { heap_array(this)->insert(where, n); }
 
-    void array_t::remove(uint32_t where, uint32_t n) {
-        heap_array(this)->remove(where, n);
-    }
+    void array_t::remove(uint32_t where, uint32_t n) { heap_array(this)->remove(where, n); }
 
-    internal::value_slot_t& array_t::slot(uint32_t index) {
-        return heap_array(this)->slot(index);
-    }
+    internal::value_slot_t& array_t::slot(uint32_t index) { return heap_array(this)->slot(index); }
 
-    internal::value_slot_t& array_t::appending() {
-        return heap_array(this)->appending();
-    }
+    internal::value_slot_t& array_t::appending() { return heap_array(this)->appending(); }
 
 } // namespace document::impl

@@ -1,9 +1,9 @@
 #include "dto.hpp"
 
-#include <unistd.h>
 #include <chrono>
 #include <crc32c/crc32c.h>
 #include <msgpack.hpp>
+#include <unistd.h>
 
 namespace services::wal {
 

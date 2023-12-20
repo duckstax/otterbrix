@@ -3,19 +3,14 @@
 namespace core::non_thread_scheduler {
 
     clock_test::clock_test()
-        : current_time(duration_type{1}) {
-    }
+        : current_time(duration_type{1}) {}
 
-    void clock_test::schedule_periodically(time_point first_run,
-                                           handler f,
-                                           duration_type period) {
+    void clock_test::schedule_periodically(time_point first_run, handler f, duration_type period) {
         assert(bool(f));
         schedule.emplace(first_run, schedule_entry{std::move(f), period});
     }
 
-    clock_test::time_point clock_test::now() const noexcept {
-        return current_time;
-    }
+    clock_test::time_point clock_test::now() const noexcept { return current_time; }
 
     bool clock_test::trigger_timeout() {
         for (;;) {

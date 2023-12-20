@@ -16,7 +16,6 @@ void insert_one(benchmark::State& state) {
 }
 BENCHMARK(insert_one)->Arg(1)->Arg(10)->Arg(20)->Arg(100)->Arg(500)->Arg(1000);
 
-
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {

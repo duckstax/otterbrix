@@ -12,7 +12,6 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 
-
 namespace components::cursor {
 
     using data_t = components::document::document_view_t;
@@ -20,10 +19,7 @@ namespace components::cursor {
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
-    enum class operation_status_t {
-        success = 1,
-        failure = 0
-    };
+    enum class operation_status_t { success = 1, failure = 0 };
 
     enum class error_code_t {
         none = 0,
@@ -53,7 +49,7 @@ namespace components::cursor {
 
         std::pmr::vector<res_t> addresses;
 
-        explicit list_addresses_t(std::pmr::memory_resource *resource);
+        explicit list_addresses_t(std::pmr::memory_resource* resource);
     };
 
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
@@ -104,5 +100,6 @@ namespace components::cursor {
 
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status);
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource);
-    cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
+    cursor_t_ptr
+    make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what = std::string());
 } // namespace components::cursor

@@ -3,15 +3,14 @@
 
 using namespace components::sql;
 
-#define CHECK_NEXT_TOKEN(LEXER, TYPE, VALUE) { \
-    auto token = LEXER.next_token();  \
-    REQUIRE(token.type == TYPE); \
-    REQUIRE(token.value() == VALUE); \
+#define CHECK_NEXT_TOKEN(LEXER, TYPE, VALUE)                                                                           \
+    {                                                                                                                  \
+        auto token = LEXER.next_token();                                                                               \
+        REQUIRE(token.type == TYPE);                                                                                   \
+        REQUIRE(token.value() == VALUE);                                                                               \
     }
 
-
 TEST_CASE("lexer::base") {
-
     SECTION("word|*|;") {
         std::string query{"SELECT * FROM table;"};
         lexer_t lexer{query};
@@ -101,12 +100,9 @@ TEST_CASE("lexer::base") {
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
     }
-
 }
 
-
 TEST_CASE("lexer::digits") {
-
     SECTION("simple") {
         std::string query{"SELECT 1, 2 FROM table;"};
         lexer_t lexer{query};
@@ -265,11 +261,9 @@ TEST_CASE("lexer::digits") {
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
         CHECK_NEXT_TOKEN(lexer, token_type::error_wrong_number, ".123f");
     }
-
 }
 
 TEST_CASE("lexer::brackets") {
-
     SECTION("round brackets") {
         std::string query{"SELECT (1, 2) FROM table;"};
         lexer_t lexer{query};
@@ -366,12 +360,9 @@ TEST_CASE("lexer::brackets") {
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
     }
-
 }
 
-
 TEST_CASE("lexer::operands") {
-
     SECTION("+") {
         std::string query{"SELECT 1+2;"};
         lexer_t lexer{query};
@@ -668,12 +659,9 @@ TEST_CASE("lexer::operands") {
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::end_query, "");
     }
-
 }
 
-
 TEST_CASE("lexer::comments") {
-
     SECTION("-- ") {
         std::string query{"SELECT * FROM table; -- comments text"};
         lexer_t lexer{query};
@@ -855,8 +843,10 @@ TEST_CASE("lexer::comments") {
         CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
-        CHECK_NEXT_TOKEN(lexer, token_type::comment, "/* multiline\n"
-                                                     "comments text */");
+        CHECK_NEXT_TOKEN(lexer,
+                         token_type::comment,
+                         "/* multiline\n"
+                         "comments text */");
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, "\n");
         CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "COMMIT");
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
@@ -877,10 +867,11 @@ TEST_CASE("lexer::comments") {
         CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
-        CHECK_NEXT_TOKEN(lexer, token_type::error_multiline_comment_is_not_closed,
+        CHECK_NEXT_TOKEN(lexer,
+                         token_type::error_multiline_comment_is_not_closed,
                          "/* multiline\n"
-                          "comments text\n"
-                          "COMMIT;");
+                         "comments text\n"
+                         "COMMIT;");
     }
 
     SECTION("include /*") {
@@ -911,14 +902,13 @@ TEST_CASE("lexer::comments") {
         CHECK_NEXT_TOKEN(lexer, token_type::bare_word, "table");
         CHECK_NEXT_TOKEN(lexer, token_type::semicolon, ";");
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
-        CHECK_NEXT_TOKEN(lexer, token_type::error_multiline_comment_is_not_closed, "/* comment /* include comment ... */");
+        CHECK_NEXT_TOKEN(lexer,
+                         token_type::error_multiline_comment_is_not_closed,
+                         "/* comment /* include comment ... */");
     }
-
 }
 
-
 TEST_CASE("lexer::string literals") {
-
     SECTION("hex|bin string literal") {
         std::string query{"SELECT x'123abc', b'10101010' FROM table;"};
         lexer_t lexer{query};
@@ -959,12 +949,9 @@ TEST_CASE("lexer::string literals") {
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
         CHECK_NEXT_TOKEN(lexer, token_type::error_single_quote_is_not_closed, "b'10101010 ");
     }
-
 }
 
-
 TEST_CASE("lexer::docs") {
-
     SECTION("$doc$") {
         std::string query{"SELECT * FROM table; $ docs to ... $"};
         lexer_t lexer{query};
@@ -1035,5 +1022,4 @@ TEST_CASE("lexer::docs") {
         CHECK_NEXT_TOKEN(lexer, token_type::whitespace, " ");
         CHECK_NEXT_TOKEN(lexer, token_type::error, "");
     }
-
 }

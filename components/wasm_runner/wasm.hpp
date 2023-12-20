@@ -19,8 +19,10 @@ namespace components::wasm_runner {
 
         auto trace(std::string_view message) -> void override;
 
-        auto getNullVmFunction(std::string_view /*function_name*/, bool /*returns_word*/,
-                               int /*number_of_arguments*/, proxy_wasm::NullPlugin* /*plugin*/,
+        auto getNullVmFunction(std::string_view /*function_name*/,
+                               bool /*returns_word*/,
+                               int /*number_of_arguments*/,
+                               proxy_wasm::NullPlugin* /*plugin*/,
                                void* /*ptr_to_function_return*/) -> bool override;
 
     private:
@@ -48,8 +50,10 @@ namespace components::wasm_runner {
 
     class wasm_t : public proxy_wasm::WasmBase {
     public:
-        wasm_t(std::unique_ptr<proxy_wasm::WasmVm> vm, std::string_view vm_id,
-               std::string_view vm_configuration, std::string_view vm_key,
+        wasm_t(std::unique_ptr<proxy_wasm::WasmVm> vm,
+               std::string_view vm_id,
+               std::string_view vm_configuration,
+               std::string_view vm_key,
                std::unordered_map<std::string, std::string> envs,
                proxy_wasm::AllowedCapabilitiesMap allowed_capabilities);
 
@@ -57,15 +61,13 @@ namespace components::wasm_runner {
 
         auto createVmContext() -> proxy_wasm::ContextBase* override;
 
-        auto createRootContext(const std::shared_ptr<proxy_wasm::PluginBase>& plugin) -> proxy_wasm::ContextBase* override;
+        auto createRootContext(const std::shared_ptr<proxy_wasm::PluginBase>& plugin)
+            -> proxy_wasm::ContextBase* override;
 
         auto createContext(const std::shared_ptr<proxy_wasm::PluginBase>& plugin) -> proxy_wasm::ContextBase* override;
     };
 
-    enum class engine_t : uint8_t {
-        wamr,
-        null
-    };
+    enum class engine_t : uint8_t { wamr, null };
 
     class wasm_manager_t {
     public:
@@ -83,39 +85,56 @@ namespace components::wasm_runner {
 
         virtual ~wasm_manager_t() = default;
 
-        auto initialize(std::string_view plugin_name, std::string_view plugin_id,
-                        std::string_view plugin_vm_id, std::string_view plugin_configuration,
-                        bool fail_open, std::string_view vm_id,
-                        std::string_view vm_configuration, std::unordered_map<std::string, std::string> envs,
-                        proxy_wasm::AllowedCapabilitiesMap allowed_capabilities, const std::string& code,
+        auto initialize(std::string_view plugin_name,
+                        std::string_view plugin_id,
+                        std::string_view plugin_vm_id,
+                        std::string_view plugin_configuration,
+                        bool fail_open,
+                        std::string_view vm_id,
+                        std::string_view vm_configuration,
+                        std::unordered_map<std::string, std::string> envs,
+                        proxy_wasm::AllowedCapabilitiesMap allowed_capabilities,
+                        const std::string& code,
                         bool allow_precompiled) -> void;
 
         auto get_or_create_thread_local_plugin() const -> std::shared_ptr<proxy_wasm::PluginHandleBase>;
-        auto copy_data(const std::string &key, const std::vector<uint8_t> &data) -> void;
+        auto copy_data(const std::string& key, const std::vector<uint8_t>& data) -> void;
 
     protected:
-        virtual auto create_plugin(std::string_view plugin_name, std::string_view plugin_id,
-                                   std::string_view plugin_vm_id, std::string_view plugin_configuration,
-                                   std::string_view plugin_key, std::string_view engine,
+        virtual auto create_plugin(std::string_view plugin_name,
+                                   std::string_view plugin_id,
+                                   std::string_view plugin_vm_id,
+                                   std::string_view plugin_configuration,
+                                   std::string_view plugin_key,
+                                   std::string_view engine,
                                    bool fail_open) const -> std::unique_ptr<proxy_wasm::PluginBase>;
 
-        auto create_plugin_and_initialize(std::string_view plugin_name, std::string_view plugin_id,
-                                          std::string_view plugin_vm_id, std::string_view plugin_configuration,
+        auto create_plugin_and_initialize(std::string_view plugin_name,
+                                          std::string_view plugin_id,
+                                          std::string_view plugin_vm_id,
+                                          std::string_view plugin_configuration,
                                           bool fail_open) const -> std::unique_ptr<proxy_wasm::PluginBase>;
 
         virtual auto create_vm_integration() const -> std::unique_ptr<proxy_wasm::WasmVmIntegration>;
 
         auto new_vm() const -> std::unique_ptr<proxy_wasm::WasmVm>;
 
-        virtual auto create_wasm(std::string_view vm_id, std::string_view vm_configuration,
-                                 std::string_view vm_key, std::unordered_map<std::string, std::string> envs,
-                                 proxy_wasm::AllowedCapabilitiesMap allowed_capabilities) const -> std::unique_ptr<proxy_wasm::WasmBase>;
+        virtual auto create_wasm(std::string_view vm_id,
+                                 std::string_view vm_configuration,
+                                 std::string_view vm_key,
+                                 std::unordered_map<std::string, std::string> envs,
+                                 proxy_wasm::AllowedCapabilitiesMap allowed_capabilities) const
+            -> std::unique_ptr<proxy_wasm::WasmBase>;
 
-        virtual auto clone_wasm(std::shared_ptr<proxy_wasm::WasmHandleBase> wasm) const -> std::unique_ptr<proxy_wasm::WasmBase>;
+        virtual auto clone_wasm(std::shared_ptr<proxy_wasm::WasmHandleBase> wasm) const
+            -> std::unique_ptr<proxy_wasm::WasmBase>;
 
-        auto create_wasm_and_load_code(std::string_view vm_id, std::string_view vm_configuration,
-                                       std::unordered_map<std::string, std::string> envs, proxy_wasm::AllowedCapabilitiesMap allowed_capabilities,
-                                       const std::string& code, bool allow_precompiled) const -> std::shared_ptr<proxy_wasm::WasmHandleBase>;
+        auto create_wasm_and_load_code(std::string_view vm_id,
+                                       std::string_view vm_configuration,
+                                       std::unordered_map<std::string, std::string> envs,
+                                       proxy_wasm::AllowedCapabilitiesMap allowed_capabilities,
+                                       const std::string& code,
+                                       bool allow_precompiled) const -> std::shared_ptr<proxy_wasm::WasmHandleBase>;
 
     private:
         engine_t engine_;

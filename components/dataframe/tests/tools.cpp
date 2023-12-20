@@ -7,9 +7,8 @@
 
 namespace components::dataframe::test {
 
-    size_type valid_count(std::pmr::memory_resource* resource, bitmask_type const* bitmask,
-                          size_type start,
-                          size_type stop) {
+    size_type
+    valid_count(std::pmr::memory_resource* resource, bitmask_type const* bitmask, size_type start, size_type stop) {
         if (bitmask == nullptr) {
             assertion_exception_msg(start >= 0 or start <= stop, "invalid range.");
             auto const total_num_bits = (stop - start);
@@ -33,11 +32,10 @@ namespace components::dataframe::test {
             return result;
         }
 
-        result = std::equal(
-            static_cast<char*>(buffer1.data()),
-            static_cast<char*>(buffer1.data()) + buffer1.size(),
-            static_cast<char*>(buffer2.data()),
-            static_cast<char*>(buffer2.data()) + buffer1.size());
+        result = std::equal(static_cast<char*>(buffer1.data()),
+                            static_cast<char*>(buffer1.data()) + buffer1.size(),
+                            static_cast<char*>(buffer2.data()),
+                            static_cast<char*>(buffer2.data()) + buffer1.size());
 
         return result;
     }
@@ -46,11 +44,6 @@ namespace components::dataframe::test {
         auto* lhs_tmp = const_cast<char*>(reinterpret_cast<const char*>(lhs));
         auto* rhs_tmp = const_cast<char*>(reinterpret_cast<const char*>(rhs));
 
-        return std::equal(
-            lhs_tmp,
-            lhs_tmp + size,
-            rhs_tmp,
-            rhs_tmp + size);
-
+        return std::equal(lhs_tmp, lhs_tmp + size, rhs_tmp, rhs_tmp + size);
     }
-} // namespace components::dataframe::detail
+} // namespace components::dataframe::test

@@ -30,11 +30,10 @@ bool equal(core::buffer& buffer1, core::buffer& buffer2) {
         return result;
     }
 
-    result = std::equal(
-        static_cast<char*>(buffer1.data()),
-        static_cast<char*>(buffer1.data()) + buffer1.size(),
-        static_cast<char*>(buffer2.data()),
-        static_cast<char*>(buffer2.data()) + buffer1.size());
+    result = std::equal(static_cast<char*>(buffer1.data()),
+                        static_cast<char*>(buffer1.data()) + buffer1.size(),
+                        static_cast<char*>(buffer2.data()),
+                        static_cast<char*>(buffer2.data()) + buffer1.size());
 
     return result;
 }

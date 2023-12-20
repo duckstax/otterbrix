@@ -8,7 +8,6 @@ namespace otterbrix {
     }
 
     spaces::spaces()
-        : base_otterbrix_t(configuration::config::default_config()) {
-    }
+        : base_otterbrix_t(configuration::config::default_config()) {}
 
-} // namespace python
+} // namespace otterbrix

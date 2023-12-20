@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory_resource>
-#include <set>
+#include "parser_result.hpp"
 #include <components/ql/aggregate/group.hpp>
 #include <components/sql/lexer/lexer.hpp>
-#include "parser_result.hpp"
+#include <memory_resource>
+#include <set>
 
 namespace components::sql::impl {
 

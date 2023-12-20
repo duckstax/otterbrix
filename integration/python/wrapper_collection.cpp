@@ -1,11 +1,11 @@
 #include "wrapper_collection.hpp"
 
 #include "convert.hpp"
+#include "wrapper_database.hpp"
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
-#include "wrapper_database.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -20,7 +20,10 @@ namespace otterbrix {
         }
     }
 
-    wrapper_collection::wrapper_collection(const std::string& name, const std::string& database, wrapper_dispatcher_t* ptr, log_t& log)
+    wrapper_collection::wrapper_collection(const std::string& name,
+                                           const std::string& database,
+                                           wrapper_dispatcher_t* ptr,
+                                           log_t& log)
         : name_(name)
         , database_(database)
         , ptr_(ptr)
@@ -28,13 +31,9 @@ namespace otterbrix {
         trace(log_, "wrapper_collection");
     }
 
-    wrapper_collection::~wrapper_collection() {
-        trace(log_, "delete wrapper_collection");
-    }
+    wrapper_collection::~wrapper_collection() { trace(log_, "delete wrapper_collection"); }
 
-    std::string wrapper_collection::print() {
-        return name_;
-    }
+    std::string wrapper_collection::print() { return name_; }
 
     std::size_t wrapper_collection::size() {
         trace(log_, "wrapper_collection::size");
@@ -88,14 +87,14 @@ namespace otterbrix {
             }
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->insert_many(session_tmp, database_, name_, docs);
-            if(cur->is_error()) {
+            if (cur->is_error()) {
                 debug(log_, "wrapper_collection::insert_many has result error while insert");
                 throw std::runtime_error("wrapper_collection::insert_many error_result");
             }
             debug(log_, "wrapper_collection::insert_many {} inserted", cur->size());
             py::list list;
             for (const auto& sub_cursor : *cur) {
-                for(const auto& doc : sub_cursor->data()) {
+                for (const auto& doc : sub_cursor->data()) {
                     list.append(doc.id().to_string());
                 }
             }
@@ -118,10 +117,14 @@ namespace otterbrix {
                 debug(log_, "wrapper_collection::update_one has result error while update");
                 throw std::runtime_error("wrapper_collection::update_one error_result");
             }
-            debug(log_, "wrapper_collection::update_one {} modified, upsert id {}", cur->size(), cur->size() == 0 ? "none" : cur->get()->id().to_string());
+            debug(log_,
+                  "wrapper_collection::update_one {} modified, upsert id {}",
+                  cur->size(),
+                  cur->size() == 0 ? "none" : cur->get()->id().to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
-        return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{
+            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
     }
 
     wrapper_cursor_ptr wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
@@ -137,10 +140,14 @@ namespace otterbrix {
                 debug(log_, "wrapper_collection::update_many has result error while update");
                 throw std::runtime_error("wrapper_collection::update_many error_result");
             }
-            debug(log_, "wrapper_collection::update_one {} modified, upsert id {}", cur->size(), cur->size() == 0 ? "none" : cur->get()->id().to_string());
+            debug(log_,
+                  "wrapper_collection::update_one {} modified, upsert id {}",
+                  cur->size(),
+                  cur->size() == 0 ? "none" : cur->get()->id().to_string());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
-        return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{
+            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
     }
 
     auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
@@ -181,14 +188,15 @@ namespace otterbrix {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_one(session_tmp, statement.release());
-            if(cur->is_error()){
+            if (cur->is_error()) {
                 debug(log_, "wrapper_collection::delete_one has result error while delete");
                 throw std::runtime_error("wrapper_collection::delete_one error_result");
             }
             debug(log_, "wrapper_collection::delete_one {} deleted", cur->size());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
-        return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{
+            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
     }
 
     wrapper_cursor_ptr wrapper_collection::delete_many(py::object cond) {
@@ -198,14 +206,15 @@ namespace otterbrix {
             to_statement(pack_to_match(cond), statement.get());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_many(session_tmp, statement.release());
-            if(cur->is_error()){
+            if (cur->is_error()) {
                 debug(log_, "wrapper_collection::delete_many has result error while delete");
                 throw std::runtime_error("wrapper_collection::delete_many error_result");
             }
             debug(log_, "wrapper_collection::delete_many {} deleted", cur->size());
             return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
         }
-        return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{
+            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
     }
 
     bool wrapper_collection::drop() {
@@ -215,7 +224,7 @@ namespace otterbrix {
         debug(log_, "wrapper_collection::drop {}", cur->is_success());
         return cur->is_success();
     }
-/*
+    /*
     auto wrapper_collection::aggregate(const py::sequence& it) -> wrapper_cursor_ptr {
         trace(log_, "wrapper_collection::aggregate");
         if (py::isinstance<py::sequence>(it)) {
@@ -233,7 +242,7 @@ namespace otterbrix {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
         components::ql::create_index_t index(database_, name_, type, compare);
-        for (const auto &key : keys) {
+        for (const auto& key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }
         bool is_success = ptr_->create_index(session_tmp, index);

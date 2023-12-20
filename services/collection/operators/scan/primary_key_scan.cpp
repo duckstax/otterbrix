@@ -6,16 +6,13 @@ namespace services::collection::operators {
 
     primary_key_scan::primary_key_scan(context_collection_t* context)
         : read_only_operator_t(context, operator_type::match)
-        , ids_(context->resource()) {
-    }
+        , ids_(context->resource()) {}
 
-    void primary_key_scan::append(document_id_t id) {
-        ids_.push_back(id);
-    }
+    void primary_key_scan::append(document_id_t id) { ids_.push_back(id); }
 
     void primary_key_scan::on_execute_impl(components::pipeline::context_t*) {
         output_ = make_operator_data(context_->resource());
-        for (const auto &id : ids_) {
+        for (const auto& id : ids_) {
             auto it = context_->storage().find(id);
             if (it != context_->storage().end()) {
                 output_->append(it->second);

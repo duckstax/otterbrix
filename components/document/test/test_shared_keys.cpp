@@ -9,7 +9,6 @@ using namespace document::impl;
 using document::retained_t;
 
 TEST_CASE("shared_keys_t") {
-
     SECTION("empty") {
         retained_t<shared_keys_t> sk = new shared_keys_t();
         REQUIRE(sk->count() == 0);
@@ -132,5 +131,4 @@ TEST_CASE("shared_keys_t") {
             REQUIRE(sk->decode(static_cast<int>(i)) == std::string(str));
         }
     }
-
 }

@@ -2,9 +2,8 @@
 
 namespace components::sql::invalid {
 
-    components::sql::impl::parser_result parse(std::pmr::memory_resource*,
-                                               std::string_view,
-                                               ql::variant_statement_t& statement) {
+    components::sql::impl::parser_result
+    parse(std::pmr::memory_resource*, std::string_view, ql::variant_statement_t& statement) {
         statement = ql::unused_statement_t{};
         return true;
     }

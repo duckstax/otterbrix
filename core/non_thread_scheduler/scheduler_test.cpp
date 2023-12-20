@@ -7,12 +7,9 @@ namespace core::non_thread_scheduler {
         class dummy_worker : public actor_zeta::execution_unit {
         public:
             dummy_worker(scheduler_test_t* parent)
-                : parent_(parent) {
-            }
+                : parent_(parent) {}
 
-            void execute_later(actor_zeta::scheduler::resumable* ptr) override {
-                parent_->jobs.push_back(ptr);
-            }
+            void execute_later(actor_zeta::scheduler::resumable* ptr) override { parent_->jobs.push_back(ptr); }
 
         private:
             scheduler_test_t* parent_;
@@ -20,14 +17,10 @@ namespace core::non_thread_scheduler {
 
     } // namespace
 
-    scheduler_test_t::scheduler_test_t(std::size_t num_worker_threads,
-                                       std::size_t max_throughput)
-        : super(num_worker_threads, max_throughput) {
-    }
+    scheduler_test_t::scheduler_test_t(std::size_t num_worker_threads, std::size_t max_throughput)
+        : super(num_worker_threads, max_throughput) {}
 
-    clock_test& scheduler_test_t::clock() noexcept {
-        return clock_;
-    }
+    clock_test& scheduler_test_t::clock() noexcept { return clock_; }
 
     void scheduler_test_t::start() {}
 
@@ -37,9 +30,7 @@ namespace core::non_thread_scheduler {
         }
     }
 
-    void scheduler_test_t::enqueue(actor_zeta::scheduler::resumable* ptr) {
-        jobs.push_back(ptr);
-    }
+    void scheduler_test_t::enqueue(actor_zeta::scheduler::resumable* ptr) { jobs.push_back(ptr); }
 
     bool scheduler_test_t::run_once() {
         if (jobs.empty()) {

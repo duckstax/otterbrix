@@ -1,14 +1,14 @@
+#include "test_operator_generaty.hpp"
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/index/single_field_index.hpp>
-#include <services/collection/operators/scan/full_scan.hpp>
-#include <services/collection/operators/scan/index_scan.hpp>
-#include <services/collection/operators/scan/transfer_scan.hpp>
 #include <services/collection/operators/operator_delete.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_update.hpp>
 #include <services/collection/operators/predicates/predicate.hpp>
-#include "test_operator_generaty.hpp"
+#include <services/collection/operators/scan/full_scan.hpp>
+#include <services/collection/operators/scan/index_scan.hpp>
+#include <services/collection/operators/scan/transfer_scan.hpp>
 
 using namespace components::expressions;
 using namespace services::collection::operators;
@@ -129,7 +129,6 @@ TEST_CASE("operator::full_scan") {
     }
 }
 
-
 TEST_CASE("operator::delete") {
     auto collection = init_collection();
 
@@ -184,7 +183,6 @@ TEST_CASE("operator::delete") {
         REQUIRE(d(collection)->size_test() == 95);
     }
 }
-
 
 TEST_CASE("operator::update") {
     auto collection = init_collection();
@@ -301,12 +299,13 @@ TEST_CASE("operator::update") {
     }
 }
 
-
 TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(),
+                                                                           "single_count",
+                                                                           keys);
     fill_collection(collection);
 
     SECTION("find::eq") {
@@ -414,7 +413,6 @@ TEST_CASE("operator::index_scan") {
     }
 }
 
-
 TEST_CASE("operator::transfer_scan") {
     auto collection = init_collection();
 
@@ -437,12 +435,13 @@ TEST_CASE("operator::transfer_scan") {
     }
 }
 
-
 TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(), "single_count", keys);
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(),
+                                                                           "single_count",
+                                                                           keys);
     fill_collection(collection);
 
     SECTION("index_scan after delete") {
@@ -467,7 +466,8 @@ TEST_CASE("operator::index::delete_and_update") {
             add_parameter(parameters, core::parameter_id_t(1), 60);
             components::pipeline::context_t pipeline_context(std::move(parameters));
             operator_delete delete_(d(collection)->view());
-            delete_.set_children(std::make_unique<index_scan>(d(collection)->view(), cond, components::ql::limit_t::unlimit()));
+            delete_.set_children(
+                std::make_unique<index_scan>(d(collection)->view(), cond, components::ql::limit_t::unlimit()));
             delete_.on_execute(&pipeline_context);
 
             index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
@@ -492,7 +492,8 @@ TEST_CASE("operator::index::delete_and_update") {
         {
             auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
             operator_update update(d(collection)->view(), script_update, false);
-            update.set_children(std::make_unique<index_scan>(d(collection)->view(), cond_check, components::ql::limit_t::unlimit()));
+            update.set_children(
+                std::make_unique<index_scan>(d(collection)->view(), cond_check, components::ql::limit_t::unlimit()));
             update.on_execute(&pipeline_context_check);
 
             index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());

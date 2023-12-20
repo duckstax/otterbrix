@@ -4,11 +4,7 @@
 
 namespace components::ql {
 
-    enum class transaction_command : char {
-        begin,
-        commit,
-        rollback
-    };
+    enum class transaction_command : char { begin, commit, rollback };
 
     struct transaction_statement : ql_statement_t {
         transaction_statement(transaction_command command);
