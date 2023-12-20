@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.otterbrix.Metadata.Internal;
+﻿namespace Duckstax.EntityFramework.Otterbrix.Metadata.Internal;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;

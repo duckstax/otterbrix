@@ -1,15 +1,15 @@
-﻿namespace Duckstax.EntityFramework.otterbrix.Extensions;
+﻿namespace Duckstax.EntityFramework.Otterbrix.Extensions;
 
-using Duckstax.EntityFramework.otterbrix.Diagnostics.Internal;
-using Duckstax.EntityFramework.otterbrix.Infrastructure;
-using Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
-using Duckstax.EntityFramework.otterbrix.Metadata.Conventions;
-using Duckstax.EntityFramework.otterbrix.Metadata.Internal;
-using Duckstax.EntityFramework.otterbrix.Migrations;
-using Duckstax.EntityFramework.otterbrix.Migrations.Internal;
-using Duckstax.EntityFramework.otterbrix.Query.Internal;
-using Duckstax.EntityFramework.otterbrix.Storage.Internal;
-using Duckstax.EntityFramework.otterbrix.Update.Internal;
+using Duckstax.EntityFramework.Otterbrix.Diagnostics.Internal;
+using Duckstax.EntityFramework.Otterbrix.Infrastructure;
+using Duckstax.EntityFramework.Otterbrix.Infrastructure.Internal;
+using Duckstax.EntityFramework.Otterbrix.Metadata.Conventions;
+using Duckstax.EntityFramework.Otterbrix.Metadata.Internal;
+using Duckstax.EntityFramework.Otterbrix.Migrations;
+using Duckstax.EntityFramework.Otterbrix.Migrations.Internal;
+using Duckstax.EntityFramework.Otterbrix.Query.Internal;
+using Duckstax.EntityFramework.Otterbrix.Storage.Internal;
+using Duckstax.EntityFramework.Otterbrix.Update.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;

@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.otterbrix.Update.Internal;
+﻿namespace Duckstax.EntityFramework.Otterbrix.Update.Internal;
 
 using Microsoft.EntityFrameworkCore.Sqlite.Update.Internal;
 using Microsoft.EntityFrameworkCore.Update;

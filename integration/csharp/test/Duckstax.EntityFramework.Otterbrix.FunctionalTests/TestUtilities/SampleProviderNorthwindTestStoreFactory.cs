@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.TestUtilities;
 
-namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
+namespace Duckstax.EntityFramework.Otterbrix.FunctionalTests.TestUtilities;
 
 public class SampleProviderNorthwindTestStoreFactory : SampleProviderTestStoreFactory
 {

@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.TestUtilities;
 using Xunit.Abstractions;
 
-namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.Query;
+namespace Duckstax.EntityFramework.Otterbrix.FunctionalTests.Query;
 
 public class NorthwindWhereQuerySampleProviderTest : NorthwindWhereQueryRelationalTestBase<NorthwindQuerySampleProviderFixture<NoopModelCustomizer>>
 {

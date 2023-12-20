@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Duckstax.otterbrix\Duckstax.otterbrix.csproj" />
+      <ProjectReference Include="..\..\src\Duckstax.Otterbrix\Duckstax.Otterbrix.csproj" />
     </ItemGroup>
 
 </Project>

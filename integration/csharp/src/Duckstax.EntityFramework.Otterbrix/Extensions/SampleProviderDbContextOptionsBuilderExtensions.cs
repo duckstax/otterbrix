@@ -1,7 +1,7 @@
-﻿namespace Duckstax.EntityFramework.otterbrix.Extensions;
+﻿namespace Duckstax.EntityFramework.Otterbrix.Extensions;
 
-using Duckstax.EntityFramework.otterbrix.Infrastructure;
-using Duckstax.EntityFramework.otterbrix.Infrastructure.Internal;
+using Duckstax.EntityFramework.Otterbrix.Infrastructure;
+using Duckstax.EntityFramework.Otterbrix.Infrastructure.Internal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 

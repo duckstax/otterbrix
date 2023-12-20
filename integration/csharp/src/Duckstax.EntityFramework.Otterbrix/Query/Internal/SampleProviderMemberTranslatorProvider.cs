@@ -1,4 +1,4 @@
-﻿namespace Duckstax.EntityFramework.otterbrix.Query.Internal;
+﻿namespace Duckstax.EntityFramework.Otterbrix.Query.Internal;
 
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Sqlite.Query.Internal;

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
+namespace Duckstax.EntityFramework.Otterbrix.FunctionalTests.TestUtilities;
 
 public static class DatabaseFacadeExtensions
 {

@@ -7,10 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Duckstax.EntityFramework.otterbrix.FunctionalTests.TestUtilities;
+namespace Duckstax.EntityFramework.Otterbrix.FunctionalTests.TestUtilities;
 
-using Duckstax.EntityFramework.otterbrix.Extensions;
-using Duckstax.EntityFramework.otterbrix.Infrastructure;
+using Duckstax.EntityFramework.Otterbrix.Extensions;
+using Duckstax.EntityFramework.Otterbrix.Infrastructure;
 
 public class SampleProviderTestStore : RelationalTestStore
 {
