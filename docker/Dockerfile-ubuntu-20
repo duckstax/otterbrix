@@ -10,7 +10,14 @@ RUN apt update && \
         ninja-build \
         python3-pip \
         python3-venv \
-        python3-dev curl gnupg apt-transport-https && \
+        python3-dev curl gnupg apt-transport-https \
+        zlib1g \
+        wget && \
+    wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb && \
+    apt update && \
+    apt-get install -y dotnet-sdk-7.0 && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -43,7 +50,22 @@ WORKDIR /app/build
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build . --target all -- -j $(nproc)
 
+WORKDIR /app
 
+COPY ./integration ./integration
+RUN cd integration/csharp && \
+    dotnet restore ./src/Duckstax.Otterbrix/Duckstax.Otterbrix.csproj && \
+    dotnet restore ./src/Duckstax.EntityFramework.Otterbrix/Duckstax.EntityFramework.Otterbrix.csproj && \
+    dotnet restore ./test/Duckstax.EntityFramework.Otterbrix.FunctionalTests/Duckstax.EntityFramework.Otterbrix.FunctionalTests.csproj && \
+    dotnet restore ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj
+
+COPY . ./
+
+WORKDIR /app/build
 RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest
+
+RUN cd .. && cd integration/csharp && \
+    #dotnet test -c Release
+    dotnet test ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj -c Release
