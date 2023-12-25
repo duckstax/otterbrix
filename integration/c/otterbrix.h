@@ -43,12 +43,14 @@ typedef struct result_set_t {
 } result_set_t;
 
 typedef void* otterbrix_ptr;
+typedef void* cursor_ptr;
 
-otterbrix_ptr create(const config_t*);
+otterbrix_ptr otterbrix_create(); // temp
+//otterbrix_ptr otterbrix_create(const config_t*); -> should become
 
-void destroy(otterbrix_ptr);
+void otterbrix_destroy(otterbrix_ptr);
 
-result_set_t* execute_sql(otterbrix_ptr, string_view_t query);
+void execute_sql(otterbrix_ptr, string_view_t query);
 
 #ifdef __cplusplus
 }

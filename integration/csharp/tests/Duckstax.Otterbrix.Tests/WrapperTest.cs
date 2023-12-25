@@ -15,7 +15,7 @@ public class Tests
     [Test]
     public void Test1()
     {
-        var result = this.wrapper.Execute();
+        var result = this.wrapper.Execute("SELECT * FROM TestDatabase.TestCollection;");
         Assert.IsTrue(result);
     }
 }

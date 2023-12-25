@@ -1,4 +1,5 @@
 #include "otterbrix.h"
+//#include "cursor_wrapper.h"
 
 #include <integration/cpp/base_spaces.hpp>
 
@@ -19,17 +20,16 @@ struct pod_space_t {
     std::unique_ptr<spaces_t> space;
 };
 
-extern "C" otterbrix_ptr create(const config_t* cfg) {
-    assert(cfg != nullptr);
+extern "C" otterbrix_ptr otterbrix_create() { // (const config_t* cfg) {
+    //assert(cfg != nullptr);
     auto config = create_config();
     auto pod_space = std::make_unique<pod_space_t>();
     pod_space->space = std::make_unique<spaces_t>(config);
     pod_space->state = state_t::created;
     return reinterpret_cast<void*>(pod_space.release());
-    ;
 }
 
-extern "C" void destroy(otterbrix_ptr ptr) {
+extern "C" void otterbrix_destroy(otterbrix_ptr ptr) {
     assert(ptr != nullptr);
     auto* spaces = reinterpret_cast<pod_space_t*>(ptr);
     assert(spaces->state == state_t::created);
@@ -38,7 +38,7 @@ extern "C" void destroy(otterbrix_ptr ptr) {
     delete spaces;
 }
 
-extern "C" result_set_t* execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
+extern "C" void execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     assert(ptr != nullptr);
     auto pod_space = reinterpret_cast<pod_space_t*>(ptr);
     assert(pod_space->state == state_t::created);
@@ -46,9 +46,25 @@ extern "C" result_set_t* execute_sql(otterbrix_ptr ptr, string_view_t query_raw)
     auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
-    if (!cursor->is_error()) {
-        return nullptr;
-    } else {
-        assert(false);
-    }
+    //cursor_storage_t* cursor_storage = new cursor_storage_t(cursor);
+    //return cursor_storage;
 }
+/*
+extern "C" cursor_storage_t::cursor_storage_t(cursor_t_ptr cursor) : cursor_(cursor) {}
+
+extern "C" int cursor_storage_t::size() {
+    return static_cast<int>(cursor_->size());
+}
+
+extern "C" cursor_storage_t* RecastCursor(void* ptr) {
+    return reinterpret_cast<cursor_storage_t*>(ptr);
+}
+
+extern "C" void ReleaseCursor(cursor_storage_t* storage) {
+    assert(storage != nullptr);
+    delete storage;
+}
+extern "C" int CursorSize(cursor_storage_t* storage) {
+    return storage->size();
+}
+*/

@@ -49,11 +49,13 @@ WORKDIR /app/build
 
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
     cmake --build . --target all -- -j $(nproc)
-
+RUN make .
 WORKDIR /app
 
 COPY ./integration ./integration
-RUN cd integration/csharp && \
+RUN cp ./build/integration/c/libotterbrix.so ./integration/csharp/src/Duckstax.Otterbrix/libotterbrix.so && \
+    cp ./build/integration/c/libotterbrix.so ./integration/csharp/tests/Duckstax.Otterbrix.Tests/libotterbrix.so && \
+    cd integration/csharp && \
     dotnet restore ./src/Duckstax.Otterbrix/Duckstax.Otterbrix.csproj && \
     dotnet restore ./src/Duckstax.EntityFramework.Otterbrix/Duckstax.EntityFramework.Otterbrix.csproj && \
     dotnet restore ./test/Duckstax.EntityFramework.Otterbrix.FunctionalTests/Duckstax.EntityFramework.Otterbrix.FunctionalTests.csproj && \
@@ -66,6 +68,7 @@ RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest
 
-RUN cd .. && cd integration/csharp && \
+RUN cd .. && \
+    cd integration/csharp && \
     #dotnet test -c Release
     dotnet test ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj -c Release
