@@ -9,8 +9,14 @@ namespace Duckstax.EntityFramework.Otterbrix
         [MarshalAs(UnmanagedType.LPStr)] public string data;
         public uint size;
     }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct error_message
+    {
+        public int error_code;
+        public string_view_t message;
+    }
 
-/*
+    /*
     [StructLayout(LayoutKind.Sequential)]
     struct config_log_t
     {
@@ -39,16 +45,17 @@ namespace Duckstax.EntityFramework.Otterbrix
         config_wal_t wal;
         config_disk_t disk;
     }
-
-*/
+    */
     public class otterbrixWrapper
     {
-        [DllImport("../../../libotterbrix.so", EntryPoint="otterbrix_create", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        const string libotterbrix = "../../../libotterbrix.so";
+        
+        [DllImport(libotterbrix, EntryPoint="otterbrix_create", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr otterbrix_create();
-        [DllImport("../../../libotterbrix.so", EntryPoint="otterbrix_destroy", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="otterbrix_destroy", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
         private static extern void otterbrix_destroy(IntPtr otterprix_ptr);
-        [DllImport("../../../libotterbrix.so", EntryPoint="execute_sql", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
-        private static extern void execute_sql(IntPtr otterprix_ptr, string_view_t sql);
+        [DllImport(libotterbrix, EntryPoint="execute_sql", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        private static extern IntPtr execute_sql(IntPtr otterprix_ptr, string_view_t sql);
 
         public otterbrixWrapper()
         {
@@ -58,14 +65,12 @@ namespace Duckstax.EntityFramework.Otterbrix
         {
             otterbrix_destroy(otterbrix_ptr_);
         }
-        public bool Execute(string sql)
+        public cursorWrapper Execute(string sql)
         {
             string_view_t str;
             str.data = sql;
             str.size = (uint)sql.Length;
-            execute_sql(otterbrix_ptr_, str);
-            //cursorWrapper cursor = new cursorWrapper(execute_sql(sql));
-            return true;
+            return new cursorWrapper(execute_sql(otterbrix_ptr_, str));
         }
 
         private readonly IntPtr otterbrix_ptr_;

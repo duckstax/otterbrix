@@ -1,5 +1,4 @@
 #include "otterbrix.h"
-//#include "cursor_wrapper.h"
 
 #include <integration/cpp/base_spaces.hpp>
 
@@ -20,6 +19,51 @@ struct pod_space_t {
     std::unique_ptr<spaces_t> space;
 };
 
+cursor_storage_t::cursor_storage_t(components::cursor::cursor_t_ptr cursor) : cursor_(cursor) {}
+
+int cursor_storage_t::size() {
+    return static_cast<int>(cursor_->size());
+}
+
+bool cursor_storage_t::has_next() {
+    return cursor_->has_next();
+}
+
+doc_ptr cursor_storage_t::next() {
+    cursor_->next();
+    return nullptr;
+}
+
+doc_ptr cursor_storage_t::get() {
+    cursor_->get();
+    return nullptr;
+}
+
+doc_ptr cursor_storage_t::get(size_t index) {
+    cursor_->get(index);
+    return nullptr;
+}
+
+bool cursor_storage_t::is_success() {
+    return cursor_->is_success();
+}
+
+bool cursor_storage_t::is_error() {
+    return cursor_->is_error();
+}
+
+error_message cursor_storage_t::get_error() {
+    error_message message;
+    string_view_t msg;
+    auto err_msg = cursor_->get_error();
+
+    message.error_code = static_cast<int32_t>(err_msg.type);
+    msg.data = err_msg.what.data();
+    msg.size = err_msg.what.size();
+    message.message = msg;
+
+    return message;
+}
 extern "C" otterbrix_ptr otterbrix_create() { // (const config_t* cfg) {
     //assert(cfg != nullptr);
     auto config = create_config();
@@ -38,7 +82,7 @@ extern "C" void otterbrix_destroy(otterbrix_ptr ptr) {
     delete spaces;
 }
 
-extern "C" void execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
+extern "C" cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     assert(ptr != nullptr);
     auto pod_space = reinterpret_cast<pod_space_t*>(ptr);
     assert(pod_space->state == state_t::created);
@@ -46,14 +90,8 @@ extern "C" void execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
-    //cursor_storage_t* cursor_storage = new cursor_storage_t(cursor);
-    //return cursor_storage;
-}
-/*
-extern "C" cursor_storage_t::cursor_storage_t(cursor_t_ptr cursor) : cursor_(cursor) {}
-
-extern "C" int cursor_storage_t::size() {
-    return static_cast<int>(cursor_->size());
+    cursor_storage_t* cursor_storage = new cursor_storage_t(cursor);
+    return reinterpret_cast<void*>(cursor_storage);
 }
 
 extern "C" cursor_storage_t* RecastCursor(void* ptr) {
@@ -64,7 +102,35 @@ extern "C" void ReleaseCursor(cursor_storage_t* storage) {
     assert(storage != nullptr);
     delete storage;
 }
+
 extern "C" int CursorSize(cursor_storage_t* storage) {
     return storage->size();
 }
-*/
+
+extern "C" bool CursorHasNext(cursor_storage_t* storage) {
+    return storage->has_next();
+}
+
+extern "C" doc_ptr CursorNext(cursor_storage_t* storage) {
+    return storage->next();
+}
+
+extern "C" doc_ptr CursorGet(cursor_storage_t* storage) {
+    return storage->get();
+}
+
+extern "C" doc_ptr CursorGetByIndex(cursor_storage_t* storage, int index) {
+    return storage->get(static_cast<size_t>(index));
+}
+
+extern "C" bool CursorIsSuccess(cursor_storage_t* storage) {
+    return storage->is_success();
+}
+
+extern "C" bool CursorIsError(cursor_storage_t* storage) {
+    return storage->is_error();
+}
+
+extern "C" error_message CursorGetError(cursor_storage_t* storage) {
+    return storage->get_error();
+}

@@ -1,17 +1,11 @@
 #ifndef otterbrix_otterbrix_H
 #define otterbrix_otterbrix_H
 
-#include <cstdint>
-#include <cstdlib>
+#include "cursor_wrapper.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct string_view_t {
-    const char* data;
-    size_t size;
-} string_view_t;
 
 ///enum level_t { trace, debug, info, warn, err, critical, off, level_nums };
 
@@ -50,7 +44,7 @@ otterbrix_ptr otterbrix_create(); // temp
 
 void otterbrix_destroy(otterbrix_ptr);
 
-void execute_sql(otterbrix_ptr, string_view_t query);
+cursor_ptr execute_sql(otterbrix_ptr, string_view_t query);
 
 #ifdef __cplusplus
 }
