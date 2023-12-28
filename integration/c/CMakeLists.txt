@@ -3,7 +3,6 @@ project(c_otterbrix C CXX)
 
 set( ${PROJECT_NAME}_headers
         otterbrix.h
-        cursor_wrapper.h
 )
 
 set(${PROJECT_NAME}_sources

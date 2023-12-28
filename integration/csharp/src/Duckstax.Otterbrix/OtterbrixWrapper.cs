@@ -46,6 +46,16 @@ namespace Duckstax.EntityFramework.Otterbrix
         config_disk_t disk;
     }
     */
+    public static class stringConverter
+    {
+        public static string_view_t ToStringView(ref string str)
+        {
+            string_view_t str_view;
+            str_view.data = str;
+            str_view.size = (uint)str.Length;
+            return str_view;
+        }
+    }
     public class otterbrixWrapper
     {
         const string libotterbrix = "../../../libotterbrix.so";
@@ -67,10 +77,7 @@ namespace Duckstax.EntityFramework.Otterbrix
         }
         public cursorWrapper Execute(string sql)
         {
-            string_view_t str;
-            str.data = sql;
-            str.size = (uint)sql.Length;
-            return new cursorWrapper(execute_sql(otterbrix_ptr_, str));
+            return new cursorWrapper(execute_sql(otterbrix_ptr_, stringConverter.ToStringView(ref sql)));
         }
 
         private readonly IntPtr otterbrix_ptr_;
