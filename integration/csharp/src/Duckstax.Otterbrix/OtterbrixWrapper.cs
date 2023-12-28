@@ -60,11 +60,11 @@ namespace Duckstax.EntityFramework.Otterbrix
     {
         const string libotterbrix = "../../../libotterbrix.so";
         
-        [DllImport(libotterbrix, EntryPoint="otterbrix_create", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="otterbrix_create", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr otterbrix_create();
-        [DllImport(libotterbrix, EntryPoint="otterbrix_destroy", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="otterbrix_destroy", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern void otterbrix_destroy(IntPtr otterprix_ptr);
-        [DllImport(libotterbrix, EntryPoint="execute_sql", ExactSpelling=false,CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="execute_sql", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr execute_sql(IntPtr otterprix_ptr, string_view_t sql);
 
         public otterbrixWrapper()

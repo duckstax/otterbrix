@@ -26,7 +26,7 @@ struct cursor_storage_t {
 
 struct document_storage_t {
     state_t state;
-    components::document::document_view_t document;
+    std::shared_ptr<const components::document::document_view_t> document;
 };
 
 extern "C" otterbrix_ptr otterbrix_create() { // (const config_t* cfg) {
@@ -35,6 +35,9 @@ extern "C" otterbrix_ptr otterbrix_create() { // (const config_t* cfg) {
     auto pod_space = std::make_unique<pod_space_t>();
     pod_space->space = std::make_unique<spaces_t>(config);
     pod_space->state = state_t::created;
+    auto session = otterbrix::session_id_t();
+    pod_space->space->dispatcher()->create_database(session, "TestDatabase");
+    pod_space->space->dispatcher()->create_collection(session, "TestDatabase", "TestCollection");
     return reinterpret_cast<void*>(pod_space.release());
 }
 
@@ -91,7 +94,7 @@ extern "C" doc_ptr CursorNext(cursor_ptr* ptr) {
     assert(storage->state == state_t::created);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = *storage->cursor->next();
+    doc_storage->document = std::shared_ptr<const components::document::document_view_t>{storage->cursor->next()};
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -101,7 +104,7 @@ extern "C" doc_ptr CursorGet(cursor_ptr* ptr) {
     assert(storage->state == state_t::created);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = *storage->cursor->get();
+    doc_storage->document = std::shared_ptr<const components::document::document_view_t>{storage->cursor->get()};
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -111,7 +114,7 @@ extern "C" doc_ptr CursorGetByIndex(cursor_ptr* ptr, int index) {
     assert(storage->state == state_t::created);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = *storage->cursor->get(static_cast<size_t>(index));
+    doc_storage->document = std::shared_ptr<const components::document::document_view_t>{storage->cursor->get(static_cast<size_t>(index))};
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -153,278 +156,316 @@ extern "C" void ReleaseDocument(doc_ptr* ptr) {
     delete storage;
 }
 
-extern "C" string_view_t DocumentID(doc_ptr* ptr) {
+extern "C" char* DocumentID(doc_ptr* ptr) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    auto id = doc->id().to_string();
-    string_view_t str;
-    str.data = id.data();
-    str.size = id.size();
-    return str;
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    auto str = doc_storage->document->id().to_string();
+    char* str_ptr = new char[sizeof(str)];
+    std::strcpy(str_ptr, str.data());
+    return str_ptr;
 }
 
 extern "C" bool DocumentIsValid(doc_ptr* ptr) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_valid();
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_valid();
 }
 
 extern "C" bool DocumentIsArray(doc_ptr* ptr) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_array();
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_array();
 }
 
 extern "C" bool DocumentIsDict(doc_ptr* ptr) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_dict();
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_dict();
 }
 
 extern "C" int32_t DocumentCount(doc_ptr* ptr) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return static_cast<int32_t>(doc->count());
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return static_cast<int32_t>(doc_storage->document->count());
 }
 
 extern "C" bool DocumentIsExistByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_exists(key);
+    return doc_storage->document->is_exists(key);
 }
 
 extern "C" bool DocumentIsExistByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_exists(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_exists(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsNullByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_null(key);
+    return doc_storage->document->is_null(key);
 }
 
 extern "C" bool DocumentIsNullByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_null(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_null(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsBoolByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_bool(key);
+    return doc_storage->document->is_bool(key);
 }
 
 extern "C" bool DocumentIsBoolByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_bool(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_bool(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsUlongByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_ulong(key);
+    return doc_storage->document->is_ulong(key);
 }
 
 extern "C" bool DocumentIsUlongByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_ulong(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_ulong(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsLongByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_long(key);
+    return doc_storage->document->is_long(key);
 }
 
 extern "C" bool DocumentIsLongByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_long(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_long(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsDoubleByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_double(key);
+    return doc_storage->document->is_double(key);
 }
 
 extern "C" bool DocumentIsDoubleByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_double(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_double(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsStringByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_string(key);
+    return doc_storage->document->is_string(key);
 }
 
 extern "C" bool DocumentIsStringByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_string(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_string(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsArrayByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_array(key);
+    return doc_storage->document->is_array(key);
 }
 
 extern "C" bool DocumentIsArrayByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_array(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_array(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentIsDictByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    return doc->is_dict(key);
+    return doc_storage->document->is_dict(key);
 }
 
 extern "C" bool DocumentIsDictByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    return doc->is_dict(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    return doc_storage->document->is_dict(static_cast<uint32_t>(index));
 }
 
 extern "C" bool DocumentGetBoolByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_bool(key));
-    return doc->get_as<bool>(key);
+    assert(doc_storage->document->is_bool(key));
+    return doc_storage->document->get_as<bool>(key);
 }
 
 extern "C" bool DocumentGetBoolByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_bool(index));
-    return doc->get_as<bool>(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_bool(index));
+    return doc_storage->document->get_as<bool>(static_cast<uint32_t>(index));
 }
 
 extern "C" uint64_t DocumentGetUlongByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_ulong(key));
-    return doc->get_as<uint64_t>(key);
+    assert(doc_storage->document->is_ulong(key));
+    return doc_storage->document->get_as<uint64_t>(key);
 }
 
 extern "C" uint64_t DocumentGetUlongByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_ulong(index));
-    return doc->get_as<uint64_t>(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_ulong(index));
+    return doc_storage->document->get_as<uint64_t>(static_cast<uint32_t>(index));
 }
 
 extern "C" int64_t DocumentGetLongByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_long(key));
-    return doc->get_as<int64_t>(key);
+    assert(doc_storage->document->is_long(key));
+    return doc_storage->document->get_as<int64_t>(key);
 }
 
 extern "C" int64_t DocumentGetLongByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_long(index));
-    return doc->get_as<int64_t>(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_long(index));
+    return doc_storage->document->get_as<int64_t>(static_cast<uint32_t>(index));
 }
 
 extern "C" double DocumentGetDoubleByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_double(key));
-    return doc->get_as<double>(key);
+    assert(doc_storage->document->is_double(key));
+    return doc_storage->document->get_as<double>(key);
 }
 
 extern "C" double DocumentGetDoubleByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_double(static_cast<uint32_t>(index)));
-    return doc->get_as<double>(static_cast<uint32_t>(index));
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_double(static_cast<uint32_t>(index)));
+    return doc_storage->document->get_as<double>(static_cast<uint32_t>(index));
 }
 
-extern "C" string_view_t DocumentGetStringByKey(doc_ptr* ptr, string_view_t key_raw) {
+extern "C" char* DocumentGetStringByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_string(key));
-    auto str_raw = doc->get_as<std::string>(key);
-    string_view_t str;
-    str.data = str_raw.data();
-    str.size = str_raw.size();
-    return str;
+    assert(doc_storage->document->is_string(key));
+    auto str = doc_storage->document->get_as<std::string>(key);
+    char* str_ptr = new char[sizeof(str)];
+    std::strcpy(str_ptr, str.data());
+    return str_ptr;
 }
 
-extern "C" string_view_t DocumentGetStringByIndex(doc_ptr* ptr, int32_t index) {
+extern "C" char* DocumentGetStringByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_string(static_cast<uint32_t>(index)));
-    auto str_raw = doc->get_as<std::string>(static_cast<uint32_t>(index));
-    string_view_t str;
-    str.data = str_raw.data();
-    str.size = str_raw.size();
-    return str;
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_string(static_cast<uint32_t>(index)));
+    auto str = doc_storage->document->get_as<std::string>(static_cast<uint32_t>(index));
+    char* str_ptr = new char[sizeof(str)];
+    std::strcpy(str_ptr, str.data());
+    return str_ptr;
 }
 
 extern "C" doc_ptr DocumentGetArrayByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_array(key));
-    auto doc_storage = std::make_unique<document_storage_t>();
-    doc_storage->state = state_t::created;
-    doc_storage->document = doc->get_array(key);
-    return reinterpret_cast<void*>(doc_storage.release());
+    assert(doc_storage->document->is_array(key));
+    auto sub_doc_storage = std::make_unique<document_storage_t>();
+    sub_doc_storage->state = state_t::created;
+    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_array(key)));
+    sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
+    return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
 extern "C" doc_ptr DocumentGetArrayByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_array(static_cast<uint32_t>(index)));
-    auto doc_storage = std::make_unique<document_storage_t>();
-    doc_storage->state = state_t::created;
-    doc_storage->document = doc->get_array(static_cast<uint32_t>(index));
-    return reinterpret_cast<void*>(doc_storage.release());
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_array(static_cast<uint32_t>(index)));
+    auto sub_doc_storage = std::make_unique<document_storage_t>();
+    sub_doc_storage->state = state_t::created;
+    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_array(static_cast<uint32_t>(index))));
+    sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
+    return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
 extern "C" doc_ptr DocumentGetDictByKey(doc_ptr* ptr, string_view_t key_raw) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc->is_dict(key));
-    auto doc_storage = std::make_unique<document_storage_t>();
-    doc_storage->state = state_t::created;
-    doc_storage->document = doc->get_dict(key);
-    return reinterpret_cast<void*>(doc_storage.release());
+    assert(doc_storage->document->is_dict(key));
+    auto sub_doc_storage = std::make_unique<document_storage_t>();
+    sub_doc_storage->state = state_t::created;
+    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_dict(key)));
+    sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
+    return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
 extern "C" doc_ptr DocumentGetDictByIndex(doc_ptr* ptr, int32_t index) {
     assert(ptr != nullptr);
-    auto doc = reinterpret_cast<components::document::document_view_t*>(ptr);
-    assert(doc->is_dict(static_cast<uint32_t>(index)));
-    auto doc_storage = std::make_unique<document_storage_t>();
-    doc_storage->state = state_t::created;
-    doc_storage->document = doc->get_dict(static_cast<uint32_t>(index));
-    return reinterpret_cast<void*>(doc_storage.release());
+    auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
+    assert(doc_storage->state == state_t::created);
+    assert(doc_storage->document->is_dict(static_cast<uint32_t>(index)));
+    auto sub_doc_storage = std::make_unique<document_storage_t>();
+    sub_doc_storage->state = state_t::created;
+    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_dict(static_cast<uint32_t>(index))));
+    sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
+    return reinterpret_cast<void*>(sub_doc_storage.release());
 }

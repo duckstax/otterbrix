@@ -105,7 +105,7 @@ namespace components::cursor {
         : collection_(collection)
         , data_(resource) {}
 
-    void sub_cursor_t::append(data_t data) { data_.push_back(data); }
+    void sub_cursor_t::append(data_t data) { data_.push_back(std::move(data)); }
 
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status) {
         return cursor_t_ptr{new cursor_t(resource, op_status)};
