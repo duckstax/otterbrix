@@ -3,9 +3,16 @@ namespace Duckstax.EntityFramework.Otterbrix
     using System;
     using System.Runtime.InteropServices;
 
-    public class cursorWrapper
+    public class CursorWrapper
     {
         const string libotterbrix = "../../../libotterbrix.so";
+        
+        [StructLayout(LayoutKind.Sequential)]
+        private struct TransferErrorMessage
+        {
+            public int type;
+            public IntPtr what;
+        }
         
         [DllImport(libotterbrix, EntryPoint="ReleaseCursor", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern void ReleaseCursor(IntPtr ptr);
@@ -24,13 +31,13 @@ namespace Duckstax.EntityFramework.Otterbrix
         [DllImport(libotterbrix, EntryPoint="CursorIsError", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorIsError(IntPtr ptr);
         [DllImport(libotterbrix, EntryPoint="CursorGetError", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
-        private static extern error_message CursorGetError(IntPtr ptr);
+        private static extern TransferErrorMessage CursorGetError(IntPtr ptr);
 
-        public cursorWrapper(IntPtr cursor_storage_ptr)
+        public CursorWrapper(IntPtr cursor_storage_ptr)
         {
             cursor_storage_ptr_ = cursor_storage_ptr;
         }
-        ~cursorWrapper()
+        ~CursorWrapper()
         {
             ReleaseCursor(cursor_storage_ptr_);
         }
@@ -42,17 +49,17 @@ namespace Duckstax.EntityFramework.Otterbrix
         {
             return CursorHasNext(cursor_storage_ptr_);
         }
-        public documentWrapper Next()
+        public DocumentWrapper Next()
         {
-            return new documentWrapper(CursorNext(cursor_storage_ptr_));
+            return new DocumentWrapper(CursorNext(cursor_storage_ptr_));
         }
-        public documentWrapper Get()
+        public DocumentWrapper Get()
         {
-            return new documentWrapper(CursorGet(cursor_storage_ptr_));
+            return new DocumentWrapper(CursorGet(cursor_storage_ptr_));
         }
-        public documentWrapper Get(int index)
+        public DocumentWrapper Get(int index)
         {
-            return new documentWrapper(CursorGet(cursor_storage_ptr_, index));
+            return new DocumentWrapper(CursorGet(cursor_storage_ptr_, index));
         }
         public bool IsSuccess()
         {
@@ -62,9 +69,14 @@ namespace Duckstax.EntityFramework.Otterbrix
         {
             return CursorIsError(cursor_storage_ptr_);
         }
-        public error_message GetError()
+        public ErrorMessage GetError()
         {
-            return CursorGetError(cursor_storage_ptr_);
+            TransferErrorMessage transfer = CursorGetError(cursor_storage_ptr_);
+            ErrorMessage message = new ErrorMessage();
+            message.type = (ErrorCode)transfer.type;
+            message.what = Marshal.PtrToStringAnsi(transfer.what);
+            Marshal.FreeHGlobal(transfer.what);
+            return message;
         }
         
         private readonly IntPtr cursor_storage_ptr_;
