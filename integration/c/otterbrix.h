@@ -14,8 +14,7 @@ typedef struct string_view_t {
     size_t size;
 } string_view_t;
 
-typedef struct config_t
-{
+typedef struct config_t {
     int level;
     string_view_t log_path;
     string_view_t wal_path;

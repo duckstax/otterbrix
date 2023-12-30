@@ -21,7 +21,7 @@ namespace components::cursor {
 
     enum class operation_status_t { success = 1, failure = 0 };
 
-    enum class error_code_t : int32_t{
+    enum class error_code_t : int32_t {
         none = 0,
         database_already_exists = 1,
         database_not_exists = 2,

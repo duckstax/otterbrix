@@ -17,8 +17,8 @@ namespace components::document {
 
     document_view_t::document_view_t(document_view_t&& doc_view)
         : document_(std::move(doc_view.document_)) {
-            doc_view.document_ = nullptr;
-        }
+        doc_view.document_ = nullptr;
+    }
 
     document_id_t document_view_t::id() const { return document_id_t(get_string("_id")); }
 

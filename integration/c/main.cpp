@@ -17,22 +17,21 @@ namespace {
             : base_otterbrix_t(config) {}
     };
 
-    pod_space_t* convert_otterbrix(otterbrix_ptr ptr)
-    {
+    pod_space_t* convert_otterbrix(otterbrix_ptr ptr) {
         assert(ptr != nullptr);
         auto spaces = reinterpret_cast<pod_space_t*>(ptr);
         assert(spaces->state == state_t::created);
         return spaces;
     }
-    cursor_storage_t* convert_cursor(cursor_ptr ptr)
-    {
+
+    cursor_storage_t* convert_cursor(cursor_ptr ptr) {
         assert(ptr != nullptr);
         auto storage = reinterpret_cast<cursor_storage_t*>(ptr);
         assert(storage->state == state_t::created);
         return storage;
     }
-    document_storage_t* convert_document(doc_ptr ptr)
-    {
+
+    document_storage_t* convert_document(doc_ptr ptr) {
         assert(ptr != nullptr);
         auto doc_storage = reinterpret_cast<document_storage_t*>(ptr);
         assert(doc_storage->state == state_t::created);
@@ -133,7 +132,8 @@ extern "C" doc_ptr CursorGetByIndex(cursor_ptr ptr, int index) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
-    doc_storage->document = std::shared_ptr<const components::document::document_view_t>{storage->cursor->get(static_cast<size_t>(index))};
+    doc_storage->document =
+        std::shared_ptr<const components::document::document_view_t>{storage->cursor->get(static_cast<size_t>(index))};
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
@@ -368,7 +368,8 @@ extern "C" doc_ptr DocumentGetArrayByKey(doc_ptr ptr, string_view_t key_raw) {
     assert(doc_storage->document->is_array(key));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
-    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_array(key)));
+    const components::document::document_view_t* doc =
+        new components::document::document_view_t(std::move(doc_storage->document->get_array(key)));
     sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
@@ -378,7 +379,8 @@ extern "C" doc_ptr DocumentGetArrayByIndex(doc_ptr ptr, int32_t index) {
     assert(doc_storage->document->is_array(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
-    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_array(static_cast<uint32_t>(index))));
+    const components::document::document_view_t* doc = new components::document::document_view_t(
+        std::move(doc_storage->document->get_array(static_cast<uint32_t>(index))));
     sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
@@ -389,7 +391,8 @@ extern "C" doc_ptr DocumentGetDictByKey(doc_ptr ptr, string_view_t key_raw) {
     assert(doc_storage->document->is_dict(key));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
-    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_dict(key)));
+    const components::document::document_view_t* doc =
+        new components::document::document_view_t(std::move(doc_storage->document->get_dict(key)));
     sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
@@ -399,7 +402,8 @@ extern "C" doc_ptr DocumentGetDictByIndex(doc_ptr ptr, int32_t index) {
     assert(doc_storage->document->is_dict(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
-    const components::document::document_view_t* doc = new components::document::document_view_t(std::move(doc_storage->document->get_dict(static_cast<uint32_t>(index))));
+    const components::document::document_view_t* doc = new components::document::document_view_t(
+        std::move(doc_storage->document->get_dict(static_cast<uint32_t>(index))));
     sub_doc_storage->document = std::shared_ptr<const components::document::document_view_t>{doc};
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }

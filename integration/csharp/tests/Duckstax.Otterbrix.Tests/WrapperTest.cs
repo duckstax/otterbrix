@@ -4,8 +4,7 @@ using Duckstax.EntityFramework.Otterbrix;
 
 public class Tests
 {
-    private string GenerateID(int num)
-    {
+    private string GenerateID(int num) {
         string res = num.ToString();
         while (res.Length < 24) {
             res = "0" + res;
@@ -14,16 +13,14 @@ public class Tests
     }
 
     [Test]
-    public void Base()
-    {
+    public void Base() {
         OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig(), "TestDatabase", "TestCollection");
         {
             string query = "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
-                for (int num = 0; num < 100; ++num)
-                {
-                    query += ("('" + GenerateID(num + 1) + "', "
-                        + "'Name " + num + "', " + num + ")" + (num == 99 ? ";" : ", "));
-                }
+            for (int num = 0; num < 100; ++num) {
+                query += ("('" + GenerateID(num + 1) + "', " + "'Name " + num + "', " + num + ")" +
+                          (num == 99 ? ";" : ", "));
+            }
             CursorWrapper cursor = otterbrix.Execute(query);
             Assert.IsTrue(cursor != null);
             Assert.IsTrue(cursor.IsSuccess());
@@ -216,15 +213,13 @@ public class Tests
     }
 
     [Test]
-    public void GroupBy()
-    {
+    public void GroupBy() {
         OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig(), "TestDatabase", "TestCollection");
         {
             string query = "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
-            for (int num = 0; num < 100; ++num)
-            {
-                query += "('" + GenerateID(num + 1) + "', "
-                    + "'Name " + (num % 10) + "', " + (num % 20) + ")" + (num == 99 ? ";" : ", ");
+            for (int num = 0; num < 100; ++num) {
+                query += "('" + GenerateID(num + 1) + "', " + "'Name " + (num % 10) + "', " + (num % 20) + ")" +
+                         (num == 99 ? ";" : ", ");
             }
             CursorWrapper cursor = otterbrix.Execute(query);
             Assert.IsTrue(cursor != null);
@@ -232,10 +227,8 @@ public class Tests
             Assert.IsTrue(cursor.Size() == 100);
         }
         {
-            string query = "SELECT name, COUNT(count) AS count_, " +
-                           "SUM(count) AS sum_, AVG(count) AS avg_, " +
-                           "MIN(count) AS min_, MAX(count) AS max_ " +
-                           "FROM TestDatabase.TestCollection " +
+            string query = "SELECT name, COUNT(count) AS count_, " + "SUM(count) AS sum_, AVG(count) AS avg_, " +
+                           "MIN(count) AS min_, MAX(count) AS max_ " + "FROM TestDatabase.TestCollection " +
                            "GROUP BY name;";
             CursorWrapper cursor = otterbrix.Execute(query);
             Assert.IsTrue(cursor != null);
@@ -243,8 +236,7 @@ public class Tests
             Assert.IsTrue(cursor.Size() == 10);
 
             int number = 0;
-            do
-            {
+            do {
                 DocumentWrapper doc = cursor.Next();
                 Assert.IsTrue(doc.GetString("name") == "Name " + number.ToString());
                 Assert.IsTrue(doc.GetLong("count_") == 10);
@@ -256,20 +248,16 @@ public class Tests
             } while (cursor.HasNext());
         }
         {
-            string query = "SELECT name, COUNT(count) AS count_, " +
-                           "SUM(count) AS sum_, AVG(count) AS avg_, " +
-                           "MIN(count) AS min_, MAX(count) AS max_ " +
-                           "FROM TestDatabase.TestCollection " +
-                           "GROUP BY name " +
-                           "ORDER BY name DESC;";
+            string query = "SELECT name, COUNT(count) AS count_, " + "SUM(count) AS sum_, AVG(count) AS avg_, " +
+                           "MIN(count) AS min_, MAX(count) AS max_ " + "FROM TestDatabase.TestCollection " +
+                           "GROUP BY name " + "ORDER BY name DESC;";
             CursorWrapper cursor = otterbrix.Execute(query);
             Assert.IsTrue(cursor != null);
             Assert.IsTrue(cursor.IsSuccess());
             Assert.IsTrue(cursor.Size() == 10);
 
             int number = 9;
-            do
-            {
+            do {
                 DocumentWrapper doc = cursor.Next();
                 Assert.IsTrue(doc.GetString("name") == "Name " + number.ToString());
                 Assert.IsTrue(doc.GetLong("count_") == 10);
@@ -283,8 +271,7 @@ public class Tests
     }
 
     [Test]
-    public void InvalidQueries()
-    {
+    public void InvalidQueries() {
         OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig(), "TestDatabase", "TestCollection");
         {
             string query = "SELECT * FROM OtherDatabase.OtherCollection;";

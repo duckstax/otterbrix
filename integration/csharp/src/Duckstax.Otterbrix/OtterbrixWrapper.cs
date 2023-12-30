@@ -4,19 +4,16 @@ namespace Duckstax.EntityFramework.Otterbrix
     using System.Runtime.InteropServices;
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct StringPasser
-    {
+    public struct StringPasser {
         [MarshalAs(UnmanagedType.LPStr)] public string data;
         public uint size;
-        public StringPasser(ref string str)
-        {
+        public StringPasser(ref string str) {
             data = str;
-            size = (uint)str.Length;
+            size = (uint) str.Length;
         }
     }
 
-    public enum ErrorCode: int 
-    {
+    public enum ErrorCode : int {
         None = 0,
         DatabaseAlreadyExists = 1,
         DatabaseNotExists = 2,
@@ -28,16 +25,13 @@ namespace Duckstax.EntityFramework.Otterbrix
         OtherError = -1
     }
 
-    public struct ErrorMessage
-    {
+    public struct ErrorMessage {
         public ErrorCode type;
         public string what;
     }
 
-    public struct Config
-    {
-        public enum LogLevel: int
-        {
+    public struct Config {
+        public enum LogLevel : int {
             Trace = 0,
             Debug = 1,
             Info = 2,
@@ -47,86 +41,90 @@ namespace Duckstax.EntityFramework.Otterbrix
             Off = 6,
         }
         public LogLevel level;
-        public string log_path;
-        public string wal_path;
-        public string disk_path;
-        public bool wal_on;
-        public bool disk_on;
-        public bool sync_wal_to_disk;
+        public string logPath;
+        public string walPath;
+        public string diskPath;
+        public bool walOn;
+        public bool diskOn;
+        public bool syncWalToDisk;
 
-        public Config()
-        {
+        public Config() {
             level = LogLevel.Trace;
-            log_path = System.Environment.CurrentDirectory + "/log";
-            wal_path = System.Environment.CurrentDirectory + "/wal";
-            disk_path = System.Environment.CurrentDirectory + "/disk";
-            wal_on = true;
-            disk_on = true;
-            sync_wal_to_disk = true;
+            logPath = System.Environment.CurrentDirectory + "/log";
+            walPath = System.Environment.CurrentDirectory + "/wal";
+            diskPath = System.Environment.CurrentDirectory + "/disk";
+            walOn = true;
+            diskOn = true;
+            syncWalToDisk = true;
         }
-        public Config(LogLevel level, string log_path, string wal_path, string disk_path, bool wal, bool disk, bool wal_disk_sync)
-        {
+        public Config(LogLevel level,
+                      string logPath,
+                      string walPath,
+                      string diskPath,
+                      bool wal,
+                      bool disk,
+                      bool walDiskSync) {
             this.level = level;
-            this.log_path = log_path;
-            this.wal_path = wal_path;
-            this.disk_path = disk_path;
-            wal_on = wal;
-            disk_on = disk;
-            sync_wal_to_disk = wal_disk_sync;
+            this.logPath = logPath;
+            this.walPath = walPath;
+            this.diskPath = diskPath;
+            walOn = wal;
+            diskOn = disk;
+            syncWalToDisk = walDiskSync;
         }
-        public static Config DefaultConfig()
-        {
-            return new Config();
-        }
+        public static Config DefaultConfig() { return new Config(); }
     }
-    
-    public class OtterbrixWrapper
-    {
 
+    public class OtterbrixWrapper {
         const string libotterbrix = "../../../libotterbrix.so";
-        
+
         [StructLayout(LayoutKind.Sequential)]
-        private struct TransferConfig
-        {
+        private struct TransferConfig {
             public int level;
-            public StringPasser log_path;
-            public StringPasser wal_path;
-            public StringPasser disk_path;
-            public bool wal_on;
-            public bool disk_on;
-            public bool sync_wal_to_disk;
-            public TransferConfig(ref Config config)
-            {
-                this.level = (int)config.level;
-                this.log_path = new StringPasser(ref config.log_path);
-                this.wal_path = new StringPasser(ref config.wal_path);
-                this.disk_path = new StringPasser(ref config.disk_path);
-                this.wal_on = config.wal_on;
-                this.disk_on = config.disk_on;
-                this.sync_wal_to_disk = config.sync_wal_to_disk;
+            public StringPasser logPath;
+            public StringPasser walPath;
+            public StringPasser diskPath;
+            public bool walOn;
+            public bool diskOn;
+            public bool syncWalToDisk;
+            public TransferConfig(ref Config config) {
+                this.level = (int) config.level;
+                this.logPath = new StringPasser(ref config.logPath);
+                this.walPath = new StringPasser(ref config.walPath);
+                this.diskPath = new StringPasser(ref config.diskPath);
+                this.walOn = config.walOn;
+                this.diskOn = config.diskOn;
+                this.syncWalToDisk = config.syncWalToDisk;
             }
         }
-        
-        [DllImport(libotterbrix, EntryPoint="otterbrix_create", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
-        private static extern IntPtr otterbrix_create(TransferConfig config, StringPasser database, StringPasser collection);
-        [DllImport(libotterbrix, EntryPoint="otterbrix_destroy", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
-        private static extern void otterbrix_destroy(IntPtr otterprix_ptr);
-        [DllImport(libotterbrix, EntryPoint="execute_sql", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
-        private static extern IntPtr execute_sql(IntPtr otterprix_ptr, StringPasser sql);
 
-        public OtterbrixWrapper(Config config, string database, string collection)
-        {
-            otterbrix_ptr_ = otterbrix_create(new TransferConfig(ref config), new StringPasser(ref database), new StringPasser(ref collection));
+        [DllImport(libotterbrix,
+                   EntryPoint = "otterbrix_create",
+                   ExactSpelling = false,
+                   CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr
+        OtterbrixCreate(TransferConfig config, StringPasser database, StringPasser collection);
+        [DllImport(libotterbrix,
+                   EntryPoint = "otterbrix_destroy",
+                   ExactSpelling = false,
+                   CallingConvention = CallingConvention.Cdecl)]
+        private static extern void OtterbrixDestroy(IntPtr otterprixPtr);
+        [DllImport(libotterbrix,
+                   EntryPoint = "execute_sql",
+                   ExactSpelling = false,
+                   CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr ExecuteSQL(IntPtr otterprixPtr, StringPasser sql);
+
+        public OtterbrixWrapper(Config config, string database, string collection) {
+            otterbrixPtr = OtterbrixCreate(new TransferConfig(ref config),
+                                           new StringPasser(ref database),
+                                           new StringPasser(ref collection));
         }
-        ~OtterbrixWrapper()
-        {
-            otterbrix_destroy(otterbrix_ptr_);
-        }
-        public CursorWrapper Execute(string sql)
-        {
-            return new CursorWrapper(execute_sql(otterbrix_ptr_, new StringPasser(ref sql)));
+        ~OtterbrixWrapper() { OtterbrixDestroy(otterbrixPtr); }
+        public CursorWrapper Execute(string sql) {
+            return new CursorWrapper(ExecuteSQL(otterbrixPtr, new StringPasser(ref sql)));
         }
 
-        private readonly IntPtr otterbrix_ptr_;
+        private readonly IntPtr otterbrixPtr;
     }
 }
