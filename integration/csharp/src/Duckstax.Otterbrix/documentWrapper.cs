@@ -6,130 +6,131 @@ namespace Duckstax.EntityFramework.Otterbrix
     public class DocumentWrapper {
         const string libotterbrix = "../../../libotterbrix.so";
         
-        [DllImport(libotterbrix, EntryPoint="DocumentID", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_id", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr DocumentID(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="ReleaseDocument", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="release_document", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern void ReleaseDocument(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsValid", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_valid", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsValid(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsArray", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_array", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsArray(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsDict", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_dict", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsDict(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="DocumentCount", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_count", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern int DocumentCount(IntPtr ptr);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsExistByKey",
+                   EntryPoint = "document_is_exist_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsExistByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsExistByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_exist_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsExistByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsNullByKey",
+                   EntryPoint = "document_is_null_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsNullByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsNullByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_null_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsNullByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsBoolByKey",
+                   EntryPoint = "document_is_bool_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsBoolByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsBoolByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_bool_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsBoolByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsUlongByKey",
+                   EntryPoint = "document_is_ulong_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsUlongByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsUlongByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_ulong_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsUlongByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsLongByKey",
+                   EntryPoint = "document_is_long_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsLongByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsLongByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_long_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsLongByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsDoubleByKey",
+                   EntryPoint = "document_is_double_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsDoubleByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsDoubleByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_double_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsDoubleByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsStringByKey",
+                   EntryPoint = "document_is_string_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsStringByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsStringByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_string_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsStringByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsArrayByKey",
+                   EntryPoint = "document_is_array_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsArrayByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsArrayByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_array_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsArrayByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentIsDictByKey",
+                   EntryPoint = "document_is_dict_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentIsDictByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentIsDictByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_is_dict_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentIsDictByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetBoolByKey",
+                   EntryPoint = "document_get_bool_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern bool DocumentGetBoolByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetBoolByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_bool_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool DocumentGetBoolByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetUlongByKey",
+                   EntryPoint = "document_get_ulong_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern ulong DocumentGetUlongByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetUlongByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_ulong_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern ulong DocumentGetUlongByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetLongByKey",
+                   EntryPoint = "document_get_long_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern long DocumentGetLongByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetLongByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_long_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern long DocumentGetLongByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetDoubleByKey",
+                   EntryPoint = "document_get_double_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern double DocumentGetDoubleByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetDoubleByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_double_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern double DocumentGetDoubleByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetStringByKey",
+                   EntryPoint = "document_get_string_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetStringByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetStringByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_string_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetStringByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetArrayByKey",
+                   EntryPoint = "document_get_array_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetArrayByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetArrayByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_array_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetArrayByIndex(IntPtr ptr, int index);
         [DllImport(libotterbrix,
-                   EntryPoint = "DocumentGetDictByKey",
+                   EntryPoint = "document_get_dict_by_key",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetDictByKey(IntPtr ptr, StringPasser key);
-        [DllImport(libotterbrix, EntryPoint="DocumentGetDictByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="document_get_dict_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr DocumentGetDictByIndex(IntPtr ptr, int index);
+        
         public DocumentWrapper(IntPtr docPtr) { this.docPtr = docPtr; }
         ~DocumentWrapper() { ReleaseDocument(docPtr); }
         public string ID()

@@ -12,24 +12,24 @@ namespace Duckstax.EntityFramework.Otterbrix
             public IntPtr what;
         }
 
-        [DllImport(libotterbrix, EntryPoint="ReleaseCursor", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="release_cursor", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern void ReleaseCursor(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorSize", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_size", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern int CursorSize(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorHasNext", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_has_next", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorHasNext(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorNext", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_next", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorNext(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorGet", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_get", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorGet(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorGetByIndex", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_get_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorGet(IntPtr ptr, int index);
-        [DllImport(libotterbrix, EntryPoint="CursorIsSuccess", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_is_success", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorIsSuccess(IntPtr ptr);
-        [DllImport(libotterbrix, EntryPoint="CursorIsError", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
+        [DllImport(libotterbrix, EntryPoint="cursor_is_error", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorIsError(IntPtr ptr);
         [DllImport(libotterbrix,
-                   EntryPoint = "CursorGetError",
+                   EntryPoint = "cursor_get_error",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern TransferErrorMessage CursorGetError(IntPtr ptr);

@@ -41,99 +41,99 @@ void otterbrix_destroy(otterbrix_ptr);
 
 cursor_ptr execute_sql(otterbrix_ptr, string_view_t query);
 
-void ReleaseCursor(cursor_ptr ptr);
+void release_cursor(cursor_ptr ptr);
 
-int32_t CursorSize(cursor_ptr ptr);
+int32_t cursor_size(cursor_ptr ptr);
 
-bool CursorHasNext(cursor_ptr ptr);
+bool cursor_has_next(cursor_ptr ptr);
 
-doc_ptr CursorNext(cursor_ptr ptr);
+doc_ptr cursor_next(cursor_ptr ptr);
 
-doc_ptr CursorGet(cursor_ptr ptr);
+doc_ptr cursor_get(cursor_ptr ptr);
 
-doc_ptr CursorGetByIndex(cursor_ptr ptr, int index);
+doc_ptr cursor_get_by_index(cursor_ptr ptr, int index);
 
-bool CursorIsSuccess(cursor_ptr ptr);
+bool cursor_Is_success(cursor_ptr ptr);
 
-bool CursorIsError(cursor_ptr ptr);
+bool cursor_is_error(cursor_ptr ptr);
 
-error_message CursorGetError(cursor_ptr ptr);
+error_message cursor_get_error(cursor_ptr ptr);
 
-void ReleaseDocument(doc_ptr ptr);
+void release_document(doc_ptr ptr);
 
-char* DocumentID(doc_ptr ptr);
+char* document_id(doc_ptr ptr);
 
-bool DocumentIsValid(doc_ptr ptr);
+bool document_is_valid(doc_ptr ptr);
 
-bool DocumentIsArray(doc_ptr ptr);
+bool document_is_array(doc_ptr ptr);
 
-bool DocumentIsDict(doc_ptr ptr);
+bool document_is_dict(doc_ptr ptr);
 
-int32_t DocumentCount(doc_ptr ptr);
+int32_t document_count(doc_ptr ptr);
 
-bool DocumentIsExistByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_exist_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsExistByIndex(doc_ptr ptr, int32_t index);
+bool document_is_exist_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsNullByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_null_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsNullByIndex(doc_ptr ptr, int32_t index);
+bool document_is_null_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsBoolByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_bool_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsBoolByIndex(doc_ptr ptr, int32_t index);
+bool document_is_bool_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsUlongByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_ulong_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsUlongByIndex(doc_ptr ptr, int32_t index);
+bool document_is_ulong_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsLongByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_long_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsLongByIndex(doc_ptr ptr, int32_t index);
+bool document_is_long_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsDoubleByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_double_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsDoubleByIndex(doc_ptr ptr, int32_t index);
+bool document_is_double_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsStringByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_string_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsStringByIndex(doc_ptr ptr, int32_t index);
+bool document_is_string_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsArrayByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_array_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsArrayByIndex(doc_ptr ptr, int32_t index);
+bool document_is_array_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentIsDictByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_is_dict_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentIsDictByIndex(doc_ptr ptr, int32_t index);
+bool document_is_dict_by_index(doc_ptr ptr, int32_t index);
 
-bool DocumentGetBoolByKey(doc_ptr ptr, string_view_t key_raw);
+bool document_get_bool_by_key(doc_ptr ptr, string_view_t key_raw);
 
-bool DocumentGetBoolByIndex(doc_ptr ptr, int32_t index);
+bool document_get_bool_by_index(doc_ptr ptr, int32_t index);
 
-uint64_t DocumentGetUlongByKey(doc_ptr ptr, string_view_t key_raw);
+uint64_t document_get_ulong_by_key(doc_ptr ptr, string_view_t key_raw);
 
-uint64_t DocumentGetUlongByIndex(doc_ptr ptr, int32_t index);
+uint64_t document_get_ulong_by_index(doc_ptr ptr, int32_t index);
 
-int64_t DocumentGetLongByKey(doc_ptr ptr, string_view_t key_raw);
+int64_t document_get_long_by_key(doc_ptr ptr, string_view_t key_raw);
 
-int64_t DocumentGetLongByIndex(doc_ptr ptr, int32_t index);
+int64_t document_get_long_by_index(doc_ptr ptr, int32_t index);
 
-double DocumentGetDoubleByKey(doc_ptr ptr, string_view_t key_raw);
+double document_get_double_by_key(doc_ptr ptr, string_view_t key_raw);
 
-double DocumentGetDoubleByIndex(doc_ptr ptr, int32_t index);
+double document_get_double_by_index(doc_ptr ptr, int32_t index);
 
-char* DocumentGetStringByKey(doc_ptr ptr, string_view_t key_raw);
+char* document_get_string_by_key(doc_ptr ptr, string_view_t key_raw);
 
-char* DocumentGetStringByIndex(doc_ptr ptr, int32_t index);
+char* document_get_string_by_index(doc_ptr ptr, int32_t index);
 
-doc_ptr DocumentGetArrayByKey(doc_ptr ptr, string_view_t key_raw);
+doc_ptr document_get_array_by_key(doc_ptr ptr, string_view_t key_raw);
 
-doc_ptr DocumentGetArrayByIndex(doc_ptr ptr, int32_t index);
+doc_ptr document_get_array_by_index(doc_ptr ptr, int32_t index);
 
-doc_ptr DocumentGetDictByKey(doc_ptr ptr, string_view_t key_raw);
+doc_ptr document_get_dict_by_key(doc_ptr ptr, string_view_t key_raw);
 
-doc_ptr DocumentGetDictByIndex(doc_ptr ptr, int32_t index);
+doc_ptr document_get_dict_by_index(doc_ptr ptr, int32_t index);
 
 #ifdef __cplusplus
 }

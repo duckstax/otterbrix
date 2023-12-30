@@ -95,24 +95,24 @@ extern "C" cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     return reinterpret_cast<void*>(cursor_storage.release());
 }
 
-extern "C" void ReleaseCursor(cursor_ptr ptr) {
+extern "C" void release_cursor(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     storage->cursor.reset();
     storage->state = state_t::destroyed;
     delete storage;
 }
 
-extern "C" int32_t CursorSize(cursor_ptr ptr) {
+extern "C" int32_t cursor_size(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     return static_cast<int32_t>(storage->cursor->size());
 }
 
-extern "C" bool CursorHasNext(cursor_ptr ptr) {
+extern "C" bool cursor_has_next(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     return storage->cursor->has_next();
 }
 
-extern "C" doc_ptr CursorNext(cursor_ptr ptr) {
+extern "C" doc_ptr cursor_next(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
@@ -120,7 +120,7 @@ extern "C" doc_ptr CursorNext(cursor_ptr ptr) {
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
-extern "C" doc_ptr CursorGet(cursor_ptr ptr) {
+extern "C" doc_ptr cursor_get(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
@@ -128,7 +128,7 @@ extern "C" doc_ptr CursorGet(cursor_ptr ptr) {
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
-extern "C" doc_ptr CursorGetByIndex(cursor_ptr ptr, int index) {
+extern "C" doc_ptr cursor_get_by_index(cursor_ptr ptr, int index) {
     auto storage = convert_cursor(ptr);
     auto doc_storage = std::make_unique<document_storage_t>();
     doc_storage->state = state_t::created;
@@ -137,17 +137,17 @@ extern "C" doc_ptr CursorGetByIndex(cursor_ptr ptr, int index) {
     return reinterpret_cast<void*>(doc_storage.release());
 }
 
-extern "C" bool CursorIsSuccess(cursor_ptr ptr) {
+extern "C" bool cursor_is_success(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     return storage->cursor->is_success();
 }
 
-extern "C" bool CursorIsError(cursor_ptr ptr) {
+extern "C" bool cursor_is_error(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     return storage->cursor->is_error();
 }
 
-extern "C" error_message CursorGetError(cursor_ptr ptr) {
+extern "C" error_message cursor_get_error(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto error = storage->cursor->get_error();
     error_message msg;
@@ -158,13 +158,13 @@ extern "C" error_message CursorGetError(cursor_ptr ptr) {
     return msg;
 }
 
-extern "C" void ReleaseDocument(doc_ptr ptr) {
+extern "C" void release_document(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     doc_storage->state = state_t::destroyed;
     delete doc_storage;
 }
 
-extern "C" char* DocumentID(doc_ptr ptr) {
+extern "C" char* document_id(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     auto str = doc_storage->document->id().to_string();
     char* str_ptr = new char[sizeof(str)];
@@ -172,178 +172,178 @@ extern "C" char* DocumentID(doc_ptr ptr) {
     return str_ptr;
 }
 
-extern "C" bool DocumentIsValid(doc_ptr ptr) {
+extern "C" bool document_is_valid(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_valid();
 }
 
-extern "C" bool DocumentIsArray(doc_ptr ptr) {
+extern "C" bool document_is_array(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_array();
 }
 
-extern "C" bool DocumentIsDict(doc_ptr ptr) {
+extern "C" bool document_is_dict(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_dict();
 }
 
-extern "C" int32_t DocumentCount(doc_ptr ptr) {
+extern "C" int32_t document_count(doc_ptr ptr) {
     auto doc_storage = convert_document(ptr);
     return static_cast<int32_t>(doc_storage->document->count());
 }
 
-extern "C" bool DocumentIsExistByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_exist_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_exists(key);
 }
 
-extern "C" bool DocumentIsExistByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_exist_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_exists(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsNullByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_null_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_null(key);
 }
 
-extern "C" bool DocumentIsNullByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_null_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_null(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsBoolByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_bool_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_bool(key);
 }
 
-extern "C" bool DocumentIsBoolByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_bool_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_bool(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsUlongByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_ulong_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_ulong(key);
 }
 
-extern "C" bool DocumentIsUlongByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_ulong_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_ulong(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsLongByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_long_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_long(key);
 }
 
-extern "C" bool DocumentIsLongByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_long_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_long(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsDoubleByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_double_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_double(key);
 }
 
-extern "C" bool DocumentIsDoubleByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_double_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_double(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsStringByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_string_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_string(key);
 }
 
-extern "C" bool DocumentIsStringByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_string_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_string(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsArrayByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_array_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_array(key);
 }
 
-extern "C" bool DocumentIsArrayByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_array_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_array(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentIsDictByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_is_dict_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     return doc_storage->document->is_dict(key);
 }
 
-extern "C" bool DocumentIsDictByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_is_dict_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     return doc_storage->document->is_dict(static_cast<uint32_t>(index));
 }
 
-extern "C" bool DocumentGetBoolByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" bool document_get_bool_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_bool(key));
     return doc_storage->document->get_as<bool>(key);
 }
 
-extern "C" bool DocumentGetBoolByIndex(doc_ptr ptr, int32_t index) {
+extern "C" bool document_get_bool_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_bool(index));
     return doc_storage->document->get_as<bool>(static_cast<uint32_t>(index));
 }
 
-extern "C" uint64_t DocumentGetUlongByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" uint64_t document_get_ulong_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_ulong(key));
     return doc_storage->document->get_as<uint64_t>(key);
 }
 
-extern "C" uint64_t DocumentGetUlongByIndex(doc_ptr ptr, int32_t index) {
+extern "C" uint64_t document_get_ulong_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_ulong(index));
     return doc_storage->document->get_as<uint64_t>(static_cast<uint32_t>(index));
 }
 
-extern "C" int64_t DocumentGetLongByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" int64_t document_get_long_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_long(key));
     return doc_storage->document->get_as<int64_t>(key);
 }
 
-extern "C" int64_t DocumentGetLongByIndex(doc_ptr ptr, int32_t index) {
+extern "C" int64_t document_get_long_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_long(index));
     return doc_storage->document->get_as<int64_t>(static_cast<uint32_t>(index));
 }
 
-extern "C" double DocumentGetDoubleByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" double document_get_double_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_double(key));
     return doc_storage->document->get_as<double>(key);
 }
 
-extern "C" double DocumentGetDoubleByIndex(doc_ptr ptr, int32_t index) {
+extern "C" double document_get_double_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_double(static_cast<uint32_t>(index)));
     return doc_storage->document->get_as<double>(static_cast<uint32_t>(index));
 }
 
-extern "C" char* DocumentGetStringByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" char* document_get_string_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_string(key));
@@ -353,7 +353,7 @@ extern "C" char* DocumentGetStringByKey(doc_ptr ptr, string_view_t key_raw) {
     return str_ptr;
 }
 
-extern "C" char* DocumentGetStringByIndex(doc_ptr ptr, int32_t index) {
+extern "C" char* document_get_string_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_string(static_cast<uint32_t>(index)));
     auto str = doc_storage->document->get_as<std::string>(static_cast<uint32_t>(index));
@@ -362,7 +362,7 @@ extern "C" char* DocumentGetStringByIndex(doc_ptr ptr, int32_t index) {
     return str_ptr;
 }
 
-extern "C" doc_ptr DocumentGetArrayByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" doc_ptr document_get_array_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_array(key));
@@ -374,7 +374,7 @@ extern "C" doc_ptr DocumentGetArrayByKey(doc_ptr ptr, string_view_t key_raw) {
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
-extern "C" doc_ptr DocumentGetArrayByIndex(doc_ptr ptr, int32_t index) {
+extern "C" doc_ptr document_get_array_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_array(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
@@ -385,7 +385,7 @@ extern "C" doc_ptr DocumentGetArrayByIndex(doc_ptr ptr, int32_t index) {
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
-extern "C" doc_ptr DocumentGetDictByKey(doc_ptr ptr, string_view_t key_raw) {
+extern "C" doc_ptr document_get_dict_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
     assert(doc_storage->document->is_dict(key));
@@ -397,7 +397,7 @@ extern "C" doc_ptr DocumentGetDictByKey(doc_ptr ptr, string_view_t key_raw) {
     return reinterpret_cast<void*>(sub_doc_storage.release());
 }
 
-extern "C" doc_ptr DocumentGetDictByIndex(doc_ptr ptr, int32_t index) {
+extern "C" doc_ptr document_get_dict_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
     assert(doc_storage->document->is_dict(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
