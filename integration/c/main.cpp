@@ -2,11 +2,24 @@
 
 #include <integration/cpp/base_spaces.hpp>
 
-struct pod_space_t;
-struct cursor_storage_t;
-struct document_storage_t;
-
 namespace {
+    struct spaces_t;
+
+    struct pod_space_t {
+        state_t state;
+        std::unique_ptr<spaces_t> space;
+    };
+
+    struct cursor_storage_t {
+        state_t state;
+        boost::intrusive_ptr<components::cursor::cursor_t> cursor;
+    };
+
+    struct document_storage_t {
+        state_t state;
+        std::shared_ptr<const components::document::document_view_t> document;
+    };
+
     configuration::config create_config() { return configuration::config::default_config(); }
 
     struct spaces_t final : public otterbrix::base_otterbrix_t {
@@ -38,21 +51,6 @@ namespace {
         return doc_storage;
     }
 } // namespace
-
-struct pod_space_t {
-    state_t state;
-    std::unique_ptr<spaces_t> space;
-};
-
-struct cursor_storage_t {
-    state_t state;
-    std::unique_ptr<components::cursor::cursor_t> cursor;
-};
-
-struct document_storage_t {
-    state_t state;
-    std::shared_ptr<const components::document::document_view_t> document;
-};
 
 extern "C" otterbrix_ptr otterbrix_create(config_t cfg, string_view_t database, string_view_t collection) {
     auto config = create_config();
@@ -88,16 +86,15 @@ extern "C" cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
+    trace(pod_space->space->get_log(), "C++ Error result: {}", cursor->is_error());
     auto cursor_storage = std::make_unique<cursor_storage_t>();
-    cursor_storage->cursor = std::unique_ptr<components::cursor::cursor_t>{cursor.get()};
-    cursor.reset();
+    cursor_storage->cursor = cursor;
     cursor_storage->state = state_t::created;
     return reinterpret_cast<void*>(cursor_storage.release());
 }
 
 extern "C" void release_cursor(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
-    storage->cursor.reset();
     storage->state = state_t::destroyed;
     delete storage;
 }
@@ -151,7 +148,7 @@ extern "C" error_message cursor_get_error(cursor_ptr ptr) {
     auto storage = convert_cursor(ptr);
     auto error = storage->cursor->get_error();
     error_message msg;
-    msg.code = static_cast<int>(error.type);
+    msg.code = static_cast<int32_t>(error.type);
     std::string str = error.what;
     msg.message = new char[sizeof(str)];
     std::strcpy(msg.message, str.data());
@@ -294,59 +291,50 @@ extern "C" bool document_is_dict_by_index(doc_ptr ptr, int32_t index) {
 extern "C" bool document_get_bool_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_bool(key));
     return doc_storage->document->get_as<bool>(key);
 }
 
 extern "C" bool document_get_bool_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_bool(index));
     return doc_storage->document->get_as<bool>(static_cast<uint32_t>(index));
 }
 
 extern "C" uint64_t document_get_ulong_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_ulong(key));
     return doc_storage->document->get_as<uint64_t>(key);
 }
 
 extern "C" uint64_t document_get_ulong_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_ulong(index));
     return doc_storage->document->get_as<uint64_t>(static_cast<uint32_t>(index));
 }
 
 extern "C" int64_t document_get_long_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_long(key));
     return doc_storage->document->get_as<int64_t>(key);
 }
 
 extern "C" int64_t document_get_long_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_long(index));
     return doc_storage->document->get_as<int64_t>(static_cast<uint32_t>(index));
 }
 
 extern "C" double document_get_double_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_double(key));
     return doc_storage->document->get_as<double>(key);
 }
 
 extern "C" double document_get_double_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_double(static_cast<uint32_t>(index)));
     return doc_storage->document->get_as<double>(static_cast<uint32_t>(index));
 }
 
 extern "C" char* document_get_string_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_string(key));
     auto str = doc_storage->document->get_as<std::string>(key);
     char* str_ptr = new char[sizeof(str)];
     std::strcpy(str_ptr, str.data());
@@ -365,7 +353,6 @@ extern "C" char* document_get_string_by_index(doc_ptr ptr, int32_t index) {
 extern "C" doc_ptr document_get_array_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_array(key));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
     const components::document::document_view_t* doc =
@@ -376,7 +363,6 @@ extern "C" doc_ptr document_get_array_by_key(doc_ptr ptr, string_view_t key_raw)
 
 extern "C" doc_ptr document_get_array_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_array(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
     const components::document::document_view_t* doc = new components::document::document_view_t(
@@ -388,7 +374,6 @@ extern "C" doc_ptr document_get_array_by_index(doc_ptr ptr, int32_t index) {
 extern "C" doc_ptr document_get_dict_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::string key(key_raw.data, key_raw.size);
-    assert(doc_storage->document->is_dict(key));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
     const components::document::document_view_t* doc =
@@ -399,7 +384,6 @@ extern "C" doc_ptr document_get_dict_by_key(doc_ptr ptr, string_view_t key_raw) 
 
 extern "C" doc_ptr document_get_dict_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    assert(doc_storage->document->is_dict(static_cast<uint32_t>(index)));
     auto sub_doc_storage = std::make_unique<document_storage_t>();
     sub_doc_storage->state = state_t::created;
     const components::document::document_view_t* doc = new components::document::document_view_t(

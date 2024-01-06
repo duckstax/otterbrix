@@ -22,6 +22,7 @@ namespace components::cursor {
     enum class operation_status_t { success = 1, failure = 0 };
 
     enum class error_code_t : int32_t {
+        other_error = -1,
         none = 0,
         database_already_exists = 1,
         database_not_exists = 2,
@@ -29,8 +30,7 @@ namespace components::cursor {
         collection_not_exists = 4,
         collection_dropped = 5,
         sql_parse_error = 6,
-        create_phisical_plan_error = 7,
-        other_error = -1
+        create_phisical_plan_error = 7
     };
 
     struct error_t {

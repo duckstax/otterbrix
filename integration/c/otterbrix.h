@@ -31,7 +31,7 @@ typedef void* cursor_ptr;
 typedef void* doc_ptr;
 
 typedef struct error_message {
-    int code;
+    int32_t code;
     char* message;
 } error_message;
 

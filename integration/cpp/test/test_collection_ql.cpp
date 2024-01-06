@@ -117,7 +117,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
-            REQUIRE(!cur->is_success());
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -165,7 +165,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
-            REQUIRE(!cur->is_success());
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {

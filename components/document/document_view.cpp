@@ -15,7 +15,7 @@ namespace components::document {
     document_view_t::document_view_t(document_ptr document)
         : document_(std::move(document)) {}
 
-    document_view_t::document_view_t(document_view_t&& doc_view)
+    document_view_t::document_view_t(document_view_t&& doc_view) noexcept
         : document_(std::move(doc_view.document_)) {
         doc_view.document_ = nullptr;
     }

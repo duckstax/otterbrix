@@ -104,11 +104,13 @@ namespace Duckstax.EntityFramework.Otterbrix
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr
         OtterbrixCreate(TransferConfig config, StringPasser database, StringPasser collection);
+
         [DllImport(libotterbrix,
                    EntryPoint = "otterbrix_destroy",
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern void OtterbrixDestroy(IntPtr otterprixPtr);
+        
         [DllImport(libotterbrix,
                    EntryPoint = "execute_sql",
                    ExactSpelling = false,

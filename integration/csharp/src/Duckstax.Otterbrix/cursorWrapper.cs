@@ -14,20 +14,28 @@ namespace Duckstax.EntityFramework.Otterbrix
 
         [DllImport(libotterbrix, EntryPoint="release_cursor", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern void ReleaseCursor(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_size", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern int CursorSize(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_has_next", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorHasNext(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_next", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorNext(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_get", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorGet(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_get_by_index", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr CursorGet(IntPtr ptr, int index);
+
         [DllImport(libotterbrix, EntryPoint="cursor_is_success", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorIsSuccess(IntPtr ptr);
+
         [DllImport(libotterbrix, EntryPoint="cursor_is_error", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern bool CursorIsError(IntPtr ptr);
+
         [DllImport(libotterbrix,
                    EntryPoint = "cursor_get_error",
                    ExactSpelling = false,
@@ -46,8 +54,9 @@ namespace Duckstax.EntityFramework.Otterbrix
         public ErrorMessage GetError() {
             TransferErrorMessage transfer = CursorGetError(cursorStoragePtr);
             ErrorMessage message = new ErrorMessage();
-            message.type = (ErrorCode) transfer.type;
-            message.what = Marshal.PtrToStringAnsi(transfer.what);
+            message.type = (ErrorCode)transfer.type;
+            string? str = Marshal.PtrToStringAnsi(transfer.what);
+            message.what = str == null ? "" : str;
             Marshal.FreeHGlobal(transfer.what);
             return message;
         }

@@ -14,7 +14,7 @@ namespace components::document {
 
         document_view_t();
         explicit document_view_t(document_ptr document);
-        explicit document_view_t(document_view_t&& doc_view);
+        explicit document_view_t(document_view_t&& doc_view) noexcept;
 
         document_id_t id() const;
 

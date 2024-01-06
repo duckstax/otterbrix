@@ -132,7 +132,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
-            REQUIRE(!cur->is_success());
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -160,7 +160,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count < 20;");
-            REQUIRE(!cur->is_success());
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {
