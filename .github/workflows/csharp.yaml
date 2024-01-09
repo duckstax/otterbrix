@@ -65,6 +65,8 @@ jobs:
 
           - name: Test with dotnet
             run: |
+              cp build/integration/c/libotterbrix.so integration/csharp/src/Duckstax.Otterbrix/libotterbrix.so
+              cp build/integration/c/libotterbrix.so integration/csharp/tests/Duckstax.Otterbrix.Tests/libotterbrix.so
               cd integration/csharp/
               dotnet test --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}"
 

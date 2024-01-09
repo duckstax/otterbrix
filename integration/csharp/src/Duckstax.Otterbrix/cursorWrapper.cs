@@ -4,7 +4,7 @@ namespace Duckstax.EntityFramework.Otterbrix
     using System.Runtime.InteropServices;
 
     public class CursorWrapper {
-        const string libotterbrix = "../../../libotterbrix.so";
+        const string libotterbrix = "libotterbrix.so";
 
         [StructLayout(LayoutKind.Sequential)]
         private struct TransferErrorMessage {

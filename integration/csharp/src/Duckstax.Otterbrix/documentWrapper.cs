@@ -4,7 +4,7 @@ namespace Duckstax.EntityFramework.Otterbrix
     using System.Runtime.InteropServices;
 
     public class DocumentWrapper {
-        const string libotterbrix = "../../../libotterbrix.so";
+        const string libotterbrix = "libotterbrix.so";
         
         [DllImport(libotterbrix, EntryPoint="document_id", ExactSpelling=false, CallingConvention=CallingConvention.Cdecl)]
         private static extern IntPtr DocumentID(IntPtr ptr);

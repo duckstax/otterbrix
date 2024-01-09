@@ -76,7 +76,7 @@ namespace Duckstax.EntityFramework.Otterbrix
     }
 
     public class OtterbrixWrapper {
-        const string libotterbrix = "../../../libotterbrix.so";
+        const string libotterbrix = "libotterbrix.so";
 
         [StructLayout(LayoutKind.Sequential)]
         private struct TransferConfig {

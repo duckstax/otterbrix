@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 as builder
 
 ENV TZ=America/US
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,7 +10,8 @@ RUN apt update && \
         ninja-build \
         python3-pip \
         python3-venv \
-        python3-dev curl gnupg apt-transport-https && \
+        python3-dev curl gnupg apt-transport-https \
+        zlib1g && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -43,7 +44,26 @@ WORKDIR /app/build
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  -DSANITIZE_ADDRESS=ON && \
     cmake --build . --target all -- -j $(nproc)
 
-
 RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest
+
+# Multistage build is faster and resulting image will be smaller
+FROM mcr.microsoft.com/dotnet/sdk:7.0
+WORKDIR /app
+COPY --from=builder /app ./
+
+RUN cd integration/csharp && \
+    dotnet restore ./src/Duckstax.Otterbrix/Duckstax.Otterbrix.csproj && \
+    dotnet restore ./src/Duckstax.EntityFramework.Otterbrix/Duckstax.EntityFramework.Otterbrix.csproj && \
+    dotnet restore ./test/Duckstax.EntityFramework.Otterbrix.FunctionalTests/Duckstax.EntityFramework.Otterbrix.FunctionalTests.csproj && \
+    dotnet restore ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj
+
+RUN mkdir -p integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0 && \
+    mkdir -p integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0 && \
+    cp ./build/integration/c/libotterbrix.so ./integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0/libotterbrix.so && \
+    cp ./build/integration/c/libotterbrix.so ./integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0/libotterbrix.so
+
+RUN cd integration/csharp && \
+    #dotnet test -c Release
+    dotnet test ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj -c Release
