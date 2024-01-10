@@ -55,7 +55,7 @@ public class Tests
                 Assert.IsTrue(doc.GetLong("count") == index);
                 Assert.IsTrue(doc.GetString("name") == "Name " + index.ToString());
                 ++index;
-            } while (index < 5);
+            } while (index <= 99);
         }
         {
             string query = "SELECT * FROM TestDatabase.TestCollection ORDER BY count DESC;";
@@ -71,7 +71,7 @@ public class Tests
                 Assert.IsTrue(doc.GetLong("count") == index);
                 Assert.IsTrue(doc.GetString("name") == "Name " + index.ToString());
                 --index;
-            } while (index > 94);
+            } while (index >= 0);
         }
         {
             string query = "SELECT * FROM TestDatabase.TestCollection  ORDER BY name;";
@@ -80,26 +80,15 @@ public class Tests
             Assert.IsFalse(cursor.IsError());
             Assert.IsTrue(cursor.Size() == 100);
 
+            List<int> counts = new List<int>(){0, 1, 10, 11, 12};
+            int index = 0;
+            do
             {
                 DocumentWrapper doc = cursor.Next();
-                Assert.IsTrue(doc.GetLong("count") == 0);
-            }
-            {
-                DocumentWrapper doc = cursor.Next();
-                Assert.IsTrue(doc.GetLong("count") == 1);
-            }
-            {
-                DocumentWrapper doc = cursor.Next();
-                Assert.IsTrue(doc.GetLong("count") == 10);
-            }
-            {
-                DocumentWrapper doc = cursor.Next();
-                Assert.IsTrue(doc.GetLong("count") == 11);
-            }
-            {
-                DocumentWrapper doc = cursor.Next();
-                Assert.IsTrue(doc.GetLong("count") == 12);
-            }
+                Assert.IsTrue(doc.GetLong("count") == counts[index]);
+                Assert.IsTrue(doc.GetString("name") == "Name " + counts[index].ToString());
+                ++index;
+            } while (index < counts.Count);
         }
         {
             string query = "SELECT * FROM TestDatabase.TestCollection  WHERE count > 90;";
