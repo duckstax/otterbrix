@@ -16,8 +16,10 @@ namespace components::serialization::traits {
     struct pair_tag {};
     struct tuple_tag {};
     struct variant_tag {};
-    struct pod_tag {};
-    struct number_tag {};
+    struct char_tag {};
+    struct boolean_tag {};
+    struct signed_number_tag {};
+    struct unsigned_number_tag {};
     struct null_tag {};
 
     struct class_tag {};
@@ -80,52 +82,52 @@ namespace components::serialization::traits {
 
     template<>
     struct category_trait_impl<bool, void> {
-        using category = pod_tag;
+        using category = boolean_tag;
     };
 
     template<>
     struct category_trait_impl<char, void> {
-        using category = pod_tag;
+        using category = char_tag;
     };
 
     template<>
     struct category_trait_impl<int8_t, void> {
-        using category = pod_tag;
+        using category = signed_number_tag;
     };
 
     template<>
     struct category_trait_impl<int16_t, void> {
-        using category = pod_tag;
+        using category = signed_number_tag;
     };
 
     template<>
     struct category_trait_impl<int32_t, void> {
-        using category = pod_tag;
+        using category = signed_number_tag;
     };
 
     template<>
     struct category_trait_impl<int64_t, void> {
-        using category = pod_tag;
+        using category = signed_number_tag;
     };
 
     template<>
     struct category_trait_impl<uint8_t, void> {
-        using category = pod_tag;
+        using category = unsigned_number_tag;
     };
 
     template<>
     struct category_trait_impl<uint16_t, void> {
-        using category = pod_tag;
+        using category = unsigned_number_tag;
     };
 
     template<>
     struct category_trait_impl<uint32_t, void> {
-        using category = pod_tag;
+        using category = unsigned_number_tag;
     };
 
     template<>
     struct category_trait_impl<uint64_t, void> {
-        using category = pod_tag;
+        using category = unsigned_number_tag;
     };
 
     template<class C>

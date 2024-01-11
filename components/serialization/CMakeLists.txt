@@ -2,6 +2,7 @@ project(serialization)
 
 set(${PROJECT_NAME}_SOURCES
         json/json.cpp
+        deserialization.cpp
         serialization.cpp
 )
 

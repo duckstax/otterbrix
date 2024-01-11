@@ -3,7 +3,7 @@
 // clang-format off
 #include <components/serialization/context.hpp>
 #include <components/serialization/traits.hpp>
-#include <components/serialization/json/json.hpp>
+#include <components/serialization/json/serialization_json.hpp>
 // clang-format on
 
 namespace components::serialization {

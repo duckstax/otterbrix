@@ -3,8 +3,8 @@ project(test_serialization)
 add_definitions(-DDEV_MODE)
 
 set(${PROJECT_NAME}_SOURCES
-        bae_class_json.cpp
-        #base_container_json.cpp
+        #bae_class_json.cpp
+        base_container_json.cpp
         #base_tuple_json.cpp
 )
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <iostream>
 
 #include <components/serialization/serialization.hpp>
 
