@@ -84,6 +84,7 @@ TEST_CASE("python::test_collection") {
             auto session = otterbrix::session_id_t();
             auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
             auto cur = dispatcher->find(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
@@ -96,6 +97,7 @@ TEST_CASE("python::test_collection") {
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 90);
             auto cur = dispatcher->find(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
 
@@ -109,6 +111,7 @@ TEST_CASE("python::test_collection") {
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, std::string_view{"9$"});
             auto cur = dispatcher->find(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 10);
         }
 
@@ -129,6 +132,7 @@ TEST_CASE("python::test_collection") {
             ql->add_parameter(id_par{1}, 90);
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
             auto cur = dispatcher->find(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 18);
         }
 
@@ -157,6 +161,7 @@ TEST_CASE("python::test_collection") {
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
             ql->add_parameter(id_par{3}, 30);
             auto cur = dispatcher->find(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 3);
         }
     }
@@ -164,6 +169,7 @@ TEST_CASE("python::test_collection") {
         auto session = otterbrix::session_id_t();
         auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
         auto cur = dispatcher->find(session, ql);
+        REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 100);
         int count = 0;
         while (cur->has_next()) {
@@ -195,6 +201,7 @@ TEST_CASE("python::test_collection") {
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
             ql->add_parameter(id_par{1}, 10);
             auto cur = dispatcher->find_one(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 10);
         }
         {
@@ -214,6 +221,7 @@ TEST_CASE("python::test_collection") {
             ql->add_parameter(id_par{1}, 90);
             ql->add_parameter(id_par{2}, std::string_view{"9$"});
             auto cur = dispatcher->find_one(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 99);
         }
     }

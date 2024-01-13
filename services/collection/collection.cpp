@@ -252,7 +252,7 @@ namespace services::collection {
                              session,
                              make_cursor(context_->resource(), operation_status_t::failure));
         } else {
-            auto result = make_cursor(context_->resource(), operation_status_t::failure);
+            auto result = make_cursor(context_->resource(), operation_status_t::success);
             result->push(cursor.first->second.get());
             actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, result);
         }

@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duckstax.EntityFramework.Otterbrix", "src\Duckstax.EntityFramework.Otterbrix\Duckstax.EntityFramework.Otterbrix.csproj", "{AE759967-2079-4D1C-9859-95D11BD2EFF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duckstax.EntityFramework.Otterbrix.FunctionalTests", "test\Duckstax.EntityFramework.Otterbrix.FunctionalTests\Duckstax.EntityFramework.Otterbrix.FunctionalTests.csproj", "{D427EF44-F833-40CF-A494-4F118D2F17B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duckstax.Otterbrix", "src\Duckstax.Otterbrix\Duckstax.Otterbrix.csproj", "{F4C264FD-3642-4A85-98EE-4D067D79FA52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Duckstax.Otterbrix.Tests", "tests\Duckstax.Otterbrix.Tests\Duckstax.Otterbrix.Tests.csproj", "{D3B94F7E-C0D5-49AB-A2F4-C6E6E45773AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AE759967-2079-4D1C-9859-95D11BD2EFF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE759967-2079-4D1C-9859-95D11BD2EFF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE759967-2079-4D1C-9859-95D11BD2EFF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE759967-2079-4D1C-9859-95D11BD2EFF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D427EF44-F833-40CF-A494-4F118D2F17B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D427EF44-F833-40CF-A494-4F118D2F17B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D427EF44-F833-40CF-A494-4F118D2F17B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D427EF44-F833-40CF-A494-4F118D2F17B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4C264FD-3642-4A85-98EE-4D067D79FA52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4C264FD-3642-4A85-98EE-4D067D79FA52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4C264FD-3642-4A85-98EE-4D067D79FA52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4C264FD-3642-4A85-98EE-4D067D79FA52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3B94F7E-C0D5-49AB-A2F4-C6E6E45773AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3B94F7E-C0D5-49AB-A2F4-C6E6E45773AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3B94F7E-C0D5-49AB-A2F4-C6E6E45773AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3B94F7E-C0D5-49AB-A2F4-C6E6E45773AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

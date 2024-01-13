@@ -42,6 +42,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
@@ -54,6 +55,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
         {
             auto session = otterbrix::session_id_t();
             auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
@@ -61,6 +63,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
     }
@@ -71,6 +74,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "ORDER BY count;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 0);
             REQUIRE(cur->next()->get_long("count") == 1);
@@ -83,6 +87,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "ORDER BY count DESC;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 99);
             REQUIRE(cur->next()->get_long("count") == 98);
@@ -95,6 +100,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "ORDER BY name;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
             REQUIRE(cur->next()->get_long("count") == 0);
             REQUIRE(cur->next()->get_long("count") == 1);
@@ -110,6 +116,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
         {
@@ -117,6 +124,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "DELETE FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
         {
@@ -124,6 +132,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count > 90;");
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -134,6 +143,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count < 20;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
         }
         {
@@ -142,6 +152,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
                                                "UPDATE TestDatabase.TestCollection "
                                                "SET count = 1000 "
                                                "WHERE count < 20;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
         }
         {
@@ -149,6 +160,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count < 20;");
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {
@@ -156,6 +168,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             auto cur = dispatcher->execute_sql(session,
                                                "SELECT * FROM TestDatabase.TestCollection "
                                                "WHERE count == 1000;");
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
         }
     }
@@ -198,6 +211,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
                                            R"_(MIN(count) AS min_, MAX(count) AS max_ )_"
                                            R"_(FROM TestDatabase.TestCollection )_"
                                            R"_(GROUP BY name;)_");
+        REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 10);
         int number = 0;
         while (auto doc = cur->next()) {
@@ -220,6 +234,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
                                            R"_(FROM TestDatabase.TestCollection )_"
                                            R"_(GROUP BY name )_"
                                            R"_(ORDER BY name DESC;)_");
+        REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 10);
         int number = 9;
         while (auto doc = cur->next()) {
