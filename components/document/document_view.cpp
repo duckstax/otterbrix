@@ -22,6 +22,8 @@ namespace components::document {
 
     document_id_t document_view_t::id() const { return document_id_t(get_string("_id")); }
 
+    document_ptr document_view_t::get_ptr() const { return document_; }
+
     bool document_view_t::is_valid() const { return document_ != nullptr; }
 
     bool document_view_t::is_dict() const { return document_->value_->type() == value_type::dict; }

@@ -17,6 +17,7 @@ namespace components::document {
         explicit document_view_t(document_view_t&& doc_view) noexcept;
 
         document_id_t id() const;
+        document_ptr get_ptr() const;
 
         bool is_valid() const;
         bool is_dict() const;
