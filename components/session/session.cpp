@@ -29,4 +29,6 @@ namespace components::session {
         counter_ = static_cast<uint64_t>(uniq_counter);
         data_ = static_cast<uint64_t>(std::time(nullptr)); //todo recanting
     }
+
+    session_id_t session_id_t::generate_uid() { return session_id_t{}; }
 } // namespace components::session
