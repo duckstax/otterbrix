@@ -22,7 +22,7 @@ namespace services::collection::operators {
         return true;
     }
 
-    void operator_join_t::on_execute_impl(components::pipeline::context_t* context) {
+    void operator_join_t::on_execute_impl([[maybe_unused]] components::pipeline::context_t* context) {
         if (!left_ || !right_) {
             return;
         }

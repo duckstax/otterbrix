@@ -4,7 +4,7 @@ namespace components::logical_plan {
 
     node_type node_t::type() const { return type_; }
 
-    const collection_full_name_t& node_t::collection_full() const { return collection_; }
+    const collection_full_name_t& node_t::collection_full_name() const { return collection_; }
 
     const database_name_t& node_t::database_name() const { return collection_.database; }
 
@@ -26,7 +26,7 @@ namespace components::logical_plan {
     }
 
     std::unordered_set<collection_full_name_t, collection_name_hash> node_t::collection_dependencies() {
-        std::unordered_set<collection_full_name_t, collection_name_hash> dependencies{collection_full()};
+        std::unordered_set<collection_full_name_t, collection_name_hash> dependencies{collection_full_name()};
         for (const auto& child : children_) {
             child->collection_dependencies_(dependencies);
         }
@@ -77,7 +77,7 @@ namespace components::logical_plan {
 
     void node_t::collection_dependencies_(
         std::unordered_set<collection_full_name_t, collection_name_hash>& upper_dependencies) {
-        upper_dependencies.insert(collection_full());
+        upper_dependencies.insert(collection_full_name());
         for (const auto& child : children_) {
             child->collection_dependencies_(upper_dependencies);
         }

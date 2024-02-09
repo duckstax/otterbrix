@@ -92,7 +92,7 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_group(const context_storage_t& context,
                                               const components::logical_plan::node_ptr& node) {
-        auto group = boost::intrusive_ptr(new operators::operator_group_t(context.at(node->collection_full())));
+        auto group = boost::intrusive_ptr(new operators::operator_group_t(context.at(node->collection_full_name())));
         std::for_each(node->expressions().begin(),
                       node->expressions().end(),
                       [&](const components::expressions::expression_ptr& expr) {
@@ -102,7 +102,7 @@ namespace services::collection::planner::impl {
                                   static_cast<const components::expressions::scalar_expression_t*>(expr.get()));
                           } else if (expr->group() == components::expressions::expression_group::aggregate) {
                               add_group_aggregate(
-                                  context.at(node->collection_full()),
+                                  context.at(node->collection_full_name()),
                                   group,
                                   static_cast<const components::expressions::aggregate_expression_t*>(expr.get()));
                           }

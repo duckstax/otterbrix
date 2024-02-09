@@ -194,7 +194,7 @@ namespace components::document {
                 }
             }
         }
-        return std::move(combined_doc);
+        return combined_doc;
     }
 
     document_ptr make_document() { return new document_t(); }

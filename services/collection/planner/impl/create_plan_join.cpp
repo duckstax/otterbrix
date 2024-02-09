@@ -19,10 +19,10 @@ namespace services::collection::planner::impl {
             expressions.emplace_back(static_cast<components::expressions::join_expression_t*>(expr.get()));
         }
         // assign left collection as actor for join
-        auto join =
-            boost::intrusive_ptr(new operators::operator_join_t(context.at(node->children().front()->collection_full()),
-                                                                join_node->type(),
-                                                                std::move(expressions)));
+        auto join = boost::intrusive_ptr(
+            new operators::operator_join_t(context.at(node->children().front()->collection_full_name()),
+                                           join_node->type(),
+                                           std::move(expressions)));
 
         operators::operator_ptr left;
         operators::operator_ptr right;

@@ -9,9 +9,9 @@ namespace services::collection::planner::impl {
                                                const components::logical_plan::node_ptr& node) {
         const auto* insert = static_cast<const components::logical_plan::node_insert_t*>(node.get());
         auto plan = boost::intrusive_ptr(
-            new operators::operator_insert(context.at(node->collection_full()), insert->documents()));
+            new operators::operator_insert(context.at(node->collection_full_name()), insert->documents()));
 
-        auto checker = boost::intrusive_ptr(new operators::primary_key_scan(context.at(node->collection_full())));
+        auto checker = boost::intrusive_ptr(new operators::primary_key_scan(context.at(node->collection_full_name())));
         for (const auto& document : insert->documents()) {
             checker->append(get_document_id(document));
         }

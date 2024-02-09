@@ -20,7 +20,7 @@ namespace components::logical_plan {
         virtual ~node_t() = default;
 
         node_type type() const;
-        const collection_full_name_t& collection_full() const;
+        const collection_full_name_t& collection_full_name() const;
         const database_name_t& database_name() const;
         const collection_name_t& collection_name() const;
         const std::pmr::vector<node_ptr>& children() const;

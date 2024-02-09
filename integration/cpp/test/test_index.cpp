@@ -58,7 +58,7 @@ constexpr int kDocuments = 100;
                                           components::ql::index_type::single,                                          \
                                           INDEX_COMPARE};                                                              \
         ql.keys_.emplace_back(KEY);                                                                                    \
-        dispatcher->create_index(session, ql);                                                                         \
+        dispatcher->create_index(session, &ql);                                                                        \
     } while (false)
 
 #define DROP_INDEX(KEY)                                                                                                \
@@ -66,7 +66,7 @@ constexpr int kDocuments = 100;
         auto session = otterbrix::session_id_t();                                                                      \
         components::ql::drop_index_t ql{database_name, collection_name};                                               \
         ql.keys_.emplace_back(KEY);                                                                                    \
-        dispatcher->drop_index(session, ql);                                                                           \
+        dispatcher->drop_index(session, &ql);                                                                          \
     } while (false)
 
 #define CHECK_FIND_ALL()                                                                                               \

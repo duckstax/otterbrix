@@ -12,7 +12,19 @@ namespace services::collection {
 
 namespace services::collection::operators {
 
-    enum class operator_type { unused = 0x0, empty, match, insert, remove, update, sort, aggregate, join };
+    enum class operator_type {
+        unused = 0x0,
+        empty,
+        match,
+        insert,
+        remove,
+        update,
+        sort,
+        join,
+        aggregate,
+        add_index,
+        drop_index
+    };
 
     enum class operator_state { created, running, waiting, executed, cleared };
 

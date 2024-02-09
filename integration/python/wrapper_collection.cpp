@@ -245,9 +245,11 @@ namespace otterbrix {
         for (const auto& key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }
-        bool is_success = ptr_->create_index(session_tmp, index);
-        debug(log_, "wrapper_collection::create_index {}", is_success);
-        return is_success;
+        auto cur = ptr_->create_index(session_tmp, &index);
+        debug(log_, "wrapper_collection::create_index {}", cur->is_success());
+        return cur->is_success();
     }
+
+    //TODO Add drop index?
 
 } // namespace otterbrix

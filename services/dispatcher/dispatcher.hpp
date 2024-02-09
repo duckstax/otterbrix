@@ -57,20 +57,9 @@ namespace services::dispatcher {
                   std::string& collection,
                   actor_zeta::address_t address);
         void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr cursor);
-        void create_index(components::session::session_id_t& session,
-                          components::ql::create_index_t index,
-                          actor_zeta::address_t address);
-        void create_index_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-
-        void drop_index(components::session::session_id_t& session,
-                        components::ql::drop_index_t drop_index,
-                        actor_zeta::address_t address);
-
-        void drop_index_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
-        bool check_load_from_wal(components::session::session_id_t& session);
+        bool load_from_wal_in_progress(components::session::session_id_t& session);
 
     private:
         log_t log_;
@@ -129,8 +118,6 @@ namespace services::dispatcher {
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_id_t& session);
-        void create_index(components::session::session_id_t& session, components::ql::create_index_t index);
-        void drop_index(components::session::session_id_t& session, components::ql::drop_index_t drop_index);
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;
