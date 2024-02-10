@@ -1,4 +1,4 @@
-namespace Duckstax.EntityFramework.Otterbrix
+namespace Duckstax.Otterbrix
 {
     using System;
     using System.Runtime.InteropServices;

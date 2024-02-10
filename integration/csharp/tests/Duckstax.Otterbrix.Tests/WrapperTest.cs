@@ -1,6 +1,6 @@
 namespace Duckstax.Otterbrix.Tests;
 
-using Duckstax.EntityFramework.Otterbrix;
+using Duckstax.Otterbrix;
 
 public class Tests
 {
