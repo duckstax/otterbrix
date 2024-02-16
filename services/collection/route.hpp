@@ -13,6 +13,7 @@ namespace services::collection {
         create_index,
         drop_index,
         create_documents_finish,
+        execute_sub_plan_finish,
         execute_plan_finish,
         size_finish,
         drop_collection_finish,

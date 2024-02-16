@@ -18,7 +18,7 @@ namespace services::collection::operators::merge {
         virtual void on_merge_impl(components::pipeline::context_t* pipeline_context) = 0;
     };
 
-    using operator_merge_ptr = std::unique_ptr<operator_merge_t>;
+    using operator_merge_ptr = boost::intrusive_ptr<operator_merge_t>;
 
     bool is_operator_merge(const components::expressions::compare_expression_ptr& expr);
     operator_merge_ptr create_operator_merge(context_collection_t* context,

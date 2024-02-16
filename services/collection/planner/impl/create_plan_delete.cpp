@@ -6,7 +6,7 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_delete(context_collection_t* context,
+    operators::operator_ptr create_plan_delete(const context_storage_t& context,
                                                const components::logical_plan::node_ptr& node) {
         const auto* node_delete = static_cast<const components::logical_plan::node_delete_t*>(node.get());
 
@@ -20,7 +20,7 @@ namespace services::collection::planner::impl {
             }
         }
 
-        auto plan = std::make_unique<operators::operator_delete>(context);
+        auto plan = boost::intrusive_ptr(new operators::operator_delete(context.at(node->collection_full())));
         plan->set_children(
             create_plan_match(context,
                               node_match,

@@ -26,6 +26,14 @@ namespace components::logical_plan {
         std::copy(expressions.begin(), expressions.end(), std::back_inserter(expressions_));
     }
 
+    std::set<collection_full_name_t> node_t::collection_dependencies() {
+        std::set<collection_full_name_t> dependencies{collection_full()};
+        for (const auto& child : children_) {
+            child->collection_dependencies_(dependencies);
+        }
+        return dependencies;
+    }
+
     hash_t node_t::hash() const {
         hash_t hash_{0};
         boost::hash_combine(hash_, type_);
@@ -67,5 +75,12 @@ namespace components::logical_plan {
         , collection_(collection)
         , children_(resource)
         , expressions_(resource) {}
+
+    void node_t::collection_dependencies_(std::set<collection_full_name_t>& upper_dependencies) {
+        upper_dependencies.insert(collection_full());
+        for (const auto& child : children_) {
+            child->collection_dependencies_(upper_dependencies);
+        }
+    }
 
 } // namespace components::logical_plan

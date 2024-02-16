@@ -12,7 +12,7 @@ namespace services::collection::planner {
 
     using components::logical_plan::node_type;
 
-    operators::operator_ptr create_plan(context_collection_t* context,
+    operators::operator_ptr create_plan(const context_storage_t& context,
                                         const components::logical_plan::node_ptr& node,
                                         components::ql::limit_t limit) {
         switch (node->type()) {
