@@ -31,7 +31,7 @@ target_link_libraries(
 
         CONAN_PKG::spdlog
         CONAN_PKG::msgpack-cxx
-        CONAN_PKG::date
+        #CONAN_PKG::date
         CONAN_PKG::catch2
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
@@ -40,7 +40,7 @@ target_link_libraries(
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::libcurl
+        #CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         CONAN_PKG::libbacktrace

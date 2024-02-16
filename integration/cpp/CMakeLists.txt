@@ -44,18 +44,18 @@ target_link_libraries(
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
-        CONAN_PKG::date
+        #CONAN_PKG::date
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::libcurl
+        #CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         #CONAN_PKG::libbacktrace
-        CONAN_PKG::openssl
+        #CONAN_PKG::openssl
 )
 
 #set_target_properties({PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME "cpp_otterbrix_shared")
@@ -86,18 +86,18 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
 
             CONAN_PKG::spdlog
             CONAN_PKG::msgpack-cxx
-            CONAN_PKG::date
+            #CONAN_PKG::date
             CONAN_PKG::crc32c
             CONAN_PKG::abseil
             CONAN_PKG::rocksdb
             CONAN_PKG::actor-zeta
             CONAN_PKG::boost
             CONAN_PKG::fmt
-            CONAN_PKG::libcurl
+            #CONAN_PKG::libcurl
             CONAN_PKG::zlib
             CONAN_PKG::bzip2
             #CONAN_PKG::libbacktrace
-            CONAN_PKG::openssl
+            #CONAN_PKG::openssl
     )
 endif()
 
