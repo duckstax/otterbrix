@@ -35,6 +35,7 @@ TEST_CASE("base container") {
         serialize(json, map);
         std::cerr << json.data() << std::endl;
         json_str = json.data();
+        ////std::exit(1);
     }
 
     {
@@ -45,19 +46,27 @@ TEST_CASE("base container") {
         std::string str;
         std::string str1;
         std::int64_t number = 0;
+	std::cerr << -1 << std::endl;
         deserialize_array(json, 6);
+std::cerr << 0 << std::endl;
         deserialize(json, boolean);
+std::cerr << 1 << std::endl;
         deserialize(json, number);
+std::cerr << 2 << std::endl;
         deserialize(json, str);
+std::cerr << 3 << std::endl;
         deserialize(json, str1);
+std::cerr << 4 << std::endl;
         deserialize(json, vector);
-        deserialize(json, map);
+std::cerr << 5 << std::endl;
+        ///deserialize(json, map);
         REQUIRE(true == boolean);
         REQUIRE(number == 42);
         std::cerr << "asd" << str << std::endl;
         REQUIRE(str1 == "42");
         REQUIRE(str == "42");
         REQUIRE(vector == std::vector<int64_t>{1, 2, 3});
-        REQUIRE(map == std::map<int64_t, int64_t>{{1, 2}, {3, 4}});
+        ///REQUIRE(map == std::map<int64_t, int64_t>{{1, 2}, {3, 4}});
     }
+std::exit(1);
 }

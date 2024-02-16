@@ -10,6 +10,8 @@
 #include <components/serialization/json/convert.hpp>
 #include <components/serialization/traits.hpp>
 
+#include <components/serialization/forward.hpp>
+
 namespace components::serialization::detail {
 
     void intermediate_deserialize_array(context::json_context& context, std::size_t size, const unsigned int version);
@@ -95,18 +97,48 @@ namespace components::serialization::detail {
         ++context.index_deserialization;
     }
 
-    template<class Contaner>
+    template<class T>
     void intermediate_deserialize(context::json_context& context,
-                               Contaner& data,
+                               std::vector<T>& data,
                                const unsigned int version,
                                traits::array_tag) {
+        std::cerr << "intermediate_deserialize array" << std::endl;
         boost::ignore_unused(version);
         assert(context.index_deserialization >= 0 && context.index_deserialization < context.number_of_elements);
         assert(context::detail::state_t::array == context.state_);
         const auto& array = context.value_.as_array()[context.index_deserialization].as_array();
-        auto first = std::begin(array);
-        auto last = std::end(array);
-        std::copy(first,last,std::back_inserter(data));
+        for(auto&i:array) {
+            std::cerr << typeid(i).name() << std::endl;
+
+            context::json_context tmp(i);
+            T tmp_data;
+            auto size = 0;
+            switch (i.kind()) {
+                case boost::json::kind::int64:
+                    size=1;
+                    break;
+                case boost::json::kind::uint64:
+                    size=1;
+                    break;
+                case boost::json::kind::bool_:
+                    size=1;
+                    break;
+                case boost::json::kind::string:
+                    size=1;
+                    break;
+                case boost::json::kind::array:
+                    size=i.as_array().size();
+                    break;
+                case boost::json::kind::object:
+                    size=i.as_object().size();
+                    break;
+                case boost::json::kind::null:
+                    size=0;
+            }
+            deserialize_array(tmp,size);
+            deserialize(tmp,tmp_data);
+            data.emplace_back(std::move(tmp_data));
+        }
         ++context.index_deserialization;
     }
 

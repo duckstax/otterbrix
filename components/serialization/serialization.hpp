@@ -21,7 +21,7 @@ namespace components::serialization {
     template<class Storage, class Object>
     void serialize(context::context_t<Storage>& context, Object& data) {
         if constexpr (traits::is_user_class_v<Object>) {
-            std::apply([&context](auto&&... args) { (serialize(context, args), ...); }, data.access_as_tuple());
+             serialize(context,data.access_as_tuple());
         } else if constexpr (traits::is_tuple_v<Object>) {
             std::apply([&context](auto&&... args) { (serialize(context, args), ...); }, data);
         } else {
