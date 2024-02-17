@@ -208,7 +208,6 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     needs: [ test-wheel, build-info ]
     # TODO remove second branch condition later
-    if: ${{ github.ref_name == 'master' || github.ref_name == 'refactor-publish' }}
     strategy:
       fail-fast: false
       matrix:
