@@ -1,11 +1,11 @@
 #pragma once
 
-#include <variant>
-#include <memory_resource>
 #include <actor-zeta.hpp>
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
 #include <components/session/session.hpp>
+#include <memory_resource>
+#include <variant>
 
 namespace services::disk {
 
@@ -72,6 +72,8 @@ namespace services::disk {
 
     using command_storage_t = std::unordered_map<components::session::session_id_t, std::vector<command_t>>;
 
-    void append_command(command_storage_t &storage, const components::session::session_id_t &session, const command_t &command);
+    void append_command(command_storage_t& storage,
+                        const components::session::session_id_t& session,
+                        const command_t& command);
 
 } //namespace services::disk

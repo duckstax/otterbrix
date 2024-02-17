@@ -5,7 +5,7 @@
 
 namespace components::sql::impl {
 
-    namespace  {
+    namespace {
 
         inline bool compare_str_case_insensitive(const std::string& s1, std::string_view s2) {
             if (s1.size() != s2.size()) {
@@ -21,13 +21,10 @@ namespace components::sql::impl {
         }
 
         inline bool equals(const mask_element_t& elem, const token_t& token) {
-            static const std::set<token_type> compare_value_types {
-                token_type::bare_word
-            };
+            static const std::set<token_type> compare_value_types{token_type::bare_word};
 
-            return elem.type == token.type
-                && (compare_value_types.find(elem.type) == compare_value_types.end()
-                    || compare_str_case_insensitive(elem.value, token.value()));
+            return elem.type == token.type && (compare_value_types.find(elem.type) == compare_value_types.end() ||
+                                               compare_str_case_insensitive(elem.value, token.value()));
         }
 
         inline bool is_integer(std::string_view data) {
@@ -40,8 +37,7 @@ namespace components::sql::impl {
     mask_element_t::mask_element_t(token_type type, const std::string& value, bool optional)
         : type(type)
         , value(value)
-        , optional(optional) {
-    }
+        , optional(optional) {}
 
     mask_element_t mask_element_t::create_value_mask_element() {
         mask_element_t elem{token_type::bare_word, ""};
@@ -55,18 +51,32 @@ namespace components::sql::impl {
         return elem;
     }
 
-    bool operator==(const mask_element_t& elem, const token_t& token) {
-        return equals(elem, token);
+    bool operator==(const mask_element_t& elem, const token_t& token) { return equals(elem, token); }
+
+    bool operator!=(const mask_element_t& elem, const token_t& token) { return !(elem == token); }
+
+    mask_group_element_t::mask_group_element_t(const std::vector<std::string>& words) {
+        this->words.reserve(words.size());
+        std::transform(words.begin(), words.end(), std::back_inserter(this->words), [](const std::string& word) {
+            return mask_element_t{token_type::bare_word, word};
+        });
     }
 
-    bool operator!=(const mask_element_t& elem, const token_t& token) {
-        return !(elem == token);
+    mask_group_element_t::status mask_group_element_t::check(lexer_t& lexer) const {
+        if (words.front() != lexer.current_significant_token()) {
+            return status::no;
+        }
+        for (auto it = words.begin() + 1; it != words.end(); ++it) {
+            auto token = lexer.next_not_whitespace_token();
+            if (*it != token) {
+                return status::error;
+            }
+        }
+        return status::yes;
     }
-
 
     mask_t::mask_t(const std::vector<mask_element_t>& elements)
-        : elements_(elements) {
-    }
+        : elements_(elements) {}
 
     bool mask_t::match(lexer_t& lexer) {
         auto token = lexer.next_token();
@@ -99,10 +109,7 @@ namespace components::sql::impl {
         return true;
     }
 
-    std::string mask_t::cap(std::size_t index) const {
-        return elements_.at(index).value;
-    }
-
+    std::string mask_t::cap(std::size_t index) const { return elements_.at(index).value; }
 
     bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem) {
         auto token = lexer.next_token();

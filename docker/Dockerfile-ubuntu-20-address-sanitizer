@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:20.04 as builder
 
 ENV TZ=America/US
 ENV DEBIAN_FRONTEND=noninteractive
@@ -10,15 +10,12 @@ RUN apt update && \
         ninja-build \
         python3-pip \
         python3-venv \
-        python3-dev curl gnupg apt-transport-https && \
-    curl -fsSL https://bazel.build/bazel-release.pub.gpg | apt-key add && \
-        echo 'deb https://storage.googleapis.com/bazel-apt stable jdk1.8' | tee /etc/apt/sources.list.d/bazel.list && \
-        apt update && \
-        apt install -y bazel bazel-4.1.0 git && \
+        python3-dev curl gnupg apt-transport-https \
+        zlib1g && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN    pip3 install --no-cache-dir conan==1.54.0 pytest==6.2.5 cmake && \
+RUN    pip3 install --no-cache-dir conan==1.60.0 pytest==6.2.5 cmake && \
     conan user && \
     conan profile new default --detect --force && \
     conan profile update settings.compiler.libcxx=libstdc++11 default && \
@@ -29,14 +26,8 @@ RUN    pip3 install --no-cache-dir conan==1.54.0 pytest==6.2.5 cmake && \
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 WORKDIR /app/build
-COPY conanfile-host-wasm.txt ./
-RUN conan install conanfile-host-wasm.txt --build missing -s build_type=Release
-
-WORKDIR /app/wasm_build
-COPY conan/profiles/wasm ./conan/profiles/wasm
-RUN conan config install conan
-COPY conanfile-wasm.txt ./
-RUN conan install -pr wasm --profile:build=default --profile:host=wasm -g=virtualenv --build missing -s build_type=Release conanfile-client-wasm.txt
+COPY conanfile.txt ./conanfile.txt
+RUN conan install conanfile.txt --build missing -s build_type=Release
 
 WORKDIR /app
 COPY ./integration ./integration
@@ -45,25 +36,31 @@ COPY ./components ./components
 COPY ./core ./core
 COPY ./services ./services
 COPY ./wasm ./wasm
+COPY ./example ./example
 COPY ./CMakeLists.txt ./CMakeLists.txt
-
-WORKDIR /app/wasm_build
-RUN ls
-RUN pwd
-RUN source ./activate.sh  && \
-    cmake  ..  -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake -DDEV_MODE=OFF -DWASM_BUILD=ON &&\
-    cmake --build .
 
 WORKDIR /app/build
 
-RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DADDRESS_SANITIZER=ON && \
-    cmake --build .
-
-RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
-
-#RUN export LSAN_OPTIONS=verbosity=1:log_threads=1 && \
-#    ctest -C -V --output-on-failure \
+RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  -DSANITIZE_ADDRESS=ON && \
+    cmake --build . --target all -- -j $(nproc)
 
 RUN ctest -C -V --output-on-failure
 
 RUN cd integration/python/ && pytest
+
+# Multistage build is faster and resulting image will be smaller
+FROM mcr.microsoft.com/dotnet/sdk:7.0
+WORKDIR /app
+COPY --from=builder /app ./
+
+RUN cd integration/csharp && \
+    dotnet restore ./src/Duckstax.Otterbrix/Duckstax.Otterbrix.csproj && \
+    dotnet restore ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj
+
+RUN mkdir -p integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0 && \
+    mkdir -p integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0 && \
+    cp ./build/integration/c/libotterbrix.so ./integration/csharp/src/Duckstax.Otterbrix/bin/Release/net7.0/libotterbrix.so && \
+    cp ./build/integration/c/libotterbrix.so ./integration/csharp/tests/Duckstax.Otterbrix.Tests/bin/Release/net7.0/libotterbrix.so
+
+RUN cd integration/csharp && \
+    dotnet test -c Release

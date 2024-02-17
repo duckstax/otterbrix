@@ -15,13 +15,21 @@ namespace core::detail {
         using trace_full_exception::trace_full_exception;
     };
 
-    void failed(std::string_view expr, const char* file, unsigned int line,
-                const char* function, std::string_view msg) noexcept {
+    void failed(std::string_view expr,
+                const char* file,
+                unsigned int line,
+                const char* function,
+                std::string_view msg) noexcept {
         auto trace = boost::stacktrace::stacktrace();
         auto log = get_logger();
-        error(log, "error at {}:{}:{}. assertion '{}' failed{}{}.\n Stacktrace:\n{}\n", file,
-              line, (function ? function : ""), expr,
-              (msg.empty() ? std::string_view{} : std::string_view{": "}), msg,
+        error(log,
+              "error at {}:{}:{}. assertion '{}' failed{}{}.\n Stacktrace:\n{}\n",
+              file,
+              line,
+              (function ? function : ""),
+              expr,
+              (msg.empty() ? std::string_view{} : std::string_view{": "}),
+              msg,
               to_string(trace));
         abort();
     }

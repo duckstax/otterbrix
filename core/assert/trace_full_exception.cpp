@@ -23,9 +23,7 @@ namespace core {
         ensure_null_terminated();
     }
 
-    trace_full_exception_base::~trace_full_exception_base() {
-        delete pimpl_;
-    }
+    trace_full_exception_base::~trace_full_exception_base() { delete pimpl_; }
 
     void trace_full_exception_base::ensure_null_terminated() {
         pimpl_->message_buffer_.reserve(pimpl_->message_buffer_.size() + 1);
@@ -36,8 +34,7 @@ namespace core {
         return message_buffer().size() != 0 ? message_buffer().data() : std::exception::what();
     }
 
-    const trace_full_exception_base::memory_buffer_t&
-    trace_full_exception_base::message_buffer() const noexcept {
+    const trace_full_exception_base::memory_buffer_t& trace_full_exception_base::message_buffer() const noexcept {
         return pimpl_->message_buffer_;
     }
 

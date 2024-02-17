@@ -6,4 +6,4 @@ namespace services::collection::operators::get {
         return get_value_impl(document);
     }
 
-} // namespace services::operators::get
+} // namespace services::collection::operators::get

@@ -7,12 +7,9 @@ namespace core::file {
 
     file_t::file_t(const path_t& path)
         : fd_(::open(path.c_str(), O_CREAT | O_RDWR, 0777))
-        , offset_(0) {
-    }
+        , offset_(0) {}
 
-    file_t::~file_t() {
-        ::close(fd_);
-    }
+    file_t::~file_t() { ::close(fd_); }
 
     std::string file_t::read(std::size_t size, __off64_t offset) const {
         std::string data(size, '\0');
@@ -65,21 +62,13 @@ namespace core::file {
         offset_ += ::pwritev(fd_, &write_data, 1, offset_);
     }
 
-    void file_t::append(void* data, std::size_t size) {
-        append(reinterpret_cast<char*>(data), size);
-    }
+    void file_t::append(void* data, std::size_t size) { append(reinterpret_cast<char*>(data), size); }
 
-    void file_t::append(const void* data, std::size_t size) {
-        append(const_cast<void*>(data), size);
-    }
+    void file_t::append(const void* data, std::size_t size) { append(const_cast<void*>(data), size); }
 
-    void file_t::append(std::string& data) {
-        append(data.data(), data.size());
-    }
+    void file_t::append(std::string& data) { append(data.data(), data.size()); }
 
-    void file_t::append(const std::string &data) {
-        append(data.data(), data.size());
-    }
+    void file_t::append(const std::string& data) { append(data.data(), data.size()); }
 
     void file_t::rewrite(std::string& data) {
         offset_ = 0;
@@ -87,8 +76,6 @@ namespace core::file {
         ::ftruncate(fd_, offset_);
     }
 
-    void file_t::seek_eof() {
-        offset_ = ::lseek64(fd_, 0, SEEK_END);
-    }
+    void file_t::seek_eof() { offset_ = ::lseek64(fd_, 0, SEEK_END); }
 
 } //namespace core::file

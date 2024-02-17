@@ -8,7 +8,7 @@ namespace services::collection::operators::aggregate {
 
     class operator_sum_t final : public operator_aggregate_t {
     public:
-        explicit operator_sum_t(context_collection_t *collection, components::index::key_t key);
+        explicit operator_sum_t(context_collection_t* collection, components::index::key_t key);
 
     private:
         components::index::key_t key_;
@@ -17,4 +17,4 @@ namespace services::collection::operators::aggregate {
         std::string key_impl() const final;
     };
 
-} // namespace services::operators::aggregate
+} // namespace services::collection::operators::aggregate

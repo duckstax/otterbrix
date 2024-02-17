@@ -40,8 +40,11 @@ private:
 
 class mock_wasm_t : public wasm_t {
 public:
-    mock_wasm_t(string_view id, unique_ptr<WasmVm> vm, string_view vm_id,
-                string_view vm_configuration, string_view vm_key,
+    mock_wasm_t(string_view id,
+                unique_ptr<WasmVm> vm,
+                string_view vm_id,
+                string_view vm_configuration,
+                string_view vm_key,
                 unordered_map<string, string> envs,
                 AllowedCapabilitiesMap allowed_capabilities);
 
@@ -62,8 +65,10 @@ public:
     mock_wasm_manager_t(string_view id, engine_t engine);
 
 protected:
-    auto create_wasm(string_view vm_id, string_view vm_configuration,
-                     string_view vm_key, unordered_map<string, string> envs,
+    auto create_wasm(string_view vm_id,
+                     string_view vm_configuration,
+                     string_view vm_key,
+                     unordered_map<string, string> envs,
                      AllowedCapabilitiesMap allowed_capabilities) const -> unique_ptr<WasmBase> override;
 
     auto clone_wasm(shared_ptr<WasmHandleBase> wasm) const -> unique_ptr<WasmBase> override;
@@ -72,20 +77,23 @@ private:
     string_view id_;
 };
 
-mock_wasm_context_t::mock_wasm_context_t(string_view id, WasmBase* wasm) : wasm_context_t(wasm), id_(id) {}
+mock_wasm_context_t::mock_wasm_context_t(string_view id, WasmBase* wasm)
+    : wasm_context_t(wasm)
+    , id_(id) {}
 
 mock_wasm_context_t::mock_wasm_context_t(string_view id, WasmBase* wasm, const shared_ptr<PluginBase>& plugin)
-    : wasm_context_t(wasm, plugin), id_(id) {}
+    : wasm_context_t(wasm, plugin)
+    , id_(id) {}
 
 WasmResult mock_wasm_context_t::log(uint32_t log_level, string_view message) {
     REQUIRE(static_cast<log_t::level>(log_level) == log_t::level::info);
 
     if (id_ == "plugin_id0") {
-        //REQUIRE(message == "[/rocketjoe/components/wasm_runner/tests/log_wasm/main.cpp:17]::onStart() Hello, World!");
+        //REQUIRE(message == "[/otterbrix/components/wasm_runner/tests/log_wasm/main.cpp:17]::onStart() Hello, World!");
     }
 
     if (id_ == "plugin_id1") {
-        //REQUIRE(message == "[/rocketjoe/components/wasm_runner/tests/log_quickjs_wasm/main.cpp:159]::js_log() Hello, World!");
+        //REQUIRE(message == "[/otterbrix/components/wasm_runner/tests/log_quickjs_wasm/main.cpp:159]::js_log() Hello, World!");
     }
 
     auto status = wasm_context_t::log(log_level, message);
@@ -115,17 +123,21 @@ auto mock_wasm_context_t::getProperty(string_view path, string* result) -> WasmR
     return status;
 }
 
-mock_wasm_t::mock_wasm_t(string_view id, unique_ptr<WasmVm> vm, string_view vm_id,
-                         string_view vm_configuration, string_view vm_key,
-                         unordered_map<string, string> envs, AllowedCapabilitiesMap allowed_capabilities)
-    : wasm_t(move(vm), vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities)), id_(id) {}
+mock_wasm_t::mock_wasm_t(string_view id,
+                         unique_ptr<WasmVm> vm,
+                         string_view vm_id,
+                         string_view vm_configuration,
+                         string_view vm_key,
+                         unordered_map<string, string> envs,
+                         AllowedCapabilitiesMap allowed_capabilities)
+    : wasm_t(move(vm), vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities))
+    , id_(id) {}
 
 mock_wasm_t::mock_wasm_t(string_view id, const shared_ptr<WasmHandleBase>& wasm, const WasmVmFactory& factory)
-    : wasm_t(wasm, factory), id_(id) {}
+    : wasm_t(wasm, factory)
+    , id_(id) {}
 
-auto mock_wasm_t::createVmContext() -> ContextBase* {
-    return new mock_wasm_context_t(id_, this);
-}
+auto mock_wasm_t::createVmContext() -> ContextBase* { return new mock_wasm_context_t(id_, this); }
 
 auto mock_wasm_t::createRootContext(const shared_ptr<PluginBase>& plugin) -> ContextBase* {
     return new mock_wasm_context_t(id_, this, plugin);
@@ -135,24 +147,32 @@ auto mock_wasm_t::createContext(const shared_ptr<PluginBase>& plugin) -> Context
     return new mock_wasm_context_t(id_, this, plugin);
 }
 
-mock_wasm_manager_t::mock_wasm_manager_t(string_view id, engine_t engine) : wasm_manager_t(engine), id_(id) {}
+mock_wasm_manager_t::mock_wasm_manager_t(string_view id, engine_t engine)
+    : wasm_manager_t(engine)
+    , id_(id) {}
 
-auto mock_wasm_manager_t::create_wasm(string_view vm_id, string_view vm_configuration,
-                                      string_view vm_key, unordered_map<string, string> envs,
+auto mock_wasm_manager_t::create_wasm(string_view vm_id,
+                                      string_view vm_configuration,
+                                      string_view vm_key,
+                                      unordered_map<string, string> envs,
                                       AllowedCapabilitiesMap allowed_capabilities) const -> unique_ptr<WasmBase> {
-    return make_unique<mock_wasm_t>(id_, new_vm(), vm_id, vm_configuration, vm_key, move(envs), move(allowed_capabilities));
+    return make_unique<mock_wasm_t>(id_,
+                                    new_vm(),
+                                    vm_id,
+                                    vm_configuration,
+                                    vm_key,
+                                    move(envs),
+                                    move(allowed_capabilities));
 }
 
 auto mock_wasm_manager_t::clone_wasm(shared_ptr<WasmHandleBase> wasm) const -> unique_ptr<WasmBase> {
-    return make_unique<mock_wasm_t>(id_, move(wasm), [this]() {
-        return new_vm();
-    });
+    return make_unique<mock_wasm_t>(id_, move(wasm), [this]() { return new_vm(); });
 }
 #include <iostream>
 TEST_CASE("wasm_manager_t log", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
-    auto wasm_path =  "log_wasm.wasm";
+    auto wasm_path = "log_wasm.wasm";
     REQUIRE(std::filesystem::exists(wasm_path));
     auto wasm = read_test_wasm_file(wasm_path);
     REQUIRE(!wasm.empty());
@@ -160,23 +180,41 @@ TEST_CASE("wasm_manager_t log", "[API]") {
     string_view plugin_id = "plugin_id0";
     mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
 
-    wasm_manager.initialize("plugin_name0", plugin_id, "plugin_vm_id0", "plugin_configiguration0",
-                            false, "vm_id0", "vm_configuration0", {}, {}, wasm, false);
+    wasm_manager.initialize("plugin_name0",
+                            plugin_id,
+                            "plugin_vm_id0",
+                            "plugin_configiguration0",
+                            false,
+                            "vm_id0",
+                            "vm_configuration0",
+                            {},
+                            {},
+                            wasm,
+                            false);
     wasm_manager.get_or_create_thread_local_plugin();
 }
 
 TEST_CASE("wasm_manager_t log_quickjs", "[API]") {
     string log_dir(".");
     auto log = initialization_logger("wasm_runner", log_dir);
-    auto wasm_path =  "log_quickjs_wasm.wasm";
+    auto wasm_path = "log_quickjs_wasm.wasm";
     REQUIRE(std::filesystem::exists(wasm_path));
     auto wasm = read_test_wasm_file(wasm_path);
     REQUIRE(!wasm.empty());
     string_view plugin_id = "plugin_id1";
     mock_wasm_manager_t wasm_manager(plugin_id, engine_t::wamr);
 
-    wasm_manager.initialize("plugin_name1", plugin_id, "plugin_vm_id1", "plugin_configiguration1",
-                            false, "vm_id1", "vm_configuration1", {}, {}, wasm, false);
+    wasm_manager.initialize("plugin_name1",
+                            plugin_id,
+                            "plugin_vm_id1",
+                            "plugin_configiguration1",
+                            false,
+                            "vm_id1",
+                            "vm_configuration1",
+                            {},
+                            {},
+                            wasm,
+                            false);
     wasm_manager.get_or_create_thread_local_plugin();
 }
 /*

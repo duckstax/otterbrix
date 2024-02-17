@@ -13,7 +13,13 @@ TEMPLATE_TEST_CASE("memory resource", "[vector][template]", std::int8_t, std::in
     REQUIRE(vec.memory_resource() == std::pmr::get_default_resource());
 }
 
-TEMPLATE_TEST_CASE("zero size constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("zero size constructor",
+                   "[vector][template]",
+                   std::int8_t,
+                   std::int32_t,
+                   std::uint64_t,
+                   float,
+                   double) {
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, 0);
     REQUIRE(vec.size() == 0);
@@ -21,7 +27,13 @@ TEMPLATE_TEST_CASE("zero size constructor", "[vector][template]", std::int8_t, s
     REQUIRE(vec.is_empty());
 }
 
-TEMPLATE_TEST_CASE("non zero size constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("non zero size constructor",
+                   "[vector][template]",
+                   std::int8_t,
+                   std::int32_t,
+                   std::uint64_t,
+                   float,
+                   double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);
@@ -185,7 +197,13 @@ TEMPLATE_TEST_CASE("set element zero", "[vector][template]", std::int8_t, std::i
     }
 }
 
-TEMPLATE_TEST_CASE("front back element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
+TEMPLATE_TEST_CASE("front back element",
+                   "[vector][template]",
+                   std::int8_t,
+                   std::int32_t,
+                   std::uint64_t,
+                   float,
+                   double) {
     auto const size{12345};
     std::pmr::memory_resource* mr = std::pmr::get_default_resource();
     core::uvector<TestType> vec(mr, size);

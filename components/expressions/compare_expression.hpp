@@ -1,9 +1,9 @@
 #pragma once
 
-#include <memory>
-#include <memory_resource>
 #include "expression.hpp"
 #include "key.hpp"
+#include <memory>
+#include <memory_resource>
 
 namespace components::expressions {
 
@@ -16,7 +16,10 @@ namespace components::expressions {
         compare_expression_t(compare_expression_t&&) = default;
         ~compare_expression_t() final = default;
 
-        compare_expression_t(std::pmr::memory_resource *resource, compare_type type, const key_t& key, core::parameter_id_t);
+        compare_expression_t(std::pmr::memory_resource* resource,
+                             compare_type type,
+                             const key_t& key,
+                             core::parameter_id_t);
 
         compare_type type() const;
         const key_t& key() const;
@@ -40,9 +43,12 @@ namespace components::expressions {
         bool equal_impl(const expression_i* rhs) const final;
     };
 
-    compare_expression_ptr make_compare_expression(std::pmr::memory_resource *resource, compare_type type, const key_t& key, core::parameter_id_t id);
-    compare_expression_ptr make_compare_expression(std::pmr::memory_resource *resource, compare_type type);
-    compare_expression_ptr make_compare_union_expression(std::pmr::memory_resource *resource, compare_type type);
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource,
+                                                   compare_type type,
+                                                   const key_t& key,
+                                                   core::parameter_id_t id);
+    compare_expression_ptr make_compare_expression(std::pmr::memory_resource* resource, compare_type type);
+    compare_expression_ptr make_compare_union_expression(std::pmr::memory_resource* resource, compare_type type);
 
     bool is_union_compare_condition(compare_type type);
     compare_type get_compare_type(const std::string& key);

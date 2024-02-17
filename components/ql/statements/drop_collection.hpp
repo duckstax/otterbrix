@@ -1,20 +1,26 @@
 #pragma once
 
-#include <msgpack.hpp>
-#include <msgpack/zone.hpp>
-#include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
+#include <msgpack.hpp>
+#include <msgpack/adaptor/list.hpp>
+#include <msgpack/zone.hpp>
 
 namespace components::ql {
 
     struct drop_collection_t final : ql_statement_t {
-        drop_collection_t(const database_name_t& database, const collection_name_t &collection);
+        drop_collection_t(const database_name_t& database, const collection_name_t& collection);
         drop_collection_t() = default;
         drop_collection_t(const drop_collection_t&) = default;
         drop_collection_t& operator=(const drop_collection_t&) = default;
         drop_collection_t(drop_collection_t&&) = default;
         drop_collection_t& operator=(drop_collection_t&&) = default;
         ~drop_collection_t() final = default;
+
+        std::string to_string() const final {
+            std::stringstream s;
+            s << "drop_collection: " << database_ << "." << collection_;
+            return s.str();
+        }
     };
 
 } // namespace components::ql
@@ -26,7 +32,8 @@ namespace msgpack {
 
             template<>
             struct convert<components::ql::drop_collection_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::drop_collection_t& v) const {
+                msgpack::object const& operator()(msgpack::object const& o,
+                                                  components::ql::drop_collection_t& v) const {
                     if (o.type != msgpack::type::ARRAY) {
                         throw msgpack::type_error();
                     }
@@ -42,7 +49,8 @@ namespace msgpack {
             template<>
             struct pack<components::ql::drop_collection_t> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::drop_collection_t const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           components::ql::drop_collection_t const& v) const {
                     o.pack_array(2);
                     o.pack(v.database_);
                     o.pack(v.collection_);
@@ -55,12 +63,14 @@ namespace msgpack {
                 void operator()(msgpack::object::with_zone& o, components::ql::drop_collection_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 2;
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
                 }
             };
 
         } // namespace adaptor
-    } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack

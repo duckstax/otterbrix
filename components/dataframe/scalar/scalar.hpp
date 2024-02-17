@@ -5,8 +5,8 @@
 #include <dataframe/column/column.hpp>
 #include <dataframe/table/table.hpp>
 #include <dataframe/table/table_view.hpp>
-#include <dataframe/types.hpp>
 #include <dataframe/traits.hpp>
+#include <dataframe/types.hpp>
 
 namespace components::dataframe::scalar {
 
@@ -45,7 +45,7 @@ namespace components::dataframe::scalar {
             fixed_width_scalar(fixed_width_scalar&& other) = default;
             fixed_width_scalar& operator=(fixed_width_scalar const& other) = delete;
             fixed_width_scalar& operator=(fixed_width_scalar&& other) = delete;
-            fixed_width_scalar(std::pmr::memory_resource*, fixed_width_scalar const& other );
+            fixed_width_scalar(std::pmr::memory_resource*, fixed_width_scalar const& other);
 
             void set_value(T value);
             explicit operator value_type() const;
@@ -57,8 +57,8 @@ namespace components::dataframe::scalar {
             core::scalar<T> _data;
 
             fixed_width_scalar() = delete;
-            fixed_width_scalar(std::pmr::memory_resource* , T value, bool is_valid = true);
-            fixed_width_scalar(std::pmr::memory_resource* , core::scalar<T>&& data, bool is_valid = true);
+            fixed_width_scalar(std::pmr::memory_resource*, T value, bool is_valid = true);
+            fixed_width_scalar(std::pmr::memory_resource*, core::scalar<T>&& data, bool is_valid = true);
         };
 
     } // namespace detail
@@ -95,11 +95,17 @@ namespace components::dataframe::scalar {
         fixed_point_scalar& operator=(fixed_point_scalar const& other) = delete;
         fixed_point_scalar& operator=(fixed_point_scalar&& other) = delete;
 
-        fixed_point_scalar(std::pmr::memory_resource*,fixed_point_scalar const& other);
-        fixed_point_scalar(std::pmr::memory_resource*, rep_type value,core::numbers::scale_type scale,bool is_valid = true);
+        fixed_point_scalar(std::pmr::memory_resource*, fixed_point_scalar const& other);
+        fixed_point_scalar(std::pmr::memory_resource*,
+                           rep_type value,
+                           core::numbers::scale_type scale,
+                           bool is_valid = true);
         fixed_point_scalar(std::pmr::memory_resource*, rep_type value, bool is_valid = true);
         fixed_point_scalar(std::pmr::memory_resource*, T value, bool is_valid = true);
-        fixed_point_scalar(std::pmr::memory_resource*, core::scalar<rep_type>&& data, core::numbers::scale_type scale, bool is_valid = true);
+        fixed_point_scalar(std::pmr::memory_resource*,
+                           core::scalar<rep_type>&& data,
+                           core::numbers::scale_type scale,
+                           bool is_valid = true);
 
         rep_type value() const;
         T fixed_point_value() const;
@@ -222,7 +228,7 @@ namespace components::dataframe::scalar {
     private:
         table::table_t _data;
 
-        void init( std::pmr::memory_resource*,bool is_valid);
+        void init(std::pmr::memory_resource*, bool is_valid);
     };
 
 } // namespace components::dataframe::scalar

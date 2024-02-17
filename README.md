@@ -1,26 +1,29 @@
-Ottergon is a development platform for building analytical systems and applications.
+Otterbrix is an open-source framework for developing conventional and analytical applications.
 
-[![ubuntu 20.04](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/ubuntu_20_04.yaml)
-[![manylinux2014](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/ottergon/actions/workflows/manylinux2014.yml)
+[![ubuntu 20.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-20-04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-20-04.yaml)
+[![ubuntu 22.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-22-04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-22-04.yaml)
+[![manylinux2014](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml)
 
-The platform is designed to combine supporting analytics and processing transactions. It is a unified data engine to power fast analytics and fast applications.
 
-It contains a set of technologies across different storage types, driving low-latency access to large datasets and enabling big data systems to process and move data fast. It also offers rich NoSQL/SQL dialects. It is designed to be fast, reliable and easy to use.
+Otterbrix is an open-source framework for developing conventional and analytical applications. 
+By adding the otterbrix module to their applications, developers unlock the ability to quickly process unstructured and loosely structured data.
 
-## Enjoy easy programming with Ottergon!
+otterbrix seamlessly integrates with column-oriented memory format and can represent both flat and hierarchical data for efficient analytical operations.
+
+## Enjoy easy programming with otterbrix!
 
 ## Installation
 
 ### Python example:
 
 ```bash
-    pip install ottergon==0.5.0 
+    pip install otterbrix==0.5.0 
 ```
 
 Python SQl example:
 
 ```python
-    from ottergon import Client
+    from otterbrix import Client
 
     client = Client()
     database = client["MyDatabase"]
@@ -33,7 +36,7 @@ Python SQl example:
 Python NoSQl example:
 
 ```python
-    from ottergon import Client
+    from otterbrix import Client
 
     client = Client()
     database = client["MyDatabase"]

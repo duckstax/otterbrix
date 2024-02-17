@@ -1,7 +1,7 @@
 #include "msgpack_encoder.hpp"
 #include <msgpack.hpp>
 
-const value_t *to_structure_(const msgpack::object &msg_object) {
+const value_t* to_structure_(const msgpack::object& msg_object) {
     if (msg_object.type == msgpack::type::object_type::BOOLEAN) {
         return document::impl::new_value(msg_object.as<bool>()).detach();
     } else if (msg_object.type == msgpack::type::object_type::POSITIVE_INTEGER) {
@@ -47,7 +47,7 @@ void to_msgpack_(const value_t* value, msgpack::object& o) {
         o.via.f64 = value->as_double();
     } else if (value->type() == value_type::string) {
         //todo kick memory leak
-        auto *s = new std::string(to_string(value));
+        auto* s = new std::string(to_string(value));
         o.type = msgpack::type::object_type::STR;
         o.via.str.size = uint32_t(s->size());
         o.via.str.ptr = s->c_str();

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <services/collection/operators/operator.hpp>
-#include <services/collection/operators/get/operator_get.hpp>
 #include <services/collection/operators/aggregate/operator_aggregate.hpp>
+#include <services/collection/operators/get/operator_get.hpp>
+#include <services/collection/operators/operator.hpp>
 
 namespace services::collection::operators {
 
@@ -20,8 +20,8 @@ namespace services::collection::operators {
     public:
         explicit operator_group_t(context_collection_t* context);
 
-        void add_key(const std::string &name, get::operator_get_ptr &&getter);
-        void add_value(const std::string &name, aggregate::operator_aggregate_ptr &&aggregator);
+        void add_key(const std::string& name, get::operator_get_ptr&& getter);
+        void add_value(const std::string& name, aggregate::operator_aggregate_ptr&& aggregator);
 
     private:
         std::pmr::vector<group_key_t> keys_;

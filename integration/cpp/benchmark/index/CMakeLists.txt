@@ -14,8 +14,8 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
         CONAN_PKG::benchmark
-        cpp_ottergon
-        rocketjoe::test_generaty
+        cpp_otterbrix
+        otterbrix::test_generaty
 )
 
 file(COPY start-perf DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

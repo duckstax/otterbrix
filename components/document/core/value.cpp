@@ -6,32 +6,28 @@
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
 #include <components/document/core/internal.hpp>
+#include <components/document/core/pointer.hpp>
 #include <components/document/internal/heap.hpp>
 #include <components/document/support/better_assert.hpp>
 #include <components/document/support/endian.hpp>
 #include <components/document/support/num_conversion.hpp>
 #include <components/document/support/varint.hpp>
-#include <components/document/core/pointer.hpp>
 
 #include "utils.hpp"
-
 
 namespace document::impl {
 
     using namespace internal;
 
-    static const value_type value_types[] = {
-        value_type::number,
-        value_type::number,
-        value_type::number,
-        value_type::null,
-        value_type::string,
-        value_type::data,
-        value_type::array,
-        value_type::dict,
-        value_type::null
-    };
-
+    static const value_type value_types[] = {value_type::number,
+                                             value_type::number,
+                                             value_type::number,
+                                             value_type::null,
+                                             value_type::string,
+                                             value_type::data,
+                                             value_type::array,
+                                             value_type::dict,
+                                             value_type::null};
 
     class const_value_t : public value_t {
     public:
@@ -39,10 +35,8 @@ namespace document::impl {
             : value_t(tag, tiny, byte1) {}
     };
 
-    EVEN_ALIGNED static constexpr const const_value_t
-        null_instance{tag_special, special_value_null},
-        undefined_instance{tag_special, special_value_undefined},
-        true_instance{tag_special, special_value_true},
+    EVEN_ALIGNED static constexpr const const_value_t null_instance{tag_special, special_value_null},
+        undefined_instance{tag_special, special_value_undefined}, true_instance{tag_special, special_value_true},
         false_instance{tag_special, special_value_false};
 
     const value_t* const value_t::null_value = &null_instance;
@@ -111,38 +105,23 @@ namespace document::impl {
         }
     }
 
-    uint64_t value_t::as_unsigned() const noexcept {
-        return uint64_t(as_int());
-    }
+    uint64_t value_t::as_unsigned() const noexcept { return uint64_t(as_int()); }
 
-    float value_t::as_float() const noexcept {
-        return as_float_of_type<float>();
-    }
+    float value_t::as_float() const noexcept { return as_float_of_type<float>(); }
 
-    double value_t::as_double() const noexcept {
-        return as_float_of_type<double>();
-    }
+    double value_t::as_double() const noexcept { return as_float_of_type<double>(); }
 
-    bool value_t::is_int() const noexcept {
-        return tag() <= internal::tag_int;
-    }
+    bool value_t::is_int() const noexcept { return tag() <= internal::tag_int; }
 
-    bool value_t::is_unsigned() const noexcept {
-        return tag() == internal::tag_int && (byte_[0] & 0x08) != 0;
-    }
+    bool value_t::is_unsigned() const noexcept { return tag() == internal::tag_int && (byte_[0] & 0x08) != 0; }
 
-    bool value_t::is_double() const noexcept {
-        return tag() == internal::tag_float && (byte_[0] & 0x8);
-    }
+    bool value_t::is_double() const noexcept { return tag() == internal::tag_float && (byte_[0] & 0x8); }
 
     bool value_t::is_undefined() const noexcept {
-        return byte_[0] == ((internal::tag_special << 4) |
-                            internal::special_value_undefined);
+        return byte_[0] == ((internal::tag_special << 4) | internal::special_value_undefined);
     }
 
-    bool value_t::is_pointer() const noexcept {
-        return (byte_[0] & 0x80) != 0;
-    }
+    bool value_t::is_pointer() const noexcept { return (byte_[0] & 0x80) != 0; }
 
     const internal::pointer_t* value_t::as_pointer() const {
         return reinterpret_cast<const internal::pointer_t*>(this);
@@ -181,14 +160,12 @@ namespace document::impl {
             size_t lengthBytes = get_uvar_int32(tmp, &length);
             if (_usually_false(lengthBytes == 0))
                 return {};
-            return {reinterpret_cast<const char*>(&tmp[lengthBytes]),length};
+            return {reinterpret_cast<const char*>(&tmp[lengthBytes]), length};
         }
         return s;
     }
 
-    bool value_t::is_mutable() const {
-        return (reinterpret_cast<size_t>(this) & 1) != 0;
-    }
+    bool value_t::is_mutable() const { return (reinterpret_cast<size_t>(this) & 1) != 0; }
 
     std::string_view value_t::as_string() const noexcept {
         return _usually_true(tag() == tag_string) ? get_string_bytes() : std::string_view();
@@ -210,13 +187,9 @@ namespace document::impl {
         return const_cast<dict_t*>(reinterpret_cast<const dict_t*>(this)); //todo: remove const_cast
     }
 
-    const array_t* value_t::as_array(const value_t* v) {
-        return v ? v->as_array() : nullptr;
-    }
+    const array_t* value_t::as_array(const value_t* v) { return v ? v->as_array() : nullptr; }
 
-    const dict_t* value_t::as_dict(const value_t* v) {
-        return v ? v->as_dict() : nullptr;
-    }
+    const dict_t* value_t::as_dict(const value_t* v) { return v ? v->as_dict() : nullptr; }
 
     shared_keys_t* value_t::shared_keys() const noexcept {
         return nullptr; ///_containing(this);
@@ -295,33 +268,19 @@ namespace document::impl {
         }
     }
 
-    bool value_t::is_lte(const document::impl::value_t* rhs) const {
-        return !rhs->is_lt(this);
-    }
+    bool value_t::is_lte(const document::impl::value_t* rhs) const { return !rhs->is_lt(this); }
 
-    void value_t::retain_() const {
-        heap_value_t::retain(this);
-    }
+    void value_t::retain_() const { heap_value_t::retain(this); }
 
-    void value_t::release_() const {
-        heap_value_t::release(this);
-    }
+    void value_t::release_() const { heap_value_t::release(this); }
 
-    internal::tags value_t::tag() const noexcept {
-        return internal::tags(byte_[0] >> 4);
-    }
+    internal::tags value_t::tag() const noexcept { return internal::tags(byte_[0] >> 4); }
 
-    unsigned value_t::tiny_value() const noexcept {
-        return byte_[0] & 0x0F;
-    }
+    unsigned value_t::tiny_value() const noexcept { return byte_[0] & 0x0F; }
 
-    bool value_t::big_float() const noexcept {
-        return byte_[0] & 0x8;
-    }
+    bool value_t::big_float() const noexcept { return byte_[0] & 0x8; }
 
-    uint16_t value_t::short_value() const noexcept {
-        return ((uint16_t(byte_[0]) << 8) | byte_[1]) & 0x0FFF;
-    }
+    uint16_t value_t::short_value() const noexcept { return ((uint16_t(byte_[0]) << 8) | byte_[1]) & 0x0FFF; }
 
     size_t value_t::data_size() const noexcept {
         switch (tag()) {
@@ -334,35 +293,30 @@ namespace document::impl {
                 return 2 + (tiny_value() & 0x07);
             case tag_string:
             case tag_binary:
-                return size_t(reinterpret_cast<const uint8_t*>(get_string_bytes().end()) - reinterpret_cast<const uint8_t*>(this));
+                return size_t(reinterpret_cast<const uint8_t*>(get_string_bytes().end()) -
+                              reinterpret_cast<const uint8_t*>(this));
             case tag_array:
                 return size_t(reinterpret_cast<const uint8_t*>(as_array()) - reinterpret_cast<const uint8_t*>(this));
             case tag_dict:
-                return size_t(reinterpret_cast<const uint8_t*>(dict_iterator_t(as_dict()).value()) - reinterpret_cast<const uint8_t*>(this));
+                return size_t(reinterpret_cast<const uint8_t*>(dict_iterator_t(as_dict()).value()) -
+                              reinterpret_cast<const uint8_t*>(this));
             case tag_pointer:
             default:
                 return 2;
         }
     }
 
-    bool value_t::is_wide_array() const noexcept {
-        return (byte_[0] & 0x08) != 0;
-    }
+    bool value_t::is_wide_array() const noexcept { return (byte_[0] & 0x08) != 0; }
 
-    uint32_t value_t::count_value() const noexcept {
-        return ((uint32_t(byte_[0]) << 8) | byte_[1]) & 0x07FF;
-    }
+    uint32_t value_t::count_value() const noexcept { return ((uint32_t(byte_[0]) << 8) | byte_[1]) & 0x07FF; }
 
-    bool value_t::count_is_zero() const noexcept {
-        return byte_[1] == 0 && (byte_[0] & 0x7) == 0;
-    }
+    bool value_t::count_is_zero() const noexcept { return byte_[1] == 0 && (byte_[0] & 0x7) == 0; }
 
     const value_t* value_t::deref(bool wide) const {
         if (!is_pointer())
             return this;
         auto v = as_pointer()->deref(wide);
-        while (_usually_false(v->is_pointer()))
-            v = v->as_pointer()->deref_wide();
+        while (_usually_false(v->is_pointer())) v = v->as_pointer()->deref_wide();
         return v;
     }
 
@@ -372,8 +326,7 @@ namespace document::impl {
             return this;
         auto v = as_pointer()->deref<WIDE>();
         if (!WIDE)
-            while (_usually_false(v->is_pointer()))
-                v = v->as_pointer()->deref_wide();
+            while (_usually_false(v->is_pointer())) v = v->as_pointer()->deref_wide();
         return v;
     }
 
@@ -384,10 +337,7 @@ namespace document::impl {
         return offsetby(this, wide ? internal::size_wide : internal::size_narrow);
     }
 
-
-    void release(const value_t* val) noexcept {
-        heap_value_t::release(val);
-    }
+    void release(const value_t* val) noexcept { heap_value_t::release(val); }
 
     template<>
     bool value_t::as<bool>() const {
@@ -458,37 +408,21 @@ namespace document::impl {
         return {};
     }
 
-    retained_const_t<value_t> new_value(nullptr_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(nullptr_t data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(bool data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(bool data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(int data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(int data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(unsigned data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(unsigned data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(int64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(int64_t data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(uint64_t data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(uint64_t data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(float data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(float data) { return internal::heap_value_t::create(data)->as_value(); }
 
-    retained_const_t<value_t> new_value(double data) {
-        return internal::heap_value_t::create(data)->as_value();
-    }
+    retained_const_t<value_t> new_value(double data) { return internal::heap_value_t::create(data)->as_value(); }
 
     retained_const_t<value_t> new_value(const std::string& data) {
         return internal::heap_value_t::create(data)->as_value();

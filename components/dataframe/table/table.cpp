@@ -9,7 +9,7 @@ namespace components::dataframe::table {
         , _num_rows{other.num_rows()} {
         _columns.reserve(other._columns.size());
         for (auto const& c : other._columns) {
-            _columns.emplace_back(std::make_unique<column::column_t>(resource_,*c));
+            _columns.emplace_back(std::make_unique<column::column_t>(resource_, *c));
         }
     }
 
@@ -19,8 +19,8 @@ namespace components::dataframe::table {
             for (auto const& c : _columns) {
                 assertion_exception_msg(c, "Unexpected null column");
                 assertion_exception_msg(c->size() == _columns.front()->size(),
-                             "Column size mismatch: " + std::to_string(c->size()) +
-                                 " != " + std::to_string(_columns.front()->size()));
+                                        "Column size mismatch: " + std::to_string(c->size()) +
+                                            " != " + std::to_string(_columns.front()->size()));
             }
             _num_rows = _columns.front()->size();
         } else {
@@ -28,13 +28,12 @@ namespace components::dataframe::table {
         }
     }
 
-    table_t::table_t(std::pmr::memory_resource* mr,table_view view)
+    table_t::table_t(std::pmr::memory_resource* mr, table_view view)
         : resource_(mr)
         , _num_rows{view.num_rows()} {
-
         _columns.reserve(view.num_columns());
         for (auto const& c : view) {
-            _columns.emplace_back(std::make_unique<column::column_t>(mr,c));
+            _columns.emplace_back(std::make_unique<column::column_t>(mr, c));
         }
     }
 

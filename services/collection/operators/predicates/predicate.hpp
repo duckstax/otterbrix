@@ -29,6 +29,7 @@ namespace services::collection::operators::predicates {
 
     using predicate_ptr = std::unique_ptr<predicate>;
 
-    predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr);
+    predicate_ptr create_predicate(context_collection_t* context,
+                                   const components::expressions::compare_expression_ptr& expr);
 
 } // namespace services::collection::operators::predicates

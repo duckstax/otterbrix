@@ -6,8 +6,8 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include <filesystem>
 #include <boost/process/environment.hpp>
+#include <filesystem>
 #include <spdlog/async.h>
 #include <utility>
 
@@ -19,25 +19,17 @@ log_t::log_t(std::shared_ptr<spdlog::async_logger> logger)
 log_t::log_t(std::shared_ptr<spdlog::logger> logger)
     : logger_(std::move(logger)) {}
 
-auto log_t::clone() noexcept -> log_t {
-    return logger_;
-}
+auto log_t::clone() noexcept -> log_t { return logger_; }
 
-auto log_t::set_level(level l) -> void {
-    logger_->set_level(static_cast<spdlog::level::level_enum>(l));
-}
+auto log_t::set_level(level l) -> void { logger_->set_level(static_cast<spdlog::level::level_enum>(l)); }
 auto log_t::get_level() const -> log_t::level {
     auto lvl = logger_->level();
     return static_cast<log_t::level>(lvl);
 }
 
-auto log_t::context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> void {
-    logger_ = std::move(logger);
-}
+auto log_t::context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> void { logger_ = std::move(logger); }
 
-auto log_t::is_valid() noexcept -> bool {
-    return logger_ != nullptr;
-}
+auto log_t::is_valid() noexcept -> bool { return logger_ != nullptr; }
 
 auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     if (prefix.back() != '/') {
@@ -55,7 +47,9 @@ auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(file_name, true);
     std::vector<spdlog::sink_ptr> sinks{stdout_sink, file_sink};
     auto logger = std::make_shared<spdlog::logger>( ///async_logger
-        __default__, sinks.begin(), sinks.end()
+        __default__,
+        sinks.begin(),
+        sinks.end()
         /*,spdlog::thread_pool(),*/
         /*spdlog::async_overflow_policy::block*/);
 
@@ -66,22 +60,14 @@ auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
     return logger;
 }
 
-auto get_logger(const std::string& name) -> log_t {
-    return spdlog::get(name);
-}
+auto get_logger(const std::string& name) -> log_t { return spdlog::get(name); }
 
-auto get_logger() -> log_t {
-    return spdlog::get(__default__);
-}
+auto get_logger() -> log_t { return spdlog::get(__default__); }
 
 auto initialization_logger(std::shared_ptr<spdlog::logger> logger) -> void {
     spdlog::register_logger(std::move(logger));
 }
 
-void drop_logger(const std::string &name) {
-    spdlog::drop(name);
-}
+void drop_logger(const std::string& name) { spdlog::drop(name); }
 
-void drop_all_loggers() {
-    spdlog::drop_all();
-}
+void drop_all_loggers() { spdlog::drop_all(); }

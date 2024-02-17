@@ -1,6 +1,6 @@
 #include "spaces.hpp"
 
-namespace duck_charmer {
+namespace otterbrix {
 
     spaces* spaces::get_instance() {
         static spaces instance;
@@ -8,7 +8,6 @@ namespace duck_charmer {
     }
 
     spaces::spaces()
-        : base_spaces(configuration::config::default_config()) {
-    }
+        : base_otterbrix_t(configuration::config::default_config()) {}
 
-} // namespace python
+} // namespace otterbrix

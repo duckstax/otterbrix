@@ -1,10 +1,10 @@
 #include "parser.hpp"
 #include "document/core/dict.hpp"
 
-using ::document::impl::value_t;
-using ::document::impl::value_type;
 using ::document::impl::array_t;
 using ::document::impl::dict_t;
+using ::document::impl::value_t;
+using ::document::impl::value_type;
 
 namespace components::ql {
 
@@ -68,11 +68,17 @@ namespace components::ql {
         return condition_type::novalid;
     }
 
-    void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word);
+    void parse_find_condition_(expr_t* parent_condition,
+                               const value_t* condition,
+                               const std::string& prev_key,
+                               const std::string& key_word);
     void parse_find_condition_dict_(expr_t* parent_condition, const dict_t* condition, const std::string& prev_key);
     void parse_find_condition_array_(expr_t* parent_condition, const array_t* condition, const std::string& prev_key);
 
-    void parse_find_condition_(expr_t* parent_condition, const value_t* condition, const std::string& prev_key, const std::string& key_word) {
+    void parse_find_condition_(expr_t* parent_condition,
+                               const value_t* condition,
+                               const std::string& prev_key,
+                               const std::string& key_word) {
         auto real_key = prev_key;
         auto type = get_condition_type_(key_word);
         if (type == condition_type::novalid) {
@@ -101,7 +107,8 @@ namespace components::ql {
             auto union_condition = parent_condition;
             if (is_union_condition(type)) {
                 parent_condition->append_sub_condition(make_union_expr());
-                union_condition = parent_condition->sub_conditions_.at(parent_condition->sub_conditions_.size() - 1).get();
+                union_condition =
+                    parent_condition->sub_conditions_.at(parent_condition->sub_conditions_.size() - 1).get();
                 union_condition->type_ = type;
             }
             if (prev_key.empty()) {
@@ -118,13 +125,13 @@ namespace components::ql {
         }
     }
 
-    void normalize(expr_ptr &expr) {
+    void normalize(expr_ptr& expr) {
         if (expr->type_ == condition_type::novalid && !expr->key_.is_null()) {
             expr->type_ = condition_type::eq;
         }
     }
 
-    void normalize_union(expr_ptr &expr) {
+    void normalize_union(expr_ptr& expr) {
         if (expr->type_ == condition_type::novalid && expr->is_union()) {
             expr->type_ = condition_type::union_and;
         }

@@ -3,9 +3,7 @@
 
 namespace components::sql::impl {
 
-    parser_result parse_set(std::pmr::memory_resource*,
-                            lexer_t& lexer,
-                            document::document_ptr& doc) {
+    parser_result parse_set(std::pmr::memory_resource*, lexer_t& lexer, document::document_ptr& doc) {
         auto doc_value = document::make_document();
         auto token = lexer.current_significant_token();
         do {

@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16.3 FATAL_ERROR)
 
 set(CMAKE_PROJECT_VERSION_MAJOR 1)
 set(CMAKE_PROJECT_VERSION_MINOR 0)
 set(CMAKE_PROJECT_VERSION_PATCH 0)
 set(CMAKE_PROJECT_VERSION "${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH}")
-PROJECT(ottergon VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
+PROJECT(otterbrix VERSION "${CMAKE_PROJECT_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -16,6 +16,7 @@ message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
 option(DEV_MODE "developer mode" OFF)
+option(EXAMPLE "Example" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
 option(APPLICATION_SERVER "application server" OFF)
@@ -70,13 +71,8 @@ endif ()
 #############################################################################################
 #clang tools
 
-option(ADDRESS_SANITIZER "Enable Clang AddressSanitizer" OFF)
-
-if(ADDRESS_SANITIZER)
-    include(cmake/address_sanitizer.cmake)
-endif()
-
-include(cmake/clang-format.cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+find_package(Sanitizers REQUIRED)
 
 #clang tools
 #############################################################################################
@@ -140,6 +136,9 @@ else()
     include_directories(services)
     add_subdirectory(services)
     add_subdirectory(integration)
+    if(EXAMPLE)
+        add_subdirectory(example)
+    endif()
 endif ()
 
 

@@ -6,7 +6,9 @@ set(SOURCE_${PROJECT_NAME}
     parser.cpp
 
     parser/base/parse_error.cpp
+    parser/base/parser_groupby.cpp
     parser/base/parser_mask.cpp
+    parser/base/parser_orderby.cpp
     parser/base/parser_result.cpp
     parser/base/parser_set.cpp
     parser/base/parser_where.cpp
@@ -24,26 +26,28 @@ set(SOURCE_${PROJECT_NAME}
     parser/insert/impl/parser_insert_into.cpp
 
     parser/select/parser_select.cpp
-    parser/select/impl/parser_select_base.cpp
+    parser/select/impl/parser_select_fields.cpp
+    parser/select/impl/parser_select_from.cpp
+    parser/select/impl/parser_select_without_from.cpp
 
     parser/update/parser_update.cpp
     parser/update/impl/parser_update_base.cpp
 )
 
-add_library(rocketjoe_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
-add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+add_library(otterbrix_${PROJECT_NAME} ${SOURCE_${PROJECT_NAME}})
+add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-    rocketjoe_${PROJECT_NAME} PUBLIC
-    rocketjoe::document
-    rocketjoe::expressions
-    rocketjoe::ql
+    otterbrix_${PROJECT_NAME} PUBLIC
+    otterbrix::document
+    otterbrix::expressions
+    otterbrix::ql
 )
 
 target_include_directories(
-    rocketjoe_${PROJECT_NAME}
+    otterbrix_${PROJECT_NAME}
     PUBLIC
 )
 

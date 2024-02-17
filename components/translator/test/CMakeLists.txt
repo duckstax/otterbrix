@@ -8,11 +8,11 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        rocketjoe::expressions
-        rocketjoe::ql
-        rocketjoe::logical_plan
-        rocketjoe::test_generaty
-        rocketjoe::translator
+        otterbrix::expressions
+        otterbrix::ql
+        otterbrix::logical_plan
+        otterbrix::test_generaty
+        otterbrix::translator
 )
 
 include(CTest)

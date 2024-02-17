@@ -8,32 +8,32 @@ list(APPEND CURRENT_${TARGET_HEADERS}
 #)
 
 
-add_library(rocketjoe_${CURRENT_TARGET} INTERFACE
+add_library(otterbrix_${CURRENT_TARGET} INTERFACE
 #            ${CURRENT_${TARGET_HEADERS}}
 #            ${CURRENT_${TARGET_HEADERS}}
 )
 
 
-add_library(rocketjoe::${CURRENT_TARGET} ALIAS rocketjoe_${CURRENT_TARGET})
+add_library(otterbrix::${CURRENT_TARGET} ALIAS otterbrix_${CURRENT_TARGET})
 
-set_property(TARGET rocketjoe_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
+set_property(TARGET otterbrix_${CURRENT_TARGET} PROPERTY EXPORT_NAME ${CURRENT_TARGET})
 
 target_link_libraries(
-        rocketjoe_${CURRENT_TARGET}
+        otterbrix_${CURRENT_TARGET}
         INTERFACE
         #PRIVATE
         #${Boost_LIBRARIES}
 )
 
 target_include_directories(
-        rocketjoe_${CURRENT_TARGET}
+        otterbrix_${CURRENT_TARGET}
         INTERFACE
         "../.."
 )
 
 
 install(TARGETS
-        rocketjoe_${CURRENT_TARGET}
+        otterbrix_${CURRENT_TARGET}
 
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib

@@ -1,54 +1,37 @@
 #include "lexer.hpp"
-#include <cctype>
 #include <algorithm>
+#include <cctype>
 #include <set>
 
 namespace components::sql {
 
     namespace {
 
-        enum class number_base {
-            dec,
-            hex,
-            bin
-        };
+        enum class number_base { dec, hex, bin };
 
+        inline bool is_word_char(char c) { return c == '_' || std::isalnum(c); }
 
-        inline bool is_word_char(char c) {
-            return c == '_' || std::isalnum(c);
-        }
-
-        inline bool is_binary_digit(char c) {
-            return c == '0' || c == '1';
-        }
+        inline bool is_binary_digit(char c) { return c == '0' || c == '1'; }
 
         inline bool is_digit(char c, number_base base) {
-            return base == number_base::dec
-                    ? std::isdigit(c)
-                    : base == number_base::hex
-                      ? std::isxdigit(c)
-                      : is_binary_digit(c);
+            return base == number_base::dec   ? std::isdigit(c)
+                   : base == number_base::hex ? std::isxdigit(c)
+                                              : is_binary_digit(c);
         }
 
         inline bool is_exponent(char c, number_base base) {
-            return base == number_base::hex
-                    ? (c == 'p' || c == 'P')
-                    : (c == 'e' || c == 'E');
+            return base == number_base::hex ? (c == 'p' || c == 'P') : (c == 'e' || c == 'E');
         }
 
-        inline bool is_sign(char c) {
-            return c == '-' || c == '+';
-        }
+        inline bool is_sign(char c) { return c == '-' || c == '+'; }
 
-        inline bool is_number_base_hex(char c) {
-            return c == 'x' || c == 'X';
-        }
+        inline bool is_number_base_hex(char c) { return c == 'x' || c == 'X'; }
 
-        inline bool is_number_base_bin(char c) {
-            return c == 'b' || c == 'B';
-        }
+        inline bool is_number_base_bin(char c) { return c == 'b' || c == 'B'; }
 
-        inline bool is_number_separator(const char* pos, const char* end, bool is_block_begin,
+        inline bool is_number_separator(const char* pos,
+                                        const char* end,
+                                        bool is_block_begin,
                                         number_base base = number_base::dec) {
             if (*pos != '_') {
                 return false;
@@ -82,21 +65,17 @@ namespace components::sql {
 
     } // namespace
 
-
     lexer_t::lexer_t(const char* const query_begin, const char* const query_end)
         : begin_(query_begin)
         , end_(query_end)
         , pos_(begin_)
-        , saved_pos_(begin_) {
-    }
+        , saved_pos_(begin_) {}
 
     lexer_t::lexer_t(std::string_view query)
-        : lexer_t(query.data(), query.data() + query.size()) {
-    }
+        : lexer_t(query.data(), query.data() + query.size()) {}
 
-    lexer_t::lexer_t(const std::string &query)
-        : lexer_t(query.data(), query.data() + query.size()) {
-    }
+    lexer_t::lexer_t(const std::string& query)
+        : lexer_t(query.data(), query.data() + query.size()) {}
 
     token_t lexer_t::next_not_whitespace_token() {
         auto token = next_token();
@@ -118,21 +97,13 @@ namespace components::sql {
         return token;
     }
 
-    token_t lexer_t::current_token() const {
-        return prev_token_;
-    }
+    token_t lexer_t::current_token() const { return prev_token_; }
 
-    token_t lexer_t::current_significant_token() const {
-        return prev_significant_token_;
-    }
+    token_t lexer_t::current_significant_token() const { return prev_significant_token_; }
 
-    void lexer_t::save() {
-        saved_pos_ = pos_;
-    }
+    void lexer_t::save() { saved_pos_ = pos_; }
 
-    void lexer_t::restore() {
-        pos_ = saved_pos_;
-    }
+    void lexer_t::restore() { pos_ = saved_pos_; }
 
     token_t lexer_t::next_token_() {
         const char* const token_begin = pos_;
@@ -163,7 +134,8 @@ namespace components::sql {
 
                 auto loop_digits = [&]() {
                     auto is_begin_block = false;
-                    while (pos_ < end_ && (is_digit(*pos_, base) || is_number_separator(pos_, end_, is_begin_block, base))) {
+                    while (pos_ < end_ &&
+                           (is_digit(*pos_, base) || is_number_separator(pos_, end_, is_begin_block, base))) {
                         ++pos_;
                         is_begin_block = *pos_ == '_';
                     }
@@ -195,15 +167,24 @@ namespace components::sql {
         }
 
         if (*pos_ == '\'') {
-            return create_quote_token_(token_begin, '\'', token_type::string_literal, token_type::error_single_quote_is_not_closed);
+            return create_quote_token_(token_begin,
+                                       '\'',
+                                       token_type::string_literal,
+                                       token_type::error_single_quote_is_not_closed);
         }
 
         if (*pos_ == '"') {
-            return create_quote_token_(token_begin, '"', token_type::quoted_identifier, token_type::error_double_quote_is_not_closed);
+            return create_quote_token_(token_begin,
+                                       '"',
+                                       token_type::quoted_identifier,
+                                       token_type::error_double_quote_is_not_closed);
         }
 
         if (*pos_ == '`') {
-            return create_quote_token_(token_begin, '`', token_type::quoted_identifier, token_type::error_back_quote_is_not_closed);
+            return create_quote_token_(token_begin,
+                                       '`',
+                                       token_type::quoted_identifier,
+                                       token_type::error_back_quote_is_not_closed);
         }
 
         if (*pos_ == '(') {
@@ -243,13 +224,11 @@ namespace components::sql {
             if (!std::isdigit(*pos_)) {
                 return token_t{token_type::dot, token_begin, pos_};
             }
-            static std::set<token_type> before_types{
-                token_type::bracket_round_close,
-                token_type::bracket_square_open,
-                token_type::bare_word,
-                token_type::quoted_identifier,
-                token_type::number_literal
-            };
+            static std::set<token_type> before_types{token_type::bracket_round_close,
+                                                     token_type::bracket_square_open,
+                                                     token_type::bare_word,
+                                                     token_type::quoted_identifier,
+                                                     token_type::number_literal};
             if (before_types.find(prev_token_.type) != before_types.end()) {
                 return token_t{token_type::dot, token_begin, pos_};
             }
@@ -340,7 +319,7 @@ namespace components::sql {
             if (check_pos_('=')) {
                 return token_t{token_type::not_equals, token_begin, ++pos_};
             }
-            return token_t{token_type::error_single_exclamation_mark,token_begin, pos_};
+            return token_t{token_type::error_single_exclamation_mark, token_begin, pos_};
         }
 
         if (*pos_ == '<') {
@@ -411,8 +390,7 @@ namespace components::sql {
             }
         }
 
-        if ((is_number_base_hex(*pos_) || is_number_base_bin(*pos_))
-                && pos_ + 1 < end_ && *(pos_ + 1) == '\'') {
+        if ((is_number_base_hex(*pos_) || is_number_base_bin(*pos_)) && pos_ + 1 < end_ && *(pos_ + 1) == '\'') {
             return create_hex_or_bin_str(token_begin);
         }
 
@@ -427,11 +405,10 @@ namespace components::sql {
         return token_t{token_type::error, token_begin, pos_};
     }
 
-    bool lexer_t::check_pos_(char c) {
-        return pos_ < end_ && *pos_ == c;
-    }
+    bool lexer_t::check_pos_(char c) { return pos_ < end_ && *pos_ == c; }
 
-    token_t lexer_t::create_quote_token_(const char* const token_begin, char quote, token_type type, token_type type_error) {
+    token_t
+    lexer_t::create_quote_token_(const char* const token_begin, char quote, token_type type, token_type type_error) {
         pos_ = find_quote(++pos_, end_, quote);
         if (pos_ < end_) {
             return token_t{type, token_begin, ++pos_};
@@ -464,9 +441,7 @@ namespace components::sql {
     }
 
     token_t lexer_t::create_hex_or_bin_str(const char* const token_begin) {
-        auto base = is_number_base_hex(*pos_)
-                ? number_base::hex
-                : number_base::bin;
+        auto base = is_number_base_hex(*pos_) ? number_base::hex : number_base::bin;
         pos_ += 2;
         while (is_digit(*pos_, base)) {
             ++pos_;

@@ -1,5 +1,7 @@
 name: ubuntu 20.04
-on: [push]
+
+on: [pull_request]
+
 jobs:
   run:
     name: Run
@@ -19,7 +21,8 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
+          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https clang-format-12
+          pip3 install termcolor
 
       - name: conan installation and configuration
         run: |
@@ -37,12 +40,17 @@ jobs:
           cp ../conanfile.txt .
           conan install . --build missing -s build_type=Release
 
+      - name: Check
+        run: |
+          chmod +x scripts/CI/run-check-formatting.sh
+          scripts/CI/run-check-formatting.sh
+
       - name: build
         env:
           CC: gcc
         run: |
           cd build
-          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+          cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON -DEXAMPLE=ON ..
           cmake --build .
 
       - name: Test

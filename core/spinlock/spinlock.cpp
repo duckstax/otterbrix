@@ -2,16 +2,12 @@
 
 #include <limits>
 
-inline long min_long() {
-    return std::numeric_limits<long>::min();
-}
+inline long min_long() { return std::numeric_limits<long>::min(); }
 
 void spin_lock::lock() {
     while (lock_.test_and_set(std::memory_order_acquire)) continue;
 }
-void spin_lock::unlock() {
-    lock_.clear(std::memory_order_release);
-}
+void spin_lock::unlock() { lock_.clear(std::memory_order_release); }
 
 template<class T>
 bool cas_weak(std::atomic<T>* obj, T* expected, T desired) {
@@ -33,13 +29,9 @@ void shared_spinlock::lock() {
     }
 }
 
-void shared_spinlock::lock_upgrade() {
-    lock_shared();
-}
+void shared_spinlock::lock_upgrade() { lock_shared(); }
 
-void shared_spinlock::unlock_upgrade() {
-    unlock_shared();
-}
+void shared_spinlock::unlock_upgrade() { unlock_shared(); }
 
 void shared_spinlock::unlock_upgrade_and_lock() {
     unlock_shared();
@@ -51,9 +43,7 @@ void shared_spinlock::unlock_and_lock_upgrade() {
     lock_upgrade();
 }
 
-void shared_spinlock::unlock() {
-    flag_.store(0);
-}
+void shared_spinlock::unlock() { flag_.store(0); }
 
 bool shared_spinlock::try_lock() {
     long v = flag_.load();
@@ -73,9 +63,7 @@ void shared_spinlock::lock_shared() {
     }
 }
 
-void shared_spinlock::unlock_shared() {
-    flag_.fetch_sub(1);
-}
+void shared_spinlock::unlock_shared() { flag_.fetch_sub(1); }
 
 bool shared_spinlock::try_lock_shared() {
     long v = flag_.load();

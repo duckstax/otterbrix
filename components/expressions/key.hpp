@@ -1,8 +1,8 @@
 #pragma once
 
+#include "forward.hpp"
 #include <string>
 #include <variant>
-#include "forward.hpp"
 
 namespace components::expressions {
 
@@ -33,56 +33,29 @@ namespace components::expressions {
             : type_(type::string)
             , storage_(std::string(data, size)) {}
 
-        enum class type {
-            non,
-            string,
-            int32,
-            uint32
-        };
+        enum class type { non, string, int32, uint32 };
 
-        auto as_string() const -> const std::string& {
-            return std::get<std::string>(storage_);
-        }
+        auto as_string() const -> const std::string& { return std::get<std::string>(storage_); }
 
-        explicit operator std::string() const {
-            return as_string();
-        }
+        explicit operator std::string() const { return as_string(); }
 
-        type which() const {
-            return type_;
-        }
+        type which() const { return type_; }
 
-        auto is_string() const -> bool {
-            return type_ == type::string;
-        }
+        auto is_string() const -> bool { return type_ == type::string; }
 
-        auto is_null() const -> bool {
-            return type_ == type::non;
-        }
+        auto is_null() const -> bool { return type_ == type::non; }
 
-        bool operator<(const key_t& other) const {
-            return storage_ < other.storage_;
-        }
+        bool operator<(const key_t& other) const { return storage_ < other.storage_; }
 
-        bool operator<=(const key_t& other) const {
-            return storage_ <= other.storage_;
-        }
+        bool operator<=(const key_t& other) const { return storage_ <= other.storage_; }
 
-        bool operator>(const key_t& other) const {
-            return storage_ > other.storage_;
-        }
+        bool operator>(const key_t& other) const { return storage_ > other.storage_; }
 
-        bool operator>=(const key_t& other) const {
-            return storage_ >= other.storage_;
-        }
+        bool operator>=(const key_t& other) const { return storage_ >= other.storage_; }
 
-        bool operator==(const key_t& other) const {
-            return storage_ == other.storage_;
-        }
+        bool operator==(const key_t& other) const { return storage_ == other.storage_; }
 
-        bool operator!=(const key_t& rhs) const {
-            return !(*this == rhs);
-        }
+        bool operator!=(const key_t& rhs) const { return !(*this == rhs); }
 
         hash_t hash() const {
             if (type_ == type::string) {
@@ -100,9 +73,8 @@ namespace components::expressions {
         std::variant<std::monostate, bool, int32_t, uint32_t, std::string> storage_;
     };
 
-
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const key_t &key) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const key_t& key) {
         if (key.is_string()) {
             stream << key.as_string();
         }

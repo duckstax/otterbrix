@@ -2,9 +2,9 @@
 #include <components/tests/generaty.hpp>
 #include <services/disk/index_disk.hpp>
 
-using services::disk::index_disk_t;
 using components::document::document_id_t;
 using document::wrapper_value_t;
+using services::disk::index_disk_t;
 
 std::string gen_str_value(int i, std::size_t size = 5) {
     auto s = std::to_string(i);

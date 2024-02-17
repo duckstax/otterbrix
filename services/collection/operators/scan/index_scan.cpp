@@ -49,11 +49,12 @@ namespace services::collection::operators {
         }
     }
 
-    index_scan::index_scan(context_collection_t* context, components::expressions::compare_expression_ptr expr, components::ql::limit_t limit)
+    index_scan::index_scan(context_collection_t* context,
+                           components::expressions::compare_expression_ptr expr,
+                           components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
         , expr_(std::move(expr))
-        , limit_(limit) {
-    }
+        , limit_(limit) {}
 
     void index_scan::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(), "index_scan by field \"{}\"", expr_->key().as_string());

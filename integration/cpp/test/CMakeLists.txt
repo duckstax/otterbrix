@@ -1,4 +1,4 @@
-project(test_ottergon)
+project(test_otterbrix)
 
 add_definitions(-DDEV_MODE)
 
@@ -15,23 +15,23 @@ add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
 
-        cpp_ottergon
+        cpp_otterbrix
 
-        rocketjoe::test_generaty
-        rocketjoe::log
-        rocketjoe::database
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
+        otterbrix::test_generaty
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
 
         CONAN_PKG::spdlog
         CONAN_PKG::msgpack-cxx
-        CONAN_PKG::date
+        #CONAN_PKG::date
         CONAN_PKG::catch2
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
@@ -40,7 +40,7 @@ target_link_libraries(
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::libcurl
+        #CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         CONAN_PKG::libbacktrace

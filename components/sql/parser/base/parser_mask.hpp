@@ -1,11 +1,11 @@
 #pragma once
 
+#include "parser_result.hpp"
+#include <components/document/wrapper_value.hpp>
+#include <components/sql/lexer/lexer.hpp>
+#include <components/sql/lexer/token.hpp>
 #include <string>
 #include <vector>
-#include <components/document/wrapper_value.hpp>
-#include <components/sql/lexer/token.hpp>
-#include <components/sql/lexer/lexer.hpp>
-#include "parser_result.hpp"
 
 namespace components::sql::impl {
 
@@ -24,6 +24,15 @@ namespace components::sql::impl {
     bool operator==(const mask_element_t& elem, const token_t& token);
     bool operator!=(const mask_element_t& elem, const token_t& token);
 
+    struct mask_group_element_t {
+        enum class status { yes, no, error };
+
+        std::vector<mask_element_t> words;
+
+        explicit mask_group_element_t(const std::vector<std::string>& words);
+
+        status check(lexer_t& lexer) const;
+    };
 
     class mask_t {
     public:
@@ -35,7 +44,6 @@ namespace components::sql::impl {
     private:
         std::vector<mask_element_t> elements_;
     };
-
 
     bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem);
 

@@ -1,5 +1,5 @@
-#include <dataframe/column/strings_column_view.hpp>
 #include <core/assert/assert.hpp>
+#include <dataframe/column/strings_column_view.hpp>
 
 namespace components::dataframe::column {
 
@@ -35,12 +35,8 @@ namespace components::dataframe::column {
         return chars().size();
     }
 
-    strings_column_view::chars_iterator strings_column_view::chars_begin() const {
-        return chars().begin<char>();
-    }
+    strings_column_view::chars_iterator strings_column_view::chars_begin() const { return chars().begin<char>(); }
 
-    strings_column_view::chars_iterator strings_column_view::chars_end() const {
-        return chars_begin() + chars_size();
-    }
+    strings_column_view::chars_iterator strings_column_view::chars_end() const { return chars_begin() + chars_size(); }
 
 } // namespace components::dataframe::column

@@ -60,11 +60,10 @@ namespace components::sql {
         error_wrong_number
     };
 
-
     struct token_t {
-        token_type  type  {token_type::unknow};
-        const char* begin {nullptr};
-        const char* end   {nullptr};
+        token_type type{token_type::unknow};
+        const char* begin{nullptr};
+        const char* end{nullptr};
 
         token_t() = default;
         token_t(token_type type, const char* begin, const char* end);
@@ -74,6 +73,8 @@ namespace components::sql {
         std::string_view value() const;
     };
 
+    bool operator==(const token_t& token1, const token_t& token2);
+    bool operator<(const token_t& token1, const token_t& token2);
 
     bool is_token_significant(const token_t& token);
     bool is_token_error(const token_t& token);

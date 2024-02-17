@@ -21,4 +21,4 @@ namespace services::collection::operators::aggregate {
 
     using operator_aggregate_ptr = std::unique_ptr<operator_aggregate_t>;
 
-} // namespace services::operators::aggregate
+} // namespace services::collection::operators::aggregate

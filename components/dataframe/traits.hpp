@@ -1,15 +1,15 @@
 #pragma once
 
-#include <type_traits>
 #include <string_view>
+#include <type_traits>
 
-#include <core/date/durations.hpp>
 #include "core/date/timestamps.hpp"
+#include <core/date/durations.hpp>
 
 #include "dataframe/dictionary/dictionary.hpp"
 
-#include "forward.hpp"
 #include "core/numbers/fixed_point.hpp"
+#include "forward.hpp"
 #include "types.hpp"
 
 namespace components::dataframe {
@@ -25,30 +25,24 @@ namespace components::dataframe {
 
     namespace detail {
         template<typename L, typename R, typename = void>
-        struct is_relationally_comparable_impl : std::false_type {
-        };
+        struct is_relationally_comparable_impl : std::false_type {};
 
         template<typename L, typename R>
         struct is_relationally_comparable_impl<L, R, std::void_t<less_comparable<L, R>, greater_comparable<L, R>>>
-            : std::true_type {
-        };
+            : std::true_type {};
 
         template<typename L, typename R, typename = void>
-        struct is_equality_comparable_impl : std::false_type {
-        };
+        struct is_equality_comparable_impl : std::false_type {};
 
         template<typename L, typename R>
-        struct is_equality_comparable_impl<L, R, std::void_t<equality_comparable<L, R>>> : std::true_type {
-        };
+        struct is_equality_comparable_impl<L, R, std::void_t<equality_comparable<L, R>>> : std::true_type {};
 
         // has common type
         template<typename AlwaysVoid, typename... Ts>
-        struct has_common_type_impl : std::false_type {
-        };
+        struct has_common_type_impl : std::false_type {};
 
         template<typename... Ts>
-        struct has_common_type_impl<std::void_t<std::common_type_t<Ts...>>, Ts...> : std::true_type {
-        };
+        struct has_common_type_impl<std::void_t<std::common_type_t<Ts...>>, Ts...> : std::true_type {};
     } // namespace detail
 
     template<typename... Ts>
@@ -56,7 +50,6 @@ namespace components::dataframe {
 
     template<typename... Ts>
     constexpr inline bool has_common_type_v = detail::has_common_type_impl<void, Ts...>::value;
-
 
     template<typename T>
     using is_timestamp_t = std::disjunction<std::is_same<core::date::timestamp_day, T>,
@@ -204,13 +197,11 @@ namespace components::dataframe {
     bool is_bit_castable(data_type from, data_type to);
 
     template<typename From, typename To>
-    struct is_convertible : std::is_convertible<From, To> {
-    };
+    struct is_convertible : std::is_convertible<From, To> {};
 
     template<typename Duration1, typename Duration2>
     struct is_convertible<core::date::detail::timestamp<Duration1>, core::date::detail::timestamp<Duration2>>
         : std::is_convertible<typename core::date::detail::time_point<Duration1>::duration,
-                              typename core::date::detail::time_point<Duration2>::duration> {
-    };
+                              typename core::date::detail::time_point<Duration2>::duration> {};
 
-} // namespace dataframe
+} // namespace components::dataframe

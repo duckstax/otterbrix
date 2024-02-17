@@ -2,11 +2,11 @@
 
 #include <vector>
 
+#include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
 #include <components/document/wrapper_value.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/ql/index.hpp>
-#include <components/cursor/cursor.hpp>
 
 namespace components::index {
 
@@ -20,4 +20,4 @@ namespace components::index {
     using query_t = expressions::compare_expression_ptr;
     using result_set_t = cursor::sub_cursor_t;
 
-}
+} // namespace components::index

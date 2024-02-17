@@ -26,7 +26,7 @@ namespace components::index {
             iterator_impl_t* next() final;
             bool equals(const iterator_impl_t* other) const final;
             bool not_equals(const iterator_impl_t* other) const final;
-            iterator_impl_t *copy() const final;
+            iterator_impl_t* copy() const final;
 
         private:
             const_iterator iterator_;
