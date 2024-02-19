@@ -16,7 +16,7 @@ target_link_libraries(
         CONAN_PKG::proxy-wasm-cpp-host
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::openssl
+        #CONAN_PKG::openssl
 )
 
 include(CTest)
