@@ -74,7 +74,7 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
-        const collection_full_name_t name_;
+        collection_full_name_t name_;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
@@ -87,9 +87,9 @@ namespace services::collection {
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
 
-        auto execute_plan(const components::session::session_id_t& session,
-                          collection::operators::operator_ptr plan,
-                          components::ql::storage_parameters parameters) -> void;
+        auto execute_sub_plan(const components::session::session_id_t& session,
+                              collection::operators::operator_ptr plan,
+                              components::ql::storage_parameters parameters) -> void;
 
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);

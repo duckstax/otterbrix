@@ -38,7 +38,7 @@ namespace services {
         };
 
         struct collection_pack_t {
-            actor_zeta::address_t address;
+            actor_zeta::address_t collection_actor_address;
             collection::context_collection_t* context;
 
             explicit collection_pack_t(actor_zeta::address_t&& address, collection::context_collection_t* context);
@@ -104,6 +104,10 @@ namespace services {
         void execute_plan_(components::session::session_id_t& session,
                            components::logical_plan::node_ptr logical_plan,
                            components::ql::storage_parameters parameters);
+
+        void traverse_plan_(components::session::session_id_t& session,
+                            collection::operators::operator_ptr&& plan,
+                            components::ql::storage_parameters&& parameters);
 
         void execute_sub_plan_finish_(components::session::session_id_t& session,
                                       components::cursor::cursor_t_ptr cursor);

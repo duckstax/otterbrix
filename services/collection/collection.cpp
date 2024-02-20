@@ -22,7 +22,7 @@ namespace services::collection {
         , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), name, log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
-        add_handler(handler_id(route::execute_plan), &collection_t::execute_plan);
+        add_handler(handler_id(route::execute_sub_plan), &collection_t::execute_sub_plan);
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
@@ -70,9 +70,9 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::execute_plan(const components::session::session_id_t& session,
-                                    collection::operators::operator_ptr plan,
-                                    components::ql::storage_parameters parameters) -> void {
+    auto collection_t::execute_sub_plan(const components::session::session_id_t& session,
+                                        collection::operators::operator_ptr plan,
+                                        components::ql::storage_parameters parameters) -> void {
         trace(log(), "collection::execute_plan: {}, session {}", context_->name().to_string(), session.data());
         auto sender = current_message()->sender();
         if (dropped_) {

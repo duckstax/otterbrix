@@ -22,7 +22,7 @@ namespace services {
 
     memory_storage_t::collection_pack_t::collection_pack_t(actor_zeta::address_t&& address,
                                                            collection::context_collection_t* context)
-        : address(std::move(address))
+        : collection_actor_address(std::move(address))
         , context(context) {}
 
     memory_storage_t::plan_t::plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
@@ -253,7 +253,7 @@ namespace services {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full().to_string());
         if (check_collection_(session, logical_plan->collection_full())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-            actor_zeta::send(collections_.at(logical_plan->collection_full()).address,
+            actor_zeta::send(collections_.at(logical_plan->collection_full()).collection_actor_address,
                              address(),
                              collection::handler_id(collection::route::drop_collection),
                              session);
@@ -274,9 +274,11 @@ namespace services {
                   session.data());
             return;
         }
-        auto collection_names = logical_plan->collection_dependencies();
-        context_storage_t collection_dependencies;
-        for (const auto& name : collection_names) {
+        auto dependency_tree_collections_names = logical_plan->collection_dependencies();
+        context_storage_t collections_context_storage;
+        while (!dependency_tree_collections_names.empty()) {
+            collection_full_name_t name =
+                dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
             if (!check_collection_(session, name)) {
                 trace(log_,
                       "memory_storage_t:execute_plan_ collection not found {}, sesion: {}",
@@ -284,11 +286,12 @@ namespace services {
                       session.data());
                 return;
             }
-            collection_dependencies.emplace(name, collections_.at(name).context);
+            collections_context_storage.emplace(std::move(name), collections_.at(name).context);
         }
         sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-        auto plan =
-            collection::planner::create_plan(collection_dependencies, logical_plan, components::ql::limit_t::unlimit());
+        auto plan = collection::planner::create_plan(collections_context_storage,
+                                                     logical_plan,
+                                                     components::ql::limit_t::unlimit());
 
         if (!plan) {
             execute_plan_finish_(
@@ -297,11 +300,17 @@ namespace services {
             return;
         }
 
+        traverse_plan_(session, std::move(plan), std::move(parameters));
+    }
+
+    void memory_storage_t::traverse_plan_(components::session::session_id_t& session,
+                                          collection::operators::operator_ptr&& plan,
+                                          components::ql::storage_parameters&& parameters) {
         std::stack<collection::operators::operator_ptr> look_up;
         std::stack<collection::operators::operator_ptr> sub_plans;
         look_up.push(plan);
         while (!look_up.empty()) {
-            collection::operators::operator_ptr check_op = look_up.top();
+            auto check_op = look_up.top();
             while (check_op->right() == nullptr) {
                 check_op = check_op->left();
                 if (check_op == nullptr) {
@@ -316,11 +325,12 @@ namespace services {
             }
         }
 
+        // start execution chain by sending first avaliable sub_plan
         auto current_plan =
             (plans_.emplace(session, plan_t{std::move(sub_plans), parameters})).first->second.sub_plans.top();
-        actor_zeta::send(collections_.at(current_plan->collection_name()).address,
+        actor_zeta::send(collections_.at(current_plan->collection_name()).collection_actor_address,
                          address(),
-                         collection::handler_id(collection::route::execute_plan),
+                         collection::handler_id(collection::route::execute_sub_plan),
                          session,
                          current_plan,
                          parameters);
@@ -336,9 +346,9 @@ namespace services {
         } else {
             assert(!plan.sub_plans.empty() && "memory_storage_t:execute_sub_plan_finish_: sub plans execution failed");
             plan.sub_plans.pop();
-            actor_zeta::send(collections_.at(plan.sub_plans.top()->collection_name()).address,
+            actor_zeta::send(collections_.at(plan.sub_plans.top()->collection_name()).collection_actor_address,
                              address(),
-                             collection::handler_id(collection::route::execute_plan),
+                             collection::handler_id(collection::route::execute_sub_plan),
                              session,
                              plan.sub_plans.top(),
                              plan.parameters);
