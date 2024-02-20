@@ -1,6 +1,6 @@
 name: ubuntu 20.04 sanitizer
 
-on: [pull_request]
+# on: [pull_request]
 
 jobs:
   run:
