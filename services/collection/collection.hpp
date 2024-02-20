@@ -37,12 +37,15 @@ namespace services::collection {
 
     class context_collection_t final {
     public:
-        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log)
+        explicit context_collection_t(std::pmr::memory_resource* resource,
+                                      const collection_full_name_t& name,
+                                      log_t&& log)
             : resource_(resource)
             , log_(log)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
-            , storage_(resource_) {
+            , storage_(resource_)
+            , name_(name) {
             assert(resource != nullptr);
         }
 
@@ -55,6 +58,8 @@ namespace services::collection {
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
 
         log_t& log() noexcept { return log_; }
+
+        const collection_full_name_t& name() const noexcept { return name_; }
 
     private:
         std::pmr::memory_resource* resource_;
@@ -69,6 +74,7 @@ namespace services::collection {
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
+        collection_full_name_t name_;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
@@ -81,9 +87,9 @@ namespace services::collection {
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
 
-        auto execute_plan(const components::session::session_id_t& session,
-                          const components::logical_plan::node_ptr& logical_plan,
-                          components::ql::storage_parameters parameters) -> void;
+        auto execute_sub_plan(const components::session::session_id_t& session,
+                              collection::operators::operator_ptr plan,
+                              components::ql::storage_parameters parameters) -> void;
 
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
@@ -119,7 +125,6 @@ namespace services::collection {
 
         log_t& log() noexcept;
 
-        const collection_full_name_t name_;
         actor_zeta::address_t mdisk_;
 
         std::unique_ptr<context_collection_t> context_;

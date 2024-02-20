@@ -4,9 +4,9 @@
 
 namespace services::collection::planner::impl {
 
-    operators::operator_ptr create_plan_sort(context_collection_t* context,
+    operators::operator_ptr create_plan_sort(const context_storage_t& context,
                                              const components::logical_plan::node_ptr& node) {
-        auto sort = std::make_unique<operators::operator_sort_t>(context);
+        auto sort = boost::intrusive_ptr(new operators::operator_sort_t(context.at(node->collection_full())));
         std::for_each(node->expressions().begin(),
                       node->expressions().end(),
                       [&sort](const components::expressions::expression_ptr& expr) {

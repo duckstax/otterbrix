@@ -11,6 +11,9 @@
 #include <memory_resource>
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
+#include <stack>
+
+#include "context_storage.hpp"
 
 namespace components::ql {
     struct create_database_t;
@@ -34,9 +37,25 @@ namespace services {
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
 
+        struct collection_pack_t {
+            actor_zeta::address_t collection_actor_address;
+            collection::context_collection_t* context;
+
+            explicit collection_pack_t(actor_zeta::address_t&& address, collection::context_collection_t* context);
+        };
+
+        struct plan_t {
+            std::stack<collection::operators::operator_ptr> sub_plans;
+            components::ql::storage_parameters parameters;
+
+            explicit plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
+                            components::ql::storage_parameters parameters);
+        };
+
         using database_storage_t = std::pmr::set<database_name_t>;
-        using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, actor_zeta::address_t>;
+        using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, collection_pack_t>;
         using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
+        using plan_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, plan_t>;
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
@@ -65,6 +84,7 @@ namespace services {
         database_storage_t databases_;
         collection_storage_t collections_;
         session_storage_t sessions_;
+        plan_storage_t plans_;
         std::unique_ptr<load_buffer_t> load_buffer_;
 
         bool is_exists_database_(const database_name_t& name) const;
@@ -84,6 +104,14 @@ namespace services {
         void execute_plan_(components::session::session_id_t& session,
                            components::logical_plan::node_ptr logical_plan,
                            components::ql::storage_parameters parameters);
+
+        void traverse_plan_(components::session::session_id_t& session,
+                            collection::operators::operator_ptr&& plan,
+                            components::ql::storage_parameters&& parameters);
+
+        void execute_sub_plan_finish_(components::session::session_id_t& session,
+                                      components::cursor::cursor_t_ptr cursor);
+
         void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
         void drop_collection_finish_(components::session::session_id_t& session,

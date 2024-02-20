@@ -4,7 +4,7 @@
 
 namespace services::collection::operators::get {
 
-    class operator_get_t {
+    class operator_get_t : public boost::intrusive_ref_counter<operator_get_t> {
     public:
         document::wrapper_value_t value(const components::document::document_ptr& document);
 
@@ -19,6 +19,6 @@ namespace services::collection::operators::get {
         virtual document::wrapper_value_t get_value_impl(const components::document::document_ptr& document) = 0;
     };
 
-    using operator_get_ptr = std::unique_ptr<operator_get_t>;
+    using operator_get_ptr = boost::intrusive_ptr<operator_get_t>;
 
 } // namespace services::collection::operators::get

@@ -139,9 +139,10 @@ TEST_CASE("operator::delete") {
                                             key("count"),
                                             core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
-        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t::unlimit()));
+        delete_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -156,9 +157,10 @@ TEST_CASE("operator::delete") {
                                             key("count"),
                                             core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
-        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t::limit_one()));
+        delete_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t::limit_one())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -173,9 +175,10 @@ TEST_CASE("operator::delete") {
                                             key("count"),
                                             core::parameter_id_t(1));
         operator_delete delete_(d(collection)->view());
-        delete_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t(5)));
+        delete_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t(5))));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -211,9 +214,10 @@ TEST_CASE("operator::update") {
         }
 
         operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t::unlimit()));
+        update_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t::unlimit())));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
@@ -248,9 +252,10 @@ TEST_CASE("operator::update") {
         }
 
         operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t(1)));
+        update_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t(1))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
@@ -285,9 +290,10 @@ TEST_CASE("operator::update") {
         }
 
         operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(std::make_unique<full_scan>(d(collection)->view(),
-                                                         predicates::create_predicate(d(collection)->view(), cond),
-                                                         components::ql::limit_t(5)));
+        update_.set_children(
+            boost::intrusive_ptr(new full_scan(d(collection)->view(),
+                                               predicates::create_predicate(d(collection)->view(), cond),
+                                               components::ql::limit_t(5))));
         update_.on_execute(&pipeline_context);
         {
             full_scan scan(d(collection)->view(),
@@ -467,7 +473,7 @@ TEST_CASE("operator::index::delete_and_update") {
             components::pipeline::context_t pipeline_context(std::move(parameters));
             operator_delete delete_(d(collection)->view());
             delete_.set_children(
-                std::make_unique<index_scan>(d(collection)->view(), cond, components::ql::limit_t::unlimit()));
+                boost::intrusive_ptr(new index_scan(d(collection)->view(), cond, components::ql::limit_t::unlimit())));
             delete_.on_execute(&pipeline_context);
 
             index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
@@ -492,8 +498,8 @@ TEST_CASE("operator::index::delete_and_update") {
         {
             auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
             operator_update update(d(collection)->view(), script_update, false);
-            update.set_children(
-                std::make_unique<index_scan>(d(collection)->view(), cond_check, components::ql::limit_t::unlimit()));
+            update.set_children(boost::intrusive_ptr(
+                new index_scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit())));
             update.on_execute(&pipeline_context_check);
 
             index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());

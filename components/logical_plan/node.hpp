@@ -7,6 +7,7 @@
 #include <components/ql/base.hpp>
 #include <core/make_intrusive_ptr.hpp>
 #include <memory_resource>
+#include <unordered_set>
 #include <vector>
 
 namespace components::logical_plan {
@@ -32,6 +33,8 @@ namespace components::logical_plan {
         void append_expression(const expression_ptr& expression);
         void append_expressions(const std::vector<expression_ptr>& expressions);
 
+        std::unordered_set<collection_full_name_t, collection_name_hash> collection_dependencies();
+
         bool operator==(const node_t& rhs) const;
         bool operator!=(const node_t& rhs) const;
 
@@ -46,6 +49,8 @@ namespace components::logical_plan {
         std::pmr::vector<expression_ptr> expressions_;
 
         node_t(std::pmr::memory_resource* resource, node_type type, const collection_full_name_t& collection);
+        void
+        collection_dependencies_(std::unordered_set<collection_full_name_t, collection_name_hash>& upper_dependencies);
 
     private:
         virtual hash_t hash_impl() const = 0;

@@ -90,7 +90,6 @@ extern "C" cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
-    trace(pod_space->space->get_log(), "C++ Error result: {}", cursor->is_error());
     auto cursor_storage = std::make_unique<cursor_storage_t>();
     cursor_storage->cursor = cursor;
     cursor_storage->state = state_t::created;

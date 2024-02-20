@@ -39,6 +39,12 @@ namespace services::collection::operators {
 
     bool operator_t::is_wait_sync_disk() const { return state_ == operator_state::waiting; }
 
+    const collection_full_name_t& operator_t::collection_name() const noexcept { return context_->name(); }
+
+    operator_ptr operator_t::left() const noexcept { return left_; }
+
+    operator_ptr operator_t::right() const noexcept { return right_; }
+
     operator_state operator_t::state() const noexcept { return state_; }
 
     operator_type operator_t::type() const noexcept { return type_; }

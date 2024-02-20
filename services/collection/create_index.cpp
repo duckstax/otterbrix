@@ -47,7 +47,7 @@ namespace services::collection {
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
         debug(log(),
               "collection::create_index : {} {} {}",
-              name_.to_string(),
+              context_->name().to_string(),
               name_index_type(index.index_type_),
               keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
@@ -155,7 +155,7 @@ namespace services::collection {
         sessions::remove(sessions_, session);
         auto cursor = make_cursor(default_resource());
         cursor->push(res.first->second.get());
-        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, cursor);
+        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
     }
 
 } // namespace services::collection

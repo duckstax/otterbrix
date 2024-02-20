@@ -18,12 +18,11 @@ namespace services::collection {
                                log_t& log,
                                actor_zeta::address_t mdisk)
         : actor_zeta::basic_async_actor(memory_storage, std::string(name.to_string()))
-        , name_(name)
         , mdisk_(std::move(mdisk))
-        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), log.clone()))
+        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), name, log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
-        add_handler(handler_id(route::execute_plan), &collection_t::execute_plan);
+        add_handler(handler_id(route::execute_sub_plan), &collection_t::execute_sub_plan);
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
@@ -38,7 +37,11 @@ namespace services::collection {
 
     void collection_t::create_documents(components::session::session_id_t& session,
                                         std::pmr::vector<document_ptr>& documents) {
-        trace(log(), "{}::{}::create_documents, count: {}", name_.database, name_.collection, documents.size());
+        trace(log(),
+              "{}::{}::create_documents, count: {}",
+              context_->name().database,
+              context_->name().collection,
+              documents.size());
         //components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
         //insert_(&pipeline_context, documents);
         for (const auto& doc : documents) {
@@ -48,7 +51,7 @@ namespace services::collection {
     }
 
     auto collection_t::size(session_id_t& session) -> void {
-        trace(log(), "collection {}::size", name_.collection);
+        trace(log(), "collection {}::size", context_->name().collection);
         auto dispatcher = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(dispatcher,
@@ -67,10 +70,10 @@ namespace services::collection {
         }
     }
 
-    auto collection_t::execute_plan(const components::session::session_id_t& session,
-                                    const components::logical_plan::node_ptr& logical_plan,
-                                    components::ql::storage_parameters parameters) -> void {
-        trace(log(), "collection::execute_plan : {}, session {}", name_.to_string(), session.data());
+    auto collection_t::execute_sub_plan(const components::session::session_id_t& session,
+                                        collection::operators::operator_ptr plan,
+                                        components::ql::storage_parameters parameters) -> void {
+        trace(log(), "collection::execute_plan: {}, session {}", context_->name().to_string(), session.data());
         auto sender = current_message()->sender();
         if (dropped_) {
             actor_zeta::send(sender,
@@ -80,7 +83,6 @@ namespace services::collection {
                              make_cursor(context_->resource(), error_code_t::collection_dropped, "collection dropped"));
             return;
         }
-        auto plan = planner::create_plan(view(), logical_plan, components::ql::limit_t::unlimit());
         if (!plan) {
             actor_zeta::send(
                 sender,
@@ -113,15 +115,17 @@ namespace services::collection {
                 return;
             }
             case operators::operator_type::aggregate: {
-                // this is find/serach
+                // this is find/search
                 find_document_impl(session, sender, std::move(plan));
                 return;
             }
 
             default: {
-                // should never happen
-                assert(false && "Problem with operator_type in collections");
-                throw std::logic_error("Problem with operator_type in collections");
+                actor_zeta::send(sender,
+                                 address(),
+                                 handler_id(route::execute_sub_plan_finish),
+                                 session,
+                                 make_cursor(context_->resource(), operation_status_t::success));
                 return;
             }
         }
@@ -134,8 +138,8 @@ namespace services::collection {
                          address(),
                          disk::handler_id(disk::route::write_documents),
                          session,
-                         std::string(name_.database),
-                         std::string(name_.collection),
+                         std::string(context_->name().database),
+                         std::string(context_->name().collection),
                          plan->output() ? plan->output()->documents()
                                         : std::pmr::vector<document_ptr>{context_->resource()});
 
@@ -151,7 +155,7 @@ namespace services::collection {
             }
         }
         cursor->push(sub_cursor);
-        actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+        actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
     }
 
     void collection_t::update_document_impl(const components::session::session_id_t& session,
@@ -167,8 +171,8 @@ namespace services::collection {
                              address(),
                              disk::handler_id(disk::route::remove_documents),
                              session,
-                             std::string(name_.database),
-                             std::string(name_.collection),
+                             std::string(context_->name().database),
+                             std::string(context_->name().collection),
                              documents);
             auto cursor(new cursor_t(context_->resource()));
             auto* sub_cursor = new sub_cursor_t(context_->resource(), address());
@@ -176,7 +180,7 @@ namespace services::collection {
                 sub_cursor->append(document_view_t(context_->storage().at(id)));
             }
             cursor->push(sub_cursor);
-            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+            actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
         } else {
             if (plan->modified()) {
                 auto cursor(new cursor_t(context_->resource()));
@@ -190,10 +194,10 @@ namespace services::collection {
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(name_.database),
-                                 std::string(name_.collection),
+                                 std::string(context_->name().database),
+                                 std::string(context_->name().collection),
                                  plan->modified()->documents());
-                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+                actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
             } else {
                 auto cursor(new cursor_t(context_->resource()));
                 auto* sub_cursor = new sub_cursor_t(context_->resource(), address());
@@ -202,10 +206,10 @@ namespace services::collection {
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(name_.database),
-                                 std::string(name_.collection),
+                                 std::string(context_->name().database),
+                                 std::string(context_->name().collection),
                                  std::pmr::vector<document_id_t>{context_->resource()});
-                actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+                actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
             }
         }
     }
@@ -221,8 +225,8 @@ namespace services::collection {
                          address(),
                          disk::handler_id(disk::route::remove_documents),
                          session,
-                         std::string(name_.database),
-                         std::string(name_.collection),
+                         std::string(context_->name().database),
+                         std::string(context_->name().collection),
                          modified);
         auto* sub_cursor = new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), address());
         for (const auto& id : plan->modified()->documents()) {
@@ -230,7 +234,7 @@ namespace services::collection {
         }
         auto cursor = make_cursor(context_->resource());
         cursor->push(sub_cursor);
-        actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, cursor);
+        actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
     }
 
     void collection_t::find_document_impl(const components::session::session_id_t& session,
@@ -248,18 +252,18 @@ namespace services::collection {
         if (cursor.first->second.get()->size() == 0) {
             actor_zeta::send(sender,
                              address(),
-                             handler_id(route::execute_plan_finish),
+                             handler_id(route::execute_sub_plan_finish),
                              session,
                              make_cursor(context_->resource(), operation_status_t::failure));
         } else {
             auto result = make_cursor(context_->resource(), operation_status_t::success);
             result->push(cursor.first->second.get());
-            actor_zeta::send(sender, address(), handler_id(route::execute_plan_finish), session, result);
+            actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, result);
         }
     }
 
     void collection_t::drop(const session_id_t& session) {
-        trace(log(), "collection::drop : {}", name_.to_string());
+        trace(log(), "collection::drop : {}", context_->name().to_string());
         auto dispatcher = current_message()->sender();
         actor_zeta::send(
             dispatcher,
@@ -267,8 +271,8 @@ namespace services::collection {
             handler_id(route::drop_collection_finish),
             session,
             make_cursor(context_->resource(), drop_() ? operation_status_t::success : operation_status_t::failure),
-            name_.database,
-            name_.collection);
+            context_->name().database,
+            context_->name().collection);
     }
 
     std::size_t collection_t::size_() const { return static_cast<size_t>(context_->storage().size()); }
