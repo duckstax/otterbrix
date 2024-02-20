@@ -37,8 +37,8 @@ namespace services::collection::operators {
 
         const collection_full_name_t& collection_name() const noexcept;
 
-        [[nodiscard]] ptr left() noexcept;
-        [[nodiscard]] ptr right() noexcept;
+        [[nodiscard]] ptr left() const noexcept;
+        [[nodiscard]] ptr right() const noexcept;
         [[nodiscard]] operator_state state() const noexcept;
         [[nodiscard]] operator_type type() const noexcept;
         const operator_data_ptr& output() const;
