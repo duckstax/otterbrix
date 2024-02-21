@@ -13,7 +13,7 @@ static constexpr int count_delete_many = 100;
 void work(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = otterbrix::session_id_t();
     state.ResumeTiming();
     int n_state = 0;
     for (auto _ : state) {
@@ -44,44 +44,75 @@ void work(benchmark::State& state) {
         for (int i_find = 1; i_find < count_find_one; ++i_find) {
             dispatcher->find_one(session, db_name, col_name, make_document());
             dispatcher->find_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(i_find)));
-            dispatcher->find_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(size_collection - i_find)));
+            dispatcher->find_one(session,
+                                 db_name,
+                                 col_name,
+                                 make_condition("id_", "$eq", std::to_string(size_collection - i_find)));
         }
 
         // find_many
         for (int i_find = 1; i_find < count_find_many; ++i_find) {
             dispatcher->find(session, db_name, col_name, make_document());
             dispatcher->find(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(i_find)));
-            dispatcher->find(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(size_collection - i_find)));
+            dispatcher->find(session,
+                             db_name,
+                             col_name,
+                             make_condition("id_", "$eq", std::to_string(size_collection - i_find)));
         }
 
         // update_one
         for (int i_update = 0; i_update < count_update_one; ++i_update) {
-            dispatcher->update_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(i_update)), make_condition("$set", "count", 0), false);
-            dispatcher->update_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(size_collection - i_update)), make_condition("$set", "count", size_collection), false);
+            dispatcher->update_one(session,
+                                   db_name,
+                                   col_name,
+                                   make_condition("id_", "$eq", std::to_string(i_update)),
+                                   make_condition("$set", "count", 0),
+                                   false);
+            dispatcher->update_one(session,
+                                   db_name,
+                                   col_name,
+                                   make_condition("id_", "$eq", std::to_string(size_collection - i_update)),
+                                   make_condition("$set", "count", size_collection),
+                                   false);
         }
 
         // update_many
         for (int i_update = 0; i_update < count_update_many; ++i_update) {
-            dispatcher->update_many(session, db_name, col_name, make_condition("count", "$lt", count_update_many * i_update), make_condition("$set", "count", 0), false);
-            dispatcher->update_many(session, db_name, col_name, make_condition("count", "$gt", size_collection - count_update_many * i_update), make_condition("$set", "count", size_collection), false);
+            dispatcher->update_many(session,
+                                    db_name,
+                                    col_name,
+                                    make_condition("count", "$lt", count_update_many * i_update),
+                                    make_condition("$set", "count", 0),
+                                    false);
+            dispatcher->update_many(session,
+                                    db_name,
+                                    col_name,
+                                    make_condition("count", "$gt", size_collection - count_update_many * i_update),
+                                    make_condition("$set", "count", size_collection),
+                                    false);
         }
 
         // delete_one
         for (int i_delete = 0; i_delete < count_delete_one; ++i_delete) {
             dispatcher->delete_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(i_delete)));
-            dispatcher->delete_one(session, db_name, col_name, make_condition("id_", "$eq", std::to_string(size_collection - i_delete)));
+            dispatcher->delete_one(session,
+                                   db_name,
+                                   col_name,
+                                   make_condition("id_", "$eq", std::to_string(size_collection - i_delete)));
         }
 
         // delete_many
         for (int i_delete = 0; i_delete < count_delete_many; ++i_delete) {
             dispatcher->delete_many(session, db_name, col_name, make_condition("count", "$lt", 100 * i_delete));
-            dispatcher->delete_many(session, db_name, col_name, make_condition("count", "$gt", size_collection - 100 * i_delete));
+            dispatcher->delete_many(session,
+                                    db_name,
+                                    col_name,
+                                    make_condition("count", "$gt", size_collection - 100 * i_delete));
         }
         dispatcher->delete_many(session, db_name, col_name, make_document());
     }
 }
 BENCHMARK(work);
-
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);

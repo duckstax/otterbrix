@@ -4,8 +4,7 @@
 namespace services::collection::operators::aggregate {
 
     operator_aggregate_t::operator_aggregate_t(context_collection_t* context)
-        : read_only_operator_t(context, operator_type::aggregate) {
-    }
+        : read_only_operator_t(context, operator_type::aggregate) {}
 
     void operator_aggregate_t::on_execute_impl(components::pipeline::context_t*) {
         output_ = make_operator_data(context_->resource());

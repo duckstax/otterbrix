@@ -3,13 +3,10 @@
 
 namespace components::logical_plan {
 
-    node_group_t::node_group_t(std::pmr::memory_resource *resource, const collection_full_name_t& collection)
-        : node_t(resource, node_type::group_t, collection) {
-    }
+    node_group_t::node_group_t(std::pmr::memory_resource* resource, const collection_full_name_t& collection)
+        : node_t(resource, node_type::group_t, collection) {}
 
-    hash_t node_group_t::hash_impl() const {
-        return 0;
-    }
+    hash_t node_group_t::hash_impl() const { return 0; }
 
     std::string node_group_t::to_string_impl() const {
         std::stringstream stream;
@@ -27,11 +24,12 @@ namespace components::logical_plan {
         return stream.str();
     }
 
-
-    node_ptr make_node_group(std::pmr::memory_resource *resource, const collection_full_name_t& collection, const ql::aggregate::group_t& group) {
+    node_ptr make_node_group(std::pmr::memory_resource* resource,
+                             const collection_full_name_t& collection,
+                             const ql::aggregate::group_t& group) {
         auto node = new node_group_t{resource, collection};
         node->append_expressions(group.fields);
         return node;
     }
 
-}
+} // namespace components::logical_plan

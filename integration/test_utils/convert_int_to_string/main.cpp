@@ -16,7 +16,7 @@ auto convert_int_to_string(group_id_t group, uint64_t number) {
 }
 
 int main() {
-    constexpr int control_number = 1152921504606847388;
+    constexpr auto control_number = 1152921504606847388;
     std::cerr << convert_int_to_string(group_id_t::wal, control_number) << std::endl;
     return 0;
 }

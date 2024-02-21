@@ -14,10 +14,9 @@ namespace components::dataframe::column {
 
     template<typename ColumnView>
     ColumnView slice(ColumnView const& input, size_type begin, size_type end) {
-        static_assert(
-            std::is_same_v<ColumnView, column::column_view> or
-                std::is_same_v<ColumnView, column::mutable_column_view>,
-            "slice can be performed only on column_view and mutable_column_view");
+        static_assert(std::is_same_v<ColumnView, column::column_view> or
+                          std::is_same_v<ColumnView, column::mutable_column_view>,
+                      "slice can be performed only on column_view and mutable_column_view");
 
         assertion_exception_msg(begin >= 0, "Invalid beginning of range.");
         assertion_exception_msg(end >= begin, "Invalid end of range.");

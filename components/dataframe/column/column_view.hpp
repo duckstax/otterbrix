@@ -16,7 +16,8 @@ namespace components::dataframe::column {
     namespace detail {
         class column_view_base {
         public:
-            template<typename R = void, typename = std::enable_if_t<std::is_same_v<R, void> or is_rep_layout_compatible<R>()>>
+            template<typename R = void,
+                     typename = std::enable_if_t<std::is_same_v<R, void> or is_rep_layout_compatible<R>()>>
             R const* head() const noexcept {
                 return static_cast<R const*>(_data);
             }
@@ -43,9 +44,7 @@ namespace components::dataframe::column {
             [[nodiscard]] size_type null_count() const;
             [[nodiscard]] size_type null_count(size_type begin, size_type end) const;
             [[nodiscard]] bool has_nulls() const { return null_count() > 0; }
-            [[nodiscard]] bool has_nulls(size_type begin, size_type end) const {
-                return null_count(begin, end) > 0;
-            }
+            [[nodiscard]] bool has_nulls(size_type begin, size_type end) const { return null_count(begin, end) > 0; }
 
             [[nodiscard]] bitmask_type const* null_mask() const noexcept { return _null_mask; }
             [[nodiscard]] size_type offset() const noexcept { return _offset; }
@@ -95,9 +94,7 @@ namespace components::dataframe::column {
                     size_type offset = 0,
                     std::vector<column_view> const& children = {});
 
-        [[nodiscard]] column_view child(size_type child_index) const noexcept {
-            return children_[child_index];
-        }
+        [[nodiscard]] column_view child(size_type child_index) const noexcept { return children_[child_index]; }
 
         [[nodiscard]] size_type num_children() const noexcept { return children_.size(); }
         auto child_begin() const noexcept { return children_.cbegin(); }
@@ -106,12 +103,14 @@ namespace components::dataframe::column {
         template<typename T, std::enable_if_t<is_numeric<T>() or is_chrono<T>()>>
         column_view(core::span<T const> data)
             : column_view(dataframe::data_type(type_to_id<T>()), data.size(), data.data(), nullptr, 0, 0, {}) {
-            assertion_exception_msg(data.size() < static_cast<std::size_t>(std::numeric_limits<size_type>::max()), "Data exceeds the maximum size of a dataframe view.");
+            assertion_exception_msg(data.size() < static_cast<std::size_t>(std::numeric_limits<size_type>::max()),
+                                    "Data exceeds the maximum size of a dataframe view.");
         }
 
         template<typename T, std::enable_if_t<is_numeric<T>() or is_chrono<T>()>>
         [[nodiscard]] operator core::span<T const>() const {
-            assertion_exception_msg(type() == data_type{type_to_id<T>()}, "Device span type must match dataframe view type.");
+            assertion_exception_msg(type() == data_type{type_to_id<T>()},
+                                    "Device span type must match dataframe view type.");
             assertion_exception_msg(!nullable(), "A nullable dataframe view cannot be converted to a device span.");
             return core::span<T const>(data<T>(), size());
         }
@@ -139,7 +138,8 @@ namespace components::dataframe::column {
                             size_type offset = 0,
                             std::vector<mutable_column_view> const& children = {});
 
-        template<typename T = void, typename = std::enable_if_t<std::is_same_v<T, void> or is_rep_layout_compatible<T>()>>
+        template<typename T = void,
+                 typename = std::enable_if_t<std::is_same_v<T, void> or is_rep_layout_compatible<T>()>>
         T* head() const noexcept {
             return const_cast<T*>(detail::column_view_base::head<T>());
         }

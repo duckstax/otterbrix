@@ -10,13 +10,10 @@
 
 namespace components::dataframe::lists {
 
-    std::unique_ptr<column::column_t> copy_slice(
-        std::pmr::memory_resource* resource,
-        lists_column_view const& lists,
-        size_type start,
-        size_type end) {
+    std::unique_ptr<column::column_t>
+    copy_slice(std::pmr::memory_resource* resource, lists_column_view const& lists, size_type start, size_type end) {
         if (lists.is_empty() or start == end) {
-            return column::empty_like(resource,lists.parent());
+            return column::empty_like(resource, lists.parent());
         }
         if (end < 0 || end > lists.size()) {
             end = lists.size();
@@ -37,26 +34,30 @@ namespace components::dataframe::lists {
         core::uvector<size_type> out_offsets(resource, offsets_count);
 
         // Compute the offsets column of the result:
-        std::transform(
-            offsets_data + start,
-            offsets_data + end + 1,
-            out_offsets.data(),
-            [start_offset](size_type i) { return i - start_offset; });
-        auto offsets = std::make_unique<column::column_t>(resource, data_type{type_id::int32}, offsets_count, out_offsets.release(),core::buffer(resource));
+        std::transform(offsets_data + start, offsets_data + end + 1, out_offsets.data(), [start_offset](size_type i) {
+            return i - start_offset;
+        });
+        auto offsets = std::make_unique<column::column_t>(resource,
+                                                          data_type{type_id::int32},
+                                                          offsets_count,
+                                                          out_offsets.release(),
+                                                          core::buffer(resource));
 
-        auto child = (lists.child().type() == data_type{type_id::list})
-                ? copy_slice(resource,lists_column_view(lists.child()), start_offset, end_offset)
-                : std::make_unique<column::column_t>(resource, column::slice(lists.child(), {start_offset, end_offset}).front());
+        auto child =
+            (lists.child().type() == data_type{type_id::list})
+                ? copy_slice(resource, lists_column_view(lists.child()), start_offset, end_offset)
+                : std::make_unique<column::column_t>(resource,
+                                                     column::slice(lists.child(), {start_offset, end_offset}).front());
 
         // Compute the null mask of the result:
         auto null_mask = detail::copy_bitmask(resource, lists.null_mask(), start, end);
 
         return lists::make_lists_column(resource,
-                                 lists_count,
-                                 std::move(offsets),
-                                 std::move(child),
-                                 unknown_null_count,
-                                 std::move(null_mask));
+                                        lists_count,
+                                        std::move(offsets),
+                                        std::move(child),
+                                        unknown_null_count,
+                                        std::move(null_mask));
     }
 
 } // namespace components::dataframe::lists

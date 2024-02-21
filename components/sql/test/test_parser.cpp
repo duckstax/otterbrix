@@ -45,8 +45,10 @@ TEST_CASE("parser::database") {
     }
 
     SECTION("create; /*") {
-        auto ql = sql::parse(resource, "CREATE DATABASE db_name; /* multiline\n"
-                             "comments */").ql;
+        auto ql = sql::parse(resource,
+                             "CREATE DATABASE db_name; /* multiline\n"
+                             "comments */")
+                      .ql;
         REQUIRE(std::holds_alternative<ql::create_database_t>(ql));
         REQUIRE(std::get<ql::create_database_t>(ql).database_ == "db_name");
     }
@@ -62,7 +64,6 @@ TEST_CASE("parser::database") {
         REQUIRE(std::holds_alternative<ql::drop_database_t>(ql));
         REQUIRE(std::get<ql::drop_database_t>(ql).database_ == "db_name");
     }
-
 }
 
 TEST_CASE("parser::table") {
@@ -102,5 +103,4 @@ TEST_CASE("parser::table") {
         REQUIRE(std::get<ql::drop_collection_t>(ql).database_ == "db_name");
         REQUIRE(std::get<ql::drop_collection_t>(ql).collection_ == "table_name");
     }
-
 }

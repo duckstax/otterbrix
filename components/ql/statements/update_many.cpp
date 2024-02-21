@@ -20,8 +20,7 @@ namespace components::ql {
     update_many_t::update_many_t(const database_name_t& database, const collection_name_t& collection)
         : ql_param_statement_t(statement_type::update_many, database, collection)
         , update_(document::make_document())
-        , upsert_(false){
-    }
+        , upsert_(false) {}
 
     update_many_t::update_many_t(components::ql::aggregate_statement_raw_ptr condition,
                                  const components::document::document_ptr& update,

@@ -2,12 +2,12 @@ from skbuild import setup
 
 
 setup(
-    name="ottergon",
+    name="otterbrix",
     version="0.5.0",
     description=" ",
     author=" ",
     license=" ",
-    packages=['ottergon'],
+    packages=['otterbrix'],
     # package_dir={'': 'integration/python'},
     # package_data={"": ["libiwasm.so"]},
     # cmake_install_dir='integration/python',

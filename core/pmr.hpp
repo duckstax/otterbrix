@@ -5,6 +5,7 @@
 #include <type_traits>
 
 namespace core::pmr {
+    inline std::pmr::memory_resource* default_resource() { return std::pmr::get_default_resource(); }
 
     class deleter_t final {
     public:

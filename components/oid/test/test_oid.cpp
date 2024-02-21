@@ -70,7 +70,7 @@ namespace ns1 {
         static constexpr uint size_increment = 3;
     };
     using oid12_t = oid_t<test_id_size>;
-}
+} // namespace ns1
 namespace ns2 {
     struct test_id_size {
         static constexpr uint size_timestamp = 4;
@@ -78,7 +78,7 @@ namespace ns2 {
         static constexpr uint size_increment = 3;
     };
     using oid12_t = oid_t<test_id_size>;
-}
+} // namespace ns2
 namespace ns3 {
     struct test_id_size {
         static constexpr uint size_timestamp = 4;
@@ -86,7 +86,7 @@ namespace ns3 {
         static constexpr uint size_increment = 3;
     };
     using oid12_t = oid_t<test_id_size>;
-}
+} // namespace ns3
 namespace ns4 {
     struct test_id_size {
         static constexpr uint size_timestamp = 4;
@@ -94,7 +94,7 @@ namespace ns4 {
         static constexpr uint size_increment = 3;
     };
     using oid12_t = oid_t<test_id_size>;
-}
+} // namespace ns4
 TEST_CASE("oid::generate") {
     std::cerr << ns1::oid12_t() << std::endl;
     usleep(1000000);

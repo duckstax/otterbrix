@@ -1,4 +1,4 @@
-project(ottergon)
+project(otterbrix)
 
 set(${PROJECT_NAME}_headers
         convert.hpp
@@ -9,7 +9,6 @@ set(${PROJECT_NAME}_headers
         wrapper_cursor.hpp
         wrapper_document.hpp
         wrapper_document_id.hpp
-        wrapper_result.hpp
 )
 
 set(${PROJECT_NAME}_sources
@@ -22,21 +21,20 @@ set(${PROJECT_NAME}_sources
         wrapper_cursor.cpp
         wrapper_document.cpp
         wrapper_document_id.cpp
-        wrapper_result.cpp
 )
 
-set(ROCKETJOE_LIBS
-        rocketjoe::log
-        rocketjoe::memory_storage
-        rocketjoe::collection
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::document
-        rocketjoe::dispatcher
-        rocketjoe::wal
-        rocketjoe::disk
-        rocketjoe::locks
-        rocketjoe::ql
+set(otterbrix_LIBS
+        otterbrix::log
+        otterbrix::memory_storage
+        otterbrix::collection
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::document
+        otterbrix::dispatcher
+        otterbrix::wal
+        otterbrix::disk
+        otterbrix::locks
+        otterbrix::ql
 )
 
 #SET(PYTHON_EXECUTABLE python3)
@@ -54,29 +52,29 @@ pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        ${ROCKETJOE_LIBS}
-        cpp_ottergon
+        ${otterbrix_LIBS}
+        cpp_otterbrix
         CONAN_PKG::spdlog
         CONAN_PKG::pybind11
         CONAN_PKG::msgpack-cxx
-        CONAN_PKG::date
+        #CONAN_PKG::date
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
         CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::libcurl
+        #CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         #CONAN_PKG::libbacktrace
-        CONAN_PKG::openssl
+        #CONAN_PKG::openssl
 
 )
 if (WASM_BUILD)
     target_link_libraries(
             ${PROJECT_NAME} PRIVATE
-            ${ROCKETJOE_LIBS}
+            ${otterbrix_LIBS}
             CONAN_PKG::proxy-wasm-cpp-host
     )
 endif ()
@@ -93,10 +91,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 #target_compile_definitions(_core PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 if(SKBUILD)
-    install(DIRECTORY ottergon DESTINATION  . )
-    install(TARGETS ${PROJECT_NAME} DESTINATION  ./ottergon )
+    install(DIRECTORY otterbrix DESTINATION  . )
+    install(TARGETS ${PROJECT_NAME} DESTINATION  ./otterbrix )
     if (WASM_BUILD)
-        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./ottergon )
+        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./otterbrix )
     endif()
 endif()
 

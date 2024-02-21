@@ -1,5 +1,5 @@
 import pytest
-from ottergon import Client
+from otterbrix import Client
 
 client = Client()
 client["schema"]["table"] # todo: create collection
@@ -10,7 +10,6 @@ def gen_id(num):
     while (len(res) < 24):
         res = '0' + res
     return res
-
 
 def test_collection_sql():
 
@@ -23,49 +22,54 @@ def test_collection_sql():
             query += ";"
         else:
             query += ", "
-    res = client.execute(query)
-    assert res.inserted_count == 100
+    c = client.execute(query)
+    assert len(c) == 100
+    c.close()
+
+    
 
     # select
 
-    res = client.execute("SELECT * FROM schema.table;")
-    assert len(res.cursor) == 100
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table;")
+    assert len(c) == 100
+    c.close()
 
     # delete
 
-    res = client.execute("SELECT * FROM schema.table WHERE count > 90;")
-    assert len(res.cursor) == 9
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count > 90;")
+    assert len(c) == 9
+    c.close()
 
-    res = client.execute("DELETE FROM schema.table WHERE count > 90;")
-    assert res.deleted_count == 9
+    c = client.execute("DELETE FROM schema.table WHERE count > 90;")
+    assert len(c) == 9
+    c.close()
 
-    res = client.execute("SELECT * FROM schema.table WHERE count > 90;")
-    assert len(res.cursor) == 0
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count > 90;")
+    assert len(c) == 0
+    c.close()
 
-    res = client.execute("SELECT * FROM schema.table;")
-    assert len(res.cursor) == 91
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table;")
+    assert len(c) == 91
+    c.close()
 
     # update
 
-    res = client.execute("SELECT * FROM schema.table WHERE count < 20;")
-    assert len(res.cursor) == 20
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count < 20;")
+    assert len(c) == 20
+    c.close()
 
-    res = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
-    assert len(res.cursor) == 0
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
+    assert len(c) == 0
+    c.close()
 
-    res = client.execute("UPDATE schema.table SET count = 1000 WHERE count < 20;")
-    assert res.modified_count == 20
+    c = client.execute("UPDATE schema.table SET count = 1000 WHERE count < 20;")
+    assert len(c) == 20
+    c.close()
 
-    res = client.execute("SELECT * FROM schema.table WHERE count < 20;")
-    assert len(res.cursor) == 0
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count < 20;")
+    assert len(c) == 0
+    c.close()
 
-    res = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
-    assert len(res.cursor) == 20
-    res.cursor.close()
+    c = client.execute("SELECT * FROM schema.table WHERE count = 1000;")
+    assert len(c) == 20
+    c.close()

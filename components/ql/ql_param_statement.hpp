@@ -1,11 +1,11 @@
 #pragma once
 
+#include "ql_statement.hpp"
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/expressions/msgpack.hpp>
-#include "ql_statement.hpp"
 #include <msgpack.hpp>
-#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
+#include <msgpack/zone.hpp>
 
 namespace components::ql {
 
@@ -13,12 +13,11 @@ namespace components::ql {
     using storage_parameters = std::unordered_map<core::parameter_id_t, expr_value_t>;
 
     template<class Value>
-    void add_parameter(storage_parameters &storage, core::parameter_id_t id, Value value) {
+    void add_parameter(storage_parameters& storage, core::parameter_id_t id, Value value) {
         storage.emplace(id, expr_value_t(::document::impl::new_value(value).detach()));
     }
 
-    const expr_value_t& get_parameter(const storage_parameters *storage, core::parameter_id_t id);
-
+    const expr_value_t& get_parameter(const storage_parameters* storage, core::parameter_id_t id);
 
     class ql_param_statement_t : public ql_statement_t {
     public:
@@ -51,19 +50,18 @@ namespace components::ql {
         storage_parameters values_;
     };
 
-
     template<>
-    inline void add_parameter(storage_parameters &storage, core::parameter_id_t id, expr_value_t value) {
+    inline void add_parameter(storage_parameters& storage, core::parameter_id_t id, expr_value_t value) {
         storage.emplace(id, value);
     }
 
     template<>
-    inline void add_parameter(storage_parameters &storage, core::parameter_id_t id, const ::document::impl::value_t* value) {
+    inline void
+    add_parameter(storage_parameters& storage, core::parameter_id_t id, const ::document::impl::value_t* value) {
         storage.emplace(id, expr_value_t(value));
     }
 
 } // namespace components::ql
-
 
 // User defined class template specialization
 namespace msgpack {
@@ -72,7 +70,8 @@ namespace msgpack {
 
             template<>
             struct convert<components::ql::storage_parameters> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::storage_parameters& v) const {
+                msgpack::object const& operator()(msgpack::object const& o,
+                                                  components::ql::storage_parameters& v) const {
                     if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
@@ -88,7 +87,8 @@ namespace msgpack {
             template<>
             struct pack<components::ql::storage_parameters> final {
                 template<typename Stream>
-                packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::storage_parameters const& v) const {
+                packer<Stream>& operator()(msgpack::packer<Stream>& o,
+                                           components::ql::storage_parameters const& v) const {
                     o.pack_map(v.size());
                     for (auto it : v) {
                         o.pack(it.first);
@@ -103,7 +103,9 @@ namespace msgpack {
                 void operator()(msgpack::object::with_zone& o, components::ql::storage_parameters const& v) const {
                     o.type = type::MAP;
                     o.via.array.size = static_cast<uint32_t>(v.size());
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     uint32_t i = 0;
                     for (auto it : v) {
                         o.via.map.ptr[i].key = msgpack::object(it.first, o.zone);

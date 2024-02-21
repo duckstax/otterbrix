@@ -1,16 +1,22 @@
 #pragma once
 
 #include <boost/intrusive/list_hook.hpp>
-#include <memory_resource>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <components/document/document_id.hpp>
+#include <memory_resource>
 
 namespace services::collection::operators {
 
-    class operator_write_data_t : public boost::intrusive::list_base_hook<> {
+    class operator_write_data_t;
+
+    class operator_write_data_t
+        : public boost::intrusive_ref_counter<operator_write_data_t>
+        , public boost::intrusive::list_base_hook<> {
         using document_id_t = components::document::document_id_t;
 
     public:
-        using ptr = std::unique_ptr<operator_write_data_t>;
+        using ptr = boost::intrusive_ptr<operator_write_data_t>;
 
         explicit operator_write_data_t(std::pmr::memory_resource* resource);
 
@@ -28,7 +34,7 @@ namespace services::collection::operators {
     using operator_write_data_ptr = operator_write_data_t::ptr;
 
     inline operator_write_data_ptr make_operator_write_data(std::pmr::memory_resource* resource) {
-        return std::make_unique<operator_write_data_t>(resource);
+        return {new operator_write_data_t(resource)};
     }
 
-}
+} // namespace services::collection::operators

@@ -33,15 +33,13 @@ TEST_CASE("natyve pack document") {
     REQUIRE(view1.get_dict("countDict").count() == view2.get_dict("countDict").count());
 }
 
-
-
 TEST_CASE("natyve pack document  and zone") {
     auto doc1 = gen_doc(10);
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, doc1);
 
     msgpack::zone zone;
-    msgpack::object obj =  msgpack::unpack(zone, sbuf.data(), sbuf.size());
+    msgpack::object obj = msgpack::unpack(zone, sbuf.data(), sbuf.size());
     auto doc2 = obj.as<document_ptr>();
 
     document_view_t view1(doc1);

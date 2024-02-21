@@ -1,7 +1,7 @@
-#include <catch2/catch.hpp>
-#include <variant>
-#include <components/ql/statements.hpp>
 #include "test_config.hpp"
+#include <catch2/catch.hpp>
+#include <components/ql/statements.hpp>
+#include <variant>
 
 using namespace components;
 using expressions::compare_type;
@@ -11,21 +11,19 @@ using id_par = core::parameter_id_t;
 
 class executor_t {
 public:
-    explicit executor_t(duck_charmer::wrapper_dispatcher_t* dispatcher)
+    explicit executor_t(otterbrix::wrapper_dispatcher_t* dispatcher)
         : dispatcher_(dispatcher) {}
 
-    components::result::result_t execute(const std::string& query) {
-        auto session = duck_charmer::session_id_t();
+    components::cursor::cursor_t_ptr execute(const std::string& query) {
+        auto session = otterbrix::session_id_t();
         return dispatcher_->execute_sql(session, query);
     }
 
 private:
-    duck_charmer::wrapper_dispatcher_t* dispatcher_;
+    otterbrix::wrapper_dispatcher_t* dispatcher_;
 };
 
-
 TEST_CASE("integration::cpp::test_join") {
-
     auto config = test_create_config("/tmp/test_collection_sql/base");
     test_clear_directory(config);
     config.disk.on = false;
@@ -56,5 +54,4 @@ TEST_CASE("integration::cpp::test_join") {
                                         "join db.col2 on db.col1.id = db.col2.id;");
         }
     }
-
 }

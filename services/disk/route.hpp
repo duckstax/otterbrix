@@ -15,7 +15,6 @@ namespace services::disk {
 
         append_collection,
         remove_collection,
-        remove_collection_finish,
 
         write_documents,
         remove_documents,
@@ -24,7 +23,5 @@ namespace services::disk {
         fix_wal_id
     };
 
-    constexpr uint64_t handler_id(route type) {
-        return handler_id(group_id_t::disk, type);
-    }
+    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::disk, type); }
 } // namespace services::disk

@@ -1,14 +1,8 @@
 #pragma once
 
-
 namespace components::ql {
 
-    enum class join_t { inner,
-                        full,
-                        left,
-                        right,
-                        cross,
-                        natural };
+    enum class join_t { inner, full, left, right, cross, natural };
 
     struct collection_ref_t {};
 

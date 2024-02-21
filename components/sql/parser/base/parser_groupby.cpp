@@ -1,22 +1,19 @@
 #include "parser_groupby.hpp"
 #include <array>
-#include <memory_resource>
 #include <components/sql/parser/base/parser_mask.hpp>
+#include <memory_resource>
 
 namespace components::sql::impl {
 
     namespace {
 
-        static const std::array<mask_element_t, 2> groupby_stop_words {
-            mask_element_t(token_type::bare_word, "having"),
-            mask_element_t(token_type::bare_word, "order")
-        };
+        static const std::array<mask_element_t, 2> groupby_stop_words{mask_element_t(token_type::bare_word, "having"),
+                                                                      mask_element_t(token_type::bare_word, "order")};
 
         inline bool is_token_groupby_end(const token_t& token) {
-            return std::find_if(groupby_stop_words.begin(), groupby_stop_words.end(),
-                                [&](const mask_element_t& elem){
-                return elem == token;
-            }) != groupby_stop_words.end();
+            return std::find_if(groupby_stop_words.begin(), groupby_stop_words.end(), [&](const mask_element_t& elem) {
+                       return elem == token;
+                   }) != groupby_stop_words.end();
         }
 
     } // namespace
@@ -48,9 +45,7 @@ namespace components::sql::impl {
                                 const ql::aggregate::group_t& group,
                                 const std::pmr::set<token_t>& group_fields_select,
                                 const std::pmr::set<token_t>& group_fields) {
-
-        auto it = std::find_if(group.fields.begin(), group.fields.end(),
-                               [](const expressions::expression_ptr& expr) {
+        auto it = std::find_if(group.fields.begin(), group.fields.end(), [](const expressions::expression_ptr& expr) {
             return expr->group() == expressions::expression_group::aggregate;
         });
         if (it == group.fields.end() && group_fields.empty()) {
@@ -58,15 +53,19 @@ namespace components::sql::impl {
         }
 
         std::pmr::set<token_t> diff(resource);
-        std::set_difference(group_fields_select.begin(), group_fields_select.end(),
-                            group_fields.begin(), group_fields.end(),
+        std::set_difference(group_fields_select.begin(),
+                            group_fields_select.end(),
+                            group_fields.begin(),
+                            group_fields.end(),
                             std::inserter(diff, diff.end()));
         if (!diff.empty()) {
             return parser_result{parse_error::group_by_less_paramaters, *diff.begin(), "less group by fields"};
         }
 
-        std::set_difference(group_fields.begin(), group_fields.end(),
-                            group_fields_select.begin(), group_fields_select.end(),
+        std::set_difference(group_fields.begin(),
+                            group_fields.end(),
+                            group_fields_select.begin(),
+                            group_fields_select.end(),
                             std::inserter(diff, diff.end()));
         if (!diff.empty()) {
             return parser_result{parse_error::group_by_more_paramaters, *diff.begin(), "more group by fields"};

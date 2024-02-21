@@ -24,17 +24,11 @@ namespace core {
 
         inline value_type value() const { return _value; }
 
-        static inline constexpr value_type max_value() {
-            return std::numeric_limits<value_type>::max();
-        }
+        static inline constexpr value_type max_value() { return std::numeric_limits<value_type>::max(); }
 
-        static inline constexpr value_type min_value() {
-            return std::numeric_limits<value_type>::min();
-        }
+        static inline constexpr value_type min_value() { return std::numeric_limits<value_type>::min(); }
 
-        static inline constexpr value_type lowest_value() {
-            return std::numeric_limits<value_type>::lowest();
-        }
+        static inline constexpr value_type lowest_value() { return std::numeric_limits<value_type>::lowest(); }
 
     private:
         value_type _value;

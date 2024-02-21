@@ -6,19 +6,14 @@
 
 #include "core/excutor.hpp"
 
-#include <actor-zeta.hpp>
 #include "core/handler_by_id.hpp"
+#include <actor-zeta.hpp>
 
 namespace services::wasm {
 
-    enum class route : uint64_t {
-        load_code
-    };
+    enum class route : uint64_t { load_code };
 
-    inline uint64_t handler_id(route type) {
-        return handler_id(group_id_t::wasm, type);
-    }
-
+    inline uint64_t handler_id(route type) { return handler_id(group_id_t::wasm, type); }
 
     class wasm_runner_t final : public actor_zeta::basic_async_actor {
     public:

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
-#include <components/expressions/key.hpp>
 #include <components/expressions/expression.hpp>
+#include <components/expressions/key.hpp>
 #include <components/ql/aggregate/forward.hpp>
+#include <vector>
 
 namespace components::ql::aggregate {
 
@@ -14,12 +14,11 @@ namespace components::ql::aggregate {
 
     void append_sort(sort_t& sort, const expressions::key_t& key, expressions::sort_order order);
 
-
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const sort_t &sort) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const sort_t& sort) {
         stream << "$sort: {";
         bool is_first = true;
-        for (const auto &v : sort.values) {
+        for (const auto& v : sort.values) {
             if (is_first) {
                 is_first = false;
             } else {

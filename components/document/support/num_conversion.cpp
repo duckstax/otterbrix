@@ -1,29 +1,31 @@
 #include "num_conversion.hpp"
 
 #include <cctype>
+#include <cfloat>
 #include <clocale>
+#include <cmath>
 #include <cstdlib>
 #include <cstring>
-#include <cmath>
-#include <cfloat>
 
 #include <iomanip>
-#include <string>
 #include <sstream>
+#include <string>
 
 #if !defined(_MSC_VER) && !defined(__GLIBC__)
 #include <xlocale.h>
 #endif
 
-
-template <class Tfloat, class Tuint>
+template<class Tfloat, class Tuint>
 uint64_t convert_to_uint(Tfloat value) {
-    union { Tfloat value; Tuint u; } convert;
+    union {
+        Tfloat value;
+        Tuint u;
+    } convert;
     convert.value = value;
     return convert.u;
 }
 
-size_t copy_str_if_fit(char *dst, size_t len, const char *src) {
+size_t copy_str_if_fit(char* dst, size_t len, const char* src) {
     const size_t src_len = strlen(src);
     if (len < src_len) {
         return 0;
@@ -32,7 +34,7 @@ size_t copy_str_if_fit(char *dst, size_t len, const char *src) {
     return src_len;
 }
 
-template <class Tfloat>
+template<class Tfloat>
 size_t count_digit_before_dot(Tfloat value) {
     size_t count = 1;
     auto v = value / 10;
@@ -43,8 +45,8 @@ size_t count_digit_before_dot(Tfloat value) {
     return count;
 }
 
-template <class Tfloat, class Tuint, int significand_count, int digits_count>
-size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
+template<class Tfloat, class Tuint, int significand_count, int digits_count>
+size_t write_float_to_str(Tfloat value, char* dst, size_t capacity) {
     if (!std::isfinite(value)) {
         if (std::isinf(value)) {
             if (std::signbit(value)) {
@@ -54,8 +56,8 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
             }
         } else {
             auto raw = convert_to_uint<Tfloat, Tuint>(value);
-            const char *sign = std::signbit(value) ? "-" : "";
-            const char *signaling = ((raw >> (significand_count - 1)) & 1) ? "" : "s";
+            const char* sign = std::signbit(value) ? "-" : "";
+            const char* signaling = ((raw >> (significand_count - 1)) & 1) ? "" : "s";
             auto payload = raw & ((Tuint(1) << (significand_count - 2)) - 1);
             char buff[32];
             if (payload != 0) {
@@ -81,10 +83,9 @@ size_t write_float_to_str(Tfloat value, char *dst, size_t capacity) {
     return copy_str_if_fit(dst, str.size(), str.c_str());
 }
 
-
 namespace document {
 
-    static bool _parse_uint(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
+    static bool _parse_uint(const char* str NONNULL, uint64_t& result, bool allow_trailing) {
         uint64_t n = 0;
         if (!isdigit(*str))
             return false;
@@ -98,8 +99,7 @@ namespace document {
             n += uint64_t(digit);
         }
         if (!allow_trailing) {
-            while (isspace(*str))
-                ++str;
+            while (isspace(*str)) ++str;
             if (_usually_false(*str != '\0'))
                 return false;
         }
@@ -107,17 +107,15 @@ namespace document {
         return true;
     }
 
-    bool parse_integer(const char *str NONNULL, uint64_t &result, bool allow_trailing) {
-        while (isspace(*str))
-            ++str;
+    bool parse_integer(const char* str NONNULL, uint64_t& result, bool allow_trailing) {
+        while (isspace(*str)) ++str;
         if (*str == '+')
             ++str;
         return _parse_uint(str, result, allow_trailing);
     }
 
-    bool parse_integer(const char *str NONNULL, int64_t &result, bool allow_trailing) {
-        while (isspace(*str))
-            ++str;
+    bool parse_integer(const char* str NONNULL, int64_t& result, bool allow_trailing) {
+        while (isspace(*str)) ++str;
         bool negative = (*str == '-');
         if (negative || *str == '+')
             ++str;
@@ -140,7 +138,7 @@ namespace document {
         return true;
     }
 
-    double parse_double(const char *str) noexcept {
+    double parse_double(const char* str) noexcept {
 #if defined(_MSC_VER)
         static _locale_t locale = _create_locale(LC_ALL, "C");
         return _strtod_l(str, nullptr, locale);
@@ -150,7 +148,7 @@ namespace document {
 #endif
     }
 
-    template <class T>
+    template<class T>
     size_t get_precision(T value, size_t capacity) {
         size_t count_dec = 0;
         auto v = value;
@@ -161,12 +159,12 @@ namespace document {
         return capacity - 2 - (count_dec > 0 ? count_dec : 1);
     }
 
-    size_t write_float(float f, char *dst, size_t capacity) {
+    size_t write_float(float f, char* dst, size_t capacity) {
         return write_float_to_str<float, uint32_t, 23, 7>(f, dst, capacity);
     }
 
-    size_t write_float(double d, char *dst, size_t capacity) {
+    size_t write_float(double d, char* dst, size_t capacity) {
         return write_float_to_str<double, uint64_t, 52, 16>(d, dst, capacity);
     }
 
-}
+} // namespace document

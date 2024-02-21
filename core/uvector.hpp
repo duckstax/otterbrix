@@ -33,12 +33,10 @@ namespace core {
         uvector() = delete;
 
         uvector(std::pmr::memory_resource* resource, std::size_t size)
-            : storage_{resource, elements_to_bytes(size)} {
-        }
+            : storage_{resource, elements_to_bytes(size)} {}
 
         uvector(std::pmr::memory_resource* mr, uvector const& other)
-            : storage_{mr, other.storage_} {
-        }
+            : storage_{mr, other.storage_} {}
 
         [[nodiscard]] pointer element_ptr(std::size_t element_index) noexcept {
             assertion_exception(element_index < size());
@@ -79,27 +77,15 @@ namespace core {
             std::memcpy(&value, element_ptr(element_index), sizeof(value));
             return value;
         }
-        [[nodiscard]] value_type front_element() const {
-            return element(0);
-        }
-        [[nodiscard]] value_type back_element() const {
-            return element(size() - 1);
-        }
-        void reserve(std::size_t new_capacity) {
-            storage_.reserve(elements_to_bytes(new_capacity));
-        }
-        void resize(std::size_t new_size) {
-            storage_.resize(elements_to_bytes(new_size));
-        }
+        [[nodiscard]] value_type front_element() const { return element(0); }
+        [[nodiscard]] value_type back_element() const { return element(size() - 1); }
+        void reserve(std::size_t new_capacity) { storage_.reserve(elements_to_bytes(new_capacity)); }
+        void resize(std::size_t new_size) { storage_.resize(elements_to_bytes(new_size)); }
         void shrink_to_fit() { storage_.shrink_to_fit(); }
         buffer release() noexcept { return std::move(storage_); }
-        [[nodiscard]] std::size_t capacity() const noexcept {
-            return bytes_to_elements(storage_.capacity());
-        }
+        [[nodiscard]] std::size_t capacity() const noexcept { return bytes_to_elements(storage_.capacity()); }
         [[nodiscard]] pointer data() noexcept { return static_cast<pointer>(storage_.data()); }
-        [[nodiscard]] const_pointer data() const noexcept {
-            return static_cast<const_pointer>(storage_.data());
-        }
+        [[nodiscard]] const_pointer data() const noexcept { return static_cast<const_pointer>(storage_.data()); }
         [[nodiscard]] iterator begin() noexcept { return data(); }
         [[nodiscard]] const_iterator cbegin() const noexcept { return data(); }
         [[nodiscard]] const_iterator begin() const noexcept { return cbegin(); }
@@ -115,9 +101,7 @@ namespace core {
 
         [[nodiscard]] bool is_empty() const noexcept { return size() == 0; }
 
-        [[nodiscard]] std::pmr::memory_resource* memory_resource() const noexcept {
-            return storage_.memory_resource();
-        }
+        [[nodiscard]] std::pmr::memory_resource* memory_resource() const noexcept { return storage_.memory_resource(); }
 
     private:
         buffer storage_;
@@ -130,8 +114,8 @@ namespace core {
             return num_bytes / sizeof(value_type);
         }
 
-        template <class stream_t>
-        friend stream_t& operator<<(stream_t &stream, const uvector& v) {
+        template<class stream_t>
+        friend stream_t& operator<<(stream_t& stream, const uvector& v) {
             stream << v.storage_;
             return stream;
         }

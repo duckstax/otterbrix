@@ -8,8 +8,8 @@
 #include <numeric>
 #include <vector>
 
-#include "dataframe/detail/bitmask.hpp"
 #include "dataframe/bitmask.hpp"
+#include "dataframe/detail/bitmask.hpp"
 #include "dataframe/traits.hpp"
 #include "dataframe/types.hpp"
 
@@ -48,19 +48,19 @@ namespace components::dataframe::column {
 
         // If null count is known, returns it. Else, compute and return it
         size_type column_view_base::null_count() const {
-            auto * ptr = std::pmr::get_default_resource(); // todo hack
+            auto* ptr = std::pmr::get_default_resource(); // todo hack
             if (_null_count <= dataframe::unknown_null_count) {
-                _null_count = dataframe::detail::null_count(ptr,null_mask(), offset(), offset() + size());
+                _null_count = dataframe::detail::null_count(ptr, null_mask(), offset(), offset() + size());
             }
             return _null_count;
         }
 
         size_type column_view_base::null_count(size_type begin, size_type end) const {
             assert((begin >= 0) && (end <= size()) && (begin <= end));
-            auto * ptr = std::pmr::get_default_resource(); // todo hack
+            auto* ptr = std::pmr::get_default_resource(); // todo hack
             return (null_count() == 0)
                        ? 0
-                       : dataframe::detail::null_count(ptr,null_mask(), offset() + begin, offset() + end);
+                       : dataframe::detail::null_count(ptr, null_mask(), offset() + begin, offset() + end);
         }
 
         // Struct to use custom hash combine and fold expression
@@ -70,7 +70,7 @@ namespace components::dataframe::column {
                 : hash{h} {}
             hash_value operator^(hash_value const& other) const {
                 auto seed = hash;
-                assert(seed!=0);
+                assert(seed != 0);
                 boost::hash_combine(seed, other.hash);
                 return hash_value(seed);
             }
@@ -90,17 +90,16 @@ namespace components::dataframe::column {
                                    init,
                                    [&c, is_parent_empty](std::size_t hash, auto const& child) {
                                        auto seed = hash;
-                                       assert(seed!=0);
-                                       boost::hash_combine(seed, shallow_hash_impl(child, c.is_empty() or is_parent_empty));
+                                       assert(seed != 0);
+                                       boost::hash_combine(seed,
+                                                           shallow_hash_impl(child, c.is_empty() or is_parent_empty));
                                        return seed;
                                    });
         }
 
         std::size_t shallow_hash(column_view const& input) { return shallow_hash_impl(input); }
 
-        bool shallow_equivalent_impl(column_view const& lhs,
-                                     column_view const& rhs,
-                                     bool is_parent_empty = false) {
+        bool shallow_equivalent_impl(column_view const& lhs, column_view const& rhs, bool is_parent_empty = false) {
             bool const is_empty = (lhs.is_empty() and rhs.is_empty()) or is_parent_empty;
             return (lhs.type() == rhs.type()) and
                    (is_empty or ((lhs.size() == rhs.size()) and (lhs.head() == rhs.head()) and

@@ -36,17 +36,17 @@ inline void operator delete(void* ptr, std::size_t) noexcept {
 
 #endif
 
-#define TracyFrame(cv_mat, name)                                         \
-    {                                                                    \
-        if (cv_mat.data) {                                               \
-            auto w = cv_mat.cols;                                        \
-            auto h = cv_mat.rows;                                        \
-            std::vector<uint8_t> data(cv_mat.total() * 4);               \
-            cv::Mat continuousRGBA(cv_mat.size(), CV_8UC4, data.data()); \
-            cv::cvtColor(cv_mat, continuousRGBA, cv::COLOR_BGR2RGBA, 4); \
-            FrameImage(data.data(), w, h, 0, 0);                         \
-            FrameMark;                                                   \
-        }                                                                \
+#define TracyFrame(cv_mat, name)                                                                                       \
+    {                                                                                                                  \
+        if (cv_mat.data) {                                                                                             \
+            auto w = cv_mat.cols;                                                                                      \
+            auto h = cv_mat.rows;                                                                                      \
+            std::vector<uint8_t> data(cv_mat.total() * 4);                                                             \
+            cv::Mat continuousRGBA(cv_mat.size(), CV_8UC4, data.data());                                               \
+            cv::cvtColor(cv_mat, continuousRGBA, cv::COLOR_BGR2RGBA, 4);                                               \
+            FrameImage(data.data(), w, h, 0, 0);                                                                       \
+            FrameMark;                                                                                                 \
+        }                                                                                                              \
     }
 
 #define TracyFrameStart(name) FrameMarkStart(name)

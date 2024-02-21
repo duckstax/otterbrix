@@ -6,8 +6,7 @@ namespace services::collection::operators {
     operator_update::operator_update(context_collection_t* context, document_ptr update, bool upsert)
         : read_write_operator_t(context, operator_type::update)
         , update_(std::move(update))
-        , upsert_(upsert) {
-    }
+        , upsert_(upsert) {}
 
     void operator_update::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output()) {

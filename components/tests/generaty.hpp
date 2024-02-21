@@ -1,8 +1,8 @@
 #pragma once
 
-#include <components/document/document.hpp>
 #include <components/document/core/array.hpp>
 #include <components/document/core/dict.hpp>
+#include <components/document/document.hpp>
 
 using namespace components::document;
 

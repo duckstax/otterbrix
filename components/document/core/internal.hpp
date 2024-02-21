@@ -9,10 +9,7 @@
 
 namespace document::impl::internal {
 
-    enum {
-        size_narrow = 2,
-        size_wide   = 4
-    };
+    enum { size_narrow = 2, size_wide = 4 };
 
     enum tags : uint8_t {
         tag_short,
@@ -27,10 +24,10 @@ namespace document::impl::internal {
     };
 
     enum {
-        special_value_null       = 0x00,
-        special_value_undefined  = 0x0C,
-        special_value_false      = 0x04,
-        special_value_true       = 0x08,
+        special_value_null = 0x00,
+        special_value_undefined = 0x0C,
+        special_value_false = 0x04,
+        special_value_true = 0x08,
     };
 
     static const uint32_t long_array_count = 0x07FF;
@@ -48,10 +45,9 @@ namespace document::impl::internal {
 #endif
 
 #ifndef _MSC_VER
-    #define EVEN_ALIGNED __attribute__((aligned(2)))
+#define EVEN_ALIGNED __attribute__((aligned(2)))
 #else
-    #define EVEN_ALIGNED
+#define EVEN_ALIGNED
 #endif
 
-
-}
+} // namespace document::impl::internal

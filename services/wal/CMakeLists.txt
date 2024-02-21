@@ -10,21 +10,21 @@ set(${PROJECT_NAME}_SOURCES
         wal.cpp
 )
 
-add_library(rocketjoe_${PROJECT_NAME}
+add_library(otterbrix_${PROJECT_NAME}
             ${${PROJECT_NAME}_HEADERS}
             ${${PROJECT_NAME}_SOURCES}
 )
 
-add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PRIVATE
-        rocketjoe::log
-        rocketjoe::ql
-        rocketjoe::locks
-        rocketjoe::file
+        otterbrix_${PROJECT_NAME} PRIVATE
+        otterbrix::log
+        otterbrix::ql
+        otterbrix::locks
+        otterbrix::file
 
         CONAN_PKG::spdlog
         CONAN_PKG::crc32c
@@ -34,7 +34,7 @@ target_link_libraries(
 )
 
 target_include_directories(
-        rocketjoe_${PROJECT_NAME}
+        otterbrix_${PROJECT_NAME}
         PRIVATE
         PUBLIC
 )

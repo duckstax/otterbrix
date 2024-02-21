@@ -1,11 +1,11 @@
 #pragma once
 
-#include <vector>
-#include <list>
 #include <actor-zeta.hpp>
 #include <components/document/document.hpp>
 #include <components/ql/ql_statement.hpp>
+#include <list>
 #include <services/wal/base.hpp>
+#include <vector>
 
 namespace services::disk {
 
@@ -19,7 +19,7 @@ namespace services::disk {
         std::vector<result_collection_t> collections;
 
         std::vector<collection_name_t> name_collections() const;
-        void set_collection(const std::vector<collection_name_t> &names);
+        void set_collection(const std::vector<collection_name_t>& names);
     };
 
     class result_load_t {
@@ -27,7 +27,7 @@ namespace services::disk {
 
     public:
         result_load_t() = default;
-        result_load_t(const std::vector<database_name_t> &databases, wal::id_t wal_id);
+        result_load_t(const std::vector<database_name_t>& databases, wal::id_t wal_id);
         const result_t& operator*() const;
         result_t& operator*();
         std::vector<database_name_t> name_databases() const;
@@ -40,7 +40,7 @@ namespace services::disk {
 
     private:
         result_t databases_;
-        wal::id_t wal_id_ {0};
+        wal::id_t wal_id_{0};
     };
 
 } // namespace services::disk

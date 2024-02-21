@@ -1,7 +1,7 @@
 #pragma once
 
-#include <components/ql/aggregate/forward.hpp>
 #include <components/expressions/expression.hpp>
+#include <components/ql/aggregate/forward.hpp>
 
 namespace components::ql::aggregate {
 
@@ -12,12 +12,11 @@ namespace components::ql::aggregate {
 
     void append_expr(group_t& group, expressions::expression_ptr&& expr);
 
-
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const group_t &group) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const group_t& group) {
         stream << "$group: {";
         bool is_first = true;
-        for (const auto &field : group.fields) {
+        for (const auto& field : group.fields) {
             if (is_first) {
                 is_first = false;
             } else {

@@ -16,10 +16,8 @@ namespace components::dataframe::math {
 
     namespace detail {
         template<typename I>
-        constexpr I div_rounding_up_safe(std::integral_constant<bool, false>,I dividend,I divisor) noexcept {
-            return (dividend > divisor)
-                       ? 1 + div_rounding_up_unsafe(dividend - divisor, divisor)
-                       : (dividend > 0);
+        constexpr I div_rounding_up_safe(std::integral_constant<bool, false>, I dividend, I divisor) noexcept {
+            return (dividend > divisor) ? 1 + div_rounding_up_unsafe(dividend - divisor, divisor) : (dividend > 0);
         }
 
         template<typename I>
@@ -37,4 +35,4 @@ namespace components::dataframe::math {
         return detail::div_rounding_up_safe(i_is_a_signed_type{}, dividend, divisor);
     }
 
-} // namespace components::dataframe::util
+} // namespace components::dataframe::math

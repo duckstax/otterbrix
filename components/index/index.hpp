@@ -33,8 +33,8 @@ namespace components::index {
             explicit iterator_t(iterator_impl_t*);
             virtual ~iterator_t();
 
-            iterator_t(const iterator_t &other);
-            iterator_t &operator=(const iterator_t &other);
+            iterator_t(const iterator_t& other);
+            iterator_t& operator=(const iterator_t& other);
 
             reference operator*() const;
             pointer operator->() const;
@@ -49,7 +49,7 @@ namespace components::index {
                 virtual iterator_impl_t* next() = 0;
                 virtual bool equals(const iterator_impl_t* other) const = 0;
                 virtual bool not_equals(const iterator_impl_t* other) const = 0;
-                virtual iterator_impl_t *copy() const = 0;
+                virtual iterator_impl_t* copy() const = 0;
             };
 
         private:
@@ -72,7 +72,7 @@ namespace components::index {
         auto keys() -> std::pair<keys_base_storage_t::iterator, keys_base_storage_t::iterator>;
         std::pmr::memory_resource* resource() const noexcept;
         ql::index_type type() const noexcept;
-        const std::string &name() const noexcept;
+        const std::string& name() const noexcept;
 
         bool is_disk() const noexcept;
         const actor_zeta::address_t& disk_agent() const noexcept;
@@ -81,7 +81,10 @@ namespace components::index {
         void clean_memory_to_new_elements(std::size_t count) noexcept;
 
     protected:
-        index_t(std::pmr::memory_resource* resource, index_type type, std::string name, const keys_base_storage_t& keys);
+        index_t(std::pmr::memory_resource* resource,
+                index_type type,
+                std::string name,
+                const keys_base_storage_t& keys);
 
         virtual void insert_impl(value_t value_key, index_value_t) = 0;
         virtual void insert_impl(document::document_ptr) = 0;
@@ -89,8 +92,8 @@ namespace components::index {
         virtual range find_impl(const value_t& value) const = 0;
         virtual range lower_bound_impl(const value_t& value) const = 0;
         virtual range upper_bound_impl(const value_t& value) const = 0;
-        virtual iterator cbegin_impl() const  = 0;
-        virtual iterator cend_impl() const  = 0;
+        virtual iterator cbegin_impl() const = 0;
+        virtual iterator cend_impl() const = 0;
 
         virtual void clean_memory_to_new_elements_impl(std::size_t count) = 0;
 

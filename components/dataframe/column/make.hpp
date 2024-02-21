@@ -28,11 +28,10 @@ namespace components::dataframe::column {
                                                   size_type null_count,
                                                   core::buffer&& null_mask);
 
-    std::unique_ptr<column_t> make_structs_column(
-        std::pmr::memory_resource* resource,
-        size_type num_rows,
-        std::vector<std::unique_ptr<column_t>>&& child_columns,
-        size_type null_count,
-        core::buffer&& null_mask);
+    std::unique_ptr<column_t> make_structs_column(std::pmr::memory_resource* resource,
+                                                  size_type num_rows,
+                                                  std::vector<std::unique_ptr<column_t>>&& child_columns,
+                                                  size_type null_count,
+                                                  core::buffer&& null_mask);
 
 } // namespace components::dataframe::column

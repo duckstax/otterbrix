@@ -1,11 +1,11 @@
 #pragma once
 
-#include <filesystem>
-#include <memory_resource>
-#include <components/document/document_id.hpp>
 #include <components/document/document.hpp>
+#include <components/document/document_id.hpp>
 #include <components/document/wrapper_value.hpp>
 #include <components/ql/index.hpp>
+#include <filesystem>
+#include <memory_resource>
 
 namespace rocksdb {
     class DB;
@@ -29,11 +29,11 @@ namespace services::disk {
         void insert(const wrapper_value_t& key, const document_id_t& value);
         void remove(wrapper_value_t key);
         void remove(const wrapper_value_t& key, const document_id_t& doc);
-        void find(const wrapper_value_t& value, result &res) const;
+        void find(const wrapper_value_t& value, result& res) const;
         result find(const wrapper_value_t& value) const;
-        void lower_bound(const wrapper_value_t& value, result &res) const;
+        void lower_bound(const wrapper_value_t& value, result& res) const;
         result lower_bound(const wrapper_value_t& value) const;
-        void upper_bound(const wrapper_value_t& value, result &res) const;
+        void upper_bound(const wrapper_value_t& value, result& res) const;
         result upper_bound(const wrapper_value_t& value) const;
 
         void drop();

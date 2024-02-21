@@ -1,9 +1,9 @@
 #pragma once
 
-#include <msgpack.hpp>
-#include <msgpack/zone.hpp>
-#include <msgpack/adaptor/list.hpp>
 #include "components/ql/ql_statement.hpp"
+#include <msgpack.hpp>
+#include <msgpack/adaptor/list.hpp>
+#include <msgpack/zone.hpp>
 
 namespace components::ql {
 
@@ -59,11 +59,13 @@ namespace msgpack {
                 void operator()(msgpack::object::with_zone& o, components::ql::drop_database_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 1;
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                 }
             };
 
         } // namespace adaptor
-    } // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
+    }     // MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 } // namespace msgpack

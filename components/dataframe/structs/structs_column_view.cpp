@@ -1,6 +1,6 @@
+#include <core/assert/assert.hpp>
 #include <dataframe/column/column.hpp>
 #include <dataframe/structs/structs_column_view.hpp>
-#include <core/assert/assert.hpp>
 
 namespace components::dataframe::structs {
 

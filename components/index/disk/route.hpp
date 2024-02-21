@@ -18,8 +18,6 @@ namespace services::index {
         error
     };
 
-    constexpr uint64_t handler_id(route type) {
-        return handler_id(group_id_t::index, type);
-    }
+    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::index, type); }
 
 } // namespace services::index

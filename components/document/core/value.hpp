@@ -18,16 +18,7 @@ namespace document::impl {
         class value_slot_t;
     }
 
-    enum class value_type : int8_t {
-        undefined = -1,
-        null = 0,
-        boolean,
-        number,
-        string,
-        data,
-        array,
-        dict
-    };
+    enum class value_type : int8_t { undefined = -1, null = 0, boolean, number, string, data, array, dict };
 
     enum copy_flags {
         default_copy = 0,
@@ -105,7 +96,9 @@ namespace document::impl {
 
         const value_t* next(bool wide) const noexcept PURE;
         template<bool WIDE>
-        PURE const value_t* next() const noexcept { return next(WIDE); }
+        PURE const value_t* next() const noexcept {
+            return next(WIDE);
+        }
 
         size_t data_size() const noexcept PURE;
 
@@ -119,7 +112,6 @@ namespace document::impl {
         friend struct dict_impl_t;
         friend std::string to_string(const value_t* value);
     };
-
 
     void release(const value_t* val) noexcept;
 

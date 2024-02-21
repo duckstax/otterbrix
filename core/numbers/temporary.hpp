@@ -55,8 +55,7 @@ namespace core::numbers {
     template<typename BaseType>
     constexpr auto exp10(int32_t exponent) {
         BaseType value = 1;
-        while (exponent > 0)
-            value *= 10, --exponent;
+        while (exponent > 0) value *= 10, --exponent;
         return value;
     }
 

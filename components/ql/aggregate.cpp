@@ -10,9 +10,7 @@ namespace components::ql {
         aggregate_operator_.append(type, std::move(storage));
     }
 
-    void aggregate_statement::reserve(std::size_t size) {
-        aggregate_operator_.reserve(size);
-    }
+    void aggregate_statement::reserve(std::size_t size) { aggregate_operator_.reserve(size); }
 
     aggregate::operator_type get_aggregate_type(const std::string& key) {
         auto type = magic_enum::enum_cast<aggregate::operator_type>(key);
@@ -24,9 +22,7 @@ namespace components::ql {
         return aggregate::operator_type::invalid;
     }
 
-    auto aggregate_statement::count_operators() const -> std::size_t {
-        return aggregate_operator_.size();
-    }
+    auto aggregate_statement::count_operators() const -> std::size_t { return aggregate_operator_.size(); }
 
     auto aggregate_statement::type_operator(std::size_t index) const -> aggregate::operator_type {
         return aggregate_operator_.type(index);
@@ -38,13 +34,8 @@ namespace components::ql {
         return s.str();
     }
 
-
     aggregate_ptr make_aggregate(const database_name_t& database, const collection_name_t& collection) {
         return new aggregate_statement(database, collection);
-    }
-
-    aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection) {
-        return std::make_unique<aggregate_statement>(database, collection);
     }
 
     const aggregate::match_t& get_match(const aggregate_statement& aggregate) {

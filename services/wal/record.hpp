@@ -1,7 +1,7 @@
 #pragma once
 
-#include <components/ql/statements.hpp>
 #include "dto.hpp"
+#include <components/ql/statements.hpp>
 
 namespace services::wal {
 

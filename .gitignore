@@ -179,12 +179,13 @@ dkms.conf
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python
+__pycache__
 [Bb]in
 [Ii]nclude
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-[Ss]cripts
+[S]cripts
 pyvenv.cfg
 .venv
 pip-selfcheck.json
@@ -334,7 +335,6 @@ nbdist/
 *.sig
 
 pkg/
-src/
 ### Xcode template
 # Xcode
 #

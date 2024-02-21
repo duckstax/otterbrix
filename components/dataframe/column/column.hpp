@@ -27,11 +27,10 @@ namespace components::dataframe::column {
         column_t(column_t&& other) noexcept;
 
         template<typename T>
-        column_t(
-            std::pmr::memory_resource* resource,
-            core::uvector<T>&& other,
-            core::buffer&& null_mask,
-            size_type null_count = unknown_null_count)
+        column_t(std::pmr::memory_resource* resource,
+                 core::uvector<T>&& other,
+                 core::buffer&& null_mask,
+                 size_type null_count = unknown_null_count)
             : type_(data_type(type_to_id<T>()))
             , size_{[&]() {
                 assert(other.size() <= static_cast<std::size_t>(std::numeric_limits<size_type>::max()));
@@ -40,18 +39,16 @@ namespace components::dataframe::column {
             , resource_(resource)
             , data_{other.release()}
             , null_mask_{std::move(null_mask)}
-            , null_count_{null_count} {
-        }
+            , null_count_{null_count} {}
 
         template<typename B1, typename B2 = core::buffer>
-        column_t(
-            std::pmr::memory_resource* resource,
-            data_type dtype,
-            size_type size,
-            B1&& data,
-            B2&& null_mask,
-            size_type null_count = unknown_null_count,
-            std::vector<std::unique_ptr<column_t>>&& children = {})
+        column_t(std::pmr::memory_resource* resource,
+                 data_type dtype,
+                 size_type size,
+                 B1&& data,
+                 B2&& null_mask,
+                 size_type null_count = unknown_null_count,
+                 std::vector<std::unique_ptr<column_t>>&& children = {})
             : type_{dtype}
             , size_{[&]() {
                 assert(size >= 0);
@@ -61,8 +58,7 @@ namespace components::dataframe::column {
             , data_{std::forward<B1>(data)}
             , null_mask_{std::forward<B2>(null_mask)}
             , null_count_{null_count}
-            , children_{std::move(children)} {
-        }
+            , children_{std::move(children)} {}
 
         explicit column_t(std::pmr::memory_resource*, column_view view);
         [[nodiscard]] data_type type() const noexcept;

@@ -4,9 +4,9 @@
 
 #include <string_view>
 
+#include "core/numbers/fixed_point.hpp"
 #include "dictionary/dictionary.hpp"
 #include "forward.hpp"
-#include "core/numbers/fixed_point.hpp"
 #include "types.hpp"
 
 namespace components::dataframe {
@@ -50,18 +50,18 @@ namespace components::dataframe {
 #define stringify(x) stringify_detail(x)
 
 #ifndef type_mapping
-#define type_mapping(Type, Id)                            \
-    template<>                                            \
-    constexpr inline type_id type_to_id<Type>() {         \
-        return Id;                                        \
-    }                                                     \
-    template<>                                            \
-    inline std::string type_to_name::operator()<Type>() { \
-        return stringify(Type);                           \
-    }                                                     \
-    template<>                                            \
-    struct id_to_type_impl<Id> {                          \
-        using type = Type;                                \
+#define type_mapping(Type, Id)                                                                                         \
+    template<>                                                                                                         \
+    constexpr inline type_id type_to_id<Type>() {                                                                      \
+        return Id;                                                                                                     \
+    }                                                                                                                  \
+    template<>                                                                                                         \
+    inline std::string type_to_name::operator()<Type>() {                                                              \
+        return stringify(Type);                                                                                        \
+    }                                                                                                                  \
+    template<>                                                                                                         \
+    struct id_to_type_impl<Id> {                                                                                       \
+        using type = Type;                                                                                             \
     };
 #endif
 
@@ -98,8 +98,8 @@ namespace components::dataframe {
 
 #undef type_mapping
 
-    template<type_id Id>
-    struct dispatch_storage_type {
+                                                                                template<type_id Id>
+                                                                                struct dispatch_storage_type {
         using type = device_storage_type_t<typename id_to_type_impl<Id>::type>;
     };
 
@@ -109,10 +109,10 @@ namespace components::dataframe {
     };
 
 #ifndef map_numeric_scalar
-#define map_numeric_scalar(Type)                          \
-    template<>                                            \
-    struct type_to_scalar_type_impl<Type> {               \
-        using scalar_type = scalar::numeric_scalar<Type>; \
+#define map_numeric_scalar(Type)                                                                                       \
+    template<>                                                                                                         \
+    struct type_to_scalar_type_impl<Type> {                                                                            \
+        using scalar_type = scalar::numeric_scalar<Type>;                                                              \
     };
 #endif
     // clang-format off
@@ -128,12 +128,12 @@ namespace components::dataframe {
     map_numeric_scalar(float)
     map_numeric_scalar(double)
     map_numeric_scalar(bool)
-        // clang-format on
+    // clang-format on
 
 #undef map_numeric_scalar
 
-    template<>
-    struct type_to_scalar_type_impl<std::string> {
+                    template<>
+                    struct type_to_scalar_type_impl<std::string> {
         using scalar_type = scalar::string_scalar;
     };
 
@@ -173,10 +173,10 @@ namespace components::dataframe {
     };
 
 #ifndef map_timestamp_scalar
-#define map_timestamp_scalar(Type)                          \
-    template<>                                              \
-    struct type_to_scalar_type_impl<Type> {                 \
-        using scalar_type = scalar::timestamp_scalar<Type>; \
+#define map_timestamp_scalar(Type)                                                                                     \
+    template<>                                                                                                         \
+    struct type_to_scalar_type_impl<Type> {                                                                            \
+        using scalar_type = scalar::timestamp_scalar<Type>;                                                            \
     };
 #endif
     // clang-format off
@@ -190,10 +190,10 @@ namespace components::dataframe {
 #undef map_timestamp_scalar
 
 #ifndef map_duration_scalar
-#define map_duration_scalar(Type)                          \
-    template<>                                             \
-    struct type_to_scalar_type_impl<Type> {                \
-        using scalar_type = scalar::duration_scalar<Type>; \
+#define map_duration_scalar(Type)                                                                                      \
+    template<>                                                                                                         \
+    struct type_to_scalar_type_impl<Type> {                                                                            \
+        using scalar_type = scalar::duration_scalar<Type>;                                                             \
     };
 #endif
         // clang-format off
@@ -202,59 +202,43 @@ namespace components::dataframe {
     map_duration_scalar(core::date::duration_ms)
     map_duration_scalar(core::date::duration_us)
     map_duration_scalar(core::date::duration_ns)
-        // clang-format on
+    // clang-format on
 
 #undef map_duration_scalar
 
-
-    template<typename T>
-    using scalar_type_t = typename type_to_scalar_type_impl<T>::scalar_type;
+                    template<typename T>
+                    using scalar_type_t = typename type_to_scalar_type_impl<T>::scalar_type;
 
     template<typename T>
     using scalar_device_type_t = typename type_to_scalar_type_impl<T>::ScalarDeviceType;
 
-    template<
-        template<type_id> typename idtypemap = id_to_type_impl,
-        typename functor,
-        typename... ts>
+    template<template<type_id> typename idtypemap = id_to_type_impl, typename functor, typename... ts>
     constexpr decltype(auto) type_dispatcher(data_type dtype, functor f, ts&&... args) {
         switch (dtype.id()) {
             case type_id::bool8:
-                return f.template operator()<typename idtypemap<type_id::bool8>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::bool8>::type>(std::forward<ts>(args)...);
             case type_id::int8:
-                return f.template operator()<typename idtypemap<type_id::int8>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::int8>::type>(std::forward<ts>(args)...);
             case type_id::int16:
-                return f.template operator()<typename idtypemap<type_id::int16>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::int16>::type>(std::forward<ts>(args)...);
             case type_id::int32:
-                return f.template operator()<typename idtypemap<type_id::int32>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::int32>::type>(std::forward<ts>(args)...);
             case type_id::int64:
-                return f.template operator()<typename idtypemap<type_id::int64>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::int64>::type>(std::forward<ts>(args)...);
             case type_id::uint8:
-                return f.template operator()<typename idtypemap<type_id::uint8>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::uint8>::type>(std::forward<ts>(args)...);
             case type_id::uint16:
-                return f.template operator()<typename idtypemap<type_id::uint16>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::uint16>::type>(std::forward<ts>(args)...);
             case type_id::uint32:
-                return f.template operator()<typename idtypemap<type_id::uint32>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::uint32>::type>(std::forward<ts>(args)...);
             case type_id::uint64:
-                return f.template operator()<typename idtypemap<type_id::uint64>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::uint64>::type>(std::forward<ts>(args)...);
             case type_id::float32:
-                return f.template operator()<typename idtypemap<type_id::float32>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::float32>::type>(std::forward<ts>(args)...);
             case type_id::float64:
-                return f.template operator()<typename idtypemap<type_id::float64>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::float64>::type>(std::forward<ts>(args)...);
             case type_id::string:
-                return f.template operator()<typename idtypemap<type_id::string>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::string>::type>(std::forward<ts>(args)...);
             case type_id::timestamp_days:
                 return f.template operator()<typename idtypemap<type_id::timestamp_days>::type>(
                     std::forward<ts>(args)...);
@@ -289,20 +273,15 @@ namespace components::dataframe {
                 return f.template operator()<typename idtypemap<type_id::dictionary32>::type>(
                     std::forward<ts>(args)...);
             case type_id::list:
-                return f.template operator()<typename idtypemap<type_id::list>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::list>::type>(std::forward<ts>(args)...);
             case type_id::decimal32:
-                return f.template operator()<typename idtypemap<type_id::decimal32>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::decimal32>::type>(std::forward<ts>(args)...);
             case type_id::decimal64:
-                return f.template operator()<typename idtypemap<type_id::decimal64>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::decimal64>::type>(std::forward<ts>(args)...);
             case type_id::decimal128:
-                return f.template operator()<typename idtypemap<type_id::decimal128>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::decimal128>::type>(std::forward<ts>(args)...);
             case type_id::structs:
-                return f.template operator()<typename idtypemap<type_id::structs>::type>(
-                    std::forward<ts>(args)...);
+                return f.template operator()<typename idtypemap<type_id::structs>::type>(std::forward<ts>(args)...);
             default: {
                 assert(false);
             }

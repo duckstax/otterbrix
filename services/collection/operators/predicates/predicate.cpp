@@ -1,6 +1,6 @@
 #include "predicate.hpp"
-#include <components/document/document_view.hpp>
 #include "simple_predicate.hpp"
+#include <components/document/document_view.hpp>
 
 namespace services::collection::operators::predicates {
 
@@ -12,7 +12,8 @@ namespace services::collection::operators::predicates {
         return check_impl(document, parameters);
     }
 
-    predicate_ptr create_predicate(context_collection_t* context, const components::expressions::compare_expression_ptr& expr) {
+    predicate_ptr create_predicate(context_collection_t* context,
+                                   const components::expressions::compare_expression_ptr& expr) {
         auto result = create_simple_predicate(context, expr);
         if (result) {
             return result;

@@ -5,17 +5,13 @@ using namespace components::sql::impl;
 
 namespace components::sql::insert::impl {
 
-    components::sql::impl::parser_result parse_insert_into(std::pmr::memory_resource* resource,
-                                                           std::string_view query,
-                                                           ql::variant_statement_t& statement) {
-        static mask_t mask_begin({
-            mask_element_t(token_type::bare_word, "insert"),
-            mask_element_t(token_type::whitespace, ""),
-            mask_element_t(token_type::bare_word, "into")
-        });
+    components::sql::impl::parser_result
+    parse_insert_into(std::pmr::memory_resource* resource, std::string_view query, ql::variant_statement_t& statement) {
+        static mask_t mask_begin({mask_element_t(token_type::bare_word, "insert"),
+                                  mask_element_t(token_type::whitespace, ""),
+                                  mask_element_t(token_type::bare_word, "into")});
 
         static const mask_element_t mask_elem_values(token_type::bare_word, "values");
-
 
         lexer_t lexer(query);
         if (!mask_begin.match(lexer)) {
@@ -67,7 +63,9 @@ namespace components::sql::insert::impl {
                 return res;
             }
             if (values.size() != fields.size()) {
-                return components::sql::impl::parser_result{parse_error::not_valid_size_values_list, lexer.next_token(), "not valid insert query"};
+                return components::sql::impl::parser_result{parse_error::not_valid_size_values_list,
+                                                            lexer.next_token(),
+                                                            "not valid insert query"};
             }
 
             auto doc = document::make_document();

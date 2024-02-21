@@ -20,16 +20,11 @@ namespace components::statistic {
     public:
         trace_entry_t(ql::statement_type statement, session::session_id_t id)
             : statement_(statement)
-            , id_(id) {
-        }
+            , id_(id) {}
 
-        void start() {
-            start_ = clock_t::now();
-        }
+        void start() { start_ = clock_t::now(); }
 
-        void finish() {
-            finish_ = clock_t::now();
-        }
+        void finish() { finish_ = clock_t::now(); }
 
     private:
         time_point start_;
@@ -45,13 +40,12 @@ namespace components::statistic {
         trace_t(std::pmr::memory_resource* resource)
             : trace_(resource) {}
 
-        void append(trace_entry_t entry) {
-            trace_.push_back(std::move(entry));
-        }
+        void append(trace_entry_t entry) { trace_.push_back(std::move(entry)); }
 
         template<class... Args>
         trace_entry_ptr make_entry(Args&&... args) {
-            return core::pmr::make_unique<trace_entry_t>(trace_.get_allocator().resource(), std::forward<Args>(args)...);
+            return core::pmr::make_unique<trace_entry_t>(trace_.get_allocator().resource(),
+                                                         std::forward<Args>(args)...);
         }
 
     private:
@@ -65,9 +59,7 @@ namespace components::statistic {
         statistic_t(std::pmr::memory_resource* resource)
             : storage_(resource) {}
 
-        trace_ptr new_trace() {
-            return core::pmr::make_unique<trace_t>(storage_.get_allocator().resource());
-        }
+        trace_ptr new_trace() { return core::pmr::make_unique<trace_t>(storage_.get_allocator().resource()); }
 
     private:
         std::pmr::list<std::unique_ptr<trace_t>> storage_;
@@ -80,9 +72,7 @@ namespace components::statistic {
             entry_.start();
         }
 
-        ~stopwatch() {
-            entry_.finish();
-        }
+        ~stopwatch() { entry_.finish(); }
 
     private:
         trace_entry_t& entry_;

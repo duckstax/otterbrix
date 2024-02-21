@@ -12,9 +12,9 @@ class field_t;
 
 using field_vector = std::vector<field_t>;
 
-#define DEFINE_FIELD_VECTOR(X)            \
-    struct X : public field_vector {      \
-        using field_vector::field_vector; \
+#define DEFINE_FIELD_VECTOR(X)                                                                                         \
+    struct X : public field_vector {                                                                                   \
+        using field_vector::field_vector;                                                                              \
     }
 
 DEFINE_FIELD_VECTOR(field_array_t);
@@ -25,9 +25,9 @@ DEFINE_FIELD_VECTOR(field_map_t);
 
 using field_map = std::map<std::string, field_t, std::less<>>;
 
-#define DEFINE_FIELD_MAP(X)         \
-    struct X : public field_map {   \
-        using field_map::field_map; \
+#define DEFINE_FIELD_MAP(X)                                                                                            \
+    struct X : public field_map {                                                                                      \
+        using field_map::field_map;                                                                                    \
     }
 
 DEFINE_FIELD_MAP(field_object_t);
@@ -40,21 +40,13 @@ struct AggregateFunctionStateData {
     std::string name;
     std::string data;
 
-    bool operator<(const AggregateFunctionStateData&) const {
-        throw std::exception();
-    }
+    bool operator<(const AggregateFunctionStateData&) const { throw std::exception(); }
 
-    bool operator<=(const AggregateFunctionStateData&) const {
-        throw std::exception();
-    }
+    bool operator<=(const AggregateFunctionStateData&) const { throw std::exception(); }
 
-    bool operator>(const AggregateFunctionStateData&) const {
-        throw std::exception();
-    }
+    bool operator>(const AggregateFunctionStateData&) const { throw std::exception(); }
 
-    bool operator>=(const AggregateFunctionStateData&) const {
-        throw std::exception();
-    }
+    bool operator>=(const AggregateFunctionStateData&) const { throw std::exception(); }
 
     bool operator==(const AggregateFunctionStateData& rhs) const {
         if (name != rhs.name)
@@ -202,7 +194,15 @@ decltype(auto) cast_to_nearest_field_type(T&& x) {
 
 class field_t {
 public:
-    using storage_t = std::variant<bool, uint64_t, int64_t, float, double, std::string, void*, field_array_t, field_object_t /*, tuple_t, map_t, AggregateFunctionStateData*/>;
+    using storage_t = std::variant<bool,
+                                   uint64_t,
+                                   int64_t,
+                                   float,
+                                   double,
+                                   std::string,
+                                   void*,
+                                   field_array_t,
+                                   field_object_t /*, tuple_t, map_t, AggregateFunctionStateData*/>;
 
     enum type_which_t {
         Null = 0,
@@ -228,9 +228,7 @@ public:
         Object = 29,
     };
 
-    type_which_t which() const {
-        return type_which_;
-    }
+    type_which_t which() const { return type_which_; }
 
     bool is_null() const { return type_which_t::Null == type_which_; }
 
@@ -266,13 +264,9 @@ public:
         : storage_(value)
         , type_which_(type_which_t::Object) {}
 
-    static field_t new_array() {
-        return field_t(field_array_t());
-    }
+    static field_t new_array() { return field_t(field_array_t()); }
 
-    static field_t new_object() {
-        return field_t(field_object_t());
-    }
+    static field_t new_object() { return field_t(field_object_t()); }
 
     //    void assign(bool value){
     //
@@ -284,49 +278,38 @@ public:
     //    void assign(const std::string& value)
     //         {}
 
-    bool operator<(const field_t& other) const {
-        return storage_ < other.storage_;
-    }
+    bool operator<(const field_t& other) const { return storage_ < other.storage_; }
 
-    bool operator<=(const field_t& other) const {
-        return storage_ <= other.storage_;
-    }
+    bool operator<=(const field_t& other) const { return storage_ <= other.storage_; }
 
-    bool operator>(const field_t& other) const {
-        return storage_ > other.storage_;
-    }
+    bool operator>(const field_t& other) const { return storage_ > other.storage_; }
 
-    bool operator>=(const field_t& other) const {
-        return storage_ >= other.storage_;
-    }
+    bool operator>=(const field_t& other) const { return storage_ >= other.storage_; }
 
-    bool operator==(const field_t& other) const {
-        return storage_ == other.storage_;
-    }
+    bool operator==(const field_t& other) const { return storage_ == other.storage_; }
 
-    bool operator!=(const field_t& rhs) const {
-        return !(*this == rhs);
-    }
+    bool operator!=(const field_t& rhs) const { return !(*this == rhs); }
 
     std::string to_string() const {
-        return std::visit([](const auto& c) {
-            using command_type = std::decay_t<decltype(c)>;
-            if constexpr (std::is_same_v<command_type, bool>) {
-                return std::string(c ? "true" : "false");
-            } else if constexpr (std::is_same_v<command_type, uint64_t>) {
-                return std::to_string(c);
-            } else if constexpr (std::is_same_v<command_type, int64_t>) {
-                return std::to_string(c);
-            } else if constexpr (std::is_same_v<command_type, float>) {
-                return std::to_string(c);
-            } else if constexpr (std::is_same_v<command_type, double>) {
-                return std::to_string(c);
-            } else if constexpr (std::is_same_v<command_type, std::string>) {
-                return "\"" + c + "\"";
-            }
-            return std::string();
-        },
-                          storage_);
+        return std::visit(
+            [](const auto& c) {
+                using command_type = std::decay_t<decltype(c)>;
+                if constexpr (std::is_same_v<command_type, bool>) {
+                    return std::string(c ? "true" : "false");
+                } else if constexpr (std::is_same_v<command_type, uint64_t>) {
+                    return std::to_string(c);
+                } else if constexpr (std::is_same_v<command_type, int64_t>) {
+                    return std::to_string(c);
+                } else if constexpr (std::is_same_v<command_type, float>) {
+                    return std::to_string(c);
+                } else if constexpr (std::is_same_v<command_type, double>) {
+                    return std::to_string(c);
+                } else if constexpr (std::is_same_v<command_type, std::string>) {
+                    return "\"" + c + "\"";
+                }
+                return std::string();
+            },
+            storage_);
     }
     /*
     template<typename T>

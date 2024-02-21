@@ -51,13 +51,9 @@ public:
         lockable_->lock_shared();
     }
 
-    ~shared_lock() {
-        unlock();
-    }
+    ~shared_lock() { unlock(); }
 
-    bool owns_lock() const {
-        return lockable_ != nullptr;
-    }
+    bool owns_lock() const { return lockable_ != nullptr; }
 
     void unlock() {
         if (lockable_) {
@@ -91,13 +87,9 @@ public:
             lockable_->unlock_upgrade_and_lock();
     }
 
-    ~upgrade_to_unique_lock() {
-        unlock();
-    }
+    ~upgrade_to_unique_lock() { unlock(); }
 
-    bool owns_lock() const {
-        return lockable_ != nullptr;
-    }
+    bool owns_lock() const { return lockable_ != nullptr; }
 
     void unlock() {
         if (lockable_) {

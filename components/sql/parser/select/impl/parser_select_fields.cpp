@@ -18,33 +18,34 @@ namespace components::sql::select::impl {
         static const mask_element_t mask_group_max{token_type::bare_word, "max"};
         static const mask_element_t mask_group_avg{token_type::bare_word, "avg"};
 
-        static const std::array<mask_element_t, 5> group_words {
-            mask_group_sum,
-            mask_group_count,
-            mask_group_min,
-            mask_group_max,
-            mask_group_avg
-        };
+        static const std::array<mask_element_t, 5> group_words{mask_group_sum,
+                                                               mask_group_count,
+                                                               mask_group_min,
+                                                               mask_group_max,
+                                                               mask_group_avg};
 
         inline bool is_token_group_word(const token_t& token) {
-            return std::find_if(group_words.begin(), group_words.end(),
-                                [&](const mask_element_t& elem){
-                return elem == token;
-            }) != group_words.end();
+            return std::find_if(group_words.begin(), group_words.end(), [&](const mask_element_t& elem) {
+                       return elem == token;
+                   }) != group_words.end();
         }
 
         inline expressions::aggregate_type get_aggregate_expression_type(const token_t& token) {
-            if (mask_group_sum == token)    return expressions::aggregate_type::sum;
-            if (mask_group_count == token)  return expressions::aggregate_type::count;
-            if (mask_group_min == token)    return expressions::aggregate_type::min;
-            if (mask_group_max == token)    return expressions::aggregate_type::max;
-            if (mask_group_avg == token)    return expressions::aggregate_type::avg;
+            if (mask_group_sum == token)
+                return expressions::aggregate_type::sum;
+            if (mask_group_count == token)
+                return expressions::aggregate_type::count;
+            if (mask_group_min == token)
+                return expressions::aggregate_type::min;
+            if (mask_group_max == token)
+                return expressions::aggregate_type::max;
+            if (mask_group_avg == token)
+                return expressions::aggregate_type::avg;
             return expressions::aggregate_type::invalid;
         }
 
-        parser_result parse_select_field(std::pmr::memory_resource* resource,
-                                         lexer_t& lexer,
-                                         ql::aggregate::group_t& group) {
+        parser_result
+        parse_select_field(std::pmr::memory_resource* resource, lexer_t& lexer, ql::aggregate::group_t& group) {
             auto token = lexer.current_significant_token();
             expressions::key_t key_value{token_clean_value(token)};
             token = lexer.next_not_whitespace_token();
@@ -56,10 +57,16 @@ namespace components::sql::select::impl {
             }
             if (is_token_field_name(token) && fields_stop_word != token) {
                 expressions::key_t key_name{token_clean_value(token)};
-                append_expr(group, expressions::make_scalar_expression(resource, expressions::scalar_type::get_field, key_name, key_value));
+                append_expr(group,
+                            expressions::make_scalar_expression(resource,
+                                                                expressions::scalar_type::get_field,
+                                                                key_name,
+                                                                key_value));
                 token = lexer.next_not_whitespace_token();
             } else {
-                append_expr(group, expressions::make_scalar_expression(resource, expressions::scalar_type::get_field, key_value));
+                append_expr(
+                    group,
+                    expressions::make_scalar_expression(resource, expressions::scalar_type::get_field, key_value));
             }
             if (token.type != token_type::comma && fields_stop_word != token) {
                 return parser_result{parse_error::syntax_error, token, "not valid select query"};
@@ -94,9 +101,8 @@ namespace components::sql::select::impl {
             return true;
         }
 
-        parser_result parse_select_group(std::pmr::memory_resource* resource,
-                                         lexer_t& lexer,
-                                         ql::aggregate::group_t& group) {
+        parser_result
+        parse_select_group(std::pmr::memory_resource* resource, lexer_t& lexer, ql::aggregate::group_t& group) {
             auto token = lexer.current_significant_token();
             auto aggregate_type = get_aggregate_expression_type(token);
             auto aggregate_name = token.value();
@@ -122,12 +128,17 @@ namespace components::sql::select::impl {
             }
             if (is_token_field_name(token) && fields_stop_word != token) {
                 expressions::key_t key_name{token_clean_value(token)};
-                append_expr(group, expressions::make_aggregate_expression(resource, aggregate_type, key_name, key_value));
+                append_expr(group,
+                            expressions::make_aggregate_expression(resource, aggregate_type, key_name, key_value));
                 token = lexer.next_not_whitespace_token();
             } else {
                 std::stringstream ss;
                 ss << aggregate_name << "(" << key_value << ")";
-                append_expr(group, expressions::make_aggregate_expression(resource, aggregate_type, expressions::key_t(ss.str()), key_value));
+                append_expr(group,
+                            expressions::make_aggregate_expression(resource,
+                                                                   aggregate_type,
+                                                                   expressions::key_t(ss.str()),
+                                                                   key_value));
             }
             if (token.type != token_type::comma && fields_stop_word != token) {
                 return parser_result{parse_error::syntax_error, token, "not valid select query"};

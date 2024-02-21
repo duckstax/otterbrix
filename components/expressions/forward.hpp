@@ -9,14 +9,7 @@ namespace components::expressions {
 
     using hash_t = std::size_t;
 
-    enum class expression_group : uint8_t {
-        invalid,
-        compare,
-        aggregate,
-        scalar,
-        sort,
-        join
-    };
+    enum class expression_group : uint8_t { invalid, compare, aggregate, scalar, sort, join };
 
     enum class compare_type : uint8_t {
         invalid,
@@ -36,14 +29,7 @@ namespace components::expressions {
         all_false
     };
 
-    enum class aggregate_type : uint8_t {
-        invalid,
-        count,
-        sum,
-        min,
-        max,
-        avg
-    };
+    enum class aggregate_type : uint8_t { invalid, count, sum, min, max, avg };
 
     enum class scalar_type : uint8_t {
         invalid,
@@ -61,13 +47,10 @@ namespace components::expressions {
         sqrt
     };
 
-    enum class sort_order : std::int8_t {
-        desc = -1,
-        asc = 1
-    };
+    enum class sort_order : std::int8_t { desc = -1, asc = 1 };
 
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const compare_type &type) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const compare_type& type) {
         if (type == compare_type::union_and) {
             stream << "$and";
         } else if (type == compare_type::union_or) {

@@ -4,8 +4,8 @@
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/ql/aggregate.hpp>
 #include <msgpack.hpp>
-#include <msgpack/zone.hpp>
 #include <msgpack/adaptor/list.hpp>
+#include <msgpack/zone.hpp>
 
 namespace components::ql {
 
@@ -20,7 +20,6 @@ namespace components::ql {
         components::ql::aggregate::match_t match_;
     };
 } // namespace components::ql
-
 
 // User defined class template specialization
 namespace msgpack {
@@ -63,10 +62,12 @@ namespace msgpack {
                 void operator()(msgpack::object::with_zone& o, components::ql::delete_one_t const& v) const {
                     o.type = type::ARRAY;
                     o.via.array.size = 4;
-                    o.via.array.ptr = static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size, MSGPACK_ZONE_ALIGNOF(msgpack::object)));
+                    o.via.array.ptr =
+                        static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
+                                                                            MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                    o.via. array.ptr[2] = msgpack::object(v.match_, o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.match_, o.zone);
                     o.via.array.ptr[3] = msgpack::object(v.parameters(), o.zone);
                 }
             };

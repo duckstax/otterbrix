@@ -1,11 +1,11 @@
 #pragma once
 
-#include <memory>
-#include <memory_resource>
-#include <components/base/collection_full_name.hpp>
 #include "expression.hpp"
 #include "key.hpp"
 #include "scalar_expression.hpp"
+#include <components/base/collection_full_name.hpp>
+#include <memory>
+#include <memory_resource>
 
 namespace components::expressions {
 
@@ -20,7 +20,7 @@ namespace components::expressions {
         join_expression_t(join_expression_t&&) = default;
         ~join_expression_t() final = default;
 
-        join_expression_t(std::pmr::memory_resource *resource,
+        join_expression_t(std::pmr::memory_resource* resource,
                           compare_type compare,
                           join_expression_field left,
                           join_expression_field right);
@@ -41,7 +41,7 @@ namespace components::expressions {
 
     using join_expression_ptr = boost::intrusive_ptr<join_expression_t>;
 
-    join_expression_ptr make_join_expression(std::pmr::memory_resource *resource,
+    join_expression_ptr make_join_expression(std::pmr::memory_resource* resource,
                                              compare_type compare,
                                              join_expression_field left,
                                              join_expression_field right);

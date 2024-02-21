@@ -1,8 +1,8 @@
-#include <dataframe/lists/lists_column_view.hpp>
 #include <core/assert/assert.hpp>
-#include <dataframe/types.hpp>
-#include <dataframe/detail/get_value.hpp>
 #include <dataframe/column/slice.hpp>
+#include <dataframe/detail/get_value.hpp>
+#include <dataframe/lists/lists_column_view.hpp>
+#include <dataframe/types.hpp>
 
 namespace components::dataframe::lists {
 

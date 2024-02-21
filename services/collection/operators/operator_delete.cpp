@@ -4,8 +4,7 @@
 namespace services::collection::operators {
 
     operator_delete::operator_delete(context_collection_t* context)
-        : read_write_operator_t(context, operator_type::remove) {
-    }
+        : read_write_operator_t(context, operator_type::remove) {}
 
     void operator_delete::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         if (left_ && left_->output() && !left_->output()->documents().empty()) {

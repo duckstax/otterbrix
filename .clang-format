@@ -16,6 +16,8 @@ AllowShortLoopsOnASingleLine: true #false
 AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: Yes
 BreakBeforeBraces: Custom
+BinPackArguments: 'false'
+BinPackParameters: 'false'
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
@@ -33,7 +35,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeComma
 BreakInheritanceList: BeforeComma
-ColumnLimit: 0
+ColumnLimit: 120
 CompactNamespaces: true
 ContinuationIndentWidth: 4 #8
 IndentCaseLabels: true
