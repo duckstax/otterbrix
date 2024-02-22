@@ -114,9 +114,9 @@ namespace services::collection {
                 update_document_impl(session, sender, std::move(plan));
                 return;
             }
+            case operators::operator_type::join:
             case operators::operator_type::aggregate: {
-                // this is find/search
-                find_document_impl(session, sender, std::move(plan));
+                aggregate_document_impl(session, sender, std::move(plan));
                 return;
             }
 
@@ -237,28 +237,40 @@ namespace services::collection {
         actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
     }
 
-    void collection_t::find_document_impl(const components::session::session_id_t& session,
-                                          const actor_zeta::address_t& sender,
-                                          operators::operator_ptr plan) {
-        trace(log(), "collection::execute_plan : operators::operator_type::agreggate");
-        auto cursor = cursor_storage_.emplace(
-            session,
-            std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
-        if (plan->output()) {
-            for (const auto& document : plan->output()->documents()) {
-                cursor.first->second->append(document_view_t(document));
-            }
+    void collection_t::aggregate_document_impl(const components::session::session_id_t& session,
+                                               const actor_zeta::address_t& sender,
+                                               operators::operator_ptr plan) {
+        if (plan->type() == operators::operator_type::aggregate) {
+            trace(log(), "collection::execute_plan : operators::operator_type::agreggate");
+        } else {
+            trace(log(), "collection::execute_plan : operators::operator_type::join");
         }
-        if (cursor.first->second.get()->size() == 0) {
+        if (plan->is_root()) {
+            auto cursor = cursor_storage_.emplace(
+                session,
+                std::make_unique<components::cursor::sub_cursor_t>(context_->resource(), address()));
+            if (plan->output()) {
+                for (const auto& document : plan->output()->documents()) {
+                    cursor.first->second->append(document_view_t(document));
+                }
+            }
+            if (cursor.first->second.get()->size() == 0) {
+                actor_zeta::send(sender,
+                                 address(),
+                                 handler_id(route::execute_sub_plan_finish),
+                                 session,
+                                 make_cursor(context_->resource(), operation_status_t::failure));
+            } else {
+                auto result = make_cursor(context_->resource(), operation_status_t::success);
+                result->push(cursor.first->second.get());
+                actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, result);
+            }
+        } else {
             actor_zeta::send(sender,
                              address(),
                              handler_id(route::execute_sub_plan_finish),
                              session,
-                             make_cursor(context_->resource(), operation_status_t::failure));
-        } else {
-            auto result = make_cursor(context_->resource(), operation_status_t::success);
-            result->push(cursor.first->second.get());
-            actor_zeta::send(sender, address(), handler_id(route::execute_sub_plan_finish), session, result);
+                             make_cursor(context_->resource(), operation_status_t::success));
         }
     }
 
