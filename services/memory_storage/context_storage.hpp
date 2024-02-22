@@ -1,6 +1,6 @@
 #pragma once
 
-#include <components/ql/base.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <unordered_map>
 
 namespace services {

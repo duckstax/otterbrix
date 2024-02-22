@@ -3,12 +3,10 @@
 #include "forward.hpp"
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <components/expressions/expression.hpp>
-#include <components/ql/base.hpp>
-#include <core/make_intrusive_ptr.hpp>
 #include <memory_resource>
 #include <unordered_set>
-#include <vector>
 
 namespace components::logical_plan {
 

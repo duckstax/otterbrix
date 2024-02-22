@@ -10,6 +10,7 @@ set(SOURCE_${PROJECT_NAME}
         node_drop_database.cpp
         node_group.cpp
         node_insert.cpp
+        node_join.cpp
         node_limit.cpp
         node_match.cpp
         node_sort.cpp

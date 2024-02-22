@@ -1,9 +1,9 @@
 #pragma once
 
 #include "index_disk.hpp"
+#include <components/base/collection_full_name.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/log/log.hpp>
-#include <components/ql/base.hpp>
 #include <components/session/session.hpp>
 #include <core/btree/btree.hpp>
 #include <core/excutor.hpp>

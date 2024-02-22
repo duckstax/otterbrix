@@ -10,6 +10,7 @@
 #include <components/logical_plan/node_drop_database.hpp>
 #include <components/logical_plan/node_group.hpp>
 #include <components/logical_plan/node_insert.hpp>
+#include <components/logical_plan/node_join.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
 #include <components/logical_plan/node_update.hpp>
@@ -50,6 +51,14 @@ namespace components::translator {
         return node;
     }
 
+    auto translator_join(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr {
+        auto node = new logical_plan::node_join_t{resource, {ql->left->database_, ql->left->collection_}, ql->join};
+        node->append_child(ql_translator(resource, ql->left.get()));
+        node->append_child(ql_translator(resource, ql->right.get()));
+        node->append_expressions(ql->expressions);
+        return node;
+    }
+
     auto ql_translator(std::pmr::memory_resource* resource, ql::ql_statement_t* statement) -> logical_plan::node_ptr {
         using ql::statement_type;
 
@@ -86,6 +95,8 @@ namespace components::translator {
             }
             case statement_type::aggregate:
                 return translator_aggregate(resource, static_cast<ql::aggregate_statement*>(statement));
+            case statement_type::join:
+                return translator_join(resource, static_cast<ql::join_t*>(statement));
             default:
                 throw std::logic_error("invalid statement");
         }

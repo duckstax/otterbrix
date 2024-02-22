@@ -267,13 +267,6 @@ namespace services {
               "memory_storage_t:execute_plan_ {}, sesion: {}",
               logical_plan->collection_full().to_string(),
               session.data());
-        if (!check_collection_(session, logical_plan->collection_full())) {
-            trace(log_,
-                  "memory_storage_t:execute_plan_ collection not found {}, sesion: {}",
-                  logical_plan->collection_full().to_string(),
-                  session.data());
-            return;
-        }
         auto dependency_tree_collections_names = logical_plan->collection_dependencies();
         context_storage_t collections_context_storage;
         while (!dependency_tree_collections_names.empty()) {

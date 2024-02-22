@@ -18,6 +18,7 @@ otterbrix seamlessly integrates with column-oriented memory format and can repre
 
 ```bash
     pip install otterbrix==0.5.0 
+    
 ```
 
 Python SQl example:

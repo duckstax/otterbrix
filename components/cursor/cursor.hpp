@@ -4,8 +4,8 @@
 
 #include <actor-zeta/actor-zeta.hpp>
 
+#include <components/base/collection_full_name.hpp>
 #include <components/document/document_view.hpp>
-#include <components/ql/base.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
