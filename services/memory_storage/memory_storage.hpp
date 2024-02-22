@@ -101,10 +101,6 @@ namespace services {
         void drop_collection_(components::session::session_id_t& session,
                               components::logical_plan::node_ptr logical_plan);
 
-        void join_(components::session::session_id_t& session,
-                   components::logical_plan::node_ptr logical_plan,
-                   components::ql::storage_parameters parameters);
-
         void execute_plan_(components::session::session_id_t& session,
                            components::logical_plan::node_ptr logical_plan,
                            components::ql::storage_parameters parameters);
