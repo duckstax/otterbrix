@@ -299,7 +299,7 @@ namespace services {
                 make_cursor(default_resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
-
+        plan->set_as_root();
         traverse_plan_(session, std::move(plan), std::move(parameters));
     }
 
