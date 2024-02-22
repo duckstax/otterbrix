@@ -16,6 +16,7 @@ namespace components::ql {
         join_t();
         join_t(database_name_t database, collection_name_t collection);
         join_t(database_name_t database, collection_name_t collection, join_type join);
+        std::string to_string() const;
     };
 
     template<class OStream>

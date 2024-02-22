@@ -14,6 +14,7 @@ set(${PROJECT_NAME}_SOURCES
         planner/impl/create_plan_match.cpp
         planner/impl/create_plan_sort.cpp
         planner/impl/create_plan_update.cpp
+        planner/impl/create_plan_join.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp
@@ -24,6 +25,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_update.cpp
         operators/operator_group.cpp
         operators/operator_sort.cpp
+        operators/operator_join.cpp
         operators/aggregation.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp

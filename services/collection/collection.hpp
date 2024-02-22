@@ -107,9 +107,9 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        void find_document_impl(const components::session::session_id_t& session,
-                                const actor_zeta::address_t& sender,
-                                operators::operator_ptr plan);
+        void aggregate_document_impl(const components::session::session_id_t& session,
+                                     const actor_zeta::address_t& sender,
+                                     operators::operator_ptr plan);
         void update_document_impl(const components::session::session_id_t& session,
                                   const actor_zeta::address_t& sender,
                                   operators::operator_ptr plan);
