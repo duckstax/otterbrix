@@ -15,7 +15,7 @@ void document_read(benchmark::State& state) {
     std::string key_array{"countArray"};
     std::string key_dict{"countDict"};
 
-    auto f = [&view](const std::string &key) {
+    auto f = [&view](const std::string& key) {
         view.is_exists(key);
         view.is_null(key);
         view.is_bool(key);
@@ -49,7 +49,6 @@ void document_read(benchmark::State& state) {
     }
 }
 BENCHMARK(document_read)->Arg(10000);
-
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);

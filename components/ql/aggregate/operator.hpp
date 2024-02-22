@@ -13,8 +13,8 @@ namespace components::ql::aggregate {
         std::size_t size() const;
         operator_type type(std::size_t index) const;
 
-        template <class T>
-        const T &get(std::size_t index) const {
+        template<class T>
+        const T& get(std::size_t index) const {
             //assert(type(index) != T::type); //todo: segfault in debug
             return operators_.at(index).operator_.template get<T>();
         }

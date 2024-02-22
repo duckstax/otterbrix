@@ -6,9 +6,9 @@
 #include <variant>
 #include <vector>
 
+#include "aggregate/operator.hpp"
 #include <components/expressions/expression.hpp>
 #include <components/ql/ql_param_statement.hpp>
-#include "aggregate/operator.hpp"
 
 namespace components::ql {
 
@@ -25,8 +25,8 @@ namespace components::ql {
         auto count_operators() const -> std::size_t;
         auto type_operator(std::size_t index) const -> aggregate::operator_type;
 
-        template <class T>
-        const T &get_operator(std::size_t index) const {
+        template<class T>
+        const T& get_operator(std::size_t index) const {
             return aggregate_operator_.get<T>(index);
         }
 
@@ -36,9 +36,8 @@ namespace components::ql {
         aggregate::operators_t aggregate_operator_;
     };
 
-
-    template <class OStream>
-    OStream &operator<<(OStream &stream, const aggregate_statement &aggregate) {
+    template<class OStream>
+    OStream& operator<<(OStream& stream, const aggregate_statement& aggregate) {
         stream << "$aggregate: {";
         bool is_first = true;
         for (std::size_t i = 0; i < aggregate.count_operators(); ++i) {
@@ -65,16 +64,11 @@ namespace components::ql {
         return stream;
     }
 
-
     using aggregate_ptr = boost::intrusive_ptr<aggregate_statement>;
-    using aggregate_statement_ptr = std::unique_ptr<aggregate_statement>; /// @depracated
     using aggregate_statement_raw_ptr = aggregate_statement*;
 
-    aggregate_ptr make_aggregate(const database_name_t &database, const collection_name_t &collection);
+    aggregate_ptr make_aggregate(const database_name_t& database, const collection_name_t& collection);
 
-    [[deprecated("use make_aggregate")]]
-    aggregate_statement_ptr make_aggregate_statement(const database_name_t &database, const collection_name_t &collection);
-
-    const components::ql::aggregate::match_t& get_match(const aggregate_statement &aggregate);
+    const components::ql::aggregate::match_t& get_match(const aggregate_statement& aggregate);
 
 } // namespace components::ql

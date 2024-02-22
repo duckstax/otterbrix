@@ -7,11 +7,11 @@
 #include <utility>
 #include <vector>
 
-#include <core/btree/btree.hpp>
 #include "core/pmr.hpp"
 #include "forward.hpp"
 #include "index.hpp"
 #include <components/pipeline/context.hpp>
+#include <core/btree/btree.hpp>
 
 namespace components::index {
 
@@ -28,8 +28,8 @@ namespace components::index {
         auto size() const -> std::size_t;
         actor_zeta::detail::pmr::memory_resource* resource() noexcept;
 
-        void insert_document(const document_ptr& document, pipeline::context_t *pipeline_context);
-        void delete_document(const document_ptr& document, pipeline::context_t *pipeline_context);
+        void insert_document(const document_ptr& document, pipeline::context_t* pipeline_context);
+        void delete_document(const document_ptr& document, pipeline::context_t* pipeline_context);
 
         auto indexes() -> std::vector<std::string>;
 
@@ -59,7 +59,8 @@ namespace components::index {
     auto search_index(const index_engine_ptr& ptr, const std::string& name) -> index_t::pointer;
 
     template<class Target, class... Args>
-    auto make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
+    auto make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args)
+        -> uint32_t {
         return ptr->add_index(
             keys,
             core::pmr::make_unique<Target>(
@@ -73,7 +74,9 @@ namespace components::index {
     void drop_index(const index_engine_ptr& ptr, index_t::pointer index);
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs);
-    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr> &docs);
+    void insert(const index_engine_ptr& ptr,
+                id_index id,
+                core::pmr::btree::btree_t<document::document_id_t, document_ptr>& docs);
     void insert_one(const index_engine_ptr& ptr, id_index id, document_ptr docs);
     void find(const index_engine_ptr& index, id_index id, result_set_t*);
     void find(const index_engine_ptr& index, query_t query, result_set_t*);
@@ -82,6 +85,6 @@ namespace components::index {
     void sync_index_from_disk(const index_engine_ptr& ptr,
                               const actor_zeta::address_t& index_address,
                               const std::pmr::vector<document::document_id_t>& ids,
-                              const core::pmr::btree::btree_t<document::document_id_t, document_ptr> &storage);
+                              const core::pmr::btree::btree_t<document::document_id_t, document_ptr>& storage);
 
 } // namespace components::index

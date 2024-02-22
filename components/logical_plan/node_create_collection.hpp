@@ -1,7 +1,7 @@
 #pragma once
 
-#include <components/ql/statements/create_collection.hpp>
 #include "node.hpp"
+#include <components/ql/statements/create_collection.hpp>
 
 namespace components::logical_plan {
 
@@ -15,8 +15,6 @@ namespace components::logical_plan {
         std::string to_string_impl() const final;
     };
 
-
-    node_ptr make_node_create_collection(std::pmr::memory_resource* resource,
-                                         ql::create_collection_t* ql);
+    node_ptr make_node_create_collection(std::pmr::memory_resource* resource, ql::create_collection_t* ql);
 
 } // namespace components::logical_plan

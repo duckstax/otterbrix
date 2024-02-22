@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 #include <components/document/document_view.hpp>
-#include <disk/disk.hpp>
 #include <components/tests/generaty.hpp>
+#include <disk/disk.hpp>
 
 const std::string file_db = "/tmp/documents.rdb";
 const std::string database_name = "test_database";
@@ -61,7 +61,7 @@ TEST_CASE("sync documents from disk") {
         disk_t disk(file_db);
         auto id_documents = disk.load_list_documents(database_name, collection_name);
         REQUIRE(id_documents.size() == 50);
-        for (const auto &id : id_documents) {
+        for (const auto& id : id_documents) {
             auto doc = disk.load_document(id);
             REQUIRE(doc != nullptr);
         }

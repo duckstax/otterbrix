@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory_resource>
 #include "expression.hpp"
 #include "key.hpp"
+#include <memory_resource>
 
 namespace components::expressions {
 
@@ -11,15 +11,12 @@ namespace components::expressions {
 
     class scalar_expression_t : public expression_i {
     public:
-        using param_storage = std::variant<
-            core::parameter_id_t,
-            key_t,
-            expression_ptr>;
+        using param_storage = std::variant<core::parameter_id_t, key_t, expression_ptr>;
 
         scalar_expression_t(const scalar_expression_t&) = delete;
         scalar_expression_t(scalar_expression_t&&) = default;
 
-        scalar_expression_t(std::pmr::memory_resource *resource, scalar_type type, const key_t& key);
+        scalar_expression_t(std::pmr::memory_resource* resource, scalar_type type, const key_t& key);
 
         scalar_type type() const;
         const key_t& key() const;
@@ -37,9 +34,11 @@ namespace components::expressions {
         bool equal_impl(const expression_i* rhs) const final;
     };
 
-    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type, const key_t& key);
-    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type);
-    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource *resource, scalar_type type, const key_t& name, const key_t& key);
+    scalar_expression_ptr
+    make_scalar_expression(std::pmr::memory_resource* resource, scalar_type type, const key_t& key);
+    scalar_expression_ptr make_scalar_expression(std::pmr::memory_resource* resource, scalar_type type);
+    scalar_expression_ptr
+    make_scalar_expression(std::pmr::memory_resource* resource, scalar_type type, const key_t& name, const key_t& key);
 
     scalar_type get_scalar_type(const std::string& key);
     bool is_scalar_type(const std::string& key);

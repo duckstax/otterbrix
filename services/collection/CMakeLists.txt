@@ -14,6 +14,7 @@ set(${PROJECT_NAME}_SOURCES
         planner/impl/create_plan_match.cpp
         planner/impl/create_plan_sort.cpp
         planner/impl/create_plan_update.cpp
+        planner/impl/create_plan_join.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp
@@ -24,6 +25,7 @@ set(${PROJECT_NAME}_SOURCES
         operators/operator_update.cpp
         operators/operator_group.cpp
         operators/operator_sort.cpp
+        operators/operator_join.cpp
         operators/aggregation.cpp
         operators/scan/full_scan.cpp
         operators/scan/index_scan.cpp
@@ -49,31 +51,30 @@ set(${PROJECT_NAME}_SOURCES
         sort.cpp
 )
 
-add_library(rocketjoe_${PROJECT_NAME}
+add_library(otterbrix_${PROJECT_NAME}
         ${${PROJECT_NAME}_HEADERS}
         ${${PROJECT_NAME}_SOURCES}
 )
 
 
-add_library(rocketjoe::${PROJECT_NAME} ALIAS rocketjoe_${PROJECT_NAME})
+add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
-set_property(TARGET rocketjoe_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
+set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
 target_link_libraries(
-        rocketjoe_${PROJECT_NAME} PUBLIC
-        rocketjoe::document
-        rocketjoe::cursor
-        rocketjoe::session
-        rocketjoe::index
-        rocketjoe::logical_plan
-        rocketjoe::pipeline
-        rocketjoe::result
+        otterbrix_${PROJECT_NAME} PUBLIC
+        otterbrix::document
+        otterbrix::cursor
+        otterbrix::session
+        otterbrix::index
+        otterbrix::logical_plan
+        otterbrix::pipeline
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost
 )
 
-target_include_directories(rocketjoe_${PROJECT_NAME} PUBLIC
+target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
 )
 
 if (DEV_MODE)

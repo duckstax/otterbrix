@@ -9,19 +9,19 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-#define PARSE_JOIN_TYPE(TYPE) { \
-    if (mask_element_t(token_type::bare_word, #TYPE) == token) { \
-        token = lexer.next_not_whitespace_token(); \
-        if (mask_elem_join == token) { \
-            join = ql::make_join(ql::join_type::TYPE); \
-        } else { \
-            return parser_result{parse_error::syntax_error, token, "not valid select query"}; \
-        } \
-    } \
-}
+#define PARSE_JOIN_TYPE(TYPE)                                                                                          \
+    {                                                                                                                  \
+        if (mask_element_t(token_type::bare_word, #TYPE) == token) {                                                   \
+            token = lexer.next_not_whitespace_token();                                                                 \
+            if (mask_elem_join == token) {                                                                             \
+                join = ql::make_join(ql::join_type::TYPE);                                                             \
+            } else {                                                                                                   \
+                return parser_result{parse_error::syntax_error, token, "not valid select query"};                      \
+            }                                                                                                          \
+        }                                                                                                              \
+    }
 
-    components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer,
-                                                         ql::join_ptr& join) {
+    components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
         static const mask_element_t mask_elem_join(token_type::bare_word, "join");
 
         auto token = lexer.current_significant_token();
@@ -37,8 +37,7 @@ namespace components::sql::select::impl {
         return true;
     }
 
-    components::sql::impl::parser_result parse_table_name(components::sql::lexer_t& lexer,
-                                                          ql::ql_statement_ptr ql) {
+    components::sql::impl::parser_result parse_table_name(components::sql::lexer_t& lexer, ql::ql_statement_ptr ql) {
         auto token = lexer.current_significant_token();
         if (token.type == token_type::bare_word) {
             ql->collection_ = std::string(token.value());
@@ -46,7 +45,9 @@ namespace components::sql::select::impl {
             if (token.type == token_type::dot) {
                 token = lexer.next_token();
                 if (token.type != token_type::bare_word) {
-                    return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
+                    return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                                token,
+                                                                "not valid select query"};
                 }
                 ql->database_ = ql->collection_;
                 ql->collection_ = std::string(token.value());
@@ -57,10 +58,8 @@ namespace components::sql::select::impl {
         return true;
     }
 
-    components::sql::impl::parser_result parse_select_from(std::pmr::memory_resource* resource,
-                                                           std::string_view query,
-                                                           ql::variant_statement_t& statement) {
-
+    components::sql::impl::parser_result
+    parse_select_from(std::pmr::memory_resource* resource, std::string_view query, ql::variant_statement_t& statement) {
         static const mask_element_t mask_elem_select(token_type::bare_word, "select");
         static const mask_element_t mask_elem_from(token_type::bare_word, "from");
         static const mask_element_t mask_elem_on(token_type::bare_word, "on");
@@ -109,9 +108,8 @@ namespace components::sql::select::impl {
                 return res;
             }
             if (sub_join) {
-                sub_join->left = join
-                        ? static_cast<ql::ql_statement_ptr>(join)
-                        : static_cast<ql::ql_statement_ptr>(agg);
+                sub_join->left =
+                    join ? static_cast<ql::ql_statement_ptr>(join) : static_cast<ql::ql_statement_ptr>(agg);
                 sub_join->right = ql::make_aggregate("", "");
                 lexer.next_not_whitespace_token();
                 res = parse_table_name(lexer, sub_join->right);
@@ -121,7 +119,9 @@ namespace components::sql::select::impl {
                 join = sub_join;
                 token = lexer.next_not_whitespace_token();
                 if (mask_elem_on != token) {
-                    return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid select query"};
+                    return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                                token,
+                                                                "not valid select query"};
                 }
                 token = lexer.next_not_whitespace_token();
                 res = parse_join_on(resource, lexer, *join);
@@ -147,7 +147,9 @@ namespace components::sql::select::impl {
         // group by
         auto status_group = mask_group_by.check(lexer);
         if (status_group == mask_group_element_t::status::error) {
-            return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use group"};
+            return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                        lexer.next_not_whitespace_token(),
+                                                        "invalid use group"};
         }
         std::pmr::set<token_t> group_fields(resource);
         if (status_group == mask_group_element_t::status::yes) {
@@ -167,7 +169,9 @@ namespace components::sql::select::impl {
         // order by
         auto status_order = mask_order_by.check(lexer);
         if (status_order == mask_group_element_t::status::error) {
-            return components::sql::impl::parser_result{parse_error::syntax_error, lexer.next_not_whitespace_token(), "invalid use order"};
+            return components::sql::impl::parser_result{parse_error::syntax_error,
+                                                        lexer.next_not_whitespace_token(),
+                                                        "invalid use order"};
         }
         if (status_order == mask_group_element_t::status::yes) {
             ql::aggregate::sort_t sort;

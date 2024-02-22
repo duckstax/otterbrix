@@ -17,4 +17,4 @@ namespace services::collection::operators {
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
     };
 
-} // namespace services::operators
+} // namespace services::collection::operators

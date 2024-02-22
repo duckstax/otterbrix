@@ -14,16 +14,11 @@ namespace core::numbers {
 
     enum scale_type : int32_t {};
 
-    enum class Radix : int32_t {
-        BASE_2 = 2,
-        BASE_10 = 10
-    };
+    enum class Radix : int32_t { BASE_2 = 2, BASE_10 = 10 };
 
     template<typename T>
     constexpr inline auto is_supported_representation_type() {
-        return std::is_same_v<T, int32_t> ||
-               std::is_same_v<T, int64_t> ||
-               std::is_same_v<T, __int128_t>;
+        return std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t> || std::is_same_v<T, __int128_t>;
     }
 
     template<typename T>
@@ -36,7 +31,8 @@ namespace core::numbers {
         template<typename Rep,
                  Radix Base,
                  typename T,
-                 typename std::enable_if_t<(std::is_same_v<int32_t, T> && is_supported_representation_type<Rep>())>* = nullptr>
+                 typename std::enable_if_t<(std::is_same_v<int32_t, T> && is_supported_representation_type<Rep>())>* =
+                     nullptr>
         inline Rep ipow(T exponent) {
             assertion_exception_msg(exponent >= 0, "integer exponentiation with negative exponent is not possible.");
             if (exponent == 0) {
@@ -97,38 +93,31 @@ namespace core::numbers {
         using rep = Rep;
 
         template<typename T,
-                 typename std::enable_if_t<std::is_floating_point<T>() &&
-                                           is_supported_representation_type<Rep>()>* = nullptr>
+                 typename std::enable_if_t<std::is_floating_point<T>() && is_supported_representation_type<Rep>()>* =
+                     nullptr>
         inline explicit fixed_point(T const& value, scale_type const& scale)
             : _value{static_cast<Rep>(detail::shift<Rep, Rad>(value, scale))}
-            , _scale{scale} {
-        }
+            , _scale{scale} {}
 
         template<typename T,
-                 typename std::enable_if_t<std::is_integral<T>() &&
-                                           is_supported_representation_type<Rep>()>* = nullptr>
+                 typename std::enable_if_t<std::is_integral<T>() && is_supported_representation_type<Rep>()>* = nullptr>
         inline explicit fixed_point(T const& value, scale_type const& scale)
             : _value{detail::shift<Rep, Rad>(static_cast<Rep>(value), scale)}
-            , _scale{scale} {
-        }
+            , _scale{scale} {}
 
         inline explicit fixed_point(scaled_integer<Rep> s)
             : _value{s.value}
-            , _scale{s.scale} {
-        }
+            , _scale{s.scale} {}
 
-        template<typename T,
-                 typename std::enable_if_t<is_supported_construction_value_type<T>()>* = nullptr>
+        template<typename T, typename std::enable_if_t<is_supported_construction_value_type<T>()>* = nullptr>
         inline fixed_point(T const& value)
             : _value{static_cast<Rep>(value)}
-            , _scale{scale_type{0}} {
-        }
+            , _scale{scale_type{0}} {}
 
         inline fixed_point()
             : _scale{scale_type{0}} {}
 
-        template<typename U,
-                 typename std::enable_if_t<std::is_floating_point_v<U>>* = nullptr>
+        template<typename U, typename std::enable_if_t<std::is_floating_point_v<U>>* = nullptr>
         explicit constexpr operator U() const {
             return detail::shift<Rep, Rad>(static_cast<U>(_value), scale_type{-_scale});
         }
@@ -139,16 +128,12 @@ namespace core::numbers {
             return static_cast<U>(detail::shift<Rep, Rad>(value, scale_type{-_scale}));
         }
 
-        inline operator scaled_integer<Rep>() const {
-            return scaled_integer<Rep>{_value, _scale};
-        }
+        inline operator scaled_integer<Rep>() const { return scaled_integer<Rep>{_value, _scale}; }
 
         inline rep value() const { return _value; }
 
         inline scale_type scale() const { return _scale; }
-        inline explicit constexpr operator bool() const {
-            return static_cast<bool>(_value);
-        }
+        inline explicit constexpr operator bool() const { return static_cast<bool>(_value); }
 
         template<typename Rep1, Radix Rad1>
         inline fixed_point<Rep1, Rad1>& operator+=(fixed_point<Rep1, Rad1> const& rhs) {
@@ -180,22 +165,24 @@ namespace core::numbers {
         }
 
         template<typename Rep1, Radix Rad1>
-        inline friend fixed_point<Rep1, Rad1> operator+(
-            fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
+        inline friend fixed_point<Rep1, Rad1> operator+(fixed_point<Rep1, Rad1> const& lhs,
+                                                        fixed_point<Rep1, Rad1> const& rhs);
 
         template<typename Rep1, Radix Rad1>
-        inline friend fixed_point<Rep1, Rad1> operator-(
-            fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
+        inline friend fixed_point<Rep1, Rad1> operator-(fixed_point<Rep1, Rad1> const& lhs,
+                                                        fixed_point<Rep1, Rad1> const& rhs);
 
         template<typename Rep1, Radix Rad1>
-        inline friend fixed_point<Rep1, Rad1> operator*(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
+        inline friend fixed_point<Rep1, Rad1> operator*(fixed_point<Rep1, Rad1> const& lhs,
+                                                        fixed_point<Rep1, Rad1> const& rhs);
 
         template<typename Rep1, Radix Rad1>
-        inline friend fixed_point<Rep1, Rad1> operator/(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
+        inline friend fixed_point<Rep1, Rad1> operator/(fixed_point<Rep1, Rad1> const& lhs,
+                                                        fixed_point<Rep1, Rad1> const& rhs);
 
         template<typename Rep1, Radix Rad1>
-        inline friend fixed_point<Rep1, Rad1> operator%(
-            fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
+        inline friend fixed_point<Rep1, Rad1> operator%(fixed_point<Rep1, Rad1> const& lhs,
+                                                        fixed_point<Rep1, Rad1> const& rhs);
 
         template<typename Rep1, Radix Rad1>
         inline friend bool operator==(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs);
@@ -228,12 +215,10 @@ namespace core::numbers {
                 auto const av = abs(_value);
                 Rep const n = exp10<Rep>(-_scale);
                 Rep const f = av % n;
-                auto const num_zeros =
-                    std::max(0, (-_scale - static_cast<int32_t>(to_string(f).size())));
+                auto const num_zeros = std::max(0, (-_scale - static_cast<int32_t>(to_string(f).size())));
                 auto const zeros = std::string(num_zeros, '0');
                 auto const sign = _value < 0 ? std::string("-") : std::string();
-                return sign + to_string(av / n) + std::string(".") + zeros +
-                       to_string(av % n);
+                return sign + to_string(av / n) + std::string(".") + zeros + to_string(av % n);
             }
             auto const zeros = std::string(_scale, '0');
             return to_string(_value) + zeros;
@@ -242,14 +227,12 @@ namespace core::numbers {
 
     template<typename Rep, typename T>
     inline auto addition_overflow(T lhs, T rhs) {
-        return rhs > 0 ? lhs > std::numeric_limits<Rep>::max() - rhs
-                       : lhs < std::numeric_limits<Rep>::min() - rhs;
+        return rhs > 0 ? lhs > std::numeric_limits<Rep>::max() - rhs : lhs < std::numeric_limits<Rep>::min() - rhs;
     }
 
     template<typename Rep, typename T>
     inline auto subtraction_overflow(T lhs, T rhs) {
-        return rhs > 0 ? lhs < std::numeric_limits<Rep>::min() + rhs
-                       : lhs > std::numeric_limits<Rep>::max() + rhs;
+        return rhs > 0 ? lhs < std::numeric_limits<Rep>::min() + rhs : lhs > std::numeric_limits<Rep>::max() + rhs;
     }
 
     template<typename Rep, typename T>
@@ -271,12 +254,12 @@ namespace core::numbers {
     }
 
     template<typename Rep1, Radix Rad1>
-    inline fixed_point<Rep1, Rad1> operator+(fixed_point<Rep1, Rad1> const& lhs,
-                                             fixed_point<Rep1, Rad1> const& rhs) {
+    inline fixed_point<Rep1, Rad1> operator+(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs) {
         auto const scale = std::min(lhs._scale, rhs._scale);
         auto const sum = lhs.rescaled(scale)._value + rhs.rescaled(scale)._value;
 
-        assertion_exception_msg(!addition_overflow<Rep1>(lhs.rescaled(scale)._value, rhs.rescaled(scale)._value), "fixed_point overflow");
+        assertion_exception_msg(!addition_overflow<Rep1>(lhs.rescaled(scale)._value, rhs.rescaled(scale)._value),
+                                "fixed_point overflow");
         return fixed_point<Rep1, Rad1>{scaled_integer<Rep1>{sum, scale}};
     }
 
@@ -285,25 +268,27 @@ namespace core::numbers {
         auto const scale = std::min(lhs._scale, rhs._scale);
         auto const diff = lhs.rescaled(scale)._value - rhs.rescaled(scale)._value;
 
-        assertion_exception_msg(!subtraction_overflow<Rep1>(lhs.rescaled(scale)._value, rhs.rescaled(scale)._value), "fixed_point overflow");
+        assertion_exception_msg(!subtraction_overflow<Rep1>(lhs.rescaled(scale)._value, rhs.rescaled(scale)._value),
+                                "fixed_point overflow");
         return fixed_point<Rep1, Rad1>{scaled_integer<Rep1>{diff, scale}};
     }
 
     template<typename Rep1, Radix Rad1>
     inline fixed_point<Rep1, Rad1> operator*(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs) {
         assertion_exception_msg(!multiplication_overflow<Rep1>(lhs._value, rhs._value), "fixed_point overflow");
-        return fixed_point<Rep1, Rad1>{scaled_integer<Rep1>(lhs._value * rhs._value, scale_type{lhs._scale + rhs._scale})};
+        return fixed_point<Rep1, Rad1>{
+            scaled_integer<Rep1>(lhs._value * rhs._value, scale_type{lhs._scale + rhs._scale})};
     }
 
     template<typename Rep1, Radix Rad1>
     inline fixed_point<Rep1, Rad1> operator/(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs) {
         assertion_exception_msg(!division_overflow<Rep1>(lhs._value, rhs._value), "fixed_point overflow");
-        return fixed_point<Rep1, Rad1>{scaled_integer<Rep1>(lhs._value / rhs._value, scale_type{lhs._scale - rhs._scale})};
+        return fixed_point<Rep1, Rad1>{
+            scaled_integer<Rep1>(lhs._value / rhs._value, scale_type{lhs._scale - rhs._scale})};
     }
 
     template<typename Rep1, Radix Rad1>
-    inline bool operator==(fixed_point<Rep1, Rad1> const& lhs,
-                           fixed_point<Rep1, Rad1> const& rhs) {
+    inline bool operator==(fixed_point<Rep1, Rad1> const& lhs, fixed_point<Rep1, Rad1> const& rhs) {
         auto const scale = std::min(lhs._scale, rhs._scale);
         return lhs.rescaled(scale)._value == rhs.rescaled(scale)._value;
     }

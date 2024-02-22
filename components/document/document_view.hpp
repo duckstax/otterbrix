@@ -1,16 +1,12 @@
 #pragma once
 
-#include <cstdint>
 #include <components/document/core/dict.hpp>
 #include <components/document/document.hpp>
+#include <cstdint>
 
 namespace components::document {
 
-    enum class compare_t {
-        less = -1,
-        equals = 0,
-        more = 1
-    };
+    enum class compare_t { less = -1, equals = 0, more = 1 };
 
     class document_view_t final {
     public:
@@ -18,8 +14,10 @@ namespace components::document {
 
         document_view_t();
         explicit document_view_t(document_ptr document);
+        explicit document_view_t(document_view_t&& doc_view) noexcept;
 
         document_id_t id() const;
+        document_ptr get_ptr() const;
 
         bool is_valid() const;
         bool is_dict() const;
@@ -29,32 +27,32 @@ namespace components::document {
         bool is_exists(const std::string& key) const;
         bool is_exists(std::string_view key) const;
         bool is_exists(uint32_t index) const;
-        bool is_null(const std::string &key) const;
+        bool is_null(const std::string& key) const;
         bool is_null(uint32_t index) const;
-        bool is_bool(const std::string &key) const;
+        bool is_bool(const std::string& key) const;
         bool is_bool(uint32_t index) const;
-        bool is_ulong(const std::string &key) const;
+        bool is_ulong(const std::string& key) const;
         bool is_ulong(uint32_t index) const;
-        bool is_long(const std::string &key) const;
+        bool is_long(const std::string& key) const;
         bool is_long(uint32_t index) const;
-        bool is_double(const std::string &key) const;
+        bool is_double(const std::string& key) const;
         bool is_double(uint32_t index) const;
-        bool is_string(const std::string &key) const;
+        bool is_string(const std::string& key) const;
         bool is_string(uint32_t index) const;
         bool is_array(std::string_view key) const;
         bool is_array(uint32_t index) const;
         bool is_dict(std::string_view key) const;
         bool is_dict(uint32_t index) const;
 
-        const_value_ptr get(const std::string &key) const;
+        const_value_ptr get(const std::string& key) const;
         const_value_ptr get(std::string_view key) const;
         const_value_ptr get(uint32_t index) const;
 
-        bool get_bool(const std::string &key) const;
-        uint64_t get_ulong(const std::string &key) const;
-        int64_t get_long(const std::string &key) const;
-        double get_double(const std::string &key) const;
-        std::string get_string(const std::string &key) const;
+        bool get_bool(const std::string& key) const;
+        uint64_t get_ulong(const std::string& key) const;
+        int64_t get_long(const std::string& key) const;
+        double get_double(const std::string& key) const;
+        std::string get_string(const std::string& key) const;
         document_view_t get_array(std::string_view key) const;
         document_view_t get_array(uint32_t index) const;
         document_view_t get_dict(std::string_view key) const;
@@ -64,18 +62,18 @@ namespace components::document {
         const_value_ptr get_value(std::string_view key) const;
         const_value_ptr get_value(uint32_t index) const;
 
-        template <class T>
-        T get_as(const std::string &key) const {
-            const auto *value = get(key);
+        template<class T>
+        T get_as(const std::string& key) const {
+            const auto* value = get(key);
             if (value) {
                 return value->as<T>();
             }
             return T();
         }
 
-        template <class T>
+        template<class T>
         T get_as(uint32_t index) const {
-            const auto *value = get(index);
+            const auto* value = get(index);
             if (value) {
                 return value->as<T>();
             }
@@ -84,7 +82,7 @@ namespace components::document {
 
         ::document::impl::dict_iterator_t begin() const;
 
-        compare_t compare(const document_view_t &other, const std::string &key) const;
+        compare_t compare(const document_view_t& other, const std::string& key) const;
 
         std::string to_json() const;
         const ::document::impl::dict_t* as_dict() const;
@@ -99,4 +97,4 @@ namespace components::document {
         std::string to_json_array() const;
     };
 
-}
+} // namespace components::document

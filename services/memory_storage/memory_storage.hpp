@@ -1,23 +1,26 @@
 #pragma once
 
-#include <memory_resource>
-#include <core/btree/btree.hpp>
-#include <core/excutor.hpp>
-#include <core/spinlock/spinlock.hpp>
+#include <components/cursor/cursor.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <components/result/result.hpp>
+#include <core/btree/btree.hpp>
+#include <core/excutor.hpp>
+#include <core/spinlock/spinlock.hpp>
+#include <memory_resource>
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
+#include <stack>
+
+#include "context_storage.hpp"
 
 namespace components::ql {
     struct create_database_t;
     struct drop_database_t;
     struct create_collection_t;
     struct drop_collection_t;
-}
+} // namespace components::ql
 
 namespace services {
 
@@ -29,30 +32,45 @@ namespace services {
         };
 
         struct load_buffer_t {
-            components::result::result_list_addresses_t collections;
+            components::cursor::list_addresses_t collections;
 
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
 
+        struct collection_pack_t {
+            actor_zeta::address_t collection_actor_address;
+            collection::context_collection_t* context;
+
+            explicit collection_pack_t(actor_zeta::address_t&& address, collection::context_collection_t* context);
+        };
+
+        struct plan_t {
+            std::stack<collection::operators::operator_ptr> sub_plans;
+            components::ql::storage_parameters parameters;
+
+            explicit plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
+                            components::ql::storage_parameters parameters);
+        };
+
         using database_storage_t = std::pmr::set<database_name_t>;
-        using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, actor_zeta::address_t>;
+        using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, collection_pack_t>;
         using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
+        using plan_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, plan_t>;
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
-        enum class unpack_rules : uint64_t {
-            manager_dispatcher = 0,
-            manager_disk = 1
-        };
+        enum class unpack_rules : uint64_t { manager_dispatcher = 0, manager_disk = 1 };
 
-        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
+        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
+                         actor_zeta::scheduler_raw scheduler,
+                         log_t& log);
         ~memory_storage_t();
 
         void sync(const address_pack& pack);
         void execute_plan(components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
                           components::ql::storage_parameters parameters);
-        void load(components::session::session_id_t &session, const disk::result_load_t &result);
+        void load(components::session::session_id_t& session, const disk::result_load_t& result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
@@ -66,6 +84,7 @@ namespace services {
         database_storage_t databases_;
         collection_storage_t collections_;
         session_storage_t sessions_;
+        plan_storage_t plans_;
         std::unique_ptr<load_buffer_t> load_buffer_;
 
         bool is_exists_database_(const database_name_t& name) const;
@@ -73,21 +92,34 @@ namespace services {
         bool check_database_(components::session::session_id_t& session, const database_name_t& name);
         bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
-        void create_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void drop_database_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void create_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
-        void drop_collection_(components::session::session_id_t& session, components::logical_plan::node_ptr logical_plan);
+        void create_database_(components::session::session_id_t& session,
+                              components::logical_plan::node_ptr logical_plan);
+        void drop_database_(components::session::session_id_t& session,
+                            components::logical_plan::node_ptr logical_plan);
+        void create_collection_(components::session::session_id_t& session,
+                                components::logical_plan::node_ptr logical_plan);
+        void drop_collection_(components::session::session_id_t& session,
+                              components::logical_plan::node_ptr logical_plan);
 
         void join_(components::session::session_id_t& session,
                    components::logical_plan::node_ptr logical_plan,
                    components::ql::storage_parameters parameters);
 
         void execute_plan_(components::session::session_id_t& session,
-                          components::logical_plan::node_ptr logical_plan,
-                          components::ql::storage_parameters parameters);
-        void execute_plan_finish_(components::session::session_id_t& session, components::result::result_t result);
+                           components::logical_plan::node_ptr logical_plan,
+                           components::ql::storage_parameters parameters);
 
-        void drop_collection_finish_(components::session::session_id_t& session, components::result::result_drop_collection& result);
+        void traverse_plan_(components::session::session_id_t& session,
+                            collection::operators::operator_ptr&& plan,
+                            components::ql::storage_parameters&& parameters);
+
+        void execute_sub_plan_finish_(components::session::session_id_t& session,
+                                      components::cursor::cursor_t_ptr cursor);
+
+        void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
+
+        void drop_collection_finish_(components::session::session_id_t& session,
+                                     components::cursor::cursor_t_ptr cursor);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 

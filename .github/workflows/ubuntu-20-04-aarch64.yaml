@@ -1,0 +1,50 @@
+name: ubuntu 20.04 arm64
+
+# on: [pull_request]
+
+jobs:
+  build_job:
+    # The host should always be linux
+    runs-on: ubuntu-22.04
+    name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
+
+    strategy:
+      matrix:
+        include:
+          - arch: aarch64
+            distro: ubuntu20.04
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: uraimo/run-on-arch-action@v2
+        name: Build artifact
+        id: build
+        with:
+          arch: ${{ matrix.arch }}
+          distro: ${{ matrix.distro }}
+
+          # Not required, but speeds up builds
+          githubToken: ${{ github.token }}
+
+          run: |
+            apt update && apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  cmake
+            
+            pip install conan==1.60.0 pytest==6.2.5
+            
+            conan user
+            conan profile new default --detect --force
+            conan profile update settings.compiler.libcxx=libstdc++11 default
+            conan config set general.parallel_download=$(nproc)
+            conan config set general.cpu_count=$(nproc)
+            conan remote add duckstax http://conan.duckstax.com --insert 0
+            
+            mkdir build
+            pwd
+            ls
+            cd build
+            cp ../conanfile.txt .
+            conan install . --build missing -s build_type=Release
+            
+            cmake  -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON ..
+            cmake --build .
+            ctest -C -V --output-on-failure

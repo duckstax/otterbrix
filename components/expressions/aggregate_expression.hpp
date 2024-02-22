@@ -1,8 +1,8 @@
 #pragma once
 
-#include <memory_resource>
 #include "expression.hpp"
 #include "key.hpp"
+#include <memory_resource>
 
 namespace components::expressions {
 
@@ -11,15 +11,12 @@ namespace components::expressions {
 
     class aggregate_expression_t : public expression_i {
     public:
-        using param_storage = std::variant<
-            core::parameter_id_t,
-            key_t,
-            expression_ptr>;
+        using param_storage = std::variant<core::parameter_id_t, key_t, expression_ptr>;
 
         aggregate_expression_t(const aggregate_expression_t&) = delete;
         aggregate_expression_t(aggregate_expression_t&&) = default;
 
-        aggregate_expression_t(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key);
+        aggregate_expression_t(std::pmr::memory_resource* resource, aggregate_type type, const key_t& key);
 
         aggregate_type type() const;
         const key_t& key() const;
@@ -37,9 +34,13 @@ namespace components::expressions {
         bool equal_impl(const expression_i* rhs) const final;
     };
 
-    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& key);
-    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type);
-    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource *resource, aggregate_type type, const key_t& name, const key_t& key);
+    aggregate_expression_ptr
+    make_aggregate_expression(std::pmr::memory_resource* resource, aggregate_type type, const key_t& key);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource* resource, aggregate_type type);
+    aggregate_expression_ptr make_aggregate_expression(std::pmr::memory_resource* resource,
+                                                       aggregate_type type,
+                                                       const key_t& name,
+                                                       const key_t& key);
 
     aggregate_type get_aggregate_type(const std::string& key);
     bool is_aggregate_type(const std::string& key);

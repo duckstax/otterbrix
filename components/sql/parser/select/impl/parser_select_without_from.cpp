@@ -9,7 +9,6 @@ namespace components::sql::select::impl {
     components::sql::impl::parser_result parse_select_without_from(std::pmr::memory_resource* resource,
                                                                    std::string_view query,
                                                                    ql::variant_statement_t& statement) {
-
         static const mask_element_t mask_elem_select(token_type::bare_word, "select");
 
         lexer_t lexer(query);

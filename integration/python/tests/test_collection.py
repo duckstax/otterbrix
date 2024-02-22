@@ -2,7 +2,7 @@ import os
 import copy
 import json
 import pytest
-from ottergon import Client,DataBase, Collection
+from otterbrix import Client,DataBase, Collection
 
 client = Client()
 friedrich_database = client["FriedrichDatabase"]

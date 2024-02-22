@@ -17,7 +17,8 @@ namespace document::impl::internal {
         offset_value_t& operator=(const offset_value_t&) = delete;
     };
 
-    class heap_value_t : public ref_counted_t
+    class heap_value_t
+        : public ref_counted_t
         , offset_value_t {
     public:
         static heap_value_t* create(nullptr_t);
@@ -76,4 +77,4 @@ namespace document::impl::internal {
         bool changed_{false};
     };
 
-}
+} // namespace document::impl::internal

@@ -1,12 +1,12 @@
+#include <actor-zeta.hpp>
 #include <catch2/catch.hpp>
 #include <components/expressions/scalar_expression.hpp>
-#include <actor-zeta.hpp>
 
 using namespace components::expressions;
 using key = components::expressions::key_t;
 
 TEST_CASE("expression::scalar::equals") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto expr1 = make_scalar_expression(resource, scalar_type::get_field, key("name"));
     auto expr2 = make_scalar_expression(resource, scalar_type::get_field, key("name"));
     auto expr3 = make_scalar_expression(resource, scalar_type::abs, key("name"));
@@ -41,7 +41,7 @@ TEST_CASE("expression::scalar::equals") {
 }
 
 TEST_CASE("expression::scalar::to_string") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto expr = make_scalar_expression(resource, scalar_type::get_field, key("count"), key("count"));
     REQUIRE(expr->to_string() == R"(count: "$count")");
     expr = make_scalar_expression(resource, scalar_type::floor, key("count"), key("count"));

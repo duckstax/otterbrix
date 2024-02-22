@@ -8,7 +8,6 @@ using namespace document;
 using namespace document::impl;
 
 TEST_CASE("mutable::mutable_array_t") {
-
     SECTION("check type") {
         auto ma = array_t::new_array();
 
@@ -68,11 +67,23 @@ TEST_CASE("mutable::mutable_array_t") {
         ma->set(15, static_cast<int64_t>(9223372036854775807LL));
         ma->set(16, static_cast<int64_t>(-9223372036854775807LL));
 
-        const value_type types[size] = {
-            value_type::null, value_type::boolean, value_type::boolean, value_type::number, value_type::number, value_type::number,
-            value_type::number, value_type::number, value_type::string, value_type::number, value_type::number, value_type::number,
-            value_type::number, value_type::number, value_type::number, value_type::number, value_type::number
-        };
+        const value_type types[size] = {value_type::null,
+                                        value_type::boolean,
+                                        value_type::boolean,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::string,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number,
+                                        value_type::number};
         for (uint32_t i = 0; i < size; ++i) {
             REQUIRE(ma->get(i)->type() == types[i]);
         }
@@ -182,9 +193,7 @@ TEST_CASE("mutable::mutable_array_t") {
     }
 }
 
-
 TEST_CASE("mutable::mutable_dict_t") {
-
     SECTION("check type") {
         auto md = dict_t::new_dict();
         REQUIRE(md->type() == value_type::dict);
@@ -229,10 +238,15 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->count() == 9);
 
         static const std::string keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
-        static const value_type types[9] = {
-            value_type::number, value_type::number, value_type::boolean, value_type::number, value_type::number,
-            value_type::null, value_type::string, value_type::boolean, value_type::number
-        };
+        static const value_type types[9] = {value_type::number,
+                                            value_type::number,
+                                            value_type::boolean,
+                                            value_type::number,
+                                            value_type::number,
+                                            value_type::null,
+                                            value_type::string,
+                                            value_type::boolean,
+                                            value_type::number};
         for (int i = 0; i < 9; ++i) {
             REQUIRE(md->get(keys[i])->type() == types[i]);
         }
@@ -247,7 +261,7 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE(md->get("str")->as_string() == std::string("dog"));
         REQUIRE(md->get("foo") == nullptr);
 
-        bool found[9] = { };
+        bool found[9] = {};
         dict_t::iterator i1(md);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
@@ -294,15 +308,20 @@ TEST_CASE("mutable::mutable_dict_t") {
         md->set("str", std::string("dog"));
 
         static const std::string keys[9] = {"+", "-", "f", "hi", "lo", "null", "str", "t", "z"};
-        static const value_type types[9] = {
-            value_type::number, value_type::number, value_type::boolean, value_type::number, value_type::number,
-            value_type::null, value_type::string, value_type::boolean, value_type::number
-        };
+        static const value_type types[9] = {value_type::number,
+                                            value_type::number,
+                                            value_type::boolean,
+                                            value_type::number,
+                                            value_type::number,
+                                            value_type::null,
+                                            value_type::string,
+                                            value_type::boolean,
+                                            value_type::number};
         for (int i = 0; i < 9; ++i) {
             REQUIRE(d->get(keys[i])->type() == types[i]);
         }
 
-        bool found[9] = { };
+        bool found[9] = {};
         dict_t::iterator i1(d);
         for (int i = 0; i < 9; ++i) {
             REQUIRE(i1);
@@ -350,13 +369,11 @@ TEST_CASE("mutable::mutable_dict_t") {
         REQUIRE_FALSE(copy->get("a") == mc->get("a"));
         REQUIRE_FALSE(copy->get("a")->as_dict()->get("a") == ma);
     }
-
 }
-
 
 TEST_CASE("mutable long string") {
     constexpr uint32_t size = 50;
-    const char *chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const char* chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     auto ma = array_t::new_array(50);
     for (uint32_t i = 0; i < size; ++i) {
         ma->set(i, std::string(chars, i));

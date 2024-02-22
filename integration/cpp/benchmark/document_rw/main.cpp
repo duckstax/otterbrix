@@ -66,7 +66,6 @@ void document_rw(benchmark::State& state) {
 }
 BENCHMARK(document_rw)->Arg(10000);
 
-
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);
     if (::benchmark::ReportUnrecognizedArguments(argc, argv)) {

@@ -14,10 +14,8 @@ namespace components::expressions {
     };
 
     bool operator==(const join_expression_field& f1, const join_expression_field& f2) {
-        return f1.collection == f2.collection &&
-               *f1.expr == *f2.expr;
+        return f1.collection == f2.collection && *f1.expr == *f2.expr;
     }
-
 
     join_expression_t::join_expression_t(std::pmr::memory_resource*,
                                          compare_type compare,
@@ -26,20 +24,13 @@ namespace components::expressions {
         : expression_i(expression_group::join)
         , compare_(compare)
         , left_(std::move(left))
-        , right_(std::move(right)) {
-    }
+        , right_(std::move(right)) {}
 
-    compare_type join_expression_t::compare() const {
-        return compare_;
-    }
+    compare_type join_expression_t::compare() const { return compare_; }
 
-    const join_expression_field& join_expression_t::left() const {
-        return left_;
-    }
+    const join_expression_field& join_expression_t::left() const { return left_; }
 
-    const join_expression_field& join_expression_t::right() const {
-        return right_;
-    }
+    const join_expression_field& join_expression_t::right() const { return right_; }
 
     hash_t join_expression_t::hash_impl() const {
         hash_t hash_{0};
@@ -60,14 +51,14 @@ namespace components::expressions {
     }
 
     bool join_expression_t::equal_impl(const expression_i* rhs) const {
-        auto *other = static_cast<const join_expression_t*>(rhs);
-        return compare_ == other->compare_ &&
-               left_ == left_ &&
-                right_ == right_;
+        auto* other = static_cast<const join_expression_t*>(rhs);
+        return compare_ == other->compare_ && left_ == left_ && right_ == right_;
     }
 
-
-    join_expression_ptr make_join_expression(std::pmr::memory_resource* resource, compare_type compare, join_expression_field left, join_expression_field right) {
+    join_expression_ptr make_join_expression(std::pmr::memory_resource* resource,
+                                             compare_type compare,
+                                             join_expression_field left,
+                                             join_expression_field right) {
         return new join_expression_t(resource, compare, std::move(left), std::move(right));
     }
 

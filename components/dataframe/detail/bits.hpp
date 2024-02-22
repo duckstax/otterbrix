@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstring>
 #include <cstdint>
+#include <cstring>
 
 #include <climits>
 #include <dataframe/types.hpp>
@@ -25,9 +25,7 @@ namespace components::dataframe::detail {
         return ~((bitmask_type{1} << (word_size - n)) - 1);
     }
 
-    constexpr inline size_type word_index(size_type bit_index) {
-        return bit_index / size_in_bits<bitmask_type>();
-    }
+    constexpr inline size_type word_index(size_type bit_index) { return bit_index / size_in_bits<bitmask_type>(); }
 
     constexpr inline size_type intra_word_index(size_type bit_index) {
         return bit_index % size_in_bits<bitmask_type>();

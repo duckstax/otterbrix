@@ -1,12 +1,12 @@
+#include <actor-zeta.hpp>
 #include <catch2/catch.hpp>
 #include <components/expressions/aggregate_expression.hpp>
-#include <actor-zeta.hpp>
 
 using namespace components::expressions;
 using key = components::expressions::key_t;
 
 TEST_CASE("expression::aggregate::equals") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto expr1 = make_aggregate_expression(resource, aggregate_type::sum, key("name"));
     auto expr2 = make_aggregate_expression(resource, aggregate_type::sum, key("name"));
     auto expr3 = make_aggregate_expression(resource, aggregate_type::avg, key("name"));
@@ -41,7 +41,7 @@ TEST_CASE("expression::aggregate::equals") {
 }
 
 TEST_CASE("expression::aggregate::to_string") {
-    auto *resource = actor_zeta::detail::pmr::get_default_resource();
+    auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto expr = make_aggregate_expression(resource, aggregate_type::sum, key("sum"), key("count"));
     REQUIRE(expr->to_string() == R"(sum: {$sum: "$count"})");
 

@@ -13,9 +13,9 @@ add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE
-    rocketjoe::document
-    rocketjoe::disk
-    rocketjoe::test_generaty
+    otterbrix::document
+    otterbrix::disk
+    otterbrix::test_generaty
     CONAN_PKG::rocksdb
     CONAN_PKG::boost
     CONAN_PKG::catch2

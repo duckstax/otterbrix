@@ -10,7 +10,5 @@ namespace core {
         load_finish
     };
 
-    constexpr uint64_t handler_id(route type) {
-        return handler_id(group_id_t::system, type);
-    }
+    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::system, type); }
 } // namespace core

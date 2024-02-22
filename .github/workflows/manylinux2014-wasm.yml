@@ -38,7 +38,7 @@ jobs:
 
       - name: conan installation and configuration
         run: |
-          pip3 install --retries=30 conan==1.59.0
+          pip3 install --retries=30 conan==1.62.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -101,7 +101,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.59.0
+          pip3 install --retries=30 conan==1.62.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -131,10 +131,10 @@ jobs:
           pwd
           ls
           
-          cp integration/python/ottergon/setup.py .
-          cp integration/python/ottergon/MANIFEST.in .
-          cp integration/python/ottergon/pyproject.toml .
-          cp integration/python/ottergon/get_path.py .
+          cp integration/python/otterbrix/setup.py .
+          cp integration/python/otterbrix/MANIFEST.in .
+          cp integration/python/otterbrix/pyproject.toml .
+          cp integration/python/otterbrix/get_path.py .
           
           python3 -m pip install wheel setuptools scikit-build pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
@@ -148,7 +148,7 @@ jobs:
 
       - name: Repair wheel
         run: |
-          for whl in dist/ottergon*.whl; do
+          for whl in dist/otterbrix*.whl; do
             auditwheel repair ${whl} -w ./work/dist/ 
             rm ${whl};
           done
@@ -157,7 +157,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: ottergon-wheel-${{ matrix.PYTHON_VERSION }}
+          name: otterbrix-wheel-${{ matrix.PYTHON_VERSION }}
 
   test-wheel:
     name: Test wheel
@@ -186,18 +186,18 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: ottergon-wheel-${{ matrix.python-version }}
+          name: otterbrix-wheel-${{ matrix.python-version }}
           path: ./app
 
       - name: Install package from wheel
         run: |
           python3 --version
-          pip3 install --retries=30 ./app/ottergon-*.whl
+          pip3 install --retries=30 ./app/otterbrix-*.whl
 
       - name: Test package imports
         run: |
           python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
-          python3 -c "from ottergon import Client, DataBase, Collection"
+          python3 -c "from otterbrix import Client, DataBase, Collection"
 
       - name: Run pytest
         run: |
@@ -231,7 +231,7 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: ottergon-wheel-${{ matrix.python-version }}
+          name: otterbrix-wheel-${{ matrix.python-version }}
           path: ./app
 
       - name: Install twine

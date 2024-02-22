@@ -3,7 +3,7 @@
 void insert_many(benchmark::State& state) {
     state.PauseTiming();
     auto* dispatcher = unique_spaces::get().dispatcher();
-    auto session = duck_charmer::session_id_t();
+    auto session = otterbrix::session_id_t();
     dispatcher->create_database(session, database_name);
     dispatcher->create_collection(session, database_name, collection_name);
     state.ResumeTiming();
@@ -16,7 +16,6 @@ void insert_many(benchmark::State& state) {
     }
 }
 BENCHMARK(insert_many)->Arg(1)->Arg(10)->Arg(20)->Arg(100)->Arg(500)->Arg(1000);
-
 
 int main(int argc, char** argv) {
     ::benchmark::Initialize(&argc, argv);

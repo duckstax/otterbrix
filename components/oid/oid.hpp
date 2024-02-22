@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <cstring>
 #include <ctime>
-#include <cstdint>
 
-#include <string>
 #include <algorithm>
 #include <functional>
+#include <string>
 
 namespace oid {
 
@@ -51,25 +51,21 @@ namespace oid {
         static bool is_valid(std::string_view str);
 
         struct hash_t {
-            std::size_t operator()(const oid_t& oid) const {
-                return std::hash<std::string_view>()(oid.data_);
-            }
+            std::size_t operator()(const oid_t& oid) const { return std::hash<std::string_view>()(oid.data_); }
         };
 
         struct timestamp_generator {
-            static void write(byte_t *data, timestamp_value_t value) {
+            static void write(byte_t* data, timestamp_value_t value) {
                 for (timestamp_value_t i = 0; i < T::size_timestamp; ++i) {
                     data[T::size_timestamp - i - 1] = byte_t(value >> 8 * i);
                 }
             }
 
-            static void write(byte_t *data) {
-                write(data, static_cast<timestamp_value_t>(time(nullptr)));
-            }
+            static void write(byte_t* data) { write(data, static_cast<timestamp_value_t>(time(nullptr))); }
         };
 
         struct random_generator {
-            static void write(byte_t *data) {
+            static void write(byte_t* data) {
                 static random_generator generator;
                 for (random_value_t i = 0; i < T::size_random; ++i) {
                     data[T::size_random - i - 1] = byte_t(generator.value_ >> 8 * i);
@@ -87,7 +83,7 @@ namespace oid {
         };
 
         struct increment_generator {
-            static void write(byte_t *data) {
+            static void write(byte_t* data) {
                 static increment_generator generator;
                 ++generator.value_;
                 for (increment_value_t i = 0; i < T::size_increment; ++i) {
@@ -98,9 +94,7 @@ namespace oid {
         private:
             increment_value_t value_;
 
-            increment_generator() {
-                value_ = increment_value_t(random());
-            }
+            increment_generator() { value_ = increment_value_t(random()); }
         };
 
     private:
@@ -114,7 +108,6 @@ namespace oid {
     inline std::ostream& operator<<(std::ostream& stream, const oid_t<T>& oid) {
         return (stream << oid.to_string());
     }
-
 
     // implementation
 
@@ -245,8 +238,8 @@ namespace oid {
             return false;
         }
         return std::all_of(str.begin(), str.end(), [](char c) {
-                return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
-            });
+            return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+        });
     }
 
     template<class T>

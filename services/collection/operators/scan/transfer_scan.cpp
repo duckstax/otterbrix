@@ -6,8 +6,7 @@ namespace services::collection::operators {
 
     transfer_scan::transfer_scan(context_collection_t* context, components::ql::limit_t limit)
         : read_only_operator_t(context, operator_type::match)
-        , limit_(limit) {
-    }
+        , limit_(limit) {}
 
     void transfer_scan::on_execute_impl(components::pipeline::context_t*) {
         int count = 0;

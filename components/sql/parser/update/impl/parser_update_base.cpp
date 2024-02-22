@@ -7,10 +7,8 @@ using namespace components::sql::impl;
 
 namespace components::sql::update::impl {
 
-    components::sql::impl::parser_result parse_update_base(std::pmr::memory_resource* resource,
-                                                           std::string_view query,
-                                                           ql::variant_statement_t& statement) {
-
+    components::sql::impl::parser_result
+    parse_update_base(std::pmr::memory_resource* resource, std::string_view query, ql::variant_statement_t& statement) {
         static const mask_element_t mask_elem_update(token_type::bare_word, "update");
         static const mask_element_t mask_elem_set(token_type::bare_word, "set");
         static const mask_element_t mask_elem_where(token_type::bare_word, "where");
@@ -51,6 +49,9 @@ namespace components::sql::update::impl {
         }
 
         statement = ql::update_many_t{schema, table};
+        assert(std::holds_alternative<ql::update_many_t>(statement) &&
+               "[components::sql::impl::parser_result parse_update_base]: [ql::update_many_t] variant statement holds "
+               "the alternative");
         auto& upd = std::get<ql::update_many_t>(statement);
 
         auto res = parse_set(resource, lexer, upd.update_);

@@ -3,9 +3,9 @@
 #include "command.hpp"
 #include "disk.hpp"
 
-#include <core/excutor.hpp>
-#include <configuration/configuration.hpp>
 #include <components/log/log.hpp>
+#include <configuration/configuration.hpp>
+#include <core/excutor.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 
 namespace services::disk {

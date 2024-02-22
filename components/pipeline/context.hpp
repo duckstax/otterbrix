@@ -14,8 +14,8 @@ namespace components::pipeline {
         explicit context_t(ql::storage_parameters init_parameters);
         context_t(session::session_id_t session, actor_zeta::address_t address, ql::storage_parameters init_parameters);
 
-        template<typename ...Args>
-        bool send(const actor_zeta::address_t& address, uint64_t signal, Args...args) {
+        template<typename... Args>
+        bool send(const actor_zeta::address_t& address, uint64_t signal, Args... args) {
             if (address_) {
                 actor_zeta::send(address, address_, signal, session, std::forward<Args>(args)...);
                 return true;

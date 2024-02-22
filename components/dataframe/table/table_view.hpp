@@ -103,8 +103,7 @@ namespace components::dataframe::table {
 
     inline bool has_nested_nulls(table_view const& input) {
         return std::any_of(input.begin(), input.end(), [](auto const& col) {
-            return col.has_nulls() ||
-                   std::any_of(col.child_begin(), col.child_end(), [](auto const& child_col) {
+            return col.has_nulls() || std::any_of(col.child_begin(), col.child_end(), [](auto const& child_col) {
                        return has_nested_nulls(table_view{{child_col}});
                    });
         });
@@ -113,22 +112,24 @@ namespace components::dataframe::table {
     std::vector<column::column_view> get_nullable_columns(table_view const& table);
 
     inline bool have_same_types(table_view const& lhs, table_view const& rhs) {
-        return std::equal(
-            lhs.begin(),
-            lhs.end(),
-            rhs.begin(),
-            rhs.end(),
-            [](column::column_view const& lcol, column::column_view const& rcol) { return (lcol.type() == rcol.type()); });
+        return std::equal(lhs.begin(),
+                          lhs.end(),
+                          rhs.begin(),
+                          rhs.end(),
+                          [](column::column_view const& lcol, column::column_view const& rcol) {
+                              return (lcol.type() == rcol.type());
+                          });
     }
 
-    table_view scatter_columns(table_view const& source,std::vector<size_type> const& map,table_view const& target);
+    table_view scatter_columns(table_view const& source, std::vector<size_type> const& map, table_view const& target);
 
     namespace detail {
 
         template<typename TableView>
         bool is_relationally_comparable(TableView const& lhs, TableView const& rhs);
         extern template bool is_relationally_comparable<table_view>(table_view const& lhs, table_view const& rhs);
-        extern template bool is_relationally_comparable<mutable_table_view>(mutable_table_view const& lhs, mutable_table_view const& rhs);
+        extern template bool is_relationally_comparable<mutable_table_view>(mutable_table_view const& lhs,
+                                                                            mutable_table_view const& rhs);
 
     } // namespace detail
 } // namespace components::dataframe::table

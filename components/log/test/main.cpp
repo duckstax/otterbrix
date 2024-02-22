@@ -1,9 +1,8 @@
-#include <core/rocketjoe/log/log.hpp>
+#include <core/otterbrix/log/log.hpp>
 
 int main() {
-    rocketjoe::initialization_logger();
-    auto l = rocketjoe::get_logger();
+    otterbrix::initialization_logger();
+    auto l = otterbrix::get_logger();
     l.info("test log");
     return 0;
-
 }

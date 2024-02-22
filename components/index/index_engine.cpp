@@ -18,9 +18,7 @@ namespace components::index {
         /// index->find(id,set);
     }
 
-    void drop_index(const index_engine_ptr& ptr, index_t::pointer index) {
-        ptr->drop_index(index);
-    }
+    void drop_index(const index_engine_ptr& ptr, index_t::pointer index) { ptr->drop_index(index); }
 
     void insert(const index_engine_ptr& ptr, id_index id, std::pmr::vector<document_ptr>& docs) {
         auto* index = search_index(ptr, id);
@@ -39,7 +37,9 @@ namespace components::index {
         }
     }
 
-    void insert(const index_engine_ptr& ptr, id_index id, core::pmr::btree::btree_t<document::document_id_t, document_ptr>& docs) {
+    void insert(const index_engine_ptr& ptr,
+                id_index id,
+                core::pmr::btree::btree_t<document::document_id_t, document_ptr>& docs) {
         auto* index = search_index(ptr, id);
         for (auto& doc : docs) {
             auto range = index->keys();
@@ -73,9 +73,7 @@ namespace components::index {
         }
     }
 
-    auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer {
-        return ptr->matching(id);
-    }
+    auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer { return ptr->matching(id); }
 
     auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t::pointer {
         return ptr->matching(query);
@@ -124,8 +122,7 @@ namespace components::index {
         , index_to_mapper_(resource)
         , index_to_address_(resource)
         , index_to_name_(resource)
-        , storage_(resource) {
-    }
+        , storage_(resource) {}
 
     auto index_engine_t::add_index(const keys_base_storage_t& keys, index_ptr index) -> uint32_t {
         auto end = storage_.cend();
@@ -142,9 +139,7 @@ namespace components::index {
     }
 
     auto index_engine_t::drop_index(index_t::pointer index) -> void {
-        auto equal = [&index](const index_ptr& ptr) {
-            return index == ptr.get();
-        };
+        auto equal = [&index](const index_ptr& ptr) { return index == ptr.get(); };
         if (index->is_disk()) {
             index_to_address_.erase(index->disk_agent());
         }
@@ -154,17 +149,11 @@ namespace components::index {
         storage_.erase(std::remove_if(storage_.begin(), storage_.end(), equal), storage_.end());
     }
 
-    actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept {
-        return resource_;
-    }
+    actor_zeta::detail::pmr::memory_resource* index_engine_t::resource() noexcept { return resource_; }
 
-    auto index_engine_t::matching(id_index id) -> index_t::pointer {
-        return index_to_mapper_.find(id)->second;
-    }
+    auto index_engine_t::matching(id_index id) -> index_t::pointer { return index_to_mapper_.find(id)->second; }
 
-    auto index_engine_t::size() const -> std::size_t {
-        return mapper_.size();
-    }
+    auto index_engine_t::size() const -> std::size_t { return mapper_.size(); }
 
     auto index_engine_t::matching(const keys_base_storage_t& query) -> index_t::pointer {
         auto it = mapper_.find(query);
@@ -196,8 +185,10 @@ namespace components::index {
                 auto key = get_value_by_index(index, document);
                 index->insert(key, document);
                 if (index->is_disk() && pipeline_context) {
-                    pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::insert),
-                                           key, document::get_document_id(document));
+                    pipeline_context->send(index->disk_agent(),
+                                           services::index::handler_id(services::index::route::insert),
+                                           key,
+                                           document::get_document_id(document));
                 }
             }
         }
@@ -209,8 +200,10 @@ namespace components::index {
                 auto key = get_value_by_index(index, document);
                 index->remove(key); //todo: bug
                 if (index->is_disk() && pipeline_context) {
-                    pipeline_context->send(index->disk_agent(), services::index::handler_id(services::index::route::remove),
-                                           key, document::get_document_id(document));
+                    pipeline_context->send(index->disk_agent(),
+                                           services::index::handler_id(services::index::route::remove),
+                                           key,
+                                           document::get_document_id(document));
                 }
             }
         }
@@ -236,11 +229,11 @@ namespace components::index {
     void sync_index_from_disk(const index_engine_ptr& ptr,
                               const actor_zeta::address_t& index_address,
                               const std::pmr::vector<document::document_id_t>& ids,
-                              const core::pmr::btree::btree_t<document::document_id_t, document_ptr> &storage) {
+                              const core::pmr::btree::btree_t<document::document_id_t, document_ptr>& storage) {
         auto* index = search_index(ptr, index_address);
         if (index) {
             index->clean_memory_to_new_elements(ids.size());
-            for (const auto &id : ids) {
+            for (const auto& id : ids) {
                 index->insert(storage.find(id)->second);
             }
         }

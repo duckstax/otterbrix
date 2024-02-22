@@ -11,12 +11,12 @@
 
 #include <log/log.hpp>
 
-#include "wrapper_collection.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
+#include "wrapper_collection.hpp"
 
 namespace py = pybind11;
 
-namespace duck_charmer {
+namespace otterbrix {
 
     class PYBIND11_EXPORT wrapper_database final : public boost::intrusive_ref_counter<wrapper_database> {
     public:
@@ -30,8 +30,8 @@ namespace duck_charmer {
         const std::string name_;
         wrapper_dispatcher_t* ptr_;
         log_t log_;
-        std::unordered_map<std::string,wrapper_collection_ptr> collections_;
+        std::unordered_map<std::string, wrapper_collection_ptr> collections_;
     };
 
     using wrapper_database_ptr = boost::intrusive_ptr<wrapper_database>;
-}
+} // namespace otterbrix

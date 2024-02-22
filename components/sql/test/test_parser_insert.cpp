@@ -1,11 +1,10 @@
 #include <catch2/catch.hpp>
-#include <components/sql/parser.hpp>
 #include <components/document/document_view.hpp>
+#include <components/sql/parser.hpp>
 
 using namespace components;
 
 TEST_CASE("parser::insert_into") {
-
     auto* resource = std::pmr::get_default_resource();
 
     SECTION("insert into with schema") {
@@ -45,12 +44,14 @@ TEST_CASE("parser::insert_into") {
     }
 
     SECTION("insert into multi-documents") {
-        auto ql = sql::parse(resource, "INSERT INTO table (id, name, count) VALUES "
+        auto ql = sql::parse(resource,
+                             "INSERT INTO table (id, name, count) VALUES "
                              "(1, 'Name1', 1), "
                              "(2, 'Name2', 2), "
                              "(3, 'Name3', 3), "
                              "(4, 'Name4', 4), "
-                             "(5, 'Name5', 5);").ql;
+                             "(5, 'Name5', 5);")
+                      .ql;
         REQUIRE(std::holds_alternative<ql::insert_many_t>(ql));
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
@@ -200,5 +201,4 @@ TEST_CASE("parser::insert_into") {
         REQUIRE(res.error.mistake() == ";");
         REQUIRE(res.error.mistake().data() == query + 128);
     }
-
 }

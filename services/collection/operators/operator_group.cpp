@@ -10,11 +10,11 @@ namespace services::collection::operators {
         , values_(context->resource())
         , input_documents_(context->resource()) {}
 
-    void operator_group_t::add_key(const std::string &name, get::operator_get_ptr &&getter) {
+    void operator_group_t::add_key(const std::string& name, get::operator_get_ptr&& getter) {
         keys_.push_back({name, std::move(getter)});
     }
 
-    void operator_group_t::add_value(const std::string &name, aggregate::operator_aggregate_ptr &&aggregator) {
+    void operator_group_t::add_value(const std::string& name, aggregate::operator_aggregate_ptr&& aggregator) {
         values_.push_back({name, std::move(aggregator)});
     }
 
@@ -59,12 +59,13 @@ namespace services::collection::operators {
     }
 
     void operator_group_t::calc_aggregate_values(components::pipeline::context_t* pipeline_context) {
-        for (const auto &value : values_) {
-            auto &aggregator = value.aggregator;
+        for (const auto& value : values_) {
+            auto& aggregator = value.aggregator;
             for (std::size_t i = 0; i < output_->documents().size(); ++i) {
-                auto &document = output_->documents().at(i);
+                auto& document = output_->documents().at(i);
                 aggregator->clear(); //todo: need copy aggregator
-                aggregator->set_children(std::make_unique<operator_empty_t>(context_, input_documents_.at(i)->copy()));
+                aggregator->set_children(
+                    boost::intrusive_ptr(new operator_empty_t(context_, input_documents_.at(i)->copy())));
                 aggregator->on_execute(pipeline_context);
                 document->set(value.name, *aggregator->value());
             }

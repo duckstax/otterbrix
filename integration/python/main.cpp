@@ -6,7 +6,6 @@
 #include "wrapper_database.hpp"
 #include "wrapper_document.hpp"
 #include "wrapper_document_id.hpp"
-#include "wrapper_result.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
@@ -19,17 +18,17 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-using namespace duck_charmer;
+using namespace otterbrix;
 
-PYBIND11_MODULE(ottergon, m) {
+PYBIND11_MODULE(otterbrix, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(
-            py::init([]() {
+        .def(py::init([]() {
             auto* spaces = spaces::get_instance();
             auto dispatcher = spaces->dispatcher();
             dispatcher->load();
             auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log, dispatcher); }))
+            return new wrapper_client(log, dispatcher);
+        }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)
         .def("execute", &wrapper_client::execute, py::arg("query"));
@@ -69,8 +68,16 @@ PYBIND11_MODULE(ottergon, m) {
         .def("insert", &wrapper_collection::insert, py::arg("documents"))
         .def("insert_one", &wrapper_collection::insert_one, py::arg("document"))
         .def("insert_many", &wrapper_collection::insert_many, py::arg("documents"))
-        .def("update_one", &wrapper_collection::update_one, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
-        .def("update_many", &wrapper_collection::update_many, py::arg("filter"), py::arg("update"), py::arg("upsert") = false)
+        .def("update_one",
+             &wrapper_collection::update_one,
+             py::arg("filter"),
+             py::arg("update"),
+             py::arg("upsert") = false)
+        .def("update_many",
+             &wrapper_collection::update_many,
+             py::arg("filter"),
+             py::arg("update"),
+             py::arg("upsert") = false)
         .def("find", &wrapper_collection::find, py::arg("filter") = py::dict())
         .def("find_one", &wrapper_collection::find_one, py::arg("filter") = py::dict())
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
@@ -81,15 +88,9 @@ PYBIND11_MODULE(ottergon, m) {
         ;
 
     py::class_<wrapper_document_id, boost::intrusive_ptr<wrapper_document_id>>(m, "ObjectId")
-        .def(py::init([]() {
-            return wrapper_document_id();
-        }))
-        .def(py::init([](const py::str& s) {
-            return wrapper_document_id(s);
-        }))
-        .def(py::init([](const py::int_& time) {
-            return wrapper_document_id(time);
-        }))
+        .def(py::init([]() { return wrapper_document_id(); }))
+        .def(py::init([](const py::str& s) { return wrapper_document_id(s); }))
+        .def(py::init([](const py::int_& time) { return wrapper_document_id(time); }))
         .def("__repr__", &wrapper_document_id::to_string)
         .def("getTimestamp", &wrapper_document_id::get_timestamp)
         .def("toString", &wrapper_document_id::to_string)
@@ -112,27 +113,12 @@ PYBIND11_MODULE(ottergon, m) {
         .def("close", &wrapper_cursor::close)
         .def("hasNext", &wrapper_cursor::has_next)
         .def("next", &wrapper_cursor::next)
+        .def("is_success", &wrapper_cursor::is_success)
+        .def("is_error", &wrapper_cursor::is_error)
+        .def("get_error", &wrapper_cursor::get_error)
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
         .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none());
 
-    py::class_<wrapper_result_delete, boost::intrusive_ptr<wrapper_result_delete>>(m, "DeleteResult")
-        .def_property_readonly("raw_result", &wrapper_result_delete::raw_result)
-        .def_property_readonly("deleted_count", &wrapper_result_delete::deleted_count);
-
-    py::class_<wrapper_result_update, boost::intrusive_ptr<wrapper_result_update>>(m, "UpdateResult")
-        .def_property_readonly("raw_result", &wrapper_result_update::raw_result)
-        .def_property_readonly("matched_count", &wrapper_result_update::matched_count)
-        .def_property_readonly("modified_count", &wrapper_result_update::modified_count)
-        .def_property_readonly("upserted_id", &wrapper_result_update::upserted_id);
-
-    py::class_<wrapper_result, boost::intrusive_ptr<wrapper_result>>(m, "Result")
-        .def_property_readonly("inserted_count", &wrapper_result::inserted_count)
-        .def_property_readonly("modified_count", &wrapper_result::modified_count)
-        .def_property_readonly("deleted_count", &wrapper_result::deleted_count)
-        .def_property_readonly("cursor", &wrapper_result::cursor)
-        ;
-
     m.def("to_aggregate", &test_to_statement);
-
 }

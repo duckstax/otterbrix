@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-#include <components/sql/lexer/token.hpp>
 #include "parse_error.hpp"
+#include <components/sql/lexer/token.hpp>
+#include <string>
 
 namespace components::sql::impl {
 
