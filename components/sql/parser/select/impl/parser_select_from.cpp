@@ -9,15 +9,28 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2dbe892... Working join operator
     components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
         static const mask_element_t mask_elem_join(token_type::bare_word, "join");
-
+        
         static const mask_group_element_t mask_inner_join({"inner", "join"});
         static const mask_group_element_t mask_full_outer_join({"full", "outer", "join"});
         static const mask_group_element_t mask_left_outer_join({"left", "outer", "join"});
         static const mask_group_element_t mask_right_outer_join({"right", "outer", "join"});
         static const mask_group_element_t mask_cross_join({"cross", "join"});
 
+<<<<<<< HEAD
+        static const mask_group_element_t mask_inner_join({"inner", "join"});
+        static const mask_group_element_t mask_full_outer_join({"full", "outer", "join"});
+        static const mask_group_element_t mask_left_outer_join({"left", "outer", "join"});
+        static const mask_group_element_t mask_right_outer_join({"right", "outer", "join"});
+        static const mask_group_element_t mask_cross_join({"cross", "join"});
+
+=======
+>>>>>>> 2dbe892... Working join operator
         lexer.save();
         auto token = lexer.current_significant_token();
         if (mask_elem_join == token) {
@@ -74,7 +87,6 @@ namespace components::sql::select::impl {
         } else if (status_order == mask_group_element_t::status::error) {
             return parser_result{parse_error::syntax_error, token, "not valid select query"};
         }
-
         lexer.restore();
         return true;
     }
