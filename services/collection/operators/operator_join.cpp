@@ -55,6 +55,7 @@ namespace services::collection::operators {
             trace(context_->log(), "operator_join::result_size(): {}", output_->documents().size());
         }
     }
+
     void operator_join_t::inner_join_() {
         for (const auto doc_left : left_->output()->documents()) {
             document_view_t left_view(doc_left);

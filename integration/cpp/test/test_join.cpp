@@ -119,6 +119,7 @@ TEST_CASE("integration::cpp::test_join") {
             REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(100));
         }
     }
+
     INFO("right outer join") {
         auto session = otterbrix::session_id_t();
         {
@@ -202,6 +203,7 @@ TEST_CASE("integration::cpp::test_join") {
             }
         }
     }
+
     INFO("cross join") {
         auto session = otterbrix::session_id_t();
         {
@@ -214,6 +216,7 @@ TEST_CASE("integration::cpp::test_join") {
             REQUIRE(cur->size() == 10100);
         }
     }
+
     INFO("two join predicates") {
         auto session = otterbrix::session_id_t();
         {
@@ -228,6 +231,7 @@ TEST_CASE("integration::cpp::test_join") {
             REQUIRE(cur->size() == 1);
         }
     }
+
     INFO("self join ") {
         auto session = otterbrix::session_id_t();
         {
@@ -235,5 +239,5 @@ TEST_CASE("integration::cpp::test_join") {
             query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name
                   << "." << collection_name_1 << " ON " << database_name << "." << collection_name_1 << ".key_1"
                   << " = " << database_name << "." << collection_name_1 + ".key_2;";
+        }
     }
-}
