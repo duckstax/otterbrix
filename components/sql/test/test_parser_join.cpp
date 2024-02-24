@@ -3,7 +3,7 @@
 
 using namespace components;
 
-#define TEST_JOIN(QUERY, RESULT, PARAMS)                                                                        \
+#define TEST_JOIN(QUERY, RESULT, PARAMS)                                                                               \
     SECTION(QUERY) {                                                                                                   \
         auto res = sql::parse(resource, QUERY);                                                                        \
         auto ql = res.ql;                                                                                              \
@@ -26,28 +26,28 @@ TEST_CASE("parser::join") {
 
     INFO("join types") {
         TEST_JOIN(R"_(select * from col1 join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
+                  R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
 
         TEST_JOIN(R"_(select * from col1 inner join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
+                  R"_($join: {$type: inner, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
 
         TEST_JOIN(R"_(select * from col1 full outer join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: full, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
-                        
+                  R"_($join: {$type: full, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
+
         TEST_JOIN(R"_(select * from col1 left outer join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: left, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
+                  R"_($join: {$type: left, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
 
         TEST_JOIN(R"_(select * from col1 right outer join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: right, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
+                  R"_($join: {$type: right, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
 
         TEST_JOIN(R"_(select * from col1 cross join col2 on col1.id = col2.id_col1;)_",
-                        R"_($join: {$type: cross, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
-                        vec());
+                  R"_($join: {$type: cross, $aggregate: {}, $aggregate: {}, $eq: [.col1.id, .col2.id_col1]})_",
+                  vec());
     }
 
     INFO("join specifics") {

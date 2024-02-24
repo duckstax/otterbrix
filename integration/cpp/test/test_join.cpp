@@ -30,7 +30,8 @@ TEST_CASE("integration::cpp::test_join") {
         }
         {
             std::stringstream query;
-            query << "INSERT INTO " << database_name << "." << collection_name_1 << " (_id, name, key_1, key_2) VALUES ";
+            query << "INSERT INTO " << database_name << "." << collection_name_1
+                  << " (_id, name, key_1, key_2) VALUES ";
             for (int num = 0, reversed = 100; num < 101; ++num, --reversed) {
                 query << "('" << gen_id(num + 1) << "', "
                       << "'Name " << num << "', " << num << ", " << reversed << ")" << (reversed == 0 ? ";" : ", ");
@@ -43,7 +44,8 @@ TEST_CASE("integration::cpp::test_join") {
             std::stringstream query;
             query << "INSERT INTO " << database_name << "." << collection_name_2 << " (_id, value, key) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1001) << "', " << (num + 25) * 2 * 10 << ", " << (num + 25) * 2 << ")" << (num == 99 ? ";" : ", ");
+                query << "('" << gen_id(num + 1001) << "', " << (num + 25) * 2 * 10 << ", " << (num + 25) * 2 << ")"
+                      << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
@@ -55,9 +57,10 @@ TEST_CASE("integration::cpp::test_join") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key" << " ORDER BY key_1 ASC;";
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name
+                  << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
+                  << " = " << database_name << "." << collection_name_2 + ".key"
+                  << " ORDER BY key_1 ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 26);
@@ -77,9 +80,11 @@ TEST_CASE("integration::cpp::test_join") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " LEFT OUTER JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key" << " ORDER BY key_1 ASC;";
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " LEFT OUTER JOIN "
+                  << database_name << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1
+                  << ".key_1"
+                  << " = " << database_name << "." << collection_name_2 + ".key"
+                  << " ORDER BY key_1 ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 101);
@@ -114,14 +119,16 @@ TEST_CASE("integration::cpp::test_join") {
             REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(100));
         }
     }
-    
+
     INFO("right outer join") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " RIGHT OUTER JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key" << " ORDER BY key_1 ASC;";
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " RIGHT OUTER JOIN "
+                  << database_name << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1
+                  << ".key_1"
+                  << " = " << database_name << "." << collection_name_2 + ".key"
+                  << " ORDER BY key_1 ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
@@ -144,18 +151,20 @@ TEST_CASE("integration::cpp::test_join") {
             }
         }
     }
-    
+
     INFO("full outer join") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " FULL OUTER JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key" << " ORDER BY key_1 ASC;";
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " FULL OUTER JOIN "
+                  << database_name << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1
+                  << ".key_1"
+                  << " = " << database_name << "." << collection_name_2 + ".key"
+                  << " ORDER BY key_1 ASC;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 175);
-            
+
             for (int num = 0; num < 50; ++num) {
                 REQUIRE(cur->has_next());
                 cur->next();
@@ -194,41 +203,41 @@ TEST_CASE("integration::cpp::test_join") {
             }
         }
     }
-    
+
     INFO("cross join") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " CROSS JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " CROSS JOIN " << database_name
+                  << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
                   << " = " << database_name << "." << collection_name_2 + ".key;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 10100);
         }
     }
-    
+
     INFO("two join predicates") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name << "."
-                  << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
-                  << " = " << database_name << "." << collection_name_2 + ".key AND "
-                  << database_name << "." << collection_name_1 << ".key_2"
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name
+                  << "." << collection_name_2 << " ON " << database_name << "." << collection_name_1 << ".key_1"
+                  << " = " << database_name << "." << collection_name_2 + ".key AND " << database_name << "."
+                  << collection_name_1 << ".key_2"
                   << " = " << database_name << "." << collection_name_2 + ".key;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 1);
         }
     }
-    
+
     INFO("self join ") {
         auto session = otterbrix::session_id_t();
         {
             std::stringstream query;
-            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name << "."
-                  << collection_name_1 << " ON " << database_name << "." << collection_name_1 << ".key_1"
+            query << "SELECT * FROM " << database_name + "." << collection_name_1 << " INNER JOIN " << database_name
+                  << "." << collection_name_1 << " ON " << database_name << "." << collection_name_1 << ".key_1"
                   << " = " << database_name << "." << collection_name_1 + ".key_2;";
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());

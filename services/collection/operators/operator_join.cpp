@@ -15,7 +15,7 @@ namespace services::collection::operators {
     bool operator_join_t::check_expressions_(document_view_t left, document_view_t right) {
         for (const auto& expr : expressions_) {
             if (!left.get(expr->left().expr->key().as_string())
-                ->is_equal(right.get(expr->right().expr->key().as_string()))) {
+                     ->is_equal(right.get(expr->right().expr->key().as_string()))) {
                 return false;
             }
         }
@@ -32,31 +32,30 @@ namespace services::collection::operators {
             trace(context_->log(), "operator_join::left_size(): {}", left_->output()->documents().size());
             trace(context_->log(), "operator_join::right_size(): {}", right_->output()->documents().size());
 
-            switch (join_type_)
-            {
-            case type::inner :
-                inner_join_();
-                break;
-            case type::full :
-                outer_full_join_();
-                break;
-            case type::left :
-                outer_left_join_();
-                break;
-            case type::right :
-                outer_right_join_();
-                break;
-            case type::cross :
-                cross_join_();
-                break;
-            default:
-                break;
+            switch (join_type_) {
+                case type::inner:
+                    inner_join_();
+                    break;
+                case type::full:
+                    outer_full_join_();
+                    break;
+                case type::left:
+                    outer_left_join_();
+                    break;
+                case type::right:
+                    outer_right_join_();
+                    break;
+                case type::cross:
+                    cross_join_();
+                    break;
+                default:
+                    break;
             }
 
             trace(context_->log(), "operator_join::result_size(): {}", output_->documents().size());
         }
     }
-    
+
     void operator_join_t::inner_join_() {
         for (const auto doc_left : left_->output()->documents()) {
             document_view_t left_view(doc_left);
@@ -67,15 +66,13 @@ namespace services::collection::operators {
                     {
                         auto fields = left_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     {
                         auto fields = right_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     output_->append(std::move(combined_doc));
@@ -85,7 +82,7 @@ namespace services::collection::operators {
     }
 
     void operator_join_t::outer_full_join_() {
-        std::vector<bool> visited_right(right_->output()->documents().size() ,false);
+        std::vector<bool> visited_right(right_->output()->documents().size(), false);
         for (const auto doc_left : left_->output()->documents()) {
             document_view_t left_view(doc_left);
             bool visited_left = false;
@@ -100,15 +97,13 @@ namespace services::collection::operators {
                     {
                         auto fields = left_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     {
                         auto fields = right_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     output_->append(std::move(combined_doc));
@@ -120,23 +115,21 @@ namespace services::collection::operators {
                 {
                     auto fields = left_view.as_dict();
                     for (auto it_field = fields->begin(); it_field; ++it_field) {
-                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                            it_field.value());
+                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                     }
                 }
                 output_->append(std::move(combined_doc));
             }
         }
-        for(size_t i = 0; i < visited_right.size(); ++i) {
+        for (size_t i = 0; i < visited_right.size(); ++i) {
             if (visited_right[i]) {
                 continue;
             }
-            
+
             auto combined_doc = components::document::make_document();
             auto fields = document_view_t(right_->output()->documents().at(i)).as_dict();
             for (auto it_field = fields->begin(); it_field; ++it_field) {
-                combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                    it_field.value());
+                combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
             }
             output_->append(std::move(combined_doc));
         }
@@ -155,15 +148,13 @@ namespace services::collection::operators {
                     {
                         auto fields = left_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     {
                         auto fields = right_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     output_->append(std::move(combined_doc));
@@ -174,8 +165,7 @@ namespace services::collection::operators {
                 {
                     auto fields = left_view.as_dict();
                     for (auto it_field = fields->begin(); it_field; ++it_field) {
-                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                            it_field.value());
+                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                     }
                 }
                 output_->append(std::move(combined_doc));
@@ -196,15 +186,13 @@ namespace services::collection::operators {
                     {
                         auto fields = right_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     {
                         auto fields = left_view.as_dict();
                         for (auto it_field = fields->begin(); it_field; ++it_field) {
-                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                                it_field.value());
+                            combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                         }
                     }
                     output_->append(std::move(combined_doc));
@@ -215,8 +203,7 @@ namespace services::collection::operators {
                 {
                     auto fields = right_view.as_dict();
                     for (auto it_field = fields->begin(); it_field; ++it_field) {
-                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                            it_field.value());
+                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                     }
                 }
                 output_->append(std::move(combined_doc));
@@ -233,15 +220,13 @@ namespace services::collection::operators {
                 {
                     auto fields = left_view.as_dict();
                     for (auto it_field = fields->begin(); it_field; ++it_field) {
-                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                            it_field.value());
+                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                     }
                 }
                 {
                     auto fields = right_view.as_dict();
                     for (auto it_field = fields->begin(); it_field; ++it_field) {
-                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()),
-                                            it_field.value());
+                        combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
                     }
                 }
                 output_->append(std::move(combined_doc));
