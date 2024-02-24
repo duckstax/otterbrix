@@ -9,31 +9,74 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-#define PARSE_JOIN_TYPE(TYPE)                                                                                          \
-    {                                                                                                                  \
-        if (mask_element_t(token_type::bare_word, #TYPE) == token) {                                                   \
-            token = lexer.next_not_whitespace_token();                                                                 \
-            if (mask_elem_join == token) {                                                                             \
-                join = ql::make_join(ql::join_type::TYPE);                                                             \
-            } else {                                                                                                   \
-                return parser_result{parse_error::syntax_error, token, "not valid select query"};                      \
-            }                                                                                                          \
-        }                                                                                                              \
-    }
 
     components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
         static const mask_element_t mask_elem_join(token_type::bare_word, "join");
+        
+        static const mask_group_element_t mask_inner_join({"inner", "join"});
+        static const mask_group_element_t mask_full_outer_join({"full", "outer", "join"});
+        static const mask_group_element_t mask_left_outer_join({"left", "outer", "join"});
+        static const mask_group_element_t mask_right_outer_join({"right", "outer", "join"});
+        static const mask_group_element_t mask_cross_join({"cross", "join"});
 
+        lexer.save();
         auto token = lexer.current_significant_token();
-
-        PARSE_JOIN_TYPE(inner);
-        PARSE_JOIN_TYPE(left);
-        PARSE_JOIN_TYPE(right);
-        PARSE_JOIN_TYPE(full);
-
         if (mask_elem_join == token) {
             join = ql::make_join(ql::join_type::inner);
+            return true;
         }
+        lexer.restore();
+
+        lexer.save();
+        auto status_order = mask_inner_join.check(lexer);
+        if (status_order == mask_group_element_t::status::yes) {
+            join = ql::make_join(ql::join_type::inner);
+            return true;
+        } else if (status_order == mask_group_element_t::status::error) {
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};
+        }
+        lexer.restore();
+
+        lexer.save();
+        status_order = mask_full_outer_join.check(lexer);
+        if (status_order == mask_group_element_t::status::yes) {
+            join = ql::make_join(ql::join_type::full);
+            return true;
+        } else if (status_order == mask_group_element_t::status::error) {
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};
+        }
+        lexer.restore();
+
+        lexer.save();
+        status_order = mask_left_outer_join.check(lexer);
+        if (status_order == mask_group_element_t::status::yes) {
+            join = ql::make_join(ql::join_type::left);
+            return true;
+        } else if (status_order == mask_group_element_t::status::error) {
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};
+        }
+        lexer.restore();
+
+        lexer.save();
+        status_order = mask_right_outer_join.check(lexer);
+        if (status_order == mask_group_element_t::status::yes) {
+            join = ql::make_join(ql::join_type::right);
+            return true;
+        } else if (status_order == mask_group_element_t::status::error) {
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};
+        }
+        lexer.restore();
+
+        lexer.save();
+        status_order = mask_cross_join.check(lexer);
+        if (status_order == mask_group_element_t::status::yes) {
+            join = ql::make_join(ql::join_type::cross);
+            return true;
+        } else if (status_order == mask_group_element_t::status::error) {
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};
+        }
+            
+        lexer.restore();
         return true;
     }
 

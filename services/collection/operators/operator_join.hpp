@@ -11,11 +11,19 @@ namespace services::collection::operators {
     public:
         using type = components::ql::join_type;
 
-        explicit operator_join_t(context_collection_t* context, const components::expressions::join_expression_t* expr);
+        explicit operator_join_t(context_collection_t* context, type join_type, std::pmr::vector<components::expressions::join_expression_ptr>&& expressions);
 
     private:
-        const components::expressions::join_expression_t* expr_;
+        type join_type_;
+        std::pmr::vector<components::expressions::join_expression_ptr> expressions_;
+
+        bool check_expressions_(components::document::document_view_t left, components::document::document_view_t right);
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
+        void inner_join_();
+        void outer_full_join_();
+        void outer_left_join_();
+        void outer_right_join_();
+        void cross_join_();
     };
 
 } // namespace services::collection::operators
