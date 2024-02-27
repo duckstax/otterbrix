@@ -74,7 +74,6 @@ namespace components::sql::select::impl {
         } else if (status_order == mask_group_element_t::status::error) {
             return parser_result{parse_error::syntax_error, token, "not valid select query"};
         }
-
         lexer.restore();
         return true;
     }
