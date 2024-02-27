@@ -30,6 +30,8 @@ namespace components::document {
 
         bool update(const ptr& update);
 
+        [[nodiscard]] static ptr combine_documents(const ptr& left, const ptr& right);
+
     private:
         document_value_t value_;
 
