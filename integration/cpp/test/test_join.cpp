@@ -241,3 +241,4 @@ TEST_CASE("integration::cpp::test_join") {
                   << " = " << database_name << "." << collection_name_1 + ".key_2;";
         }
     }
+}
