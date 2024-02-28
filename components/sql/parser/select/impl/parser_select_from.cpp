@@ -9,6 +9,19 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
+#define PARSE_JOIN_MASK(MASK, TYPE)                                                                                     \
+    {                                                                                                                   \
+        lexer.save();                                                                                                   \
+        auto status_order = MASK.check(lexer);                                                                          \
+        if (status_order == mask_group_element_t::status::yes) {                                                        \
+            join = ql::make_join(ql::join_type::TYPE);                                                                  \
+            return true;                                                                                                \
+        } else if (status_order == mask_group_element_t::status::error) {                                               \
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};                           \
+        }                                                                                                               \
+        lexer.restore();                                                                                                \
+    }
+
     components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
         static const mask_element_t mask_elem_join(token_type::bare_word, "join");
 
@@ -26,55 +39,12 @@ namespace components::sql::select::impl {
         }
         lexer.restore();
 
-        lexer.save();
-        auto status_order = mask_inner_join.check(lexer);
-        if (status_order == mask_group_element_t::status::yes) {
-            join = ql::make_join(ql::join_type::inner);
-            return true;
-        } else if (status_order == mask_group_element_t::status::error) {
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};
-        }
-        lexer.restore();
-
-        lexer.save();
-        status_order = mask_full_outer_join.check(lexer);
-        if (status_order == mask_group_element_t::status::yes) {
-            join = ql::make_join(ql::join_type::full);
-            return true;
-        } else if (status_order == mask_group_element_t::status::error) {
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};
-        }
-        lexer.restore();
-
-        lexer.save();
-        status_order = mask_left_outer_join.check(lexer);
-        if (status_order == mask_group_element_t::status::yes) {
-            join = ql::make_join(ql::join_type::left);
-            return true;
-        } else if (status_order == mask_group_element_t::status::error) {
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};
-        }
-        lexer.restore();
-
-        lexer.save();
-        status_order = mask_right_outer_join.check(lexer);
-        if (status_order == mask_group_element_t::status::yes) {
-            join = ql::make_join(ql::join_type::right);
-            return true;
-        } else if (status_order == mask_group_element_t::status::error) {
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};
-        }
-        lexer.restore();
-
-        lexer.save();
-        status_order = mask_cross_join.check(lexer);
-        if (status_order == mask_group_element_t::status::yes) {
-            join = ql::make_join(ql::join_type::cross);
-            return true;
-        } else if (status_order == mask_group_element_t::status::error) {
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};
-        }
-        lexer.restore();
+        PARSE_JOIN_MASK(mask_inner_join, inner);
+        PARSE_JOIN_MASK(mask_full_outer_join, full);
+        PARSE_JOIN_MASK(mask_left_outer_join, left);
+        PARSE_JOIN_MASK(mask_right_outer_join, right);
+        PARSE_JOIN_MASK(mask_cross_join, cross);
+        
         return true;
     }
 

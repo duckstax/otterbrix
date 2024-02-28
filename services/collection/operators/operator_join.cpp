@@ -63,7 +63,7 @@ namespace services::collection::operators {
                 document_view_t right_view(doc_right);
                 if (check_expressions_(document_view_t(doc_left), document_view_t(doc_right))) {
                     output_->append(
-                        std::move(components::document::document_t::combine_documents(doc_left, doc_right)));
+                        std::move(components::document::combine_documents(doc_left, doc_right)));
                 }
             }
         }
@@ -99,12 +99,12 @@ namespace services::collection::operators {
                     visited_left = true;
                     visited_right[right_index] = true;
                     output_->append(
-                        std::move(components::document::document_t::combine_documents(doc_left, doc_right)));
+                        std::move(components::document::combine_documents(doc_left, doc_right)));
                 }
                 right_index++;
             }
             if (!visited_left) {
-                output_->append(std::move(components::document::document_t::combine_documents(doc_left, empty_right)));
+                output_->append(std::move(components::document::combine_documents(doc_left, empty_right)));
             }
         }
         for (size_t i = 0; i < visited_right.size(); ++i) {
@@ -112,7 +112,7 @@ namespace services::collection::operators {
                 continue;
             }
             output_->append(std::move(
-                components::document::document_t::combine_documents(empty_left, right_->output()->documents().at(i))));
+                components::document::combine_documents(empty_left, right_->output()->documents().at(i))));
         }
     }
 
@@ -135,11 +135,11 @@ namespace services::collection::operators {
                 if (check_expressions_(document_view_t(doc_left), document_view_t(doc_right))) {
                     visited_left = true;
                     output_->append(
-                        std::move(components::document::document_t::combine_documents(doc_left, doc_right)));
+                        std::move(components::document::combine_documents(doc_left, doc_right)));
                 }
             }
             if (!visited_left) {
-                output_->append(std::move(components::document::document_t::combine_documents(doc_left, empty_right)));
+                output_->append(std::move(components::document::combine_documents(doc_left, empty_right)));
             }
         }
     }
@@ -163,11 +163,11 @@ namespace services::collection::operators {
                 if (check_expressions_(document_view_t(doc_left), document_view_t(doc_right))) {
                     visited_right = true;
                     output_->append(
-                        std::move(components::document::document_t::combine_documents(doc_left, doc_right)));
+                        std::move(components::document::combine_documents(doc_left, doc_right)));
                 }
             }
             if (!visited_right) {
-                output_->append(std::move(components::document::document_t::combine_documents(empty_left, doc_right)));
+                output_->append(std::move(components::document::combine_documents(empty_left, doc_right)));
             }
         }
     }
@@ -177,7 +177,7 @@ namespace services::collection::operators {
             document_view_t left_view(doc_left);
             for (const auto doc_right : right_->output()->documents()) {
                 document_view_t right_view(doc_right);
-                output_->append(std::move(components::document::document_t::combine_documents(doc_left, doc_right)));
+                output_->append(std::move(components::document::combine_documents(doc_left, doc_right)));
             }
         }
     }

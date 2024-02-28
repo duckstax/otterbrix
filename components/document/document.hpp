@@ -30,8 +30,6 @@ namespace components::document {
 
         bool update(const ptr& update);
 
-        [[nodiscard]] static ptr combine_documents(const ptr& left, const ptr& right);
-
     private:
         document_value_t value_;
 
@@ -50,6 +48,8 @@ namespace components::document {
 
     template<class T>
     document_ptr make_document(const std::string& key, T value);
+
+    [[nodiscard]] document_ptr combine_documents(const document_ptr& left, const document_ptr& right);
 
     document_ptr make_upsert_document(const document_ptr& source);
 
