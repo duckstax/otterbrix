@@ -9,17 +9,17 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-#define PARSE_JOIN_MASK(MASK, TYPE)                                                                                     \
-    {                                                                                                                   \
-        lexer.save();                                                                                                   \
-        auto status_order = MASK.check(lexer);                                                                          \
-        if (status_order == mask_group_element_t::status::yes) {                                                        \
-            join = ql::make_join(ql::join_type::TYPE);                                                                  \
-            return true;                                                                                                \
-        } else if (status_order == mask_group_element_t::status::error) {                                               \
-            return parser_result{parse_error::syntax_error, token, "not valid select query"};                           \
-        }                                                                                                               \
-        lexer.restore();                                                                                                \
+#define PARSE_JOIN_MASK(MASK, TYPE)                                                                                    \
+    {                                                                                                                  \
+        lexer.save();                                                                                                  \
+        auto status_order = MASK.check(lexer);                                                                         \
+        if (status_order == mask_group_element_t::status::yes) {                                                       \
+            join = ql::make_join(ql::join_type::TYPE);                                                                 \
+            return true;                                                                                               \
+        } else if (status_order == mask_group_element_t::status::error) {                                              \
+            return parser_result{parse_error::syntax_error, token, "not valid select query"};                          \
+        }                                                                                                              \
+        lexer.restore();                                                                                               \
     }
 
     components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
@@ -44,7 +44,7 @@ namespace components::sql::select::impl {
         PARSE_JOIN_MASK(mask_left_outer_join, left);
         PARSE_JOIN_MASK(mask_right_outer_join, right);
         PARSE_JOIN_MASK(mask_cross_join, cross);
-        
+
         return true;
     }
 
