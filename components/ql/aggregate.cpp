@@ -34,9 +34,8 @@ namespace components::ql {
         return s.str();
     }
 
-    aggregate_statement_ptr make_aggregate_statement(const database_name_t& database,
-                                                     const collection_name_t& collection) {
-        return std::make_unique<aggregate_statement>(database, collection);
+    aggregate_ptr make_aggregate(const database_name_t& database, const collection_name_t& collection) {
+        return new aggregate_statement(database, collection);
     }
 
     const aggregate::match_t& get_match(const aggregate_statement& aggregate) {

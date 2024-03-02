@@ -175,6 +175,28 @@ namespace components::document {
         set_new_value_(value_, key, value);
     }
 
+    document_ptr combine_documents(const document_ptr& left, const document_ptr& right) {
+        auto combined_doc = make_document();
+        document_view_t combined_doc_view(combined_doc);
+        {
+            document_view_t view(left);
+            auto fields = view.as_dict();
+            for (auto it_field = fields->begin(); it_field; ++it_field) {
+                combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
+            }
+        }
+        {
+            document_view_t view(right);
+            auto fields = view.as_dict();
+            for (auto it_field = fields->begin(); it_field; ++it_field) {
+                if (!combined_doc_view.as_dict()->get(it_field.key()->as_string())) {
+                    combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
+                }
+            }
+        }
+        return std::move(combined_doc);
+    }
+
     document_ptr make_document() { return new document_t(); }
 
     document_ptr make_document(const ::document::impl::dict_t* dict) {
