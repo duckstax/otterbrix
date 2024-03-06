@@ -23,7 +23,7 @@ target_link_libraries(
         otterbrix::wasm_runner
         CONAN_PKG::spdlog
         CONAN_PKG::actor-zeta
-        CONAN_PKG::openssl
+        #CONAN_PKG::openssl
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC "")

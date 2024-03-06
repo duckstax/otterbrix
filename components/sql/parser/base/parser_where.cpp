@@ -1,5 +1,6 @@
 #include "parser_where.hpp"
 #include <components/expressions/expression.hpp>
+#include <components/expressions/join_expression.hpp>
 #include <components/sql/parser/base/parser_mask.hpp>
 
 namespace components::sql::impl {
@@ -10,6 +11,15 @@ namespace components::sql::impl {
                                                                   mask_element_t{token_type::bare_word, "order"},
                                                                   mask_element_t{token_type::bare_word, "limit"}};
 
+        static const std::vector<mask_element_t> join_stop_words{mask_element_t{token_type::bare_word, "join"},
+                                                                 mask_element_t{token_type::bare_word, "where"},
+                                                                 mask_element_t{token_type::bare_word, "group"},
+                                                                 mask_element_t{token_type::bare_word, "order"},
+                                                                 mask_element_t{token_type::bare_word, "limit"}};
+
+        static const std::vector<mask_element_t> join_on_stop_words{mask_element_t{token_type::bare_word, "and"},
+                                                                    mask_element_t{token_type::bare_word, "or"}};
+
         static const mask_element_t mask_not{token_type::bare_word, "not"};
         static const mask_element_t mask_and{token_type::bare_word, "and"};
         static const mask_element_t mask_or{token_type::bare_word, "or"};
@@ -19,6 +29,18 @@ namespace components::sql::impl {
             return std::find_if(where_stop_words.begin(), where_stop_words.end(), [&](const mask_element_t& elem) {
                        return elem == token;
                    }) != where_stop_words.end();
+        }
+
+        inline bool is_token_join_end(const token_t& token) {
+            return std::find_if(join_stop_words.begin(), join_stop_words.end(), [&](const mask_element_t& elem) {
+                       return elem == token;
+                   }) != join_stop_words.end();
+        }
+
+        inline bool is_token_join_on_end(const token_t& token) {
+            return std::find_if(join_on_stop_words.begin(), join_on_stop_words.end(), [&](const mask_element_t& elem) {
+                       return elem == token;
+                   }) != join_on_stop_words.end();
         }
 
         inline bool is_token_operand(const token_t& token) {
@@ -143,6 +165,34 @@ namespace components::sql::impl {
             return {parser_result{false}, nullptr};
         }
 
+        parser_result parse_join_on_expression(std::pmr::memory_resource* resource,
+                                               lexer_t& lexer,
+                                               expressions::join_expression_field& expr) {
+            auto token = lexer.current_significant_token();
+            if (token.type != token_type::bare_word) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            expr.collection.collection = token.value();
+            token = lexer.next_token();
+            if (token.type != token_type::dot) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            token = lexer.next_token();
+            if (token.type == token_type::bare_word && lexer.next_token().type == token_type::dot) {
+                expr.collection.database = expr.collection.collection;
+                expr.collection.collection = token.value();
+                token = lexer.next_token();
+            }
+            if (!is_token_field_name(token)) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            expr.expr = expressions::make_scalar_expression(resource,
+                                                            expressions::scalar_type::get_field,
+                                                            expressions::key_t{token_clean_value(token)});
+            lexer.next_not_whitespace_token();
+            return true;
+        }
+
     } // namespace
 
     parser_result parse_where(std::pmr::memory_resource* resource,
@@ -162,6 +212,38 @@ namespace components::sql::impl {
         match.query = result.expr;
         if (!match.query) {
             return parser_result{parse_error::not_valid_where_condition, token, "not valid where condition"};
+        }
+        return true;
+    }
+
+    parser_result parse_join_on(std::pmr::memory_resource* resource, lexer_t& lexer, ql::join_t& join) {
+        auto token = lexer.current_significant_token();
+        while (!is_token_end_query(token) && !is_token_join_end(token)) {
+            expressions::join_expression_field left;
+            expressions::join_expression_field right;
+            auto res = parse_join_on_expression(resource, lexer, left);
+            if (res.is_error()) {
+                return res;
+            }
+            token = lexer.current_significant_token();
+            auto compare = get_compare_expression(token);
+            if (compare == expressions::compare_type::invalid) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            token = lexer.next_not_whitespace_token();
+            res = parse_join_on_expression(resource, lexer, right);
+            if (res.is_error()) {
+                return res;
+            }
+            join.expressions.push_back(
+                expressions::make_join_expression(resource, compare, std::move(left), std::move(right)));
+            token = lexer.current_significant_token();
+            if (!is_token_end_query(token) && !is_token_join_end(token) && !is_token_join_on_end(token)) {
+                return parser_result{parse_error::not_valid_join_condition, token, "not valid join condition"};
+            }
+            if (is_token_join_on_end(token)) {
+                token = lexer.next_not_whitespace_token();
+            }
         }
         return true;
     }

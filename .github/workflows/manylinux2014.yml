@@ -46,7 +46,7 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.59.0
+          pip3 install --retries=30 conan==1.62.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default

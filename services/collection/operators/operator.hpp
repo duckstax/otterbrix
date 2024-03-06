@@ -12,17 +12,19 @@ namespace services::collection {
 
 namespace services::collection::operators {
 
-    enum class operator_type { unused = 0x0, empty, match, insert, remove, update, sort, aggregate };
+    enum class operator_type { unused = 0x0, empty, match, insert, remove, update, sort, aggregate, join };
 
     enum class operator_state { created, running, waiting, executed, cleared };
 
-    class operator_t {
+    class operator_t : public boost::intrusive_ref_counter<operator_t> {
     public:
-        using ptr = std::unique_ptr<operator_t>;
+        using ptr = boost::intrusive_ptr<operator_t>;
 
         operator_t() = delete;
         operator_t(const operator_t&) = delete;
+        operator_t(operator_t&&) = default;
         operator_t& operator=(const operator_t&) = delete;
+        operator_t& operator=(operator_t&&) = default;
         operator_t(context_collection_t* collection, operator_type type);
         virtual ~operator_t() = default;
 
@@ -32,7 +34,13 @@ namespace services::collection::operators {
 
         bool is_executed() const;
         bool is_wait_sync_disk() const;
+        bool is_root() const noexcept;
+        void set_as_root() noexcept;
 
+        const collection_full_name_t& collection_name() const noexcept;
+
+        [[nodiscard]] ptr left() const noexcept;
+        [[nodiscard]] ptr right() const noexcept;
         [[nodiscard]] operator_state state() const noexcept;
         [[nodiscard]] operator_type type() const noexcept;
         const operator_data_ptr& output() const;
@@ -57,6 +65,7 @@ namespace services::collection::operators {
 
         const operator_type type_;
         operator_state state_{operator_state::created};
+        bool root{false};
     };
 
     class read_only_operator_t : public operator_t {

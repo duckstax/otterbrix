@@ -27,6 +27,8 @@ namespace services::collection {
                 return "hashed";
             case index_type::wildcard:
                 return "wildcard";
+            case index_type::no_valid:
+                return "no_valid";
         }
         return "default";
     }
@@ -45,7 +47,7 @@ namespace services::collection {
     void collection_t::create_index(const session_id_t& session, create_index_t& index) {
         debug(log(),
               "collection::create_index : {} {} {}",
-              name_.to_string(),
+              context_->name().to_string(),
               name_index_type(index.index_type_),
               keys_index(index.keys_)); //todo: maybe delete
         if (dropped_) {
@@ -67,19 +69,15 @@ namespace services::collection {
                     break;
                 }
 
-                case index_type::composite: {
-                    break;
-                }
-
-                case index_type::multikey: {
-                    break;
-                }
-
-                case index_type::hashed: {
-                    break;
-                }
-
+                case index_type::composite:
+                case index_type::multikey:
+                case index_type::hashed:
                 case index_type::wildcard: {
+                    assert(false && "index_type not implemented");
+                    break;
+                }
+                case index_type::no_valid: {
+                    assert(false && "index_type not valid");
                     break;
                 }
             }
@@ -97,7 +95,6 @@ namespace services::collection {
                          address(),
                          handler_id(route::create_index_finish),
                          session,
-                         name,
                          make_cursor(default_resource(), operation_status_t::success));
         sessions::remove(sessions_, session, name);
     }
@@ -109,7 +106,6 @@ namespace services::collection {
                              address(),
                              handler_id(route::drop_index_finish),
                              session,
-                             index.name(),
                              make_cursor(default_resource(), error_code_t::collection_dropped));
         } else {
             auto index_ptr = components::index::search_index(context_->index_engine(), index.name());
@@ -122,14 +118,12 @@ namespace services::collection {
                                  address(),
                                  handler_id(route::drop_index_finish),
                                  session,
-                                 index.name(),
                                  make_cursor(default_resource(), operation_status_t::success));
             } else {
                 actor_zeta::send(current_message()->sender(),
                                  address(),
                                  handler_id(route::drop_index_finish),
                                  session,
-                                 index.name(),
                                  make_cursor(default_resource(), error_code_t::collection_not_exists));
             }
         }
@@ -161,7 +155,7 @@ namespace services::collection {
         sessions::remove(sessions_, session);
         auto cursor = make_cursor(default_resource());
         cursor->push(res.first->second.get());
-        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_plan_finish), session, cursor);
+        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
     }
 
 } // namespace services::collection

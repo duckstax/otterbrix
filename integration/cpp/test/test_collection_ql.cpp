@@ -44,6 +44,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             auto session = otterbrix::session_id_t();
             components::ql::variant_statement_t ql{ins};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
@@ -58,6 +59,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             components::ql::aggregate_statement agg{database_name, collection_name};
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
@@ -71,6 +73,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
     }
@@ -87,6 +90,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
         {
@@ -99,6 +103,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             del.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{del};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
         }
         {
@@ -112,6 +117,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 90);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
     }
@@ -145,6 +151,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             upd.update_ = make_document(upd_value);
             components::ql::variant_statement_t ql{upd};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
         }
         {
@@ -158,6 +165,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 20);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE_FALSE(cur->is_success());
             REQUIRE(cur->size() == 0);
         }
         {
@@ -171,6 +179,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             agg.add_parameter(id_par{1}, 1000);
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
+            REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 20);
         }
     }

@@ -4,8 +4,8 @@
 
 #include <actor-zeta/actor-zeta.hpp>
 
+#include <components/base/collection_full_name.hpp>
 #include <components/document/document_view.hpp>
-#include <components/ql/base.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
@@ -21,16 +21,16 @@ namespace components::cursor {
 
     enum class operation_status_t { success = 1, failure = 0 };
 
-    enum class error_code_t {
+    enum class error_code_t : int32_t {
+        other_error = -1,
         none = 0,
-        database_already_exists,
-        database_not_exists,
-        collection_already_exists,
-        collection_not_exists,
-        collection_dropped,
-        sql_parse_error,
-        create_phisical_plan_error,
-        other_error
+        database_already_exists = 1,
+        database_not_exists = 2,
+        collection_already_exists = 3,
+        collection_not_exists = 4,
+        collection_dropped = 5,
+        sql_parse_error = 6,
+        create_phisical_plan_error = 7
     };
 
     struct error_t {

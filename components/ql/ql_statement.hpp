@@ -1,7 +1,8 @@
 #pragma once
 
-#include "base.hpp"
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
+#include <components/base/collection_full_name.hpp>
 #include <components/document/wrapper_value.hpp>
 
 namespace components::ql {
@@ -20,7 +21,8 @@ namespace components::ql {
         update_many,
         create_index,
         drop_index,
-        aggregate
+        aggregate,
+        join
     };
 
     // Base struct for every QL statement
@@ -47,6 +49,8 @@ namespace components::ql {
         database_name_t database_;
         collection_name_t collection_;
     };
+
+    using ql_statement_ptr = boost::intrusive_ptr<ql_statement_t>;
 
     struct unused_statement_t : public ql_statement_t {
         unused_statement_t()

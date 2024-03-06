@@ -9,7 +9,7 @@ namespace components::expressions {
 
     using hash_t = std::size_t;
 
-    enum class expression_group : uint8_t { invalid, compare, aggregate, scalar, sort };
+    enum class expression_group : uint8_t { invalid, compare, aggregate, scalar, sort, join };
 
     enum class compare_type : uint8_t {
         invalid,

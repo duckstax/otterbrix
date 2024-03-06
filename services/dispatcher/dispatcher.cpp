@@ -27,9 +27,9 @@ namespace services::dispatcher {
                                std::string name)
         : actor_zeta::basic_async_actor(manager_dispatcher, std::move(name))
         , log_(log.clone())
+        , manager_dispatcher_(manager_dispatcher->address())
         , resource_(resource)
         , last_collection_(actor_zeta::base::address_t::empty_address())
-        , manager_dispatcher_(manager_dispatcher->address())
         , memory_storage_(std::move(mstorage))
         , manager_wal_(std::move(mwal))
         , manager_disk_(std::move(mdisk)) {
@@ -468,7 +468,7 @@ namespace services::dispatcher {
         collection_full_name_t key(index.database_, index.collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session_key_t{session, index.name()}, session_t(address, index));
+            make_session(session_to_address_, session_key_t{session}, session_t(address, index));
             actor_zeta::send(it_collection->second,
                              dispatcher_t::address(),
                              collection::handler_id(collection::route::create_index),
@@ -485,21 +485,19 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::create_index_finish(components::session::session_id_t& session,
-                                           const std::string& name,
-                                           cursor_t_ptr result) {
-        trace(log_, "dispatcher_t::create_index_finish session: {}, index: {}", session.data(), name);
-        if (find_session(session_to_address_, session, name).address().get() == manager_wal_.get()) {
+    void dispatcher_t::create_index_finish(components::session::session_id_t& session, cursor_t_ptr result) {
+        trace(log_, "dispatcher_t::create_index_finish session: {}", session.data());
+        if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
         }
-        if (find_session(session_to_address_, session, name).address().get() != dispatcher_t::address().get()) {
-            actor_zeta::send(find_session(session_to_address_, session, name).address(),
+        if (find_session(session_to_address_, session).address().get() != dispatcher_t::address().get()) {
+            actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
                              collection::handler_id(collection::route::create_index_finish),
                              session,
                              result->is_success());
         }
-        remove_session(session_to_address_, session, name);
+        remove_session(session_to_address_, session);
     }
 
     void dispatcher_t::drop_index(components::session::session_id_t& session,
@@ -509,9 +507,7 @@ namespace services::dispatcher {
         collection_full_name_t key(drop_index.database_, drop_index.collection_);
         auto it_collection = collection_address_book_.find(key);
         if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_,
-                         session_key_t{session, drop_index.name()},
-                         session_t(address, drop_index));
+            make_session(session_to_address_, session, session_t(address, drop_index));
             actor_zeta::send(it_collection->second,
                              dispatcher_t::address(),
                              collection::handler_id(collection::route::drop_index),
@@ -528,21 +524,19 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::drop_index_finish(components::session::session_id_t& session,
-                                         const std::string& name,
-                                         cursor_t_ptr result) {
-        trace(log_, "dispatcher_t::drop_index_finish session: {}, index: {}", session.data(), name);
-        if (find_session(session_to_address_, session, name).address().get() == manager_wal_.get()) {
+    void dispatcher_t::drop_index_finish(components::session::session_id_t& session, cursor_t_ptr result) {
+        trace(log_, "dispatcher_t::drop_index_finish session: {}", session.data());
+        if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
             wal_success(session, last_wal_id_);
         }
-        if (find_session(session_to_address_, session, name).address().get() != dispatcher_t::address().get()) {
-            actor_zeta::send(find_session(session_to_address_, session, name).address(),
+        if (find_session(session_to_address_, session).address().get() != dispatcher_t::address().get()) {
+            actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
                              collection::handler_id(collection::route::drop_index_finish),
                              session,
                              result->is_success());
         }
-        remove_session(session_to_address_, session, name);
+        remove_session(session_to_address_, session);
     }
 
     void dispatcher_t::close_cursor(components::session::session_id_t& session) {

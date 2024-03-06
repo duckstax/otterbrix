@@ -6,10 +6,10 @@ namespace services::collection::planner::impl {
 
     using components::logical_plan::node_type;
 
-    operators::operator_ptr create_plan_aggregate(context_collection_t* context,
+    operators::operator_ptr create_plan_aggregate(const context_storage_t& context,
                                                   const components::logical_plan::node_ptr& node,
                                                   components::ql::limit_t limit) {
-        auto op = std::make_unique<operators::aggregation>(context);
+        auto op = boost::intrusive_ptr(new operators::aggregation(context.at(node->collection_full())));
         for (const components::logical_plan::node_ptr& child : node->children()) {
             switch (child->type()) {
                 case node_type::match_t:

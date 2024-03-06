@@ -8,6 +8,7 @@ set( ${PROJECT_NAME}_SOURCES
         test_collection_sql.cpp
         test_save_load.cpp
         test_index.cpp
+        test_join.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
@@ -31,7 +32,7 @@ target_link_libraries(
 
         CONAN_PKG::spdlog
         CONAN_PKG::msgpack-cxx
-        CONAN_PKG::date
+        #CONAN_PKG::date
         CONAN_PKG::catch2
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
@@ -40,7 +41,7 @@ target_link_libraries(
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
-        CONAN_PKG::libcurl
+        #CONAN_PKG::libcurl
         CONAN_PKG::zlib
         CONAN_PKG::bzip2
         CONAN_PKG::libbacktrace

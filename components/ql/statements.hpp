@@ -2,6 +2,7 @@
 
 #include "aggregate.hpp"
 #include "index.hpp"
+#include "join/join.hpp"
 #include "statements/create_collection.hpp"
 #include "statements/create_database.hpp"
 #include "statements/delete_many.hpp"
@@ -30,6 +31,7 @@ namespace components::ql {
                                              update_many_t,
                                              create_index_t,
                                              drop_index_t,
+                                             join_t,
                                              ql_statement_t*>;
 
 } //namespace components::ql

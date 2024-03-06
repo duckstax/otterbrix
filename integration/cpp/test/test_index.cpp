@@ -43,7 +43,7 @@ constexpr int kDocuments = 100;
             documents.push_back(gen_doc(num));                                                                         \
         }                                                                                                              \
         {                                                                                                              \
-            auto session = duck_charmer::session_id_t();                                                               \
+            auto session = otterbrix::session_id_t();                                                                  \
             for (size_t num = 0; num < documents.size(); ++num) {                                                      \
                 dispatcher->insert_one(session, database_name, collection_name, documents.at(num));                    \
             }                                                                                                          \

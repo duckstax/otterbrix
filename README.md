@@ -1,13 +1,7 @@
 Otterbrix is an open-source framework for developing conventional and analytical applications.
 
-## Stable Arch
-
-[![ubuntu 20.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu_20_04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu_20_04.yaml)
-
-[![manylinux2014](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml)
-
-## Experemental Arch
-
+[![ubuntu 20.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-20-04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-20-04.yaml)
+[![ubuntu 22.04](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-22-04.yaml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/ubuntu-22-04.yaml)
 [![manylinux2014](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml/badge.svg)](https://github.com/duckstax/otterbrix/actions/workflows/manylinux2014.yml)
 
 
@@ -23,7 +17,7 @@ otterbrix seamlessly integrates with column-oriented memory format and can repre
 ### Python example:
 
 ```bash
-    pip install otterbrix==0.5.0 
+    pip install otterbrix==1.0a7 
 ```
 
 Python SQl example:

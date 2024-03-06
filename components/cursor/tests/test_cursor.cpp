@@ -9,26 +9,26 @@ TEST_CASE("cursor::construction") {
     INFO("empty cursor") {
         auto cursor = components::cursor::make_cursor(default_resource());
         REQUIRE(cursor->is_success());
-        REQUIRE(!cursor->is_error());
+        REQUIRE_FALSE(cursor->is_error());
     }
     INFO("failed operation cursor") {
         auto cursor =
             components::cursor::make_cursor(default_resource(), components::cursor::operation_status_t::failure);
-        REQUIRE(!cursor->is_success());
-        REQUIRE(!cursor->is_error());
+        REQUIRE_FALSE(cursor->is_success());
+        REQUIRE_FALSE(cursor->is_error());
     }
     INFO("successful operation cursor") {
         auto cursor =
             components::cursor::make_cursor(default_resource(), components::cursor::operation_status_t::success);
         REQUIRE(cursor->is_success());
-        REQUIRE(!cursor->is_error());
+        REQUIRE_FALSE(cursor->is_error());
     }
     INFO("error cursor") {
         std::string description = "error description";
         auto cursor = components::cursor::make_cursor(default_resource(),
                                                       components::cursor::error_code_t::other_error,
                                                       description);
-        REQUIRE(!cursor->is_success());
+        REQUIRE_FALSE(cursor->is_success());
         REQUIRE(cursor->is_error());
         REQUIRE(cursor->get_error().type == components::cursor::error_code_t::other_error);
         REQUIRE(cursor->get_error().what == description);

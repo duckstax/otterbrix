@@ -6,6 +6,7 @@
 #include "parser/delete/parser_delete.hpp"
 #include "parser/insert/parser_insert.hpp"
 #include "parser/select/parser_select.hpp"
+#include "parser/table/parser_table.hpp"
 #include "parser/update/parser_update.hpp"
 
 #define PARSE(F)                                                                                                       \
@@ -26,6 +27,7 @@ namespace components::sql {
         ql::variant_statement_t result;
         components::sql::impl::parser_result ok{false};
         PARSE(database);
+        PARSE(table);
         PARSE(select);
         PARSE(delete_);
         PARSE(insert);

@@ -257,10 +257,13 @@ namespace services::disk {
         auto indexes = read_indexes_();
         metafile_indexes_->seek_eof();
         for (const auto& index : indexes) {
+            trace(log_, "manager_disk: load_indexes_ : {}", index.name());
+            // Require to separate sessions for load and create index
+            // For each index create we need to generate unique session id.
             actor_zeta::send(dispatcher,
                              address(),
                              collection::handler_id(collection::route::create_index),
-                             session,
+                             session_id_t::generate_uid(),
                              index,
                              dispatcher);
         }
