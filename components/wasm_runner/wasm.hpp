@@ -67,7 +67,11 @@ namespace components::wasm_runner {
         auto createContext(const std::shared_ptr<proxy_wasm::PluginBase>& plugin) -> proxy_wasm::ContextBase* override;
     };
 
-    enum class engine_t : uint8_t { wamr, null };
+    enum class engine_t : uint8_t
+    {
+        wamr,
+        null
+    };
 
     class wasm_manager_t {
     public:

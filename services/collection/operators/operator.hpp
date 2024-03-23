@@ -12,7 +12,8 @@ namespace services::collection {
 
 namespace services::collection::operators {
 
-    enum class operator_type {
+    enum class operator_type
+    {
         unused = 0x0,
         empty,
         match,
@@ -26,7 +27,14 @@ namespace services::collection::operators {
         drop_index
     };
 
-    enum class operator_state { created, running, waiting, executed, cleared };
+    enum class operator_state
+    {
+        created,
+        running,
+        waiting,
+        executed,
+        cleared
+    };
 
     class operator_t : public boost::intrusive_ref_counter<operator_t> {
     public:
@@ -85,7 +93,14 @@ namespace services::collection::operators {
         read_only_operator_t(context_collection_t* collection, operator_type type);
     };
 
-    enum class read_write_operator_state { pending, executed, conflicted, rolledBack, committed };
+    enum class read_write_operator_state
+    {
+        pending,
+        executed,
+        conflicted,
+        rolledBack,
+        committed
+    };
 
     class read_write_operator_t : public operator_t {
     public:

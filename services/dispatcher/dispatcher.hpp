@@ -92,7 +92,12 @@ namespace services::dispatcher {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t { memory_storage = 0, manager_wal = 1, manager_disk = 2 };
+        enum class unpack_rules : uint64_t
+        {
+            memory_storage = 0,
+            manager_wal = 1,
+            manager_disk = 2
+        };
 
         void sync(address_pack& pack) {
             memory_storage_ = std::get<static_cast<uint64_t>(unpack_rules::memory_storage)>(pack);

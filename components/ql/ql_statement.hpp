@@ -7,7 +7,8 @@
 
 namespace components::ql {
 
-    enum class statement_type : char {
+    enum class statement_type : char
+    {
         unused = 0x00, // unused
         create_database,
         drop_database,

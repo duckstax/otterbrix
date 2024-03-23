@@ -4,7 +4,8 @@
 
 namespace components::sql {
 
-    enum class parse_error {
+    enum class parse_error
+    {
         no_error,
         syntax_error,
         empty_fields_list,

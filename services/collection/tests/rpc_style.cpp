@@ -17,7 +17,10 @@ using actor_zeta::detail::pmr::memory_resource;
 
 class supervisor_lite final : public actor_zeta::cooperative_supervisor<supervisor_lite> {
 public:
-    enum class system_command : std::uint64_t { any_method };
+    enum class system_command : std::uint64_t
+    {
+        any_method
+    };
 
     explicit supervisor_lite(memory_resource* ptr)
         : cooperative_supervisor(ptr, "network")

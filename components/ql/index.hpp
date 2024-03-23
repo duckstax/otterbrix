@@ -10,7 +10,15 @@ namespace components::ql {
 
     using keys_base_storage_t = std::pmr::vector<components::expressions::key_t>;
 
-    enum class index_type : uint8_t { single, composite, multikey, hashed, wildcard, no_valid = 255 };
+    enum class index_type : uint8_t
+    {
+        single,
+        composite,
+        multikey,
+        hashed,
+        wildcard,
+        no_valid = 255
+    };
 
     inline std::string name_index_type(index_type type) {
         switch (type) {
@@ -30,7 +38,21 @@ namespace components::ql {
         return "default";
     }
 
-    enum class index_compare { str, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, bool8 };
+    enum class index_compare
+    {
+        str,
+        int8,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
+        bool8
+    };
 
     inline std::string name_index_compare(index_compare type) {
         switch (type) {

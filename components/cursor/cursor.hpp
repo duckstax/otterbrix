@@ -19,9 +19,14 @@ namespace components::cursor {
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
-    enum class operation_status_t { success = 1, failure = 0 };
+    enum class operation_status_t
+    {
+        success = 1,
+        failure = 0
+    };
 
-    enum class error_code_t : int32_t {
+    enum class error_code_t : int32_t
+    {
         other_error = -1,
         none = 0,
         database_already_exists = 1,

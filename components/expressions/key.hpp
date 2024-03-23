@@ -33,7 +33,13 @@ namespace components::expressions {
             : type_(type::string)
             , storage_(std::string(data, size)) {}
 
-        enum class type { non, string, int32, uint32 };
+        enum class type
+        {
+            non,
+            string,
+            int32,
+            uint32
+        };
 
         auto as_string() const -> const std::string& { return std::get<std::string>(storage_); }
 
