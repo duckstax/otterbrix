@@ -26,10 +26,6 @@ namespace otterbrix {
         add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish),
                     &wrapper_dispatcher_t::execute_ql_finish);
         add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
-        add_handler(collection::handler_id(collection::route::create_index_finish),
-                    &wrapper_dispatcher_t::create_index_finish);
-        add_handler(collection::handler_id(collection::route::drop_index_finish),
-                    &wrapper_dispatcher_t::drop_index_finish);
     }
 
     wrapper_dispatcher_t::~wrapper_dispatcher_t() { trace(log_, "delete wrapper_dispatcher_t"); }
@@ -216,28 +212,16 @@ namespace otterbrix {
         return std::move(size_store_);
     }
 
-    auto wrapper_dispatcher_t::create_index(session_id_t& session, components::ql::create_index_t index) -> bool {
-        trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), index.name());
-        init();
-        actor_zeta::send(manager_dispatcher_,
-                         address(),
-                         collection::handler_id(collection::route::create_index),
-                         session,
-                         std::move(index));
-        wait();
-        return std::move(bool_store_);
+    auto wrapper_dispatcher_t::create_index(session_id_t& session, components::ql::create_index_t* ql)
+        -> components::cursor::cursor_t_ptr {
+        trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
+        return send_ql_new(session, ql);
     }
 
-    auto wrapper_dispatcher_t::drop_index(session_id_t& session, components::ql::drop_index_t drop_index) -> bool {
-        trace(log_, "wrapper_dispatcher_t::drop_index session: {}, index: {}", session.data(), drop_index.name());
-        init();
-        actor_zeta::send(manager_dispatcher_,
-                         address(),
-                         collection::handler_id(collection::route::drop_index),
-                         session,
-                         std::move(drop_index));
-        wait();
-        return std::move(bool_store_);
+    auto wrapper_dispatcher_t::drop_index(session_id_t& session, components::ql::drop_index_t* ql)
+        -> components::cursor::cursor_t_ptr {
+        trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
+        return send_ql_new(session, ql);
     }
 
     auto wrapper_dispatcher_t::execute_ql(session_id_t& session, components::ql::variant_statement_t& query)
@@ -298,32 +282,9 @@ namespace otterbrix {
         notify();
     }
 
-    void wrapper_dispatcher_t::delete_finish(session_id_t& session, cursor_t_ptr cursor) {
-        cursor_store_ = cursor;
-        input_session_ = session;
-        notify();
-    }
-
-    void wrapper_dispatcher_t::update_finish(session_id_t& session, cursor_t_ptr cursor) {
-        cursor_store_ = cursor;
-        input_session_ = session;
-        notify();
-    }
-
     auto wrapper_dispatcher_t::size_finish(session_id_t& session, size_t size) -> void {
+        trace(log_, "wrapper_dispatcher_t::size_finish session: {} {}", session.data(), size);
         size_store_ = size;
-        input_session_ = session;
-        notify();
-    }
-
-    auto wrapper_dispatcher_t::create_index_finish(session_id_t& session, bool success) -> void {
-        bool_store_ = success;
-        input_session_ = session;
-        notify();
-    }
-
-    auto wrapper_dispatcher_t::drop_index_finish(session_id_t& session, bool success) -> void {
-        bool_store_ = success;
         input_session_ = session;
         notify();
     }

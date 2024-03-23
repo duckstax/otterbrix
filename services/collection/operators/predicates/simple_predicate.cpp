@@ -21,85 +21,79 @@ namespace services::collection::operators::predicates {
 
         switch (expr->type()) {
             case compare_type::eq:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value == it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value == it->second;
+                                                 }
+                                             })};
             case compare_type::ne:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value != it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value != it->second;
+                                                 }
+                                             })};
             case compare_type::gt:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value > it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value > it->second;
+                                                 }
+                                             })};
             case compare_type::gte:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value >= it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value >= it->second;
+                                                 }
+                                             })};
             case compare_type::lt:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value < it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value < it->second;
+                                                 }
+                                             })};
             case compare_type::lte:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [&expr](const components::document::document_ptr& document,
-                            const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
-                            return false;
-                        } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value <= it->second;
-                        }
-                    });
+                return {new simple_predicate(context,
+                                             [&expr](const components::document::document_ptr& document,
+                                                     const components::ql::storage_parameters* parameters) {
+                                                 auto it = parameters->find(expr->value());
+                                                 if (it == parameters->end()) {
+                                                     return false;
+                                                 } else {
+                                                     auto value = get_value_from_document(document, expr->key());
+                                                     return value && value <= it->second;
+                                                 }
+                                             })};
             case compare_type::regex:
-                return std::make_unique<simple_predicate>(
+                return {new simple_predicate(
                     context,
                     [&expr](const components::document::document_ptr& document,
                             const components::ql::storage_parameters* parameters) {
@@ -112,25 +106,21 @@ namespace services::collection::operators::predicates {
                                    std::regex_match(value->as_string().data(),
                                                     std::regex(fmt::format(".*{}.*", it->second->as_string())));
                         }
-                    });
+                    })};
             case compare_type::all_true:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [](const components::document::document_ptr&, const components::ql::storage_parameters*) {
-                        return true;
-                    });
+                return {new simple_predicate(context,
+                                             [](const components::document::document_ptr&,
+                                                const components::ql::storage_parameters*) { return true; })};
             case compare_type::all_false:
-                return std::make_unique<simple_predicate>(
-                    context,
-                    [](const components::document::document_ptr&, const components::ql::storage_parameters*) {
-                        return false;
-                    });
+                return {new simple_predicate(context,
+                                             [](const components::document::document_ptr&,
+                                                const components::ql::storage_parameters*) { return false; })};
             default:
                 break;
         }
-        return std::make_unique<simple_predicate>(
+        return {new simple_predicate(
             context,
-            [](const components::document::document_ptr&, const components::ql::storage_parameters*) { return true; });
+            [](const components::document::document_ptr&, const components::ql::storage_parameters*) { return true; })};
     }
 
 } // namespace services::collection::operators::predicates

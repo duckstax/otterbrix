@@ -8,7 +8,10 @@
 using namespace std;
 using namespace services;
 
-enum class route : uint64_t { start };
+enum class route : uint64_t
+{
+    start
+};
 
 inline uint64_t test_handler_id(route type) { return 100 * 3773 + static_cast<uint64_t>(type); }
 

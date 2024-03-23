@@ -17,7 +17,8 @@ namespace components::dataframe {
 
     static constexpr size_type unknown_null_count{-1};
 
-    enum class type_id : int32_t {
+    enum class type_id : int32_t
+    {
         empty,
         int8,
         int16,

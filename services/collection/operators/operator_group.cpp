@@ -64,7 +64,8 @@ namespace services::collection::operators {
             for (std::size_t i = 0; i < output_->documents().size(); ++i) {
                 auto& document = output_->documents().at(i);
                 aggregator->clear(); //todo: need copy aggregator
-                aggregator->set_children(std::make_unique<operator_empty_t>(context_, input_documents_.at(i)->copy()));
+                aggregator->set_children(
+                    boost::intrusive_ptr(new operator_empty_t(context_, input_documents_.at(i)->copy())));
                 aggregator->on_execute(pipeline_context);
                 document->set(value.name, *aggregator->value());
             }

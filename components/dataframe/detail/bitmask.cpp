@@ -75,7 +75,8 @@ namespace components::dataframe::detail {
                   out_bitmask_iterator(destination));
     }
 
-    enum class count_bits_policy : bool {
+    enum class count_bits_policy : bool
+    {
         unset_bits, /// Count unset (0) bits
         set_bits    /// Count set (1) bits
     };

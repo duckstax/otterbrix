@@ -23,11 +23,11 @@ namespace services::collection::operators::merge {
         using components::expressions::compare_type;
         switch (type) {
             case compare_type::union_and:
-                return std::make_unique<operator_and_t>(context, limit);
+                return {new operator_and_t(context, limit)};
             case compare_type::union_or:
-                return std::make_unique<operator_or_t>(context, limit);
+                return {new operator_or_t(context, limit)};
             case compare_type::union_not:
-                return std::make_unique<operator_not_t>(context, limit);
+                return {new operator_not_t(context, limit)};
             default:
                 break;
         }

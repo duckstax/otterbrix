@@ -4,8 +4,8 @@
 
 #include <actor-zeta/actor-zeta.hpp>
 
+#include <components/base/collection_full_name.hpp>
 #include <components/document/document_view.hpp>
-#include <components/ql/base.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
@@ -19,9 +19,14 @@ namespace components::cursor {
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
-    enum class operation_status_t { success = 1, failure = 0 };
+    enum class operation_status_t
+    {
+        success = 1,
+        failure = 0
+    };
 
-    enum class error_code_t : int32_t {
+    enum class error_code_t : int32_t
+    {
         other_error = -1,
         none = 0,
         database_already_exists = 1,

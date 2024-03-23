@@ -3,7 +3,8 @@
 #include "handler_by_id.hpp"
 
 namespace core {
-    enum class route : uint64_t {
+    enum class route : uint64_t
+    {
         sync = 0,
         load,
 

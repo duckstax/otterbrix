@@ -18,10 +18,9 @@ namespace services::collection::operators {
 
     void aggregation::on_prepare_impl() {
         if (!left_) {
-            operator_ptr executor =
-                match_ ? std::move(match_)
-                       : static_cast<operator_ptr>(
-                             std::make_unique<transfer_scan>(context_, components::ql::limit_t::unlimit()));
+            operator_ptr executor = match_ ? std::move(match_)
+                                           : static_cast<operator_ptr>(boost::intrusive_ptr(
+                                                 new transfer_scan(context_, components::ql::limit_t::unlimit())));
             if (group_) {
                 group_->set_children(std::move(executor));
                 executor = std::move(group_);

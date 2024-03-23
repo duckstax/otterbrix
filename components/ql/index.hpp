@@ -10,9 +10,79 @@ namespace components::ql {
 
     using keys_base_storage_t = std::pmr::vector<components::expressions::key_t>;
 
-    enum class index_type : uint8_t { single, composite, multikey, hashed, wildcard, no_valid = 255 };
+    enum class index_type : uint8_t
+    {
+        single,
+        composite,
+        multikey,
+        hashed,
+        wildcard,
+        no_valid = 255
+    };
 
-    enum class index_compare { str, int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64, bool8 };
+    inline std::string name_index_type(index_type type) {
+        switch (type) {
+            case index_type::single:
+                return "single";
+            case index_type::composite:
+                return "composite";
+            case index_type::multikey:
+                return "multikey";
+            case index_type::hashed:
+                return "hashed";
+            case index_type::wildcard:
+                return "wildcard";
+            case index_type::no_valid:
+                return "no_valid";
+        }
+        return "default";
+    }
+
+    enum class index_compare
+    {
+        str,
+        int8,
+        int16,
+        int32,
+        int64,
+        uint8,
+        uint16,
+        uint32,
+        uint64,
+        float32,
+        float64,
+        bool8
+    };
+
+    inline std::string name_index_compare(index_compare type) {
+        switch (type) {
+            case index_compare::str:
+                return "srt";
+            case index_compare::int8:
+                return "int8";
+            case index_compare::int16:
+                return "int16";
+            case index_compare::int32:
+                return "int32";
+            case index_compare::int64:
+                return "int64";
+            case index_compare::uint8:
+                return "uint8";
+            case index_compare::uint16:
+                return "uint16";
+            case index_compare::uint32:
+                return "uint32";
+            case index_compare::uint64:
+                return "uint64";
+            case index_compare::float32:
+                return "float32";
+            case index_compare::float64:
+                return "float64";
+            case index_compare::bool8:
+                return "bool8";
+        }
+        return "invalid";
+    }
 
     struct create_index_t final : ql_statement_t {
         create_index_t(const database_name_t& database,
@@ -27,6 +97,11 @@ namespace components::ql {
             : ql_statement_t(statement_type::create_index, {}, {})
             , index_type_(index_type::no_valid)
             , index_compare_(index_compare::str) {}
+
+        create_index_t(const create_index_t&) = default;
+        create_index_t& operator=(const create_index_t&) = default;
+        create_index_t(create_index_t&&) = default;
+        create_index_t& operator=(create_index_t&&) = default;
 
         std::string name() const {
             //todo: user input

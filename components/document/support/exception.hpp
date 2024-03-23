@@ -6,7 +6,8 @@
 
 namespace document {
 
-    enum class error_code {
+    enum class error_code
+    {
         no_error,
         memory_error,
         out_of_range,

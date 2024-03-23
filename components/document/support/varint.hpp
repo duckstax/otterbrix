@@ -8,7 +8,8 @@
 
 namespace document {
 
-    enum {
+    enum
+    {
         max_varint_len16 = 3,
         max_varint_len32 = 5,
         max_varint_len64 = 10,

@@ -91,7 +91,7 @@ namespace services::wal {
     }
 
     void wal_replicate_t::load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) {
-        trace(log_, "wal_replicate_t::load, id: {}", wal_id);
+        trace(log_, "wal_replicate_t::load, session: {}, id: {}", session.data(), wal_id);
         std::size_t start_index = 0;
         next_id(wal_id);
         std::vector<record_t> records;

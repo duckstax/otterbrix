@@ -25,7 +25,12 @@ namespace components::sql::impl {
     bool operator!=(const mask_element_t& elem, const token_t& token);
 
     struct mask_group_element_t {
-        enum class status { yes, no, error };
+        enum class status
+        {
+            yes,
+            no,
+            error
+        };
 
         std::vector<mask_element_t> words;
 

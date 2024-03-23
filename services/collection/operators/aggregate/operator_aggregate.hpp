@@ -19,6 +19,6 @@ namespace services::collection::operators::aggregate {
         virtual std::string key_impl() const = 0;
     };
 
-    using operator_aggregate_ptr = std::unique_ptr<operator_aggregate_t>;
+    using operator_aggregate_ptr = boost::intrusive_ptr<operator_aggregate_t>;
 
 } // namespace services::collection::operators::aggregate

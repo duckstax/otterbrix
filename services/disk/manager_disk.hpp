@@ -28,7 +28,8 @@ namespace services::disk {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t {
+        enum class unpack_rules : uint64_t
+        {
             manager_wal = 0,
         };
 

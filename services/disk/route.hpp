@@ -3,7 +3,8 @@
 #include <core/handler_by_id.hpp>
 
 namespace services::disk {
-    enum class route : uint64_t {
+    enum class route : uint64_t
+    {
         create_agent,
 
         load,

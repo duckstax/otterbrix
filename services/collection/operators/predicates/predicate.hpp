@@ -9,7 +9,7 @@ namespace services::collection::operators::predicates {
 
     using services::collection::context_collection_t;
 
-    class predicate {
+    class predicate : public boost::intrusive_ref_counter<predicate> {
     public:
         explicit predicate(context_collection_t* context);
         predicate(const predicate&) = delete;
@@ -27,7 +27,7 @@ namespace services::collection::operators::predicates {
                                 const components::ql::storage_parameters* parameters) = 0;
     };
 
-    using predicate_ptr = std::unique_ptr<predicate>;
+    using predicate_ptr = boost::intrusive_ptr<predicate>;
 
     predicate_ptr create_predicate(context_collection_t* context,
                                    const components::expressions::compare_expression_ptr& expr);

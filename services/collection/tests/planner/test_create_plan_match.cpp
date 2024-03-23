@@ -21,7 +21,9 @@ TEST_CASE("create_plan::match") {
     {
         auto match = components::ql::aggregate::make_match(nullptr);
         auto node_match = make_node_match(resource, get_name(), match);
-        auto plan = create_plan(d(collection)->view(), node_match, components::ql::limit_t::unlimit());
+        context_storage_t context;
+        context.emplace(get_name(), d(collection)->view());
+        auto plan = create_plan(context, node_match, components::ql::limit_t::unlimit());
         plan->on_execute(nullptr);
         REQUIRE(plan->output()->size() == 100);
     }
@@ -29,7 +31,9 @@ TEST_CASE("create_plan::match") {
         auto match = components::ql::aggregate::make_match(
             make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
         auto node_match = make_node_match(resource, get_name(), match);
-        auto plan = create_plan(d(collection)->view(), node_match, components::ql::limit_t::unlimit());
+        context_storage_t context;
+        context.emplace(get_name(), d(collection)->view());
+        auto plan = create_plan(context, node_match, components::ql::limit_t::unlimit());
         //REQUIRE(node_match->to_string() == R"_($match: {"key": {$eq: #1}})_");
     }
 }

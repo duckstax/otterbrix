@@ -9,9 +9,14 @@
 
 namespace document::impl::internal {
 
-    enum { size_narrow = 2, size_wide = 4 };
+    enum
+    {
+        size_narrow = 2,
+        size_wide = 4
+    };
 
-    enum tags : uint8_t {
+    enum tags : uint8_t
+    {
         tag_short,
         tag_int,
         tag_float,
@@ -23,7 +28,8 @@ namespace document::impl::internal {
         tag_pointer
     };
 
-    enum {
+    enum
+    {
         special_value_null = 0x00,
         special_value_undefined = 0x0C,
         special_value_false = 0x04,

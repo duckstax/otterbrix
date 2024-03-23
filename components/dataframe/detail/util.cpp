@@ -66,7 +66,12 @@ namespace components::dataframe::detail {
             }
         };
 
-        enum class gather_bitmask_op { dont_check, passthrough, nullify };
+        enum class gather_bitmask_op
+        {
+            dont_check,
+            passthrough,
+            nullify
+        };
 
         template<typename iterator>
         void gather_bitmask(std::pmr::memory_resource* resource,

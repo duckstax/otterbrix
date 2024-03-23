@@ -5,7 +5,8 @@
 
 class log_t final {
 public:
-    enum class level : char {
+    enum class level : char
+    {
         trace = spdlog::level::trace,
         debug = spdlog::level::debug,
         info = spdlog::level::info,

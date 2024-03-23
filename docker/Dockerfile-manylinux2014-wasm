@@ -98,7 +98,7 @@ RUN   PYBIN=(/opt/python/*/bin) && \
           #${BIN}/python3 -m pip install --no-index --find-links . dist/otterbrix-*.whl  && \
           cp /app/wasm_bin/*.wasm $(echo "./$(${BIN}/python3 get_path.py )/components/wasm_runner/tests/") && \
           cd $(echo "./$(${BIN}/python3 get_path.py )") && \
-          ctest  -C --output-on-failure && \
+          ctest  -C --output-on-failure --timeout 60 && \
           #pytest && \
           cd /app ; \
       fi \

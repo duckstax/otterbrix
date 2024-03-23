@@ -3,7 +3,17 @@
 #include <cstdint>
 #include <cstdlib>
 
-enum class group_id_t : uint8_t { system = 0, dispatcher, memory_storage, collection, wal, disk, wasm, index };
+enum class group_id_t : uint8_t
+{
+    system = 0,
+    dispatcher,
+    memory_storage,
+    collection,
+    wal,
+    disk,
+    wasm,
+    index
+};
 
 template<class T>
 constexpr uint64_t handler_id(group_id_t group, T type) {

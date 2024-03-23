@@ -35,14 +35,23 @@ namespace services::collection {
     using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
     using document_view_t = components::document::document_view_t;
 
+    class collection_t;
+
     class context_collection_t final {
     public:
-        explicit context_collection_t(std::pmr::memory_resource* resource, log_t&& log)
+        explicit context_collection_t(std::pmr::memory_resource* resource,
+                                      const collection_full_name_t& name,
+                                      sessions::sessions_storage_t& sessions,
+                                      actor_zeta::address_t mdisk,
+                                      log_t&& log)
             : resource_(resource)
-            , log_(log)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
-            , storage_(resource_) {
+            , storage_(resource_)
+            , name_(name)
+            , sessions_(sessions)
+            , mdisk_(mdisk)
+            , log_(log) {
             assert(resource != nullptr);
         }
 
@@ -56,19 +65,27 @@ namespace services::collection {
 
         log_t& log() noexcept { return log_; }
 
+        const collection_full_name_t& name() const noexcept { return name_; }
+        sessions::sessions_storage_t& sessions() noexcept { return sessions_; }
+
+        actor_zeta::address_t disk() noexcept { return mdisk_; }
+
     private:
         std::pmr::memory_resource* resource_;
-        log_t log_;
-        /**
-        *  index
-        */
-
         components::index::index_engine_ptr index_engine_;
         /**
         *  statistics
         */
         components::statistic::statistic_t statistic_;
         storage_t storage_;
+        collection_full_name_t name_;
+        /**
+         * @brief Index create/drop context
+         * 
+         */
+        sessions::sessions_storage_t& sessions_;
+        actor_zeta::address_t mdisk_;
+        log_t log_;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
@@ -81,18 +98,15 @@ namespace services::collection {
         auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
         auto size(session_id_t& session) -> void;
 
-        auto execute_plan(const components::session::session_id_t& session,
-                          const components::logical_plan::node_ptr& logical_plan,
-                          components::ql::storage_parameters parameters) -> void;
+        auto execute_sub_plan(const components::session::session_id_t& session,
+                              collection::operators::operator_ptr plan,
+                              components::ql::storage_parameters parameters) -> void;
 
         void drop(const session_id_t& session);
         void close_cursor(session_id_t& session);
-
-        void create_index(const session_id_t& session, components::ql::create_index_t& index);
         void create_index_finish(const session_id_t& session,
                                  const std::string& name,
                                  const actor_zeta::address_t& index_address);
-        void drop_index(const session_id_t& session, components::ql::drop_index_t& index);
         void index_modify_finish(const session_id_t& session);
         void index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result);
 
@@ -101,9 +115,9 @@ namespace services::collection {
         context_collection_t* extract();
 
     private:
-        void find_document_impl(const components::session::session_id_t& session,
-                                const actor_zeta::address_t& sender,
-                                operators::operator_ptr plan);
+        void aggregate_document_impl(const components::session::session_id_t& session,
+                                     const actor_zeta::address_t& sender,
+                                     operators::operator_ptr plan);
         void update_document_impl(const components::session::session_id_t& session,
                                   const actor_zeta::address_t& sender,
                                   operators::operator_ptr plan);
@@ -119,7 +133,6 @@ namespace services::collection {
 
         log_t& log() noexcept;
 
-        const collection_full_name_t name_;
         actor_zeta::address_t mdisk_;
 
         std::unique_ptr<context_collection_t> context_;

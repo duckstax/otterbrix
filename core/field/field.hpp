@@ -204,7 +204,8 @@ public:
                                    field_array_t,
                                    field_object_t /*, tuple_t, map_t, AggregateFunctionStateData*/>;
 
-    enum type_which_t {
+    enum type_which_t
+    {
         Null = 0,
         UInt64 = 1,
         Int64 = 2,

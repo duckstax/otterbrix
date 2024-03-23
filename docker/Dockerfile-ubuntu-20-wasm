@@ -60,7 +60,7 @@ RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON && \
 
 RUN cp -p  /app/wasm_build/bin/*.wasm  /app/build/components/wasm_runner/tests/
 
-RUN ctest -C -V --output-on-failure
+RUN ctest -C -V --output-on-failure --timeout 60
 
 RUN cd integration/python/ && pytest
 

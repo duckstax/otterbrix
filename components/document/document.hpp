@@ -49,6 +49,8 @@ namespace components::document {
     template<class T>
     document_ptr make_document(const std::string& key, T value);
 
+    [[nodiscard]] document_ptr combine_documents(const document_ptr& left, const document_ptr& right);
+
     document_ptr make_upsert_document(const document_ptr& source);
 
     document_id_t get_document_id(const document_ptr& document);
