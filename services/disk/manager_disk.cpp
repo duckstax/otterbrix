@@ -4,10 +4,24 @@
 #include <components/index/disk/route.hpp>
 #include <core/system_command.hpp>
 #include <services/collection/route.hpp>
+#include <services/dispatcher/route.hpp>
 
 namespace services::disk {
 
     using components::document::document_id_t;
+
+    namespace {
+        std::vector<std::unique_ptr<components::ql::create_index_t>>
+        make_unique(std::vector<components::ql::create_index_t> indexes) {
+            std::vector<std::unique_ptr<components::ql::create_index_t>> result;
+            result.reserve(indexes.size());
+
+            for (auto&& index : indexes) {
+                result.push_back(std::make_unique<components::ql::create_index_t>(std::move(index)));
+            }
+            return result;
+        }
+    } // namespace
 
     base_manager_disk_t::base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,
                                              actor_zeta::scheduler_raw scheduler)
@@ -253,18 +267,19 @@ namespace services::disk {
         }
     }
 
-    void manager_disk_t::load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher) {
-        auto indexes = read_indexes_();
+    void manager_disk_t::load_indexes_([[maybe_unused]] session_id_t& session,
+                                       const actor_zeta::address_t& dispatcher) {
+        auto indexes = make_unique(read_indexes_());
         metafile_indexes_->seek_eof();
-        for (const auto& index : indexes) {
-            trace(log_, "manager_disk: load_indexes_ : {}", index.name());
+        for (auto& index : indexes) {
+            trace(log_, "manager_disk: load_indexes_ : {}", index->name());
             // Require to separate sessions for load and create index
             // For each index create we need to generate unique session id.
             actor_zeta::send(dispatcher,
                              address(),
-                             collection::handler_id(collection::route::create_index),
+                             dispatcher::handler_id(dispatcher::route::execute_ql),
                              session_id_t::generate_uid(),
-                             index,
+                             index.release(),
                              dispatcher);
         }
     }

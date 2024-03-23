@@ -11,7 +11,10 @@
 
 namespace services::wasm {
 
-    enum class route : uint64_t { load_code };
+    enum class route : uint64_t
+    {
+        load_code
+    };
 
     inline uint64_t handler_id(route type) { return handler_id(group_id_t::wasm, type); }
 

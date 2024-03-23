@@ -5,6 +5,8 @@ set(SOURCE_${PROJECT_NAME}
         node_aggregate.cpp
         node_create_collection.cpp
         node_create_database.cpp
+        node_create_index.cpp
+        node_drop_index.cpp
         node_delete.cpp
         node_drop_collection.cpp
         node_drop_database.cpp

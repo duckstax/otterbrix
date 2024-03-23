@@ -20,7 +20,7 @@ namespace services::collection::planner::impl {
             }
         }
 
-        auto plan = boost::intrusive_ptr(new operators::operator_delete(context.at(node->collection_full())));
+        auto plan = boost::intrusive_ptr(new operators::operator_delete(context.at(node->collection_full_name())));
         plan->set_children(
             create_plan_match(context,
                               node_match,

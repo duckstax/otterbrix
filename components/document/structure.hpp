@@ -4,7 +4,14 @@
 
 namespace components::document::structure {
 
-    enum class attribute : uint32_t { type = 0, offset = 1, size = 2, value = 3, version = 4 };
+    enum class attribute : uint32_t
+    {
+        type = 0,
+        offset = 1,
+        size = 2,
+        value = 3,
+        version = 4
+    };
 
     uint32_t index_attribute(attribute attr);
     bool is_attribute(const ::document::impl::value_t* field, attribute attr);

@@ -7,6 +7,12 @@
 
 namespace components::dataframe {
 
-    enum class mask_state : int32_t { unallocated, uninitialized, all_valid, all_null };
+    enum class mask_state : int32_t
+    {
+        unallocated,
+        uninitialized,
+        all_valid,
+        all_null
+    };
 
 } // namespace components::dataframe

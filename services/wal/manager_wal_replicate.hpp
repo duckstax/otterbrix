@@ -37,7 +37,11 @@ namespace services::wal {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t { manager_disk = 0, manager_dispatcher = 1 };
+        enum class unpack_rules : uint64_t
+        {
+            manager_disk = 0,
+            manager_dispatcher = 1
+        };
 
         void sync(address_pack& pack) {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);

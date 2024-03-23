@@ -47,11 +47,11 @@ namespace services::collection::planner::impl {
                                               const components::logical_plan::node_ptr& node,
                                               components::ql::limit_t limit) {
         if (node->expressions().empty()) {
-            return boost::intrusive_ptr(new operators::transfer_scan(context.at(node->collection_full()), limit));
+            return boost::intrusive_ptr(new operators::transfer_scan(context.at(node->collection_full_name()), limit));
         } else { //todo: other kinds scan
             auto expr =
                 reinterpret_cast<const components::expressions::compare_expression_ptr*>(&node->expressions()[0]);
-            return create_plan_match_(context.at(node->collection_full()), *expr, limit);
+            return create_plan_match_(context.at(node->collection_full_name()), *expr, limit);
         }
     }
 

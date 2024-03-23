@@ -19,16 +19,18 @@ namespace services::collection {
                                actor_zeta::address_t mdisk)
         : actor_zeta::basic_async_actor(memory_storage, std::string(name.to_string()))
         , mdisk_(std::move(mdisk))
-        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(), name, log.clone()))
+        , context_(std::make_unique<context_collection_t>(new std::pmr::monotonic_buffer_resource(),
+                                                          name,
+                                                          sessions_,
+                                                          mdisk_,
+                                                          log.clone()))
         , cursor_storage_(context_->resource()) {
         add_handler(handler_id(route::create_documents), &collection_t::create_documents);
         add_handler(handler_id(route::execute_sub_plan), &collection_t::execute_sub_plan);
         add_handler(handler_id(route::size), &collection_t::size);
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
-        add_handler(handler_id(route::create_index), &collection_t::create_index);
         add_handler(handler_id(index::route::success_create), &collection_t::create_index_finish);
-        add_handler(handler_id(route::drop_index), &collection_t::drop_index);
         add_handler(handler_id(index::route::success), &collection_t::index_modify_finish);
         add_handler(handler_id(index::route::success_find), &collection_t::index_find_finish);
     }
@@ -92,7 +94,7 @@ namespace services::collection {
                 make_cursor(context_->resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
-        components::pipeline::context_t pipeline_context{session, address(), parameters};
+        components::pipeline::context_t pipeline_context{session, address(), current_message()->sender(), parameters};
         plan->on_execute(&pipeline_context);
         if (!plan->is_executed()) {
             sessions::make_session(sessions_,
@@ -119,7 +121,11 @@ namespace services::collection {
                 aggregate_document_impl(session, sender, std::move(plan));
                 return;
             }
-
+            case operators::operator_type::add_index:
+            case operators::operator_type::drop_index: {
+                //nothing to do
+                return;
+            }
             default: {
                 actor_zeta::send(sender,
                                  address(),

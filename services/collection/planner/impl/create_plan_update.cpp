@@ -20,7 +20,7 @@ namespace services::collection::planner::impl {
             }
         }
 
-        auto plan = boost::intrusive_ptr(new operators::operator_update(context.at(node->collection_full()),
+        auto plan = boost::intrusive_ptr(new operators::operator_update(context.at(node->collection_full_name()),
                                                                         node_update->update(),
                                                                         node_update->upsert()));
         plan->set_children(

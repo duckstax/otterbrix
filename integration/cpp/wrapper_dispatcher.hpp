@@ -65,8 +65,9 @@ namespace otterbrix {
                                         bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto
         size(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> size_t;
-        auto create_index(session_id_t& session, components::ql::create_index_t index) -> bool;
-        auto drop_index(session_id_t& session, components::ql::drop_index_t drop_index) -> bool;
+        auto create_index(session_id_t& session, components::ql::create_index_t* ql)
+            -> components::cursor::cursor_t_ptr;
+        auto drop_index(session_id_t& session, components::ql::drop_index_t* ql) -> components::cursor::cursor_t_ptr;
         auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query)
             -> components::cursor::cursor_t_ptr;
         auto execute_sql(session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
@@ -79,11 +80,7 @@ namespace otterbrix {
         /// async method
         auto load_finish() -> void;
         auto execute_ql_finish(session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto delete_finish(session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
-        auto update_finish(session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
         auto size_finish(session_id_t& session, size_t size) -> void;
-        auto create_index_finish(session_id_t& session, bool success) -> void;
-        auto drop_index_finish(session_id_t& session, bool success) -> void;
 
         void init();
         void wait();
