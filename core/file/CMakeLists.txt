@@ -1,10 +1,16 @@
 project(file)
 
 set(header_${PROJECT_NAME}
+        base_file_system.hpp
+        file_system.hpp
+        utils.hpp
         file.hpp
         )
 
 set(source_${PROJECT_NAME}
+        base_file_system.cpp
+        file_system.cpp
+        utils.cpp
         file.cpp
         )
 
@@ -27,3 +33,7 @@ target_include_directories(
         otterbrix_${PROJECT_NAME}
         PUBLIC
 )
+
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif ()
