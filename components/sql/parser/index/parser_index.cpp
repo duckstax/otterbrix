@@ -1,6 +1,6 @@
+#include "parser_index.hpp"
 #include "impl/parser_index_create.hpp"
 #include "impl/parser_index_drop.hpp"
-#include "parser_database.hpp"
 
 #define PARSE(F)                                                                                                       \
     if (!ok)                                                                                                           \

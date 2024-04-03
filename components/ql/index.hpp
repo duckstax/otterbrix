@@ -40,6 +40,7 @@ namespace components::ql {
 
     enum class index_compare
     {
+        undef,
         str,
         int8,
         int16,
@@ -56,6 +57,8 @@ namespace components::ql {
 
     inline std::string name_index_compare(index_compare type) {
         switch (type) {
+            case index_compare::undef:
+                return "undef";
             case index_compare::str:
                 return "srt";
             case index_compare::int8:
@@ -93,6 +96,15 @@ namespace components::ql {
             , index_type_(type)
             , index_compare_(index_compare) {}
 
+        create_index_t(const database_name_t& database,
+                       const collection_name_t& collection,
+                       const std::string& name,
+                       index_type type = index_type::single)
+            : ql_statement_t(statement_type::create_index, database, collection)
+            , name_{name}
+            , index_type_(type)
+            , index_compare_(index_compare::undef) {}
+
         create_index_t()
             : ql_statement_t(statement_type::create_index, {}, {})
             , index_type_(index_type::no_valid)
@@ -104,9 +116,8 @@ namespace components::ql {
         create_index_t& operator=(create_index_t&&) = default;
 
         std::string name() const {
-            //todo: user input
             std::stringstream s;
-            s << collection_ << "_";
+            s << name_ << "__" << collection_ << "_";
             for (const auto& key : keys_) {
                 s << "_" << key.as_string();
             }
@@ -115,6 +126,7 @@ namespace components::ql {
 
         ~create_index_t() final = default;
 
+        std::string name_ = {"unnamed"};
         keys_base_storage_t keys_;
         index_type index_type_;
         index_compare index_compare_;
@@ -123,6 +135,13 @@ namespace components::ql {
     struct drop_index_t final : ql_statement_t {
         drop_index_t(const database_name_t& database, const collection_name_t& collection)
             : ql_statement_t(statement_type::drop_index, database, collection) {}
+
+        drop_index_t(const database_name_t& database,
+                     const collection_name_t& collection,
+                     components::expressions::key_t key)
+            : ql_statement_t(statement_type::drop_index, database, collection) {
+            keys_.push_back(std::move(key));
+        }
 
         drop_index_t()
             : ql_statement_t(statement_type::drop_index, {}, {}) {}

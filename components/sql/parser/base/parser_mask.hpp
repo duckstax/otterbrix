@@ -50,7 +50,7 @@ namespace components::sql::impl {
         std::vector<mask_element_t> elements_;
     };
 
-    bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem);
+    bool contains_mask_element(lexer_t& lexer, const mask_element_t& elem);
 
     ::document::wrapper_value_t parse_value(const token_t& token);
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields);

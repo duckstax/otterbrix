@@ -86,7 +86,7 @@ namespace components::sql::select::impl {
         }
 
         lexer.save();
-        if (!contents_mask_element(lexer, mask_elem_from)) {
+        if (!contains_mask_element(lexer, mask_elem_from)) {
             return false;
         }
         lexer.restore();
