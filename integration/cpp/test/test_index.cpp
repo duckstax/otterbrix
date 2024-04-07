@@ -50,22 +50,22 @@ constexpr int kDocuments = 100;
         }                                                                                                              \
     } while (false)
 
-#define CREATE_INDEX(INDEX_COMPARE, KEY)                                                                               \
+#define CREATE_INDEX(INDEX_NAME, INDEX_COMPARE, KEY)                                                                   \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
         components::ql::create_index_t ql{database_name,                                                               \
                                           collection_name,                                                             \
+                                          INDEX_NAME,                                                                  \
                                           components::ql::index_type::single,                                          \
                                           INDEX_COMPARE};                                                              \
         ql.keys_.emplace_back(KEY);                                                                                    \
         dispatcher->create_index(session, &ql);                                                                        \
     } while (false)
 
-#define DROP_INDEX(KEY)                                                                                                \
+#define DROP_INDEX(INDEX_NAME)                                                                                         \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        components::ql::drop_index_t ql{database_name, collection_name};                                               \
-        ql.keys_.emplace_back(KEY);                                                                                    \
+        components::ql::drop_index_t ql{database_name, collection_name, INDEX_NAME};                                   \
         dispatcher->drop_index(session, &ql);                                                                          \
     } while (false)
 
@@ -93,7 +93,7 @@ constexpr int kDocuments = 100;
 
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
-        auto index_name = collection_name + "__" + NAME;                                                               \
+        auto index_name = collection_name + "_" + NAME;                                                                \
         auto path = config.disk.path / "indexes" / collection_name / index_name;                                       \
         REQUIRE(std::filesystem::exists(path) == EXISTS);                                                              \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS);                                                        \
@@ -107,7 +107,7 @@ TEST_CASE("integration::test_index::base") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX(components::ql::index_compare::int64, "count");
+        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
         FILL_COLLECTION();
     }
 
@@ -131,9 +131,9 @@ TEST_CASE("integration::test_index::save_load") {
         auto* dispatcher = space.dispatcher();
 
         INIT_COLLECTION();
-        CREATE_INDEX(components::ql::index_compare::int64, "count");
-        CREATE_INDEX(components::ql::index_compare::str, "countStr");
-        CREATE_INDEX(components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("strings", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("double_numbers", components::ql::index_compare::float64, "countDouble");
         FILL_COLLECTION();
     }
 
@@ -160,44 +160,44 @@ TEST_CASE("integration::test_index::drop") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX(components::ql::index_compare::int64, "count");
-        CREATE_INDEX(components::ql::index_compare::str, "countStr");
-        CREATE_INDEX(components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("strings", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("double_numbers", components::ql::index_compare::float64, "countDouble");
         FILL_COLLECTION();
         usleep(1000000); //todo: wait
     }
 
     INFO("drop indexes") {
-        CHECK_EXISTS_INDEX("count", true);
-        CHECK_EXISTS_INDEX("countStr", true);
-        CHECK_EXISTS_INDEX("countDouble", true);
+        CHECK_EXISTS_INDEX("numbers", true);
+        CHECK_EXISTS_INDEX("strings", true);
+        CHECK_EXISTS_INDEX("double_numbers", true);
 
-        DROP_INDEX("count");
+        DROP_INDEX("numbers");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("count", false);
-        CHECK_EXISTS_INDEX("countStr", true);
-        CHECK_EXISTS_INDEX("countDouble", true);
+        CHECK_EXISTS_INDEX("numbers", false);
+        CHECK_EXISTS_INDEX("strings", true);
+        CHECK_EXISTS_INDEX("double_numbers", true);
 
-        DROP_INDEX("countStr");
+        DROP_INDEX("strings");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("count", false);
-        CHECK_EXISTS_INDEX("countStr", false);
-        CHECK_EXISTS_INDEX("countDouble", true);
+        CHECK_EXISTS_INDEX("numbers", false);
+        CHECK_EXISTS_INDEX("strings", false);
+        CHECK_EXISTS_INDEX("double_numbers", true);
 
-        DROP_INDEX("countDouble");
+        DROP_INDEX("double_numbers");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("count", false);
-        CHECK_EXISTS_INDEX("countStr", false);
-        CHECK_EXISTS_INDEX("countDouble", false);
+        CHECK_EXISTS_INDEX("numbers", false);
+        CHECK_EXISTS_INDEX("strings", false);
+        CHECK_EXISTS_INDEX("double_numbers", false);
 
-        DROP_INDEX("count");
-        DROP_INDEX("count");
-        DROP_INDEX("count");
-        DROP_INDEX("count");
-        DROP_INDEX("count");
+        DROP_INDEX("numbers");
+        DROP_INDEX("numbers");
+        DROP_INDEX("numbers");
+        DROP_INDEX("numbers");
+        DROP_INDEX("numbers");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("count", false);
-        CHECK_EXISTS_INDEX("countStr", false);
-        CHECK_EXISTS_INDEX("countDouble", false);
+        CHECK_EXISTS_INDEX("numbers", false);
+        CHECK_EXISTS_INDEX("strings", false);
+        CHECK_EXISTS_INDEX("double_numbers", false);
     }
 }

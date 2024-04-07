@@ -90,9 +90,11 @@ namespace components::ql {
     struct create_index_t final : ql_statement_t {
         create_index_t(const database_name_t& database,
                        const collection_name_t& collection,
+                       const std::string& name,
                        index_type type,
                        index_compare index_compare)
             : ql_statement_t(statement_type::create_index, database, collection)
+            , name_{name}
             , index_type_(type)
             , index_compare_(index_compare) {}
 
@@ -117,10 +119,7 @@ namespace components::ql {
 
         std::string name() const {
             std::stringstream s;
-            s << name_ << "__" << collection_ << "_";
-            for (const auto& key : keys_) {
-                s << "_" << key.as_string();
-            }
+            s << collection_ << "_" << name_;
             return s.str();
         }
 
@@ -133,31 +132,22 @@ namespace components::ql {
     };
 
     struct drop_index_t final : ql_statement_t {
-        drop_index_t(const database_name_t& database, const collection_name_t& collection)
-            : ql_statement_t(statement_type::drop_index, database, collection) {}
-
-        drop_index_t(const database_name_t& database,
-                     const collection_name_t& collection,
-                     components::expressions::key_t key)
-            : ql_statement_t(statement_type::drop_index, database, collection) {
-            keys_.push_back(std::move(key));
-        }
+        drop_index_t(const database_name_t& database, const collection_name_t& collection, const std::string& name)
+            : ql_statement_t(statement_type::drop_index, database, collection)
+            , name_{name} {}
 
         drop_index_t()
             : ql_statement_t(statement_type::drop_index, {}, {}) {}
 
         std::string name() const {
             std::stringstream s;
-            s << collection_ << "_";
-            for (const auto& key : keys_) {
-                s << "_" << key.as_string();
-            }
+            s << collection_ << "_" << name_;
             return s.str();
         }
 
         ~drop_index_t() final = default;
 
-        keys_base_storage_t keys_;
+        std::string name_;
     };
 
 } // namespace components::ql
@@ -170,14 +160,15 @@ namespace msgpack {
             template<>
             struct convert<components::ql::create_index_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::ql::create_index_t& v) const {
-                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 5) {
+                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 6) {
                         throw msgpack::type_error();
                     }
                     v.database_ = o.via.array.ptr[0].as<std::string>();
                     v.collection_ = o.via.array.ptr[1].as<std::string>();
-                    v.index_type_ = static_cast<components::ql::index_type>(o.via.array.ptr[2].as<uint8_t>());
-                    v.index_compare_ = static_cast<components::ql::index_compare>(o.via.array.ptr[3].as<uint8_t>());
-                    auto data = o.via.array.ptr[4].as<std::vector<std::string>>();
+                    v.name_ = o.via.array.ptr[2].as<std::string>();
+                    v.index_type_ = static_cast<components::ql::index_type>(o.via.array.ptr[3].as<uint8_t>());
+                    v.index_compare_ = static_cast<components::ql::index_compare>(o.via.array.ptr[4].as<uint8_t>());
+                    auto data = o.via.array.ptr[5].as<std::vector<std::string>>();
                     v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
                     return o;
                 }
@@ -187,9 +178,10 @@ namespace msgpack {
             struct pack<components::ql::create_index_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::create_index_t const& v) const {
-                    o.pack_array(5);
+                    o.pack_array(6);
                     o.pack(v.database_);
                     o.pack(v.collection_);
+                    o.pack(v.name_);
                     o.pack(static_cast<uint8_t>(v.index_type_));
                     o.pack(static_cast<uint8_t>(v.index_compare_));
                     o.pack(v.keys_);
@@ -201,16 +193,17 @@ namespace msgpack {
             struct object_with_zone<components::ql::create_index_t> final {
                 void operator()(msgpack::object::with_zone& o, components::ql::create_index_t const& v) const {
                     o.type = type::ARRAY;
-                    o.via.array.size = 5;
+                    o.via.array.size = 6;
                     o.via.array.ptr =
                         static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
                                                                             MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                    o.via.array.ptr[2] = msgpack::object(static_cast<uint8_t>(v.index_type_), o.zone);
-                    o.via.array.ptr[3] = msgpack::object(static_cast<uint8_t>(v.index_compare_), o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.name_, o.zone);
+                    o.via.array.ptr[3] = msgpack::object(static_cast<uint8_t>(v.index_type_), o.zone);
+                    o.via.array.ptr[4] = msgpack::object(static_cast<uint8_t>(v.index_compare_), o.zone);
                     std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
-                    o.via.array.ptr[4] = msgpack::object(tmp, o.zone);
+                    o.via.array.ptr[5] = msgpack::object(tmp, o.zone);
                 }
             };
 
@@ -222,8 +215,8 @@ namespace msgpack {
                     }
                     v.database_ = o.via.array.ptr[0].as<std::string>();
                     v.collection_ = o.via.array.ptr[1].as<std::string>();
-                    auto data = o.via.array.ptr[2].as<std::vector<std::string>>();
-                    v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
+                    v.name_ = o.via.array.ptr[2].as<std::string>();
+
                     return o;
                 }
             };
@@ -235,7 +228,7 @@ namespace msgpack {
                     o.pack_array(3);
                     o.pack(v.database_);
                     o.pack(v.collection_);
-                    o.pack(v.keys_);
+                    o.pack(v.name_);
                     return o;
                 }
             };
@@ -250,8 +243,7 @@ namespace msgpack {
                                                                             MSGPACK_ZONE_ALIGNOF(msgpack::object)));
                     o.via.array.ptr[0] = msgpack::object(v.database_, o.zone);
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
-                    std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
-                    o.via.array.ptr[2] = msgpack::object(tmp, o.zone);
+                    o.via.array.ptr[2] = msgpack::object(v.name_, o.zone);
                 }
             };
 

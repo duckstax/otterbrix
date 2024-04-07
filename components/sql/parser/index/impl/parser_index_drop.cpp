@@ -8,7 +8,7 @@ namespace components::sql::index::impl {
 
     constexpr uint64_t database_name = 4;
     constexpr uint64_t collection_name = 6;
-    constexpr uint64_t key_name = 8;
+    constexpr uint64_t name = 8;
 
     components::sql::impl::parser_result
     parse_drop(std::pmr::memory_resource*, std::string_view query, ql::variant_statement_t& statement) {
@@ -25,9 +25,8 @@ namespace components::sql::index::impl {
 
         lexer_t lexer(query);
         if (mask.match(lexer)) {
-            statement = components::ql::drop_index_t{mask.cap(database_name),
-                                                     mask.cap(collection_name),
-                                                     components::expressions::key_t{std::move(mask.cap(key_name))}};
+            statement =
+                components::ql::drop_index_t{mask.cap(database_name), mask.cap(collection_name), mask.cap(name)};
             return true;
         }
         return false;
