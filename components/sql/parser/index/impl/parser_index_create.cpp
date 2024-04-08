@@ -53,7 +53,7 @@ namespace components::sql::index::impl {
         std::string index_name;
         {
             auto index_name_token = lexer.next_not_whitespace_token();
-            if (index_name_token.type != token_type::bare_word) {
+            if (index_name_token.type != token_type::bare_word || mask_elem_on == index_name_token) {
                 return components::sql::impl::parser_result{parse_error::syntax_error,
                                                             index_name_token,
                                                             "not valid index query"};
