@@ -62,6 +62,21 @@ constexpr int kDocuments = 100;
         dispatcher->create_index(session, &ql);                                                                        \
     } while (false)
 
+#define CREATE_EXISTED_INDEX(INDEX_NAME, INDEX_COMPARE, KEY)                                                           \
+    do {                                                                                                               \
+        auto session = otterbrix::session_id_t();                                                                      \
+        components::ql::create_index_t ql{database_name,                                                               \
+                                          collection_name,                                                             \
+                                          INDEX_NAME,                                                                  \
+                                          components::ql::index_type::single,                                          \
+                                          INDEX_COMPARE};                                                              \
+        ql.keys_.emplace_back(KEY);                                                                                    \
+        auto res = dispatcher->create_index(session, &ql);                                                             \
+        REQUIRE(res->is_error() == true);                                                                              \
+        REQUIRE(res->get_error().type == components::cursor::error_code_t::index_already_exist);                       \
+                                                                                                                       \
+    } while (false)
+
 #define DROP_INDEX(INDEX_NAME)                                                                                         \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
@@ -107,7 +122,7 @@ TEST_CASE("integration::test_index::base") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
         FILL_COLLECTION();
     }
 
@@ -131,9 +146,9 @@ TEST_CASE("integration::test_index::save_load") {
         auto* dispatcher = space.dispatcher();
 
         INIT_COLLECTION();
-        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
-        CREATE_INDEX("strings", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("double_numbers", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
         FILL_COLLECTION();
     }
 
@@ -160,44 +175,81 @@ TEST_CASE("integration::test_index::drop") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("numbers", components::ql::index_compare::int64, "count");
-        CREATE_INDEX("strings", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("double_numbers", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
         FILL_COLLECTION();
         usleep(1000000); //todo: wait
     }
 
     INFO("drop indexes") {
-        CHECK_EXISTS_INDEX("numbers", true);
-        CHECK_EXISTS_INDEX("strings", true);
-        CHECK_EXISTS_INDEX("double_numbers", true);
+        CHECK_EXISTS_INDEX("ncount", true);
+        CHECK_EXISTS_INDEX("scount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
 
-        DROP_INDEX("numbers");
+        DROP_INDEX("ncount");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("numbers", false);
-        CHECK_EXISTS_INDEX("strings", true);
-        CHECK_EXISTS_INDEX("double_numbers", true);
+        CHECK_EXISTS_INDEX("ncount", false);
+        CHECK_EXISTS_INDEX("scount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
 
-        DROP_INDEX("strings");
+        DROP_INDEX("scount");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("numbers", false);
-        CHECK_EXISTS_INDEX("strings", false);
-        CHECK_EXISTS_INDEX("double_numbers", true);
+        CHECK_EXISTS_INDEX("ncount", false);
+        CHECK_EXISTS_INDEX("scount", false);
+        CHECK_EXISTS_INDEX("dcount", true);
 
-        DROP_INDEX("double_numbers");
+        DROP_INDEX("dcount");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("numbers", false);
-        CHECK_EXISTS_INDEX("strings", false);
-        CHECK_EXISTS_INDEX("double_numbers", false);
+        CHECK_EXISTS_INDEX("ncount", false);
+        CHECK_EXISTS_INDEX("scount", false);
+        CHECK_EXISTS_INDEX("dcount", false);
 
-        DROP_INDEX("numbers");
-        DROP_INDEX("numbers");
-        DROP_INDEX("numbers");
-        DROP_INDEX("numbers");
-        DROP_INDEX("numbers");
+        DROP_INDEX("ncount");
+        DROP_INDEX("ncount");
+        DROP_INDEX("ncount");
+        DROP_INDEX("ncount");
+        DROP_INDEX("ncount");
         usleep(100000); //todo: wait
-        CHECK_EXISTS_INDEX("numbers", false);
-        CHECK_EXISTS_INDEX("strings", false);
-        CHECK_EXISTS_INDEX("double_numbers", false);
+        CHECK_EXISTS_INDEX("ncount", false);
+        CHECK_EXISTS_INDEX("scount", false);
+        CHECK_EXISTS_INDEX("dcount", false);
+    }
+}
+
+TEST_CASE("integration::test_index::index already exist") {
+    auto config = test_create_config("/tmp/otterbrix/integration/test_index/base");
+    test_clear_directory(config);
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        INIT_COLLECTION();
+        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        FILL_COLLECTION();
+    }
+
+    INFO("add existed ncount index") {
+        CREATE_EXISTED_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_EXISTED_INDEX("ncount", components::ql::index_compare::int64, "count");
+    }
+
+    INFO("add existed scount index") {
+        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+    }
+
+    INFO("add existed dcount index") {
+        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+    }
+
+    INFO("find") {
+        CHECK_FIND_ALL();
+        CHECK_EXISTS_INDEX("ncount", true);
+        CHECK_EXISTS_INDEX("scount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
     }
 }

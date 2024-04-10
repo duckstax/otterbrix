@@ -179,6 +179,8 @@ namespace components::index {
         return nullptr;
     }
 
+    auto index_engine_t::has_index(const std::string& name) -> bool { return matching(name) == nullptr ? false : true; }
+
     void index_engine_t::insert_document(const document_ptr& document, pipeline::context_t* pipeline_context) {
         for (auto& index : storage_) {
             if (is_match_document(index, document)) {

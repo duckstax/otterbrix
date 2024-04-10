@@ -33,9 +33,10 @@ namespace components::cursor {
         database_not_exists = 2,
         collection_already_exists = 3,
         collection_not_exists = 4,
-        collection_dropped = 5,
-        sql_parse_error = 6,
-        create_phisical_plan_error = 7
+        index_already_exist = 5,
+        collection_dropped = 6,
+        sql_parse_error = 7,
+        create_phisical_plan_error = 8
     };
 
     struct error_t {

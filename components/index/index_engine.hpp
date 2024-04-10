@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <map>
 #include <memory>
 #include <scoped_allocator>
@@ -15,6 +16,8 @@
 
 namespace components::index {
 
+    constexpr uint32_t INDEX_ID_UNDEFINED = std::numeric_limits<uint32_t>::max();
+
     struct index_engine_t final {
     public:
         explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
@@ -22,6 +25,8 @@ namespace components::index {
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto matching(const actor_zeta::address_t& address) -> index_t::pointer;
         auto matching(const std::string& name) -> index_t::pointer;
+        auto has_index(const std::string& name)
+            -> bool; // TODO figure out how to make it faster (not using matching inside)
         auto add_index(const keys_base_storage_t&, index_ptr) -> uint32_t;
         auto add_disk_agent(id_index id, actor_zeta::address_t address) -> void;
         auto drop_index(index_t::pointer index) -> void;

@@ -25,6 +25,7 @@ TEST_CASE("parser::create_index") {
         REQUIRE(res.error.error() == sql::parse_error::syntax_error);
         REQUIRE(res.error.mistake() == "name");
         REQUIRE(res.error.mistake().data() == query + 58);
+        // TODO check what()
     }
 
     // // TODO Add more correct EoQ check
@@ -110,5 +111,10 @@ TEST_CASE("parser::drop_index") {
         REQUIRE(std::get<ql::drop_index_t>(ql).database_ == "TEST_DATABASE");
         REQUIRE(std::get<ql::drop_index_t>(ql).collection_ == "TEST_COLLECTION");
         REQUIRE(std::get<ql::drop_index_t>(ql).name_ == "counter");
+    }
+
+    SECTION("base drop index error") {
+        auto ql = sql::parse(resource, "DROP INDEX TEST_DATABASE.TEST_COLLECTION;").ql;
+        REQUIRE(std::holds_alternative<ql::unused_statement_t>(ql));
     }
 }

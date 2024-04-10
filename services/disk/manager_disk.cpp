@@ -191,7 +191,11 @@ namespace services::disk {
         auto name = index.name();
         if (index_agents_.contains(name) && !index_agents_.at(name)->is_dropped()) {
             error(log_, "manager_disk: index {} already exists", name);
-            actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::error), session);
+            actor_zeta::send(current_message()->sender(),
+                             address(),
+                             index::handler_id(index::route::error),
+                             session,
+                             name);
         } else {
             trace(log_, "manager_disk: create_index_agent : {}", name);
             index_agents_.erase(name);
