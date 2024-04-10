@@ -46,9 +46,7 @@ namespace services::collection {
         sessions::remove(sessions_, session, name);
     }
 
-    void collection_t::create_index_finish_fail(const session_id_t& session,
-                                                const std::string& name,
-                                                const actor_zeta::address_t& index_address) {
+    void collection_t::create_index_finish_fail(const session_id_t& session, const std::string& name) {
         debug(log(), "collection::create_index_finish_fail");
         auto& create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         actor_zeta::send(
