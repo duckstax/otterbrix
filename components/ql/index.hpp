@@ -154,13 +154,15 @@ namespace components::ql {
 
 // User defined class template specialization
 namespace msgpack {
+    constexpr uint32_t CREATE_INDEX_SIZE = 6;
+    constexpr uint32_t DROP_INDEX_SIZE = 3;
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
 
             template<>
             struct convert<components::ql::create_index_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::ql::create_index_t& v) const {
-                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 6) {
+                    if (o.type != msgpack::type::ARRAY || o.via.array.size != CREATE_INDEX_SIZE) {
                         throw msgpack::type_error();
                     }
                     v.database_ = o.via.array.ptr[0].as<std::string>();
@@ -178,7 +180,7 @@ namespace msgpack {
             struct pack<components::ql::create_index_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::create_index_t const& v) const {
-                    o.pack_array(6);
+                    o.pack_array(CREATE_INDEX_SIZE);
                     o.pack(v.database_);
                     o.pack(v.collection_);
                     o.pack(v.name_);
@@ -193,7 +195,7 @@ namespace msgpack {
             struct object_with_zone<components::ql::create_index_t> final {
                 void operator()(msgpack::object::with_zone& o, components::ql::create_index_t const& v) const {
                     o.type = type::ARRAY;
-                    o.via.array.size = 6;
+                    o.via.array.size = CREATE_INDEX_SIZE;
                     o.via.array.ptr =
                         static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
                                                                             MSGPACK_ZONE_ALIGNOF(msgpack::object)));
@@ -210,7 +212,7 @@ namespace msgpack {
             template<>
             struct convert<components::ql::drop_index_t> final {
                 msgpack::object const& operator()(msgpack::object const& o, components::ql::drop_index_t& v) const {
-                    if (o.type != msgpack::type::ARRAY || o.via.array.size != 3) {
+                    if (o.type != msgpack::type::ARRAY || o.via.array.size != DROP_INDEX_SIZE) {
                         throw msgpack::type_error();
                     }
                     v.database_ = o.via.array.ptr[0].as<std::string>();
@@ -225,7 +227,7 @@ namespace msgpack {
             struct pack<components::ql::drop_index_t> final {
                 template<typename Stream>
                 packer<Stream>& operator()(msgpack::packer<Stream>& o, components::ql::drop_index_t const& v) const {
-                    o.pack_array(3);
+                    o.pack_array(DROP_INDEX_SIZE);
                     o.pack(v.database_);
                     o.pack(v.collection_);
                     o.pack(v.name_);
@@ -237,7 +239,7 @@ namespace msgpack {
             struct object_with_zone<components::ql::drop_index_t> final {
                 void operator()(msgpack::object::with_zone& o, components::ql::drop_index_t const& v) const {
                     o.type = type::ARRAY;
-                    o.via.array.size = 3;
+                    o.via.array.size = DROP_INDEX_SIZE;
                     o.via.array.ptr =
                         static_cast<msgpack::object*>(o.zone.allocate_align(sizeof(msgpack::object) * o.via.array.size,
                                                                             MSGPACK_ZONE_ALIGNOF(msgpack::object)));
