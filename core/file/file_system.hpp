@@ -1,86 +1,126 @@
 #pragma once
 
-#include "base_file_system.hpp"
+#include "local_file_system.hpp"
+#include "virtual_file_system.hpp"
 
-namespace core::file {
+namespace core::filesystem {
 
-    class file_system_t : public base_file_system_t {
+    template<class FSC>
+    class file_system final : private FSC {
     public:
-        std::unique_ptr<file_handle_t> open_file(const std::string& path, uint8_t flags, file_lock_type lock = file_lock_type::NO_LOCK) override;
-
-        // read exactly nr_bytes from the specified location in the file. Fails if nr_bytes could not be read. This is
-        // equivalent to calling set_file_pointer(location) followed by calling read().
-        bool read(file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location) override;
-        // write exactly nr_bytes to the specified location in the file. Fails if nr_bytes could not be written. This is
-        // equivalent to calling set_file_pointer(location) followed by calling write().
-        bool write(file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location) override;
-        // read nr_bytes from the specified file into the buffer, moving the file pointer forward by nr_bytes. Returns the
-        // amount of bytes read.
-        int64_t read(file_handle_t& handle, void* buffer, int64_t nr_bytes) override;
-        // write nr_bytes from the buffer into the file, moving the file pointer forward by nr_bytes.
-        int64_t write(file_handle_t& handle, void* buffer, int64_t nr_bytes) override;
-
-        // Returns the file size of a file handle, returns -1 on error
-        int64_t file_size(file_handle_t& handle) override;
-        // Returns the file last modified time of a file handle, returns timespec with zero on all attributes on error
-        time_t last_modified_time(file_handle_t& handle) override;
-        // Returns the file last modified time of a file handle, returns timespec with zero on all attributes on error
-        file_type_t file_type(file_handle_t& handle) override;
-        // truncate a file to a maximum size of new_size, new_size should be smaller than or equal to the current size of
-        // the file
-        bool truncate(file_handle_t& handle, int64_t new_size) override;
-
-        // Check if a directory exists
-        bool directory_exists(const std::string& directory) override;
-        // Create a directory if it does not exist
-        bool create_directory(const std::string& directory) override;
-        // Recursively remove a directory and all files in it
-        bool remove_directory(const std::string& directory) override;
-        // List files in a directory, invoking the callback method for each one with (filename, is_dir)
-        bool list_files(const std::string& directory, const std::function<void(const std::string&, bool)>& callback) override;
-        // Move a file from source path to the target, StorageManager relies on this being an atomic action for ACID
-        // properties
-        bool move_files(const std::string& source, const std::string& target) override;
-        // Check if a file exists
-        bool file_exists(const std::string& filename) override;
-
-        // Check if path is a pipe
-        bool is_pipe(const std::string& filename) override;
-        // Remove a file from disk
-        bool remove_file(const std::string& filename) override;
-        // sync a file handle to disk
-        bool file_sync(file_handle_t& handle) override;
-
-        // Runs a glob on the file system, returning a list of matching files
-        std::vector<std::string> glob_files(const std::string& path) override;
-
-        bool can_handle_files(const std::string&) override {
-            // Whether or not a sub-system can handle a specific file path
-            return false;
-        }
-
-        // Set the file pointer of a file handle to a specified location. Reads and writes will happen from this location
-        bool seek(file_handle_t& handle, uint64_t location) override;
-        // Return the current seek posiiton in the file.
-        uint64_t seek_position(file_handle_t& handle) override;
-
-        // Whether or not we can seek into the file
-        bool can_seek() override;
-
-        std::string name() const override {
-            return "file_system_t";
-        }
-
-        // Returns the last Win32 error, in std::string format. Returns an empty std::string if there is no error, or on non-Windows
-        // systems.
-        static std::string last_error_as_string();
-
-    private:
-        // Set the file pointer of a file handle to a specified location. Reads and writes will happen from this location
-        bool set_file_pointer(file_handle_t& handle, uint64_t location);
-        uint64_t file_pointer(file_handle_t& handle);
-
-        std::vector<std::string> fetch_file_without_glob(const std::string& path, bool absolute_path);
+        file_system(const FSC& fs) : FSC(fs) {}
     };
 
-} // namespace core::file
+    template<class FSC, class ...Args>
+    std::unique_ptr<file_handle_t> open_file(file_system<FSC>& fs, Args&&... args) {
+        return open_file(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC>
+    bool read(file_system<FSC>& fs, file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location) {
+        return read(fs, handle, buffer, nr_bytes, location);
+    }
+
+    template<class FSC>
+    int64_t read(file_system<FSC>& fs, file_handle_t& handle, void* buffer, int64_t nr_bytes) {
+        return read(fs, handle, buffer, nr_bytes);
+    }
+
+    template<class FSC>
+    bool write(file_system<FSC>& fs, file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location) {
+        return write(fs, handle, buffer, nr_bytes, location);
+    }
+
+    template<class FSC>
+    int64_t write(file_system<FSC>& fs, file_handle_t& handle, void* buffer, int64_t nr_bytes) {
+        return write(fs, handle, buffer, nr_bytes);
+    }
+
+    template<class FSC, class ...Args>
+    int64_t file_size(file_system<FSC>& fs, Args&&... args) {
+        return file_size(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    time_t last_modified_time(file_system<FSC>& fs, Args&&... args) {
+        return last_modified_time(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    file_type_t file_type(file_system<FSC>& fs, Args&&... args) {
+        return file_type(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool truncate(file_system<FSC>& fs, Args&&... args) {
+        return truncate(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool directory_exist(file_system<FSC>& fs, Args&&... args) {
+        return directory_exist(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool create_directory(file_system<FSC>& fs, Args&&... args) {
+        return create_directory(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool remove_directory(file_system<FSC>& fs, Args&&... args) {
+        return remove_directory(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool list_files(file_system<FSC>& fs, Args&&... args) {
+        return list_files(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool move_files(file_system<FSC>& fs, Args&&... args) {
+        return move_files(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool file_exists(file_system<FSC>& fs, Args&&... args) {
+        return file_exists(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool is_pipe(file_system<FSC>& fs, Args&&... args) {
+        return is_pipe(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool remove_file(file_system<FSC>& fs, Args&&... args) {
+        return remove_file(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool file_sync(file_system<FSC>& fs, Args&&... args) {
+        return file_sync(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    std::vector<path_t> glob_files(file_system<FSC>& fs, Args&&... args) {
+        return glob_files(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    bool seek(file_system<FSC>& fs, Args&&... args) {
+        return seek(fs, std::forward<Args>(args)...);
+    }
+
+    template<class FSC, class ...Args>
+    uint64_t seek_position(file_system<FSC>& fs, Args&&... args) {
+        return seek_position(fs, std::forward<Args>(args)...);
+    }
+
+    #ifdef PLATFORM_WINDOWS
+    template<class FSC, class ...Args>
+    std::string last_error_as_string(file_system<FSC>& fs, Args&&... args) {
+        return last_error_as_string(fs, std::forward<Args>(args)...);
+    }
+    #endif
+
+} // namespace core::filesystem

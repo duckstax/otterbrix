@@ -1,16 +1,19 @@
 project(file)
 
 set(header_${PROJECT_NAME}
-        base_file_system.hpp
+        file_handle.hpp
+        local_file_system.hpp
+        virtual_file_system.hpp
+        path_utils.hpp
         file_system.hpp
-        utils.hpp
         file.hpp
         )
 
 set(source_${PROJECT_NAME}
-        base_file_system.cpp
-        file_system.cpp
-        utils.cpp
+        file_handle.cpp
+        local_file_system.cpp
+        virtual_file_system.cpp
+        path_utils.cpp
         file.cpp
         )
 

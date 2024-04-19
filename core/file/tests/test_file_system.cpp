@@ -1,192 +1,171 @@
 #include <catch2/catch.hpp>
 
+#include "file_system.hpp"
 #include <log/log.hpp>
 #include <string>
-#include "file_system.hpp"
 #include <fstream>
 
 #if defined(__linux__)
 #include <unistd.h>
 #endif
 
-using namespace core::file;
 using namespace std;
+using namespace core::filesystem;
 
-#define TESTING_DIRECTORY_NAME "unittest_tempdir"
-static string custom_test_directory;
+path_t testing_directory = "filesystem_test";
 
-static void create_dummy_file(string fname) {
-	ofstream outfile(fname);
-	outfile << "I_AM_A_DUMMY" << endl;
+static void create_dummy_file(string fname1) {
+	ofstream outfile(fname1);
+	outfile << "test_string" << endl;
 	outfile.close();
 }
 
-string get_test_directory() {
-	if (custom_test_directory.empty()) {
-		return TESTING_DIRECTORY_NAME;
-	}
-	return custom_test_directory;
-}
-
-string test_directory_path() {
-	unique_ptr<base_file_system_t> fs = base_file_system_t::create_local_system();
-	auto test_directory = get_test_directory();
-	if (!fs->directory_exists(test_directory)) {
-		fs->create_directory(test_directory);
-	}
-	string path;
-	if (custom_test_directory.empty()) {
-		// add the PID to the test directory - but only if it was not specified explicitly by the user
-        // fallback to the default home directories for the specified system
-        auto pid = getpid();
-		path = fs->join_path(test_directory, to_string(pid));
-	} else {
-		path = test_directory;
-	}
-	if (!fs->directory_exists(path)) {
-		fs->create_directory(path);
-	}
-	return path;
-}
-
-string test_create_path(string suffix) {
-	unique_ptr<base_file_system_t> fs = base_file_system_t::create_local_system();
-	return fs->join_path(test_directory_path(), suffix);
-}
-
-TEST_CASE("file_system::operators")
+TEST_CASE("filesystem")
 {
-    unique_ptr<base_file_system_t> fs = base_file_system_t::create_local_system();
-    auto dname = test_create_path("TEST_DIR");
-    string fname = "TEST_FILE";
-    string fname2 = "TEST_FILE_TWO";
-
-    if (fs->directory_exists(dname)) {
-        fs->remove_directory(dname);
+    INFO("initialization") {
+        local_file_system_t fs = local_file_system_t();
+        if (!directory_exists(fs, testing_directory)) {
+            create_directory(fs, testing_directory);
+        }
+        auto pid = getpid();
+        testing_directory /= to_string(pid);
+        if (!directory_exists(fs, testing_directory)) {
+            create_directory(fs, testing_directory);
+        }
     }
 
-    fs->create_directory(dname);
-    REQUIRE(fs->directory_exists(dname));
-    REQUIRE(!fs->file_exists(dname));
+    INFO("operators") {
+        local_file_system_t fs = local_file_system_t();
+        auto dname = testing_directory;
+        dname /= "TEST_DIR";
+        path_t fname1 = "TEST_FILE";
+        path_t fname2 = "TEST_FILE_TWO";
 
-    // we can call this again and nothing happens
-    fs->create_directory(dname);
+        if (directory_exists(fs, dname)) {
+            remove_directory(fs, dname);
+        }
 
-    auto fname_in_dir = fs->join_path(dname, fname);
-    auto fname_in_dir2 = fs->join_path(dname, fname2);
+        create_directory(fs, dname);
+        REQUIRE(directory_exists(fs, dname));
+        REQUIRE_FALSE(file_exists(fs, dname));
 
-    create_dummy_file(fname_in_dir);
-    REQUIRE(fs->file_exists(fname_in_dir));
-    REQUIRE(!fs->directory_exists(fname_in_dir));
+        create_directory(fs, dname);
 
-    size_t n_files = 0;
-    REQUIRE(fs->list_files(dname, [&n_files](const string&, bool) { n_files++; }));
+        auto fname_in_dir1 = dname;
+        fname_in_dir1 /= fname1;
+        auto fname_in_dir2 = dname;
+        fname_in_dir2 /= fname2;
 
-    REQUIRE(n_files == 1);
+        create_dummy_file(fname_in_dir1);
+        REQUIRE(file_exists(fs, fname_in_dir1));
+        REQUIRE_FALSE(directory_exists(fs, fname_in_dir1));
 
-    REQUIRE(fs->file_exists(fname_in_dir));
-    REQUIRE(!fs->file_exists(fname_in_dir2));
+        size_t n_files = 0;
+        REQUIRE(list_files(fs, dname, [&n_files](const path_t&, bool) { n_files++; }));
 
-    fs->move_files(fname_in_dir, fname_in_dir2);
+        REQUIRE(n_files == 1);
 
-    REQUIRE(!fs->file_exists(fname_in_dir));
-    REQUIRE(fs->file_exists(fname_in_dir2));
+        REQUIRE(file_exists(fs, fname_in_dir1));
+        REQUIRE_FALSE(file_exists(fs, fname_in_dir2));
 
-    fs->remove_directory(dname);
+        move_files(fs, fname_in_dir1, fname_in_dir2);
 
-    REQUIRE(!fs->directory_exists(dname));
-    REQUIRE(!fs->file_exists(fname_in_dir));
-    REQUIRE(!fs->file_exists(fname_in_dir2));
-}
+        REQUIRE_FALSE(file_exists(fs, fname_in_dir1));
+        REQUIRE(file_exists(fs, fname_in_dir2));
 
-// note: the integer count is chosen as 512 so that we write 512*8=4096 bytes to the file
-// this is required for the Direct-IO as on Windows Direct-IO can only write multiples of sector sizes
-// sector sizes are typically one of [512/1024/2048/4096] bytes, hence a 4096 bytes write succeeds.
-#define INTEGER_COUNT 512
+        remove_directory(fs, dname);
 
-TEST_CASE("file_system::operations")
-{
+        REQUIRE_FALSE(directory_exists(fs, dname));
+        REQUIRE_FALSE(file_exists(fs, fname_in_dir1));
+        REQUIRE_FALSE(file_exists(fs, fname_in_dir2));
+    }
+    
+    size_t size = 512;
+
     INFO("write_close_read") {
-        unique_ptr<base_file_system_t> fs = base_file_system_t::create_local_system();
+        local_file_system_t fs = local_file_system_t();
         unique_ptr<file_handle_t> handle;
-        int64_t test_data[INTEGER_COUNT];
-        for (int i = 0; i < INTEGER_COUNT; i++) {
+        int64_t test_data[size];
+        for (int i = 0; i < size; i++) {
             test_data[i] = i;
         }
 
-        auto fname = test_create_path("test_file");
+        auto fname = testing_directory;
+        fname /= "test_file";
 
         // standard reading/writing test
 
         // open file for writing
-        handle = fs->open_file(fname, file_flags::FILE_FLAGS_WRITE | file_flags::FILE_FLAGS_FILE_CREATE, file_lock_type::NO_LOCK);
+        handle = open_file(fs, fname, file_flags::WRITE | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
         // write 10 integers
-        handle->write((void*)test_data, sizeof(int64_t) * INTEGER_COUNT, 0);
+        handle->write((void*)test_data, sizeof(int64_t) * size, 0);
         // close the file
         handle.reset();
 
-        for (int i = 0; i < INTEGER_COUNT; i++) {
+        for (int i = 0; i < size; i++) {
             test_data[i] = 0;
         }
         // now open the file for reading
-        handle = fs->open_file(fname, file_flags::FILE_FLAGS_READ, file_lock_type::NO_LOCK);
+        handle = open_file(fs, fname, file_flags::READ, file_lock_type::NO_LOCK);
         // read the 10 integers back
-        handle->read((void*)test_data, sizeof(int64_t) * INTEGER_COUNT, 0);
+        handle->read((void*)test_data, sizeof(int64_t) * size, 0);
         // check the values of the integers
         for (int i = 0; i < 10; i++) {
             REQUIRE(test_data[i] == i);
         }
         handle.reset();
-        fs->remove_file(fname);
+        remove_file(fs, fname);
     }
     INFO("write_read without closing") {
-        unique_ptr<base_file_system_t> fs = base_file_system_t::create_local_system();
+        local_file_system_t fs = local_file_system_t();
         unique_ptr<file_handle_t> handle;
-        int64_t test_data[INTEGER_COUNT];
-        for (int i = 0; i < INTEGER_COUNT; i++) {
+        int64_t test_data[size];
+        for (int i = 0; i < size; i++) {
             test_data[i] = i;
         }
 
-        auto fname = test_create_path("test_file");
+        auto fname = testing_directory;
+        fname /= "test_file";
 
         // standard reading/writing test
 
         // open file for writing
-        handle = fs->open_file(fname, file_flags::FILE_FLAGS_READ | file_flags::FILE_FLAGS_WRITE | file_flags::FILE_FLAGS_FILE_CREATE, file_lock_type::NO_LOCK);
+        handle = open_file(fs, fname, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
         // write 10 integers
-        handle->write((void*)test_data, sizeof(int64_t) * INTEGER_COUNT, 0);
+        handle->write((void*)test_data, sizeof(int64_t) * size, 0);
         handle->sync();
 
-        for (int i = 0; i < INTEGER_COUNT; i++) {
+        for (int i = 0; i < size; i++) {
             test_data[i] = 0;
         }
         // read the 10 integers back
-        handle->read((void*)test_data, sizeof(int64_t) * INTEGER_COUNT, 0);
+        handle->read((void*)test_data, sizeof(int64_t) * size, 0);
         // check the values of the integers
         for (int i = 0; i < 10; i++) {
             REQUIRE(test_data[i] == i);
         }
         handle.reset();
-        fs->remove_file(fname);
+        remove_file(fs, fname);
     }
-}
-TEST_CASE("file_system::absolute_paths")
-{
-    file_system_t fs;
 
-#ifndef _WIN32
-    REQUIRE(fs.is_path_absolute("/home/me"));
-    REQUIRE(!fs.is_path_absolute("./me"));
-    REQUIRE(!fs.is_path_absolute("me"));
-#else
-    const std::string long_path = "\\\\?\\D:\\very long network\\";
-    REQUIRE(fs.is_path_absolute(long_path));
-    const std::string network = "\\\\network_drive\\filename.csv";
-    REQUIRE(fs.is_path_absolute(network));
-    REQUIRE(fs.is_path_absolute("C:\\folder\\filename.csv"));
-    REQUIRE(fs.is_path_absolute("C:/folder\\filename.csv"));
-    REQUIRE(fs.normalize_path_absolute("C:/folder\\filename.csv") == "c:\\folder\\filename.csv");
-    REQUIRE(fs.normalize_path_absolute(network) == network);
-    REQUIRE(fs.normalize_path_absolute(long_path) == "\\\\?\\d:\\very long network\\");
-#endif
+    INFO("absolute_paths")
+    {
+        local_file_system_t fs;
+
+    #ifdef PLATFORM_WINDOWS
+        const path_t long_path = "\\\\?\\D:\\very long network\\";
+        REQUIRE(fs.is_path_absolute(network));
+        REQUIRE(fs.normalize_path_absolute("C:/folder\\filename.csv") == "c:\\folder\\filename.csv");
+        REQUIRE(fs.normalize_path_absolute(network) == network);
+        REQUIRE(fs.normalize_path_absolute(long_path) == "\\\\?\\d:\\very long network\\");
+    #endif
+    }
+    
+    INFO("deinitialization")
+    {
+        local_file_system_t fs = local_file_system_t();
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
+        }
+    }
 }
