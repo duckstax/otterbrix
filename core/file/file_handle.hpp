@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cassert>
 #include <filesystem>
 #include <functional>
-#include <cassert>
 #include <memory>
 #include <string>
 
@@ -19,10 +19,11 @@
 namespace core::filesystem {
 
     using path_t = std::filesystem::path;
-    
+
     class local_file_system_t;
 
-    enum class file_type_t {
+    enum class file_type_t
+    {
         REGULAR,
         DIR,
         FIFO,
@@ -57,20 +58,30 @@ namespace core::filesystem {
 
         virtual void close() = 0;
 
-        path_t path() const {
-            return path_;
-        }
+        path_t path() const { return path_; }
 
     public:
         local_file_system_t& fs_;
         path_t path_;
     };
 
-    enum class file_lock_type : uint8_t { NO_LOCK = 0, READ_LOCK = 1, WRITE_LOCK = 2 };
+    enum class file_lock_type : uint8_t
+    {
+        NO_LOCK = 0,
+        READ_LOCK = 1,
+        WRITE_LOCK = 2
+    };
     static constexpr file_lock_type DEFAULT_LOCK = file_lock_type::NO_LOCK;
-    enum class file_compression_type : uint8_t { AUTO_DETECT = 0, UNCOMPRESSED = 1, GZIP = 2, ZSTD = 3 };
+    enum class file_compression_type : uint8_t
+    {
+        AUTO_DETECT = 0,
+        UNCOMPRESSED = 1,
+        GZIP = 2,
+        ZSTD = 3
+    };
 
-    enum class file_flags : uint16_t {
+    enum class file_flags : uint16_t
+    {
         EMPTY = 0,
         READ = 1 << 0,
         WRITE = 1 << 1,
@@ -82,12 +93,10 @@ namespace core::filesystem {
         NULL_IF_NOT_EXISTS = 1 << 7,
         PARALLEL_ACCESS = 1 << 8
     };
-    inline file_flags operator|(file_flags a, file_flags b)
-    {
+    inline file_flags operator|(file_flags a, file_flags b) {
         return static_cast<file_flags>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
     }
-    inline file_flags operator&(file_flags a, file_flags b)
-    {
+    inline file_flags operator&(file_flags a, file_flags b) {
         return static_cast<file_flags>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
     }
 

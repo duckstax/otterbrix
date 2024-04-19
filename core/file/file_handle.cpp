@@ -33,43 +33,53 @@ extern "C" WINBASEAPI BOOL WINAPI GetPhysicallyInstalledSystemMemory(PULONGLONG)
 
 namespace core::filesystem {
 
-    file_handle_t::file_handle_t(local_file_system_t& fs, path_t path_p) : fs_(fs), path_(std::move(path_p)) {
-    }
+    file_handle_t::file_handle_t(local_file_system_t& fs, path_t path_p)
+        : fs_(fs)
+        , path_(std::move(path_p)) {}
 
-    file_handle_t::~file_handle_t() {
-    }
+    file_handle_t::~file_handle_t() {}
 
     int64_t file_handle_t::read(void* buffer, uint64_t nr_bytes) {
-        return ::core::filesystem::read(dynamic_cast<local_file_system_t&>(fs_), *this, buffer, static_cast<int64_t>(nr_bytes));
+        return ::core::filesystem::read(dynamic_cast<local_file_system_t&>(fs_),
+                                        *this,
+                                        buffer,
+                                        static_cast<int64_t>(nr_bytes));
     }
 
     bool file_handle_t::read(void* buffer, uint64_t nr_bytes, uint64_t location) {
-        return ::core::filesystem::read(dynamic_cast<local_file_system_t&>(fs_), *this, buffer, static_cast<int64_t>(nr_bytes), location);
+        return ::core::filesystem::read(dynamic_cast<local_file_system_t&>(fs_),
+                                        *this,
+                                        buffer,
+                                        static_cast<int64_t>(nr_bytes),
+                                        location);
     }
 
     int64_t file_handle_t::write(void* buffer, uint64_t nr_bytes) {
-        return ::core::filesystem::write(dynamic_cast<local_file_system_t&>(fs_), *this, buffer, static_cast<int64_t>(nr_bytes));
+        return ::core::filesystem::write(dynamic_cast<local_file_system_t&>(fs_),
+                                         *this,
+                                         buffer,
+                                         static_cast<int64_t>(nr_bytes));
     }
 
     bool file_handle_t::write(void* buffer, uint64_t nr_bytes, uint64_t location) {
-        return ::core::filesystem::write(dynamic_cast<local_file_system_t&>(fs_), *this, buffer, static_cast<int64_t>(nr_bytes), location);
+        return ::core::filesystem::write(dynamic_cast<local_file_system_t&>(fs_),
+                                         *this,
+                                         buffer,
+                                         static_cast<int64_t>(nr_bytes),
+                                         location);
     }
 
     bool file_handle_t::seek(uint64_t location) {
         return ::core::filesystem::seek(dynamic_cast<local_file_system_t&>(fs_), *this, location);
     }
 
-    void file_handle_t::reset() {
-        fs_.reset(*this);
-    }
+    void file_handle_t::reset() { fs_.reset(*this); }
 
     uint64_t file_handle_t::seek_position() {
         return ::core::filesystem::seek_position(dynamic_cast<local_file_system_t&>(fs_), *this);
     }
 
-    bool file_handle_t::can_seek() {
-        return fs_.can_seek();
-    }
+    bool file_handle_t::can_seek() { return fs_.can_seek(); }
 
     bool file_handle_t::is_pipe() {
         return ::core::filesystem::is_pipe(dynamic_cast<local_file_system_t&>(fs_), path_);
@@ -93,9 +103,7 @@ namespace core::filesystem {
         return static_cast<uint64_t>(::core::filesystem::file_size(dynamic_cast<local_file_system_t&>(fs_), *this));
     }
 
-    bool file_handle_t::sync() {
-        return ::core::filesystem::file_sync(dynamic_cast<local_file_system_t&>(fs_), *this);
-    }
+    bool file_handle_t::sync() { return ::core::filesystem::file_sync(dynamic_cast<local_file_system_t&>(fs_), *this); }
 
     bool file_handle_t::truncate(int64_t new_size) {
         return ::core::filesystem::truncate(dynamic_cast<local_file_system_t&>(fs_), *this, new_size);

@@ -1,8 +1,8 @@
 #include "local_file_system.hpp"
 
 #include "path_utils.hpp"
-#include <limits>
 #include <algorithm>
+#include <limits>
 
 #include <cstdint>
 #include <cstdio>
@@ -33,19 +33,19 @@ extern "C" WINBASEAPI BOOL WINAPI GetPhysicallyInstalledSystemMemory(PULONGLONG)
 #if defined(__linux__)
 #include <libgen.h>
 #elif defined(__APPLE__)
-#include <TargetConditionals.h>                            
+#include <TargetConditionals.h>
 #if not(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE == 1)
-#include <libproc.h>                                       
-#endif                                                     
+#include <libproc.h>
+#endif
 #elif defined(PLATFORM_WINDOWS)
 #include <restartmanager.h>
 #endif
 
 namespace core::filesystem {
-    
+
     static constexpr const uint64_t INVALID_INDEX = uint64_t(-1);
-    
-    #ifndef PLATFORM_WINDOWS
+
+#ifndef PLATFORM_WINDOWS
 
     std::string local_file_system_t::enviroment_variable(const std::string& name) {
         const char* env = getenv(name.c_str());
@@ -65,13 +65,15 @@ namespace core::filesystem {
     uint64_t local_file_system_t::available_memory() {
         errno = 0;
 
-    #ifdef __MVS__
+#ifdef __MVS__
         struct rlimit limit;
         int rlim_rc = getrlimit(RLIMIT_AS, &limit);
         uint64_t max_memory = std::min<uint64_t>(limit.rlim_max, UINTPTR_MAX);
-    #else
-        uint64_t max_memory = std::min<uint64_t>(static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) * static_cast<uint64_t>(sysconf(_SC_PAGESIZE)), UINTPTR_MAX);
-    #endif
+#else
+        uint64_t max_memory = std::min<uint64_t>(static_cast<uint64_t>(sysconf(_SC_PHYS_PAGES)) *
+                                                     static_cast<uint64_t>(sysconf(_SC_PAGESIZE)),
+                                                 UINTPTR_MAX);
+#endif
         if (errno != 0) {
             return INVALID_INDEX;
         }
@@ -92,7 +94,7 @@ namespace core::filesystem {
         return path;
     }
 
-    #else
+#else
 
     std::string local_file_system_t::enviroment_variable(const std::string& env) {
         auto env_w = path_utils::UTF8_to_Unicode(env.c_str());
@@ -120,7 +122,7 @@ namespace core::filesystem {
         assert(path.is_absolute());
         auto result = path;
         result.make_prefered();
-        std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c){ return std::tolower(c); });
+        std::transform(result.begin(), result.end(), result.begin(), [](unsigned char c) { return std::tolower(c); });
         if (starts_with_single_backslash(result)) {
             return working_directory().substr(0, 2) + result;
         }
@@ -130,7 +132,8 @@ namespace core::filesystem {
     bool local_file_system_t::set_working_directory(const path_t& path) {
         auto unicode_path = path_utils::UTF8_to_Unicode(path.c_str());
         if (!SetCurrentDirectoryW(unicode_path.c_str())) {
-            return false;;
+            return false;
+            ;
         }
         return true;
     }
@@ -162,19 +165,18 @@ namespace core::filesystem {
         return path_utils::Unicode_to_UTF8(buffer.get());
     }
 
-    #endif
-
+#endif
 
     const path_t& local_file_system_t::home_directory() {
         if (!home_directory_.empty()) {
             return home_directory_;
         }
 
-    #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
         return local_file_system_t::enviroment_variable("USERPROFILE");
-    #else
+#else
         return local_file_system_t::enviroment_variable("HOME");
-    #endif
+#endif
     }
 
     bool local_file_system_t::set_home_directory(path_t path) {
@@ -196,23 +198,20 @@ namespace core::filesystem {
     bool local_file_system_t::has_glob(const std::string& str) {
         for (uint64_t i = 0; i < str.size(); i++) {
             switch (str[i]) {
-            case '*':
-            case '?':
-            case '[':
-                return true;
-            default:
-                break;
+                case '*':
+                case '?':
+                case '[':
+                    return true;
+                default:
+                    break;
             }
         }
         return false;
     }
-    
 
-    void local_file_system_t::reset(file_handle_t& handle) {
-        handle.seek(0);
-    }
+    void local_file_system_t::reset(file_handle_t& handle) { handle.seek(0); }
 
-    #ifndef PLATFORM_WINDOWS
+#ifndef PLATFORM_WINDOWS
     bool file_exists(local_file_system_t&, const path_t& filename) {
         if (!filename.empty()) {
             if (access(filename.c_str(), 0) == 0) {
@@ -239,7 +238,7 @@ namespace core::filesystem {
         return false;
     }
 
-    #else
+#else
     bool file_exists(local_file_system_t&, const path_t& filename) {
         auto unicode_path = path_utils::UTF8_to_Unicode(filename.c_str());
         const wchar_t* wpath = unicode_path.c_str();
@@ -264,17 +263,16 @@ namespace core::filesystem {
         }
         return false;
     }
-    #endif
+#endif
 
-    #ifndef _WIN32
+#ifndef _WIN32
 
     struct unix_file_handle_t : public file_handle_t {
     public:
-        unix_file_handle_t(local_file_system_t& file_system, path_t path, int fd) : file_handle_t(file_system, std::move(path)), fd(fd) {
-        }
-        ~unix_file_handle_t() override {
-            unix_file_handle_t::close();
-        }
+        unix_file_handle_t(local_file_system_t& file_system, path_t path, int fd)
+            : file_handle_t(file_system, std::move(path))
+            , fd(fd) {}
+        ~unix_file_handle_t() override { unix_file_handle_t::close(); }
 
         int fd;
 
@@ -293,22 +291,22 @@ namespace core::filesystem {
             return file_type_t::INVALID;
         }
         switch (s.st_mode & S_IFMT) {
-        case S_IFBLK:
-            return file_type_t::BLOCKDEV;
-        case S_IFCHR:
-            return file_type_t::CHARDEV;
-        case S_IFIFO:
-            return file_type_t::FIFO;
-        case S_IFDIR:
-            return file_type_t::DIR;
-        case S_IFLNK:
-            return file_type_t::LINK;
-        case S_IFREG:
-            return file_type_t::REGULAR;
-        case S_IFSOCK:
-            return file_type_t::SOCKET;
-        default:
-            return file_type_t::INVALID;
+            case S_IFBLK:
+                return file_type_t::BLOCKDEV;
+            case S_IFCHR:
+                return file_type_t::CHARDEV;
+            case S_IFIFO:
+                return file_type_t::FIFO;
+            case S_IFDIR:
+                return file_type_t::DIR;
+            case S_IFLNK:
+                return file_type_t::LINK;
+            case S_IFREG:
+                return file_type_t::REGULAR;
+            case S_IFSOCK:
+                return file_type_t::SOCKET;
+            default:
+                return file_type_t::INVALID;
         }
     }
 
@@ -330,7 +328,8 @@ namespace core::filesystem {
         return static_cast<uint64_t>(position);
     }
 
-    std::unique_ptr<file_handle_t> open_file(local_file_system_t& lfs, const path_t& path_p, file_flags flags, file_lock_type lock_type) {
+    std::unique_ptr<file_handle_t>
+    open_file(local_file_system_t& lfs, const path_t& path_p, file_flags flags, file_lock_type lock_type) {
         auto path = lfs.expand_path(path_p);
 
         int open_flags = 0;
@@ -359,14 +358,14 @@ namespace core::filesystem {
             }
         }
         if ((flags & file_flags::DIRECT_IO) != file_flags::EMPTY) {
-    #if defined(__sun) && defined(__SVR4)
+#if defined(__sun) && defined(__SVR4)
             throw std::logic_error("DIRECT_IO not supported on Solaris");
-    #endif
-    #if defined(__DARWIN__) || defined(__APPLE__) || defined(__OpenBSD__)
+#endif
+#if defined(__DARWIN__) || defined(__APPLE__) || defined(__OpenBSD__)
             open_flags |= O_SYNC;
-    #else
+#else
             open_flags |= O_DIRECT | O_SYNC;
-    #endif
+#endif
         }
         int fd = open(path.c_str(), open_flags, 0666);
         if (fd == -1) {
@@ -414,7 +413,8 @@ namespace core::filesystem {
         int fd = reinterpret_cast<unix_file_handle_t&>(handle).fd;
         auto write_buffer = reinterpret_cast<char*>(buffer);
         while (nr_bytes > 0) {
-            int64_t bytes_written = pwrite(fd, write_buffer, static_cast<size_t>(nr_bytes), static_cast<off_t>(location));
+            int64_t bytes_written =
+                pwrite(fd, write_buffer, static_cast<size_t>(nr_bytes), static_cast<off_t>(location));
             if (bytes_written <= 0) {
                 return false;
             }
@@ -463,7 +463,7 @@ namespace core::filesystem {
         return file_type_internal(fd);
     }
 
-    bool truncate(local_file_system_t&, file_handle_t &handle, int64_t new_size) {
+    bool truncate(local_file_system_t&, file_handle_t& handle, int64_t new_size) {
         int fd = reinterpret_cast<unix_file_handle_t&>(handle).fd;
         if (ftruncate(fd, new_size) != 0) {
             return false;
@@ -498,16 +498,16 @@ namespace core::filesystem {
     }
 
     int remove_directory_recursive(const char* path) {
-        DIR *d = opendir(path);
+        DIR* d = opendir(path);
         uint64_t path_len = static_cast<uint64_t>(strlen(path));
         int r = -1;
 
         if (d) {
-            struct dirent *p;
+            struct dirent* p;
             r = 0;
             while (!r && (p = readdir(d))) {
                 int r2 = -1;
-                char *buf;
+                char* buf;
                 uint64_t len;
                 if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
                     continue;
@@ -547,11 +547,12 @@ namespace core::filesystem {
         return true;
     }
 
-    bool list_files(local_file_system_t& lfs, path_t directory, const std::function<void(const path_t&, bool)>& callback) {
+    bool
+    list_files(local_file_system_t& lfs, path_t directory, const std::function<void(const path_t&, bool)>& callback) {
         if (!directory_exists(lfs, directory)) {
             return false;
         }
-        DIR *dir = opendir(directory.c_str());
+        DIR* dir = opendir(directory.c_str());
         if (!dir) {
             return false;
         }
@@ -592,7 +593,7 @@ namespace core::filesystem {
         return true;
     }
 
-    #else
+#else
 
     constexpr char PIPE_PREFIX[] = "\\\\.\\pipe\\";
 
@@ -604,7 +605,12 @@ namespace core::filesystem {
         LPSTR messageBuffer = nullptr;
         uint64_t size =
             FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                        NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+                           NULL,
+                           errorMessageID,
+                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           (LPSTR) &messageBuffer,
+                           0,
+                           NULL);
 
         std::string message(messageBuffer, size);
 
@@ -616,11 +622,10 @@ namespace core::filesystem {
     struct windows_file_handle_t : public file_handle_t {
     public:
         windows_file_handle_t(local_file_system_t& file_system, path_t path, HANDLE fd)
-            : file_handle_t(file_system, path), position_(0), fd_(fd) {
-        }
-        ~windows_file_handle_t() override {
-            close();
-        }
+            : file_handle_t(file_system, path)
+            , position_(0)
+            , fd_(fd) {}
+        ~windows_file_handle_t() override { close(); }
 
         uint64_t position_;
         HANDLE fd_;
@@ -635,7 +640,8 @@ namespace core::filesystem {
         };
     };
 
-    std::unique_ptr<file_handle_t> open_file(local_file_system_t& lfs, const path_t& path_p, file_flags flags, file_lock_type) {
+    std::unique_ptr<file_handle_t>
+    open_file(local_file_system_t& lfs, const path_t& path_p, file_flags flags, file_lock_type) {
         auto path = lfs.expand_path(path_p);
         uint16_t flags = static_cast<uint16_t>(flags);
 
@@ -668,8 +674,13 @@ namespace core::filesystem {
             flags_and_attributes |= FILE_FLAG_NO_BUFFERING;
         }
         auto unicode_path = path_utils::UTF8_to_Unicode(path.c_str());
-        HANDLE hFile = CreateFileW(unicode_path.c_str(), desired_access, share_mode, NULL, creation_disposition,
-                                flags_and_attributes, NULL);
+        HANDLE hFile = CreateFileW(unicode_path.c_str(),
+                                   desired_access,
+                                   share_mode,
+                                   NULL,
+                                   creation_disposition,
+                                   flags_and_attributes,
+                                   NULL);
         if (hFile == INVALID_HANDLE_VALUE) {
             auto error = last_error_as_string(lfs);
 
@@ -683,7 +694,7 @@ namespace core::filesystem {
     }
 
     bool set_file_pointer(local_file_system_t&, file_handle_t& handle, uint64_t location) {
-        auto &whandle = reinterpret_cast<windows_file_handle_t&>(handle);
+        auto& whandle = reinterpret_cast<windows_file_handle_t&>(handle);
         whandle.position_ = location;
         LARGE_INTEGER wlocation;
         wlocation.QuadPart = location;
@@ -694,7 +705,8 @@ namespace core::filesystem {
         return reinterpret_cast<windows_file_handle_t&>(handle).position_;
     }
 
-    static DWORD FSInternalRead(file_handle_t& handle, HANDLE hFile, void* buffer, int64_t nr_bytes, uint64_t location) {
+    static DWORD
+    FSInternalRead(file_handle_t& handle, HANDLE hFile, void* buffer, int64_t nr_bytes, uint64_t location) {
         DWORD bytes_read = 0;
         OVERLAPPED ov = {};
         ov.Internal = 0;
@@ -702,7 +714,7 @@ namespace core::filesystem {
         ov.Offset = location & 0xFFFFFFFF;
         ov.OffsetHigh = location >> 32;
         ov.hEvent = 0;
-        auto rc = ReadFile(hFile, buffer, (DWORD)nr_bytes, &bytes_read, &ov);
+        auto rc = ReadFile(hFile, buffer, (DWORD) nr_bytes, &bytes_read, &ov);
         if (!rc) {
             return DWORD();
         }
@@ -710,7 +722,7 @@ namespace core::filesystem {
     }
 
     bool read(local_file_system_t&, file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location) {
-        HANDLE hFile = ((windows_file_handle_t &)handle).fd_;
+        HANDLE hFile = ((windows_file_handle_t&) handle).fd_;
         auto bytes_read = FSInternalRead(handle, hFile, buffer, nr_bytes, location);
         if (bytes_read != nr_bytes) {
             return false;
@@ -727,7 +739,8 @@ namespace core::filesystem {
         return bytes_read;
     }
 
-    static DWORD FSInternalWrite(file_handle_t& handle, HANDLE hFile, void* buffer, int64_t nr_bytes, uint64_t location) {
+    static DWORD
+    FSInternalWrite(file_handle_t& handle, HANDLE hFile, void* buffer, int64_t nr_bytes, uint64_t location) {
         DWORD bytes_written = 0;
         OVERLAPPED ov = {};
         ov.Internal = 0;
@@ -735,7 +748,7 @@ namespace core::filesystem {
         ov.Offset = location & 0xFFFFFFFF;
         ov.OffsetHigh = location >> 32;
         ov.hEvent = 0;
-        auto rc = WriteFile(hFile, buffer, (DWORD)nr_bytes, &bytes_written, &ov);
+        auto rc = WriteFile(hFile, buffer, (DWORD) nr_bytes, &bytes_written, &ov);
         if (!rc) {
             return DWORD();
         }
@@ -769,7 +782,7 @@ namespace core::filesystem {
 
     int64_t write(local_file_system_t&, file_handle_t& handle, void* buffer, int64_t nr_bytes) {
         HANDLE hFile = reinterpret_cast<windows_file_handle_t&>(handle).fd_;
-        auto &pos = reinterpret_cast<windows_file_handle_t&>(handle).position_;
+        auto& pos = reinterpret_cast<windows_file_handle_t&>(handle).position_;
         auto bytes_written = FSWrite(handle, hFile, buffer, nr_bytes, pos);
         pos += bytes_written;
         return bytes_written;
@@ -834,7 +847,7 @@ namespace core::filesystem {
     }
 
     static bool delete_directory_recursive(local_file_system_t& fs, path_t directory) {
-        list_files(fs,directory, [directory](const path_t& fname, bool is_directory) {
+        list_files(fs, directory, [directory](const path_t& fname, bool is_directory) {
             if (is_directory) {
                 delete_directory_recursive(fs, directory /= fname);
             } else {
@@ -867,7 +880,8 @@ namespace core::filesystem {
         return true;
     }
 
-    bool list_files(local_file_system_t& lfs, path_t directory, const std::function<void(const path_t&, bool)>& callback) {
+    bool
+    list_files(local_file_system_t& lfs, path_t directory, const std::function<void(const path_t&, bool)>& callback) {
         directory /= "*";
 
         auto unicode_path = path_utils::UTF8_to_Unicode(directory.c_str());
@@ -927,34 +941,33 @@ namespace core::filesystem {
         }
         return file_type_t::INVALID;
     }
-    #endif
+#endif
 
     bool seek(local_file_system_t& lfs, file_handle_t& handle, uint64_t location) {
         lfs.set_file_pointer(handle, location);
         return true;
     }
 
-    uint64_t seek_position(local_file_system_t& lfs, file_handle_t& handle) {
-        return lfs.file_pointer(handle);
-    }
+    uint64_t seek_position(local_file_system_t& lfs, file_handle_t& handle) { return lfs.file_pointer(handle); }
 
-    static bool is_crawl(const path_t& glob) {
-        return glob == "**";
-    }
+    static bool is_crawl(const path_t& glob) { return glob == "**"; }
     static bool is_symbolic_link(const path_t& path) {
-    #ifndef PLATFORM_WINDOWS
+#ifndef PLATFORM_WINDOWS
         struct stat status;
         return (lstat(path.c_str(), &status) != -1 && S_ISLNK(status.st_mode));
-    #else
+#else
         auto attributes = WindowsGetFileAttributes(path);
         if (attributes == INVALID_FILE_ATTRIBUTES)
             return false;
         return attributes & FILE_ATTRIBUTE_REPARSE_POINT;
-    #endif
+#endif
     }
 
-    static void recursive_glob_directories(local_file_system_t& lfs, const path_t& path, std::vector<path_t>& result, bool match_directory,
-                                        bool join_path) {
+    static void recursive_glob_directories(local_file_system_t& lfs,
+                                           const path_t& path,
+                                           std::vector<path_t>& result,
+                                           bool match_directory,
+                                           bool join_path) {
         list_files(lfs, path, [&](const path_t& fname, bool is_directory) {
             path_t concat;
             if (join_path) {
@@ -975,8 +988,12 @@ namespace core::filesystem {
         });
     }
 
-    static void glob_files_internal(local_file_system_t& lfs, const path_t& path, const path_t& glob, bool match_directory,
-                                std::vector<path_t>& result, bool join_path) {
+    static void glob_files_internal(local_file_system_t& lfs,
+                                    const path_t& path,
+                                    const path_t& glob,
+                                    bool match_directory,
+                                    std::vector<path_t>& result,
+                                    bool join_path) {
         list_files(lfs, path, [&](const path_t& fname, bool is_directory) {
             if (is_directory != match_directory) {
                 return;
@@ -998,7 +1015,7 @@ namespace core::filesystem {
             result.push_back(path);
         } else if (!absolute_path) {
             std::vector<std::string> search_paths = path_utils::split(lfs.file_search_path(), ',');
-            for (const auto &search_path : search_paths) {
+            for (const auto& search_path : search_paths) {
                 path_t joined_path(search_path);
                 joined_path /= path;
                 if (file_exists(lfs, joined_path) || is_pipe(lfs, joined_path)) {
@@ -1053,7 +1070,7 @@ namespace core::filesystem {
             previous_directories.push_back(splits[0]);
         } else {
             std::vector<std::string> search_paths = path_utils::split(lfs.file_search_path(), ',');
-            for (const auto &search_path : search_paths) {
+            for (const auto& search_path : search_paths) {
                 previous_directories.push_back(path_t(search_path));
             }
         }
@@ -1070,7 +1087,7 @@ namespace core::filesystem {
                     result.push_back(splits[i]);
                 } else {
                     if (is_last_chunk) {
-                        for (auto &prev_directory : previous_directories) {
+                        for (auto& prev_directory : previous_directories) {
                             path_t filename = prev_directory;
                             filename /= splits[i];
                             if (file_exists(lfs, filename) || directory_exists(lfs, filename)) {
@@ -1078,7 +1095,7 @@ namespace core::filesystem {
                             }
                         }
                     } else {
-                        for (auto &prev_directory : previous_directories) {
+                        for (auto& prev_directory : previous_directories) {
                             path_t filename = prev_directory;
                             filename /= splits[i];
                             result.push_back(filename);
@@ -1093,7 +1110,7 @@ namespace core::filesystem {
                     if (previous_directories.empty()) {
                         recursive_glob_directories(lfs, ".", result, !is_last_chunk, false);
                     } else {
-                        for (auto &prev_dir : previous_directories) {
+                        for (auto& prev_dir : previous_directories) {
                             recursive_glob_directories(lfs, prev_dir, result, !is_last_chunk, true);
                         }
                     }
@@ -1101,7 +1118,7 @@ namespace core::filesystem {
                     if (previous_directories.empty()) {
                         glob_files_internal(lfs, ".", splits[i], !is_last_chunk, result, false);
                     } else {
-                        for (auto &prev_directory : previous_directories) {
+                        for (auto& prev_directory : previous_directories) {
                             glob_files_internal(lfs, prev_directory, splits[i], !is_last_chunk, result, true);
                         }
                     }

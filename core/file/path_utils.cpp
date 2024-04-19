@@ -1,7 +1,7 @@
 #include "path_utils.hpp"
 #include <algorithm>
-#include <sstream>
 #include <memory>
+#include <sstream>
 
 namespace core::filesystem::path_utils {
 
@@ -42,11 +42,11 @@ namespace core::filesystem::path_utils {
     bool glob(const char* string, uint64_t slen, const char* pattern, uint64_t plen, bool allow_question_mark) {
         uint64_t sidx = 0;
         uint64_t pidx = 0;
-        main_loop : {
-            while (sidx < slen && pidx < plen) {
-                char s = string[sidx];
-                char p = pattern[pidx];
-                switch (p) {
+    main_loop : {
+        while (sidx < slen && pidx < plen) {
+            char s = string[sidx];
+            char p = pattern[pidx];
+            switch (p) {
                 case '*': {
                     pidx++;
                     while (pidx < plen && pattern[pidx] == '*') {
@@ -84,111 +84,109 @@ namespace core::filesystem::path_utils {
                         return false;
                     }
                     break;
-                }
-                sidx++;
-                pidx++;
-            }
-            while (pidx < plen && pattern[pidx] == '*') {
-                pidx++;
-            }
-            return pidx == plen && sidx == slen;
-        }
-        parse_bracket : {
-            if (pidx == plen) {
-                return false;
-            }
-            char p = pattern[pidx];
-            char s = string[sidx];
-            bool invert = false;
-            if (p == '!') {
-                invert = true;
-                pidx++;
-            }
-            bool found_match = invert;
-            uint64_t start_pos = pidx;
-            bool found_closing_bracket = false;
-            while (pidx < plen) {
-                p = pattern[pidx];
-                if (p == ']' && pidx > start_pos) {
-                    found_closing_bracket = true;
-                    pidx++;
-                    break;
-                }
-                if (pidx + 1 == plen) {
-                    break;
-                }
-                bool matches;
-                if (pattern[pidx + 1] == '-') {
-                    if (pidx + 2 == plen) {
-                        break;
-                    }
-                    char next_char = pattern[pidx + 2];
-                    matches = s >= p && s <= next_char;
-                    pidx += 3;
-                } else {
-                    matches = p == s;
-                    pidx++;
-                }
-                if (found_match == invert && matches) {
-                    found_match = !invert;
-                }
-            }
-            if (!found_closing_bracket) {
-                return false;
-            }
-            if (!found_match) {
-                return false;
             }
             sidx++;
-            goto main_loop;
+            pidx++;
         }
+        while (pidx < plen && pattern[pidx] == '*') {
+            pidx++;
+        }
+        return pidx == plen && sidx == slen;
+    }
+    parse_bracket : {
+        if (pidx == plen) {
+            return false;
+        }
+        char p = pattern[pidx];
+        char s = string[sidx];
+        bool invert = false;
+        if (p == '!') {
+            invert = true;
+            pidx++;
+        }
+        bool found_match = invert;
+        uint64_t start_pos = pidx;
+        bool found_closing_bracket = false;
+        while (pidx < plen) {
+            p = pattern[pidx];
+            if (p == ']' && pidx > start_pos) {
+                found_closing_bracket = true;
+                pidx++;
+                break;
+            }
+            if (pidx + 1 == plen) {
+                break;
+            }
+            bool matches;
+            if (pattern[pidx + 1] == '-') {
+                if (pidx + 2 == plen) {
+                    break;
+                }
+                char next_char = pattern[pidx + 2];
+                matches = s >= p && s <= next_char;
+                pidx += 3;
+            } else {
+                matches = p == s;
+                pidx++;
+            }
+            if (found_match == invert && matches) {
+                found_match = !invert;
+            }
+        }
+        if (!found_closing_bracket) {
+            return false;
+        }
+        if (!found_match) {
+            return false;
+        }
+        sidx++;
+        goto main_loop;
+    }
     }
 
-    #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
 
-        std::wstring UTF8_to_Unicode(const char* input) {
-            uint64_t result_size;
+    std::wstring UTF8_to_Unicode(const char* input) {
+        uint64_t result_size;
 
-            result_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, nullptr, 0);
-            if (result_size == 0) {
-                throw std::runtime_error("Failure in MultiByteToWideChar");
-            }
-            auto buffer = std::make_unique<wchar_t[]>(result_size);
-            result_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, buffer.get(), result_size);
-            if (result_size == 0) {
-                throw std::runtime_error("Failure in MultiByteToWideChar");
-            }
-            return std::wstring(buffer.get(), result_size);
+        result_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, nullptr, 0);
+        if (result_size == 0) {
+            throw std::runtime_error("Failure in MultiByteToWideChar");
         }
-
-        std::string wchar_to_MultiByteWrapper(LPCWSTR input, uint32_t code_page) {
-            uint64_t result_size;
-
-            result_size = WideCharToMultiByte(code_page, 0, input, -1, 0, 0, 0, 0);
-            if (result_size == 0) {
-                throw std::runtime_error("Failure in WideCharToMultiByte");
-            }
-            auto buffer = std::make_unique<char[]>(result_size);
-            result_size = WideCharToMultiByte(code_page, 0, input, -1, buffer.get(), result_size, 0, 0);
-            if (result_size == 0) {
-                throw std::runtime_error("Failure in WideCharToMultiByte");
-            }
-            return std::string(buffer.get(), result_size - 1);
+        auto buffer = std::make_unique<wchar_t[]>(result_size);
+        result_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, buffer.get(), result_size);
+        if (result_size == 0) {
+            throw std::runtime_error("Failure in MultiByteToWideChar");
         }
+        return std::wstring(buffer.get(), result_size);
+    }
 
-        std::string Unicode_to_UTF8(LPCWSTR input) {
-            return wchar_to_MultiByteWrapper(input, CP_UTF8);
+    std::string wchar_to_MultiByteWrapper(LPCWSTR input, uint32_t code_page) {
+        uint64_t result_size;
+
+        result_size = WideCharToMultiByte(code_page, 0, input, -1, 0, 0, 0, 0);
+        if (result_size == 0) {
+            throw std::runtime_error("Failure in WideCharToMultiByte");
         }
-
-        std::string windows_Unicode_to_MBCS(LPCWSTR unicode_text, int use_ansi) {
-            uint32_t code_page = use_ansi ? CP_ACP : CP_OEMCP;
-            return wchar_to_MultiByteWrapper(unicode_text, code_page);
+        auto buffer = std::make_unique<char[]>(result_size);
+        result_size = WideCharToMultiByte(code_page, 0, input, -1, buffer.get(), result_size, 0, 0);
+        if (result_size == 0) {
+            throw std::runtime_error("Failure in WideCharToMultiByte");
         }
+        return std::string(buffer.get(), result_size - 1);
+    }
 
-        std::string UTF8_to_MBCS(const char* input, bool use_ansi) {
-            auto unicode = UTF8_to_Unicode(input);
-            return windows_Unicode_to_MBCS(unicode.c_str(), use_ansi);
-        }
+    std::string Unicode_to_UTF8(LPCWSTR input) { return wchar_to_MultiByteWrapper(input, CP_UTF8); }
 
-        #endif
-}
+    std::string windows_Unicode_to_MBCS(LPCWSTR unicode_text, int use_ansi) {
+        uint32_t code_page = use_ansi ? CP_ACP : CP_OEMCP;
+        return wchar_to_MultiByteWrapper(unicode_text, code_page);
+    }
+
+    std::string UTF8_to_MBCS(const char* input, bool use_ansi) {
+        auto unicode = UTF8_to_Unicode(input);
+        return windows_Unicode_to_MBCS(unicode.c_str(), use_ansi);
+    }
+
+#endif
+} // namespace core::filesystem::path_utils

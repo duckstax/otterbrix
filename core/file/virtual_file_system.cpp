@@ -2,10 +2,10 @@
 #include "file_system.hpp"
 #include "path_utils.hpp"
 
-
 namespace core::filesystem {
 
-    virtual_file_system_t::virtual_file_system_t() : default_fs_(new local_file_system_t()) {}
+    virtual_file_system_t::virtual_file_system_t()
+        : default_fs_(new local_file_system_t()) {}
 
     void virtual_file_system_t::register_sub_system(std::unique_ptr<local_file_system_t> fs) {
         sub_systems_.push_back(std::move(fs));
@@ -21,7 +21,8 @@ namespace core::filesystem {
         assert(false && ("Could not find file_handle with name " + name).data());
     }
 
-    void virtual_file_system_t::register_sub_system(file_compression_type compression_type, std::unique_ptr<local_file_system_t> fs) {
+    void virtual_file_system_t::register_sub_system(file_compression_type compression_type,
+                                                    std::unique_ptr<local_file_system_t> fs) {
         compressed_fs_[compression_type] = std::move(fs);
     }
 
@@ -33,9 +34,7 @@ namespace core::filesystem {
         return names;
     }
 
-    std::string virtual_file_system_t::name() const {
-        return "virtual_file_system";
-    }
+    std::string virtual_file_system_t::name() const { return "virtual_file_system"; }
 
     void virtual_file_system_t::set_disabled_file_systems(const std::vector<std::string>& names) {
         std::unordered_set<std::string> new_disabled_file_systems;
@@ -50,7 +49,9 @@ namespace core::filesystem {
         }
         for (auto& disabled_fs : disabled_file_systems_) {
             if (new_disabled_file_systems.find(disabled_fs) == new_disabled_file_systems.end()) {
-                assert(false && ("File system: " + disabled_fs + " has been disabled previously, it cannot be re-enabled").data());
+                assert(
+                    false &&
+                    ("File system: " + disabled_fs + " has been disabled previously, it cannot be re-enabled").data());
             }
         }
         disabled_file_systems_ = std::move(new_disabled_file_systems);
@@ -97,9 +98,7 @@ namespace core::filesystem {
         return write(vfs.default_file_system(), handle, buffer, nr_bytes);
     }
 
-    int64_t file_size(virtual_file_system_t&, file_handle_t& handle) {
-        return handle.file_size();
-    }
+    int64_t file_size(virtual_file_system_t&, file_handle_t& handle) { return handle.file_size(); }
     time_t last_modified_time(virtual_file_system_t& vfs, file_handle_t& handle) {
         return last_modified_time(vfs.default_file_system(), handle);
     }
@@ -127,7 +126,8 @@ namespace core::filesystem {
         return remove_directory(vfs.find_file_system(directory), directory);
     }
 
-    bool list_files(virtual_file_system_t& vfs, path_t directory, const std::function<void(const path_t& , bool)>& callback) {
+    bool
+    list_files(virtual_file_system_t& vfs, path_t directory, const std::function<void(const path_t&, bool)>& callback) {
         return list_files(vfs.find_file_system(directory), directory, callback);
     }
 

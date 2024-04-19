@@ -9,7 +9,7 @@ namespace core::filesystem {
     public:
         local_file_system_t() = default;
         virtual ~local_file_system_t() = default;
-        
+
         static bool set_working_directory(const path_t& path);
         static path_t working_directory();
         static uint64_t available_memory();
@@ -23,7 +23,7 @@ namespace core::filesystem {
         virtual std::string name() const { return "local_file_system_t"; }
         virtual bool can_handle_files(const path_t&) { return true; }
         virtual bool can_seek() const { return true; }
-        
+
         const path_t& home_directory();
         bool set_home_directory(path_t path);
         path_t normalize_path_absolute(const path_t& path);
@@ -41,7 +41,10 @@ namespace core::filesystem {
         path_t file_search_path_;
     };
 
-    std::unique_ptr<file_handle_t> open_file(local_file_system_t&, const path_t& path, file_flags flags, file_lock_type lock = file_lock_type::NO_LOCK);
+    std::unique_ptr<file_handle_t> open_file(local_file_system_t&,
+                                             const path_t& path,
+                                             file_flags flags,
+                                             file_lock_type lock = file_lock_type::NO_LOCK);
     bool read(local_file_system_t&, file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location);
     int64_t read(local_file_system_t&, file_handle_t& handle, void* buffer, int64_t nr_bytes);
     bool write(local_file_system_t&, file_handle_t& handle, void* buffer, int64_t nr_bytes, uint64_t location);
@@ -68,8 +71,8 @@ namespace core::filesystem {
     bool seek(local_file_system_t&, file_handle_t& handle, uint64_t location);
     uint64_t seek_position(local_file_system_t&, file_handle_t& handle);
 
-    #ifdef PLATFORM_WINDOWS
+#ifdef PLATFORM_WINDOWS
     std::string last_error_as_string(local_file_system_t&);
-    #endif
+#endif
 
 } // namespace core::filesystem
