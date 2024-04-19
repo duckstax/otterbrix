@@ -10,7 +10,11 @@ namespace services::storage::sort {
 
     using components::document::compare_t;
 
-    enum class order { descending = -1, ascending = 1 };
+    enum class order
+    {
+        descending = -1,
+        ascending = 1
+    };
 
     class sorter_t {
         using function_t = std::function<compare_t(const document_view_t*, const document_view_t*)>;

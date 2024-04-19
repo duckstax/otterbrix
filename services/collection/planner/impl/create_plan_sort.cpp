@@ -6,7 +6,7 @@ namespace services::collection::planner::impl {
 
     operators::operator_ptr create_plan_sort(const context_storage_t& context,
                                              const components::logical_plan::node_ptr& node) {
-        auto sort = boost::intrusive_ptr(new operators::operator_sort_t(context.at(node->collection_full())));
+        auto sort = boost::intrusive_ptr(new operators::operator_sort_t(context.at(node->collection_full_name())));
         std::for_each(node->expressions().begin(),
                       node->expressions().end(),
                       [&sort](const components::expressions::expression_ptr& expr) {

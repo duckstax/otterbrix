@@ -4,7 +4,8 @@
 
 namespace components::ql::aggregate {
 
-    enum class operator_type : int16_t {
+    enum class operator_type : int16_t
+    {
         invalid = 1,
         count, ///group + project
         group,

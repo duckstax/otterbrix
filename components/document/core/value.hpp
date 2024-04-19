@@ -18,9 +18,20 @@ namespace document::impl {
         class value_slot_t;
     }
 
-    enum class value_type : int8_t { undefined = -1, null = 0, boolean, number, string, data, array, dict };
+    enum class value_type : int8_t
+    {
+        undefined = -1,
+        null = 0,
+        boolean,
+        number,
+        string,
+        data,
+        array,
+        dict
+    };
 
-    enum copy_flags {
+    enum copy_flags
+    {
         default_copy = 0,
         deep_copy = 1,
         copy_immutables = 2,

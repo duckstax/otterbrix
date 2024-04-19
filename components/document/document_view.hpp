@@ -6,7 +6,12 @@
 
 namespace components::document {
 
-    enum class compare_t { less = -1, equals = 0, more = 1 };
+    enum class compare_t
+    {
+        less = -1,
+        equals = 0,
+        more = 1
+    };
 
     class document_view_t final {
     public:

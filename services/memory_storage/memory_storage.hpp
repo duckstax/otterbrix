@@ -59,7 +59,11 @@ namespace services {
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
-        enum class unpack_rules : uint64_t { manager_dispatcher = 0, manager_disk = 1 };
+        enum class unpack_rules : uint64_t
+        {
+            manager_dispatcher = 0,
+            manager_disk = 1
+        };
 
         memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
                          actor_zeta::scheduler_raw scheduler,

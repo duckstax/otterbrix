@@ -15,10 +15,14 @@ set(${PROJECT_NAME}_SOURCES
         planner/impl/create_plan_sort.cpp
         planner/impl/create_plan_update.cpp
         planner/impl/create_plan_join.cpp
+        planner/impl/create_plan_add_index.cpp
+        planner/impl/create_plan_drop_index.cpp
 
         operators/operator_data.cpp
         operators/operator_write_data.cpp
         operators/operator.cpp
+        operators/operator_add_index.cpp
+        operators/operator_drop_index.cpp
         operators/operator_empty.cpp
         operators/operator_insert.cpp
         operators/operator_delete.cpp

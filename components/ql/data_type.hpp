@@ -4,7 +4,8 @@
 
 namespace components::ql {
 
-    enum class data_type {
+    enum class data_type
+    {
         unknown,
         char_,
         date,
