@@ -19,7 +19,7 @@ namespace components::sql::insert::impl {
         }
 
         lexer.save();
-        if (!contents_mask_element(lexer, mask_elem_values)) {
+        if (!contains_mask_element(lexer, mask_elem_values)) {
             return false;
         }
         lexer.restore();

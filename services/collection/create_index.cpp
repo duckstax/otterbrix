@@ -46,6 +46,18 @@ namespace services::collection {
         sessions::remove(sessions_, session, name);
     }
 
+    void collection_t::create_index_finish_fail(const session_id_t& session, const std::string& name) {
+        debug(log(), "collection::create_index_finish_fail");
+        auto& create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
+        actor_zeta::send(
+            create_index.client,
+            address(),
+            handler_id(route::execute_plan_finish),
+            session,
+            make_cursor(default_resource(), error_code_t::index_already_exist, "index with name : " + name + " exist"));
+        sessions::remove(sessions_, session, name);
+    }
+
     void collection_t::index_modify_finish(const session_id_t& session) {
         debug(log(), "collection::index_modify_finish");
         sessions::remove(sessions_, session);

@@ -107,6 +107,7 @@ namespace services::collection {
         void create_index_finish(const session_id_t& session,
                                  const std::string& name,
                                  const actor_zeta::address_t& index_address);
+        void create_index_finish_fail(const session_id_t& session, const std::string& name);
         void index_modify_finish(const session_id_t& session);
         void index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result);
 

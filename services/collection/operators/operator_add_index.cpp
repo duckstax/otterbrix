@@ -18,10 +18,13 @@ namespace services::collection::operators {
               ql_->name());
         switch (ql_->index_type_) {
             case components::ql::index_type::single: {
-                auto id_index =
-                    components::index::make_index<components::index::single_field_index_t>(context_->index_engine(),
-                                                                                           ql_->name(),
-                                                                                           ql_->keys_);
+                const bool index_exist = context_->index_engine()->has_index(ql_->name());
+                const auto id_index = index_exist
+                                          ? components::index::INDEX_ID_UNDEFINED
+                                          : components::index::make_index<components::index::single_field_index_t>(
+                                                context_->index_engine(),
+                                                ql_->name(),
+                                                ql_->keys_);
                 services::collection::sessions::make_session(
                     context_->sessions(),
                     pipeline_context->session,

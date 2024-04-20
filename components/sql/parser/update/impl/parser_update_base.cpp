@@ -21,7 +21,7 @@ namespace components::sql::update::impl {
         }
 
         lexer.save();
-        if (!contents_mask_element(lexer, mask_elem_set)) {
+        if (!contains_mask_element(lexer, mask_elem_set)) {
             return false;
         }
         lexer.restore();

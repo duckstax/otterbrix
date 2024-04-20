@@ -241,7 +241,7 @@ namespace otterbrix {
     bool wrapper_collection::create_index(const py::list& keys, index_type type, index_compare compare) {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
-        components::ql::create_index_t index(database_, name_, type, compare);
+        components::ql::create_index_t index(database_, name_, name_, type, compare);
         for (const auto& key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }

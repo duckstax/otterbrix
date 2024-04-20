@@ -111,7 +111,7 @@ namespace components::sql::impl {
 
     std::string mask_t::cap(std::size_t index) const { return elements_.at(index).value; }
 
-    bool contents_mask_element(lexer_t& lexer, const mask_element_t& elem) {
+    bool contains_mask_element(lexer_t& lexer, const mask_element_t& elem) {
         auto token = lexer.next_token();
         while (!is_token_end_query(token)) {
             if (equals(elem, token)) {
