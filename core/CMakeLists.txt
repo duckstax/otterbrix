@@ -5,6 +5,7 @@ if (WASM_BUILD)
 
 else ()
     add_subdirectory(assert)
+    add_subdirectory(b_plus_tree)
     add_subdirectory(spinlock)
     add_subdirectory(non_thread_scheduler)
     add_subdirectory(file)
