@@ -1,4 +1,5 @@
 #include "block.hpp"
+#include <crc32c/crc32c.h>
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -55,8 +56,8 @@ namespace core::b_plus_tree {
         assert((size & (SECTOR_SIZE - 1)) == 0 && "block size should be a multiple of SECTOR_SIZE!");
         internal_buffer_ = static_cast<data_ptr_t>(resource_->allocate(size));
         full_size_ = size;
-        checksum_ = reinterpret_cast<uint64_t*>(internal_buffer_);
-        count_ = reinterpret_cast<size_t*>(checksum_ + 1);
+        checksum_ = reinterpret_cast<size_t*>(internal_buffer_);
+        count_ = checksum_ + 1;
         *count_ = 0;
         end_ = reinterpret_cast<item_metadata*>(internal_buffer_ + size);
 
@@ -370,16 +371,11 @@ namespace core::b_plus_tree {
         });
     }
 
-    uint64_t block_t::calculate_checksum_() const {
+    size_t block_t::calculate_checksum_() const {
         assert(is_valid_ && "block is not initialized!");
-        uint64_t size = full_size_ - (reinterpret_cast<data_ptr_t>(count_) - internal_buffer_);
-        uint64_t result = 5953;
-        // removing item can only change pointers location and item count, so count_ is included in checksum
-        uint64_t* window = count_;
-        for (uint64_t i = 0; i < size / 8; i++) {
-            result ^= window[i] * 13315146811210211749;
-        }
-        return result;
+        data_ptr_t crc_buffer = reinterpret_cast<data_ptr_t>(count_);
+        size_t size = full_size_ - (crc_buffer - internal_buffer_);
+        return crc32c::Crc32c(crc_buffer, size);
     }
 
 } // namespace core::b_plus_tree

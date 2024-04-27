@@ -34,7 +34,7 @@ namespace core::b_plus_tree {
 
     public:
         static constexpr size_t item_metadata_size = sizeof(item_metadata);
-        static constexpr size_t header_size = sizeof(uint64_t) + sizeof(size_t);
+        static constexpr size_t header_size = sizeof(size_t) * 2;
 
         struct item_data {
             uint64_t id;
@@ -251,7 +251,7 @@ namespace core::b_plus_tree {
 
     private:
         item_metadata* find_item_(uint64_t id) const;
-        uint64_t calculate_checksum_() const;
+        size_t calculate_checksum_() const;
 
         std::pmr::memory_resource* resource_;
         // The pointer to the internal buffer that will be read or written, including the buffer header
@@ -268,7 +268,7 @@ namespace core::b_plus_tree {
         // The size of free part
         size_t available_memory_;
         size_t* count_;
-        uint64_t* checksum_;
+        size_t* checksum_;
     };
 
     [[nodiscard]] static inline std::unique_ptr<block_t> create_initialize(std::pmr::memory_resource* resource,
