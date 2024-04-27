@@ -1,7 +1,7 @@
 #include "block.hpp"
-#include <crc32c/crc32c.h>
 #include <algorithm>
 #include <cassert>
+#include <crc32c/crc32c.h>
 #include <cstring>
 
 namespace core::b_plus_tree {
