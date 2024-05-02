@@ -10,7 +10,7 @@ namespace services::disk {
                                            const path_t& path_db,
                                            const collection_name_t& collection_name,
                                            const index_name_t& index_name,
-                                           components::ql::index_compare compare_type,
+                                           core::type compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)

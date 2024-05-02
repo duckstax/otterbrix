@@ -129,6 +129,7 @@ namespace components::sql::impl {
             if (is_integer(token.value())) {
                 return ::document::wrapper_value_t(std::atol(token.value().data()));
             } else {
+                // TODO we don't support float in this case?
                 return ::document::wrapper_value_t(std::atof(token.value().data()));
             }
         } else if (is_token_bool_value_true(token)) {

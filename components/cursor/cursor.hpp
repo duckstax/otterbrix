@@ -33,7 +33,7 @@ namespace components::cursor {
         database_not_exists = 2,
         collection_already_exists = 3,
         collection_not_exists = 4,
-        index_already_exist = 5,
+        index_create_fail = 5,
         collection_dropped = 6,
         sql_parse_error = 7,
         create_phisical_plan_error = 8

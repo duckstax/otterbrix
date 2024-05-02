@@ -175,6 +175,22 @@ namespace components::document {
         set_new_value_(value_, key, value);
     }
 
+    core::type document_t::type_by_key(const std::string& key) const {
+        const auto value = get_value_by_key_(value_, key);
+        if (value == nullptr) {
+            return core::type::undef;
+        }
+        return value->schema_type();
+    }
+
+    core::type document_t::type_by_key(std::string_view key) const {
+        const auto value = get_value_by_key_(value_, key);
+        if (value == nullptr) {
+            return core::type::undef;
+        }
+        return value->schema_type();
+    }
+
     document_ptr combine_documents(const document_ptr& left, const document_ptr& right) {
         auto combined_doc = make_document();
         document_view_t combined_doc_view(combined_doc);

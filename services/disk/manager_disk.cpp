@@ -189,6 +189,7 @@ namespace services::disk {
 
     void manager_disk_t::create_index_agent(session_id_t& session, const components::ql::create_index_t& index) {
         auto name = index.name();
+        trace(log_, "manager_disk: create_index_agent : {}", name);
         if (index_agents_.contains(name) && !index_agents_.at(name)->is_dropped()) {
             error(log_, "manager_disk: index {} already exists", name);
             actor_zeta::send(current_message()->sender(),
@@ -385,14 +386,13 @@ namespace services::disk {
         actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session, result);
     }
 
-    void manager_disk_empty_t::create_index_agent(session_id_t& session,
-                                                  const collection_name_t&,
-                                                  const index_name_t&,
-                                                  components::ql::index_compare) {
+    void manager_disk_empty_t::create_index_agent(session_id_t& session, const components::ql::create_index_t& index) {
+        auto name = index.name();
         actor_zeta::send(current_message()->sender(),
                          address(),
                          handler_id(index::route::success_create),
                          session,
+                         name,
                          actor_zeta::address_t::empty_address());
     }
 

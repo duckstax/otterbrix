@@ -28,6 +28,9 @@ namespace components::document {
         template<class T>
         void set(const std::string& key, T value);
 
+        core::type type_by_key(const std::string& key) const;
+        core::type type_by_key(std::string_view key) const;
+
         bool update(const ptr& update);
 
     private:
