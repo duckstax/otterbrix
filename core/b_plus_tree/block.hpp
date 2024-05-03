@@ -26,28 +26,29 @@ namespace core::b_plus_tree {
 
     class block_t {
     private:
-        struct item_metadata {
+        struct list_metadata {
             uint64_t id;
             size_t offset;
             size_t size;
         };
 
     public:
-        static constexpr size_t item_metadata_size = sizeof(item_metadata);
-        static constexpr size_t header_size = sizeof(size_t) * 2;
+        static constexpr size_t list_metadata_size = sizeof(list_metadata);
+        // max needed size to append to internal list
+        static constexpr size_t item_metadata_size = sizeof(size_t) * 2;
+        static constexpr size_t header_size = sizeof(size_t) * 3;
 
-        struct item_data {
+        struct list_data {
             uint64_t id;
-            data_ptr_t data;
-            size_t size;
+            std::vector<std::pair<data_ptr_t, size_t>> items;
         };
 
         class iterator {
         public:
-            iterator(const block_t* block, item_metadata* metadata);
+            iterator(const block_t* block, list_metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const list_data& operator*() const { return data_; }
+            inline const list_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const iterator& operator++() {
@@ -112,16 +113,16 @@ namespace core::b_plus_tree {
             void rebuild_data();
 
             const block_t* block_;
-            item_metadata* metadata_;
-            item_data data_;
+            list_metadata* metadata_;
+            list_data data_;
         };
 
         class r_iterator {
         public:
-            r_iterator(const block_t* block, item_metadata* metadata);
+            r_iterator(const block_t* block, list_metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const list_data& operator*() const { return data_; }
+            inline const list_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const r_iterator& operator++() {
@@ -186,8 +187,8 @@ namespace core::b_plus_tree {
             void rebuild_data();
 
             const block_t* block_;
-            item_metadata* metadata_;
-            item_data data_;
+            list_metadata* metadata_;
+            list_data data_;
         };
 
         friend class iterator;
@@ -209,29 +210,34 @@ namespace core::b_plus_tree {
         bool is_empty() const;
         bool is_valid() const;
 
-        bool append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
-        bool remove(uint64_t id);
+        bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        // remove all entries with this id
+        bool remove_id(uint64_t id);
 
-        bool contains(uint64_t id) const;
-        size_t size_of(uint64_t id) const;
-        data_ptr_t data_of(uint64_t id) const;
-        std::pair<data_ptr_t, size_t> get_item(uint64_t id) const;
+        bool contains_id(uint64_t id) const;
+        bool contains(uint64_t id, const_data_ptr_t buffer, size_t buffer_size) const;
+        size_t item_count(uint64_t id) const;
+        std::pair<data_ptr_t, size_t> get_item(uint64_t id, size_t index) const;
+        void get_items(std::vector<std::pair<data_ptr_t, size_t>>& result, uint64_t id) const;
 
         size_t count() const;
-        uint64_t first_id() const;
-        uint64_t last_id() const;
+        size_t unique_id_count() const;
+        uint64_t min_id() const;
+        uint64_t max_id() const;
 
         data_ptr_t internal_buffer();
         size_t block_size() const;
         // should be called when internal_buffer is used for reading to restore metadata
         void restore_block();
+        void resize(size_t new_size);
         void reset();
 
         // after splits this block will contain the first half
         // best case: second block >= first block
         // worst case: 2 blocks will be created
         [[nodiscard]] std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>>
-        split_append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
+        split_append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
         // creates new block and puts last "count" elements there
         [[nodiscard]] std::unique_ptr<block_t> split(size_t count);
         // merge other block to this one
@@ -245,12 +251,13 @@ namespace core::b_plus_tree {
         iterator begin() const { return cbegin(); }
         iterator end() const { return cend(); }
         iterator cbegin() const { return iterator(this, end_ - 1); }
-        iterator cend() const { return iterator(this, last_item_metadata_ - 1); }
-        r_iterator rbegin() const { return r_iterator({this, last_item_metadata_}); }
+        iterator cend() const { return iterator(this, last_list_metadata_ - 1); }
+        r_iterator rbegin() const { return r_iterator({this, last_list_metadata_}); }
         r_iterator rend() const { return r_iterator({this, end_}); }
 
     private:
-        item_metadata* find_item_(uint64_t id) const;
+        list_metadata* find_item_metadata_(uint64_t id) const;
+        bool append_list_(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
         size_t calculate_checksum_() const;
 
         std::pmr::memory_resource* resource_;
@@ -261,13 +268,14 @@ namespace core::b_plus_tree {
         // start location of free part
         data_ptr_t buffer_;
         // store explicitly to avoid calculating it every time
-        item_metadata* end_;
+        list_metadata* end_;
         // where last written id/pointer pair is located
-        item_metadata* last_item_metadata_;
+        list_metadata* last_list_metadata_;
         size_t full_size_;
         // The size of free part
         size_t available_memory_;
         size_t* count_;
+        size_t* unique_id_count_;
         size_t* checksum_;
     };
 

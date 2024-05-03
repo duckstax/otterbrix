@@ -256,24 +256,27 @@ namespace core::b_plus_tree {
         ~segment_tree_t();
 
         // will try to maintain default block size if possible
-        bool append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
-        bool remove(uint64_t id);
+        bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        bool remove_id(uint64_t id);
         [[nodiscard]] std::unique_ptr<segment_tree_t> split(std::unique_ptr<core::filesystem::file_handle_t> file);
-        // requires other->item_count() > this->item_count()
+        // requires other->count() > this->count()
         void balance_with(std::unique_ptr<segment_tree_t>& other);
         void merge(std::unique_ptr<segment_tree_t>& other);
 
         // due to lazy loading this batch can't be const anymore
-        bool contains(uint64_t id);
-        size_t size_of(uint64_t id);
-        data_ptr_t data_of(uint64_t id);
-        std::pair<data_ptr_t, size_t> get_item(uint64_t id);
+        bool contains_id(uint64_t id);
+        bool contains(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        size_t item_count(uint64_t id);
+        std::pair<data_ptr_t, size_t> get_item(uint64_t id, size_t index);
+        void get_items(std::vector<std::pair<data_ptr_t, size_t>>& result, uint64_t id);
 
         uint64_t min_id() const; // with 0 blocks will give [0,INVALID_ID] range:
         uint64_t max_id() const; // with 0 blocks will give [0,INVALID_ID] range:
 
         size_t blocks_count() const;
-        size_t item_count() const;
+        size_t count() const;
+        size_t unique_id_count() const;
         // flush to disk
         void flush();
         // load all tree segment at once from scratch
@@ -290,7 +293,8 @@ namespace core::b_plus_tree {
         r_iterator rend() const { return r_iterator({const_cast<segment_tree_t*>(this), metadata_begin_ - 1}); }
 
     private:
-        [[nodiscard]] node_t construct_new_node_(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
+        [[nodiscard]] node_t construct_new_node_(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+        it find_node_(uint64_t id);
         void load_segment_(block_metadata* metadata);
         void unload_old_segments_();
         // header changes will be handled here:
@@ -301,8 +305,9 @@ namespace core::b_plus_tree {
         std::pmr::memory_resource* resource_;
         std::vector<node_t> segments_; // will become boost::intrusive
 
-        size_t* header_; // header buffer start and node count
+        size_t* header_;
         size_t* item_count_;
+        size_t* unique_id_count_;
         block_metadata* metadata_begin_;
         block_metadata* metadata_end_;
         // keep track of gaps in block record and try to fill them when creating new blocks

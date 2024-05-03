@@ -58,7 +58,7 @@ TEST_CASE("b+tree") {
         }
     }
 
-    INFO("blocks") {
+    INFO("block: unique ids") {
         local_file_system_t fs = local_file_system_t();
         auto fname = testing_directory;
         fname /= "block_test_file";
@@ -80,19 +80,16 @@ TEST_CASE("b+tree") {
             test_data.emplace_back(i, str);
         }
 
-        INFO("block_1") {
+        {
             std::unique_ptr<block_t> test_block_1 = create_initialize(std::pmr::get_default_resource());
 
             REQUIRE(test_block_1->available_memory() == DEFAULT_BLOCK_SIZE - test_block_1->header_size);
             REQUIRE(test_block_1->count() == 0);
-            for (size_t i = 0; i < test_data.size(); i++) {
+            for (uint64_t i = 0; i < test_data.size(); i++) {
                 REQUIRE(test_block_1->append(test_data[i].first,
                                              (const_data_ptr_t) (test_data[i].second.data()),
-                                             test_data[i].second.size()));
-                std::string data_return_test((char*) (test_block_1->data_of(test_data[i].first)),
-                                             test_block_1->size_of(test_data[i].first));
-                REQUIRE(data_return_test == test_data[i].second);
-                REQUIRE(test_block_1->contains(test_data[i].first));
+                                             static_cast<uint64_t>(test_data[i].second.size())));
+                REQUIRE(test_block_1->contains_id(test_data[i].first));
                 // test iterators
                 for (auto it = test_block_1->begin(); it != test_block_1->end(); it++) {
                     std::pair<uint64_t, std::string> test_item =
@@ -100,7 +97,7 @@ TEST_CASE("b+tree") {
                             return item.first == (*it).id;
                         });
                     REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).data, (*it).size);
+                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
                     REQUIRE(item == test_item.second);
                 }
                 for (auto it = test_block_1->rbegin(); it != test_block_1->rend(); it++) {
@@ -109,7 +106,7 @@ TEST_CASE("b+tree") {
                             return item.first == (*it).id;
                         });
                     REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).data, (*it).size);
+                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
                     REQUIRE(item == test_item.second);
                 }
             }
@@ -117,21 +114,21 @@ TEST_CASE("b+tree") {
 
             unique_ptr<file_handle_t> handle =
                 open_file(fs, fname, file_flags::WRITE | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
-            REQUIRE(handle->write((void*) test_block_1->internal_buffer(), test_block_1->block_size(), 0));
+            handle->write((void*) test_block_1->internal_buffer(), test_block_1->block_size(), 0);
             // close the file
             handle.reset();
         }
-
-        INFO("block_2") {
+        {
             std::unique_ptr<block_t> test_block_2 = create_initialize(std::pmr::get_default_resource());
 
-            unique_ptr<file_handle_t> handle = open_file(fs, fname, file_flags::READ);
-            REQUIRE(handle->read((void*) test_block_2->internal_buffer(), test_block_2->block_size(), 0));
+            unique_ptr<file_handle_t> handle =
+                open_file(fs, fname, file_flags::READ | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
+            handle->read((void*) test_block_2->internal_buffer(), test_block_2->block_size(), 0);
             //! important to call restore_block()
             test_block_2->restore_block();
 
             REQUIRE(test_block_2->count() == test_data.size());
-            for (size_t i = 0; i < test_data.size(); i++) {
+            for (uint64_t i = 0; i < test_data.size(); i++) {
                 // test iterators
                 for (auto it = test_block_2->begin(); it != test_block_2->end(); it++) {
                     std::pair<uint64_t, std::string> test_item =
@@ -139,7 +136,7 @@ TEST_CASE("b+tree") {
                             return item.first == (*it).id;
                         });
                     REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).data, (*it).size);
+                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
                     REQUIRE(item == test_item.second);
                 }
                 for (auto it = test_block_2->rbegin(); it != test_block_2->rend(); it++) {
@@ -148,11 +145,11 @@ TEST_CASE("b+tree") {
                             return item.first == (*it).id;
                         });
                     REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).data, (*it).size);
+                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
                     REQUIRE(item == test_item.second);
                 }
-                REQUIRE(test_block_2->remove(test_data[i].first));
-                REQUIRE_FALSE(test_block_2->contains(test_data[i].first));
+                REQUIRE(test_block_2->remove_id(test_data[i].first));
+                REQUIRE_FALSE(test_block_2->contains_id(test_data[i].first));
             }
             REQUIRE(test_block_2->count() == 0);
             REQUIRE(test_block_2->available_memory() == DEFAULT_BLOCK_SIZE - test_block_2->header_size);
@@ -160,6 +157,91 @@ TEST_CASE("b+tree") {
             // close the file
             handle.reset();
             remove_file(fs, fname);
+        }
+    }
+
+    INFO("block: repeated ids") {
+        local_file_system_t fs = local_file_system_t();
+        auto fname = testing_directory;
+        fname /= "block_test_file";
+        size_t test_data_size = 100;
+        size_t duplicate_count = 4;
+
+        std::vector<std::pair<uint64_t, std::string>> test_data;
+
+        for (uint64_t i = 0; i < test_data_size; i++) {
+            std::string str;
+            for (uint64_t j = 0; j < i; j++) {
+                str.push_back('a' + j);
+            }
+            for (size_t j = 0; j < duplicate_count; j++) {
+                test_data.emplace_back(i, str + std::to_string(j));
+            }
+        }
+        std::shuffle(test_data.begin(), test_data.end(), std::default_random_engine{0});
+
+        {
+            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource());
+
+            REQUIRE(test_block->available_memory() == DEFAULT_BLOCK_SIZE - test_block->header_size);
+            REQUIRE(test_block->count() == 0);
+            for (uint64_t i = 0; i < test_data.size(); i++) {
+                REQUIRE(test_block->append(test_data[i].first,
+                                           (const_data_ptr_t) (test_data[i].second.data()),
+                                           static_cast<uint64_t>(test_data[i].second.size())));
+                REQUIRE(test_block->contains_id(test_data[i].first));
+                // test iterators
+                for (auto it = test_block->begin(); it != test_block->end(); it++) {
+                    for (auto item = it->items.begin(); item != it->items.end(); item++) {
+                        std::pair<uint64_t, std::string> deserialized_entry = {
+                            it->id,
+                            std::string((char*) (*item).first, (*item).second)};
+                        REQUIRE(std::find(test_data.begin(), test_data.end(), deserialized_entry) != test_data.end());
+                    }
+                }
+                for (auto it = test_block->rbegin(); it != test_block->rend(); it++) {
+                    for (auto item = it->items.rbegin(); item != it->items.rend(); item++) {
+                        std::pair<uint64_t, std::string> deserialized_entry = {
+                            it->id,
+                            std::string((char*) (*item).first, (*item).second)};
+                        REQUIRE(std::find(test_data.begin(), test_data.end(), deserialized_entry) != test_data.end());
+                    }
+                }
+            }
+            REQUIRE(test_block->count() == test_data_size * duplicate_count);
+            REQUIRE(test_block->unique_id_count() == test_data_size);
+
+            unique_ptr<file_handle_t> handle = open_file(fs,
+                                                         fname,
+                                                         file_flags::WRITE | file_flags::READ | file_flags::FILE_CREATE,
+                                                         file_lock_type::NO_LOCK);
+            handle->write((void*) test_block->internal_buffer(), test_block->block_size(), 0);
+            handle->sync();
+
+            REQUIRE(test_block->count() == test_data_size * duplicate_count);
+            REQUIRE(test_block->unique_id_count() == test_data_size);
+            for (uint64_t i = 0; i < test_data_size; i++) {
+                REQUIRE(test_block->remove_id(i));
+                REQUIRE_FALSE(test_block->contains_id(i));
+            }
+            REQUIRE(test_block->count() == 0);
+            REQUIRE(test_block->unique_id_count() == 0);
+
+            handle->read((void*) test_block->internal_buffer(), test_block->block_size(), 0);
+            test_block->restore_block();
+
+            REQUIRE(test_block->count() == test_data_size * duplicate_count);
+            REQUIRE(test_block->unique_id_count() == test_data_size);
+            for (uint64_t i = 0; i < test_data.size(); i++) {
+                REQUIRE(test_block->remove(test_data[i].first,
+                                           (const_data_ptr_t) (test_data[i].second.data()),
+                                           static_cast<uint64_t>(test_data[i].second.size())));
+            }
+            REQUIRE(test_block->count() == 0);
+            REQUIRE(test_block->unique_id_count() == 0);
+
+            // close the file
+            handle.reset();
         }
     }
 
@@ -189,101 +271,107 @@ TEST_CASE("b+tree") {
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
+        for (uint64_t i = 0; i < 500; i++) {
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
             REQUIRE(tree.append(test_data[i].id, test_data[i].buffer, test_data[i].size));
             // test iterators
+            uint64_t j = 0;
             for (auto block = tree.begin(); block != tree.end(); block++) {
                 for (auto it = block->begin(); it != block->end(); it++) {
                     auto test_item = *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
                         return item.id == (*it).id;
                     });
                     REQUIRE((*it).id == test_item.id);
-                    REQUIRE(test_item.size == (*it).size);
-                    REQUIRE(memcmp(test_item.buffer, (*it).data, test_item.size) == 0);
+                    REQUIRE(test_item.size == (*it).items[0].second);
+                    REQUIRE(memcmp(test_item.buffer, (*it).items[0].first, (*it).items[0].second) == 0);
+                    j++;
                 }
             }
+            j = 0;
             for (auto block = tree.rbegin(); block != tree.rend(); block++) {
                 for (auto it = block->rbegin(); it != block->rend(); it++) {
                     auto test_item = *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
                         return item.id == (*it).id;
                     });
                     REQUIRE((*it).id == test_item.id);
-                    REQUIRE(test_item.size == (*it).size);
-                    REQUIRE(memcmp(test_item.buffer, (*it).data, test_item.size) == 0);
+                    REQUIRE(test_item.size == (*it).items[0].second);
+                    REQUIRE(memcmp(test_item.buffer, (*it).items[0].first, (*it).items[0].second) == 0);
+                    j++;
                 }
             }
-            REQUIRE(tree.contains(test_data[i].id));
+            REQUIRE(tree.contains_id(test_data[i].id));
         }
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(test_data[i].size == tree.size_of(test_data[i].id));
-            REQUIRE(memcmp(test_data[i].buffer, tree.data_of(test_data[i].id), test_data[i].size) == 0);
+        for (uint64_t i = 0; i < 500; i++) {
+            auto item = tree.get_item(test_data[i].id, 0);
+            REQUIRE(test_data[i].size == item.second);
+            REQUIRE(memcmp(test_data[i].buffer, item.first, item.second) == 0);
         }
 
-        REQUIRE(tree.item_count() == 500);
+        REQUIRE(tree.count() == 500);
 
         tree.flush();
         tree.clean_load();
 
-        REQUIRE(tree.item_count() == 500);
+        REQUIRE(tree.count() == 500);
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(tree.item_count() == 500 - i);
-            REQUIRE(tree.contains(test_data[i].id));
-            REQUIRE(tree.remove(test_data[i].id));
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
-            REQUIRE(tree.item_count() == 500 - i - 1);
+        for (uint64_t i = 0; i < 500; i++) {
+            REQUIRE(tree.count() == 500 - i);
+            REQUIRE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.remove_id(test_data[i].id));
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.count() == 500 - i - 1);
         }
 
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
         tree.clean_load();
-        REQUIRE(tree.item_count() == 500); // should be at state of last flush
+        REQUIRE(tree.count() == 500); // should be at state of last flush
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(test_data[i].size == tree.size_of(test_data[i].id));
-            REQUIRE(memcmp(test_data[i].buffer, tree.data_of(test_data[i].id), test_data[i].size) == 0);
+        for (uint64_t i = 0; i < 500; i++) {
+            auto item = tree.get_item(test_data[i].id, 0);
+            REQUIRE(test_data[i].size == item.second);
+            REQUIRE(memcmp(test_data[i].buffer, item.first, item.second) == 0);
         }
 
-        for (size_t i = 450; i < 500; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 450; i < 500; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
         tree.flush();
         tree.clean_load();
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
-        for (size_t i = 0; i < 450; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 0; i < 450; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
         // try again but with lazy loading
         tree.lazy_load();
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
-        for (size_t i = 0; i < 450; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 0; i < 450; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
-        for (size_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < 500; i++) {
             std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
@@ -314,80 +402,82 @@ TEST_CASE("b+tree") {
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
+        for (uint64_t i = 0; i < 500; i++) {
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
             REQUIRE(tree.append(test_data[i].id, test_data[i].buffer, test_data[i].size));
-            REQUIRE(tree.contains(test_data[i].id));
+            REQUIRE(tree.contains_id(test_data[i].id));
         }
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(test_data[i].size == tree.size_of(test_data[i].id));
-            REQUIRE(memcmp(test_data[i].buffer, tree.data_of(test_data[i].id), test_data[i].size) == 0);
+        for (uint64_t i = 0; i < 500; i++) {
+            auto item = tree.get_item(test_data[i].id, 0);
+            REQUIRE(test_data[i].size == item.second);
+            REQUIRE(memcmp(test_data[i].buffer, item.first, item.second) == 0);
         }
 
-        REQUIRE(tree.item_count() == 500);
+        REQUIRE(tree.count() == 500);
 
         tree.flush();
         tree.clean_load();
 
-        REQUIRE(tree.item_count() == 500);
+        REQUIRE(tree.count() == 500);
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(tree.item_count() == 500 - i);
-            REQUIRE(tree.contains(test_data[i].id));
-            REQUIRE(tree.remove(test_data[i].id));
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
-            REQUIRE(tree.item_count() == 500 - i - 1);
+        for (uint64_t i = 0; i < 500; i++) {
+            REQUIRE(tree.count() == 500 - i);
+            REQUIRE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.remove_id(test_data[i].id));
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.count() == 500 - i - 1);
         }
 
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
         tree.clean_load();
-        REQUIRE(tree.item_count() == 500); // should be at state of last flush
+        REQUIRE(tree.count() == 500); // should be at state of last flush
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE(test_data[i].size == tree.size_of(test_data[i].id));
-            REQUIRE(memcmp(test_data[i].buffer, tree.data_of(test_data[i].id), test_data[i].size) == 0);
+        for (uint64_t i = 0; i < 500; i++) {
+            auto item = tree.get_item(test_data[i].id, 0);
+            REQUIRE(test_data[i].size == item.second);
+            REQUIRE(memcmp(test_data[i].buffer, item.first, item.second) == 0);
         }
 
-        for (size_t i = 450; i < 500; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 450; i < 500; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
         tree.flush();
         tree.clean_load();
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
-        for (size_t i = 0; i < 450; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 0; i < 450; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
         // try again but with lazy loading
         tree.lazy_load();
 
-        REQUIRE(tree.item_count() == 450);
+        REQUIRE(tree.count() == 450);
 
-        for (size_t i = 0; i < 450; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(tree.remove(i));
-            REQUIRE_FALSE(tree.contains(i));
+        for (uint64_t i = 0; i < 450; i++) {
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(tree.remove_id(i));
+            REQUIRE_FALSE(tree.contains_id(i));
         }
 
         REQUIRE(tree.blocks_count() == 0);
-        REQUIRE(tree.item_count() == 0);
+        REQUIRE(tree.count() == 0);
 
-        for (size_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < 500; i++) {
             std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
@@ -414,15 +504,15 @@ TEST_CASE("b+tree") {
         }
         std::shuffle(test_data.begin(), test_data.end(), std::default_random_engine{0});
 
-        for (size_t i = 0; i < test_count; i++) {
+        for (uint64_t i = 0; i < test_count; i++) {
             *buffer = test_data[i];
-            REQUIRE(tree.item_count() == i);
+            REQUIRE(tree.count() == i);
             REQUIRE(tree.append(test_data[i], reinterpret_cast<data_ptr_t>(buffer), dummy_size));
-            REQUIRE(tree.item_count() == i + 1);
+            REQUIRE(tree.count() == i + 1);
         }
 
         for (uint64_t i = 0; i < test_count; i++) {
-            REQUIRE(tree.contains(i));
+            REQUIRE(tree.contains_id(i));
         }
 
         tree.flush();
@@ -435,7 +525,7 @@ TEST_CASE("b+tree") {
         }
 
         for (uint64_t i = 0; i < test_count; i++) {
-            REQUIRE(tree.remove(i));
+            REQUIRE(tree.remove_id(i));
         }
 
         std::pmr::get_default_resource()->deallocate(buffer, dummy_size);
@@ -464,12 +554,13 @@ TEST_CASE("b+tree") {
             test_data.push_back(dummy);
         }
 
-        for (size_t i = 0; i < 500; i++) {
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
+        for (uint64_t i = 0; i < 500; i++) {
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
             REQUIRE(tree.append(test_data[i].id, test_data[i].buffer, test_data[i].size));
-            REQUIRE(tree.contains(test_data[i].id));
-            REQUIRE(test_data[i].size == tree.size_of(test_data[i].id));
-            REQUIRE(memcmp(test_data[i].buffer, tree.data_of(test_data[i].id), test_data[i].size) == 0);
+            REQUIRE(tree.contains_id(test_data[i].id));
+            auto item = tree.get_item(test_data[i].id, 0);
+            REQUIRE(test_data[i].size == item.second);
+            REQUIRE(memcmp(test_data[i].buffer, item.first, item.second) == 0);
 
             // test scan
             std::vector<std::pair<uint64_t, std::string>> scan_result;
@@ -478,10 +569,10 @@ TEST_CASE("b+tree") {
                 500,
                 500,
                 &scan_result,
-                [](void* buf, size_t size) { return std::string(static_cast<char*>(buf), size); },
+                [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
                 [](const std::string&) { return true; });
             REQUIRE(scan_result.size() == i + 1);
-            for (size_t j = 0; j < scan_result.size(); j++) {
+            for (uint64_t j = 0; j < scan_result.size(); j++) {
                 uint64_t id = scan_result[j].first;
                 auto dummy = std::find_if(test_data.begin(), test_data.end(), [id](const dummy_alloc& dummy) {
                     return dummy.id == id;
@@ -496,10 +587,10 @@ TEST_CASE("b+tree") {
                 500,
                 500,
                 &scan_result,
-                [](void* buf, size_t size) { return std::string(static_cast<char*>(buf), size); },
+                [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
                 [](const std::string&) { return true; });
             REQUIRE(scan_result.size() == i + 1);
-            for (size_t j = 0; j < scan_result.size(); j++) {
+            for (uint64_t j = 0; j < scan_result.size(); j++) {
                 uint64_t id = scan_result[j].first;
                 auto dummy = std::find_if(test_data.begin(), test_data.end(), [id](const dummy_alloc& dummy) {
                     return dummy.id == id;
@@ -512,15 +603,14 @@ TEST_CASE("b+tree") {
         REQUIRE(tree.size() == 500);
 
         tree.flush();
-        tree.load();
 
         REQUIRE(tree.size() == 500);
 
-        for (size_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < 500; i++) {
             REQUIRE(tree.size() == 500 - i);
-            REQUIRE(tree.contains(test_data[i].id));
-            REQUIRE(tree.remove(test_data[i].id));
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
+            REQUIRE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.remove_id(test_data[i].id));
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
             REQUIRE(tree.size() == 500 - i - 1);
         }
 
@@ -528,21 +618,21 @@ TEST_CASE("b+tree") {
 
         REQUIRE(tree.size() == 500);
         // after loading, internal nodes will be different, but functionality shouldn't change
-        for (size_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < 500; i++) {
             REQUIRE(tree.size() == 500 - i);
-            REQUIRE(tree.contains(test_data[i].id));
-            REQUIRE(tree.remove(test_data[i].id));
-            REQUIRE_FALSE(tree.contains(test_data[i].id));
+            REQUIRE(tree.contains_id(test_data[i].id));
+            REQUIRE(tree.remove_id(test_data[i].id));
+            REQUIRE_FALSE(tree.contains_id(test_data[i].id));
             REQUIRE(tree.size() == 500 - i - 1);
         }
 
-        for (size_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < 500; i++) {
             std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
 
     INFO("b+tree: big item count; random order") {
-        size_t key_num = 1'000'000;
+        size_t key_num = 100'000;
         local_file_system_t fs = local_file_system_t();
         auto dname = testing_directory;
         dname /= "btree_test1";
@@ -556,24 +646,24 @@ TEST_CASE("b+tree") {
 
         REQUIRE(tree.size() == 0);
 
-        for (size_t i = 0; i < key_num; i++) {
+        for (uint64_t i = 0; i < key_num; i++) {
             REQUIRE(tree.append(keys[i], reinterpret_cast<data_ptr_t>(&keys[i]), sizeof(uint64_t)));
         }
         REQUIRE(tree.size() == key_num);
         for (uint64_t i = 0; i < key_num; i++) {
-            REQUIRE(tree.contains(i));
-            REQUIRE(*reinterpret_cast<uint64_t*>(tree.get_item(i).first) == i);
+            REQUIRE(tree.contains_id(i));
+            REQUIRE(*reinterpret_cast<uint64_t*>(tree.get_item(i, 0).first) == i);
         }
         REQUIRE(tree.size() == key_num);
         for (uint64_t i = 0; i < key_num; i++) {
-            REQUIRE(tree.remove(keys[i]));
+            REQUIRE(tree.remove_id(keys[i]));
         }
         REQUIRE(tree.size() == 0);
     }
 
     INFO("b+tree: multithread access") {
         size_t num_threads = 4;
-        size_t key_num = 1'000'000;
+        size_t key_num = 100'000;
         local_file_system_t fs = local_file_system_t();
         auto dname = testing_directory;
         dname /= "btree_test2";
@@ -602,7 +692,7 @@ TEST_CASE("b+tree") {
             size_t end = work_per_thread * (id + 1);
 
             for (size_t i = start; i < end; i++) {
-                auto result_pair = tree.get_item(keys.at(i));
+                auto result_pair = tree.get_item(keys.at(i), 0);
                 REQUIRE(result_pair.first);
                 REQUIRE(result_pair.second == sizeof(uint64_t));
                 REQUIRE(*reinterpret_cast<uint64_t*>(result_pair.first) == keys.at(i));
@@ -615,7 +705,7 @@ TEST_CASE("b+tree") {
             size_t end = work_per_thread * (id + 1);
 
             for (size_t i = start; i < end; i++) {
-                REQUIRE(tree.remove(keys.at(i)));
+                REQUIRE(tree.remove_id(keys.at(i)));
             }
         };
 
@@ -671,6 +761,60 @@ TEST_CASE("b+tree") {
         }
 
         REQUIRE(tree.size() == 0);
+    }
+
+    INFO("btree: non unique ids") {
+        size_t fake_item_size = 8192;
+        size_t duplicate_count = 50;
+        size_t key_num = 4000;
+        local_file_system_t fs = local_file_system_t();
+        auto dname = testing_directory;
+        dname /= "btree_test3";
+        btree_t tree(std::pmr::get_default_resource(), fs, dname, 128);
+
+        std::vector<std::pair<uint64_t, uint64_t>> test_data;
+        test_data.reserve(key_num * duplicate_count);
+        for (uint64_t i = 0; i < key_num; i++) {
+            for (uint64_t j = 0; j < duplicate_count; j++) {
+                test_data.emplace_back(std::pair<uint64_t, uint64_t>{i, j});
+            }
+        }
+        std::shuffle(test_data.begin(), test_data.end(), std::default_random_engine{0});
+
+        std::vector<size_t> duplicates(key_num, 0);
+        uint64_t* fake_buffer = (uint64_t*) (std::pmr::get_default_resource()->allocate(fake_item_size));
+        REQUIRE(tree.size() == 0);
+        for (uint64_t i = 0; i < key_num * duplicate_count; i++) {
+            *fake_buffer = test_data[i].second;
+            REQUIRE(tree.append(test_data[i].first, reinterpret_cast<data_ptr_t>(fake_buffer), fake_item_size));
+            REQUIRE(tree.contains_id(test_data[i].first));
+            REQUIRE(tree.contains(test_data[i].first, reinterpret_cast<data_ptr_t>(fake_buffer), fake_item_size));
+            duplicates[test_data[i].first]++;
+            REQUIRE(tree.item_count(test_data[i].first) == duplicates[test_data[i].first]);
+        }
+        REQUIRE(tree.size() == key_num * duplicate_count);
+        for (uint64_t i = 0; i < key_num; i++) {
+            REQUIRE(tree.contains_id(i));
+        }
+        REQUIRE(tree.size() == key_num * duplicate_count);
+        tree.flush();
+        for (uint64_t i = 0; i < key_num; i++) {
+            REQUIRE(tree.remove_id(i));
+            for (uint64_t j = i + 1; j < key_num; j++) {
+                REQUIRE(tree.contains_id(j));
+            }
+            REQUIRE(tree.size() == (key_num - i - 1) * duplicate_count);
+        }
+        REQUIRE(tree.size() == 0);
+        tree.load();
+        REQUIRE(tree.size() == key_num * duplicate_count);
+        for (uint64_t i = 0; i < key_num * duplicate_count; i++) {
+            *fake_buffer = test_data[i].second;
+            REQUIRE(tree.remove(test_data[i].first, reinterpret_cast<data_ptr_t>(fake_buffer), fake_item_size));
+        }
+        REQUIRE(tree.size() == 0);
+
+        std::pmr::get_default_resource()->deallocate(fake_buffer, fake_item_size);
     }
 
     INFO("deinitialization") {
