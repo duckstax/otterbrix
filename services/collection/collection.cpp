@@ -1,6 +1,7 @@
 #include "collection.hpp"
 #include <components/index/disk/route.hpp>
 #include <core/system_command.hpp>
+#include <services/collection/create_index_utils.hpp>
 #include <services/collection/operators/operator_delete.hpp>
 #include <services/collection/operators/operator_insert.hpp>
 #include <services/collection/operators/operator_update.hpp>
@@ -31,7 +32,7 @@ namespace services::collection {
         add_handler(handler_id(route::drop_collection), &collection_t::drop);
         add_handler(handler_id(route::close_cursor), &collection_t::close_cursor);
         add_handler(handler_id(index::route::success_create), &collection_t::create_index_finish);
-        add_handler(handler_id(index::route::error), &collection_t::create_index_finish_fail);
+        add_handler(handler_id(index::route::error), &collection_t::create_index_finish_index_exist);
         add_handler(handler_id(index::route::success), &collection_t::index_modify_finish);
         add_handler(handler_id(index::route::success_find), &collection_t::index_find_finish);
     }
@@ -97,6 +98,7 @@ namespace services::collection {
         }
         components::pipeline::context_t pipeline_context{session, address(), current_message()->sender(), parameters};
         plan->on_execute(&pipeline_context);
+        // TODO figure is it possible to use for pending indexes
         if (!plan->is_executed()) {
             sessions::make_session(sessions_,
                                    session,
@@ -107,6 +109,9 @@ namespace services::collection {
         switch (plan->type()) {
             case operators::operator_type::insert: {
                 insert_document_impl(session, sender, std::move(plan));
+                if (!context_->pending_indexes().empty()) {
+                    process_pending_indexes(context_.get());
+                }
                 return;
             }
             case operators::operator_type::remove: {
@@ -141,6 +146,7 @@ namespace services::collection {
                                             const actor_zeta::address_t& sender,
                                             operators::operator_ptr plan) {
         trace(log(), "collection::execute_plan : operators::operator_type::insert");
+
         actor_zeta::send(mdisk_,
                          address(),
                          disk::handler_id(disk::route::write_documents),

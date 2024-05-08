@@ -89,31 +89,31 @@ namespace services::disk {
     ADD_TYPE_SLICE(double, as_double)
     ADD_TYPE_SLICE(bool, as_bool)
 
-    std::unique_ptr<base_comparator> make_comparator(components::ql::index_compare compare_type) {
+    std::unique_ptr<base_comparator> make_comparator(core::type compare_type) {
         switch (compare_type) {
-            case components::ql::index_compare::str:
+            case core::type::str:
                 return std::make_unique<comparator<std::string>>();
-            case components::ql::index_compare::int8:
+            case core::type::int8:
                 return std::make_unique<comparator<int8_t>>();
-            case components::ql::index_compare::int16:
+            case core::type::int16:
                 return std::make_unique<comparator<int16_t>>();
-            case components::ql::index_compare::int32:
+            case core::type::int32:
                 return std::make_unique<comparator<int32_t>>();
-            case components::ql::index_compare::int64:
+            case core::type::int64:
                 return std::make_unique<comparator<int64_t>>();
-            case components::ql::index_compare::uint8:
+            case core::type::uint8:
                 return std::make_unique<comparator<uint8_t>>();
-            case components::ql::index_compare::uint16:
+            case core::type::uint16:
                 return std::make_unique<comparator<uint16_t>>();
-            case components::ql::index_compare::uint32:
+            case core::type::uint32:
                 return std::make_unique<comparator<uint32_t>>();
-            case components::ql::index_compare::uint64:
+            case core::type::uint64:
                 return std::make_unique<comparator<uint64_t>>();
-            case components::ql::index_compare::float32:
+            case core::type::float32:
                 return std::make_unique<comparator<float>>();
-            case components::ql::index_compare::float64:
+            case core::type::float64:
                 return std::make_unique<comparator<double>>();
-            case components::ql::index_compare::bool8:
+            case core::type::bool8:
                 return std::make_unique<comparator<bool>>();
         }
         return std::make_unique<comparator<std::string>>();
@@ -130,7 +130,7 @@ namespace services::disk {
         std::memcpy(docs.data() + size, slice.data(), slice.size());
     }
 
-    index_disk_t::index_disk_t(const path_t& path, components::ql::index_compare compare_type)
+    index_disk_t::index_disk_t(const path_t& path, core::type compare_type)
         : path_(path)
         , db_(nullptr)
         , comparator_(make_comparator(compare_type)) {

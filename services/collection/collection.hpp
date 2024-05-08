@@ -37,6 +37,11 @@ namespace services::collection {
 
     class collection_t;
 
+    struct pending_index_create {
+        components::ql::create_index_ptr index_ql{nullptr};
+        std::unique_ptr<components::pipeline::context_t> context{nullptr};
+    };
+
     class context_collection_t final {
     public:
         explicit context_collection_t(std::pmr::memory_resource* resource,
@@ -70,6 +75,8 @@ namespace services::collection {
 
         actor_zeta::address_t disk() noexcept { return mdisk_; }
 
+        std::vector<pending_index_create>& pending_indexes() noexcept { return pending_indexes_to_create; }
+
     private:
         std::pmr::memory_resource* resource_;
         components::index::index_engine_ptr index_engine_;
@@ -81,11 +88,12 @@ namespace services::collection {
         collection_full_name_t name_;
         /**
          * @brief Index create/drop context
-         * 
          */
         sessions::sessions_storage_t& sessions_;
         actor_zeta::address_t mdisk_;
         log_t log_;
+
+        std::vector<pending_index_create> pending_indexes_to_create;
     };
 
     class collection_t final : public actor_zeta::basic_async_actor {
@@ -107,7 +115,7 @@ namespace services::collection {
         void create_index_finish(const session_id_t& session,
                                  const std::string& name,
                                  const actor_zeta::address_t& index_address);
-        void create_index_finish_fail(const session_id_t& session, const std::string& name);
+        void create_index_finish_index_exist(const session_id_t& session, const std::string& name);
         void index_modify_finish(const session_id_t& session);
         void index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result);
 

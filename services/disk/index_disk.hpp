@@ -23,7 +23,7 @@ namespace services::disk {
     public:
         using result = std::pmr::vector<document_id_t>;
 
-        index_disk_t(const path_t& path, components::ql::index_compare compare_type);
+        index_disk_t(const path_t& path, core::type compare_type);
         ~index_disk_t();
 
         void insert(const wrapper_value_t& key, const document_id_t& value);

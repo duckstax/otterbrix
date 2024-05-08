@@ -14,6 +14,7 @@
 #include <log/log.hpp>
 
 #include <components/ql/index.hpp>
+#include <core/types.hpp>
 
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
@@ -22,7 +23,6 @@
 namespace py = pybind11;
 namespace otterbrix {
 
-    using components::ql::index_compare;
     using components::ql::index_type;
 
     class PYBIND11_EXPORT wrapper_collection final : public boost::intrusive_ref_counter<wrapper_collection> {
@@ -42,7 +42,7 @@ namespace otterbrix {
         wrapper_cursor_ptr delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
-        bool create_index(const py::list& keys, index_type type, index_compare compare);
+        bool create_index(const py::list& keys, index_type type, core::type compare);
 
     private:
         const std::string name_;

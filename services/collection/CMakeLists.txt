@@ -52,6 +52,7 @@ set(${PROJECT_NAME}_SOURCES
 
         collection.cpp
         create_index.cpp
+        create_index_utils.cpp
         sort.cpp
 )
 
