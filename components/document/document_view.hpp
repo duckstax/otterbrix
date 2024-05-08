@@ -24,6 +24,9 @@ namespace components::document {
         document_id_t id() const;
         document_ptr get_ptr() const;
 
+        core::type type_by_key(const std::string& key) const;
+        core::type type_by_key(std::string_view key) const;
+
         bool is_valid() const;
         bool is_dict() const;
         bool is_array() const;

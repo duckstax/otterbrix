@@ -73,7 +73,7 @@ constexpr int kDocuments = 100;
         ql.keys_.emplace_back(KEY);                                                                                    \
         auto res = dispatcher->create_index(session, &ql);                                                             \
         REQUIRE(res->is_error() == true);                                                                              \
-        REQUIRE(res->get_error().type == components::cursor::error_code_t::index_already_exist);                       \
+        REQUIRE(res->get_error().type == components::cursor::error_code_t::index_create_fail);                         \
                                                                                                                        \
     } while (false)
 
@@ -122,7 +122,7 @@ TEST_CASE("integration::test_index::base") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_INDEX("ncount", core::type::int64, "count");
         FILL_COLLECTION();
     }
 
@@ -146,9 +146,9 @@ TEST_CASE("integration::test_index::save_load") {
         auto* dispatcher = space.dispatcher();
 
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
-        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("ncount", core::type::int64, "count");
+        CREATE_INDEX("scount", core::type::str, "countStr");
+        CREATE_INDEX("dcount", core::type::float64, "countDouble");
         FILL_COLLECTION();
     }
 
@@ -175,9 +175,9 @@ TEST_CASE("integration::test_index::drop") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
-        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("ncount", core::type::int64, "count");
+        CREATE_INDEX("scount", core::type::str, "countStr");
+        CREATE_INDEX("dcount", core::type::float64, "countDouble");
         FILL_COLLECTION();
         usleep(1000000); //todo: wait
     }
@@ -225,25 +225,25 @@ TEST_CASE("integration::test_index::index already exist") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", components::ql::index_compare::int64, "count");
-        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("ncount", core::type::int64, "count");
+        CREATE_INDEX("scount", core::type::str, "countStr");
+        CREATE_INDEX("dcount", core::type::float64, "countDouble");
         FILL_COLLECTION();
     }
 
     INFO("add existed ncount index") {
-        CREATE_EXISTED_INDEX("ncount", components::ql::index_compare::int64, "count");
-        CREATE_EXISTED_INDEX("ncount", components::ql::index_compare::int64, "count");
+        CREATE_EXISTED_INDEX("ncount", core::type::int64, "count");
+        CREATE_EXISTED_INDEX("ncount", core::type::int64, "count");
     }
 
     INFO("add existed scount index") {
-        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
-        CREATE_INDEX("scount", components::ql::index_compare::str, "countStr");
+        CREATE_INDEX("scount", core::type::str, "countStr");
+        CREATE_INDEX("scount", core::type::str, "countStr");
     }
 
     INFO("add existed dcount index") {
-        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
-        CREATE_INDEX("dcount", components::ql::index_compare::float64, "countDouble");
+        CREATE_INDEX("dcount", core::type::float64, "countDouble");
+        CREATE_INDEX("dcount", core::type::float64, "countDouble");
     }
 
     INFO("find") {
@@ -251,5 +251,104 @@ TEST_CASE("integration::test_index::index already exist") {
         CHECK_EXISTS_INDEX("ncount", true);
         CHECK_EXISTS_INDEX("scount", true);
         CHECK_EXISTS_INDEX("dcount", true);
+    }
+}
+
+TEST_CASE("integration::test_index::no_type base check") {
+    auto config = test_create_config("/tmp/otterbrix/integration/test_index/base");
+    test_clear_directory(config);
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        INIT_COLLECTION();
+        FILL_COLLECTION();
+        CREATE_INDEX("ncount", core::type::undef, "count");
+        CREATE_INDEX("dcount", core::type::undef, "countDouble");
+        CREATE_INDEX("scount", core::type::undef, "countStr");
+    }
+
+    INFO("check indexes") {
+        CHECK_EXISTS_INDEX("ncount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
+        CHECK_EXISTS_INDEX("scount", true);
+    }
+
+    // Not working
+    // INFO("find"){
+    // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+    // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+    // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+    // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+    // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+    // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+    // }
+}
+
+TEST_CASE("integration::test_index::no_type pending base check") {
+    auto config = test_create_config("/tmp/otterbrix/integration/test_index/base");
+    test_clear_directory(config);
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        INIT_COLLECTION();
+        CREATE_INDEX("ncount", core::type::undef, "count");
+        CREATE_INDEX("dcount", core::type::undef, "countDouble");
+        CREATE_INDEX("scount", core::type::undef, "countStr");
+        FILL_COLLECTION();
+    }
+
+    INFO("check indexes") {
+        CHECK_EXISTS_INDEX("ncount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
+        CHECK_EXISTS_INDEX("scount", true);
+    }
+
+    // Not working
+    // INFO("find"){
+    // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+    // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+    // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+    // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+    // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+    // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+    // }
+}
+
+// TODO this test is unstable
+TEST_CASE("integration::test_index::no_type save_load") {
+    auto config = test_create_config("/tmp/otterbrix/integration/test_index/save_load");
+    test_clear_directory(config);
+
+    INFO("initialization") {
+        test_spaces space(config);
+        auto* dispatcher = space.dispatcher();
+
+        INIT_COLLECTION();
+        CREATE_INDEX("ncount", core::type::undef, "count");
+        CREATE_INDEX("scount", core::type::undef, "countStr");
+        CREATE_INDEX("dcount", core::type::undef, "countDouble");
+        FILL_COLLECTION();
+    }
+
+    INFO("check indexes") {
+        CHECK_EXISTS_INDEX("ncount", true);
+        CHECK_EXISTS_INDEX("dcount", true);
+        CHECK_EXISTS_INDEX("scount", true);
+    }
+
+    INFO("find") {
+        test_spaces space(config);
+        auto* dispatcher = space.dispatcher();
+        dispatcher->load();
+
+        CHECK_FIND_ALL();
+        // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+        // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+        // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+        // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+        // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+        // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
     }
 }

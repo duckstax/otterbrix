@@ -276,3 +276,91 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         REQUIRE(cur->get_error().type == error_code_t::collection_not_exists);
     }
 }
+
+TEST_CASE("integration::cpp::test_collection::sql::index") {
+    auto config = test_create_config("/tmp/test_collection_sql/base");
+    test_clear_directory(config);
+    config.disk.on = false;
+    config.wal.on = false;
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_database(session, database_name);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_name);
+        }
+    }
+
+    // [UNSTABLE] Lead to problems with documents insert
+    // TODO figure out how to fix
+    // INFO("create_pending_index") {
+    //     auto session = otterbrix::session_id_t();
+    //     auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_name ON TestDatabase.TestCollection (name);");
+    //     REQUIRE(cur->is_success());
+    // }
+
+    INFO("insert") {
+        {
+            auto session = otterbrix::session_id_t();
+            std::stringstream query;
+            query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
+            for (int num = 0; num < 100; ++num) {
+                query << "('" << gen_id(num + 1) << "', "
+                      << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
+            }
+            auto cur = dispatcher->execute_sql(session, query.str());
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 100);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
+        }
+    }
+
+    INFO("create_index") {
+        auto session = otterbrix::session_id_t();
+        auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_count ON TestDatabase.TestCollection (count);");
+        REQUIRE(cur->is_success());
+    }
+
+    INFO("find") {
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection;");
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 100);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 9);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
+        }
+    }
+
+    INFO("drop") {
+        // TODO uncomment when create_pending_index is fixed
+        // {
+        //     auto session = otterbrix::session_id_t();
+        //     auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_name;");
+        //     REQUIRE(cur->is_success());
+        // }
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_count;");
+            REQUIRE(cur->is_success());
+        }
+    }
+}

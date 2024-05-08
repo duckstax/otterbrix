@@ -38,23 +38,28 @@ namespace services::collection {
         auto& create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(context_->index_engine(), create_index.id_index, index_address);
         components::index::insert(context_->index_engine(), create_index.id_index, context_->storage());
-        actor_zeta::send(create_index.client,
-                         address(),
-                         handler_id(route::execute_plan_finish),
-                         session,
-                         make_cursor(default_resource(), operation_status_t::success));
+        if (!create_index.is_pending) {
+            actor_zeta::send(create_index.client,
+                             address(),
+                             handler_id(route::execute_plan_finish),
+                             session,
+                             make_cursor(default_resource(), operation_status_t::success));
+        }
         sessions::remove(sessions_, session, name);
     }
 
-    void collection_t::create_index_finish_fail(const session_id_t& session, const std::string& name) {
-        debug(log(), "collection::create_index_finish_fail");
+    void collection_t::create_index_finish_index_exist(const session_id_t& session, const std::string& name) {
+        debug(log(), "collection::create_index_finish_index_exist");
         auto& create_index = sessions::find(sessions_, session, name).get<sessions::create_index_t>();
-        actor_zeta::send(
-            create_index.client,
-            address(),
-            handler_id(route::execute_plan_finish),
-            session,
-            make_cursor(default_resource(), error_code_t::index_already_exist, "index with name : " + name + " exist"));
+        if (!create_index.is_pending) {
+            actor_zeta::send(create_index.client,
+                             address(),
+                             handler_id(route::execute_plan_finish),
+                             session,
+                             make_cursor(default_resource(),
+                                         error_code_t::index_create_fail,
+                                         "index with name : " + name + " exist"));
+        }
         sessions::remove(sessions_, session, name);
     }
 

@@ -7,6 +7,7 @@
 #include <components/document/support/endian.hpp>
 #include <components/document/support/exception.hpp>
 #include <components/document/support/ref_counted.hpp>
+#include <core/types.hpp>
 
 namespace document::impl {
 
@@ -46,6 +47,7 @@ namespace document::impl {
         static const value_t* const undefined_value;
 
         value_type type() const noexcept PURE;
+        core::type schema_type() const noexcept PURE;
         bool is_equal(const value_t*) const PURE;
         bool is_lt(const value_t*) const PURE;
         bool is_lte(const value_t*) const PURE;

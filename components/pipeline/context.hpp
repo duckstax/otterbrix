@@ -13,6 +13,7 @@ namespace components::pipeline {
         ql::storage_parameters parameters;
 
         explicit context_t(ql::storage_parameters init_parameters);
+        context_t(context_t&& context);
         context_t(session::session_id_t session,
                   actor_zeta::address_t address,
                   actor_zeta::address_t sender,

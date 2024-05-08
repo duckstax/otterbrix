@@ -238,7 +238,7 @@ namespace otterbrix {
         throw std::runtime_error("wrapper_collection::find");
     }
     */
-    bool wrapper_collection::create_index(const py::list& keys, index_type type, index_compare compare) {
+    bool wrapper_collection::create_index(const py::list& keys, index_type type, core::type compare) {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
         components::ql::create_index_t index(database_, name_, name_, type, compare);

@@ -27,7 +27,7 @@ namespace services::disk {
                            const path_t&,
                            const collection_name_t&,
                            const index_name_t&,
-                           components::ql::index_compare compare_type,
+                           core::type compare_type,
                            log_t&);
         ~index_agent_disk_t() final;
 

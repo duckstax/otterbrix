@@ -104,10 +104,7 @@ namespace services::disk {
         manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
-        void create_index_agent(session_id_t& session,
-                                const collection_name_t&,
-                                const index_name_t&,
-                                components::ql::index_compare);
+        void create_index_agent(session_id_t& session, const components::ql::create_index_t& index);
 
         template<class... Args>
         auto nothing(Args&&...) -> void {}

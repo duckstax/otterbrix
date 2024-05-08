@@ -12,6 +12,13 @@ namespace components::expressions {
             : type_(type::non)
             , storage_({}) {}
 
+        key_t(key_t&& key)
+            : type_{key.type_}
+            , storage_{std::move(key.storage_)} {}
+
+        key_t(const key_t& key) = default;
+        key_t& operator=(const key_t& key) = default;
+
         explicit key_t(std::string_view str)
             : type_(type::string)
             , storage_(std::string(str.data(), str.size())) {}
