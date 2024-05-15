@@ -47,27 +47,16 @@ namespace components::cursor {
         explicit error_t(error_code_t type, const std::string& what);
     };
 
-    struct list_addresses_t final {
-        struct res_t {
-            collection_full_name_t name;
-            actor_zeta::address_t address;
-        };
-
-        std::pmr::vector<res_t> addresses;
-
-        explicit list_addresses_t(std::pmr::memory_resource* resource);
-    };
-
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
     public:
-        sub_cursor_t(std::pmr::memory_resource* resource, actor_zeta::address_t collection);
-        actor_zeta::address_t& address();
+        sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name);
+        const collection_full_name_t& collection_name();
         std::size_t size() const;
         std::pmr::vector<data_t>& data();
         void append(data_t);
 
     private:
-        actor_zeta::address_t collection_;
+        collection_full_name_t collection_name_;
         std::pmr::vector<data_t> data_;
     };
 

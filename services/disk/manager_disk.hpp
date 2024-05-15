@@ -7,6 +7,10 @@
 #include <core/excutor.hpp>
 #include <core/file/file.hpp>
 
+namespace services::collection {
+    class context_collection_t;
+}
+
 namespace services::disk {
 
     using session_id_t = ::components::session::session_id_t;
@@ -69,8 +73,12 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
-        void create_index_agent(session_id_t& session, const components::ql::create_index_t& index);
-        void drop_index_agent(session_id_t& session, const index_name_t& index_name);
+        void create_index_agent(session_id_t& session,
+                                const components::ql::create_index_t& index,
+                                services::collection::context_collection_t* collection);
+        void drop_index_agent(session_id_t& session,
+                              const index_name_t& index_name,
+                              services::collection::context_collection_t* collection);
         void drop_index_agent_success(session_id_t& session);
 
     private:
@@ -104,7 +112,9 @@ namespace services::disk {
         manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
-        void create_index_agent(session_id_t& session, const components::ql::create_index_t& index);
+        void create_index_agent(session_id_t& session,
+                                const components::ql::create_index_t& index,
+                                services::collection::context_collection_t* collection);
 
         template<class... Args>
         auto nothing(Args&&...) -> void {}

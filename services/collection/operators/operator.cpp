@@ -45,6 +45,8 @@ namespace services::collection::operators {
 
     const collection_full_name_t& operator_t::collection_name() const noexcept { return context_->name(); }
 
+    context_collection_t* operator_t::context() noexcept { return context_; }
+
     operator_ptr operator_t::left() const noexcept { return left_; }
 
     operator_ptr operator_t::right() const noexcept { return right_; }

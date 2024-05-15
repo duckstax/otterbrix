@@ -10,9 +10,6 @@ namespace components::cursor {
         : type(type)
         , what(what) {}
 
-    list_addresses_t::list_addresses_t(std::pmr::memory_resource* resource)
-        : addresses(resource) {}
-
     void cursor_t::push(sub_cursor_t* sub_cursor) {
         size_ += sub_cursor->size();
         sub_cursor_.emplace_back(sub_cursor);
@@ -95,14 +92,14 @@ namespace components::cursor {
         , error_(error_code_t::none)
         , success_(op_status == operation_status_t::success) {}
 
-    actor_zeta::address_t& sub_cursor_t::address() { return collection_; }
+    const collection_full_name_t& sub_cursor_t::collection_name() { return collection_name_; }
 
     size_t sub_cursor_t::size() const { return data_.size(); }
 
     std::pmr::vector<data_t>& sub_cursor_t::data() { return data_; }
 
-    sub_cursor_t::sub_cursor_t(std::pmr::memory_resource* resource, actor_zeta::address_t collection)
-        : collection_(collection)
+    sub_cursor_t::sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name)
+        : collection_name_(collection_name)
         , data_(resource) {}
 
     void sub_cursor_t::append(data_t data) { data_.push_back(std::move(data)); }

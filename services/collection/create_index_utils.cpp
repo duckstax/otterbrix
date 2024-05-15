@@ -50,7 +50,8 @@ namespace services::collection {
                     sessions::create_index_t{pipeline_context->current_message_sender, id_index, is_pending});
                 pipeline_context->send(context->disk(),
                                        services::index::handler_id(services::index::route::create),
-                                       std::move(*(index_ql.release())));
+                                       std::move(*(index_ql.release())),
+                                       context->name());
                 break;
             }
             case components::ql::index_type::composite:

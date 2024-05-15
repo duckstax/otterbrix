@@ -58,6 +58,7 @@ namespace services::collection::operators {
         void set_as_root() noexcept;
 
         const collection_full_name_t& collection_name() const noexcept;
+        context_collection_t* context() noexcept;
 
         [[nodiscard]] ptr left() const noexcept;
         [[nodiscard]] ptr right() const noexcept;

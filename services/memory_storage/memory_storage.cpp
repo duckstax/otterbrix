@@ -20,16 +20,6 @@ namespace services {
     memory_storage_t::load_buffer_t::load_buffer_t(std::pmr::memory_resource* resource)
         : collections(resource) {}
 
-    memory_storage_t::collection_pack_t::collection_pack_t(actor_zeta::address_t&& address,
-                                                           collection::context_collection_t* context)
-        : collection_actor_address(std::move(address))
-        , context(context) {}
-
-    memory_storage_t::plan_t::plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
-                                     components::ql::storage_parameters parameters)
-        : sub_plans(std::move(sub_plans))
-        , parameters(parameters) {}
-
     memory_storage_t::memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
                                        actor_zeta::scheduler_raw scheduler,
                                        log_t& log)
@@ -37,22 +27,23 @@ namespace services {
         , log_(log.clone())
         , e_(scheduler)
         , databases_(resource)
-        , collections_(resource)
-        , plans_(resource) {
+        , collections_(resource) {
         ZoneScoped;
         trace(log_, "memory_storage start thread pool");
+        executor_address_ = spawn_actor<services::collection::executor::executor_t>(
+            [this](services::collection::executor::executor_t* ptr) { executor_ = ptr; },
+            resource,
+            std::move(log_.clone()));
         add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
         add_handler(handler_id(route::execute_plan), &memory_storage_t::execute_plan);
         add_handler(handler_id(route::load), &memory_storage_t::load);
 
-        add_handler(collection::handler_id(collection::route::drop_collection_finish),
-                    &memory_storage_t::drop_collection_finish_);
         add_handler(collection::handler_id(collection::route::create_documents_finish),
                     &memory_storage_t::create_documents_finish_);
-        add_handler(collection::handler_id(collection::route::execute_sub_plan_finish),
-                    &memory_storage_t::execute_sub_plan_finish_);
         add_handler(collection::handler_id(collection::route::execute_plan_finish),
                     &memory_storage_t::execute_plan_finish_);
+        add_handler(collection::handler_id(collection::route::size), &memory_storage_t::size);
+        add_handler(collection::handler_id(collection::route::close_cursor), &memory_storage_t::close_cursor);
     }
 
     memory_storage_t::~memory_storage_t() {
@@ -89,6 +80,37 @@ namespace services {
         }
     }
 
+    void memory_storage_t::size(components::session::session_id_t& session, collection_full_name_t&& name) {
+        trace(log_, "collection {}::{}::size", name.database, name.collection);
+        auto collection = collections_.at(name).get();
+        if (collection->dropped()) {
+            actor_zeta::send(current_message()->sender(),
+                             address(),
+                             handler_id(collection::route::size_finish),
+                             session,
+                             make_cursor(std::pmr::get_default_resource(), error_code_t::collection_dropped));
+        } else {
+            auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
+            for (const auto& doc : collection->storage()) {
+                sub_cursor->append(components::document::document_view_t(doc.second));
+            }
+            auto cursor = make_cursor(collection->resource());
+            cursor->push(sub_cursor);
+            actor_zeta::send(current_message()->sender(),
+                             address(),
+                             handler_id(collection::route::size_finish),
+                             session,
+                             std::move(cursor));
+        }
+    }
+
+    void memory_storage_t::close_cursor(components::session::session_id_t& session,
+                                        std::set<collection_full_name_t>&& collections) {
+        for (const auto& name : collections) {
+            collections_.at(name)->cursor_storage().erase(session);
+        }
+    }
+
     void memory_storage_t::load(components::session::session_id_t& session, const disk::result_load_t& result) {
         trace(log_, "memory_storage_t:load");
         load_buffer_ = std::make_unique<load_buffer_t>(resource());
@@ -106,20 +128,19 @@ namespace services {
             for (const auto& collection : database.collections) {
                 debug(log_, "memory_storage_t:load:create_collection: {}", collection.name);
                 collection_full_name_t name(database.name, collection.name);
-                auto collection_address = spawn_actor<collection::collection_t>(
-                    [this, &name](services::collection::collection_t* ptr) {
-                        collections_.emplace(name,
-                                             collection_pack_t{std::move(actor_zeta::address_t(ptr)), ptr->view()});
-                    },
-                    name,
-                    log_,
-                    manager_disk_);
-                load_buffer_->collections.addresses.emplace_back(list_addresses_t::res_t{name, collection_address});
+                auto context =
+                    collections_.emplace(name,
+                                         new collection::context_collection_t(std::pmr::get_default_resource(),
+                                                                              name,
+                                                                              manager_disk_,
+                                                                              log_.clone()));
+                load_buffer_->collections.emplace_back(name);
                 debug(log_, "memory_storage_t:load:fill_documents: {}", collection.documents.size());
-                actor_zeta::send(collection_address,
+                actor_zeta::send(executor_address_,
                                  address(),
                                  collection::handler_id(collection::route::create_documents),
                                  session,
+                                 context,
                                  collection.documents);
             }
         }
@@ -226,19 +247,16 @@ namespace services {
                                              "collection already exists"));
                 return;
             }
-            auto address = spawn_actor<collection::collection_t>(
-                [this, &logical_plan](collection::collection_t* ptr) {
-                    collections_.emplace(logical_plan->collection_full_name(),
-                                         collection_pack_t{std::move(actor_zeta::address_t(ptr)), ptr->view()});
-                },
-                logical_plan->collection_full_name(),
-                log_,
-                manager_disk_);
+            collections_.emplace(logical_plan->collection_full_name(),
+                                 new collection::context_collection_t(std::pmr::get_default_resource(),
+                                                                      logical_plan->collection_full_name(),
+                                                                      manager_disk_,
+                                                                      log_.clone()));
             actor_zeta::send(current_message()->sender(),
                              this->address(),
                              handler_id(route::create_collection_finish),
                              session,
-                             address);
+                             logical_plan->collection_full_name());
             auto cursor = make_cursor(default_resource(), operation_status_t::success);
             actor_zeta::send(current_message()->sender(),
                              this->address(),
@@ -253,10 +271,17 @@ namespace services {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full_name().to_string());
         if (check_collection_(session, logical_plan->collection_full_name())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-            actor_zeta::send(collections_.at(logical_plan->collection_full_name()).collection_actor_address,
-                             address(),
-                             collection::handler_id(collection::route::drop_collection),
-                             session);
+
+            trace(log_, "memory_storage_t:drop_collection_finish {}", logical_plan->collection_full_name().to_string());
+            actor_zeta::send(
+                current_message()->sender(),
+                address(),
+                handler_id(route::execute_plan_finish),
+                session,
+                collections_.at(logical_plan->collection_full_name())->drop()
+                    ? make_cursor(default_resource(), operation_status_t::success)
+                    : make_cursor(default_resource(), error_code_t::other_error, "collection not dropped"));
+            sessions_.erase(session);
         }
     }
 
@@ -279,100 +304,22 @@ namespace services {
                       session.data());
                 return;
             }
-            collections_context_storage.emplace(std::move(name), collections_.at(name).context);
+            collections_context_storage.emplace(std::move(name), collections_.at(name).get());
         }
         sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-        auto plan = collection::planner::create_plan(collections_context_storage,
-                                                     logical_plan,
-                                                     components::ql::limit_t::unlimit());
-
-        if (!plan) {
-            execute_plan_finish_(
-                session,
-                make_cursor(default_resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
-            return;
-        }
-        plan->set_as_root();
-        traverse_plan_(session, std::move(plan), std::move(parameters));
-    }
-
-    void memory_storage_t::traverse_plan_(components::session::session_id_t& session,
-                                          collection::operators::operator_ptr&& plan,
-                                          components::ql::storage_parameters&& parameters) {
-        std::stack<collection::operators::operator_ptr> look_up;
-        std::stack<collection::operators::operator_ptr> sub_plans;
-        look_up.push(plan);
-        while (!look_up.empty()) {
-            auto check_op = look_up.top();
-            while (check_op->right() == nullptr) {
-                check_op = check_op->left();
-                if (check_op == nullptr) {
-                    break;
-                }
-            }
-            sub_plans.push(look_up.top());
-            look_up.pop();
-            if (check_op != nullptr) {
-                look_up.push(check_op->right());
-                look_up.push(check_op->left());
-            }
-        }
-
-        // start execution chain by sending first avaliable sub_plan
-        auto current_plan =
-            (plans_.emplace(session, plan_t{std::move(sub_plans), parameters})).first->second.sub_plans.top();
-        actor_zeta::send(collections_.at(current_plan->collection_name()).collection_actor_address,
+        actor_zeta::send(executor_address_,
                          address(),
-                         collection::handler_id(collection::route::execute_sub_plan),
+                         collection::handler_id(collection::route::execute_plan),
                          session,
-                         current_plan,
-                         parameters);
-    }
-
-    void memory_storage_t::execute_sub_plan_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
-        if (result->is_error() || !plans_.contains(session)) {
-            execute_plan_finish_(session, std::move(result));
-        }
-        auto& plan = plans_.at(session);
-        if (plan.sub_plans.size() == 1) {
-            execute_plan_finish_(session, std::move(result));
-        } else {
-            assert(!plan.sub_plans.empty() && "memory_storage_t:execute_sub_plan_finish_: sub plans execution failed");
-            plan.sub_plans.pop();
-            actor_zeta::send(collections_.at(plan.sub_plans.top()->collection_name()).collection_actor_address,
-                             address(),
-                             collection::handler_id(collection::route::execute_sub_plan),
-                             session,
-                             plan.sub_plans.top(),
-                             plan.parameters);
-        }
+                         logical_plan,
+                         parameters,
+                         std::move(collections_context_storage));
     }
 
     void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
         auto& s = sessions_.at(session);
         debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result->is_success());
         actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
-        plans_.erase(session);
-        sessions_.erase(session);
-    }
-
-    void memory_storage_t::drop_collection_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
-        const auto& s = sessions_.at(session);
-        trace(log_, "memory_storage_t:drop_collection_finish {}", s.logical_plan->collection_full_name().to_string());
-        if (result->is_success()) {
-            collections_.erase(s.logical_plan->collection_full_name());
-            actor_zeta::send(s.sender,
-                             address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(default_resource(), operation_status_t::success));
-        } else {
-            actor_zeta::send(s.sender,
-                             address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(default_resource(), error_code_t::other_error, "collection not dropped"));
-        }
         sessions_.erase(session);
     }
 
