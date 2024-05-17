@@ -28,7 +28,7 @@ namespace services::collection::executor {
 
         void create_documents(session_id_t& session,
                               context_collection_t* collection,
-                              std::pmr::vector<document_ptr>& documents);
+                              const std::pmr::vector<document_ptr>& documents);
 
         void create_index_finish(const session_id_t& session,
                                  const std::string& name,
@@ -71,9 +71,7 @@ namespace services::collection::executor {
                                   context_collection_t* context_,
                                   operators::operator_ptr plan);
 
-        context_collection_t* find_context_(const components::session::session_id_t& session);
-
-        services::memory_storage_t* memory_storage_{nullptr};
+        actor_zeta::address_t memory_storage_ = actor_zeta::address_t::empty_address();
         std::pmr::memory_resource* resource_;
         plan_storage_t plans_;
         log_t log_;

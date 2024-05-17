@@ -52,7 +52,10 @@ namespace services::dispatcher {
         void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
         void create_collection_finish(components::session::session_id_t& session,
                                       collection_full_name_t collection_address);
-        void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
+        void size(components::session::session_id_t& session,
+                  std::string& database_name,
+                  std::string& collection,
+                  actor_zeta::base::address_t sender);
         void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr&& cursor);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);

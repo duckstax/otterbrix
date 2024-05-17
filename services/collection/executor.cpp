@@ -24,7 +24,7 @@ namespace services::collection::executor {
 
     executor_t::executor_t(services::memory_storage_t* memory_storage, std::pmr::memory_resource* resource, log_t&& log)
         : actor_zeta::basic_async_actor(memory_storage, "plan executor")
-        , memory_storage_(memory_storage)
+        , memory_storage_(memory_storage->address())
         , resource_(resource)
         , plans_(resource_)
         , log_(log) {
@@ -43,7 +43,7 @@ namespace services::collection::executor {
         trace(log_, "executor::execute_plan");
         auto plan = collection::planner::create_plan(context_storage, logical_plan, components::ql::limit_t::unlimit());
         if (!plan) {
-            actor_zeta::send(memory_storage_->address(),
+            actor_zeta::send(memory_storage_,
                              address(),
                              handler_id(route::execute_plan_finish),
                              session,
@@ -58,9 +58,9 @@ namespace services::collection::executor {
 
     void executor_t::create_documents(components::session::session_id_t& session,
                                       context_collection_t* collection,
-                                      std::pmr::vector<document_ptr>& documents) {
+                                      const std::pmr::vector<document_ptr>& documents) {
         trace(log_,
-              "{}::{}::create_documents, count: {}",
+              "executor_t::create_documents: {}::{}, count: {}",
               collection->name().database,
               collection->name().collection,
               documents.size());
@@ -120,14 +120,14 @@ namespace services::collection::executor {
                 make_cursor(collection->resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
-        components::pipeline::context_t pipeline_context{session, address(), memory_storage_->address(), parameters};
+        components::pipeline::context_t pipeline_context{session, address(), memory_storage_, parameters};
         plan->on_execute(&pipeline_context);
         // TODO figure is it possible to use for pending indexes
         if (!plan->is_executed()) {
             sessions::make_session(
                 collection->sessions(),
                 session,
-                sessions::suspend_plan_t{memory_storage_->address(), std::move(plan), std::move(pipeline_context)});
+                sessions::suspend_plan_t{memory_storage_, std::move(plan), std::move(pipeline_context)});
             return;
         }
 
@@ -180,7 +180,7 @@ namespace services::collection::executor {
 
     void executor_t::execute_plan_finish_(const components::session::session_id_t& session, cursor_t_ptr&& cursor) {
         trace(log_, "executor::execute_plan_finish, success: {}", cursor->is_success());
-        actor_zeta::send(memory_storage_->address(),
+        actor_zeta::send(memory_storage_,
                          address(),
                          handler_id(route::execute_plan_finish),
                          session,

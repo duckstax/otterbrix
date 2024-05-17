@@ -291,12 +291,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::insert_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -308,12 +308,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::insert_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -324,12 +324,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::update_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -341,12 +341,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::update_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -358,12 +358,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::delete_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -375,12 +375,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::delete_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -435,7 +435,7 @@ namespace services::dispatcher {
                              dispatcher_t::address(),
                              handler_id(route::execute_ql_finish),
                              session,
-                             result);
+                             std::move(result));
             remove_session(session_to_address_, session);
             result_storage_.erase(session);
         }
@@ -447,12 +447,14 @@ namespace services::dispatcher {
     }
     void dispatcher_t::size(components::session::session_id_t& session,
                             std::string& database_name,
-                            std::string& collection) {
+                            std::string& collection,
+                            actor_zeta::base::address_t sender) {
         trace(log_,
               "dispatcher_t::size: session:{}, database: {}, collection: {}",
               session.data(),
               database_name,
               collection);
+        make_session(session_to_address_, session, session_t(std::move(sender)));
         actor_zeta::send(memory_storage_,
                          dispatcher_t::address(),
                          collection::handler_id(collection::route::size),
@@ -461,7 +463,7 @@ namespace services::dispatcher {
     }
 
     void dispatcher_t::size_finish(components::session::session_id_t& session, cursor_t_ptr&& result) {
-        trace(log_, "dispatcher_t::size_finish session: {}", session.data());
+        trace(log_, "dispatcher_t::size_finish session: {}, size: {}", session.data(), result->size());
         actor_zeta::send(find_session(session_to_address_, session).address(),
                          dispatcher_t::address(),
                          collection::handler_id(collection::route::size_finish),

@@ -43,7 +43,7 @@ namespace services::collection {
                                                 index_ql->name(),
                                                 index_ql->keys_);
 
-                services::collection::sessions::make_session(
+                sessions::make_session(
                     context->sessions(),
                     pipeline_context->session,
                     index_ql->name(),
@@ -51,7 +51,7 @@ namespace services::collection {
                 pipeline_context->send(context->disk(),
                                        services::index::handler_id(services::index::route::create),
                                        std::move(*(index_ql.release())),
-                                       context->name());
+                                       context);
                 break;
             }
             case components::ql::index_type::composite:
