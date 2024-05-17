@@ -128,12 +128,11 @@ namespace services {
             for (const auto& collection : database.collections) {
                 debug(log_, "memory_storage_t:load:create_collection: {}", collection.name);
                 collection_full_name_t name(database.name, collection.name);
-                auto context =
-                    collections_.emplace(name,
-                                         new collection::context_collection_t(std::pmr::get_default_resource(),
-                                                                              name,
-                                                                              manager_disk_,
-                                                                              log_.clone()));
+                auto context = new collection::context_collection_t(std::pmr::get_default_resource(),
+                                                                    name,
+                                                                    manager_disk_,
+                                                                    log_.clone());
+                collections_.emplace(name, context);
                 load_buffer_->collections.emplace_back(name);
                 debug(log_, "memory_storage_t:load:fill_documents: {}", collection.documents.size());
                 actor_zeta::send(executor_address_,
