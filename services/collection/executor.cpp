@@ -40,7 +40,7 @@ namespace services::collection::executor {
                                   components::logical_plan::node_ptr logical_plan,
                                   components::ql::storage_parameters parameters,
                                   services::context_storage_t&& context_storage) {
-        trace(log_, "executor::execute_plan");
+        trace(log_, "executor::execute_plan, session: {}", session.data());
         auto plan = collection::planner::create_plan(context_storage, logical_plan, components::ql::limit_t::unlimit());
         if (!plan) {
             actor_zeta::send(memory_storage_,
@@ -106,7 +106,7 @@ namespace services::collection::executor {
     void executor_t::execute_sub_plan_(const components::session::session_id_t& session,
                                        collection::operators::operator_ptr plan,
                                        components::ql::storage_parameters parameters) {
-        trace(log_, "executor::execute_sub_plan");
+        trace(log_, "executor::execute_sub_plan, session: {}", session.data());
         auto collection = plan->context();
         if (collection->dropped()) {
             execute_sub_plan_finish_(
@@ -172,7 +172,7 @@ namespace services::collection::executor {
         if (plan.sub_plans.size() == 1) {
             execute_plan_finish_(session, std::move(result));
         } else {
-            assert(!plan.sub_plans.empty() && "memory_storage_t:execute_sub_plan_finish_: sub plans execution failed");
+            assert(!plan.sub_plans.empty() && "executor_t:execute_sub_plan_finish_: sub plans execution failed");
             plan.sub_plans.pop();
             execute_sub_plan_(session, plan.sub_plans.top(), plan.parameters);
         }

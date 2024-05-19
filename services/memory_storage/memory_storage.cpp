@@ -147,8 +147,7 @@ namespace services {
             actor_zeta::send(current_message()->sender(),
                              address(),
                              handler_id(route::load_finish),
-                             session,
-                             load_buffer_->collections);
+                             session);
             load_buffer_.reset();
         }
     }
@@ -251,11 +250,6 @@ namespace services {
                                                                       logical_plan->collection_full_name(),
                                                                       manager_disk_,
                                                                       log_.clone()));
-            actor_zeta::send(current_message()->sender(),
-                             this->address(),
-                             handler_id(route::create_collection_finish),
-                             session,
-                             logical_plan->collection_full_name());
             auto cursor = make_cursor(default_resource(), operation_status_t::success);
             actor_zeta::send(current_message()->sender(),
                              this->address(),
@@ -288,7 +282,7 @@ namespace services {
                                          components::logical_plan::node_ptr logical_plan,
                                          components::ql::storage_parameters parameters) {
         trace(log_,
-              "memory_storage_t:execute_plan_ {}, sesion: {}",
+              "memory_storage_t:execute_plan_: collection: {}, sesion: {}",
               logical_plan->collection_full_name().to_string(),
               session.data());
         auto dependency_tree_collections_names = logical_plan->collection_dependencies();
@@ -298,7 +292,7 @@ namespace services {
                 dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
             if (!check_collection_(session, name)) {
                 trace(log_,
-                      "memory_storage_t:execute_plan_ collection not found {}, sesion: {}",
+                      "memory_storage_t:execute_plan_: collection not found {}, sesion: {}",
                       name.to_string(),
                       session.data());
                 return;
@@ -317,7 +311,7 @@ namespace services {
 
     void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
         auto& s = sessions_.at(session);
-        debug(log_, "memory_storage_t:execute_plan_finish: {}, success: {}", session.data(), result->is_success());
+        debug(log_, "memory_storage_t:execute_plan_finish: session: {}, success: {}", session.data(), result->is_success());
         actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
         sessions_.erase(session);
     }
@@ -330,7 +324,7 @@ namespace services {
         --s.count_answers;
         debug(log_, "memory_storage_t:create_documents_finish: {}, rest: {}", session.data(), s.count_answers);
         if (s.count_answers == 0) {
-            actor_zeta::send(s.sender, address(), handler_id(route::load_finish), session, load_buffer_->collections);
+            actor_zeta::send(s.sender, address(), handler_id(route::load_finish), session);
             load_buffer_.reset();
             sessions_.erase(session);
         }

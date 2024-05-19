@@ -42,16 +42,13 @@ namespace services::dispatcher {
         void load(components::session::session_id_t& session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t& session,
                                    const services::disk::result_load_t& result);
-        void load_from_memory_resource_result(components::session::session_id_t& session,
-                                              std::pmr::vector<collection_full_name_t> collections);
+        void load_from_memory_resource_result(components::session::session_id_t& session);
         void load_from_wal_result(components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);
         void execute_ql(components::session::session_id_t& session,
                         components::ql::ql_statement_t* ql,
                         actor_zeta::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-        void create_collection_finish(components::session::session_id_t& session,
-                                      collection_full_name_t collection_address);
         void size(components::session::session_id_t& session,
                   std::string& database_name,
                   std::string& collection,
@@ -65,7 +62,6 @@ namespace services::dispatcher {
         log_t log_;
         actor_zeta::address_t manager_dispatcher_;
         std::pmr::memory_resource* resource_;
-        std::unordered_map<components::session::session_id_t, collection_full_name_t> last_collection_;
         actor_zeta::address_t memory_storage_;
         actor_zeta::address_t manager_wal_;
         actor_zeta::address_t manager_disk_;

@@ -208,7 +208,7 @@ namespace services::disk {
                 [&](index_agent_disk_t* ptr) { index_agents_.insert_or_assign(name, index_agent_disk_ptr(ptr)); },
                 resource(),
                 config_.path,
-                index.collection_,
+                collection,
                 name,
                 index.index_compare_,
                 log_);

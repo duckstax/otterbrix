@@ -29,7 +29,6 @@ namespace services::dispatcher {
         , log_(log.clone())
         , manager_dispatcher_(manager_dispatcher->address())
         , resource_(resource)
-        , last_collection_()
         , memory_storage_(std::move(mstorage))
         , manager_wal_(std::move(mwal))
         , manager_disk_(std::move(mdisk)) {
@@ -42,8 +41,6 @@ namespace services::dispatcher {
         add_handler(handler_id(route::execute_ql), &dispatcher_t::execute_ql);
         add_handler(memory_storage::handler_id(memory_storage::route::execute_plan_finish),
                     &dispatcher_t::execute_ql_finish);
-        add_handler(memory_storage::handler_id(memory_storage::route::create_collection_finish),
-                    &dispatcher_t::create_collection_finish);
         add_handler(collection::handler_id(collection::route::size), &dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::size_finish), &dispatcher_t::size_finish);
         add_handler(collection::handler_id(collection::route::close_cursor), &dispatcher_t::close_cursor);
@@ -79,8 +76,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t& session,
-                                                        std::pmr::vector<collection_full_name_t> collections) {
+    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t& session) {
         trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
@@ -265,7 +261,6 @@ namespace services::dispatcher {
 
                 case statement_type::create_collection: {
                     trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    last_collection_.erase(session);
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::append_collection),
@@ -441,10 +436,6 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::create_collection_finish(components::session::session_id_t& session,
-                                                collection_full_name_t name) {
-        last_collection_.emplace(session, name);
-    }
     void dispatcher_t::size(components::session::session_id_t& session,
                             std::string& database_name,
                             std::string& collection,

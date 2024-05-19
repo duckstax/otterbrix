@@ -94,7 +94,7 @@ namespace services::collection::executor {
         sessions::remove(collection->sessions(), session);
         auto cursor = make_cursor(default_resource());
         cursor->push(res.first->second.get());
-        actor_zeta::send(suspend_plan.client, address(), handler_id(route::execute_sub_plan_finish), session, cursor);
+        execute_sub_plan_finish_(session, cursor);
     }
 
 } // namespace services::collection::executor
