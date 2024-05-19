@@ -33,9 +33,12 @@ namespace services::collection {
     using document_id_t = components::document::document_id_t;
     using document_ptr = components::document::document_ptr;
     using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
+    using cursor_storage_t = std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>>;
     using document_view_t = components::document::document_view_t;
 
-    class collection_t;
+    namespace executor {
+        class executor_t;
+    }
 
     struct pending_index_create {
         components::ql::create_index_ptr index_ql{nullptr};
@@ -46,21 +49,21 @@ namespace services::collection {
     public:
         explicit context_collection_t(std::pmr::memory_resource* resource,
                                       const collection_full_name_t& name,
-                                      sessions::sessions_storage_t& sessions,
-                                      actor_zeta::address_t mdisk,
+                                      const actor_zeta::address_t& mdisk,
                                       log_t&& log)
             : resource_(resource)
+            , cursor_storage_(resource_)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , statistic_(resource_)
             , storage_(resource_)
             , name_(name)
-            , sessions_(sessions)
             , mdisk_(mdisk)
             , log_(log) {
             assert(resource != nullptr);
         }
 
         storage_t& storage() noexcept { return storage_; }
+        cursor_storage_t& cursor_storage() noexcept { return cursor_storage_; }
 
         components::index::index_engine_ptr& index_engine() noexcept { return index_engine_; }
 
@@ -71,7 +74,18 @@ namespace services::collection {
         log_t& log() noexcept { return log_; }
 
         const collection_full_name_t& name() const noexcept { return name_; }
+
         sessions::sessions_storage_t& sessions() noexcept { return sessions_; }
+
+        bool drop() noexcept {
+            if (dropped_) {
+                return false;
+            }
+            dropped_ = true;
+            return true;
+        }
+
+        bool dropped() const noexcept { return dropped_; }
 
         actor_zeta::address_t disk() noexcept { return mdisk_; }
 
@@ -79,6 +93,7 @@ namespace services::collection {
 
     private:
         std::pmr::memory_resource* resource_;
+        cursor_storage_t cursor_storage_;
         components::index::index_engine_ptr index_engine_;
         /**
         *  statistics
@@ -89,70 +104,12 @@ namespace services::collection {
         /**
          * @brief Index create/drop context
          */
-        sessions::sessions_storage_t& sessions_;
+        sessions::sessions_storage_t sessions_;
         actor_zeta::address_t mdisk_;
         log_t log_;
 
         std::vector<pending_index_create> pending_indexes_to_create;
-    };
-
-    class collection_t final : public actor_zeta::basic_async_actor {
-    public:
-        collection_t(services::memory_storage_t* memory_storage,
-                     const collection_full_name_t& name,
-                     log_t& log,
-                     actor_zeta::address_t mdisk);
-        ~collection_t();
-        auto create_documents(session_id_t& session, std::pmr::vector<document_ptr>& documents) -> void;
-        auto size(session_id_t& session) -> void;
-
-        auto execute_sub_plan(const components::session::session_id_t& session,
-                              collection::operators::operator_ptr plan,
-                              components::ql::storage_parameters parameters) -> void;
-
-        void drop(const session_id_t& session);
-        void close_cursor(session_id_t& session);
-        void create_index_finish(const session_id_t& session,
-                                 const std::string& name,
-                                 const actor_zeta::address_t& index_address);
-        void create_index_finish_index_exist(const session_id_t& session, const std::string& name);
-        void index_modify_finish(const session_id_t& session);
-        void index_find_finish(const session_id_t& session, const std::pmr::vector<document_id_t>& result);
-
-        context_collection_t* view() const;
-
-        context_collection_t* extract();
-
-    private:
-        void aggregate_document_impl(const components::session::session_id_t& session,
-                                     const actor_zeta::address_t& sender,
-                                     operators::operator_ptr plan);
-        void update_document_impl(const components::session::session_id_t& session,
-                                  const actor_zeta::address_t& sender,
-                                  operators::operator_ptr plan);
-        void insert_document_impl(const components::session::session_id_t& session,
-                                  const actor_zeta::address_t& sender,
-                                  operators::operator_ptr plan);
-        void delete_document_impl(const components::session::session_id_t& session,
-                                  const actor_zeta::address_t& sender,
-                                  operators::operator_ptr plan);
-
-        std::size_t size_() const;
-        bool drop_();
-
-        log_t& log() noexcept;
-
-        actor_zeta::address_t mdisk_;
-
-        std::unique_ptr<context_collection_t> context_;
-        std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>> cursor_storage_;
-        sessions::sessions_storage_t sessions_;
         bool dropped_{false};
-
-#ifdef DEV_MODE
-    public:
-        std::size_t size_test() const;
-#endif
     };
 
 } // namespace services::collection

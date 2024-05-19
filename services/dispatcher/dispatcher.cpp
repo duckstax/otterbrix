@@ -29,7 +29,6 @@ namespace services::dispatcher {
         , log_(log.clone())
         , manager_dispatcher_(manager_dispatcher->address())
         , resource_(resource)
-        , last_collection_(actor_zeta::base::address_t::empty_address())
         , memory_storage_(std::move(mstorage))
         , manager_wal_(std::move(mwal))
         , manager_disk_(std::move(mdisk)) {
@@ -42,8 +41,6 @@ namespace services::dispatcher {
         add_handler(handler_id(route::execute_ql), &dispatcher_t::execute_ql);
         add_handler(memory_storage::handler_id(memory_storage::route::execute_plan_finish),
                     &dispatcher_t::execute_ql_finish);
-        add_handler(memory_storage::handler_id(memory_storage::route::create_collection_finish),
-                    &dispatcher_t::create_collection_finish);
         add_handler(collection::handler_id(collection::route::size), &dispatcher_t::size);
         add_handler(collection::handler_id(collection::route::size_finish), &dispatcher_t::size_finish);
         add_handler(collection::handler_id(collection::route::close_cursor), &dispatcher_t::close_cursor);
@@ -79,12 +76,8 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t& session,
-                                                        list_addresses_t collections) {
+    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t& session) {
         trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
-        for (const auto& collection : collections.addresses) {
-            collection_address_book_.emplace(collection.name, collection.address);
-        }
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
         load_result_.clear();
@@ -268,9 +261,6 @@ namespace services::dispatcher {
 
                 case statement_type::create_collection: {
                     trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
-                    collection_address_book_.emplace(collection_full_name_t(ql->database_, ql->collection_),
-                                                     last_collection_.at(session));
-                    last_collection_.erase(session);
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::append_collection),
@@ -296,12 +286,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::insert_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -313,12 +303,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::insert_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -329,12 +319,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::update_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -346,12 +336,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::update_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -363,12 +353,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::delete_one),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -380,12 +370,12 @@ namespace services::dispatcher {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
-                        auto result = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
+                        auto statement = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
                         actor_zeta::send(manager_wal_,
                                          dispatcher_t::address(),
                                          wal::handler_id(wal::route::delete_many),
                                          session,
-                                         std::move(result));
+                                         std::move(statement));
                         return;
                     }
                     break;
@@ -394,7 +384,6 @@ namespace services::dispatcher {
                 case statement_type::drop_collection: {
                     trace(log_, "dispatcher_t::execute_ql_finish: {}", to_string(ql->type()));
                     collection_full_name_t name(ql->database_, ql->collection_);
-                    collection_address_book_.erase(name);
                     actor_zeta::send(manager_disk_,
                                      dispatcher_t::address(),
                                      disk::handler_id(disk::route::remove_collection),
@@ -441,44 +430,31 @@ namespace services::dispatcher {
                              dispatcher_t::address(),
                              handler_id(route::execute_ql_finish),
                              session,
-                             result);
+                             std::move(result));
             remove_session(session_to_address_, session);
             result_storage_.erase(session);
         }
     }
 
-    void dispatcher_t::create_collection_finish(components::session::session_id_t& session,
-                                                actor_zeta::base::address_t collection_address) {
-        last_collection_.emplace(session, collection_address);
-    }
     void dispatcher_t::size(components::session::session_id_t& session,
                             std::string& database_name,
                             std::string& collection,
-                            actor_zeta::address_t address) {
+                            actor_zeta::base::address_t sender) {
         trace(log_,
               "dispatcher_t::size: session:{}, database: {}, collection: {}",
               session.data(),
               database_name,
               collection);
-        collection_full_name_t key(database_name, collection);
-        auto it_collection = collection_address_book_.find(key);
-        if (it_collection != collection_address_book_.end()) {
-            make_session(session_to_address_, session, session_t(std::move(address)));
-            actor_zeta::send(it_collection->second,
-                             dispatcher_t::address(),
-                             collection::handler_id(collection::route::size),
-                             session);
-        } else {
-            actor_zeta::send(address,
-                             dispatcher_t::address(),
-                             collection::handler_id(collection::route::size_finish),
-                             session,
-                             0U);
-        }
+        make_session(session_to_address_, session, session_t(std::move(sender)));
+        actor_zeta::send(memory_storage_,
+                         dispatcher_t::address(),
+                         collection::handler_id(collection::route::size),
+                         session,
+                         collection_full_name_t{database_name, collection});
     }
 
-    void dispatcher_t::size_finish(components::session::session_id_t& session, cursor_t_ptr result) {
-        trace(log_, "dispatcher_t::size_finish session: {}", session.data());
+    void dispatcher_t::size_finish(components::session::session_id_t& session, cursor_t_ptr&& result) {
+        trace(log_, "dispatcher_t::size_finish session: {}, size: {}", session.data(), result->size());
         actor_zeta::send(find_session(session_to_address_, session).address(),
                          dispatcher_t::address(),
                          collection::handler_id(collection::route::size_finish),
@@ -492,12 +468,15 @@ namespace services::dispatcher {
         trace(log_, "Session : {}", session.data());
         auto it = cursor_.find(session);
         if (it != cursor_.end()) {
+            std::set<collection_full_name_t> collections;
             for (auto& i : *it->second) {
-                actor_zeta::send(i->address(),
-                                 address(),
-                                 collection::handler_id(collection::route::close_cursor),
-                                 session);
+                collections.insert(i->collection_name());
             }
+            actor_zeta::send(memory_storage_,
+                             address(),
+                             collection::handler_id(collection::route::close_cursor),
+                             session,
+                             std::move(collections));
             cursor_.erase(it);
         } else {
             error(log_, "Not find session : {}", session.data());

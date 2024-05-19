@@ -17,19 +17,17 @@ using components::ql::add_parameter;
 
 TEST_CASE("operator::insert") {
     auto collection = init_collection();
-    REQUIRE(d(collection)->size_test() == 100);
+    REQUIRE(d(collection)->storage().size() == 100);
 }
 
 TEST_CASE("operator::full_scan") {
     auto collection = init_collection();
 
     SECTION("find::eq") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::eq,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(1));
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -39,12 +37,10 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find::ne") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::ne,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::ne, key("count"), core::parameter_id_t(1));
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -54,12 +50,10 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find::gt") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -69,12 +63,12 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find::gte") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
+        auto cond = make_compare_expression(d(collection)->resource(),
                                             compare_type::gte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -84,12 +78,10 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find::lt") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::lt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -99,12 +91,12 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find::lte") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
+        auto cond = make_compare_expression(d(collection)->resource(),
                                             compare_type::lte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -114,12 +106,10 @@ TEST_CASE("operator::full_scan") {
     }
 
     SECTION("find_one") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        full_scan scan(d(collection)->view(),
-                       predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        full_scan scan(d(collection),
+                       predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
@@ -133,57 +123,48 @@ TEST_CASE("operator::delete") {
     auto collection = init_collection();
 
     SECTION("find::delete") {
-        REQUIRE(d(collection)->size_test() == 100);
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_delete delete_(d(collection)->view());
-        delete_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t::unlimit())));
+        REQUIRE(d(collection)->storage().size() == 100);
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        operator_delete delete_(d(collection));
+        delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
-        REQUIRE(d(collection)->size_test() == 90);
+        REQUIRE(d(collection)->storage().size() == 90);
     }
 
     SECTION("find::delete_one") {
-        REQUIRE(d(collection)->size_test() == 100);
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_delete delete_(d(collection)->view());
-        delete_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t::limit_one())));
+        REQUIRE(d(collection)->storage().size() == 100);
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        operator_delete delete_(d(collection));
+        delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t::limit_one())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
-        REQUIRE(d(collection)->size_test() == 99);
+        REQUIRE(d(collection)->storage().size() == 99);
     }
 
     SECTION("find::delete_limit") {
-        REQUIRE(d(collection)->size_test() == 100);
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_delete delete_(d(collection)->view());
-        delete_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t(5))));
+        REQUIRE(d(collection)->storage().size() == 100);
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        operator_delete delete_(d(collection));
+        delete_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t(5))));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
-        REQUIRE(d(collection)->size_test() == 95);
+        REQUIRE(d(collection)->storage().size() == 95);
     }
 }
 
@@ -196,32 +177,27 @@ TEST_CASE("operator::update") {
         add_parameter(parameters, core::parameter_id_t(2), 999);
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
-                                                  compare_type::eq,
-                                                  key("count"),
-                                                  core::parameter_id_t(2));
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        auto cond_check =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t::unlimit())));
+        operator_update update_(d(collection), std::move(script_update), false);
+        update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t::unlimit())));
         update_.on_execute(&pipeline_context);
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 10);
@@ -234,32 +210,27 @@ TEST_CASE("operator::update") {
         add_parameter(parameters, core::parameter_id_t(2), 999);
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
-                                                  compare_type::eq,
-                                                  key("count"),
-                                                  core::parameter_id_t(2));
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        auto cond_check =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t(1))));
+        operator_update update_(d(collection), std::move(script_update), false);
+        update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t(1))));
         update_.on_execute(&pipeline_context);
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 1);
@@ -272,32 +243,27 @@ TEST_CASE("operator::update") {
         add_parameter(parameters, core::parameter_id_t(2), 999);
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
-                                                  compare_type::eq,
-                                                  key("count"),
-                                                  core::parameter_id_t(2));
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        auto cond_check =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
         auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 0);
         }
 
-        operator_update update_(d(collection)->view(), std::move(script_update), false);
-        update_.set_children(
-            boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                               predicates::create_predicate(d(collection)->view(), cond),
-                                               components::ql::limit_t(5))));
+        operator_update update_(d(collection), std::move(script_update), false);
+        update_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                                predicates::create_predicate(d(collection), cond),
+                                                                components::ql::limit_t(5))));
         update_.on_execute(&pipeline_context);
         {
-            full_scan scan(d(collection)->view(),
-                           predicates::create_predicate(d(collection)->view(), cond_check),
+            full_scan scan(d(collection),
+                           predicates::create_predicate(d(collection), cond_check),
                            components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context);
             REQUIRE(scan.output()->size() == 5);
@@ -309,17 +275,15 @@ TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(),
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
                                                                            keys);
     fill_collection(collection);
 
     SECTION("find::eq") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::eq,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -328,11 +292,9 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find::ne") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::ne,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::ne, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -341,11 +303,9 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find::gt") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -354,11 +314,11 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find::gte") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
+        auto cond = make_compare_expression(d(collection)->resource(),
                                             compare_type::gte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -367,11 +327,9 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find::lt") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::lt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -380,11 +338,11 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find::lte") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
+        auto cond = make_compare_expression(d(collection)->resource(),
                                             compare_type::lte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::unlimit());
+        index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -393,11 +351,9 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find_one") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t::limit_one());
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -406,11 +362,9 @@ TEST_CASE("operator::index_scan") {
     }
 
     SECTION("find_limit") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        index_scan scan(d(collection)->view(), cond, components::ql::limit_t(3));
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        index_scan scan(d(collection), cond, components::ql::limit_t(3));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 90);
         components::pipeline::context_t pipeline_context(std::move(parameters));
@@ -423,19 +377,19 @@ TEST_CASE("operator::transfer_scan") {
     auto collection = init_collection();
 
     SECTION("all") {
-        transfer_scan scan(d(collection)->view(), components::ql::limit_t::unlimit());
+        transfer_scan scan(d(collection), components::ql::limit_t::unlimit());
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 100);
     }
 
     SECTION("limit") {
-        transfer_scan scan(d(collection)->view(), components::ql::limit_t(50));
+        transfer_scan scan(d(collection), components::ql::limit_t(50));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 50);
     }
 
     SECTION("one") {
-        transfer_scan scan(d(collection)->view(), components::ql::limit_t(1));
+        transfer_scan scan(d(collection), components::ql::limit_t(1));
         scan.on_execute(nullptr);
         REQUIRE(scan.output()->size() == 1);
     }
@@ -445,64 +399,60 @@ TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
-    components::index::make_index<components::index::single_field_index_t>(d(collection)->view()->index_engine(),
+    components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
                                                                            keys);
     fill_collection(collection);
 
     SECTION("index_scan after delete") {
-        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
-                                                  compare_type::gt,
-                                                  key("count"),
-                                                  core::parameter_id_t(1));
+        auto cond_check =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
         add_parameter(parameters_check, core::parameter_id_t(1), 50);
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 50);
         }
         {
-            auto cond = make_compare_expression(d(collection)->view()->resource(),
+            auto cond = make_compare_expression(d(collection)->resource(),
                                                 compare_type::gt,
                                                 key("count"),
                                                 core::parameter_id_t(1));
             components::ql::storage_parameters parameters;
             add_parameter(parameters, core::parameter_id_t(1), 60);
             components::pipeline::context_t pipeline_context(std::move(parameters));
-            operator_delete delete_(d(collection)->view());
+            operator_delete delete_(d(collection));
             delete_.set_children(
-                boost::intrusive_ptr(new index_scan(d(collection)->view(), cond, components::ql::limit_t::unlimit())));
+                boost::intrusive_ptr(new index_scan(d(collection), cond, components::ql::limit_t::unlimit())));
             delete_.on_execute(&pipeline_context);
 
-            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 10);
         }
     }
 
     SECTION("index_scan after update") {
-        auto cond_check = make_compare_expression(d(collection)->view()->resource(),
-                                                  compare_type::eq,
-                                                  key("count"),
-                                                  core::parameter_id_t(1));
+        auto cond_check =
+            make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
         add_parameter(parameters_check, core::parameter_id_t(1), 50);
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
-            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 1);
         }
         {
             auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
-            operator_update update(d(collection)->view(), script_update, false);
-            update.set_children(boost::intrusive_ptr(
-                new index_scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit())));
+            operator_update update(d(collection), script_update, false);
+            update.set_children(
+                boost::intrusive_ptr(new index_scan(d(collection), cond_check, components::ql::limit_t::unlimit())));
             update.on_execute(&pipeline_context_check);
 
-            index_scan scan(d(collection)->view(), cond_check, components::ql::limit_t::unlimit());
+            index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
             scan.on_execute(&pipeline_context_check);
             REQUIRE(scan.output()->size() == 0);
         }

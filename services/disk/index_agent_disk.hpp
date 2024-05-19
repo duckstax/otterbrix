@@ -9,6 +9,10 @@
 #include <core/excutor.hpp>
 #include <filesystem>
 
+namespace services::collection {
+    class context_collection_t;
+}
+
 namespace services::disk {
 
     using index_name_t = std::string;
@@ -25,13 +29,14 @@ namespace services::disk {
         index_agent_disk_t(base_manager_disk_t*,
                            actor_zeta::detail::pmr::memory_resource* resource,
                            const path_t&,
-                           const collection_name_t&,
+                           collection::context_collection_t*,
                            const index_name_t&,
                            core::type compare_type,
                            log_t&);
         ~index_agent_disk_t() final;
 
         const collection_name_t& collection_name() const;
+        collection::context_collection_t* collection() const;
 
         void drop(session_id_t& session);
         bool is_dropped() const;
@@ -44,7 +49,7 @@ namespace services::disk {
         actor_zeta::detail::pmr::memory_resource* resource_;
         log_t log_;
         std::unique_ptr<index_disk_t> index_disk_;
-        const collection_name_t& collection_name_;
+        collection::context_collection_t* collection_;
         bool is_dropped_{false};
     };
 

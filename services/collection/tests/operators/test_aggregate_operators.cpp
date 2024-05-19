@@ -19,23 +19,23 @@ TEST_CASE("operator::aggregate::count") {
     auto collection = init_collection();
 
     SECTION("count::all") {
-        operator_count_t count(d(collection)->view());
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::all_true);
-        count.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                              predicates::create_predicate(d(collection)->view(), cond),
+        operator_count_t count(d(collection));
+        auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
+        count.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                              predicates::create_predicate(d(collection), cond),
                                                               components::ql::limit_t::unlimit())));
         count.on_execute(nullptr);
         REQUIRE(count.value()->as_unsigned() == 100);
     }
 
     SECTION("count::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
+        auto cond = make_compare_expression(d(collection)->resource(),
                                             compare_type::lte,
                                             key("count"),
                                             core::parameter_id_t(1));
-        operator_count_t count(d(collection)->view());
-        count.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                              predicates::create_predicate(d(collection)->view(), cond),
+        operator_count_t count(d(collection));
+        count.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                              predicates::create_predicate(d(collection), cond),
                                                               components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);
@@ -49,23 +49,21 @@ TEST_CASE("operator::aggregate::min") {
     auto collection = init_collection();
 
     SECTION("min::all") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::all_true);
-        operator_min_t min_(d(collection)->view(), key("count"));
-        min_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
+        operator_min_t min_(d(collection), key("count"));
+        min_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         min_.on_execute(nullptr);
         REQUIRE(min_.value()->as_unsigned() == 1);
     }
 
     SECTION("min::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::gt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_min_t min_(d(collection)->view(), key("count"));
-        min_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
+        operator_min_t min_(d(collection), key("count"));
+        min_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 80);
@@ -79,23 +77,21 @@ TEST_CASE("operator::aggregate::max") {
     auto collection = init_collection();
 
     SECTION("max::all") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::all_true);
-        operator_max_t max_(d(collection)->view(), key("count"));
-        max_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
+        operator_max_t max_(d(collection), key("count"));
+        max_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         max_.on_execute(nullptr);
         REQUIRE(max_.value()->as_unsigned() == 100);
     }
 
     SECTION("max::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::lt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_max_t max_(d(collection)->view(), key("count"));
-        max_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        operator_max_t max_(d(collection), key("count"));
+        max_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 20);
@@ -109,23 +105,21 @@ TEST_CASE("operator::aggregate::sum") {
     auto collection = init_collection();
 
     SECTION("sum::all") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::all_true);
-        operator_sum_t sum_(d(collection)->view(), key("count"));
-        sum_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
+        operator_sum_t sum_(d(collection), key("count"));
+        sum_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         sum_.on_execute(nullptr);
         REQUIRE(sum_.value()->as_unsigned() == 5050);
     }
 
     SECTION("sum::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::lt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_sum_t sum_(d(collection)->view(), key("count"));
-        sum_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        operator_sum_t sum_(d(collection), key("count"));
+        sum_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);
@@ -139,23 +133,21 @@ TEST_CASE("operator::aggregate::avg") {
     auto collection = init_collection();
 
     SECTION("avg::all") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(), compare_type::all_true);
-        operator_avg_t avg_(d(collection)->view(), key("count"));
-        avg_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
+        operator_avg_t avg_(d(collection), key("count"));
+        avg_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         avg_.on_execute(nullptr);
         REQUIRE(::document::is_equals(avg_.value()->as_double(), 50.5));
     }
 
     SECTION("avg::match") {
-        auto cond = make_compare_expression(d(collection)->view()->resource(),
-                                            compare_type::lt,
-                                            key("count"),
-                                            core::parameter_id_t(1));
-        operator_avg_t avg_(d(collection)->view(), key("count"));
-        avg_.set_children(boost::intrusive_ptr(new full_scan(d(collection)->view(),
-                                                             predicates::create_predicate(d(collection)->view(), cond),
+        auto cond =
+            make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
+        operator_avg_t avg_(d(collection), key("count"));
+        avg_.set_children(boost::intrusive_ptr(new full_scan(d(collection),
+                                                             predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t(1), 10);

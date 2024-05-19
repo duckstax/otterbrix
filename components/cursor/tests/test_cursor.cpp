@@ -38,8 +38,7 @@ TEST_CASE("cursor::construction") {
 TEST_CASE("cursor::sort") {
     components::cursor::cursor_t cursor(default_resource());
     for (int i = 0; i < 10; ++i) {
-        auto* sub_cursor =
-            new components::cursor::sub_cursor_t(default_resource(), actor_zeta::address_t::empty_address());
+        auto* sub_cursor = new components::cursor::sub_cursor_t(default_resource(), {});
         for (int j = 0; j < 10; ++j) {
             sub_cursor->append(document_view_t(gen_doc(10 * i + j + 1)));
         }
