@@ -82,6 +82,9 @@ namespace services {
 
     void memory_storage_t::size(components::session::session_id_t& session, collection_full_name_t&& name) {
         trace(log_, "collection {}::{}::size", name.database, name.collection);
+        if (!check_collection_(session, name)) {
+            return;
+        }
         auto collection = collections_.at(name).get();
         if (collection->dropped()) {
             actor_zeta::send(current_message()->sender(),
@@ -107,7 +110,9 @@ namespace services {
     void memory_storage_t::close_cursor(components::session::session_id_t& session,
                                         std::set<collection_full_name_t>&& collections) {
         for (const auto& name : collections) {
-            collections_.at(name)->cursor_storage().erase(session);
+            if (check_collection_(session, name)) {
+                collections_.at(name)->cursor_storage().erase(session);
+            }
         }
     }
 
@@ -261,8 +266,6 @@ namespace services {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full_name().to_string());
         if (check_collection_(session, logical_plan->collection_full_name())) {
             sessions_.emplace(session, session_t{logical_plan, current_message()->sender(), 1});
-
-            trace(log_, "memory_storage_t:drop_collection_finish {}", logical_plan->collection_full_name().to_string());
             actor_zeta::send(
                 current_message()->sender(),
                 address(),
@@ -272,6 +275,8 @@ namespace services {
                     ? make_cursor(default_resource(), operation_status_t::success)
                     : make_cursor(default_resource(), error_code_t::other_error, "collection not dropped"));
             sessions_.erase(session);
+            collections_.erase(logical_plan->collection_full_name());
+            trace(log_, "memory_storage_t:drop_collection_finish {}", logical_plan->collection_full_name().to_string());
         }
     }
 
