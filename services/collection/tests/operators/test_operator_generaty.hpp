@@ -9,19 +9,11 @@
 using namespace services;
 using namespace services::collection;
 
-struct context_t final {
-    using collection_ptr = actor_zeta::intrusive_ptr<collection_t>;
-
-    collection_t* operator->() const noexcept { return collection_.get(); }
-
-    collection_t& operator*() const noexcept { return *(collection_); }
-
-    ~context_t() {}
-
+struct context_t {
     actor_zeta::scheduler_ptr scheduler_;
     actor_zeta::detail::pmr::memory_resource* resource;
     std::unique_ptr<memory_storage_t> memory_storage_;
-    std::unique_ptr<collection_t> collection_;
+    std::unique_ptr<context_collection_t> collection_;
 };
 
 using context_ptr = std::unique_ptr<context_t>;
@@ -36,16 +28,16 @@ inline context_ptr make_context(log_t& log) {
     collection_full_name_t name;
     name.database = "TestDatabase";
     name.collection = "TestCollection";
-    auto allocate_byte = sizeof(collection_t);
-    auto allocate_byte_alignof = alignof(collection_t);
+    auto allocate_byte = sizeof(context_collection_t);
+    auto allocate_byte_alignof = alignof(context_collection_t);
     void* buffer = context->resource->allocate(allocate_byte, allocate_byte_alignof);
     auto* collection =
-        new (buffer) collection_t(context->memory_storage_.get(), name, log, actor_zeta::address_t::empty_address());
+        new (buffer) context_collection_t(context->resource, name, actor_zeta::address_t::empty_address(), log.clone());
     context->collection_.reset(collection);
     return context;
 }
 
-inline collection_t* d(context_ptr& ptr) { return ptr->collection_.get(); }
+inline context_collection_t* d(context_ptr& ptr) { return ptr->collection_.get(); }
 
 inline context_ptr create_collection() {
     static auto log = initialization_logger("python", "/tmp/docker_logs/");
@@ -59,7 +51,7 @@ inline void fill_collection(context_ptr& collection) {
     for (int i = 1; i <= 100; ++i) {
         documents.emplace_back(gen_doc(i));
     }
-    services::collection::operators::operator_insert insert(d(collection)->view(), std::move(documents));
+    services::collection::operators::operator_insert insert(collection->collection_.get(), std::move(documents));
     insert.on_execute(nullptr);
 }
 

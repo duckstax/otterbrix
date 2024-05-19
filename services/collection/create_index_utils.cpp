@@ -43,14 +43,15 @@ namespace services::collection {
                                                 index_ql->name(),
                                                 index_ql->keys_);
 
-                services::collection::sessions::make_session(
+                sessions::make_session(
                     context->sessions(),
                     pipeline_context->session,
                     index_ql->name(),
                     sessions::create_index_t{pipeline_context->current_message_sender, id_index, is_pending});
                 pipeline_context->send(context->disk(),
                                        services::index::handler_id(services::index::route::create),
-                                       std::move(*(index_ql.release())));
+                                       std::move(*(index_ql.release())),
+                                       context);
                 break;
             }
             case components::ql::index_type::composite:

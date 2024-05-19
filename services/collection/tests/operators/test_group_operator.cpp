@@ -16,36 +16,32 @@ TEST_CASE("operator::group::base") {
     auto collection = init_collection();
 
     SECTION("base::all::no_valid") {
-        operator_group_t group(d(collection)->view());
-        group.set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        operator_group_t group(d(collection));
+        group.set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group.add_key("id_", get::simple_value_t::create(key("id_")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 0);
     }
 
     SECTION("base::all::id") {
-        operator_group_t group(d(collection)->view());
-        group.set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        operator_group_t group(d(collection));
+        group.set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group.add_key("_id", get::simple_value_t::create(key("_id")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 100);
     }
 
     SECTION("base::all::countBool") {
-        operator_group_t group(d(collection)->view());
-        group.set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        operator_group_t group(d(collection));
+        group.set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group.add_key("countBool", get::simple_value_t::create(key("countBool")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 2);
     }
 
     SECTION("base::all::dict") {
-        operator_group_t group(d(collection)->view());
-        group.set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        operator_group_t group(d(collection));
+        group.set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group.add_key("even", get::simple_value_t::create(key("countDict.even")));
         group.add_key("three", get::simple_value_t::create(key("countDict.three")));
         group.add_key("five", get::simple_value_t::create(key("countDict.five")));
@@ -58,13 +54,12 @@ TEST_CASE("operator::group::sort") {
     auto collection = init_collection();
 
     SECTION("sort::all") {
-        auto group = boost::intrusive_ptr(new operator_group_t(d(collection)->view()));
-        group->set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));
+        group->set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group->add_key("even", get::simple_value_t::create(key("countDict.even")));
         group->add_key("three", get::simple_value_t::create(key("countDict.three")));
         group->add_key("five", get::simple_value_t::create(key("countDict.five")));
-        auto sort = boost::intrusive_ptr(new operator_sort_t(d(collection)->view()));
+        auto sort = boost::intrusive_ptr(new operator_sort_t(d(collection)));
         sort->set_children(std::move(group));
         sort->add({"even", "three", "five"});
         sort->on_execute(nullptr);
@@ -90,20 +85,17 @@ TEST_CASE("operator::group::all") {
     auto collection = init_collection();
 
     SECTION("sort::all") {
-        auto group = boost::intrusive_ptr(new operator_group_t(d(collection)->view()));
-        group->set_children(
-            boost::intrusive_ptr(new transfer_scan(d(collection)->view(), components::ql::limit_t::unlimit())));
+        auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));
+        group->set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
         group->add_key("even", get::simple_value_t::create(key("countDict.even")));
         group->add_key("three", get::simple_value_t::create(key("countDict.three")));
         group->add_key("five", get::simple_value_t::create(key("countDict.five")));
 
-        group->add_value("count", boost::intrusive_ptr(new aggregate::operator_count_t(d(collection)->view())));
-        group->add_value("sum",
-                         boost::intrusive_ptr(new aggregate::operator_sum_t(d(collection)->view(), key("count"))));
-        group->add_value("avg",
-                         boost::intrusive_ptr(new aggregate::operator_avg_t(d(collection)->view(), key("count"))));
+        group->add_value("count", boost::intrusive_ptr(new aggregate::operator_count_t(d(collection))));
+        group->add_value("sum", boost::intrusive_ptr(new aggregate::operator_sum_t(d(collection), key("count"))));
+        group->add_value("avg", boost::intrusive_ptr(new aggregate::operator_avg_t(d(collection), key("count"))));
 
-        auto sort = boost::intrusive_ptr(new operator_sort_t(d(collection)->view()));
+        auto sort = boost::intrusive_ptr(new operator_sort_t(d(collection)));
         sort->set_children(std::move(group));
         sort->add({"even", "three", "five"});
         sort->on_execute(nullptr);
