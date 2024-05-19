@@ -16,7 +16,8 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
         , log_(log.clone())
-        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection->name().collection / index_name, compare_type))
+        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection->name().collection / index_name,
+                                                     compare_type))
         , collection_(collection) {
         trace(log_, "index_agent_disk::create {}", index_name);
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
@@ -34,7 +35,11 @@ namespace services::disk {
         trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
         index_disk_->drop();
         is_dropped_ = true;
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session, collection_);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
     bool index_agent_disk_t::is_dropped() const { return is_dropped_; }
@@ -42,13 +47,21 @@ namespace services::disk {
     void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session, collection_);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
     void index_agent_disk_t::remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::remove {}, session: {}", value.to_string(), session.data());
         index_disk_->remove(key, value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session, collection_);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
     void index_agent_disk_t::find(session_id_t& session,

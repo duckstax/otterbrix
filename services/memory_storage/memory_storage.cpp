@@ -144,10 +144,7 @@ namespace services {
             }
         }
         if (count_collections == 0) {
-            actor_zeta::send(current_message()->sender(),
-                             address(),
-                             handler_id(route::load_finish),
-                             session);
+            actor_zeta::send(current_message()->sender(), address(), handler_id(route::load_finish), session);
             load_buffer_.reset();
         }
     }
@@ -311,7 +308,10 @@ namespace services {
 
     void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
         auto& s = sessions_.at(session);
-        debug(log_, "memory_storage_t:execute_plan_finish: session: {}, success: {}", session.data(), result->is_success());
+        debug(log_,
+              "memory_storage_t:execute_plan_finish: session: {}, success: {}",
+              session.data(),
+              result->is_success());
         actor_zeta::send(s.sender, address(), handler_id(route::execute_plan_finish), session, std::move(result));
         sessions_.erase(session);
     }

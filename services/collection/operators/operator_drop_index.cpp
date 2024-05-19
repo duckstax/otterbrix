@@ -37,7 +37,10 @@ namespace services::collection::operators {
         }
 
         if (index_ptr->is_disk()) {
-            pipeline_context->send(context_->disk(), services::index::handler_id(index::route::drop), ql_->name(), context_);
+            pipeline_context->send(context_->disk(),
+                                   services::index::handler_id(index::route::drop),
+                                   ql_->name(),
+                                   context_);
         }
         components::index::drop_index(context_->index_engine(), index_ptr);
         pipeline_context->send(pipeline_context->current_message_sender,
