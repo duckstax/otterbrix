@@ -134,9 +134,6 @@ namespace services::collection::executor {
         switch (plan->type()) {
             case operators::operator_type::insert: {
                 insert_document_impl(session, collection, std::move(plan));
-                if (!collection->pending_indexes().empty()) {
-                    process_pending_indexes(collection);
-                }
                 return;
             }
             case operators::operator_type::remove: {
@@ -285,6 +282,9 @@ namespace services::collection::executor {
                          std::string(collection->name().collection),
                          plan->output() ? plan->output()->documents()
                                         : std::pmr::vector<document_ptr>{collection->resource()});
+        if (!collection->pending_indexes().empty()) {
+            process_pending_indexes(collection);
+        }
 
         auto cursor = make_cursor(collection->resource());
         auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());

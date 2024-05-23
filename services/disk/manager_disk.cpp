@@ -5,7 +5,7 @@
 #include <core/system_command.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/route.hpp>
-#include <services/dispatcher/route.hpp>
+#include <services/memory_storage/route.hpp>
 
 namespace services::disk {
 
@@ -133,10 +133,11 @@ namespace services::disk {
                                          const collection_name_t& collection,
                                          const std::pmr::vector<document_ptr>& documents) -> void {
         trace(log_,
-              "manager_disk_t::write_documents , session : {} , database : {} , collection : {}",
+              "manager_disk_t::write_documents , session : {} , database : {} , collection : {}, documents count: {}",
               session.data(),
               database,
-              collection);
+              collection,
+              documents.size());
         command_write_documents_t command{database, collection, documents};
         append_command(commands_, session, command_t(command));
     }
@@ -290,7 +291,7 @@ namespace services::disk {
             // For each index create we need to generate unique session id.
             actor_zeta::send(dispatcher,
                              address(),
-                             dispatcher::handler_id(dispatcher::route::execute_ql),
+                             memory_storage::handler_id(memory_storage::route::execute_ql),
                              session_id_t::generate_uid(),
                              index.release(),
                              dispatcher);
