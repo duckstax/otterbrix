@@ -61,13 +61,12 @@ namespace services {
                         actor_zeta::base::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
-        void size(components::session::session_id_t& session, 
+        void size(components::session::session_id_t& session,
                   const std::string& database_name,
                   const std::string& collection_name);
         void close_cursor(components::session::session_id_t& session, std::set<collection_full_name_t>&& collections);
         void load(components::session::session_id_t& session);
-        void load_from_disk_result(components::session::session_id_t& session,
-                                   services::disk::result_load_t&& result);
+        void load_from_disk_result(components::session::session_id_t& session, services::disk::result_load_t&& result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
@@ -86,7 +85,7 @@ namespace services {
         collection_storage_t collections_;
         session_storage_t sessions_;
         std::unique_ptr<load_buffer_t> load_buffer_;
-        
+
         disk::result_load_t load_result_;
         components::session::session_id_t load_session_;
         std::size_t load_count_answers_{0};
@@ -97,7 +96,7 @@ namespace services {
         std::vector<services::wal::record_t> records_;
 
         std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters>
-            create_logic_plan(components::ql::ql_statement_t* statement);
+        create_logic_plan(components::ql::ql_statement_t* statement);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
         void load_from_wal_result(components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);

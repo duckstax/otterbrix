@@ -24,9 +24,7 @@ public:
         return std::get<T>(data_);
     }
 
-    size_t& count_answers() {
-        return count_answers_;
-    }
+    size_t& count_answers() { return count_answers_; }
 
     template<typename T>
     bool is_type() const {

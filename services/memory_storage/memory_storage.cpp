@@ -5,11 +5,11 @@
 #include <components/ql/statements/create_database.hpp>
 #include <components/ql/statements/drop_collection.hpp>
 #include <components/ql/statements/drop_database.hpp>
+#include <components/translator/ql_translator.hpp>
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
 #include <services/collection/collection.hpp>
 #include <services/collection/planner/create_plan.hpp>
-#include <components/translator/ql_translator.hpp>
 #include <services/disk/route.hpp>
 #include <services/wal/route.hpp>
 
@@ -67,8 +67,8 @@ namespace services {
     }
 
     void memory_storage_t::execute_ql(components::session::session_id_t& session,
-                                        components::ql::ql_statement_t* ql,
-                                        actor_zeta::base::address_t address) {
+                                      components::ql::ql_statement_t* ql,
+                                      actor_zeta::base::address_t address) {
         sessions_.emplace(session, session_t{address, ql});
         auto logic_plan = create_logic_plan(ql);
         using components::logical_plan::node_type;
@@ -92,7 +92,6 @@ namespace services {
         }
     }
 
-    
     void memory_storage_t::execute_ql_finish(components::session::session_id_t& session, cursor_t_ptr result) {
         result_storage_[session] = result;
         auto& s = sessions_.at(session);
@@ -421,9 +420,9 @@ namespace services {
         sessions_.erase(session);
         result_storage_.erase(session);
     }
-    
+
     void memory_storage_t::load_from_wal_result(components::session::session_id_t& session,
-                                            std::vector<services::wal::record_t>& in_records) {
+                                                std::vector<services::wal::record_t>& in_records) {
         // TODO think what to do with records
         records_ = std::move(in_records);
         load_count_answers_ = records_.size();
@@ -433,9 +432,7 @@ namespace services {
               load_count_answers_);
         if (load_count_answers_ == 0) {
             trace(log_, "memory_storage_t::load_from_wal_result - empty records_");
-            actor_zeta::send(sessions_.at(session).address(),
-                             address(),
-                             core::handler_id(core::route::load_finish));
+            actor_zeta::send(sessions_.at(session).address(), address(), core::handler_id(core::route::load_finish));
             sessions_.erase(session);
             return;
         }
@@ -461,9 +458,10 @@ namespace services {
                     break;
                 }
                 case statement_type::create_collection: {
-                    assert(std::holds_alternative<create_collection_t>(record.data) &&
-                           "[memory_storage_t::load_from_wal_result]: [ case: statement_type::create_collection] variant "
-                           "record.data holds the alternative create_collection_t");
+                    assert(
+                        std::holds_alternative<create_collection_t>(record.data) &&
+                        "[memory_storage_t::load_from_wal_result]: [ case: statement_type::create_collection] variant "
+                        "record.data holds the alternative create_collection_t");
                     auto& data = std::get<create_collection_t>(record.data);
                     components::session::session_id_t session_collection;
                     execute_ql(session_collection, &data, manager_wal_);
@@ -709,7 +707,11 @@ namespace services {
               "memory_storage_t:execute_plan_finish: session: {}, success: {}",
               session.data(),
               result->is_success());
-        actor_zeta::send(s.address(), address(), memory_storage::handler_id(memory_storage::route::execute_ql_finish), session, std::move(result));
+        actor_zeta::send(s.address(),
+                         address(),
+                         memory_storage::handler_id(memory_storage::route::execute_ql_finish),
+                         session,
+                         std::move(result));
         sessions_.erase(session);
     }
 
