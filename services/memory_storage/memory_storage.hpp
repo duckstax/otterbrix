@@ -107,6 +107,9 @@ namespace services {
         bool check_database_(components::session::session_id_t& session, const database_name_t& name);
         bool check_collection_(components::session::session_id_t& session, const collection_full_name_t& name);
 
+        // TODO separate change logic and condition check
+        bool load_from_wal_in_progress(components::session::session_id_t& session);
+
         void create_database_(components::session::session_id_t& session,
                               components::logical_plan::node_ptr logical_plan);
         void drop_database_(components::session::session_id_t& session,
@@ -119,10 +122,6 @@ namespace services {
         void execute_plan_(components::session::session_id_t& session,
                            components::logical_plan::node_ptr logical_plan,
                            components::ql::storage_parameters parameters);
-
-        void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-
-        void create_documents_finish_(components::session::session_id_t& session);
     };
 
 } // namespace services

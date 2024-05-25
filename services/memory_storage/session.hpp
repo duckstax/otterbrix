@@ -36,7 +36,7 @@ public:
 private:
     actor_zeta::address_t address_;
     components::ql::variant_statement_t data_;
-    size_t count_answers_ = 0;
+    size_t count_answers_ = 1;
 };
 
 // TODO Remove this session and use logic from collections

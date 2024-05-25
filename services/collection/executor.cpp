@@ -29,7 +29,6 @@ namespace services::collection::executor {
         , plans_(resource_)
         , log_(log) {
         add_handler(handler_id(route::execute_plan), &executor_t::execute_plan);
-        add_handler(handler_id(route::create_documents), &executor_t::create_documents);
         add_handler(handler_id(index::route::success_create), &executor_t::create_index_finish);
         add_handler(handler_id(index::route::error), &executor_t::create_index_finish_index_exist);
         add_handler(handler_id(index::route::success), &executor_t::index_modify_finish);
@@ -54,22 +53,6 @@ namespace services::collection::executor {
         }
         plan->set_as_root();
         traverse_plan_(session, std::move(plan), std::move(parameters), std::move(context_storage));
-    }
-
-    void executor_t::create_documents(components::session::session_id_t& session,
-                                      context_collection_t* collection,
-                                      const std::pmr::vector<document_ptr>& documents) {
-        trace(log_,
-              "executor_t::create_documents: {}::{}, count: {}",
-              collection->name().database,
-              collection->name().collection,
-              documents.size());
-        //components::pipeline::context_t pipeline_context{session, address(), components::ql::storage_parameters{}};
-        //insert_(&pipeline_context, documents);
-        for (const auto& doc : documents) {
-            collection->storage().emplace(components::document::get_document_id(doc), doc);
-        }
-        actor_zeta::send(current_message()->sender(), address(), handler_id(route::create_documents_finish), session);
     }
 
     void executor_t::traverse_plan_(const components::session::session_id_t& session,
