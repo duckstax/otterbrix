@@ -85,12 +85,13 @@ namespace services::wal {
 
         template<class T>
         auto always_success(session_id_t& session, T&&) -> void {
-            trace(log_, "manager_wal_replicate_empty_t::always_success: session: {}", session.data());
+            trace(log_, "manager_wal_replicate_empty_t::always_success: session: {}", session.data()); // Works fine
             actor_zeta::send(current_message()->sender(),
                              address(),
                              services::wal::handler_id(services::wal::route::success),
                              session,
                              services::wal::id_t(0));
+            trace(log_, "manager_wal_replicate_empty_t::always_success: sent finished"); // is not called
         }
 
         template<class... Args>

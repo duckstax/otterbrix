@@ -42,7 +42,7 @@ namespace otterbrix {
                                                                                          log_);
         } else {
             manager_disk_ =
-                actor_zeta::spawn_supervisor<services::disk::manager_disk_empty_t>(resource, scheduler_.get());
+                actor_zeta::spawn_supervisor<services::disk::manager_disk_empty_t>(resource, scheduler_.get(), log_);
         }
         trace(log_, "manager_disk finish");
 

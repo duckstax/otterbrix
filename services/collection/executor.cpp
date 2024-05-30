@@ -265,8 +265,10 @@ namespace services::collection::executor {
                          std::string(collection->name().collection),
                          plan->output() ? plan->output()->documents()
                                         : std::pmr::vector<document_ptr>{collection->resource()});
+        trace(log_, "executor::execute_plan : operators::operator_type::insert sent to disk");
         if (!collection->pending_indexes().empty()) {
             process_pending_indexes(collection);
+            trace(log_, "executor::execute_plan : operators::operator_type::insert indexes processed");
         }
 
         auto cursor = make_cursor(collection->resource());

@@ -399,7 +399,6 @@ namespace services {
     }
 
     void memory_storage_t::wal_success(components::session::session_id_t& session, services::wal::id_t wal_id) {
-        trace(log_, "memory_storage_t::wal_success no args");
         trace(log_, "memory_storage_t::wal_success session : {}, wal id: {}", session.data(), wal_id);
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::flush), session, wal_id);
 
@@ -566,7 +565,9 @@ namespace services {
         auto sender = sessions_.at(session).address();
         if (sender.get() == manager_wal_.get()) {
             if (--load_count_answers_ == 0) {
-                actor_zeta::send(sender, address(), core::handler_id(core::route::load_finish));
+                actor_zeta::send(sessions_.at(load_session_).address(),
+                                 address(),
+                                 core::handler_id(core::route::load_finish));
                 sessions_.erase(load_session_);
             }
             return true;
