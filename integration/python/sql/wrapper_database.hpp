@@ -11,7 +11,7 @@
 
 #include <log/log.hpp>
 
-#include "../../cpp/wrapper_dispatcher.hpp"
+#include "integration/cpp/wrapper_dispatcher.hpp"
 #include "wrapper_collection.hpp"
 
 namespace py = pybind11;

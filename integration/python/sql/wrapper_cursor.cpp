@@ -1,5 +1,5 @@
 #include "wrapper_cursor.hpp"
-#include "../../cpp/route.hpp"
+#include "integration/cpp/route.hpp"
 #include "convert.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a

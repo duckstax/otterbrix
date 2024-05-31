@@ -14,7 +14,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl_bind.h>
 
-#include "../../cpp/wrapper_dispatcher.hpp"
+#include "integration/cpp/wrapper_dispatcher.hpp"
 #include "forward.hpp"
 #include "wrapper_cursor.hpp"
 

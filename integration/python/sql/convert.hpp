@@ -7,7 +7,7 @@
 #include <components/document/document.hpp>
 #include <services/collection/sort.hpp>
 
-#include "../../../components/ql/aggregate.hpp"
+#include "components/ql/aggregate.hpp"
 
 namespace py = pybind11;
 
