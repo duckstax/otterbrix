@@ -1,18 +1,18 @@
 #include <pybind11/pybind11.h>
 
-#include "wrapper_client.hpp"
-#include "wrapper_collection.hpp"
-#include "wrapper_cursor.hpp"
-#include "wrapper_database.hpp"
-#include "wrapper_document.hpp"
-#include "wrapper_document_id.hpp"
+#include "sql/wrapper_client.hpp"
+#include "sql/wrapper_collection.hpp"
+#include "sql/wrapper_cursor.hpp"
+#include "sql/wrapper_database.hpp"
+#include "sql/wrapper_document.hpp"
+#include "sql/wrapper_document_id.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
-#include "convert.hpp"
-#include "spaces.hpp"
+#include "sql/convert.hpp"
+#include "sql/spaces.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.

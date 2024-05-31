@@ -16,7 +16,6 @@
 #include <components/ql/aggregate/limit.hpp>
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
-#include <components/statistic/statistic.hpp>
 
 #include <utility>
 
@@ -46,7 +45,6 @@ namespace services::collection {
                                       log_t&& log)
             : resource_(resource)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
-            , statistic_(resource_)
             , storage_(resource_)
             , name_(name)
             , sessions_(sessions)
@@ -58,8 +56,6 @@ namespace services::collection {
         storage_t& storage() noexcept { return storage_; }
 
         components::index::index_engine_ptr& index_engine() noexcept { return index_engine_; }
-
-        components::statistic::statistic_t& statistic() noexcept { return statistic_; }
 
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
 
@@ -73,10 +69,7 @@ namespace services::collection {
     private:
         std::pmr::memory_resource* resource_;
         components::index::index_engine_ptr index_engine_;
-        /**
-        *  statistics
-        */
-        components::statistic::statistic_t statistic_;
+
         storage_t storage_;
         collection_full_name_t name_;
         /**

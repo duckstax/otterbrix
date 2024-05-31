@@ -15,8 +15,8 @@
 
 #include <components/ql/index.hpp>
 
+#include "../../cpp/wrapper_dispatcher.hpp"
 #include "forward.hpp"
-#include "integration/cpp/wrapper_dispatcher.hpp"
 #include "wrapper_cursor.hpp"
 
 namespace py = pybind11;
