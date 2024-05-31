@@ -43,13 +43,6 @@ target_link_libraries(
 
 )
 
-if (WASM_BUILD)
-    target_link_libraries(
-            ${PROJECT_NAME} PRIVATE
-            CONAN_PKG::proxy-wasm-cpp-host
-    )
-endif ()
-
 include(CTest)
 include(Catch)
 catch_discover_tests(${PROJECT_NAME})

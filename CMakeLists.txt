@@ -35,7 +35,7 @@ endif()
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    set(WASM_BUILD ON)
+
 else()
     # stack track
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
@@ -102,7 +102,7 @@ endif(CCACHE_FOUND)
 #############################################################################################
 # wasm
 if(WASM_BUILD)
-    set(WASM_OBJECT ON)
+
 endif()
 # wasm
 #############################################################################################
@@ -130,16 +130,12 @@ if (APPLICATION_SERVER)
     set(WASM_BUILD OFF)
 endif ()
 
-if (WASM_BUILD)
-    add_subdirectory(wasm)
-else()
-    include_directories(services)
-    add_subdirectory(services)
-    add_subdirectory(integration)
-    if(EXAMPLE)
-        add_subdirectory(example)
-    endif()
-endif ()
+include_directories(services)
+add_subdirectory(services)
+add_subdirectory(integration)
+if(EXAMPLE)
+    add_subdirectory(example)
+endif()
 
 
 

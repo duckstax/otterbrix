@@ -59,13 +59,6 @@ target_link_libraries(
         #CONAN_PKG::openssl
 
 )
-if (WASM_BUILD)
-    target_link_libraries(
-            ${PROJECT_NAME} PRIVATE
-            ${otterbrix_LIBS}
-            CONAN_PKG::proxy-wasm-cpp-host
-    )
-endif ()
 
 pybind11_extension(${PROJECT_NAME})
 
@@ -81,9 +74,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 if(SKBUILD)
     install(DIRECTORY otterbrix DESTINATION  . )
     install(TARGETS ${PROJECT_NAME} DESTINATION  ./otterbrix )
-    if (WASM_BUILD)
-        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./otterbrix )
-    endif()
 endif()
 
 if (DEV_MODE)
