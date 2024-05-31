@@ -24,6 +24,10 @@ namespace components::document {
 
     document_ptr document_view_t::get_ptr() const { return document_; }
 
+    core::type document_view_t::type_by_key(const std::string& key) const { return document_->type_by_key(key); }
+
+    core::type document_view_t::type_by_key(std::string_view key) const { return document_->type_by_key(key); }
+
     bool document_view_t::is_valid() const { return document_ != nullptr; }
 
     bool document_view_t::is_dict() const { return document_->value_->type() == value_type::dict; }

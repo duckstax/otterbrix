@@ -34,6 +34,10 @@ set(SOURCE_${PROJECT_NAME}
     parser/select/impl/parser_select_from.cpp
     parser/select/impl/parser_select_without_from.cpp
 
+    parser/index/parser_index.cpp
+    parser/index/impl/parser_index_create.cpp
+    parser/index/impl/parser_index_drop.cpp
+
     parser/update/parser_update.cpp
     parser/update/impl/parser_update_base.cpp
 )

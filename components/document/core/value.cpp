@@ -19,15 +19,27 @@ namespace document::impl {
 
     using namespace internal;
 
-    static const value_type value_types[] = {value_type::number,
-                                             value_type::number,
-                                             value_type::number,
-                                             value_type::null,
-                                             value_type::string,
-                                             value_type::data,
-                                             value_type::array,
-                                             value_type::dict,
-                                             value_type::null};
+    namespace {
+        static const value_type value_types[] = {value_type::number,
+                                                 value_type::number,
+                                                 value_type::number,
+                                                 value_type::null,
+                                                 value_type::string,
+                                                 value_type::data,
+                                                 value_type::array,
+                                                 value_type::dict,
+                                                 value_type::null};
+
+        static const core::type schema_types[] = {core::type::int64,
+                                                  core::type::int64,
+                                                  core::type::float64,
+                                                  core::type::undef,
+                                                  core::type::str,
+                                                  core::type::undef,
+                                                  core::type::undef,
+                                                  core::type::undef,
+                                                  core::type::undef};
+    } // namespace
 
     class const_value_t : public value_t {
     public:
@@ -57,8 +69,29 @@ namespace document::impl {
                 default:
                     return value_type::null;
             }
-        } else {
-            return value_types[t];
+        }
+        return value_types[t];
+    }
+
+    core::type value_t::schema_type() const noexcept {
+        auto t = tag();
+        if (_usually_false(t == tag_special)) {
+            switch (tiny_value()) {
+                case special_value_false:
+                case special_value_true:
+                    return core::type::bool8;
+                case special_value_undefined:
+                    return core::type::undef;
+                case special_value_null:
+                default:
+                    return core::type::undef;
+            }
+        }
+        switch (t) {
+            case tag_int:
+                return (byte_[0] & 0x08) != 0 ? core::type::uint64 : core::type::int64;
+            default:
+                return schema_types[t];
         }
     }
 

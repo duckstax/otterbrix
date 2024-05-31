@@ -19,8 +19,7 @@ namespace components::logical_plan {
         for (const auto& key : ql_->keys_) {
             stream << key.as_string() << ' ';
         }
-        stream << "] type:" << name_index_type(ql_->index_type_)
-               << "compare: " << name_index_compare(ql_->index_compare_);
+        stream << "] type:" << name_index_type(ql_->index_type_) << "compare: " << type_name(ql_->index_compare_);
         return stream.str();
     }
 

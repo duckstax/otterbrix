@@ -4,6 +4,7 @@
 #include "parser/common/parser_invalid.hpp"
 #include "parser/database/parser_database.hpp"
 #include "parser/delete/parser_delete.hpp"
+#include "parser/index/parser_index.hpp"
 #include "parser/insert/parser_insert.hpp"
 #include "parser/select/parser_select.hpp"
 #include "parser/table/parser_table.hpp"
@@ -32,6 +33,7 @@ namespace components::sql {
         PARSE(delete_);
         PARSE(insert);
         PARSE(update);
+        PARSE(index);
         PARSE(invalid);
         if (ok.is_error()) {
             return parse_result(

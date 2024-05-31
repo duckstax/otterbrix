@@ -2,6 +2,7 @@ project(collection)
 
 set(${PROJECT_NAME}_HEADERS
         collection.hpp
+        executor.hpp
         sort.hpp
 )
 
@@ -50,8 +51,9 @@ set(${PROJECT_NAME}_SOURCES
         operators/get/operator_get.cpp
         operators/get/simple_value.cpp
 
-        collection.cpp
         create_index.cpp
+        create_index_utils.cpp
+        executor.cpp
         sort.cpp
 )
 

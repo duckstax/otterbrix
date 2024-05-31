@@ -9,6 +9,7 @@
 #include <core/excutor.hpp>
 #include <core/spinlock/spinlock.hpp>
 #include <memory_resource>
+#include <services/collection/executor.hpp>
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 #include <stack>
@@ -32,30 +33,15 @@ namespace services {
         };
 
         struct load_buffer_t {
-            components::cursor::list_addresses_t collections;
+            std::pmr::vector<collection_full_name_t> collections;
 
             explicit load_buffer_t(std::pmr::memory_resource* resource);
         };
 
-        struct collection_pack_t {
-            actor_zeta::address_t collection_actor_address;
-            collection::context_collection_t* context;
-
-            explicit collection_pack_t(actor_zeta::address_t&& address, collection::context_collection_t* context);
-        };
-
-        struct plan_t {
-            std::stack<collection::operators::operator_ptr> sub_plans;
-            components::ql::storage_parameters parameters;
-
-            explicit plan_t(std::stack<collection::operators::operator_ptr>&& sub_plans,
-                            components::ql::storage_parameters parameters);
-        };
-
         using database_storage_t = std::pmr::set<database_name_t>;
-        using collection_storage_t = core::pmr::btree::btree_t<collection_full_name_t, collection_pack_t>;
+        using collection_storage_t =
+            core::pmr::btree::btree_t<collection_full_name_t, std::unique_ptr<collection::context_collection_t>>;
         using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
-        using plan_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, plan_t>;
 
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
@@ -74,6 +60,9 @@ namespace services {
         void execute_plan(components::session::session_id_t& session,
                           components::logical_plan::node_ptr logical_plan,
                           components::ql::storage_parameters parameters);
+
+        void size(components::session::session_id_t& session, collection_full_name_t&& name);
+        void close_cursor(components::session::session_id_t& session, std::set<collection_full_name_t>&& collections);
         void load(components::session::session_id_t& session, const disk::result_load_t& result);
 
         actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
@@ -83,12 +72,13 @@ namespace services {
         spin_lock lock_;
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
+        actor_zeta::address_t executor_address_{actor_zeta::address_t::empty_address()};
+        services::collection::executor::executor_t* executor_ = nullptr;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         database_storage_t databases_;
         collection_storage_t collections_;
         session_storage_t sessions_;
-        plan_storage_t plans_;
         std::unique_ptr<load_buffer_t> load_buffer_;
 
         bool is_exists_database_(const database_name_t& name) const;
@@ -109,17 +99,8 @@ namespace services {
                            components::logical_plan::node_ptr logical_plan,
                            components::ql::storage_parameters parameters);
 
-        void traverse_plan_(components::session::session_id_t& session,
-                            collection::operators::operator_ptr&& plan,
-                            components::ql::storage_parameters&& parameters);
-
-        void execute_sub_plan_finish_(components::session::session_id_t& session,
-                                      components::cursor::cursor_t_ptr cursor);
-
         void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
-        void drop_collection_finish_(components::session::session_id_t& session,
-                                     components::cursor::cursor_t_ptr cursor);
         void create_documents_finish_(components::session::session_id_t& session);
     };
 

@@ -15,10 +15,7 @@ namespace components::logical_plan {
 
     std::string node_drop_index_t::to_string_impl() const {
         std::stringstream stream;
-        stream << "$drop_index: " << database_name() << "." << collection_name() << " name:" << ql_->name() << "[ ";
-        for (const auto& key : ql_->keys_) {
-            stream << key.as_string() << ' ';
-        }
+        stream << "$drop_index: " << database_name() << "." << collection_name() << " name:" << ql_->name();
         return stream.str();
     }
 
