@@ -101,13 +101,6 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
     )
 endif()
 
-if (WASM_BUILD)
-    target_link_libraries(
-            otterbrix_${PROJECT_NAME} PUBLIC
-            CONAN_PKG::proxy-wasm-cpp-host
-    )
-endif ()
-
 if (DEV_MODE)
     add_subdirectory(test)
 endif()

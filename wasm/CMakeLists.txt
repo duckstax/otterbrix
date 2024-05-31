@@ -1,2 +1,0 @@
-add_subdirectory(log_quickjs_wasm)
-add_subdirectory(log_wasm)
