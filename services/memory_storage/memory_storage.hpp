@@ -13,6 +13,7 @@
 #include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 #include <stack>
+#include <mutex>
 
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
@@ -72,7 +73,8 @@ namespace services {
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
 
     private:
-        spin_lock lock_;
+        // spin lock_;
+        std::recursive_mutex lock_; // HOTFIX
         actor_zeta::detail::pmr::memory_resource* resource_;
         actor_zeta::address_t dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};

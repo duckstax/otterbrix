@@ -383,7 +383,7 @@ namespace services {
 
     void memory_storage_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) {
         ZoneScoped;
-        std::unique_lock<spin_lock> _(lock_);
+        std::unique_lock<std::recursive_mutex> _(lock_); //HOTFIX
         set_current_message(std::move(msg));
         execute(this, current_message());
     }
