@@ -16,7 +16,6 @@
 #include <components/ql/aggregate/limit.hpp>
 #include <components/ql/index.hpp>
 #include <components/session/session.hpp>
-#include <components/statistic/statistic.hpp>
 
 #include <utility>
 
@@ -54,7 +53,6 @@ namespace services::collection {
             : resource_(resource)
             , cursor_storage_(resource_)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
-            , statistic_(resource_)
             , storage_(resource_)
             , name_(name)
             , mdisk_(mdisk)
@@ -66,8 +64,6 @@ namespace services::collection {
         cursor_storage_t& cursor_storage() noexcept { return cursor_storage_; }
 
         components::index::index_engine_ptr& index_engine() noexcept { return index_engine_; }
-
-        components::statistic::statistic_t& statistic() noexcept { return statistic_; }
 
         std::pmr::memory_resource* resource() const noexcept { return resource_; }
 
@@ -95,10 +91,7 @@ namespace services::collection {
         std::pmr::memory_resource* resource_;
         cursor_storage_t cursor_storage_;
         components::index::index_engine_ptr index_engine_;
-        /**
-        *  statistics
-        */
-        components::statistic::statistic_t statistic_;
+
         storage_t storage_;
         collection_full_name_t name_;
         /**

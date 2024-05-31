@@ -1,2 +1,0 @@
-include libiwasm.so
-include *.wasm

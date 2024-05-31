@@ -1,26 +1,14 @@
 project(otterbrix)
 
-set(${PROJECT_NAME}_headers
-        convert.hpp
-        spaces.hpp
-        wrapper_client.hpp
-        wrapper_collection.hpp
-        wrapper_database.hpp
-        wrapper_cursor.hpp
-        wrapper_document.hpp
-        wrapper_document_id.hpp
-)
-
-set(${PROJECT_NAME}_sources
-        convert.cpp
-        main.cpp
-        spaces.cpp
-        wrapper_client.cpp
-        wrapper_collection.cpp
-        wrapper_database.cpp
-        wrapper_cursor.cpp
-        wrapper_document.cpp
-        wrapper_document_id.cpp
+set(${PROJECT_NAME}_sql_sources
+        sql/convert.cpp
+        sql/spaces.cpp
+        sql/wrapper_client.cpp
+        sql/wrapper_collection.cpp
+        sql/wrapper_database.cpp
+        sql/wrapper_cursor.cpp
+        sql/wrapper_document.cpp
+        sql/wrapper_document_id.cpp
 )
 
 set(otterbrix_LIBS
@@ -48,7 +36,7 @@ find_package(pybind11 CONFIG REQUIRED)
 
 #include_directories(${PROJECT_SOURCE_DIR})
 
-pybind11_add_module(${PROJECT_NAME} ${${PROJECT_NAME}_sources} ${${PROJECT_NAME}_headers})
+pybind11_add_module(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_sql_sources})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
@@ -71,13 +59,6 @@ target_link_libraries(
         #CONAN_PKG::openssl
 
 )
-if (WASM_BUILD)
-    target_link_libraries(
-            ${PROJECT_NAME} PRIVATE
-            ${otterbrix_LIBS}
-            CONAN_PKG::proxy-wasm-cpp-host
-    )
-endif ()
 
 pybind11_extension(${PROJECT_NAME})
 
@@ -93,9 +74,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "hidden")
 if(SKBUILD)
     install(DIRECTORY otterbrix DESTINATION  . )
     install(TARGETS ${PROJECT_NAME} DESTINATION  ./otterbrix )
-    if (WASM_BUILD)
-        install(FILES "${CMAKE_BINARY_DIR}/build_tools/libiwasm.so" DESTINATION  ./otterbrix )
-    endif()
 endif()
 
 if (DEV_MODE)
