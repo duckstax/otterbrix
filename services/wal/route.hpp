@@ -5,8 +5,6 @@ namespace services::wal {
 
     enum class route : uint64_t
     {
-        create,
-
         load,
         load_finish,
 
@@ -23,7 +21,7 @@ namespace services::wal {
         update_many,
         create_index,
 
-        success,
+        success
     };
 
     constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::wal, type); }

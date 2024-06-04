@@ -8,7 +8,6 @@
 #include <components/document/document_view.hpp>
 #include <components/ql/statements.hpp>
 #include <components/tests/generaty.hpp>
-#include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/wal/wal_replicate.hpp>
 
 using namespace services::wal;
@@ -23,9 +22,9 @@ constexpr std::size_t count_documents = 5;
 void test_insert_one(std::unique_ptr<test_wal_supervisor_t>& wal) {
     for (int num = 1; num <= 5; ++num) {
         auto document = gen_doc(num);
-        insert_one_t data(database_name, collection_name, std::move(document));
+        insert_one_t* data = new insert_one_t(database_name, collection_name, std::move(document));
         auto session = components::session::session_id_t();
-        wal->write_data(data);
+        wal->call_wal(session, data);
     }
 }
 
@@ -36,10 +35,7 @@ std::unique_ptr<test_wal_supervisor_t> create_test_wal(const std::filesystem::pa
     std::filesystem::create_directories(path);
     configuration::config_wal config;
     config.path = path;
-    return actor_zeta::spawn_supervisor<test_wal_supervisor_t>(actor_zeta::detail::pmr::get_default_resource(),
-                                                               new core::non_thread_scheduler::scheduler_test_t(1, 1),
-                                                               config,
-                                                               log);
+    return actor_zeta::spawn_supervisor<test_wal_supervisor_t>(config, log);
 }
 
 TEST_CASE("insert one test") {
@@ -77,8 +73,9 @@ TEST_CASE("insert many empty test") {
     auto test_wal = create_test_wal("/tmp/wal/insert_many_empty");
 
     std::pmr::vector<components::document::document_ptr> documents;
-    insert_many_t data(database_name, collection_name, std::move(documents));
-    test_wal->write_data(data);
+    insert_many_t* data = new insert_many_t(database_name, collection_name, std::move(documents));
+    auto session = components::session::session_id_t();
+    test_wal->call_wal(session, data);
 
     wal_entry_t<insert_many_t> entry;
 
@@ -104,8 +101,9 @@ TEST_CASE("insert many test") {
         for (int num = 1; num <= 5; ++num) {
             documents.push_back(gen_doc(num));
         }
-        insert_many_t data(database_name, collection_name, std::move(documents));
-        test_wal->write_data(data);
+        insert_many_t* data = new insert_many_t(database_name, collection_name, std::move(documents));
+        auto session = components::session::session_id_t();
+        test_wal->call_wal(session, data);
     }
 
     std::size_t read_index = 0;
@@ -150,8 +148,9 @@ TEST_CASE("delete one test") {
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t{1}, num);
-        delete_one_t data(database_name, collection_name, match, parameters);
-        test_wal->write_data(data);
+        delete_one_t* data = new delete_one_t(database_name, collection_name, match, parameters);
+        auto session = components::session::session_id_t();
+        test_wal->call_wal(session, data);
     }
 
     std::size_t index = 0;
@@ -183,8 +182,9 @@ TEST_CASE("delete many test") {
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
         add_parameter(parameters, core::parameter_id_t{1}, num);
-        delete_many_t data(database_name, collection_name, match, parameters);
-        test_wal->write_data(data);
+        delete_many_t* data = new delete_many_t(database_name, collection_name, match, parameters);
+        auto session = components::session::session_id_t();
+        test_wal->call_wal(session, data);
     }
 
     std::size_t index = 0;
@@ -218,8 +218,9 @@ TEST_CASE("update one test") {
         add_parameter(parameters, core::parameter_id_t{1}, num);
         auto update =
             components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
-        update_one_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
-        test_wal->write_data(data);
+        update_one_t* data = new update_one_t(database_name, collection_name, match, parameters, update, num % 2 == 0);
+        auto session = components::session::session_id_t();
+        test_wal->call_wal(session, data);
     }
 
     std::size_t index = 0;
@@ -256,8 +257,10 @@ TEST_CASE("update many test") {
         add_parameter(parameters, core::parameter_id_t{1}, num);
         auto update =
             components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
-        update_many_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
-        test_wal->write_data(data);
+        update_many_t* data =
+            new update_many_t(database_name, collection_name, match, parameters, update, num % 2 == 0);
+        auto session = components::session::session_id_t();
+        test_wal->call_wal(session, data);
     }
 
     std::size_t index = 0;

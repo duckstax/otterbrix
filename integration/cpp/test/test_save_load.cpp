@@ -109,11 +109,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
         auto* dispatcher = space.dispatcher();
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
-        auto wal = actor_zeta::spawn_supervisor<services::wal::test_wal_supervisor_t>(
-            actor_zeta::detail::pmr::get_default_resource(),
-            dispatcher->scheduler(),
-            config.wal,
-            log);
+        auto wal = actor_zeta::spawn_supervisor<services::wal::test_wal_supervisor_t>(config.wal, log);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
@@ -121,8 +117,9 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 uint n_doc = count_documents + 1;
                 auto doc = gen_doc(int(n_doc));
                 doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                components::ql::insert_one_t insert_one(db_name, col_name, doc);
-                wal->write_data(insert_one);
+                auto insert_one = new components::ql::insert_one_t(db_name, col_name, doc);
+                auto session = components::session::session_id_t();
+                wal->call_wal(session, insert_one);
 
                 {
                     auto match = components::ql::aggregate::make_match(
@@ -132,8 +129,9 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 1);
-                    components::ql::delete_one_t delete_one(db_name, col_name, match, params);
-                    wal->write_data(delete_one);
+                    auto delete_one = new components::ql::delete_one_t(db_name, col_name, match, params);
+                    auto session = components::session::session_id_t();
+                    wal->call_wal(session, delete_one);
                 }
 
                 {
@@ -151,8 +149,9 @@ TEST_CASE("python::test_save_load::disk+wal") {
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 2);
                     components::ql::add_parameter(params, core::parameter_id_t{2}, 4);
-                    components::ql::delete_many_t delete_many(db_name, col_name, match, params);
-                    wal->write_data(delete_many);
+                    auto delete_many = new components::ql::delete_many_t(db_name, col_name, match, params);
+                    auto session = components::session::session_id_t();
+                    wal->call_wal(session, delete_many);
                 }
 
                 {
@@ -163,14 +162,15 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
-                    components::ql::update_one_t update_one(
+                    auto update_one = new components::ql::update_one_t(
                         db_name,
                         col_name,
                         match,
                         params,
                         components::document::document_from_json(R"({"$set": {"count": 0}})"),
                         false);
-                    wal->write_data(update_one);
+                    auto session = components::session::session_id_t();
+                    wal->call_wal(session, update_one);
                 }
 
                 {
@@ -181,14 +181,15 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          core::parameter_id_t{1}));
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 5);
-                    components::ql::update_many_t update_many(
+                    auto update_many = new components::ql::update_many_t(
                         db_name,
                         col_name,
                         match,
                         params,
                         components::document::document_from_json(R"({"$set": {"count": 1000}})"),
                         false);
-                    wal->write_data(update_many);
+                    auto session = components::session::session_id_t();
+                    wal->call_wal(session, update_many);
                 }
             }
         }

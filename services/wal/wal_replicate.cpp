@@ -279,15 +279,110 @@ namespace services::wal {
     buffer_t wal_replicate_t::test_read(size_t start_index, size_t finish_index) const {
         return read(start_index, finish_index);
     }
+#endif
 
-    test_wal_supervisor_t::test_wal_supervisor_t(actor_zeta::detail::pmr::memory_resource* resource,
-                                                 actor_zeta::scheduler_raw scheduler,
-                                                 const configuration::config_wal& config,
-                                                 log_t& log)
-        : actor_zeta::cooperative_supervisor<test_wal_supervisor_t>(resource, "memory_storage")
-        , e_(scheduler) {
+    test_wal_supervisor_t::test_wal_supervisor_t(const configuration::config_wal& config, log_t& log)
+        : actor_zeta::cooperative_supervisor<test_wal_supervisor_t>(actor_zeta::detail::pmr::get_default_resource(),
+                                                                    "memory_storage")
+        , e_(new actor_zeta::shared_work(1, 1000)) {
         wal_address_ =
             spawn_actor<wal::wal_replicate_t>([this](wal::wal_replicate_t* ptr) { wal.reset(ptr); }, config, log);
+        add_handler(handler_id(wal::route::success), &test_wal_supervisor_t::wal_success);
+        e_->start();
+    }
+
+    void test_wal_supervisor_t::call_wal(components::session::session_id_t& session,
+                                         components::ql::ql_statement_t* statement) {
+        i = 0;
+
+        switch (statement->type()) {
+            case statement_type::create_database:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::create_database),
+                                 session,
+                                 static_cast<components::ql::create_database_t&>(*statement));
+                break;
+            case statement_type::drop_database:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::drop_database),
+                                 session,
+                                 static_cast<components::ql::drop_database_t&>(*statement));
+                break;
+            case statement_type::create_collection:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::create_collection),
+                                 session,
+                                 static_cast<components::ql::create_collection_t&>(*statement));
+                break;
+            case statement_type::drop_collection:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::drop_collection),
+                                 session,
+                                 static_cast<components::ql::drop_collection_t&>(*statement));
+                break;
+            case statement_type::insert_one:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::insert_one),
+                                 session,
+                                 static_cast<components::ql::insert_one_t&>(*statement));
+                break;
+            case statement_type::insert_many:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::insert_many),
+                                 session,
+                                 static_cast<components::ql::insert_many_t&>(*statement));
+                break;
+            case statement_type::delete_one:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::delete_one),
+                                 session,
+                                 static_cast<components::ql::delete_one_t&>(*statement));
+                break;
+            case statement_type::delete_many:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::delete_many),
+                                 session,
+                                 static_cast<components::ql::delete_many_t&>(*statement));
+                break;
+            case statement_type::update_one:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::update_one),
+                                 session,
+                                 static_cast<components::ql::update_many_t&>(*statement));
+                break;
+            case statement_type::update_many:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::update_many),
+                                 session,
+                                 static_cast<components::ql::update_many_t&>(*statement));
+                break;
+            case statement_type::create_index:
+                actor_zeta::send(wal_address_,
+                                 address(),
+                                 wal::handler_id(wal::route::create_index),
+                                 session,
+                                 static_cast<components::ql::create_index_t&>(*statement));
+                break;
+            default:
+                throw std::runtime_error("unhandled case");
+                break;
+        }
+        std::unique_lock<std::mutex> lk(mutex_);
+        cv_.wait(lk, [this]() { return i == 1; });
+    }
+    void test_wal_supervisor_t::wal_success() {
+        i = 1;
+        cv_.notify_all();
     }
 
     actor_zeta::scheduler::scheduler_abstract_t* test_wal_supervisor_t::scheduler_impl() noexcept { return e_; }
@@ -297,6 +392,5 @@ namespace services::wal {
         set_current_message(std::move(msg));
         execute(this, current_message());
     }
-#endif
 
 } //namespace services::wal
