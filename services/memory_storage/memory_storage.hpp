@@ -7,16 +7,14 @@
 #include <components/session/session.hpp>
 #include <core/btree/btree.hpp>
 #include <core/excutor.hpp>
-#include <core/spinlock/spinlock.hpp>
 #include <memory_resource>
-#include <services/collection/executor.hpp>
-#include <services/collection/operators/operator.hpp>
-#include <services/disk/result.hpp>
-#include <stack>
 #include <mutex>
+#include <services/collection/executor.hpp>
+#include <services/disk/result.hpp>
 
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
+#include <services/wal/wal_replicate.hpp>
 
 #include "context_storage.hpp"
 #include "session.hpp"
@@ -29,6 +27,11 @@ namespace components::ql {
 } // namespace components::ql
 
 namespace services {
+
+    namespace wal {
+        class base_wal_replicate_t;
+        using wal_ptr = std::unique_ptr<base_wal_replicate_t>;
+    } // namespace wal
 
     class memory_storage_t final : public actor_zeta::cooperative_supervisor<memory_storage_t> {
         struct load_buffer_t {
@@ -43,16 +46,16 @@ namespace services {
         using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
 
     public:
-        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t>;
+        using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
         enum class unpack_rules : uint64_t
         {
             dispatcher = 0,
-            manager_disk = 1,
-            manager_wal = 2
+            manager_disk = 1
         };
 
         memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
                          actor_zeta::scheduler_raw scheduler,
+                         const configuration::config_wal& config,
                          log_t& log);
         ~memory_storage_t();
 
@@ -78,9 +81,10 @@ namespace services {
         actor_zeta::detail::pmr::memory_resource* resource_;
         actor_zeta::address_t dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
-        actor_zeta::address_t manager_wal_{actor_zeta::address_t::empty_address()};
+        actor_zeta::address_t manager_wal_address_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t executor_address_{actor_zeta::address_t::empty_address()};
         services::collection::executor::executor_t* executor_ = nullptr;
+        services::wal::wal_ptr manager_wal_;
         log_t log_;
         actor_zeta::scheduler_raw e_;
         database_storage_t databases_;

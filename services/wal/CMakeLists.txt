@@ -6,8 +6,7 @@ set( ${PROJECT_NAME}_HEADERS
 set(${PROJECT_NAME}_SOURCES
         dto.cpp
         record.cpp
-        manager_wal_replicate.cpp
-        wal.cpp
+        wal_replicate.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -25,12 +24,12 @@ target_link_libraries(
         otterbrix::ql
         otterbrix::locks
         otterbrix::file
+        otterbrix::session
 
         CONAN_PKG::spdlog
         CONAN_PKG::crc32c
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
-
 )
 
 target_include_directories(

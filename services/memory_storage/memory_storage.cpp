@@ -26,6 +26,7 @@ namespace services {
 
     memory_storage_t::memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
                                        actor_zeta::scheduler_raw scheduler,
+                                       const configuration::config_wal& config,
                                        log_t& log)
         : actor_zeta::cooperative_supervisor<memory_storage_t>(resource, "memory_storage")
         , resource_(resource)
@@ -33,12 +34,21 @@ namespace services {
         , e_(scheduler)
         , databases_(resource)
         , collections_(resource) {
-        ZoneScoped;
         trace(log_, "memory_storage start thread pool");
-        executor_address_ = spawn_actor<services::collection::executor::executor_t>(
-            [this](services::collection::executor::executor_t* ptr) { executor_ = ptr; },
+        executor_address_ = spawn_actor<collection::executor::executor_t>(
+            [this](collection::executor::executor_t* ptr) { executor_ = ptr; },
             resource,
             std::move(log_.clone()));
+        if (config.on) {
+            manager_wal_address_ =
+                spawn_actor<wal::wal_replicate_t>([this](wal::base_wal_replicate_t* ptr) { manager_wal_.reset(ptr); },
+                                                  config,
+                                                  log_);
+        } else {
+            manager_wal_address_ = spawn_actor<services::wal::wal_replicate_empty_t>(
+                [this](wal::base_wal_replicate_t* ptr) { manager_wal_.reset(ptr); },
+                log_);
+        }
         add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
         add_handler(memory_storage::handler_id(memory_storage::route::execute_ql), &memory_storage_t::execute_ql);
 
@@ -53,15 +63,15 @@ namespace services {
         add_handler(wal::handler_id(wal::route::success), &memory_storage_t::wal_success);
     }
 
-    memory_storage_t::~memory_storage_t() {
-        ZoneScoped;
-        trace(log_, "delete memory_resource");
-    }
+    memory_storage_t::~memory_storage_t() { trace(log_, "delete memory_resource"); }
 
     void memory_storage_t::sync(const address_pack& pack) {
         dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::dispatcher)>(pack);
         manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
-        manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
+        actor_zeta::send(manager_wal_address_,
+                         actor_zeta::address_t::empty_address(),
+                         core::handler_id(core::route::sync),
+                         std::make_tuple(manager_disk_, address()));
     }
 
     void memory_storage_t::execute_ql(components::session::session_id_t& session,
@@ -108,10 +118,10 @@ namespace services {
                                      disk::handler_id(disk::route::append_database),
                                      session,
                                      ql->database_);
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::create_database),
                                          session,
@@ -127,10 +137,10 @@ namespace services {
                                      disk::handler_id(disk::route::remove_database),
                                      session,
                                      ql->database_);
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::drop_database),
                                          session,
@@ -147,10 +157,10 @@ namespace services {
                                      session,
                                      ql->database_,
                                      ql->collection_);
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::create_collection),
                                          session,
@@ -168,10 +178,10 @@ namespace services {
                                      session,
                                      ql->database_,
                                      ql->collection_);
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::drop_collection),
                                          session,
@@ -182,12 +192,12 @@ namespace services {
                 }
 
                 case statement_type::insert_one: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::insert_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::insert_one),
                                          session,
@@ -198,12 +208,12 @@ namespace services {
                 }
 
                 case statement_type::insert_many: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::insert_many_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::insert_many),
                                          session,
@@ -213,12 +223,12 @@ namespace services {
                     break;
                 }
                 case statement_type::update_one: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::update_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::update_one),
                                          session,
@@ -229,12 +239,12 @@ namespace services {
                 }
 
                 case statement_type::update_many: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::update_many_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::update_many),
                                          session,
@@ -245,12 +255,12 @@ namespace services {
                 }
 
                 case statement_type::delete_one: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::delete_one_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::delete_one),
                                          session,
@@ -261,12 +271,12 @@ namespace services {
                 }
 
                 case statement_type::delete_many: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     } else {
                         assert(s.is_type<ql_statement_t*>() && "Doesn't holds ql_statement_t*");
                         auto statement = *static_cast<components::ql::delete_many_t*>(s.get<ql_statement_t*>());
-                        actor_zeta::send(manager_wal_,
+                        actor_zeta::send(manager_wal_address_,
                                          address(),
                                          wal::handler_id(wal::route::delete_many),
                                          session,
@@ -278,7 +288,7 @@ namespace services {
 
                 case statement_type::create_index:
                 case statement_type::drop_index: {
-                    if (s.address().get() == manager_wal_.get()) {
+                    if (s.address().get() == manager_wal_address_.get()) {
                         wal_success(session, last_wal_id_);
                     }
                     // We initiate session from this dispatcher,
@@ -382,7 +392,6 @@ namespace services {
     actor_zeta::scheduler::scheduler_abstract_t* memory_storage_t::scheduler_impl() noexcept { return e_; }
 
     void memory_storage_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) {
-        ZoneScoped;
         std::unique_lock<std::recursive_mutex> _(lock_); //HOTFIX
         set_current_message(std::move(msg));
         execute(this, current_message());
@@ -407,7 +416,7 @@ namespace services {
         }
 
         auto session_obj = sessions_.at(session);
-        const bool is_from_wal = session_obj.address().get() == manager_wal_.get();
+        const bool is_from_wal = session_obj.address().get() == manager_wal_address_.get();
         if (is_from_wal) {
             return;
         }
@@ -447,7 +456,7 @@ namespace services {
                            "record.data holds the alternative create_database_t");
                     auto& data = std::get<create_database_t>(record.data);
                     components::session::session_id_t session_database;
-                    execute_ql(session_database, &data, manager_wal_);
+                    execute_ql(session_database, &data, manager_wal_address_);
                     break;
                 }
                 case statement_type::drop_database: {
@@ -456,7 +465,7 @@ namespace services {
                            "record.data holds the alternative drop_database_t");
                     auto& data = std::get<drop_database_t>(record.data);
                     components::session::session_id_t session_database;
-                    execute_ql(session_database, &data, manager_wal_);
+                    execute_ql(session_database, &data, manager_wal_address_);
                     break;
                 }
                 case statement_type::create_collection: {
@@ -466,7 +475,7 @@ namespace services {
                         "record.data holds the alternative create_collection_t");
                     auto& data = std::get<create_collection_t>(record.data);
                     components::session::session_id_t session_collection;
-                    execute_ql(session_collection, &data, manager_wal_);
+                    execute_ql(session_collection, &data, manager_wal_address_);
                     break;
                 }
                 case statement_type::drop_collection: {
@@ -475,7 +484,7 @@ namespace services {
                            "record.data holds the alternative drop_collection_t");
                     auto& data = std::get<drop_collection_t>(record.data);
                     components::session::session_id_t session_collection;
-                    execute_ql(session_collection, &data, manager_wal_);
+                    execute_ql(session_collection, &data, manager_wal_address_);
                     break;
                 }
                 case statement_type::insert_one: {
@@ -485,7 +494,7 @@ namespace services {
                            "record.data holds the alternative insert_one_t");
                     auto& ql = std::get<insert_one_t>(record.data);
                     components::session::session_id_t session_insert;
-                    execute_ql(session_insert, &ql, manager_wal_);
+                    execute_ql(session_insert, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::insert_many: {
@@ -495,7 +504,7 @@ namespace services {
                            "record.data holds the alternative insert_many_t");
                     auto& ql = std::get<insert_many_t>(record.data);
                     components::session::session_id_t session_insert;
-                    execute_ql(session_insert, &ql, manager_wal_);
+                    execute_ql(session_insert, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::delete_one: {
@@ -504,7 +513,7 @@ namespace services {
                            "record.data holds the alternative delete_one_t");
                     auto& ql = std::get<delete_one_t>(record.data);
                     components::session::session_id_t session_delete;
-                    execute_ql(session_delete, &ql, manager_wal_);
+                    execute_ql(session_delete, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::delete_many: {
@@ -513,7 +522,7 @@ namespace services {
                            "record.data holds the alternative delete_many_t");
                     auto& ql = std::get<delete_many_t>(record.data);
                     components::session::session_id_t session_delete;
-                    execute_ql(session_delete, &ql, manager_wal_);
+                    execute_ql(session_delete, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::update_one: {
@@ -523,7 +532,7 @@ namespace services {
                            "record.data holds the alternative update_one_t");
                     auto& ql = std::get<update_one_t>(record.data);
                     components::session::session_id_t session_update;
-                    execute_ql(session_update, &ql, manager_wal_);
+                    execute_ql(session_update, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::update_many: {
@@ -532,7 +541,7 @@ namespace services {
                            "record.data holds the alternative update_many_t");
                     auto& ql = std::get<update_many_t>(record.data);
                     components::session::session_id_t session_update;
-                    execute_ql(session_update, &ql, manager_wal_);
+                    execute_ql(session_update, &ql, manager_wal_address_);
                     break;
                 }
                 case statement_type::create_index: {
@@ -541,7 +550,7 @@ namespace services {
                            "record.data holds the alternative create_index_t");
                     auto& ql = std::get<create_index_t>(record.data);
                     components::session::session_id_t session_create_index;
-                    execute_ql(session_create_index, &ql, manager_wal_);
+                    execute_ql(session_create_index, &ql, manager_wal_address_);
                     break;
                 }
                 // TODO no drop index?
@@ -554,7 +563,11 @@ namespace services {
     void memory_storage_t::load_from_disk_finished(components::session::session_id_t& session) {
         trace(log_, "memory_storage_t:load_from_disk_finished: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
-        actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
+        actor_zeta::send(manager_wal_address_,
+                         address(),
+                         wal::handler_id(wal::route::load),
+                         session,
+                         load_result_.wal_id());
         load_result_.clear();
         load_buffer_.reset();
     }
@@ -563,7 +576,7 @@ namespace services {
     bool memory_storage_t::load_from_wal_in_progress(components::session::session_id_t& session) {
         trace(log_, "memory_storage_t::load_from_wal_in_progress: session: {}", session.data());
         auto sender = sessions_.at(session).address();
-        if (sender.get() == manager_wal_.get()) {
+        if (sender.get() == manager_wal_address_.get()) {
             if (--load_count_answers_ == 0) {
                 actor_zeta::send(sessions_.at(load_session_).address(),
                                  address(),

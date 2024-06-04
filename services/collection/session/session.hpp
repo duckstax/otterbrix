@@ -15,6 +15,8 @@ namespace services::collection::sessions {
             : type_(statement.type())
             , data_(std::move(statement)) {}
 
+        session_t(session_t&&) = default;
+
         template<class T>
         T& get() {
             return std::get<T>(data_);

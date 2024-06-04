@@ -2,7 +2,7 @@
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
-#include <services/wal/wal.hpp>
+#include <services/wal/wal_replicate.hpp>
 
 constexpr uint count_databases = 2;
 constexpr uint count_collections = 4;
@@ -109,7 +109,11 @@ TEST_CASE("python::test_save_load::disk+wal") {
         auto* dispatcher = space.dispatcher();
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
-        services::wal::wal_replicate_t wal(nullptr, log, config.wal);
+        auto wal = actor_zeta::spawn_supervisor<services::wal::test_wal_supervisor_t>(
+            actor_zeta::detail::pmr::get_default_resource(),
+            dispatcher->scheduler(),
+            config.wal,
+            log);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {
@@ -117,10 +121,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
                 uint n_doc = count_documents + 1;
                 auto doc = gen_doc(int(n_doc));
                 doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                auto session = otterbrix::session_id_t();
-                auto address = actor_zeta::address_t::empty_address();
                 components::ql::insert_one_t insert_one(db_name, col_name, doc);
-                wal.insert_one(session, address, insert_one);
+                wal->write_data(insert_one);
 
                 {
                     auto match = components::ql::aggregate::make_match(
@@ -131,7 +133,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                     components::ql::storage_parameters params;
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 1);
                     components::ql::delete_one_t delete_one(db_name, col_name, match, params);
-                    wal.delete_one(session, address, delete_one);
+                    wal->write_data(delete_one);
                 }
 
                 {
@@ -150,7 +152,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                     components::ql::add_parameter(params, core::parameter_id_t{1}, 2);
                     components::ql::add_parameter(params, core::parameter_id_t{2}, 4);
                     components::ql::delete_many_t delete_many(db_name, col_name, match, params);
-                    wal.delete_many(session, address, delete_many);
+                    wal->write_data(delete_many);
                 }
 
                 {
@@ -168,7 +170,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                         params,
                         components::document::document_from_json(R"({"$set": {"count": 0}})"),
                         false);
-                    wal.update_one(session, address, update_one);
+                    wal->write_data(update_one);
                 }
 
                 {
@@ -186,7 +188,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                         params,
                         components::document::document_from_json(R"({"$set": {"count": 1000}})"),
                         false);
-                    wal.update_many(session, address, update_many);
+                    wal->write_data(update_many);
                 }
             }
         }

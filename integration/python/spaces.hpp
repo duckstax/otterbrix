@@ -7,7 +7,7 @@
 
 #include <services/disk/manager_disk.hpp>
 #include <services/memory_storage/memory_storage.hpp>
-#include <services/wal/manager_wal_replicate.hpp>
+#include <services/wal/wal_replicate.hpp>
 
 #include "integration/cpp/base_spaces.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"

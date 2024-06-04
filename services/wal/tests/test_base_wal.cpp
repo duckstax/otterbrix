@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <wal/wal.hpp>
+#include <wal/wal_replicate.hpp>
 
 #include <msgpack.hpp>
 #include <string>

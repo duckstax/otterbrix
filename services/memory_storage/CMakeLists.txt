@@ -22,6 +22,7 @@ target_link_libraries(
     otterbrix::session
     otterbrix::ql
     otterbrix::translator
+    otterbrix::wal
     CONAN_PKG::spdlog
 )
 
