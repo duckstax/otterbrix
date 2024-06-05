@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include <components/tests/generaty.hpp>
 #include <components/physical_plan/collection/operators/get/simple_value.hpp>
+#include <components/tests/generaty.hpp>
 
 using namespace components;
 using namespace services::collection::operators;

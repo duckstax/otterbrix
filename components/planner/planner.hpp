@@ -1,8 +1,8 @@
 #pragma once
 
 #include <components/logical_plan/node.hpp>
-#include <components/ql/ql_statement.hpp>
 #include <components/ql/aggregate/limit.hpp>
+#include <components/ql/ql_statement.hpp>
 
 namespace components::planner {
 
@@ -23,8 +23,7 @@ namespace components::planner {
 
     class planner_t {
     public:
-        auto create_plan(std::pmr::memory_resource* resource,
-                           ql::ql_statement_t* statement) -> logical_plan::node_ptr;
+        auto create_plan(std::pmr::memory_resource* resource, ql::ql_statement_t* statement) -> logical_plan::node_ptr;
     };
 
-}
+} // namespace components::planner

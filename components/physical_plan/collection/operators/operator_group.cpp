@@ -1,6 +1,6 @@
 #include "operator_group.hpp"
-#include <services/collection/collection.hpp>
 #include <components/physical_plan/collection/operators/operator_empty.hpp>
+#include <services/collection/collection.hpp>
 
 namespace services::collection::operators {
 

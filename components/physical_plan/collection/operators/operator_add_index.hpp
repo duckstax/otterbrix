@@ -1,7 +1,7 @@
 #pragma once
+#include <components/physical_plan/collection/operators/operator.hpp>
 #include <components/ql/index.hpp>
 #include <memory>
-#include <components/physical_plan/collection/operators/operator.hpp>
 #include <string>
 
 namespace services::collection::operators {

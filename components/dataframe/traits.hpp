@@ -29,20 +29,20 @@ namespace components::dataframe {
 
         template<typename L, typename R>
         struct is_relationally_comparable_impl<L, R, std::void_t<less_comparable<L, R>, greater_comparable<L, R>>>
-            : std::true_type {};
+            : std::true_type{};
 
         template<typename L, typename R, typename = void>
         struct is_equality_comparable_impl : std::false_type {};
 
         template<typename L, typename R>
-        struct is_equality_comparable_impl<L, R, std::void_t<equality_comparable<L, R>>> : std::true_type {};
+        struct is_equality_comparable_impl<L, R, std::void_t<equality_comparable<L, R>>> : std::true_type{};
 
         // has common type
         template<typename AlwaysVoid, typename... Ts>
         struct has_common_type_impl : std::false_type {};
 
         template<typename... Ts>
-        struct has_common_type_impl<std::void_t<std::common_type_t<Ts...>>, Ts...> : std::true_type {};
+        struct has_common_type_impl<std::void_t<std::common_type_t<Ts...>>, Ts...> : std::true_type{};
     } // namespace detail
 
     template<typename... Ts>

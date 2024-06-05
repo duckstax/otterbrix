@@ -1,6 +1,7 @@
 #include "memory_storage.hpp"
 #include "route.hpp"
 #include <cassert>
+#include <components/physical_plan_generator/create_plan.hpp>
 #include <components/ql/statements/create_collection.hpp>
 #include <components/ql/statements/create_database.hpp>
 #include <components/ql/statements/drop_collection.hpp>
@@ -8,7 +9,6 @@
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
 #include <services/collection/collection.hpp>
-#include <components/physical_plan_generator/create_plan.hpp>
 
 using namespace components::cursor;
 

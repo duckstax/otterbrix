@@ -1,8 +1,8 @@
 #include "create_plan_aggregate.hpp"
 
-#include <components/ql/aggregate/limit.hpp>
-#include <components/physical_plan_generator/create_plan.hpp>
 #include <components/physical_plan/collection/operators/aggregation.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
+#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::planner::impl {
 

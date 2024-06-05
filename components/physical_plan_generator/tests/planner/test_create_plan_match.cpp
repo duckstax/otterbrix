@@ -2,8 +2,8 @@
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/logical_plan/node_match.hpp>
-#include <components/physical_plan_generator/create_plan.hpp>
 #include <components/physical_plan/tests/operators/test_operator_generaty.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
 
 using namespace components::logical_plan;
 using namespace components::expressions;

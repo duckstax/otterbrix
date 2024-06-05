@@ -1,7 +1,7 @@
 #pragma once
 
-#include <components/ql/aggregate/limit.hpp>
 #include <components/physical_plan/collection/operators/operator.hpp>
+#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::operators {
 

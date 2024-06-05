@@ -1,8 +1,8 @@
 #pragma once
 
-#include <components/physical_plan/context.hpp>
 #include <components/physical_plan/collection/operators/operator_data.hpp>
 #include <components/physical_plan/collection/operators/operator_write_data.hpp>
+#include <components/physical_plan/context.hpp>
 
 namespace services::collection {
 

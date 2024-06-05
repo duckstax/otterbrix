@@ -53,7 +53,7 @@ namespace components::planner {
     }
 
     auto translator_join(std::pmr::memory_resource* resource, ql::join_t* ql) -> logical_plan::node_ptr {
-        planner_t planner;//  hotfix
+        planner_t planner; //  hotfix
         auto node = new logical_plan::node_join_t{resource, {ql->left->database_, ql->left->collection_}, ql->join};
         node->append_child(planner.create_plan(resource, ql->left.get()));
         node->append_child(planner.create_plan(resource, ql->right.get()));

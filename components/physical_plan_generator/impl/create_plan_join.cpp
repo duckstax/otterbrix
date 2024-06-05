@@ -1,10 +1,10 @@
 #include "create_plan_join.hpp"
 
-#include <components/physical_plan_generator/create_plan.hpp>
 #include <components/expressions/join_expression.hpp>
 #include <components/logical_plan/node_join.hpp>
-#include <components/ql/aggregate/limit.hpp>
 #include <components/physical_plan/collection/operators/operator_join.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
+#include <components/ql/aggregate/limit.hpp>
 
 namespace services::collection::planner::impl {
 

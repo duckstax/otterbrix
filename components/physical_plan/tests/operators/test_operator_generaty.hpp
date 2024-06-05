@@ -1,9 +1,9 @@
 #pragma once
 
+#include <components/physical_plan/collection/operators/operator_insert.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/collection/collection.hpp>
-#include <components/physical_plan/collection/operators/operator_insert.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 
 using namespace services;

@@ -4,8 +4,8 @@
 #include <core/tracy/tracy.hpp>
 
 #include <components/document/document.hpp>
-#include <components/ql/statements.hpp>
 #include <components/planner/planner.hpp>
+#include <components/ql/statements.hpp>
 
 #include <services/collection/route.hpp>
 #include <services/disk/manager_disk.hpp>

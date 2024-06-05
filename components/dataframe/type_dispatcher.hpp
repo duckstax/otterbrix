@@ -98,8 +98,8 @@ namespace components::dataframe {
 
 #undef type_mapping
 
-                                                                                template<type_id Id>
-                                                                                struct dispatch_storage_type {
+                                                                                    template<type_id Id>
+                                                                                    struct dispatch_storage_type {
         using type = device_storage_type_t<typename id_to_type_impl<Id>::type>;
     };
 

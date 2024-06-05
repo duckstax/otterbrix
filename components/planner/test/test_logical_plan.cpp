@@ -7,6 +7,7 @@
 #include <components/logical_plan/node_limit.hpp>
 #include <components/logical_plan/node_match.hpp>
 #include <components/logical_plan/node_sort.hpp>
+#include <components/planner/planner.hpp>
 #include <components/ql/aggregate.hpp>
 #include <components/ql/aggregate/limit.hpp>
 #include <components/ql/statements/create_collection.hpp>
@@ -20,7 +21,6 @@
 #include <components/ql/statements/update_many.hpp>
 #include <components/ql/statements/update_one.hpp>
 #include <components/tests/generaty.hpp>
-#include <components/planner/planner.hpp>
 
 using namespace components::logical_plan;
 using namespace components::expressions;

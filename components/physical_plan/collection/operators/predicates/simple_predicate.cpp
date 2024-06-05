@@ -1,6 +1,6 @@
 #include "simple_predicate.hpp"
-#include <regex>
 #include <components/physical_plan/collection/operators/operator.hpp>
+#include <regex>
 
 namespace services::collection::operators::predicates {
 

@@ -17,8 +17,7 @@
             T t;                                                                                                       \
             constexpr explicit D(const T& t_) noexcept(std::is_nothrow_copy_constructible_v<T>)                        \
                 : t(t_) {}                                                                                             \
-            D()                                                                                                        \
-            noexcept(std::is_nothrow_default_constructible_v<T>)                                                       \
+            D() noexcept(std::is_nothrow_default_constructible_v<T>)                                                   \
                 : t() {}                                                                                               \
             D& operator=(const T& other) noexcept(std::is_nothrow_assignable_v<T, T>) {                                \
                 t = other;                                                                                             \
