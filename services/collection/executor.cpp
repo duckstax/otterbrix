@@ -3,11 +3,11 @@
 #include <components/index/disk/route.hpp>
 #include <core/system_command.hpp>
 #include <services/collection/create_index_utils.hpp>
-#include <services/collection/operators/operator_delete.hpp>
-#include <services/collection/operators/operator_insert.hpp>
-#include <services/collection/operators/operator_update.hpp>
-#include <services/collection/operators/scan/primary_key_scan.hpp>
-#include <services/collection/planner/create_plan.hpp>
+#include <components/physical_plan/collection/operators/operator_delete.hpp>
+#include <components/physical_plan/collection/operators/operator_insert.hpp>
+#include <components/physical_plan/collection/operators/operator_update.hpp>
+#include <components/physical_plan/collection/operators/scan/primary_key_scan.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
 #include <services/disk/route.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 

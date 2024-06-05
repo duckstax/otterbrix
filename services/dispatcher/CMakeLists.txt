@@ -24,7 +24,7 @@ target_link_libraries(
         otterbrix::cursor
         otterbrix::session
         otterbrix::ql
-        otterbrix::translator
+        otterbrix::planner
         CONAN_PKG::spdlog
 )
 

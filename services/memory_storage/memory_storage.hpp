@@ -10,7 +10,7 @@
 #include <core/spinlock/spinlock.hpp>
 #include <memory_resource>
 #include <services/collection/executor.hpp>
-#include <services/collection/operators/operator.hpp>
+#include <components/physical_plan/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 #include <stack>
 

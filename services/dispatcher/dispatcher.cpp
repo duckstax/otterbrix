@@ -5,7 +5,7 @@
 
 #include <components/document/document.hpp>
 #include <components/ql/statements.hpp>
-#include <components/translator/ql_translator.hpp>
+#include <components/planner/planner.hpp>
 
 #include <services/collection/route.hpp>
 #include <services/disk/manager_disk.hpp>
@@ -525,7 +525,8 @@ namespace services::dispatcher {
     std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters>
     dispatcher_t::create_logic_plan(ql_statement_t* statement) {
         //todo: cache logical plans
-        auto logic_plan = components::translator::ql_translator(resource_, statement);
+        components::planner::planner_t planner;
+        auto logic_plan = planner.create_plan(resource_, statement);
         auto parameters = statement->is_parameters()
                               ? static_cast<components::ql::ql_param_statement_t*>(statement)->take_parameters()
                               : components::ql::storage_parameters{};

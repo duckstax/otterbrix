@@ -5,7 +5,7 @@
 #include <pybind11/stl_bind.h>
 
 #include <components/document/document.hpp>
-#include <services/collection/sort.hpp>
+#include <components/physical_plan/collection/operators/sort/sort.hpp>
 
 #include "components/ql/aggregate.hpp"
 

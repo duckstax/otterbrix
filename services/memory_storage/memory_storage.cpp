@@ -8,7 +8,7 @@
 #include <core/system_command.hpp>
 #include <core/tracy/tracy.hpp>
 #include <services/collection/collection.hpp>
-#include <services/collection/planner/create_plan.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
 
 using namespace components::cursor;
 
