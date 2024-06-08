@@ -5,7 +5,7 @@
 #include <components/ql/index.hpp>
 #include <services/disk/index_disk.hpp>
 
-#include <services/collection/planner/create_plan.hpp>
+#include <components/physical_plan_generator/create_plan.hpp>
 #include <services/disk/route.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 
