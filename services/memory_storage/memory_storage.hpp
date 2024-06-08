@@ -3,6 +3,7 @@
 #include <components/cursor/cursor.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
+#include <components/physical_plan/collection/operators/operator.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
 #include <core/btree/btree.hpp>
@@ -10,7 +11,6 @@
 #include <core/spinlock/spinlock.hpp>
 #include <memory_resource>
 #include <services/collection/executor.hpp>
-#include <services/collection/operators/operator.hpp>
 #include <services/disk/result.hpp>
 #include <stack>
 

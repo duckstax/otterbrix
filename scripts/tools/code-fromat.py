@@ -12,7 +12,8 @@ from termcolor import colored
 clang_versions = [
   "clang-format-13",
   "clang-format-12",
-  "/usr/local/opt/llvm/bin/clang-format" # llvm binaries installed by brew (keg only)
+  "/usr/local/opt/llvm/bin/clang-format", # llvm binaries installed by brew (keg only)
+  "/opt/homebrew/bin/clang-format"
 ]
 
 ext_to_format = [
