@@ -42,7 +42,7 @@ namespace core::filesystem::path_utils {
     bool glob(const char* string, uint64_t slen, const char* pattern, uint64_t plen, bool allow_question_mark) {
         uint64_t sidx = 0;
         uint64_t pidx = 0;
-    main_loop: {
+    main_loop : {
         while (sidx < slen && pidx < plen) {
             char s = string[sidx];
             char p = pattern[pidx];
@@ -93,7 +93,7 @@ namespace core::filesystem::path_utils {
         }
         return pidx == plen && sidx == slen;
     }
-    parse_bracket: {
+    parse_bracket : {
         if (pidx == plen) {
             return false;
         }

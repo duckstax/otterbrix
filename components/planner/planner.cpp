@@ -18,8 +18,8 @@
 #include <components/logical_plan/node_update.hpp>
 
 namespace components::planner {
-    auto translator_aggregate(std::pmr::memory_resource* resource,
-                              ql::aggregate_statement* aggregate) -> logical_plan::node_ptr {
+    auto translator_aggregate(std::pmr::memory_resource* resource, ql::aggregate_statement* aggregate)
+        -> logical_plan::node_ptr {
         using components::ql::aggregate::operator_type;
 
         auto node = new logical_plan::node_aggregate_t{resource, {aggregate->database_, aggregate->collection_}};
@@ -61,8 +61,8 @@ namespace components::planner {
         return node;
     }
 
-    auto planner_t::create_plan(std::pmr::memory_resource* resource,
-                                ql::ql_statement_t* statement) -> logical_plan::node_ptr {
+    auto planner_t::create_plan(std::pmr::memory_resource* resource, ql::ql_statement_t* statement)
+        -> logical_plan::node_ptr {
         assert(resource && statement);
         using ql::statement_type;
 

@@ -25,8 +25,8 @@ namespace components::index {
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto matching(const actor_zeta::address_t& address) -> index_t::pointer;
         auto matching(const std::string& name) -> index_t::pointer;
-        auto
-        has_index(const std::string& name) -> bool; // TODO figure out how to make it faster (not using matching inside)
+        auto has_index(const std::string& name)
+            -> bool; // TODO figure out how to make it faster (not using matching inside)
         auto add_index(const keys_base_storage_t&, index_ptr) -> uint32_t;
         auto add_disk_agent(id_index id, actor_zeta::address_t address) -> void;
         auto drop_index(index_t::pointer index) -> void;
@@ -64,8 +64,8 @@ namespace components::index {
     auto search_index(const index_engine_ptr& ptr, const std::string& name) -> index_t::pointer;
 
     template<class Target, class... Args>
-    auto
-    make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args) -> uint32_t {
+    auto make_index(index_engine_ptr& ptr, std::string name, const keys_base_storage_t& keys, Args&&... args)
+        -> uint32_t {
         return ptr->add_index(
             keys,
             core::pmr::make_unique<Target>(
