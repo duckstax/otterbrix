@@ -15,8 +15,8 @@ namespace {
         return ptr;
     }
 
-    auto base_execute_sql(otterbrix::base_otterbrix_t* ptr, const std::string& query)
-        -> components::cursor::cursor_t_ptr {
+    auto base_execute_sql(otterbrix::base_otterbrix_t* ptr,
+                          const std::string& query) -> components::cursor::cursor_t_ptr {
         assert(ptr != nullptr);
         assert(!query.empty());
         auto session = otterbrix::session_id_t();

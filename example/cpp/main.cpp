@@ -130,9 +130,7 @@ TEST_CASE("example::sql::group_by") {
     otterbrix::otterbrix_ptr otterbrix;
 
     INFO("initialization") {
-        {
-            otterbrix = otterbrix::make_otterbrix(config);
-        }
+        { otterbrix = otterbrix::make_otterbrix(config); }
         {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";

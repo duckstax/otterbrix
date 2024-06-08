@@ -212,20 +212,20 @@ namespace otterbrix {
         return std::move(size_store_);
     }
 
-    auto wrapper_dispatcher_t::create_index(session_id_t& session, components::ql::create_index_t* ql)
-        -> components::cursor::cursor_t_ptr {
+    auto wrapper_dispatcher_t::create_index(session_id_t& session,
+                                            components::ql::create_index_t* ql) -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
         return send_ql_new(session, ql);
     }
 
-    auto wrapper_dispatcher_t::drop_index(session_id_t& session, components::ql::drop_index_t* ql)
-        -> components::cursor::cursor_t_ptr {
+    auto wrapper_dispatcher_t::drop_index(session_id_t& session,
+                                          components::ql::drop_index_t* ql) -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
         return send_ql_new(session, ql);
     }
 
-    auto wrapper_dispatcher_t::execute_ql(session_id_t& session, components::ql::variant_statement_t& query)
-        -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::execute_ql(session_id_t& session,
+                                          components::ql::variant_statement_t& query) -> cursor_t_ptr {
         using namespace components::ql;
 
         trace(log_, "wrapper_dispatcher_t::execute session: {}", session.data());

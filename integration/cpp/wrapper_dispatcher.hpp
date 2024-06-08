@@ -29,10 +29,10 @@ namespace otterbrix {
         wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::address_t, log_t& log);
         ~wrapper_dispatcher_t();
         auto load() -> void;
-        [[deprecated]] auto create_database(session_id_t& session, const database_name_t& database)
-            -> components::cursor::cursor_t_ptr;
-        [[deprecated]] auto drop_database(session_id_t& session, const database_name_t& database)
-            -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto create_database(session_id_t& session,
+                                            const database_name_t& database) -> components::cursor::cursor_t_ptr;
+        [[deprecated]] auto drop_database(session_id_t& session,
+                                          const database_name_t& database) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto create_collection(session_id_t& session,
                                               const database_name_t& database,
                                               const collection_name_t& collection) -> components::cursor::cursor_t_ptr;
@@ -65,11 +65,11 @@ namespace otterbrix {
                                         bool upsert) -> components::cursor::cursor_t_ptr;
         [[deprecated]] auto
         size(session_id_t& session, const database_name_t& database, const collection_name_t& collection) -> size_t;
-        auto create_index(session_id_t& session, components::ql::create_index_t* ql)
-            -> components::cursor::cursor_t_ptr;
+        auto create_index(session_id_t& session,
+                          components::ql::create_index_t* ql) -> components::cursor::cursor_t_ptr;
         auto drop_index(session_id_t& session, components::ql::drop_index_t* ql) -> components::cursor::cursor_t_ptr;
-        auto execute_ql(session_id_t& session, components::ql::variant_statement_t& query)
-            -> components::cursor::cursor_t_ptr;
+        auto execute_ql(session_id_t& session,
+                        components::ql::variant_statement_t& query) -> components::cursor::cursor_t_ptr;
         auto execute_sql(session_id_t& session, const std::string& query) -> components::cursor::cursor_t_ptr;
 
     protected:
