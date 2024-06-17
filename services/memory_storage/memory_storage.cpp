@@ -1,17 +1,24 @@
 #include "memory_storage.hpp"
-#include "route.hpp"
+
 #include <cassert>
+
+#include <actor-zeta.hpp>
+
+#include <core/system_command.hpp>
+#include <core/tracy/tracy.hpp>
+
 #include <components/ql/statements/create_collection.hpp>
 #include <components/ql/statements/create_database.hpp>
 #include <components/ql/statements/drop_collection.hpp>
 #include <components/ql/statements/drop_database.hpp>
 #include <components/translator/ql_translator.hpp>
-#include <core/system_command.hpp>
-#include <core/tracy/tracy.hpp>
+
 #include <services/collection/collection.hpp>
 #include <services/collection/planner/create_plan.hpp>
 #include <services/disk/route.hpp>
 #include <services/wal/route.hpp>
+
+#include "route.hpp"
 
 using namespace components::cursor;
 
@@ -33,7 +40,8 @@ namespace services {
         , log_(log.clone())
         , e_(scheduler)
         , databases_(resource)
-        , collections_(resource) {
+        , collections_(resource)
+        , internal_executor_(new actor_zeta::shared_work(1, 1000)) {
         trace(log_, "memory_storage start thread pool");
         executor_address_ = spawn_actor<collection::executor::executor_t>(
             [this](collection::executor::executor_t* ptr) { executor_ = ptr; },
@@ -61,6 +69,9 @@ namespace services {
         add_handler(disk::handler_id(disk::route::load_finish), &memory_storage_t::load_from_disk_result);
         add_handler(wal::handler_id(wal::route::load_finish), &memory_storage_t::load_from_wal_result);
         add_handler(wal::handler_id(wal::route::success), &memory_storage_t::wal_success);
+
+        flags(static_cast<int>(state::empty));
+        inbox_.try_unblock();
     }
 
     memory_storage_t::~memory_storage_t() { trace(log_, "delete memory_resource"); }
@@ -392,9 +403,134 @@ namespace services {
     actor_zeta::scheduler::scheduler_abstract_t* memory_storage_t::scheduler_impl() noexcept { return e_; }
 
     void memory_storage_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) {
-        std::unique_lock<std::recursive_mutex> _(lock_); //HOTFIX
-        set_current_message(std::move(msg));
-        execute(this, current_message());
+        assert(msg);
+        inbox_.enqueue(msg.release());
+        if (flags() == static_cast<int>(state::empty)) {
+            intrusive_ptr_add_ref(this);
+            internal_executor_->enqueue(this);
+        }
+    }
+
+    void memory_storage_t::reactivate(actor_zeta::mailbox::message& x) {
+        current_message_ = &x;
+        execute(this,current_message());
+    }
+
+    bool activate(actor_zeta::scheduler::execution_unit* ctx) {
+        assert(ctx != nullptr);
+        return true;
+    }
+
+    bool memory_storage_t::has_next_message() {
+        auto& mbox = inbox_;
+        auto& cache = mbox.cache();
+        return cache.begin() != cache.separator() || mbox.can_fetch_more();
+    }
+
+    actor_zeta::mailbox::message_ptr memory_storage_t::next_message() {
+        auto& cache = inbox_.cache();
+        auto i = cache.begin();
+        auto e = cache.separator();
+        if (i == e || !i->is_high_priority()) {
+            auto hp_pos = i;
+            auto tmp = inbox_.try_pop();
+            while (tmp != nullptr) {
+                cache.insert(tmp->is_high_priority() ? hp_pos : e, tmp);
+                if (hp_pos == e && !tmp->is_high_priority())
+                    --hp_pos;
+                tmp = inbox_.try_pop();
+            }
+        }
+        actor_zeta::mailbox::message_ptr result;
+        i = cache.begin();
+        if (i != e)
+            result.reset(cache.take(i));
+        return result;
+    }
+
+    bool memory_storage_t::consume_from_cache() {
+        auto& cache = inbox_.cache();
+        auto i = cache.continuation();
+        auto e = cache.end();
+        while (i != e) {
+            current_message_ = &(*i);
+            execute(this,current_message());
+            cache.erase(i);
+            return true;
+        }
+        return false;
+    }
+
+    void memory_storage_t::push_to_cache(actor_zeta::mailbox::message_ptr ptr) {
+        assert(ptr != nullptr);
+        if (!ptr->is_high_priority()) {
+            inbox_.cache().insert(inbox_.cache().end(), ptr.release());
+            return;
+        }
+        auto high_priority = [](const actor_zeta::mailbox::message& val) {
+            return val.is_high_priority();
+        };
+        auto& cache = inbox_.cache();
+        auto e = cache.end();
+        cache.insert(std::partition_point(cache.continuation(), e, high_priority), ptr.release());
+    }
+
+    actor_zeta::scheduler::resume_result memory_storage_t::resume(actor_zeta::scheduler::execution_unit*e, size_t max_throughput) {
+        if (!activate(e)) {
+            return actor_zeta::scheduler::resume_result::done;
+        }
+        size_t handled_msgs = 0;
+
+        actor_zeta::mailbox::message_ptr ptr;
+
+        while (handled_msgs < max_throughput && !inbox_.cache().empty()) {
+            do {
+                ptr = next_message();
+                if (!ptr) {
+                    if (inbox_.try_block()) {
+                        return actor_zeta::scheduler::resume_result::awaiting;
+                    }
+                }
+            } while (!ptr);
+            consume_from_cache();
+            ++handled_msgs;
+        }
+
+        while (handled_msgs < max_throughput) {
+            do {
+                ptr = next_message();
+                if (!ptr) {
+                    if (inbox_.try_block()) {
+                        return actor_zeta::scheduler::resume_result::awaiting;
+                    }
+                }
+            } while (!ptr);
+            reactivate(*ptr);
+            ++handled_msgs;
+        }
+
+        while (!ptr) {
+            ptr = next_message();
+            push_to_cache(std::move(ptr));
+        }
+
+        if (!has_next_message() && inbox_.try_block()) {
+            return actor_zeta::scheduler::resume_result::awaiting;
+        }
+
+        return actor_zeta::scheduler::resume_result::awaiting;
+    }
+
+    void memory_storage_t::intrusive_ptr_add_ref_impl() {
+        flags(static_cast<int>(state::busy));
+        inbox_.try_block();
+        ref();
+    }
+
+    void memory_storage_t::intrusive_ptr_release_impl() {
+        flags(static_cast<int>(state::empty));
+        inbox_.try_unblock();
+        deref();
     }
 
     std::pair<components::logical_plan::node_ptr, components::ql::storage_parameters>

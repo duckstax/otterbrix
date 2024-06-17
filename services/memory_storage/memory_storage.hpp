@@ -1,17 +1,19 @@
 #pragma once
 
+#include <memory_resource>
+#include <mutex>
+
+#include <core/btree/btree.hpp>
+#include <core/excutor.hpp>
+
 #include <components/cursor/cursor.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
 #include <components/ql/ql_param_statement.hpp>
 #include <components/session/session.hpp>
-#include <core/btree/btree.hpp>
-#include <core/excutor.hpp>
-#include <memory_resource>
-#include <mutex>
+
 #include <services/collection/executor.hpp>
 #include <services/disk/result.hpp>
-
 #include <services/wal/base.hpp>
 #include <services/wal/record.hpp>
 #include <services/wal/wal_replicate.hpp>
@@ -33,7 +35,9 @@ namespace services {
         using wal_ptr = std::unique_ptr<base_wal_replicate_t>;
     } // namespace wal
 
-    class memory_storage_t final : public actor_zeta::cooperative_supervisor<memory_storage_t> {
+    class memory_storage_t final
+        : public actor_zeta::cooperative_supervisor<memory_storage_t>
+        , private actor_zeta::scheduler::resumable {
         struct load_buffer_t {
             std::pmr::vector<collection_full_name_t> collections;
 
@@ -44,8 +48,14 @@ namespace services {
         using collection_storage_t =
             core::pmr::btree::btree_t<collection_full_name_t, std::unique_ptr<collection::context_collection_t>>;
         using session_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, session_t>;
+        using mailbox_t = actor_zeta::detail::single_reader_queue<actor_zeta::mailbox::message>;
 
     public:
+
+        actor_zeta::scheduler::resume_result resume(actor_zeta::scheduler::execution_unit*e, size_t max_throughput);
+        void intrusive_ptr_add_ref_impl();
+        void intrusive_ptr_release_impl();
+
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
         enum class unpack_rules : uint64_t
         {
@@ -76,8 +86,32 @@ namespace services {
         void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
 
     private:
-        // spin lock_;
-        std::recursive_mutex lock_; // HOTFIX
+        void reactivate(actor_zeta::mailbox::message&);
+        actor_zeta::mailbox::message_ptr next_message();
+        bool consume_from_cache();
+        void push_to_cache(actor_zeta::mailbox::message_ptr ptr);
+
+        actor_zeta::scheduler_ptr internal_executor_;
+        actor_zeta::mailbox::message* current_message_;
+        mailbox_t inbox_;
+
+        bool has_next_message() ;
+
+        enum class state : int {
+            empty = 0x01,
+            busy
+        };
+
+        inline int flags() const {
+            return flags_.load(std::memory_order_relaxed);
+        }
+
+        inline void flags(int new_value) {
+            flags_.store(new_value, std::memory_order_relaxed);
+        }
+
+        std::atomic<int> flags_;
+
         actor_zeta::detail::pmr::memory_resource* resource_;
         actor_zeta::address_t dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
