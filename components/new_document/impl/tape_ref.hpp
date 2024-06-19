@@ -1,9 +1,9 @@
 #pragma once
 
-#include <components/new_document/impl/tape_type.h>
+#include <components/new_document/impl/tape_type.hpp>
 #include <cstring>
 
-namespace components::document {
+namespace components::new_document {
     namespace impl {
         template<typename T>
         class base_document;
@@ -161,4 +161,4 @@ namespace components::document {
         }
 
     } // namespace internal
-} // namespace components::document
+} // namespace components::new_document

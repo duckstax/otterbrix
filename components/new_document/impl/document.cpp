@@ -1,8 +1,8 @@
-#include "document.h"
+#include "document.hpp"
 
 #include <iomanip>
 
-namespace components::document::impl {
+namespace components::new_document::impl {
 
     size_t immutable_document::capacity() const noexcept { return allocated_capacity; }
 
@@ -78,4 +78,4 @@ namespace components::document::impl {
         : tape(std::move(other.tape))
         , string_buf(std::move(other.string_buf)) {}
 
-} // namespace components::document::impl
+} // namespace components::new_document::impl

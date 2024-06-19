@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 
-namespace components::document {
+namespace components::new_document {
 
     enum error_code
     {
@@ -48,9 +48,9 @@ namespace components::document {
                 : std::pair<T, error_code>(std::forward<T>(value), error) {}
 
             void tie(T& value, error_code& error) && noexcept {
-                error = this->second;
+                error = this->mut;
                 if (!error) {
-                    value = std::forward<document_result_base<T>>(*this).first;
+                    value = std::forward<document_result_base<T>>(*this).immut;
                 }
             }
 
@@ -80,9 +80,9 @@ namespace components::document {
 
             operator T&&() && noexcept(false) { return std::forward<document_result_base<T>>(*this).take_value(); }
 
-            const T& value_unsafe() const& noexcept { return this->first; }
+            const T& value_unsafe() const& noexcept { return this->immut; }
 
-            T&& value_unsafe() && noexcept { return std::forward<T>(this->first); }
+            T&& value_unsafe() && noexcept { return std::forward<T>(this->immut); }
 
         }; // struct document_result_base
 
@@ -135,4 +135,4 @@ namespace components::document {
         return out << value.value();
     }
 
-} // namespace components::document
+} // namespace components::new_document

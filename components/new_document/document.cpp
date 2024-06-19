@@ -6,7 +6,7 @@
 #include <components/new_document/string_splitter.hpp>
 #include <utility>
 
-namespace components::document {
+namespace components::new_document {
 
     document_t::document_t()
         : allocator_(nullptr)
@@ -46,7 +46,7 @@ namespace components::document {
         , ancestors_(allocator_)
         , is_root_(is_root) {
         if (is_root) {
-            builder_ = components::document::tape_builder<impl::tape_writer_to_mutable>(allocator_, *mut_src_);
+            builder_ = components::new_document::tape_builder<impl::tape_writer_to_mutable>(allocator_, *mut_src_);
         }
     }
 
@@ -75,11 +75,11 @@ namespace components::document {
         if (node_ptr == nullptr) {
             return false;
         }
-        if (node_ptr->is_first()) {
-            return node_ptr->get_first()->is_null();
+        if (node_ptr->is_immut()) {
+            return node_ptr->get_immut()->is_null();
         }
-        if (node_ptr->is_second()) {
-            return node_ptr->get_second()->is_null();
+        if (node_ptr->is_mut()) {
+            return node_ptr->get_mut()->is_null();
         }
         return false;
         ;
@@ -165,59 +165,6 @@ namespace components::document {
         return new (allocator_->allocate(sizeof(document_t))) document_t({this}, allocator_, node_ptr);
     }
 
-    template<class T, typename FirstType, typename SecondType>
-    compare_t equals_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
-        T v1 = element1->template get<T>();
-        T v2 = element2->template get<T>();
-        if (v1 < v2)
-            return compare_t::less;
-        if (v1 > v2)
-            return compare_t::more;
-        return compare_t::equals;
-    }
-
-    template<typename FirstType, typename SecondType>
-    compare_t compare_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
-        using impl::element_type;
-
-        auto type1 = element1->type();
-
-        if (type1 == element2->type()) {
-            switch (type1) {
-                case element_type::INT8:
-                    return equals_<int8_t>(element1, element2);
-                case element_type::INT16:
-                    return equals_<int16_t>(element1, element2);
-                case element_type::INT32:
-                    return equals_<int32_t>(element1, element2);
-                case element_type::INT64:
-                    return equals_<int64_t>(element1, element2);
-                case element_type::INT128:
-                    return equals_<__int128_t>(element1, element2);
-                case element_type::UINT8:
-                    return equals_<uint8_t>(element1, element2);
-                case element_type::UINT16:
-                    return equals_<uint16_t>(element1, element2);
-                case element_type::UINT32:
-                    return equals_<uint32_t>(element1, element2);
-                case element_type::UINT64:
-                    return equals_<uint64_t>(element1, element2);
-                case element_type::FLOAT:
-                    return equals_<float>(element1, element2);
-                case element_type::DOUBLE:
-                    return equals_<double>(element1, element2);
-                case element_type::STRING:
-                    return equals_<std::string_view>(element1, element2);
-                case element_type::BOOL:
-                    return equals_<bool>(element1, element2);
-                case element_type::NULL_VALUE:
-                    return compare_t::equals;
-            }
-        }
-
-        return compare_t::equals;
-    }
-
     compare_t document_t::compare(const document_t& other, std::string_view json_pointer) const {
         if (is_valid() && !other.is_valid())
             return compare_t::less;
@@ -236,14 +183,14 @@ namespace components::document {
         if (!exists)
             return compare_t::equals;
 
-        if (node->is_first() && other_node->is_first()) {
-            return compare_(node->get_first(), other_node->get_first());
-        } else if (node->is_first() && other_node->is_second()) {
-            return compare_(node->get_first(), other_node->get_second());
-        } else if (node->is_second() && other_node->is_first()) {
-            return compare_(node->get_second(), other_node->get_first());
-        } else if (node->is_second() && other_node->is_second()) {
-            return compare_(node->get_second(), other_node->get_second());
+        if (node->is_immut() && other_node->is_immut()) {
+            return compare_(node->get_immut(), other_node->get_immut());
+        } else if (node->is_immut() && other_node->is_mut()) {
+            return compare_(node->get_immut(), other_node->get_mut());
+        } else if (node->is_mut() && other_node->is_immut()) {
+            return compare_(node->get_mut(), other_node->get_immut());
+        } else if (node->is_mut() && other_node->is_mut()) {
+            return compare_(node->get_mut(), other_node->get_mut());
         } else {
             return compare_t::equals;
         }
@@ -308,7 +255,7 @@ namespace components::document {
         return set_(json_pointer_to, node->make_deep_copy());
     }
 
-    error_code_t document_t::set_(std::string_view json_pointer, const element_from_mutable& value) {
+    error_code_t document_t::set_(std::string_view json_pointer, const impl::element<impl::mutable_document>& value) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
@@ -514,7 +461,8 @@ namespace components::document {
         auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
         res->immut_src_ =
             new (allocator->allocate(sizeof(impl::immutable_document))) impl::immutable_document(allocator);
-        if (res->immut_src_->allocate(json.size()) != components::document::SUCCESS) {
+        // TODO: allocate exact size, since it is an immutable part, it should not have redundant space apart from padding
+        if (res->immut_src_->allocate(json.size()) != components::new_document::SUCCESS) {
             return nullptr;
         }
         auto tree = boost::json::parse(json);
@@ -610,7 +558,7 @@ namespace components::document {
             case element_type::INT128:
                 return {
                     "hugeint",
-                    allocator}; //TODO support value ! a new json parser is neede for it (boost::json::parser does not support int128
+                    allocator}; //TODO support value ! a new json parser is needed for it (boost::json::parser does not support int128)
             case element_type::UINT8:
                 return create_pmr_string_(value->get_uint8().value(), allocator);
             case element_type::UINT16:
@@ -731,4 +679,4 @@ namespace components::document {
         is_unescaped = false;
         return error_code_t::SUCCESS;
     }
-} // namespace components::document
+} // namespace components::new_document

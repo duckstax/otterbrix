@@ -1,10 +1,10 @@
 #pragma once
 
-#include <components/new_document/impl/document.h>
+#include <components/new_document/impl/document.hpp>
 #include <cstring>
 #include <vector>
 
-namespace components::document::impl {
+namespace components::new_document::impl {
 
     template<typename T>
     class tape_writer {
@@ -130,4 +130,4 @@ namespace components::document::impl {
         str_ptr[str_length] = '\0';
     }
 
-} // namespace components::document::impl
+} // namespace components::new_document::impl

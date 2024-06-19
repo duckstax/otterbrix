@@ -7,11 +7,11 @@
 //#include <components/new_document/document_id.hpp>
 #include <boost/json/value.hpp>
 #include <components/new_document/impl/allocator_intrusive_ref_counter.hpp>
-#include <components/new_document/impl/document.h>
-#include <components/new_document/impl/element.h>
-#include <components/new_document/impl/tape_builder.h>
+#include <components/new_document/impl/document.hpp>
+#include <components/new_document/impl/element.hpp>
+#include <components/new_document/impl/tape_builder.hpp>
 
-namespace components::document {
+namespace components::new_document {
 
     enum class compare_t
     {
@@ -31,9 +31,9 @@ namespace components::document {
 
     enum class special_type
     {
-        OBJECT,
-        ARRAY,
-        DELETER,
+        OBJECT = 0,
+        ARRAY = 1,
+        DELETER = 2,
     };
 
     class document_t final : public allocator_intrusive_ref_counter<document_t> {
@@ -160,11 +160,11 @@ namespace components::document {
             if (node_ptr == nullptr) {
                 return false;
             }
-            if (node_ptr->is_first()) {
-                return node_ptr->get_first()->is<T>();
+            if (node_ptr->is_immut()) {
+                return node_ptr->get_immut()->is<T>();
             }
-            if (node_ptr->is_second()) {
-                return node_ptr->get_second()->is<T>();
+            if (node_ptr->is_mut()) {
+                return node_ptr->get_mut()->is<T>();
             }
             return false;
         }
@@ -175,17 +175,17 @@ namespace components::document {
             if (node_ptr == nullptr) {
                 return T();
             }
-            if (node_ptr->is_first()) {
-                auto res = node_ptr->get_first()->get<T>();
+            if (node_ptr->is_immut()) {
+                auto res = node_ptr->get_immut()->get<T>();
                 return res.error() == error_code::SUCCESS ? res.value() : T();
             }
-            if (node_ptr->is_second()) {
-                auto res = node_ptr->get_second()->get<T>();
+            if (node_ptr->is_mut()) {
+                auto res = node_ptr->get_mut()->get<T>();
                 return res.error() == error_code::SUCCESS ? res.value() : T();
             }
             return T();
         }
-        //  ::document::impl::dict_iterator_t begin() const;
+        //  ::new_document::impl::dict_iterator_t begin() const;
 
         compare_t compare(const document_t& other, std::string_view json_pointer) const;
 
@@ -193,9 +193,9 @@ namespace components::document {
 
         std::pmr::string to_binary() const;
 
-        //  ::document::retained_t<::document::impl::dict_t> to_dict() const;
+        //  ::new_document::retained_t<::new_document::impl::dict_t> to_dict() const;
 
-        //  ::document::retained_t<::document::impl::array_t> to_array() const;
+        //  ::new_document::retained_t<::new_document::impl::array_t> to_array() const;
         //
         //  bool operator<(const document_t &rhs) const;
         //
@@ -209,9 +209,9 @@ namespace components::document {
         //
         //  bool operator!=(const document_t &rhs) const;
         //
-        //  const ::document::impl::value_t *operator*() const;
+        //  const ::new_document::impl::value_t *operator*() const;
         //
-        //  const ::document::impl::value_t *operator->() const;
+        //  const ::new_document::impl::value_t *operator->() const;
         //
         //  explicit operator bool() const;
 
@@ -226,9 +226,7 @@ namespace components::document {
         allocator_type* get_allocator() override;
 
     private:
-        using element_from_immutable = impl::element<impl::immutable_document>;
-        using element_from_mutable = impl::element<impl::mutable_document>;
-        using json_trie_node_element = json::json_trie_node<element_from_immutable, element_from_mutable>;
+        using json_trie_node_element = json::json_trie_node;
         using inserter_ptr = json_trie_node_element* (*) (allocator_type*);
 
         document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index);
@@ -277,18 +275,18 @@ namespace components::document {
 
     document_ptr make_document(document_t::allocator_type* allocator);
     //
-    //document_ptr make_document(const ::document::impl::dict_t *dict);
+    //document_ptr make_document(const ::new_document::impl::dict_t *dict);
     //
-    //document_ptr make_document(const ::document::impl::array_t *array);
+    //document_ptr make_document(const ::new_document::impl::array_t *array);
     //
-    //document_ptr make_document(const ::document::impl::value_t *value);
+    //document_ptr make_document(const ::new_document::impl::value_t *value);
     //
     //template<class T>
     //document_ptr make_document(const std::string &key, T value);
     //
     //document_ptr make_upsert_document(const document_ptr &source);
 
-    //document_id_t get_document_id(const document_ptr &document);
+    //document_id_t get_document_id(const document_ptr &new_document);
 
     template<class T>
     inline error_code_t document_t::set(std::string_view json_pointer, T value) {
@@ -337,4 +335,57 @@ namespace components::document {
                                std::pmr::string& unescaped_key,
                                document_t::allocator_type* allocator);
 
-} // namespace components::document
+    template<class T, typename FirstType, typename SecondType>
+    compare_t equals_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
+        T v1 = element1->template get<T>();
+        T v2 = element2->template get<T>();
+        if (v1 < v2)
+            return compare_t::less;
+        if (v1 > v2)
+            return compare_t::more;
+        return compare_t::equals;
+    }
+
+    template<typename FirstType, typename SecondType>
+    compare_t compare_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
+        using impl::element_type;
+
+        auto type1 = element1->type();
+
+        if (type1 == element2->type()) {
+            switch (type1) {
+                case element_type::INT8:
+                    return equals_<int8_t>(element1, element2);
+                case element_type::INT16:
+                    return equals_<int16_t>(element1, element2);
+                case element_type::INT32:
+                    return equals_<int32_t>(element1, element2);
+                case element_type::INT64:
+                    return equals_<int64_t>(element1, element2);
+                case element_type::INT128:
+                    return equals_<__int128_t>(element1, element2);
+                case element_type::UINT8:
+                    return equals_<uint8_t>(element1, element2);
+                case element_type::UINT16:
+                    return equals_<uint16_t>(element1, element2);
+                case element_type::UINT32:
+                    return equals_<uint32_t>(element1, element2);
+                case element_type::UINT64:
+                    return equals_<uint64_t>(element1, element2);
+                case element_type::FLOAT:
+                    return equals_<float>(element1, element2);
+                case element_type::DOUBLE:
+                    return equals_<double>(element1, element2);
+                case element_type::STRING:
+                    return equals_<std::string_view>(element1, element2);
+                case element_type::BOOL:
+                    return equals_<bool>(element1, element2);
+                case element_type::NULL_VALUE:
+                    return compare_t::equals;
+            }
+        }
+
+        return compare_t::equals;
+    }
+
+} // namespace components::new_document

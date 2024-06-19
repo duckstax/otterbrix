@@ -1,6 +1,6 @@
 #pragma once
 
-namespace components::document::internal {
+namespace components::new_document::internal {
 
     enum class tape_type
     {
@@ -21,4 +21,4 @@ namespace components::document::internal {
         NULL_VALUE = 'n'
     }; // enum class tape_type
 
-} // namespace components::document::internal
+} // namespace components::new_document::internal
