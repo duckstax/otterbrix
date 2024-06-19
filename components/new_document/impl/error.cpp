@@ -1,8 +1,8 @@
-#include "error.h"
+#include "error.hpp"
 
 #include <iostream>
 
-namespace components::document {
+namespace components::new_document {
 
     const char* error_message(error_code error) noexcept {
         // If you're using error_code, we're trusting you got it from the enum.
@@ -26,4 +26,4 @@ namespace components::document {
 
     } // namespace internal
 
-} // namespace components::document
+} // namespace components::new_document

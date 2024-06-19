@@ -1,13 +1,13 @@
 #pragma once
 
 #include <components/new_document/base.hpp>
-#include <components/new_document/impl/error.h>
-#include <components/new_document/impl/tape_ref.h>
+#include <components/new_document/impl/error.hpp>
+#include <components/new_document/impl/tape_ref.hpp>
 
 #include <memory>
 #include <memory_resource>
 
-namespace components::document::impl {
+namespace components::new_document::impl {
 
     template<typename T>
     class element;
@@ -171,4 +171,4 @@ namespace components::document::impl {
         return {array, array_deleter<T>(allocator, n)};
     }
 
-} // namespace components::document::impl
+} // namespace components::new_document::impl

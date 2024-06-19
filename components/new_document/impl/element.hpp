@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace components::document {
+namespace components::new_document {
     namespace internal {
         template<typename T>
         class tape_ref;
@@ -84,10 +84,10 @@ namespace components::document {
             }
             return static_cast<To>(result);
         }
-        /**
- * The actual concrete type of a JSON element
- * This is the type it is most easily cast_from to with get<>.
- */
+        /*
+        * The actual concrete type of a JSON element
+        * This is the type it is most easily cast_from to with get<>.
+        */
         enum class element_type
         {
             INT8 = 'c',
@@ -715,4 +715,4 @@ namespace components::document {
         }
 
     } // namespace impl
-} // namespace components::document
+} // namespace components::new_document

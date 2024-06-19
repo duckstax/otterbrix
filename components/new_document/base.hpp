@@ -6,7 +6,7 @@
 #include <limits>
 #include <memory_resource>
 
-namespace components::document {
+namespace components::new_document {
 
     using int128_t = absl::int128;
 
@@ -16,13 +16,20 @@ namespace components::document {
         return std::fabs(x - y) < std::numeric_limits<T>::epsilon();
     }
 
+    namespace impl {
+        template<typename K>
+        class element;
+        class immutable_document;
+        class mutable_document;
+    } // namespace impl
+
     namespace json {
-        template<typename FirstType, typename SecondType>
         class json_trie_node;
-        template<typename FirstType, typename SecondType>
         class json_array;
-        template<typename FirstType, typename SecondType>
         class json_object;
+
+        using immutable_part = impl::element<impl::immutable_document>;
+        using mutable_part = impl::element<impl::mutable_document>;
     } // namespace json
 
     enum binary_type : uint8_t
@@ -34,4 +41,4 @@ namespace components::document {
         array_end
     };
 
-} // namespace components::document
+} // namespace components::new_document

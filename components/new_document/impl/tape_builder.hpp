@@ -1,9 +1,9 @@
 #pragma once
 
-#include <components/new_document/impl/document.h>
-#include <components/new_document/impl/tape_writer.h>
+#include <components/new_document/impl/document.hpp>
+#include <components/new_document/impl/tape_writer.hpp>
 
-namespace components::document {
+namespace components::new_document {
 
     template<typename K>
     struct tape_builder {
@@ -202,4 +202,4 @@ namespace components::document {
         tape_->copy(data + 1);
     }
 
-} // namespace components::document
+} // namespace components::new_document
