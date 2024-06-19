@@ -26,7 +26,7 @@ namespace components::new_document {
                 return static_cast<tape_type>(doc_->get_tape(json_index_) >> 56);
             }
             uint64_t tape_value() const noexcept { return doc_->get_tape(json_index_) & JSON_VALUE_MASK; }
-            std::pmr::string serialize() const noexcept { return doc_->serialize(); }
+
             bool is_float() const noexcept;
             bool is_double() const noexcept;
             bool is_int8() const noexcept;

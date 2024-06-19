@@ -69,9 +69,6 @@ namespace components::new_document::json {
         std::pmr::string to_json(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
                                  std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
 
-        std::pmr::string to_binary(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
-                                   std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
-
         bool equals(const json_object& other,
                     bool (*)(const immutable_part*, const immutable_part*),
                     bool (*)(const mutable_part*, const mutable_part*),

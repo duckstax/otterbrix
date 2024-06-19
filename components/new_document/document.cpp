@@ -590,22 +590,13 @@ namespace components::new_document {
         }
         return {};
     }
-    template<typename T>
-    std::pmr::string value_to_binary(const impl::element<T>* value, std::pmr::memory_resource* allocator) {
-        return value->serialize();
-    }
 
     std::pmr::string document_t::to_json() const {
         return element_ind_->to_json(&value_to_string<impl::immutable_document>,
                                      &value_to_string<impl::mutable_document>);
     }
 
-    std::pmr::string document_t::to_binary() const {
-        return element_ind_->to_binary(&value_to_binary<impl::immutable_document>,
-                                       &value_to_binary<impl::mutable_document>);
-    }
-
-    std::pmr::string serialize_document(const document_ptr& document) { return document->to_binary(); }
+    std::pmr::string serialize_document(const document_ptr& document) { return document->to_json(); }
 
     document_ptr deserialize_document(const std::string& text, document_t::allocator_type* allocator) {
         return document_t::document_from_json(text, allocator);
