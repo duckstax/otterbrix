@@ -3,7 +3,7 @@
 
 namespace components::new_document::json {
 
-    json_array::json_array(json_array::allocator_type* allocator) noexcept
+    json_array::json_array(json_array::allocator_type* allocator)
         : items_(allocator) {}
 
     json_array::iterator json_array::begin() { return items_.begin(); }
@@ -68,20 +68,6 @@ namespace components::new_document::json {
             res.append(it->to_json(to_json_immut, to_json_mut));
         }
         return res.append("]");
-        ;
-    }
-
-    std::pmr::string
-    json_array::to_binary(std::pmr::string (*to_binary_immut)(const immutable_part*, std::pmr::memory_resource*),
-                          std::pmr::string (*to_binary_mut)(const mutable_part*, std::pmr::memory_resource*)) const {
-        std::pmr::string res(items_.get_allocator().resource());
-        res.push_back(binary_type::array_start);
-        for (auto& it : items_) {
-            res.append(it->to_binary(to_binary_immut, to_binary_mut));
-            res.push_back('\0');
-        }
-        res.push_back(binary_type::array_end);
-        return res;
     }
 
     bool json_array::equals(const json_array& other,

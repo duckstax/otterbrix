@@ -51,13 +51,16 @@ TEST_CASE("document_t::json") {
     REQUIRE(doc1->get_dict("/mixedDict")->count() == doc2->get_dict("/mixedDict")->count());
 }
 
-TEST_CASE("document_t::serialize") {
+TEST_CASE("document_t::serialization") {
     auto allocator = std::pmr::new_delete_resource();
     auto doc1 = gen_doc(1, allocator);
-    auto ser1 = doc1->to_json();
-    auto ser2 = doc1->to_binary();
-
-    //! for demonstration:
-    REQUIRE(ser1.size() == 663);
-    REQUIRE(ser2.size() == 37571);
+    auto ser1 = serialize_document(doc1);
+    auto doc2 = deserialize_document(std::string(ser1), allocator);
+    REQUIRE(doc1->get_string("/_id") == doc2->get_string("/_id"));
+    REQUIRE(doc1->get_ulong("/count") == doc2->get_ulong("/count"));
+    REQUIRE(doc1->get_array("/countArray")->count() == doc2->get_array("/countArray")->count());
+    REQUIRE(doc1->get_array("/countArray")->get_as<uint64_t>("1") ==
+            doc2->get_array("/countArray")->get_as<uint64_t>("1"));
+    REQUIRE(doc1->get_dict("/countDict")->count() == doc2->get_dict("/countDict")->count());
+    REQUIRE(doc1->get_dict("/countDict")->get_bool("/odd") == doc2->get_dict("/countDict")->get_bool("/odd"));
 }

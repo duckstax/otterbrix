@@ -65,7 +65,6 @@ namespace components::new_document::impl {
         const uint8_t* get_string_buf_ptr() const noexcept { return self()->get_string_buf_ptr_impl(); }
 
         size_t size() const noexcept { return self()->size_impl(); }
-        std::pmr::string serialize() const noexcept { return self()->serialize_impl(); }
 
         element<T> next_element() const noexcept { return {internal::tape_ref(this, size())}; }
 
@@ -95,20 +94,6 @@ namespace components::new_document::impl {
 
         size_t capacity() const noexcept;
         size_t size_impl() const noexcept { return next_tape_loc - tape.get(); }
-
-        std::pmr::string serialize_impl() const noexcept {
-            size_t tape_size = size_impl() * sizeof(uint64_t);
-            size_t header = sizeof(binary_type) + sizeof(size_t);
-            size_t size = header + tape_size + (current_string_buf_loc - string_buf.get());
-            uint8_t* buf = static_cast<uint8_t*>(allocator_->allocate(size));
-            *buf = binary_type::tape;
-            *reinterpret_cast<size_t*>(buf) = size_impl();
-            std::memcpy(buf + header, tape.get(), tape_size);
-            std::memcpy(buf + header + tape_size, string_buf.get(), current_string_buf_loc - string_buf.get());
-            std::pmr::string res(buf, buf + size, allocator_);
-            allocator_->deallocate(buf, size);
-            return res;
-        }
 
     private:
         allocator_type* allocator_;
@@ -144,20 +129,6 @@ namespace components::new_document::impl {
         const uint8_t* get_string_buf_ptr_impl() const noexcept { return string_buf.data(); }
 
         size_t size_impl() const noexcept { return tape.size(); }
-
-        std::pmr::string serialize_impl() const noexcept {
-            size_t tape_size = size_impl() * sizeof(uint64_t);
-            size_t header = sizeof(binary_type) + sizeof(size_t);
-            size_t size = header + tape_size + string_buf.size();
-            uint8_t* buf = string_buf.get_allocator().allocate(size);
-            *buf = binary_type::tape;
-            *reinterpret_cast<size_t*>(buf) = tape.size();
-            std::memcpy(buf + header, tape.data(), tape_size);
-            std::memcpy(buf + header + tape_size, string_buf.data(), string_buf.size());
-            std::pmr::string res(buf, buf + size, string_buf.get_allocator());
-            string_buf.get_allocator().deallocate(buf, size);
-            return res;
-        }
 
     private:
         std::pmr::vector<uint64_t> tape{};

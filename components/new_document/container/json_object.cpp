@@ -69,22 +69,6 @@ namespace components::new_document::json {
         return res.append("}");
     }
 
-    std::pmr::string
-    json_object::to_binary(std::pmr::string (*to_binary_immut)(const immutable_part*, std::pmr::memory_resource*),
-                           std::pmr::string (*to_binary_mut)(const mutable_part*, std::pmr::memory_resource*)) const {
-        std::pmr::string res(map_.get_allocator().resource());
-        res.push_back(binary_type::object_start);
-        for (auto& it : map_) {
-            auto key = it.first;
-            res.append(key);
-            res.push_back('\0');
-            res.append(it.second->to_binary(to_binary_immut, to_binary_mut));
-            res.push_back('\0');
-        }
-        res.push_back(binary_type::object_end);
-        return res;
-    }
-
     bool json_object::equals(const json_object& other,
                              bool (*immut_equals_immut)(const immutable_part*, const immutable_part*),
                              bool (*mut_equals_mut)(const mutable_part*, const mutable_part*),

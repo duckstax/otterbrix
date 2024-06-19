@@ -132,24 +132,6 @@ namespace components::new_document::json {
         }
     }
 
-    std::pmr::string json_trie_node::to_binary(std::pmr::string (*to_binary_immut)(const immutable_part*,
-                                                                                   std::pmr::memory_resource*),
-                                               std::pmr::string (*to_binary_mut)(const mutable_part*,
-                                                                                 std::pmr::memory_resource*)) const {
-        switch (type_) {
-            case OBJECT:
-                return value_.obj.to_binary(to_binary_immut, to_binary_mut);
-            case ARRAY:
-                return value_.arr.to_binary(to_binary_immut, to_binary_mut);
-            case IMMUT:
-                return to_binary_immut(&value_.immut, allocator_);
-            case MUT:
-                return to_binary_mut(&value_.mut, allocator_);
-            case DELETER:
-                return {"DELETER", allocator_};
-        }
-    }
-
     bool json_trie_node::equals(const json_trie_node* other,
                                 bool (*immut_equals_immut)(const immutable_part*, const immutable_part*),
                                 bool (*mut_equals_mut)(const mutable_part*, const mutable_part*),

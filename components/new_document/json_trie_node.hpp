@@ -66,9 +66,6 @@ namespace components::new_document::json {
         std::pmr::string to_json(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
                                  std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
 
-        std::pmr::string to_binary(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
-                                   std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
-
         bool equals(const json_trie_node* other,
                     bool (*)(const immutable_part*, const immutable_part*),
                     bool (*)(const mutable_part*, const mutable_part*),
@@ -99,19 +96,19 @@ namespace components::new_document::json {
             mutable_part mut;
 
             value_type(json_object&& value)
-                : obj(std::move(value)){};
+                : obj(std::move(value)) {}
 
             value_type(json_array&& value)
-                : arr(std::move(value)){};
+                : arr(std::move(value)) {}
 
             value_type(immutable_part value)
-                : immut(value){};
+                : immut(value) {}
 
             value_type(mutable_part value)
-                : mut(value){};
+                : mut(value) {}
 
-            value_type(){};
-            ~value_type(){};
+            value_type() {}
+            ~value_type() {}
         } value_;
 
         json_type type_;

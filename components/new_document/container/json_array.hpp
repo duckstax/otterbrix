@@ -11,15 +11,15 @@ namespace components::new_document::json {
     public:
         using allocator_type = std::pmr::memory_resource;
 
-        explicit json_array(allocator_type* allocator) noexcept;
+        explicit json_array(allocator_type* allocator);
 
         ~json_array() = default;
 
-        json_array(json_array&&) noexcept = default;
+        json_array(json_array&&) = default;
 
         json_array(const json_array&) = delete;
 
-        json_array& operator=(json_array&&) noexcept = default;
+        json_array& operator=(json_array&&) = default;
 
         json_array& operator=(const json_array&) = delete;
 
@@ -44,9 +44,6 @@ namespace components::new_document::json {
 
         std::pmr::string to_json(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
                                  std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
-
-        std::pmr::string to_binary(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
-                                   std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
 
         bool equals(const json_array& other,
                     bool (*)(const immutable_part*, const immutable_part*),
