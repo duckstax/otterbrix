@@ -30,15 +30,15 @@ namespace components::new_document::json {
         const_iterator cbegin() const;
         const_iterator cend() const;
 
-        const json_trie_node* get(uint32_t index) const;
+        const json_trie_node* get(size_t index) const;
 
-        void set(uint32_t index, json_trie_node* value);
+        void set(size_t index, json_trie_node* value);
 
-        void set(uint32_t index, boost::intrusive_ptr<json_trie_node>&& value);
+        void set(size_t index, boost::intrusive_ptr<json_trie_node>&& value);
 
-        boost::intrusive_ptr<json_trie_node> remove(uint32_t index);
+        boost::intrusive_ptr<json_trie_node> remove(size_t index);
 
-        uint32_t size() const noexcept;
+        size_t size() const noexcept;
 
         json_array* make_deep_copy() const;
 

@@ -13,14 +13,14 @@ namespace components::new_document::json {
     json_array::const_iterator json_array::cbegin() const { return items_.cbegin(); }
     json_array::const_iterator json_array::cend() const { return items_.cend(); }
 
-    const json_trie_node* json_array::get(uint32_t index) const {
+    const json_trie_node* json_array::get(size_t index) const {
         if (index >= size()) {
             return nullptr;
         }
         return items_[index].get();
     }
 
-    void json_array::set(uint32_t index, json_trie_node* value) {
+    void json_array::set(size_t index, json_trie_node* value) {
         if (index >= size()) {
             items_.emplace_back(value);
         } else {
@@ -28,7 +28,7 @@ namespace components::new_document::json {
         }
     }
 
-    void json_array::set(uint32_t index, boost::intrusive_ptr<json_trie_node>&& value) {
+    void json_array::set(size_t index, boost::intrusive_ptr<json_trie_node>&& value) {
         if (index >= size()) {
             items_.emplace_back(std::move(value));
         } else {
@@ -36,7 +36,7 @@ namespace components::new_document::json {
         }
     }
 
-    boost::intrusive_ptr<json_trie_node> json_array::remove(uint32_t index) {
+    boost::intrusive_ptr<json_trie_node> json_array::remove(size_t index) {
         if (index >= size()) {
             return nullptr;
         }
@@ -45,12 +45,12 @@ namespace components::new_document::json {
         return copy;
     }
 
-    uint32_t json_array::size() const noexcept { return items_.size(); }
+    size_t json_array::size() const noexcept { return items_.size(); }
 
     json_array* json_array::make_deep_copy() const {
         auto copy = new (items_.get_allocator().resource()->allocate(sizeof(json_array)))
             json_array(items_.get_allocator().resource());
-        for (uint32_t i = 0; i < items_.size(); ++i) {
+        for (size_t i = 0; i < items_.size(); ++i) {
             copy->items_[i] = items_[i]->make_deep_copy();
         }
         return copy;
@@ -77,7 +77,7 @@ namespace components::new_document::json {
         if (size() != other.size()) {
             return false;
         }
-        for (uint32_t i = 0; i < size(); ++i) {
+        for (size_t i = 0; i < size(); ++i) {
             if (!items_[i]->equals(other.items_[i].get(), immut_equals_immut, mut_equals_mut, immut_equals_mut)) {
                 return false;
             }

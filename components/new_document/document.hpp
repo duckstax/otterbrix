@@ -37,6 +37,8 @@ namespace components::new_document {
     };
 
     class document_t final : public allocator_intrusive_ref_counter<document_t> {
+        friend class msgpack_decoder_t;
+
     public:
         using ptr = boost::intrusive_ptr<document_t>;
         using allocator_type = std::pmr::memory_resource;
@@ -191,7 +193,7 @@ namespace components::new_document {
 
         std::pmr::string to_json() const;
 
-        std::pmr::string to_binary() const;
+        boost::intrusive_ptr<json::json_trie_node> json_trie() const;
 
         //  ::new_document::retained_t<::new_document::impl::dict_t> to_dict() const;
 
@@ -216,7 +218,6 @@ namespace components::new_document {
         //  explicit operator bool() const;
 
         static ptr document_from_json(const std::string& json, document_t::allocator_type* allocator);
-        static ptr document_from_binary(const std::string& binary, document_t::allocator_type* allocator);
 
         static ptr merge(ptr& document1, ptr& document2, document_t::allocator_type* allocator);
 
