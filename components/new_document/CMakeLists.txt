@@ -1,10 +1,20 @@
 project(new_document)
 
-file(GLOB_RECURSE DOCUMENT_SOURCES "*.cpp")
+set(${PROJECT_NAME}_SOURCES
+        container/json_object.cpp
+        container/json_array.cpp
+        impl/document.cpp
+        impl/error.cpp
+        msgpack/msgpack_encoder.cpp
+        temp_generator/generaty.cpp
 
+        document.cpp
+        json_trie_node.cpp
+        string_splitter.cpp
+)
 add_library(
         document_library
-        ${DOCUMENT_SOURCES}
+        ${${PROJECT_NAME}_SOURCES}
 )
 
 target_include_directories(document_library PUBLIC "${CMAKE_SOURCE_DIR}/components/new_document/")
