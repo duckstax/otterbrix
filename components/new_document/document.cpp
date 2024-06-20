@@ -402,7 +402,7 @@ namespace components::new_document {
             if (raw_index < 0) {
                 return error_code_t::INVALID_INDEX;
             }
-            index = std::min(uint32_t(raw_index), container->get_array()->size());
+            index = std::min(uint32_t(raw_index), uint32_t(container->get_array()->size()));
             return error_code_t::SUCCESS;
         }
         return error_code_t::NO_SUCH_CONTAINER;
@@ -472,10 +472,6 @@ namespace components::new_document {
             obj->set(key, build_index(val, builder, res->immut_src_, allocator));
         }
         return res;
-    }
-
-    document_t::ptr document_t::document_from_binary(const std::string& binary, document_t::allocator_type* allocator) {
-        return nullptr;
     }
 
     document_t::ptr
@@ -595,6 +591,8 @@ namespace components::new_document {
         return element_ind_->to_json(&value_to_string<impl::immutable_document>,
                                      &value_to_string<impl::mutable_document>);
     }
+
+    boost::intrusive_ptr<json::json_trie_node> document_t::json_trie() const { return element_ind_; }
 
     std::pmr::string serialize_document(const document_ptr& document) { return document->to_json(); }
 
