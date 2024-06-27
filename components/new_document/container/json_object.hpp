@@ -4,31 +4,29 @@
 #include <components/new_document/base.hpp>
 
 namespace components::new_document::json {
-    struct string_view_hash {
+    struct json_trie_node_hash {
         using is_transparent = void;
 
-        size_t operator()(const std::pmr::string& s) const { return std::hash<std::pmr::string>{}(s); }
-
-        size_t operator()(std::string_view sv) const { return std::hash<std::string_view>{}(sv); }
+        size_t operator()(const boost::intrusive_ptr<json_trie_node>& n) const;
+        size_t operator()(const std::string_view& sv) const;
     };
 
-    struct string_view_eq {
+    struct json_trie_node_eq {
         using is_transparent = void;
 
-        bool operator()(const std::pmr::string& lhs, const std::pmr::string& rhs) const noexcept { return lhs == rhs; }
-
-        bool operator()(const std::pmr::string& lhs, std::string_view rhs) const noexcept { return lhs == rhs; }
-
-        bool operator()(std::string_view lhs, const std::pmr::string& rhs) const noexcept { return lhs == rhs; }
+        bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) const noexcept;
+        bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
+                        const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
     };
 
     class json_object {
-        using flat_map_t = absl::flat_hash_map<
-            std::pmr::string,
-            boost::intrusive_ptr<json_trie_node>,
-            string_view_hash,
-            string_view_eq,
-            std::pmr::polymorphic_allocator<std::pair<const std::pmr::string, boost::intrusive_ptr<json_trie_node>>>>;
+        using flat_map_t =
+            absl::flat_hash_map<boost::intrusive_ptr<json_trie_node>,
+                                boost::intrusive_ptr<json_trie_node>,
+                                json_trie_node_hash,
+                                json_trie_node_eq,
+                                std::pmr::polymorphic_allocator<std::pair<boost::intrusive_ptr<json_trie_node>,
+                                                                          boost::intrusive_ptr<json_trie_node>>>>;
         using iterator = flat_map_t::iterator;
         using const_iterator = flat_map_t::const_iterator;
 
@@ -56,11 +54,15 @@ namespace components::new_document::json {
         const_iterator cbegin() const;
         const_iterator cend() const;
 
+        void set(json_trie_node* key, json_trie_node* value);
         void set(std::string_view key, json_trie_node* value);
 
+        void set(boost::intrusive_ptr<json_trie_node>&& key, boost::intrusive_ptr<json_trie_node>&& value);
         void set(std::string_view key, boost::intrusive_ptr<json_trie_node>&& value);
 
         boost::intrusive_ptr<json_trie_node> remove(std::string_view key);
+
+        bool contains(std::string_view key) const noexcept;
 
         size_t size() const noexcept;
 

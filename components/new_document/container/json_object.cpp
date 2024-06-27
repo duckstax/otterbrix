@@ -3,6 +3,43 @@
 
 namespace components::new_document::json {
 
+    size_t json_trie_node_hash::operator()(const boost::intrusive_ptr<json_trie_node>& n) const {
+        if (n->is_immut()) {
+            return std::hash<std::string_view>{}(n->get_immut()->get_string().value());
+        } else if (n->is_mut()) {
+            return std::hash<std::string_view>{}(n->get_mut()->get_string().value());
+        } else {
+            return 0;
+        }
+    }
+    size_t json_trie_node_hash::operator()(const std::string_view& sv) const {
+        return std::hash<std::string_view>{}(sv);
+    }
+
+    bool operator==(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) {
+        if (lhs->is_immut()) {
+            return lhs->get_immut()->get_string().value() == rhs;
+        } else if (lhs->is_mut()) {
+            return lhs->get_mut()->get_string().value() == rhs;
+        } else {
+            return false;
+        }
+    }
+    bool json_trie_node_eq::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
+                                       const std::string_view& rhs) const noexcept {
+        return lhs == rhs;
+    }
+    bool json_trie_node_eq::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
+                                       const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept {
+        if (rhs->is_immut()) {
+            return lhs == rhs->get_immut()->get_string().value();
+        } else if (rhs->is_mut()) {
+            return lhs == rhs->get_mut()->get_string().value();
+        } else {
+            return false;
+        }
+    }
+
     json_object::json_object(json_object::allocator_type* allocator) noexcept
         : map_(allocator) {}
 
@@ -26,10 +63,18 @@ namespace components::new_document::json {
         return res->second.get();
     }
 
-    void json_object::set(std::string_view key, json_trie_node* value) { map_[key] = value; }
+    void json_object::set(json_trie_node* key, json_trie_node* value) {
+        map_.emplace(boost::intrusive_ptr<json_trie_node>(key), boost::intrusive_ptr<json_trie_node>(value));
+    }
+    void json_object::set(std::string_view key, json_trie_node* value) {
+        map_.at(key) = boost::intrusive_ptr<json_trie_node>(value);
+    }
 
+    void json_object::set(boost::intrusive_ptr<json_trie_node>&& key, boost::intrusive_ptr<json_trie_node>&& value) {
+        map_.emplace(std::move(key), std::move(value));
+    }
     void json_object::set(std::string_view key, boost::intrusive_ptr<json_trie_node>&& value) {
-        map_[key] = std::move(value);
+        map_.at(key) = std::move(value);
     }
 
     boost::intrusive_ptr<json_trie_node> json_object::remove(std::string_view key) {
@@ -41,6 +86,8 @@ namespace components::new_document::json {
         map_.erase(found);
         return copy;
     }
+
+    bool json_object::contains(std::string_view key) const noexcept { return map_.contains(key); }
 
     size_t json_object::size() const noexcept { return map_.size(); }
 
@@ -63,8 +110,9 @@ namespace components::new_document::json {
             if (res.size() > 1) {
                 res.append(",");
             }
-            res.append("\"").append(key).append("\"").append(":").append(
-                it.second->to_json(to_json_immut, to_json_mut));
+            res.append(key->to_json(to_json_immut, to_json_mut))
+                .append(":")
+                .append(it.second->to_json(to_json_immut, to_json_mut));
         }
         return res.append("}");
     }
