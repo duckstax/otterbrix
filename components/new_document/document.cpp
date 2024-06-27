@@ -488,7 +488,7 @@ namespace components::new_document {
 
     template<typename T, typename K>
     bool is_equals_value(const impl::element<T>* value1, const impl::element<K>* value2) {
-        using impl::element_type;
+        using types::logical_type;
 
         auto type1 = value1->type();
 
@@ -497,33 +497,33 @@ namespace components::new_document {
         }
 
         switch (type1) {
-            case element_type::INT8:
+            case logical_type::TINYINT:
                 return value1->get_int8().value() == value2->get_int8().value();
-            case element_type::INT16:
+            case logical_type::SMALLINT:
                 return value1->get_int16().value() == value2->get_int16().value();
-            case element_type::INT32:
+            case logical_type::INTEGER:
                 return value1->get_int32().value() == value2->get_int32().value();
-            case element_type::INT64:
+            case logical_type::BIGINT:
                 return value1->get_int64().value() == value2->get_int64().value();
-            case element_type::INT128:
+            case logical_type::HUGEINT:
                 return value1->get_int128().value() == value2->get_int128().value();
-            case element_type::UINT8:
+            case logical_type::UTINYINT:
                 return value1->get_uint8().value() == value2->get_uint8().value();
-            case element_type::UINT16:
+            case logical_type::USMALLINT:
                 return value1->get_uint16().value() == value2->get_uint16().value();
-            case element_type::UINT32:
+            case logical_type::UINTEGER:
                 return value1->get_uint32().value() == value2->get_uint32().value();
-            case element_type::UINT64:
+            case logical_type::UBIGINT:
                 return value1->get_uint64().value() == value2->get_uint64().value();
-            case element_type::FLOAT:
+            case logical_type::FLOAT:
                 return is_equals(value1->get_float().value(), value2->get_float().value());
-            case element_type::DOUBLE:
+            case logical_type::DOUBLE:
                 return is_equals(value1->get_double().value(), value2->get_double().value());
-            case element_type::STRING:
+            case logical_type::STRING_LITERAL:
                 return value1->get_string().value() == value2->get_string().value();
-            case element_type::BOOL:
+            case logical_type::BOOLEAN:
                 return value1->get_bool().value() == value2->get_bool().value();
-            case element_type::NULL_VALUE:
+            case logical_type::NA:
                 return true;
         }
         return false;
@@ -540,39 +540,39 @@ namespace components::new_document {
 
     template<typename T>
     std::pmr::string value_to_string(const impl::element<T>* value, std::pmr::memory_resource* allocator) {
-        using impl::element_type;
+        using types::logical_type;
 
         switch (value->type()) {
-            case element_type::INT8:
+            case logical_type::TINYINT:
                 return create_pmr_string_(value->get_int8().value(), allocator);
-            case element_type::INT16:
+            case logical_type::SMALLINT:
                 return create_pmr_string_(value->get_int16().value(), allocator);
-            case element_type::INT32:
+            case logical_type::INTEGER:
                 return create_pmr_string_(value->get_int32().value(), allocator);
-            case element_type::INT64:
+            case logical_type::BIGINT:
                 return create_pmr_string_(value->get_int64().value(), allocator);
-            case element_type::INT128:
+            case logical_type::HUGEINT:
                 return {
                     "hugeint",
                     allocator}; //TODO support value ! a new json parser is needed for it (boost::json::parser does not support int128)
-            case element_type::UINT8:
+            case logical_type::UTINYINT:
                 return create_pmr_string_(value->get_uint8().value(), allocator);
-            case element_type::UINT16:
+            case logical_type::USMALLINT:
                 return create_pmr_string_(value->get_uint16().value(), allocator);
-            case element_type::UINT32:
+            case logical_type::UINTEGER:
                 return create_pmr_string_(value->get_uint32().value(), allocator);
-            case element_type::UINT64:
+            case logical_type::UBIGINT:
                 return create_pmr_string_(value->get_uint64().value(), allocator);
-            case element_type::FLOAT:
+            case logical_type::FLOAT:
                 return create_pmr_string_(value->get_float().value(), allocator);
-            case element_type::DOUBLE:
+            case logical_type::DOUBLE:
                 return create_pmr_string_(value->get_double().value(), allocator);
-            case element_type::STRING: {
+            case logical_type::STRING_LITERAL: {
                 std::pmr::string tmp(allocator);
                 tmp.append("\"").append(value->get_string().value()).append("\"");
                 return tmp;
             }
-            case element_type::BOOL: {
+            case logical_type::BOOLEAN: {
                 std::pmr::string tmp(allocator);
                 if (value->get_bool()) {
                     tmp.append("true");
@@ -581,7 +581,7 @@ namespace components::new_document {
                 }
                 return tmp;
             }
-            case element_type::NULL_VALUE:
+            case logical_type::NA:
                 return {"null", allocator};
         }
         return {};
