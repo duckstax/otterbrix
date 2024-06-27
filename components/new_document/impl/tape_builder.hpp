@@ -181,7 +181,7 @@ namespace components::new_document {
 
     template<typename K>
     void tape_builder<K>::append(uint64_t val, types::physical_type t) noexcept {
-        tape_->append(val | ((uint64_t(char(t))) << 56));
+        tape_->append(val | (static_cast<uint64_t>(t) << 56));
     }
 
     template<typename K>

@@ -263,11 +263,18 @@ namespace components::new_document {
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
         if (res == error_code_t::SUCCESS) {
-            auto node = json_trie_node_element::create(value, allocator_);
+            auto value_node = json_trie_node_element::create(value, allocator_);
             if (container->is_object()) {
-                container->as_object()->set(is_view_key ? view_key : key, node);
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, value_node);
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    auto key_node = json_trie_node_element::create(element, allocator_);
+                    container->as_object()->set(key_node, value_node);
+                }
             } else {
-                container->as_array()->set(index, node);
+                container->as_array()->set(index, value_node);
             }
         }
         return res;
@@ -282,7 +289,13 @@ namespace components::new_document {
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
         if (res == error_code_t::SUCCESS) {
             if (container->is_object()) {
-                container->as_object()->set(is_view_key ? view_key : key, std::move(value));
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, std::move(value));
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    container->as_object()->set(json_trie_node_element::create(element, allocator_), std::move(value));
+                }
             } else {
                 container->as_array()->set(index, std::move(value));
             }
@@ -300,7 +313,13 @@ namespace components::new_document {
         if (res == error_code_t::SUCCESS) {
             auto node = creators[static_cast<int>(value)](allocator_);
             if (container->is_object()) {
-                container->as_object()->set(is_view_key ? view_key : key, node);
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, node);
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    container->as_object()->set(json_trie_node_element::create(element, allocator_), node);
+                }
             } else {
                 container->as_array()->set(index, node);
             }
@@ -440,7 +459,8 @@ namespace components::new_document {
             res = json_trie_node_element::create_object(allocator);
             const auto& boost_obj = value.get_object();
             for (auto const& [current_key, val] : boost_obj) {
-                res->as_object()->set(current_key, build_index(val, builder, immut_src, allocator));
+                res->as_object()->set(build_index(current_key, builder, immut_src, allocator),
+                                      build_index(val, builder, immut_src, allocator));
             }
         } else if (value.is_array()) {
             res = json_trie_node_element::create_array(allocator);
@@ -469,7 +489,8 @@ namespace components::new_document {
         tape_builder<impl::tape_writer_to_immutable> builder(allocator, *res->immut_src_);
         auto obj = res->element_ind_->as_object();
         for (auto& [key, val] : tree.get_object()) {
-            obj->set(key, build_index(val, builder, res->immut_src_, allocator));
+            obj->set(build_index(key, builder, res->immut_src_, allocator),
+                     build_index(val, builder, res->immut_src_, allocator));
         }
         return res;
     }

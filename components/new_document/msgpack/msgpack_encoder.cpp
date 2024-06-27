@@ -37,7 +37,7 @@ build_index(const msgpack::object& msg_object,
         res = json_trie_node::create_object(allocator);
         const auto& obj = msg_object.via.map;
         for (auto const& [current_key, val] : obj) {
-            res->as_object()->set(std::string(current_key.via.str.ptr, current_key.via.str.size),
+            res->as_object()->set(build_index(current_key, builder, immut_src, allocator),
                                   build_index(val, builder, immut_src, allocator));
         }
     } else if (msg_object.type == msgpack::type::ARRAY) {
@@ -71,7 +71,8 @@ const document_ptr components::new_document::msgpack_decoder_t::to_structure_(co
     tape_builder<impl::tape_writer_to_immutable> builder(allocator, *res->immut_src_);
     auto obj = res->element_ind_->as_object();
     for (auto& [key, val] : msg_object.via.map) {
-        obj->set(std::string(key.via.str.ptr, key.via.str.size), build_index(val, builder, res->immut_src_, allocator));
+        obj->set(build_index(key, builder, res->immut_src_, allocator),
+                 build_index(val, builder, res->immut_src_, allocator));
     }
     return res;
 }
@@ -84,8 +85,7 @@ void to_msgpack_(const json_trie_node* value, msgpack::object& o) {
         int i = 0;
         for (auto it = dict->begin(); it != dict->end(); ++it) {
             o.via.map.ptr[i].key.type = msgpack::type::object_type::STR;
-            o.via.map.ptr[i].key.via.str.size = uint32_t(it->first.size());
-            o.via.map.ptr[i].key.via.str.ptr = it->first.c_str();
+            to_msgpack_(it->first.get(), o.via.map.ptr[i].key);
             to_msgpack_(it->second.get(), o.via.map.ptr[i].val);
             ++i;
         }

@@ -53,7 +53,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const json_trie_node* value) {
         auto* dict = value->get_object();
         o.pack_map(dict->size());
         for (auto it = dict->begin(); it != dict->end(); ++it) {
-            o.pack(std::string(it->first));
+            to_msgpack_(o, it->first.get());
             to_msgpack_(o, it->second.get());
         }
     } else if (value->type() == json_type::ARRAY) {
