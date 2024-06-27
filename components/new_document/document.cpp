@@ -217,11 +217,7 @@ namespace components::new_document {
         return set_(json_pointer, special_type::DELETER);
     }
 
-    error_code_t document_t::set_null(std::string_view json_pointer) {
-        auto next_element = mut_src_->next_element();
-        builder_.visit_null_atom();
-        return set_(json_pointer, next_element);
-    }
+    error_code_t document_t::set_null(std::string_view json_pointer) { return set(json_pointer, nullptr); }
 
     error_code_t document_t::remove(std::string_view json_pointer) {
         boost::intrusive_ptr<json_trie_node_element> ignored;
@@ -253,31 +249,6 @@ namespace components::new_document {
             return error_code_t::NO_SUCH_ELEMENT;
         }
         return set_(json_pointer_to, node->make_deep_copy());
-    }
-
-    error_code_t document_t::set_(std::string_view json_pointer, const impl::element<impl::mutable_document>& value) {
-        json_trie_node_element* container;
-        bool is_view_key;
-        std::pmr::string key;
-        std::string_view view_key;
-        uint32_t index;
-        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
-        if (res == error_code_t::SUCCESS) {
-            auto value_node = json_trie_node_element::create(value, allocator_);
-            if (container->is_object()) {
-                if (container->as_object()->contains(is_view_key ? view_key : key)) {
-                    container->as_object()->set(is_view_key ? view_key : key, value_node);
-                } else {
-                    auto element = mut_src_->next_element();
-                    builder_.build(is_view_key ? view_key : key);
-                    auto key_node = json_trie_node_element::create(element, allocator_);
-                    container->as_object()->set(key_node, value_node);
-                }
-            } else {
-                container->as_array()->set(index, value_node);
-            }
-        }
-        return res;
     }
 
     error_code_t document_t::set_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>&& value) {

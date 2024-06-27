@@ -33,7 +33,7 @@ namespace components::new_document {
     {
         OBJECT = 0,
         ARRAY = 1,
-        DELETER = 2,
+        DELETER = 2
     };
 
     class document_t final : public allocator_intrusive_ref_counter<document_t> {
@@ -244,8 +244,6 @@ namespace components::new_document {
                                                  json_trie_node_element::create_array,
                                                  json_trie_node_element::create_deleter};
 
-        error_code_t set_(std::string_view json_pointer, const impl::element<impl::mutable_document>& value);
-
         error_code_t set_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>&& value);
 
         error_code_t set_(std::string_view json_pointer, special_type value);
@@ -291,9 +289,35 @@ namespace components::new_document {
 
     template<class T>
     inline error_code_t document_t::set(std::string_view json_pointer, T value) {
-        auto next_element = mut_src_->next_element();
-        builder_.build(value);
-        return set_(json_pointer, next_element);
+        auto build_value = [&]() {
+            auto element1 = mut_src_->next_element();
+            builder_.build(value);
+            return json_trie_node_element::create(element1, allocator_);
+        };
+
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        // key-value pair will be written backwards
+        if (res == error_code_t::SUCCESS) {
+            if (container->is_object()) {
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, build_value());
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    auto key_node = json_trie_node_element::create(element, allocator_);
+                    auto value_node = build_value();
+                    container->as_object()->set(key_node, value_node);
+                }
+            } else {
+                container->as_array()->set(index, build_value());
+            }
+        }
+        return res;
     }
 
     template<>
