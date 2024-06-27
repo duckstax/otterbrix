@@ -349,39 +349,39 @@ namespace components::new_document {
 
     template<typename FirstType, typename SecondType>
     compare_t compare_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
-        using impl::element_type;
+        using types::logical_type;
 
         auto type1 = element1->type();
 
         if (type1 == element2->type()) {
             switch (type1) {
-                case element_type::INT8:
+                case logical_type::TINYINT:
                     return equals_<int8_t>(element1, element2);
-                case element_type::INT16:
+                case logical_type::SMALLINT:
                     return equals_<int16_t>(element1, element2);
-                case element_type::INT32:
+                case logical_type::INTEGER:
                     return equals_<int32_t>(element1, element2);
-                case element_type::INT64:
+                case logical_type::BIGINT:
                     return equals_<int64_t>(element1, element2);
-                case element_type::INT128:
+                case logical_type::HUGEINT:
                     return equals_<__int128_t>(element1, element2);
-                case element_type::UINT8:
+                case logical_type::UTINYINT:
                     return equals_<uint8_t>(element1, element2);
-                case element_type::UINT16:
+                case logical_type::USMALLINT:
                     return equals_<uint16_t>(element1, element2);
-                case element_type::UINT32:
+                case logical_type::UINTEGER:
                     return equals_<uint32_t>(element1, element2);
-                case element_type::UINT64:
+                case logical_type::UBIGINT:
                     return equals_<uint64_t>(element1, element2);
-                case element_type::FLOAT:
+                case logical_type::FLOAT:
                     return equals_<float>(element1, element2);
-                case element_type::DOUBLE:
+                case logical_type::DOUBLE:
                     return equals_<double>(element1, element2);
-                case element_type::STRING:
+                case logical_type::STRING_LITERAL:
                     return equals_<std::string_view>(element1, element2);
-                case element_type::BOOL:
+                case logical_type::BOOLEAN:
                     return equals_<bool>(element1, element2);
-                case element_type::NULL_VALUE:
+                case logical_type::NA:
                     return compare_t::equals;
             }
         }

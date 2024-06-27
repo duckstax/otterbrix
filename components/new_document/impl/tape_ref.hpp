@@ -1,6 +1,6 @@
 #pragma once
 
-#include <components/new_document/impl/tape_type.hpp>
+#include <components/types/types.hpp>
 #include <cstring>
 
 namespace components::new_document {
@@ -22,8 +22,8 @@ namespace components::new_document {
             tape_ref(const impl::base_document<K>* doc, size_t json_index) noexcept
                 : doc_{doc}
                 , json_index_{json_index} {}
-            tape_type tape_ref_type() const noexcept {
-                return static_cast<tape_type>(doc_->get_tape(json_index_) >> 56);
+            types::physical_type tape_ref_type() const noexcept {
+                return static_cast<types::physical_type>(doc_->get_tape(json_index_) >> 56);
             }
             uint64_t tape_value() const noexcept { return doc_->get_tape(json_index_) & JSON_VALUE_MASK; }
 
@@ -72,72 +72,72 @@ namespace components::new_document {
 
         template<typename K>
         bool tape_ref<K>::is_float() const noexcept {
-            constexpr auto tape_float = uint8_t(tape_type::FLOAT);
+            constexpr auto tape_float = uint8_t(types::physical_type::FLOAT);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_float;
         }
         template<typename K>
         bool tape_ref<K>::is_double() const noexcept {
-            constexpr uint64_t tape_double = uint64_t(tape_type::DOUBLE) << 56;
+            constexpr uint64_t tape_double = uint64_t(types::physical_type::DOUBLE) << 56;
             return doc_->get_tape(json_index_) == tape_double;
         }
         template<typename K>
         bool tape_ref<K>::is_int8() const noexcept {
-            constexpr auto tape_int32 = uint8_t(tape_type::INT8);
+            constexpr auto tape_int32 = uint8_t(types::physical_type::INT8);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_int32;
         }
         template<typename K>
         bool tape_ref<K>::is_int16() const noexcept {
-            constexpr auto tape_int32 = uint8_t(tape_type::INT16);
+            constexpr auto tape_int32 = uint8_t(types::physical_type::INT16);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_int32;
         }
         template<typename K>
         bool tape_ref<K>::is_int32() const noexcept {
-            constexpr auto tape_int32 = uint8_t(tape_type::INT32);
+            constexpr auto tape_int32 = uint8_t(types::physical_type::INT32);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_int32;
         }
         template<typename K>
         bool tape_ref<K>::is_int64() const noexcept {
-            constexpr uint64_t tape_int64 = uint64_t(tape_type::INT64) << 56;
+            constexpr uint64_t tape_int64 = uint64_t(types::physical_type::INT64) << 56;
             return doc_->get_tape(json_index_) == tape_int64;
         }
         template<typename K>
         bool tape_ref<K>::is_int128() const noexcept {
-            constexpr uint64_t tape_int128 = uint64_t(tape_type::INT128) << 56;
+            constexpr uint64_t tape_int128 = uint64_t(types::physical_type::INT128) << 56;
             return doc_->get_tape(json_index_) == tape_int128;
         }
         template<typename K>
         bool tape_ref<K>::is_uint8() const noexcept {
-            constexpr auto tape_int32 = uint8_t(tape_type::UINT8);
+            constexpr auto tape_int32 = uint8_t(types::physical_type::UINT8);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_int32;
         }
         template<typename K>
         bool tape_ref<K>::is_uint16() const noexcept {
-            constexpr auto tape_int32 = uint8_t(tape_type::UINT16);
+            constexpr auto tape_int32 = uint8_t(types::physical_type::UINT16);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_int32;
         }
         template<typename K>
         bool tape_ref<K>::is_uint32() const noexcept {
-            constexpr auto tape_uint32 = uint8_t(tape_type::UINT32);
+            constexpr auto tape_uint32 = uint8_t(types::physical_type::UINT32);
             return reinterpret_cast<const uint8_t*>(&doc_->get_tape(json_index_))[7] == tape_uint32;
         }
         template<typename K>
         bool tape_ref<K>::is_uint64() const noexcept {
-            constexpr uint64_t tape_uint64 = uint64_t(tape_type::UINT64) << 56;
+            constexpr uint64_t tape_uint64 = uint64_t(types::physical_type::UINT64) << 56;
             return doc_->get_tape(json_index_) == tape_uint64;
         }
         template<typename K>
         bool tape_ref<K>::is_false() const noexcept {
-            constexpr uint64_t tape_false = uint64_t(tape_type::FALSE_VALUE) << 56;
+            constexpr uint64_t tape_false = uint64_t(types::physical_type::BOOL_FALSE) << 56;
             return doc_->get_tape(json_index_) == tape_false;
         }
         template<typename K>
         bool tape_ref<K>::is_true() const noexcept {
-            constexpr uint64_t tape_true = uint64_t(tape_type::TRUE_VALUE) << 56;
+            constexpr uint64_t tape_true = uint64_t(types::physical_type::BOOL_TRUE) << 56;
             return doc_->get_tape(json_index_) == tape_true;
         }
         template<typename K>
         bool tape_ref<K>::is_null_on_tape() const noexcept {
-            constexpr uint64_t tape_null = uint64_t(tape_type::NULL_VALUE) << 56;
+            constexpr uint64_t tape_null = uint64_t(types::physical_type::NA) << 56;
             return doc_->get_tape(json_index_) == tape_null;
         }
 

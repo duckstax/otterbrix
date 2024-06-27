@@ -47,14 +47,14 @@ namespace components::new_document {
         allocator_type* allocator_;
         impl::tape_writer<K>* tape_;
 
-        void append(uint64_t val, internal::tape_type t) noexcept;
+        void append(uint64_t val, types::physical_type t) noexcept;
 
     private:
         template<typename T>
-        void append2(uint64_t val, T val2, internal::tape_type t) noexcept;
+        void append2(uint64_t val, T val2, types::physical_type t) noexcept;
 
         template<typename T>
-        void append3(T val2, internal::tape_type t) noexcept;
+        void append3(T val2, types::physical_type t) noexcept;
     };
 
     template<typename K>
@@ -102,53 +102,53 @@ namespace components::new_document {
     template<typename K>
     void tape_builder<K>::build(std::string_view value) noexcept {
         // we advance the point, accounting for the fact that we have a NULL termination
-        append(tape_->next_string_buf_index(), internal::tape_type::STRING);
+        append(tape_->next_string_buf_index(), types::physical_type::STRING);
         tape_->append_string(value);
     }
 
     template<typename K>
     void tape_builder<K>::build(int8_t value) noexcept {
-        append(value, internal::tape_type::INT8);
+        append(value, types::physical_type::INT8);
     }
 
     template<typename K>
     void tape_builder<K>::build(int16_t value) noexcept {
-        append(value, internal::tape_type::INT16);
+        append(value, types::physical_type::INT16);
     }
 
     template<typename K>
     void tape_builder<K>::build(int32_t value) noexcept {
-        append(value, internal::tape_type::INT32);
+        append(value, types::physical_type::INT32);
     }
 
     template<typename K>
     void tape_builder<K>::build(int64_t value) noexcept {
-        append2(0, value, internal::tape_type::INT64);
+        append2(0, value, types::physical_type::INT64);
     }
 
     template<typename K>
     void tape_builder<K>::build(__int128_t value) noexcept {
-        append3(value, internal::tape_type::INT128);
+        append3(value, types::physical_type::INT128);
     }
 
     template<typename K>
     void tape_builder<K>::build(uint8_t value) noexcept {
-        append(value, internal::tape_type::UINT8);
+        append(value, types::physical_type::UINT8);
     }
 
     template<typename K>
     void tape_builder<K>::build(uint16_t value) noexcept {
-        append(value, internal::tape_type::UINT16);
+        append(value, types::physical_type::UINT16);
     }
 
     template<typename K>
     void tape_builder<K>::build(uint32_t value) noexcept {
-        append(value, internal::tape_type::UINT32);
+        append(value, types::physical_type::UINT32);
     }
 
     template<typename K>
     void tape_builder<K>::build(uint64_t value) noexcept {
-        append(0, internal::tape_type::UINT64);
+        append(0, types::physical_type::UINT64);
         tape_->append(value);
     }
 
@@ -156,17 +156,17 @@ namespace components::new_document {
     void tape_builder<K>::build(float value) noexcept {
         uint64_t tape_data;
         std::memcpy(&tape_data, &value, sizeof(value));
-        append(tape_data, internal::tape_type::FLOAT);
+        append(tape_data, types::physical_type::FLOAT);
     }
 
     template<typename K>
     void tape_builder<K>::build(double value) noexcept {
-        append2(0, value, internal::tape_type::DOUBLE);
+        append2(0, value, types::physical_type::DOUBLE);
     }
 
     template<typename K>
     void tape_builder<K>::build(bool value) noexcept {
-        append(0, value ? internal::tape_type::TRUE_VALUE : internal::tape_type::FALSE_VALUE);
+        append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
     }
 
     template<typename K>
@@ -176,17 +176,17 @@ namespace components::new_document {
 
     template<typename K>
     void tape_builder<K>::visit_null_atom() noexcept {
-        append(0, internal::tape_type::NULL_VALUE);
+        append(0, types::physical_type::NA);
     }
 
     template<typename K>
-    void tape_builder<K>::append(uint64_t val, internal::tape_type t) noexcept {
+    void tape_builder<K>::append(uint64_t val, types::physical_type t) noexcept {
         tape_->append(val | ((uint64_t(char(t))) << 56));
     }
 
     template<typename K>
     template<typename T>
-    void tape_builder<K>::append2(uint64_t val, T val2, internal::tape_type t) noexcept {
+    void tape_builder<K>::append2(uint64_t val, T val2, types::physical_type t) noexcept {
         append(val, t);
         static_assert(sizeof(val2) == sizeof(uint64_t), "Type is not 64 bits!");
         tape_->copy(&val2);
@@ -194,7 +194,7 @@ namespace components::new_document {
 
     template<typename K>
     template<typename T>
-    void tape_builder<K>::append3(T val2, internal::tape_type t) noexcept {
+    void tape_builder<K>::append3(T val2, types::physical_type t) noexcept {
         append(0, t);
         static_assert(sizeof(val2) == 2 * sizeof(uint64_t), "Type is not 128 bits!");
         auto data = reinterpret_cast<uint64_t*>(&val2);

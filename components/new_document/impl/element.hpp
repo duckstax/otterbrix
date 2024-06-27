@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/types/types.hpp>
 #include <cstdint>
 #include <type_traits>
 
@@ -84,27 +85,6 @@ namespace components::new_document {
             }
             return static_cast<To>(result);
         }
-        /*
-        * The actual concrete type of a JSON element
-        * This is the type it is most easily cast_from to with get<>.
-        */
-        enum class element_type
-        {
-            INT8 = 'c',
-            INT16 = 's',
-            INT32 = 'i',
-            INT64 = 'l', ///< int64_t
-            INT128 = 'h',
-            UINT8 = '8',
-            UINT16 = 'G',
-            UINT32 = 'u',
-            UINT64 = 'U', ///< uint64_t: any integer that fits in uint64_t but *not* int64_t
-            FLOAT = 'f',
-            DOUBLE = 'd',    ///< double: Any number with a "." or "e" that fits in double.
-            STRING = '"',    ///< std::string_view
-            BOOL = '1',      ///< bool
-            NULL_VALUE = 'n' ///< null
-        };
 
         template<typename K>
         class element {
@@ -112,11 +92,9 @@ namespace components::new_document {
             element() noexcept
                 : tape() {}
 
-            element_type type() const noexcept {
+            types::logical_type type() const noexcept {
                 assert(tape.usable());
-                auto tape_type = tape.tape_ref_type();
-                return tape_type == internal::tape_type::FALSE_VALUE ? element_type::BOOL
-                                                                     : static_cast<element_type>(tape_type);
+                return types::to_logical(tape.tape_ref_type());
             }
 
             std::pmr::string serialize() const noexcept { return tape.serialize(); }
@@ -125,7 +103,7 @@ namespace components::new_document {
             document_result<const char*> get_c_str() const noexcept {
                 assert(tape.usable());
                 switch (tape.tape_ref_type()) {
-                    case internal::tape_type::STRING: {
+                    case types::physical_type::STRING: {
                         return tape.get_c_str();
                     }
                     default:
@@ -135,7 +113,7 @@ namespace components::new_document {
             document_result<size_t> get_string_length() const noexcept {
                 assert(tape.usable());
                 switch (tape.tape_ref_type()) {
-                    case internal::tape_type::STRING: {
+                    case types::physical_type::STRING: {
                         return tape.get_string_length();
                     }
                     default:
@@ -145,7 +123,7 @@ namespace components::new_document {
             document_result<std::string_view> get_string() const noexcept {
                 assert(tape.usable());
                 switch (tape.tape_ref_type()) {
-                    case internal::tape_type::STRING:
+                    case types::physical_type::STRING:
                         return tape.get_string_view();
                     default:
                         return INCORRECT_TYPE;
@@ -156,28 +134,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_uint8())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return cast_from<K, int8_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return cast_from<K, uint16_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return cast_from<K, int16_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return cast_from<K, uint32_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, uint8_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, uint8_t>(tape);
                         }
                         default:
@@ -191,28 +169,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_uint16())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return uint16_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return uint16_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return cast_from<K, int16_t, uint16_t>(tape);
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return cast_from<K, uint32_t, uint16_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, uint16_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, uint16_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, uint16_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, uint16_t>(tape);
                         }
                         default:
@@ -226,28 +204,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_uint32())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return uint32_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return uint32_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return uint32_t(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return cast_from<K, int16_t, uint32_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, uint32_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, uint32_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, uint32_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, uint32_t>(tape);
                         }
                         default:
@@ -261,28 +239,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_uint64())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return uint64_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return uint64_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return uint64_t(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return uint64_t(tape.template next_tape_value<uint32_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return cast_from<K, int16_t, uint64_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, uint64_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, uint64_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, uint64_t>(tape);
                         }
                         default:
@@ -296,28 +274,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_int8())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return int8_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return cast_from<K, int16_t, int8_t>(tape);
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return cast_from<K, uint16_t, int8_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, int8_t>(tape);
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return cast_from<K, uint32_t, int8_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, int8_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, int8_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, int8_t>(tape);
                         }
                         default:
@@ -331,28 +309,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_int16())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return int16_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return int16_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return cast_from<K, uint16_t, int16_t>(tape);
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return cast_from<K, int32_t, int16_t>(tape);
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return cast_from<K, uint32_t, int16_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, int16_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, int16_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, int16_t>(tape);
                         }
                         default:
@@ -366,28 +344,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_int32())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return int32_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return int32_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return int32_t(tape.template next_tape_value<int16_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return int32_t(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return cast_from<K, uint32_t, int32_t>(tape);
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, int32_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, int32_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, int32_t>(tape);
                         }
                         default:
@@ -401,28 +379,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_int64())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return int64_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return int64_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return int32_t(tape.template next_tape_value<int16_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return int64_t(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return int64_t(tape.template next_tape_value<int32_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return int64_t(tape.template next_tape_value<uint32_t>());
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, int64_t>(tape);
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return cast_from<K, __int128_t, int64_t>(tape);
                         }
                         default:
@@ -436,28 +414,28 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_int128())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return __int128_t(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return __int128_t(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return __int128_t(tape.template next_tape_value<int16_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return __int128_t(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return __int128_t(tape.template next_tape_value<int32_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return __int128_t(tape.template next_tape_value<uint32_t>());
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return cast_from<K, int64_t, __int128_t>(tape);
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return cast_from<K, uint64_t, __int128_t>(tape);
                         }
                         default:
@@ -471,34 +449,34 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_float())) { // branch rarely taken
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::DOUBLE: {
+                        case types::physical_type::DOUBLE: {
                             return float(tape.template next_tape_value<double>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return float(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return float(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return float(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return float(tape.template next_tape_value<int16_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return float(tape.template next_tape_value<uint32_t>());
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return float(tape.template next_tape_value<int32_t>());
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return float(tape.template next_tape_value<uint64_t>());
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return float(tape.template next_tape_value<int64_t>());
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return float(tape.template next_tape_value<__int128_t>());
                         }
                         default:
@@ -513,34 +491,34 @@ namespace components::new_document {
                 assert(tape.usable());
                 if (_usually_false(!tape.is_double())) { // branch rarely taken    switch (tape.tape_ref_type()) {
                     switch (tape.tape_ref_type()) {
-                        case internal::tape_type::FLOAT: {
+                        case types::physical_type::FLOAT: {
                             return double(tape.template next_tape_value<float>());
                         }
-                        case internal::tape_type::UINT8: {
+                        case types::physical_type::UINT8: {
                             return double(tape.template next_tape_value<uint8_t>());
                         }
-                        case internal::tape_type::INT8: {
+                        case types::physical_type::INT8: {
                             return double(tape.template next_tape_value<int8_t>());
                         }
-                        case internal::tape_type::UINT16: {
+                        case types::physical_type::UINT16: {
                             return double(tape.template next_tape_value<uint16_t>());
                         }
-                        case internal::tape_type::INT16: {
+                        case types::physical_type::INT16: {
                             return double(tape.template next_tape_value<int16_t>());
                         }
-                        case internal::tape_type::UINT32: {
+                        case types::physical_type::UINT32: {
                             return double(tape.template next_tape_value<uint32_t>());
                         }
-                        case internal::tape_type::INT32: {
+                        case types::physical_type::INT32: {
                             return double(tape.template next_tape_value<int32_t>());
                         }
-                        case internal::tape_type::UINT64: {
+                        case types::physical_type::UINT64: {
                             return double(tape.template next_tape_value<uint64_t>());
                         }
-                        case internal::tape_type::INT64: {
+                        case types::physical_type::INT64: {
                             return double(tape.template next_tape_value<int64_t>());
                         }
-                        case internal::tape_type::INT128: {
+                        case types::physical_type::INT128: {
                             return double(tape.template next_tape_value<__int128_t>());
                         }
                         default:
@@ -695,19 +673,19 @@ namespace components::new_document {
             friend struct document_result<element>;
         };
 
-        inline std::ostream& operator<<(std::ostream& out, element_type type) {
+        inline std::ostream& operator<<(std::ostream& out, types::logical_type type) {
             switch (type) {
-                case element_type::INT64:
+                case types::logical_type::HUGEINT:
                     return out << "int64_t";
-                case element_type::UINT64:
+                case types::logical_type::UHUGEINT:
                     return out << "uint64_t";
-                case element_type::DOUBLE:
+                case types::logical_type::DOUBLE:
                     return out << "double";
-                case element_type::STRING:
+                case types::logical_type::STRING_LITERAL:
                     return out << "string";
-                case element_type::BOOL:
+                case types::logical_type::BOOLEAN:
                     return out << "bool";
-                case element_type::NULL_VALUE:
+                case types::logical_type::NA:
                     return out << "null";
                 default:
                     return out << "unexpected content!!!"; // abort() usage is forbidden in the library

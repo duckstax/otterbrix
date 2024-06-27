@@ -12,7 +12,7 @@ add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        document_library
+        otterbrix::new_document
         CONAN_PKG::boost
         CONAN_PKG::catch2
         CONAN_PKG::msgpack-cxx
