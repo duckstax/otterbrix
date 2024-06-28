@@ -1,6 +1,7 @@
 #pragma once
 
 #include <components/new_document/impl/document.hpp>
+#include <components/new_document/impl/mr_utils.hpp>
 #include <components/new_document/impl/tape_writer.hpp>
 
 namespace components::new_document {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <components/new_document/impl/common_defs.hpp>
 #include <components/types/types.hpp>
 #include <cstdint>
 #include <type_traits>
@@ -92,9 +93,14 @@ namespace components::new_document {
             element() noexcept
                 : tape() {}
 
-            types::logical_type type() const noexcept {
+            types::logical_type logical_type() const noexcept {
                 assert(tape.usable());
                 return types::to_logical(tape.tape_ref_type());
+            }
+
+            types::physical_type physical_type() const noexcept {
+                assert(tape.usable());
+                return tape.tape_ref_type();
             }
 
             std::pmr::string serialize() const noexcept { return tape.serialize(); }

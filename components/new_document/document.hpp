@@ -1,15 +1,14 @@
 #pragma once
 
-#include <boost/smart_ptr/intrusive_ptr.hpp>
-#include <components/new_document/json_trie_node.hpp>
-#include <memory_resource>
-#include <utility>
-//#include <components/new_document/document_id.hpp>
 #include <boost/json/value.hpp>
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <components/new_document/impl/allocator_intrusive_ref_counter.hpp>
 #include <components/new_document/impl/document.hpp>
 #include <components/new_document/impl/element.hpp>
 #include <components/new_document/impl/tape_builder.hpp>
+#include <components/new_document/json_trie_node.hpp>
+#include <memory_resource>
+#include <utility>
 
 namespace components::new_document {
 
@@ -375,9 +374,9 @@ namespace components::new_document {
     compare_t compare_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
         using types::logical_type;
 
-        auto type1 = element1->type();
+        auto type1 = element1->logical_type();
 
-        if (type1 == element2->type()) {
+        if (type1 == element2->logical_type()) {
             switch (type1) {
                 case logical_type::TINYINT:
                     return equals_<int8_t>(element1, element2);

@@ -11,6 +11,7 @@ set(${PROJECT_NAME}_SOURCES
         document.cpp
         json_trie_node.cpp
         string_splitter.cpp
+        value.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}

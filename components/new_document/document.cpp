@@ -482,9 +482,9 @@ namespace components::new_document {
     bool is_equals_value(const impl::element<T>* value1, const impl::element<K>* value2) {
         using types::logical_type;
 
-        auto type1 = value1->type();
+        auto type1 = value1->logical_type();
 
-        if (type1 != value2->type()) {
+        if (type1 != value2->logical_type()) {
             return false;
         }
 
@@ -534,7 +534,7 @@ namespace components::new_document {
     std::pmr::string value_to_string(const impl::element<T>* value, std::pmr::memory_resource* allocator) {
         using types::logical_type;
 
-        switch (value->type()) {
+        switch (value->logical_type()) {
             case logical_type::TINYINT:
                 return create_pmr_string_(value->get_int8().value(), allocator);
             case logical_type::SMALLINT:

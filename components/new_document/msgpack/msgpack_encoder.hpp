@@ -12,7 +12,7 @@ using components::types::logical_type;
 
 template<typename Stream, typename T>
 void to_msgpack_(msgpack::packer<Stream>& o, const element<T>* value) {
-    switch (value->type()) {
+    switch (value->logical_type()) {
         case logical_type::BOOLEAN: {
             o.pack(value->get_bool().value());
             break;
@@ -73,7 +73,7 @@ void to_msgpack_(const json_trie_node* value, msgpack::object& o);
 
 template<typename T>
 void to_msgpack_(const element<T>* value, msgpack::object& o) {
-    switch (value->type()) {
+    switch (value->logical_type()) {
         case logical_type::BOOLEAN: {
             o.type = msgpack::type::BOOLEAN;
             o.via.boolean = value->get_bool().value();
