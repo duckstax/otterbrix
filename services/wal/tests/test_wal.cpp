@@ -41,7 +41,7 @@ test_wal create_test_wal(const std::filesystem::path& path) {
     static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
     result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
-    actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
+    std::pmr::memory_resource* resource = std::pmr::get_default_resource();
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
     configuration::config_wal config;

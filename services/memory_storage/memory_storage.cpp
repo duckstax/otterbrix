@@ -20,7 +20,7 @@ namespace services {
     memory_storage_t::load_buffer_t::load_buffer_t(std::pmr::memory_resource* resource)
         : collections(resource) {}
 
-    memory_storage_t::memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
+    memory_storage_t::memory_storage_t(std::pmr::memory_resource* resource,
                                        actor_zeta::scheduler_raw scheduler,
                                        log_t& log)
         : actor_zeta::cooperative_supervisor<memory_storage_t>(resource, "memory_storage")

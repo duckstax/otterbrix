@@ -9,21 +9,25 @@ namespace services {
 
     namespace dispatcher {
         class manager_dispatcher_t;
-        using manager_dispatcher_ptr = std::unique_ptr<manager_dispatcher_t>;
+        using manager_dispatcher_ptr = std::unique_ptr<manager_dispatcher_t, actor_zeta::deleter>;
     } // namespace dispatcher
 
     namespace disk {
-        class base_manager_disk_t;
-        using manager_disk_ptr = std::unique_ptr<base_manager_disk_t>;
+        class manager_disk_t;
+        using manager_disk_ptr = std::unique_ptr<manager_disk_t, actor_zeta::deleter>;
+        class manager_disk_empty_t;
+        using manager_disk_empty_ptr = std::unique_ptr<manager_disk_empty_t, actor_zeta::deleter>;
     } // namespace disk
 
     namespace wal {
-        class base_manager_wal_replicate_t;
-        using manager_wal_ptr = std::unique_ptr<base_manager_wal_replicate_t>;
+        class manager_wal_replicate_t;
+        class manager_wal_replicate_empty_t;
+        using manager_wal_ptr = std::unique_ptr<manager_wal_replicate_t, actor_zeta::deleter>;
+        using manager_wal_empty_ptr = std::unique_ptr<manager_wal_replicate_empty_t, actor_zeta::deleter>;
     } // namespace wal
 
     class memory_storage_t;
-    using memory_storage_ptr = std::unique_ptr<memory_storage_t>;
+    using memory_storage_ptr = std::unique_ptr<memory_storage_t, actor_zeta::deleter>;
 
 } // namespace services
 
@@ -41,14 +45,16 @@ namespace otterbrix {
     protected:
         explicit base_otterbrix_t(const configuration::config& config);
         log_t log_;
+        std::pmr::memory_resource* resource;
         actor_zeta::scheduler_ptr scheduler_;
-        actor_zeta::scheduler_ptr scheduler_dispather_;
-        actor_zeta::detail::pmr::memory_resource* resource;
+        actor_zeta::scheduler_ptr scheduler_dispatcher_;
         services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
-        services::disk::manager_disk_ptr manager_disk_;
         services::wal::manager_wal_ptr manager_wal_;
+        std::variant<std::monostate, services::disk::manager_disk_empty_ptr, services::disk::manager_disk_ptr>
+            manager_disk_;
+        std::variant<std::monostate, services::wal::manager_wal_empty_ptr, services::wal::manager_wal_ptr> manager_wal_;
+        std::unique_ptr<otterbrix::wrapper_dispatcher_t, actor_zeta::deleter> wrapper_dispatcher_;
         services::memory_storage_ptr memory_storage_;
-        std::unique_ptr<otterbrix::wrapper_dispatcher_t> wrapper_dispatcher_;
     };
 
 } // namespace otterbrix

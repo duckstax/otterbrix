@@ -6,7 +6,7 @@
 
 namespace services::wal {
 
-    base_manager_wal_replicate_t::base_manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr,
+    base_manager_wal_replicate_t::base_manager_wal_replicate_t(std::pmr::memory_resource* mr,
                                                                actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t>(mr, "manager_wal")
         , e_(scheduler) {}
@@ -19,7 +19,7 @@ namespace services::wal {
         execute(this, current_message());
     }
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_wal_replicate_t::manager_wal_replicate_t(std::pmr::memory_resource* mr,
                                                      actor_zeta::scheduler_raw scheduler,
                                                      configuration::config_wal config,
                                                      log_t& log)
@@ -182,7 +182,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(std::pmr::memory_resource* mr,
                                                                  actor_zeta::scheduler_raw scheduler,
                                                                  log_t& log)
         : base_manager_wal_replicate_t(mr, scheduler) {

@@ -51,9 +51,7 @@ namespace services {
             manager_disk = 1
         };
 
-        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
-                         actor_zeta::scheduler_raw scheduler,
-                         log_t& log);
+        memory_storage_t(std::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
         ~memory_storage_t();
 
         void sync(const address_pack& pack);

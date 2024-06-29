@@ -533,7 +533,7 @@ namespace services::dispatcher {
         return {logic_plan, parameters};
     }
 
-    manager_dispatcher_t::manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_dispatcher_t::manager_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::scheduler_raw scheduler,
                                                log_t& log)
         : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")

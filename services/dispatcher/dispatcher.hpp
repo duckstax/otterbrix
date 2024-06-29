@@ -99,7 +99,7 @@ namespace services::dispatcher {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
         }
 
-        manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
+        manager_dispatcher_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
 
         ~manager_dispatcher_t() override;
 
@@ -133,7 +133,5 @@ namespace services::dispatcher {
 
         auto dispatcher() -> actor_zeta::address_t;
     };
-
-    using manager_dispatcher_ptr = std::unique_ptr<manager_dispatcher_t>;
 
 } // namespace services::dispatcher
