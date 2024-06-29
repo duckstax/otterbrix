@@ -134,7 +134,7 @@ include_directories(services)
 add_subdirectory(services)
 add_subdirectory(integration)
 if(EXAMPLE)
-    add_subdirectory(example)
+    # add_subdirectory(example)
 endif()
 
 

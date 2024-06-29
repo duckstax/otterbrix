@@ -10,9 +10,9 @@ namespace components::cursor {
         : type(type)
         , what(what) {}
 
-    void cursor_t::push(sub_cursor_t* sub_cursor) {
+    void cursor_t::push(std::unique_ptr<sub_cursor_t> sub_cursor) {
         size_ += sub_cursor->size();
-        sub_cursor_.emplace_back(sub_cursor);
+        sub_cursor_.emplace_back(std::move(sub_cursor));
     }
 
     std::size_t cursor_t::size() const { return size_; }
@@ -113,4 +113,5 @@ namespace components::cursor {
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, error_code_t type, const std::string& what) {
         return cursor_t_ptr{new cursor_t(resource, error_t(type, what))};
     }
+
 } // namespace components::cursor

@@ -18,6 +18,7 @@ target_link_libraries(
     otterbrix::test_generaty
     CONAN_PKG::boost
     CONAN_PKG::catch2
+    CONAN_PKG::actor-zeta
 )
 
 include(CTest)

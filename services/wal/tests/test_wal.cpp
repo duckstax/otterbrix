@@ -4,6 +4,7 @@
 #include <crc32c/crc32c.h>
 #include <log/log.hpp>
 #include <string>
+#include <thread>
 
 #include <components/document/document.hpp>
 #include <components/ql/statements.hpp>
@@ -11,6 +12,8 @@
 #include <core/non_thread_scheduler/scheduler_test.hpp>
 #include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
+
+using namespace std::chrono_literals;
 
 using namespace services::wal;
 using namespace components::ql;
@@ -20,9 +23,9 @@ constexpr auto database_name = "test_database";
 constexpr auto collection_name = "test_collection";
 constexpr std::size_t count_documents = 5;
 
-void test_insert_one(wal_replicate_t* wal) {
+void test_insert_one(wal_replicate_t* wal, std::pmr::memory_resource* resource) {
     for (int num = 1; num <= 5; ++num) {
-        auto document = gen_doc(num, wal->resource());
+        auto document = gen_doc(num, resource);
         insert_one_t data(database_name, collection_name, std::move(document));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -31,31 +34,45 @@ void test_insert_one(wal_replicate_t* wal) {
 }
 
 struct test_wal {
+    test_wal(const std::filesystem::path& path, std::pmr::memory_resource* resource)
+        : log(initialization_logger("python", "/tmp/docker_logs/"))
+        , scheduler(new core::non_thread_scheduler::scheduler_test_t(1, 1))
+        , config([path, this]() {
+            configuration::config_wal config_wal;
+            log.set_level(log_t::level::trace);
+            std::filesystem::remove_all(path);
+            std::filesystem::create_directories(path);
+            config_wal.path = path;
+            return config_wal;
+        }())
+        , manager(actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource, scheduler, config, log))
+        , wal([this]() {
+            auto allocate_byte = sizeof(wal_replicate_t);
+            auto allocate_byte_alignof = alignof(wal_replicate_t);
+            void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
+            return new (buffer) wal_replicate_t(manager.get(), log, config);
+        }()) {
+        log.set_level(log_t::level::trace);
+        std::filesystem::remove_all(path);
+        std::filesystem::create_directories(path);
+        config.path = path;
+    }
+
+    log_t log;
     core::non_thread_scheduler::scheduler_test_t* scheduler{nullptr};
+    configuration::config_wal config;
+    std::unique_ptr<manager_wal_replicate_t, actor_zeta::pmr::deleter_t> manager;
     wal_replicate_t* wal{nullptr};
 };
 
 test_wal create_test_wal(const std::filesystem::path& path, std::pmr::memory_resource* resource) {
-    test_wal result;
-    static auto log = initialization_logger("python", "/tmp/docker_logs/");
-    log.set_level(log_t::level::trace);
-    result.scheduler = new core::non_thread_scheduler::scheduler_test_t(1, 1);
-    std::filesystem::remove_all(path);
-    std::filesystem::create_directories(path);
-    configuration::config_wal config;
-    config.path = path;
-    auto manager = actor_zeta::spawn_supervisor<manager_wal_replicate_t>(resource, result.scheduler, config, log);
-    auto allocate_byte = sizeof(wal_replicate_t);
-    auto allocate_byte_alignof = alignof(wal_replicate_t);
-    void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-    result.wal = new (buffer) wal_replicate_t(manager.get(), log, config);
-    return result;
+    return {path, resource};
 }
 
 TEST_CASE("insert one test") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/insert_one", &resource);
-    test_insert_one(test_wal.wal);
+    test_insert_one(test_wal.wal, &resource);
 
     std::size_t read_index = 0;
     for (int num = 1; num <= 5; ++num) {
@@ -165,7 +182,7 @@ TEST_CASE("delete one test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_one", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(&resource,
+        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
@@ -318,7 +335,7 @@ TEST_CASE("update many test") {
 TEST_CASE("test find start record") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/find_start_record", &resource);
-    test_insert_one(test_wal.wal);
+    test_insert_one(test_wal.wal, &resource);
 
     std::size_t start_index;
     REQUIRE(test_wal.wal->test_find_start_record(services::wal::id_t(1), start_index));
@@ -330,7 +347,7 @@ TEST_CASE("test find start record") {
 TEST_CASE("test read id") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/read_id", &resource);
-    test_insert_one(test_wal.wal);
+    test_insert_one(test_wal.wal, &resource);
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
@@ -343,7 +360,7 @@ TEST_CASE("test read id") {
 TEST_CASE("test read record") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/read_record", &resource);
-    test_insert_one(test_wal.wal);
+    test_insert_one(test_wal.wal, &resource);
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {

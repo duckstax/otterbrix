@@ -58,7 +58,7 @@ namespace services::collection::executor {
                          address(),
                          handler_id(route::execute_plan_finish),
                          session,
-                         make_cursor(resource_, operation_status_t::success));
+                         make_cursor(resource(), operation_status_t::success));
     }
 
     void executor_t::create_index_finish_index_exist(const session_id_t& session,
@@ -71,7 +71,7 @@ namespace services::collection::executor {
             address(),
             handler_id(route::execute_plan_finish),
             session,
-            make_cursor(resource_, error_code_t::index_create_fail, "index with name : " + name + " exist"));
+            make_cursor(resource(), error_code_t::index_create_fail, "index with name : " + name + " exist"));
         sessions::remove(collection->sessions(), session, name);
     }
 
@@ -89,20 +89,18 @@ namespace services::collection::executor {
                                                 result,
                                                 collection->storage());
         auto& suspend_plan = sessions::find(collection->sessions(), session).get<sessions::suspend_plan_t>();
-        auto res = collection->cursor_storage().emplace(
-            session,
-            std::make_unique<components::cursor::sub_cursor_t>(resource_, collection->name()));
+        auto res = std::make_unique<components::cursor::sub_cursor_t>(resource(), collection->name());
         suspend_plan.plan->on_execute(&suspend_plan.pipeline_context);
         if (suspend_plan.plan->is_executed()) {
             if (suspend_plan.plan->output()) {
                 for (const auto& document : suspend_plan.plan->output()->documents()) {
-                    res.first->second->append(document);
+                    res->append(document);
                 }
             }
         }
         sessions::remove(collection->sessions(), session);
-        auto cursor = make_cursor(resource_);
-        cursor->push(res.first->second.get());
+        auto cursor = make_cursor(resource());
+        cursor->push(std::move(res));
         execute_sub_plan_finish_(session, cursor);
     }
 

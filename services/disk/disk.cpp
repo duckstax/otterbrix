@@ -42,7 +42,7 @@ namespace services::disk {
         }
     }
 
-    disk_t::~disk_t() = default;
+    disk_t::~disk_t() { db_->Close(); }
 
     void disk_t::save_document(const database_name_t& database,
                                const collection_name_t& collection,

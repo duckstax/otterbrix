@@ -26,6 +26,7 @@ target_link_libraries(
         CONAN_PKG::spdlog
         CONAN_PKG::abseil
         CONAN_PKG::boost
+        CONAN_PKG::actor-zeta
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC
