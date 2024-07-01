@@ -28,7 +28,6 @@ namespace services::disk {
 
     public:
         index_agent_disk_t(manager_disk_t*,
-                           std::pmr::memory_resource* resource,
                            const path_t&,
                            collection::context_collection_t*,
                            const index_name_t&,
