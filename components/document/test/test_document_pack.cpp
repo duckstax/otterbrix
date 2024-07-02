@@ -1,8 +1,8 @@
-#include "components/new_document/msgpack/msgpack_encoder.hpp"
+#include "components/document/msgpack/msgpack_encoder.hpp"
 #include "msgpack.hpp"
 #include <catch2/catch.hpp>
-#include <components/new_document/document.hpp>
-#include <components/new_document/temp_generator/generaty.hpp>
+#include <components/document/document.hpp>
+#include <components/document/temp_generator/generaty.hpp>
 
 using namespace components::new_document;
 

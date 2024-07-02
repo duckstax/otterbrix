@@ -1,14 +1,9 @@
-project(test_document_base)
+project(test_new_document_base)
 
 set( ${PROJECT_NAME}_SOURCES
-	    test_mutable.cpp
-	    test_shared_keys.cpp
-	    test_support.cpp
-	    test_value.cpp
-		test_pack_msgpack.cpp
-		test_document_id.cpp
-		test_document_json.cpp
-		test_document_view.cpp
+        test_document_json.cpp
+        test_document_t.cpp
+        test_document_pack.cpp
 )
 
 find_package( Threads )
@@ -17,11 +12,11 @@ add_executable(${PROJECT_NAME} main.cpp  ${${PROJECT_NAME}_SOURCES})
 
 target_link_libraries(
         ${PROJECT_NAME} PRIVATE
-        otterbrix::document
-		otterbrix::test_generaty
-		CONAN_PKG::catch2
-		CONAN_PKG::boost
-		${CMAKE_THREAD_LIBS_INIT}
+        otterbrix::new_document
+        CONAN_PKG::boost
+        CONAN_PKG::catch2
+        CONAN_PKG::msgpack-cxx
+        ${CMAKE_THREAD_LIBS_INIT}
 )
 
 include(CTest)

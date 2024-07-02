@@ -1,8 +1,8 @@
 #pragma once
-#include <components/new_document/base.hpp>
-#include <components/new_document/impl/document.hpp>
-#include <components/new_document/impl/element.hpp>
-#include <components/new_document/impl/tape_builder.hpp>
+#include <components/document/base.hpp>
+#include <components/document/impl/document.hpp>
+#include <components/document/impl/element.hpp>
+#include <components/document/impl/tape_builder.hpp>
 #include <components/types/types.hpp>
 #include <cstdint>
 #include <string>
@@ -13,11 +13,9 @@ namespace components::new_document {
     class value_t {
     public:
         template<typename T>
-        explicit value_t(std::pmr::memory_resource* allocator, T value);
-        explicit value_t(std::pmr::memory_resource* allocator);
+        explicit value_t(std::pmr::memory_resource* allocator, impl::mutable_document* tape, T value);
 
-        template<typename T>
-        void set(T value);
+        void set(impl::element<impl::mutable_document> element);
 
         types::physical_type physical_type() const noexcept;
         types::logical_type logical_type() const noexcept;
@@ -50,8 +48,6 @@ namespace components::new_document {
 
     private:
         impl::element<impl::mutable_document> element_;
-        impl::mutable_document* mut_src_;
-        tape_builder<impl::tape_writer_to_mutable> builder_{};
     };
 
     std::string to_string(const value_t& value);
@@ -59,17 +55,10 @@ namespace components::new_document {
     value_t sum(const value_t& value1, const value_t& value2);
 
     template<typename T>
-    value_t::value_t(std::pmr::memory_resource* allocator, T value)
-        : mut_src_(new (allocator->allocate(sizeof(impl::mutable_document))) impl::mutable_document(allocator)) {
-        builder_ = components::new_document::tape_builder<impl::tape_writer_to_mutable>(allocator, *mut_src_);
-        element_ = mut_src_->next_element();
-        builder_.build(value);
-    }
-
-    template<typename T>
-    void value_t::set(T value) {
-        element_ = mut_src_->next_element();
-        builder_.build(value);
+    value_t::value_t(std::pmr::memory_resource* allocator, impl::mutable_document* tape, T value) {
+        auto builder = components::new_document::tape_builder<impl::tape_writer_to_mutable>(allocator, *tape);
+        element_ = tape->next_element();
+        builder.build(value);
     }
 
     template<class T>

@@ -2,9 +2,8 @@
 
 namespace components::new_document {
 
-    value_t::value_t(std::pmr::memory_resource* allocator)
-        : mut_src_(new (allocator->allocate(sizeof(impl::mutable_document))) impl::mutable_document(allocator)) {
-        builder_ = components::new_document::tape_builder<impl::tape_writer_to_mutable>(allocator, *mut_src_);
+    void value_t::set(impl::element<impl::mutable_document> element) {
+        element_ = element;
     }
 
     types::physical_type value_t::physical_type() const noexcept { return element_.physical_type(); }

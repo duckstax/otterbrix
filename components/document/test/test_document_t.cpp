@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include <components/new_document/document.hpp>
-#include <components/new_document/temp_generator/generaty.hpp>
+#include <components/document/document.hpp>
+#include <components/document/temp_generator/generaty.hpp>
 
 using components::new_document::compare_t;
 using components::new_document::document_t;
