@@ -3,7 +3,7 @@
 #include <ostream>
 #include <string>
 
-namespace components::new_document {
+namespace components::document {
 
     enum error_code
     {
@@ -135,4 +135,4 @@ namespace components::new_document {
         return out << value.value();
     }
 
-} // namespace components::new_document
+} // namespace components::document

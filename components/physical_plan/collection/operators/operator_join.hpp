@@ -19,8 +19,8 @@ namespace services::collection::operators {
         type join_type_;
         std::pmr::vector<components::expressions::join_expression_ptr> expressions_;
 
-        bool check_expressions_(components::document::document_view_t left,
-                                components::document::document_view_t right);
+        bool check_expressions_(const components::document::document_ptr& left,
+                                const components::document::document_ptr& right);
         void on_execute_impl(components::pipeline::context_t* pipeline_context) final;
         void inner_join_();
         void outer_full_join_();

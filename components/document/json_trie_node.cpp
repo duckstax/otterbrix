@@ -1,6 +1,6 @@
 #include "json_trie_node.hpp"
 
-namespace components::new_document::json {
+namespace components::document::json {
 
     json_trie_node::json_trie_node(allocator_type* allocator, json_type type) noexcept
         : allocator_(allocator)
@@ -202,4 +202,4 @@ namespace components::new_document::json {
 
     json_trie_node::allocator_type* json_trie_node::get_allocator() { return allocator_; }
 
-} // namespace components::new_document::json
+} // namespace components::document::json

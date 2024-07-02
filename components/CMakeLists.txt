@@ -1,7 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_subdirectory(document)
-add_subdirectory(new_document)
 
 add_subdirectory(cursor)
 add_subdirectory(dataframe)

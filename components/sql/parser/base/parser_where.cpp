@@ -149,17 +149,19 @@ namespace components::sql::impl {
 
             if (is_token_field_name(*begin) && is_token_operator(*(begin + 1)) && is_token_field_value(*(begin + 2))) {
                 return {parser_result{true},
-                        expressions::make_compare_expression(resource,
-                                                             get_compare_expression(*(begin + 1)),
-                                                             expressions::key_t{token_clean_value(*begin)},
-                                                             statement.add_parameter(parse_value(*(begin + 2))))};
+                        expressions::make_compare_expression(
+                            resource,
+                            get_compare_expression(*(begin + 1)),
+                            expressions::key_t{token_clean_value(*begin)},
+                            statement.add_parameter(parse_value(*(begin + 2), statement.parameters().tape, resource)))};
             } else if (is_token_field_value(*begin) && is_token_operator(*(begin + 1)) &&
                        is_token_field_name(*(begin + 2))) {
                 return {parser_result{true},
-                        expressions::make_compare_expression(resource,
-                                                             get_compare_expression(*(begin + 1)),
-                                                             expressions::key_t{token_clean_value(*(begin + 2))},
-                                                             statement.add_parameter(parse_value(*begin)))};
+                        expressions::make_compare_expression(
+                            resource,
+                            get_compare_expression(*(begin + 1)),
+                            expressions::key_t{token_clean_value(*(begin + 2))},
+                            statement.add_parameter(parse_value(*begin, statement.parameters().tape, resource)))};
             }
 
             return {parser_result{false}, nullptr};

@@ -57,8 +57,9 @@ namespace components::sql::insert::impl {
 
         bool is_first = true;
         while (is_first || (token = lexer.next_not_whitespace_token()).type == token_type::comma) {
-            std::pmr::vector<::document::wrapper_value_t> values(resource);
-            res = parse_field_values(lexer, values);
+            std::pmr::vector<document::value_t> values(resource);
+            auto tape = std::make_unique<document::impl::mutable_document>(resource);
+            res = parse_field_values(lexer, values, tape.get(), resource);
             if (res.is_error()) {
                 return res;
             }
@@ -68,10 +69,10 @@ namespace components::sql::insert::impl {
                                                             "not valid insert query"};
             }
 
-            auto doc = document::make_document();
+            auto doc = document::make_document(resource);
             auto it_field = fields.begin();
             for (auto it_value = values.begin(); it_value < values.end(); ++it_field, ++it_value) {
-                doc->set(*it_field, **it_value);
+                doc->set(*it_field, *it_value);
             }
             documents.push_back(doc);
             is_first = false;

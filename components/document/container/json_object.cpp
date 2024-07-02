@@ -1,7 +1,7 @@
 #include "json_object.hpp"
 #include <components/document/json_trie_node.hpp>
 
-namespace components::new_document::json {
+namespace components::document::json {
 
     size_t json_trie_node_hash::operator()(const boost::intrusive_ptr<json_trie_node>& n) const {
         if (n->is_immut()) {
@@ -168,4 +168,4 @@ namespace components::new_document::json {
         return res;
     }
 
-} // namespace components::new_document::json
+} // namespace components::document::json

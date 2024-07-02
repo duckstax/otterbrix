@@ -1,10 +1,10 @@
 #include <catch2/catch.hpp>
 #include <components/document/document.hpp>
-#include <components/document/temp_generator/generaty.hpp>
+#include <components/tests/generaty.hpp>
 
-using components::new_document::compare_t;
-using components::new_document::document_t;
-using components::new_document::error_code_t;
+using components::document::compare_t;
+using components::document::document_t;
+using components::document::error_code_t;
 
 TEST_CASE("document_t::is/get value") {
     auto allocator = std::pmr::new_delete_resource();
@@ -215,7 +215,7 @@ TEST_CASE("document_t::hugeint") {
     auto doc = make_document(allocator);
 
     std::string_view key("/countHugeInt");
-    __int128_t value = 3;
+    int128_t value = 3;
     doc->set(key, value);
 
     REQUIRE(doc->is_exists(key));

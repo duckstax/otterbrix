@@ -6,13 +6,12 @@
 #include <limits>
 #include <memory_resource>
 
-namespace components::new_document {
+namespace components::document {
 
     using int128_t = absl::int128;
 
-    template<typename T>
+    template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
     static inline bool is_equals(T x, T y) {
-        static_assert(std::is_floating_point<T>());
         return std::fabs(x - y) < std::numeric_limits<T>::epsilon();
     }
 
@@ -41,4 +40,4 @@ namespace components::new_document {
         array_end
     };
 
-} // namespace components::new_document
+} // namespace components::document

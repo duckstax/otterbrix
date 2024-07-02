@@ -1,10 +1,10 @@
 #pragma once
 
-#include <components/new_document/impl/document.hpp>
-#include <components/new_document/impl/mr_utils.hpp>
-#include <components/new_document/impl/tape_writer.hpp>
+#include <components/document/impl/document.hpp>
+#include <components/document/impl/mr_utils.hpp>
+#include <components/document/impl/tape_writer.hpp>
 
-namespace components::new_document {
+namespace components::document {
 
     template<typename K>
     struct tape_builder {
@@ -31,7 +31,7 @@ namespace components::new_document {
         void build(int32_t value) noexcept;
         void build(int64_t value) noexcept;
 
-        void build(__int128_t value) noexcept;
+        void build(int128_t value) noexcept;
 
         void build(uint8_t value) noexcept;
         void build(uint16_t value) noexcept;
@@ -128,8 +128,8 @@ namespace components::new_document {
     }
 
     template<typename K>
-    void tape_builder<K>::build(__int128_t value) noexcept {
-        append3(value, types::physical_type::INT128);
+    void tape_builder<K>::build(int128_t value) noexcept {
+        append3(__int128_t(value), types::physical_type::INT128);
     }
 
     template<typename K>
@@ -203,4 +203,4 @@ namespace components::new_document {
         tape_->copy(data + 1);
     }
 
-} // namespace components::new_document
+} // namespace components::document

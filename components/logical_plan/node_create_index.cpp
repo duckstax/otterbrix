@@ -1,4 +1,5 @@
 #include "node_create_index.hpp"
+#include <components/types/types.hpp>
 #include <sstream>
 
 namespace components::logical_plan {

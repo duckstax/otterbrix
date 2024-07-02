@@ -22,7 +22,7 @@ namespace services::collection::operators {
               index_ql_->name());
 
         // Index has pre setup compare type already
-        if (index_ql_->index_compare_ != core::type::undef) {
+        if (index_ql_->index_compare_ != components::types::logical_type::UNKNOWN) {
             create_index_impl(context_, pipeline_context, std::move(index_ql_));
             return;
         }
@@ -41,10 +41,7 @@ namespace services::collection::operators {
             return;
         }
 
-        // Get view for first doc to retrieve types by key
-        const auto doc_view = document_view_t(context_->storage().begin()->second);
-
-        if (!try_update_index_compare(doc_view, index_ql_)) {
+        if (!try_update_index_compare(context_->storage().begin()->second, index_ql_)) {
             warn(context_->log(),
                  "Can't deduce compare type for index: {} with key {}",
                  index_ql_->name_,

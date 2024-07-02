@@ -27,11 +27,9 @@ namespace components::index {
             for (auto j = range.first; j != range.second; ++j) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                document::document_view_t view(i);
-                if ((!(view.is_null(key)))) {
-                    auto* data = view.get_value(key);
-                    ::document::wrapper_value_t key_(data);
-                    index->insert(key_, i);
+                if ((!(i->is_null(key)))) {
+                    auto data = i->get_value(key);
+                    index->insert(data, i);
                 }
             }
         }
@@ -46,11 +44,9 @@ namespace components::index {
             for (auto j = range.first; j != range.second; ++j) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                document::document_view_t view(doc.second);
-                if ((!(view.is_null(key)))) {
-                    auto* data = view.get_value(key);
-                    ::document::wrapper_value_t key_(data);
-                    index->insert(key_, {doc.first, doc.second});
+                if ((!(doc.second->is_null(key)))) {
+                    auto data = doc.second->get_value(key);
+                    index->insert(data, {doc.first, doc.second});
                 }
             }
         }
@@ -63,11 +59,9 @@ namespace components::index {
             if (j->which() == key_t::type::string) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                document::document_view_t view(doc);
-                if ((!(view.is_null(key)))) {
-                    auto* data = view.get_value(key);
-                    ::document::wrapper_value_t key_(data);
-                    index->insert(key_, doc);
+                if ((!(doc->is_null(key)))) {
+                    auto data = doc->get_value(key);
+                    index->insert(data, doc);
                 }
             }
         }
@@ -97,23 +91,21 @@ namespace components::index {
 
     bool is_match_document(const index_ptr& index, const document_ptr& document) {
         auto keys = index->keys();
-        components::document::document_view_t view(document);
         for (auto key = keys.first; key != keys.second; ++key) {
-            if (!view.is_exists(key->as_string())) {
+            if (!document->is_exists(key->as_string())) {
                 return false;
             }
         }
         return true;
     }
 
-    components::index::value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
+    value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
         auto keys = index->keys();
-        components::document::document_view_t view(document);
         if (keys.first != keys.second) {
-            return components::index::value_t(view.get_value(keys.first->as_string()));
+            return components::index::value_t(document->get_value(keys.first->as_string()));
             //todo: multi values index
         }
-        return components::index::value_t(nullptr);
+        return value_t{};
     }
 
     index_engine_t::index_engine_t(actor_zeta::detail::pmr::memory_resource* resource)

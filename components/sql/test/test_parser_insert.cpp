@@ -1,5 +1,5 @@
 #include <catch2/catch.hpp>
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 #include <components/sql/parser.hpp>
 
 using namespace components;
@@ -13,10 +13,10 @@ TEST_CASE("parser::insert_into") {
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "schema");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
         REQUIRE(std::get<ql::insert_many_t>(ql).documents_.size() == 1);
-        components::document::document_view_t view(std::get<ql::insert_many_t>(ql).documents_.front());
-        REQUIRE(view.get_long("id") == 1);
-        REQUIRE(view.get_string("name") == "Name");
-        REQUIRE(view.get_long("count") == 1);
+        auto doc = std::get<ql::insert_many_t>(ql).documents_.front();
+        REQUIRE(doc->get_long("id") == 1);
+        REQUIRE(doc->get_string("name") == "Name");
+        REQUIRE(doc->get_long("count") == 1);
     }
 
     SECTION("insert into without schema") {
@@ -25,10 +25,10 @@ TEST_CASE("parser::insert_into") {
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
         REQUIRE(std::get<ql::insert_many_t>(ql).documents_.size() == 1);
-        components::document::document_view_t view(std::get<ql::insert_many_t>(ql).documents_.front());
-        REQUIRE(view.get_long("id") == 1);
-        REQUIRE(view.get_string("name") == "Name");
-        REQUIRE(view.get_long("count") == 1);
+        auto doc = std::get<ql::insert_many_t>(ql).documents_.front();
+        REQUIRE(doc->get_long("id") == 1);
+        REQUIRE(doc->get_string("name") == "Name");
+        REQUIRE(doc->get_long("count") == 1);
     }
 
     SECTION("insert into with quoted") {
@@ -37,10 +37,10 @@ TEST_CASE("parser::insert_into") {
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
         REQUIRE(std::get<ql::insert_many_t>(ql).documents_.size() == 1);
-        components::document::document_view_t view(std::get<ql::insert_many_t>(ql).documents_.front());
-        REQUIRE(view.get_long("id") == 1);
-        REQUIRE(view.get_string("name") == "Name");
-        REQUIRE(view.get_long("count") == 1);
+        auto doc = std::get<ql::insert_many_t>(ql).documents_.front();
+        REQUIRE(doc->get_long("id") == 1);
+        REQUIRE(doc->get_string("name") == "Name");
+        REQUIRE(doc->get_long("count") == 1);
     }
 
     SECTION("insert into multi-documents") {
@@ -56,14 +56,14 @@ TEST_CASE("parser::insert_into") {
         REQUIRE(std::get<ql::insert_many_t>(ql).database_ == "");
         REQUIRE(std::get<ql::insert_many_t>(ql).collection_ == "table");
         REQUIRE(std::get<ql::insert_many_t>(ql).documents_.size() == 5);
-        components::document::document_view_t view1(std::get<ql::insert_many_t>(ql).documents_.front());
-        REQUIRE(view1.get_long("id") == 1);
-        REQUIRE(view1.get_string("name") == "Name1");
-        REQUIRE(view1.get_long("count") == 1);
-        components::document::document_view_t view5(std::get<ql::insert_many_t>(ql).documents_.back());
-        REQUIRE(view5.get_long("id") == 5);
-        REQUIRE(view5.get_string("name") == "Name5");
-        REQUIRE(view5.get_long("count") == 5);
+        auto doc1 = std::get<ql::insert_many_t>(ql).documents_.front();
+        REQUIRE(doc1->get_long("id") == 1);
+        REQUIRE(doc1->get_string("name") == "Name1");
+        REQUIRE(doc1->get_long("count") == 1);
+        auto doc5 = std::get<ql::insert_many_t>(ql).documents_.back();
+        REQUIRE(doc5->get_long("id") == 5);
+        REQUIRE(doc5->get_string("name") == "Name5");
+        REQUIRE(doc5->get_long("count") == 5);
     }
 
     SECTION("insert into error 01") {

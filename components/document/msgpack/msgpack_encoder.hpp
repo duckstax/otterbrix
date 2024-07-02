@@ -1,13 +1,13 @@
 #pragma once
 
-#include <components/new_document/document.hpp>
+#include <components/document/document.hpp>
 #include <msgpack.hpp>
 
-using components::new_document::document_ptr;
-using components::new_document::document_t;
-using components::new_document::impl::element;
-using components::new_document::json::json_trie_node;
-using components::new_document::json::json_type;
+using components::document::document_ptr;
+using components::document::document_t;
+using components::document::impl::element;
+using components::document::json::json_trie_node;
+using components::document::json::json_type;
 using components::types::logical_type;
 
 template<typename Stream, typename T>
@@ -112,10 +112,13 @@ void to_msgpack_(const element<T>* value, msgpack::object& o) {
             o.type = msgpack::type::object_type::NIL;
             break;
         }
+        default:
+            assert(false); // should be unreachable;
+            break;
     }
 }
 
-namespace components::new_document {
+namespace components::document {
     class msgpack_decoder_t {
         msgpack_decoder_t() = delete;
         msgpack_decoder_t(const msgpack_decoder_t&) = delete;
@@ -126,7 +129,7 @@ namespace components::new_document {
     public:
         const static document_ptr to_structure_(const msgpack::object& msg_object);
     };
-} // namespace components::new_document
+} // namespace components::document
 
 // User defined class template specialization
 namespace msgpack {
@@ -139,7 +142,7 @@ namespace msgpack {
                     if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
-                    v = components::new_document::msgpack_decoder_t::to_structure_(o);
+                    v = components::document::msgpack_decoder_t::to_structure_(o);
                     return o;
                 }
             };

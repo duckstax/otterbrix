@@ -87,7 +87,7 @@ namespace services::collection::executor {
         if (suspend_plan.plan->is_executed()) {
             if (suspend_plan.plan->output()) {
                 for (const auto& document : suspend_plan.plan->output()->documents()) {
-                    res.first->second->append(document_view_t(document));
+                    res.first->second->append(document);
                 }
             }
         }

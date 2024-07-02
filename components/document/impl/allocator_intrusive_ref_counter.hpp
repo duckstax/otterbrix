@@ -1,7 +1,7 @@
 #pragma once
 
 #include <atomic>
-#include <components/new_document/impl/mr_utils.hpp>
+#include <components/document/impl/mr_utils.hpp>
 #include <memory_resource>
 
 template<typename T>

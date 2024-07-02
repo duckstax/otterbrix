@@ -2,9 +2,9 @@
 #include "msgpack.hpp"
 #include <catch2/catch.hpp>
 #include <components/document/document.hpp>
-#include <components/document/temp_generator/generaty.hpp>
+#include <components/tests/generaty.hpp>
 
-using namespace components::new_document;
+using namespace components::document;
 
 TEST_CASE("native pack document") {
     auto doc1 = gen_doc(10, std::pmr::get_default_resource());

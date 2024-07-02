@@ -1,6 +1,5 @@
 #include "test_operator_generaty.hpp"
 #include <catch2/catch.hpp>
-#include <components/document/support/varint.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/physical_plan/collection/operators/aggregate/operator_avg.hpp>
 #include <components/physical_plan/collection/operators/aggregate/operator_count.hpp>
@@ -17,6 +16,9 @@ using components::ql::add_parameter;
 
 TEST_CASE("operator::aggregate::count") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("count::all") {
         operator_count_t count(d(collection));
@@ -25,7 +27,7 @@ TEST_CASE("operator::aggregate::count") {
                                                               predicates::create_predicate(d(collection), cond),
                                                               components::ql::limit_t::unlimit())));
         count.on_execute(nullptr);
-        REQUIRE(count.value()->as_unsigned() == 100);
+        REQUIRE(count.value().as_unsigned() == 100);
     }
 
     SECTION("count::match") {
@@ -38,15 +40,18 @@ TEST_CASE("operator::aggregate::count") {
                                                               predicates::create_predicate(d(collection), cond),
                                                               components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 10);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         count.on_execute(&pipeline_context);
-        REQUIRE(count.value()->as_unsigned() == 10);
+        REQUIRE(count.value().as_unsigned() == 10);
     }
 }
 
 TEST_CASE("operator::aggregate::min") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("min::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -55,7 +60,7 @@ TEST_CASE("operator::aggregate::min") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         min_.on_execute(nullptr);
-        REQUIRE(min_.value()->as_unsigned() == 1);
+        REQUIRE(min_.value().as_unsigned() == 1);
     }
 
     SECTION("min::match") {
@@ -66,15 +71,18 @@ TEST_CASE("operator::aggregate::min") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 80);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(80));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         min_.on_execute(&pipeline_context);
-        REQUIRE(min_.value()->as_unsigned() == 81);
+        REQUIRE(min_.value().as_unsigned() == 81);
     }
 }
 
 TEST_CASE("operator::aggregate::max") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("max::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -83,7 +91,7 @@ TEST_CASE("operator::aggregate::max") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         max_.on_execute(nullptr);
-        REQUIRE(max_.value()->as_unsigned() == 100);
+        REQUIRE(max_.value().as_unsigned() == 100);
     }
 
     SECTION("max::match") {
@@ -94,15 +102,18 @@ TEST_CASE("operator::aggregate::max") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 20);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(20));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         max_.on_execute(&pipeline_context);
-        REQUIRE(max_.value()->as_unsigned() == 19);
+        REQUIRE(max_.value().as_unsigned() == 19);
     }
 }
 
 TEST_CASE("operator::aggregate::sum") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("sum::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -111,7 +122,7 @@ TEST_CASE("operator::aggregate::sum") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         sum_.on_execute(nullptr);
-        REQUIRE(sum_.value()->as_unsigned() == 5050);
+        REQUIRE(sum_.value().as_unsigned() == 5050);
     }
 
     SECTION("sum::match") {
@@ -122,15 +133,18 @@ TEST_CASE("operator::aggregate::sum") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 10);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         sum_.on_execute(&pipeline_context);
-        REQUIRE(sum_.value()->as_unsigned() == 45);
+        REQUIRE(sum_.value().as_unsigned() == 45);
     }
 }
 
 TEST_CASE("operator::aggregate::avg") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("avg::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -139,7 +153,7 @@ TEST_CASE("operator::aggregate::avg") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         avg_.on_execute(nullptr);
-        REQUIRE(::document::is_equals(avg_.value()->as_double(), 50.5));
+        REQUIRE(components::document::is_equals(avg_.value().as_double(), 50.5));
     }
 
     SECTION("avg::match") {
@@ -150,9 +164,9 @@ TEST_CASE("operator::aggregate::avg") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 10);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         avg_.on_execute(&pipeline_context);
-        REQUIRE(::document::is_equals(avg_.value()->as_double(), 5.0));
+        REQUIRE(components::document::is_equals(avg_.value().as_double(), 5.0));
     }
 }

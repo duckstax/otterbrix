@@ -14,7 +14,7 @@ using namespace components;
         std::stringstream s;                                                                                           \
         s << del.match_;                                                                                               \
         REQUIRE(s.str() == RESULT);                                                                                    \
-        REQUIRE(del.parameters().size() == PARAMS.size());                                                             \
+        REQUIRE(del.parameters().parameters.size() == PARAMS.size());                                                  \
         for (auto i = 0ul; i < PARAMS.size(); ++i) {                                                                   \
             REQUIRE(del.parameter(core::parameter_id_t(uint16_t(i))) == PARAMS.at(i));                                 \
         }                                                                                                              \
@@ -37,20 +37,22 @@ using namespace components;
         REQUIRE(res.error.mistake().data() == query + POS);                                                            \
     }
 
-using v = ::document::wrapper_value_t;
+using v = ::document::value_t;
 using vec = std::vector<v>;
 
 TEST_CASE("parser::delete_from_where") {
     auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<document::impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
 
     TEST_SIMPLE_DELETE("delete from schema.table where number == 10;",
                        R"_($match: {"number": {$eq: #0}})_",
-                       vec({v(10l)}));
+                       vec({new_value(10l)}));
 
     TEST_SIMPLE_DELETE(
         "delete from schema.table where not (number = 10) and not(name = 'doc 10' or count = 2);",
         R"_($match: {$and: [$not: ["number": {$eq: #0}], $not: [$or: ["name": {$eq: #1}, "count": {$eq: #2}]]]})_",
-        vec({v(10l), v(std::string("doc 10")), v(2l)}));
+        vec({new_value(10l), new_value(std::pmr::string("doc 10")), new_value(2l)}));
 }
 
 TEST_CASE("parser::delete no valid queries") {

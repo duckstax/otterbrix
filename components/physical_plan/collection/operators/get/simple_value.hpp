@@ -13,7 +13,7 @@ namespace services::collection::operators::get {
 
         explicit simple_value_t(const components::expressions::key_t& key);
 
-        document::wrapper_value_t get_value_impl(const components::document::document_ptr& document) final;
+        components::document::value_t get_value_impl(const components::document::document_ptr& document);
     };
 
 } // namespace services::collection::operators::get

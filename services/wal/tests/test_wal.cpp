@@ -5,7 +5,7 @@
 #include <log/log.hpp>
 #include <string>
 
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 #include <components/ql/statements.hpp>
 #include <components/tests/generaty.hpp>
 #include <core/non_thread_scheduler/scheduler_test.hpp>
@@ -23,7 +23,7 @@ constexpr std::size_t count_documents = 5;
 
 void test_insert_one(wal_replicate_t* wal) {
     for (int num = 1; num <= 5; ++num) {
-        auto document = gen_doc(num);
+        auto document = gen_doc(num, get_default_resource());
         insert_one_t data(database_name, collection_name, std::move(document));
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -77,10 +77,10 @@ TEST_CASE("insert one test") {
         REQUIRE(entry.crc32_ == crc32);
         REQUIRE(entry.entry_.database_ == database_name);
         REQUIRE(entry.entry_.collection_ == collection_name);
-        document_view_t view(entry.entry_.document_);
-        REQUIRE(view.get_string("_id") == gen_id(num));
-        REQUIRE(view.get_long("count") == num);
-        REQUIRE(view.get_string("countStr") == std::to_string(num));
+        auto doc = entry.entry_.document_;
+        REQUIRE(doc->get_string("/_id") == gen_id(num, get_default_resource()));
+        REQUIRE(doc->get_long("/count") == num);
+        REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), get_default_resource()));
 
         read_index = finish;
     }
@@ -119,7 +119,7 @@ TEST_CASE("insert many test") {
     for (int i = 0; i <= 3; ++i) {
         std::pmr::vector<components::document::document_ptr> documents;
         for (int num = 1; num <= 5; ++num) {
-            documents.push_back(gen_doc(num));
+            documents.push_back(gen_doc(num, get_default_resource()));
         }
         insert_many_t data(database_name, collection_name, std::move(documents));
         auto session = components::session::session_id_t();
@@ -150,10 +150,9 @@ TEST_CASE("insert many test") {
         int num = 0;
         for (const auto& doc : entry.entry_.documents_) {
             ++num;
-            document_view_t view(doc);
-            REQUIRE(view.get_string("_id") == gen_id(num));
-            REQUIRE(view.get_long("count") == num);
-            REQUIRE(view.get_string("countStr") == std::to_string(num));
+            REQUIRE(doc->get_string("/_id") == gen_id(num, get_default_resource()));
+            REQUIRE(doc->get_long("/count") == num);
+            REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), get_default_resource()));
         }
 
         read_index = finish;
@@ -169,7 +168,7 @@ TEST_CASE("delete one test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t{1}, num);
+        add_parameter(parameters, core::parameter_id_t{1}, num, get_default_resource());
         delete_one_t data(database_name, collection_name, match, parameters);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -188,8 +187,8 @@ TEST_CASE("delete one test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<delete_one_t>(record.data).parameters().size() == 1);
-        REQUIRE(get_parameter(&std::get<delete_one_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() ==
+        REQUIRE(std::get<delete_one_t>(record.data).parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&std::get<delete_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
                 num);
         index = test_wal.wal->test_next_record(index);
     }
@@ -204,7 +203,7 @@ TEST_CASE("delete many test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t{1}, num);
+        add_parameter(parameters, core::parameter_id_t{1}, num, get_default_resource());
         delete_many_t data(database_name, collection_name, match, parameters);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -223,8 +222,8 @@ TEST_CASE("delete many test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<delete_many_t>(record.data).parameters().size() == 1);
-        REQUIRE(get_parameter(&std::get<delete_many_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() ==
+        REQUIRE(std::get<delete_many_t>(record.data).parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&std::get<delete_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
                 num);
         index = test_wal.wal->test_next_record(index);
     }
@@ -239,9 +238,10 @@ TEST_CASE("update one test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t{1}, num);
-        auto update =
-            components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
+        add_parameter(parameters, core::parameter_id_t{1}, num, get_default_resource());
+        auto update = components::document::document_t::document_from_json(R"({"$set": {"count": )" +
+                                                                               std::to_string(num + 10) + "}}",
+                                                                           get_default_resource());
         update_one_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -260,11 +260,11 @@ TEST_CASE("update one test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<update_one_t>(record.data).parameters().size() == 1);
-        REQUIRE(get_parameter(&std::get<update_one_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() ==
+        REQUIRE(std::get<update_one_t>(record.data).parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&std::get<update_one_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
                 num);
-        document_view_t view_update(std::get<update_one_t>(record.data).update_);
-        REQUIRE(view_update.get_dict("$set").get_long("count") == num + 10);
+        auto doc = std::get<update_one_t>(record.data).update_;
+        REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
         REQUIRE(std::get<update_one_t>(record.data).upsert_ == (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }
@@ -279,9 +279,9 @@ TEST_CASE("update many test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t{1}, num);
-        auto update =
-            components::document::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}");
+        add_parameter(parameters, core::parameter_id_t{1}, num, get_default_resource());
+        auto update = document_t::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}",
+                                                     get_default_resource());
         update_many_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -300,11 +300,11 @@ TEST_CASE("update many test") {
         REQUIRE(match->type() == compare_type::eq);
         REQUIRE(match->key() == components::expressions::key_t{"count"});
         REQUIRE(match->value() == core::parameter_id_t{1});
-        REQUIRE(std::get<update_many_t>(record.data).parameters().size() == 1);
-        REQUIRE(get_parameter(&std::get<update_many_t>(record.data).parameters(), core::parameter_id_t{1})->as_int() ==
+        REQUIRE(std::get<update_many_t>(record.data).parameters().parameters.size() == 1);
+        REQUIRE(get_parameter(&std::get<update_many_t>(record.data).parameters(), core::parameter_id_t{1}).as_int() ==
                 num);
-        document_view_t view_update(std::get<update_many_t>(record.data).update_);
-        REQUIRE(view_update.get_dict("$set").get_long("count") == num + 10);
+        auto doc = std::get<update_many_t>(record.data).update_;
+        REQUIRE(doc->get_dict("$set")->get_long("count") == num + 10);
         REQUIRE(std::get<update_many_t>(record.data).upsert_ == (num % 2 == 0));
         index = test_wal.wal->test_next_record(index);
     }
@@ -343,10 +343,10 @@ TEST_CASE("test read record") {
         REQUIRE(record.type == statement_type::insert_one);
         REQUIRE(std::get<insert_one_t>(record.data).database_ == database_name);
         REQUIRE(std::get<insert_one_t>(record.data).collection_ == collection_name);
-        document_view_t view(std::get<insert_one_t>(record.data).document_);
-        REQUIRE(view.get_string("_id") == gen_id(num));
-        REQUIRE(view.get_long("count") == num);
-        REQUIRE(view.get_string("countStr") == std::to_string(num));
+        auto doc = std::get<insert_one_t>(record.data).document_;
+        REQUIRE(doc->get_string("/_id") == gen_id(num, get_default_resource()));
+        REQUIRE(doc->get_long("/count") == num);
+        REQUIRE(doc->get_string("/countStr") == std::pmr::string(std::to_string(num), get_default_resource()));
         index = test_wal.wal->test_next_record(index);
     }
     REQUIRE(test_wal.wal->test_read_record(index).type == statement_type::unused);

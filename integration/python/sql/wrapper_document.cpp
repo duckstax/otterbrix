@@ -9,10 +9,8 @@
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 namespace otterbrix {
-    wrapper_document::wrapper_document(wrapper_document::pointer ptr)
+    wrapper_document::wrapper_document(document_ptr ptr)
         : ptr_(ptr) {}
-
-    wrapper_document::~wrapper_document() { ptr_.release(); }
 
     std::string wrapper_document::print() { return ptr_->to_json(); }
 

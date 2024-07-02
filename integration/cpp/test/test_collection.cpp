@@ -11,6 +11,7 @@ using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
 
 TEST_CASE("python::test_collection") {
+    auto* resource = std::pmr::get_default_resource();
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
     test_spaces space(config);
@@ -35,7 +36,7 @@ TEST_CASE("python::test_collection") {
     INFO("one_insert") {
         for (int num = 0; num < 50; ++num) {
             {
-                auto doc = gen_doc(num);
+                auto doc = gen_doc(num, resource);
                 auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
@@ -51,7 +52,7 @@ TEST_CASE("python::test_collection") {
     INFO("many_insert") {
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
         for (int num = 50; num < 100; ++num) {
-            documents.push_back(gen_doc(num));
+            documents.push_back(gen_doc(num, resource));
         }
         {
             auto session = otterbrix::session_id_t();
@@ -66,7 +67,7 @@ TEST_CASE("python::test_collection") {
     INFO("insert non unique id") {
         for (int num = 0; num < 100; ++num) {
             {
-                auto doc = gen_doc(num);
+                auto doc = gen_doc(num, resource);
                 auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
@@ -187,7 +188,7 @@ TEST_CASE("python::test_collection") {
                                                                          key{"_id"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, gen_id(1));
+            ql->add_parameter(id_par{1}, gen_id(1, resource));
             auto cur = dispatcher->find_one(session, ql);
             REQUIRE(cur->next()->get_long("count") == 1);
         }

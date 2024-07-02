@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 
 namespace components::types {
 
@@ -103,6 +104,9 @@ namespace components::types {
         UNKNOWN = 127, // Unknown type, used for parameter expressions
         INVALID = 255
     };
+
+    std::string type_name(logical_type type);
+    std::string type_name(physical_type type);
 
     constexpr logical_type to_logical(physical_type type) {
         switch (type) {

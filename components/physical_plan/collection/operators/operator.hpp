@@ -116,7 +116,7 @@ namespace services::collection::operators {
 
     using operator_ptr = operator_t::ptr;
 
-    ::document::wrapper_value_t get_value_from_document(const components::document::document_ptr& doc,
-                                                        const components::expressions::key_t& key);
+    components::document::value_t get_value_from_document(const components::document::document_ptr& doc,
+                                                          const components::expressions::key_t& key);
 
 } // namespace services::collection::operators

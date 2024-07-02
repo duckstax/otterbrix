@@ -1,8 +1,8 @@
 #pragma once
 
-#include <components/new_document/base.hpp>
+#include <components/document/base.hpp>
 
-namespace components::new_document::json {
+namespace components::document::json {
 
     class json_array {
         using iterator = std::pmr::vector<boost::intrusive_ptr<json_trie_node>>::iterator;
@@ -54,4 +54,4 @@ namespace components::new_document::json {
         std::pmr::vector<boost::intrusive_ptr<json_trie_node>> items_;
     };
 
-} // namespace components::new_document::json
+} // namespace components::document::json

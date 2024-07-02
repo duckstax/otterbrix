@@ -1,16 +1,18 @@
 #pragma once
 
+#include "value.hpp"
 #include <boost/json/value.hpp>
 #include <boost/smart_ptr/intrusive_ptr.hpp>
-#include <components/new_document/impl/allocator_intrusive_ref_counter.hpp>
-#include <components/new_document/impl/document.hpp>
-#include <components/new_document/impl/element.hpp>
-#include <components/new_document/impl/tape_builder.hpp>
-#include <components/new_document/json_trie_node.hpp>
+#include <components/document/document_id.hpp>
+#include <components/document/impl/allocator_intrusive_ref_counter.hpp>
+#include <components/document/impl/document.hpp>
+#include <components/document/impl/element.hpp>
+#include <components/document/impl/tape_builder.hpp>
+#include <components/document/json_trie_node.hpp>
 #include <memory_resource>
 #include <utility>
 
-namespace components::new_document {
+namespace components::document {
 
     enum class compare_t
     {
@@ -55,18 +57,8 @@ namespace components::new_document {
         document_t& operator=(const document_t&) = delete;
 
         explicit document_t(allocator_type*, bool = true);
-        //
-        //  explicit document_t(bool value);
-        //
-        //  explicit document_t(uint64_t value);
-        //
-        //  explicit document_t(int64_t value);
-        //
-        //  explicit document_t(double value);
-        //
-        //  explicit document_t(const std::string &value);
-        //
-        //  explicit document_t(std::string_view value);
+
+        types::logical_type type_by_key(std::string_view json_pointer);
 
         template<class T>
         error_code_t set(std::string_view json_pointer, T value);
@@ -84,8 +76,6 @@ namespace components::new_document {
         error_code_t move(std::string_view json_pointer_from, std::string_view json_pointer_to);
 
         error_code_t copy(std::string_view json_pointer_from, std::string_view json_pointer_to);
-
-        //  document_id_t id() const;
 
         bool is_valid() const;
 
@@ -186,7 +176,6 @@ namespace components::new_document {
             }
             return T();
         }
-        //  ::new_document::impl::dict_iterator_t begin() const;
 
         compare_t compare(const document_t& other, std::string_view json_pointer) const;
 
@@ -194,27 +183,11 @@ namespace components::new_document {
 
         boost::intrusive_ptr<json::json_trie_node> json_trie() const;
 
-        //  ::new_document::retained_t<::new_document::impl::dict_t> to_dict() const;
+        bool is_equals(std::string_view json_pointer, value_t value);
 
-        //  ::new_document::retained_t<::new_document::impl::array_t> to_array() const;
-        //
-        //  bool operator<(const document_t &rhs) const;
-        //
-        //  bool operator>(const document_t &rhs) const;
-        //
-        //  bool operator<=(const document_t &rhs) const;
-        //
-        //  bool operator>=(const document_t &rhs) const;
-        //
-        //  bool operator==(const document_t &rhs) const;
-        //
-        //  bool operator!=(const document_t &rhs) const;
-        //
-        //  const ::new_document::impl::value_t *operator*() const;
-        //
-        //  const ::new_document::impl::value_t *operator->() const;
-        //
-        //  explicit operator bool() const;
+        value_t get_value(std::string_view json_pointer);
+
+        bool update(const ptr& update);
 
         static ptr document_from_json(const std::string& json, document_t::allocator_type* allocator);
 
@@ -267,30 +240,87 @@ namespace components::new_document {
                                                    tape_builder<impl::tape_writer_to_immutable>& builder,
                                                    impl::immutable_document* immut_src,
                                                    allocator_type* allocator);
+
+        friend ptr make_upsert_document(const ptr& source);
     };
 
     using document_ptr = document_t::ptr;
 
     document_ptr make_document(document_t::allocator_type* allocator);
-    //
-    //document_ptr make_document(const ::new_document::impl::dict_t *dict);
-    //
-    //document_ptr make_document(const ::new_document::impl::array_t *array);
-    //
-    //document_ptr make_document(const ::new_document::impl::value_t *value);
-    //
-    //template<class T>
-    //document_ptr make_document(const std::string &key, T value);
-    //
-    //document_ptr make_upsert_document(const document_ptr &source);
-
-    //document_id_t get_document_id(const document_ptr &new_document);
 
     template<class T>
     inline error_code_t document_t::set(std::string_view json_pointer, T value) {
         auto build_value = [&]() {
             auto element1 = mut_src_->next_element();
             builder_.build(value);
+            return json_trie_node_element::create(element1, allocator_);
+        };
+
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        // key-value pair will be written backwards
+        if (res == error_code_t::SUCCESS) {
+            if (container->is_object()) {
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, build_value());
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    auto key_node = json_trie_node_element::create(element, allocator_);
+                    auto value_node = build_value();
+                    container->as_object()->set(key_node, value_node);
+                }
+            } else {
+                container->as_array()->set(index, build_value());
+            }
+        }
+        return res;
+    }
+
+    template<>
+    inline error_code_t document_t::set(std::string_view json_pointer, value_t value) {
+        auto build_value = [&]() {
+            auto element1 = mut_src_->next_element();
+            switch (value.physical_type()) {
+                case types::physical_type::BOOL_FALSE:
+                    builder_.build(false);
+                    break;
+                case types::physical_type::BOOL_TRUE:
+                    builder_.build(true);
+                    break;
+                case types::physical_type::UINT8:
+                case types::physical_type::UINT16:
+                case types::physical_type::UINT32:
+                case types::physical_type::UINT64:
+                    builder_.build(value.as_unsigned());
+                    break;
+                case types::physical_type::INT8:
+                case types::physical_type::INT16:
+                case types::physical_type::INT32:
+                case types::physical_type::INT64:
+                    builder_.build(value.as_int());
+                    break;
+                case types::physical_type::UINT128:
+                case types::physical_type::INT128:
+                    builder_.build(value.as_int128());
+                    break;
+                case types::physical_type::FLOAT:
+                    builder_.build(value.as_float());
+                    break;
+                case types::physical_type::DOUBLE:
+                    builder_.build(value.as_double());
+                    break;
+                case types::physical_type::STRING:
+                    builder_.build(value.as_string());
+                    break;
+                default:
+                    builder_.build(nullptr);
+                    break;
+            }
             return json_trie_node_element::create(element1, allocator_);
         };
 
@@ -412,4 +442,7 @@ namespace components::new_document {
         return compare_t::equals;
     }
 
-} // namespace components::new_document
+    document_id_t get_document_id(const document_ptr& doc);
+
+    document_ptr make_upsert_document(const document_ptr& source);
+} // namespace components::document

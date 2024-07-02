@@ -24,8 +24,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -36,8 +36,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -48,8 +48,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -60,8 +60,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -72,8 +72,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -84,8 +84,8 @@ namespace services::collection::operators::predicates {
                 return {new simple_predicate(context,
                                              [&expr](const components::document::document_ptr& document,
                                                      const components::ql::storage_parameters* parameters) {
-                                                 auto it = parameters->find(expr->value());
-                                                 if (it == parameters->end()) {
+                                                 auto it = parameters->parameters.find(expr->value());
+                                                 if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
                                                      auto value = get_value_from_document(document, expr->key());
@@ -97,14 +97,14 @@ namespace services::collection::operators::predicates {
                     context,
                     [&expr](const components::document::document_ptr& document,
                             const components::ql::storage_parameters* parameters) {
-                        auto it = parameters->find(expr->value());
-                        if (it == parameters->end()) {
+                        auto it = parameters->parameters.find(expr->value());
+                        if (it == parameters->parameters.end()) {
                             return false;
                         } else {
                             auto value = get_value_from_document(document, expr->key());
-                            return value && value->type() == document::impl::value_type::string &&
-                                   std::regex_match(value->as_string().data(),
-                                                    std::regex(fmt::format(".*{}.*", it->second->as_string())));
+                            return value && value.physical_type() == components::types::physical_type::STRING &&
+                                   std::regex_match(value.as_string().data(),
+                                                    std::regex(fmt::format(".*{}.*", it->second.as_string())));
                         }
                     })};
             case compare_type::all_true:

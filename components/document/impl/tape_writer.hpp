@@ -1,10 +1,10 @@
 #pragma once
 
-#include <components/new_document/impl/document.hpp>
+#include <components/document/impl/document.hpp>
 #include <cstring>
 #include <vector>
 
-namespace components::new_document::impl {
+namespace components::document::impl {
 
     template<typename T>
     class tape_writer {
@@ -92,7 +92,7 @@ namespace components::new_document::impl {
     }
 
     inline uint64_t tape_writer_to_immutable::next_string_buf_index_impl() noexcept {
-        return current_string_buf_loc - doc_->string_buf.get();
+        return current_string_buf_loc - doc_->string_buf_.get();
     }
 
     void tape_writer_to_immutable::append_string_impl(std::string_view val) noexcept {
@@ -106,8 +106,8 @@ namespace components::new_document::impl {
     }
 
     tape_writer_to_mutable::tape_writer_to_mutable(impl::mutable_document& doc)
-        : tape_ptr(&doc.tape)
-        , current_string_buf(&doc.string_buf) {}
+        : tape_ptr(&doc.tape_)
+        , current_string_buf(&doc.string_buf_) {}
 
     void tape_writer_to_mutable::append_impl(uint64_t val) noexcept { tape_ptr->push_back(val); }
 
@@ -130,4 +130,4 @@ namespace components::new_document::impl {
         str_ptr[str_length] = '\0';
     }
 
-} // namespace components::new_document::impl
+} // namespace components::document::impl

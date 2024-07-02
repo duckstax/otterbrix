@@ -16,7 +16,7 @@ TEST_CASE("parser::create_index") {
         REQUIRE(std::get<ql::create_index_t>(ql).keys_.size() == 1);
         REQUIRE(std::get<ql::create_index_t>(ql).name() == "TEST_COLLECTION_base");
         REQUIRE(std::get<ql::create_index_t>(ql).index_type_ == ql::index_type::single);
-        REQUIRE(std::get<ql::create_index_t>(ql).index_compare_ == core::type::undef);
+        REQUIRE(std::get<ql::create_index_t>(ql).index_compare_ == types::logical_type::UNKNOWN);
     }
 
     SECTION("unsupported multi index") {

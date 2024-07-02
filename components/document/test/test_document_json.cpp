@@ -1,8 +1,8 @@
 #include <catch2/catch.hpp>
 #include <components/document/document.hpp>
-#include <components/document/temp_generator/generaty.hpp>
+#include <components/tests/generaty.hpp>
 
-using namespace components::new_document;
+using namespace components::document;
 
 TEST_CASE("document_t::value from json") {
     auto json = R"(

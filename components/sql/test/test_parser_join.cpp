@@ -12,13 +12,13 @@ using namespace components;
         std::stringstream s;                                                                                           \
         s << join;                                                                                                     \
         REQUIRE(s.str() == RESULT);                                                                                    \
-        REQUIRE(join.parameters().size() == PARAMS.size());                                                            \
+        REQUIRE(join.parameters().parameters.size() == PARAMS.size());                                                 \
         for (auto i = 0ul; i < PARAMS.size(); ++i) {                                                                   \
             REQUIRE(join.parameter(core::parameter_id_t(uint16_t(i))) == PARAMS.at(i));                                \
         }                                                                                                              \
     }
 
-using v = ::document::wrapper_value_t;
+using v = document::value_t;
 using vec = std::vector<v>;
 
 TEST_CASE("parser::join") {

@@ -79,7 +79,7 @@ namespace components::sql::select::impl {
                                             ql::aggregate::group_t& group,
                                             ql::ql_param_statement_t& statement) {
             auto token = lexer.current_significant_token();
-            auto value = parse_value(token);
+            auto value = parse_value(token, statement.parameters().tape, resource);
             expressions::key_t key_name{token_clean_value(token)};
             token = lexer.next_not_whitespace_token();
             if (mask_as == token) {

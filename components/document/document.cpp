@@ -6,7 +6,7 @@
 #include <components/document/string_splitter.hpp>
 #include <utility>
 
-namespace components::new_document {
+namespace components::document {
 
     document_t::document_t()
         : allocator_(nullptr)
@@ -46,7 +46,22 @@ namespace components::new_document {
         , ancestors_(allocator_)
         , is_root_(is_root) {
         if (is_root) {
-            builder_ = components::new_document::tape_builder<impl::tape_writer_to_mutable>(allocator_, *mut_src_);
+            builder_ = components::document::tape_builder<impl::tape_writer_to_mutable>(allocator_, *mut_src_);
+        }
+    }
+
+    types::logical_type document_t::type_by_key(std::string_view json_pointer) {
+        const auto value_ptr = find_node_const(json_pointer).first;
+        if (value_ptr == nullptr) {
+            return types::logical_type::INVALID;
+        } else if (value_ptr->is_object()) {
+            return types::logical_type::MAP;
+        } else if (value_ptr->is_array()) {
+            return types::logical_type::ARRAY;
+        } else if (value_ptr->is_immut()) {
+            return value_ptr->get_immut()->logical_type();
+        } else {
+            return value_ptr->get_mut()->logical_type();
         }
     }
 
@@ -453,7 +468,7 @@ namespace components::new_document {
         res->immut_src_ =
             new (allocator->allocate(sizeof(impl::immutable_document))) impl::immutable_document(allocator);
         // TODO: allocate exact size, since it is an immutable part, it should not have redundant space apart from padding
-        if (res->immut_src_->allocate(json.size()) != components::new_document::SUCCESS) {
+        if (res->immut_src_->allocate(json.size()) != components::document::SUCCESS) {
             return nullptr;
         }
         auto tree = boost::json::parse(json);
@@ -586,6 +601,107 @@ namespace components::new_document {
 
     boost::intrusive_ptr<json::json_trie_node> document_t::json_trie() const { return element_ind_; }
 
+    bool document_t::is_equals(std::string_view json_pointer, value_t value) {
+        switch (value.physical_type()) {
+            case types::physical_type::NA:
+                return is_null(json_pointer);
+            case types::physical_type::BOOL_FALSE:
+            case types::physical_type::BOOL_TRUE:
+                return value.as_bool() == get_bool(json_pointer);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return value.as_unsigned() == get_ulong(json_pointer);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return value.as_int() == get_long(json_pointer);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return value.as_int128() == get_hugeint(json_pointer);
+            case types::physical_type::FLOAT:
+                return value.as_float() == get_float(json_pointer);
+            case types::physical_type::DOUBLE:
+                return value.as_double() == get_double(json_pointer);
+            case types::physical_type::STRING:
+                return value.as_string() == get_string(json_pointer);
+            default:
+                return false;
+        }
+    }
+
+    value_t document_t::get_value(std::string_view json_pointer) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        if (res != error_code_t::SUCCESS) {
+            return value_t{};
+        }
+        auto node = container->is_object() ? container->get_object()->get(is_view_key ? view_key : key)
+                                           : container->get_array()->get(index);
+        if (node == nullptr) {
+            return value_t{};
+        }
+        if (node->is_immut()) {
+            return value_t{*node->get_immut()};
+        } else if (node->is_mut()) {
+            return value_t{*node->get_mut()};
+        }
+        return value_t{};
+    }
+
+    bool document_t::update(const ptr& update) {
+        bool result = false;
+        auto dict = update->json_trie()->as_object();
+        for (auto it_update = dict->begin(); it_update != dict->end(); ++it_update) {
+            std::string_view key_update;
+            if (it_update->first->is_immut()) {
+                key_update = it_update->first->get_immut()->get_string();
+            } else {
+                key_update = it_update->first->get_mut()->get_string();
+            }
+            auto fields = it_update->second->as_object();
+            if (!fields) {
+                break;
+            }
+            auto tape = std::make_unique<impl::mutable_document>(allocator_);
+            for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
+                std::string_view key_field;
+                if (it_field->first->is_immut()) {
+                    key_field = it_field->first->get_immut()->get_string();
+                } else {
+                    key_field = it_field->first->get_mut()->get_string();
+                }
+                auto old_value = get_value(key_field);
+                value_t new_value{};
+                if (key_update == "$set") {
+                    if (it_field->second->is_immut()) {
+                        new_value.set(*it_field->second->get_immut());
+                    } else {
+                        new_value.set(*it_field->second->get_mut());
+                    }
+                } else if (key_update == "$inc") {
+                    if (it_field->second->is_immut()) {
+                        new_value = sum(old_value, value_t{*it_field->second->get_immut()}, tape.get(), allocator_);
+                    } else {
+                        new_value = sum(old_value, value_t{*it_field->second->get_mut()}, tape.get(), allocator_);
+                    }
+                }
+                //todo impl others methods
+                if (new_value && new_value != old_value) {
+                    set(key_field, new_value);
+                    result = true;
+                }
+            }
+        }
+        return result;
+    }
+
     std::pmr::string serialize_document(const document_ptr& document) { return document->to_json(); }
 
     document_ptr deserialize_document(const std::string& text, document_t::allocator_type* allocator) {
@@ -660,4 +776,33 @@ namespace components::new_document {
         is_unescaped = false;
         return error_code_t::SUCCESS;
     }
-} // namespace components::new_document
+
+    document_id_t get_document_id(const document_ptr& doc) { return document_id_t{doc->get_string("/_id")}; }
+
+    document_ptr make_upsert_document(const document_ptr& source) {
+        auto doc = make_document(source->allocator_);
+        for (auto it = source->element_ind_->as_object()->begin(); it != source->element_ind_->as_object()->end();
+             ++it) {
+            std::string_view cmd;
+            if (it->first->is_mut()) {
+                cmd = it->first->get_mut()->get_string().value();
+            } else {
+                cmd = it->first->get_immut()->get_string().value();
+            }
+            if (cmd == "$set" || cmd == "$inc") {
+                auto values = it->second->get_object();
+                for (auto it_field = values->begin(); it_field != values->end(); ++it_field) {
+                    std::string_view key;
+                    if (it_field->first->is_mut()) {
+                        key = it_field->first->get_mut()->get_string().value();
+                    } else {
+                        key = it_field->first->get_immut()->get_string().value();
+                    }
+                    doc->set_(key, it_field->second->make_deep_copy());
+                }
+            }
+        }
+        doc->set("/_id", doc->get_string("/_id"));
+        return doc;
+    }
+} // namespace components::document

@@ -40,7 +40,7 @@ TEST_CASE("cursor::sort") {
     for (int i = 0; i < 10; ++i) {
         auto* sub_cursor = new components::cursor::sub_cursor_t(default_resource(), {});
         for (int j = 0; j < 10; ++j) {
-            sub_cursor->append(document_view_t(gen_doc(10 * i + j + 1)));
+            sub_cursor->append(gen_doc(10 * i + j + 1, default_resource()));
         }
         cursor.push(sub_cursor);
     }

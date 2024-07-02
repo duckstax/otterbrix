@@ -1,14 +1,15 @@
 #include "ql_param_statement.hpp"
 
+#include <core/pmr.hpp>
+
 namespace components::ql {
 
     const expr_value_t& get_parameter(const storage_parameters* storage, core::parameter_id_t id) {
-        auto it = storage->find(id);
-        if (it != storage->end()) {
+        auto it = storage->parameters.find(id);
+        if (it != storage->parameters.end()) {
             return it->second;
         }
-        static const expr_value_t null_value = expr_value_t{nullptr};
-        return null_value;
+        return expr_value_t{};
     }
 
     ql_param_statement_t::ql_param_statement_t(statement_type type,
@@ -33,5 +34,4 @@ namespace components::ql {
     auto ql_param_statement_t::parameter(core::parameter_id_t id) const -> const expr_value_t& {
         return get_parameter(&values_, id);
     }
-
 } // namespace components::ql

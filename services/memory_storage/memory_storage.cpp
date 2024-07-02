@@ -95,7 +95,7 @@ namespace services {
         } else {
             auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
             for (const auto& doc : collection->storage()) {
-                sub_cursor->append(components::document::document_view_t(doc.second));
+                sub_cursor->append(doc.second);
             }
             auto cursor = make_cursor(collection->resource());
             cursor->push(sub_cursor);

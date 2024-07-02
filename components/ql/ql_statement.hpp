@@ -3,7 +3,7 @@
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <components/base/collection_full_name.hpp>
-#include <components/document/wrapper_value.hpp>
+#include <components/document/value.hpp>
 
 namespace components::ql {
 

@@ -2,14 +2,14 @@
 
 #include "container/json_array.hpp"
 #include "container/json_object.hpp"
-#include <components/new_document/base.hpp>
-#include <components/new_document/impl/allocator_intrusive_ref_counter.hpp>
-#include <components/new_document/impl/common_defs.hpp>
-#include <components/new_document/impl/document.hpp>
-#include <components/new_document/impl/element.hpp>
-#include <components/new_document/impl/mr_utils.hpp>
+#include <components/document/base.hpp>
+#include <components/document/impl/allocator_intrusive_ref_counter.hpp>
+#include <components/document/impl/common_defs.hpp>
+#include <components/document/impl/document.hpp>
+#include <components/document/impl/element.hpp>
+#include <components/document/impl/mr_utils.hpp>
 
-namespace components::new_document::json {
+namespace components::document::json {
 
     enum json_type
     {
@@ -125,4 +125,4 @@ namespace components::new_document::json {
         , value_(std::forward<T>(value))
         , type_(type) {}
 
-} // namespace  components::new_document::json
+} // namespace  components::document::json

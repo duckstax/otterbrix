@@ -1,11 +1,11 @@
 #pragma once
 
-#include <components/new_document/impl/common_defs.hpp>
+#include <components/document/impl/common_defs.hpp>
 #include <components/types/types.hpp>
 #include <cstdint>
 #include <type_traits>
 
-namespace components::new_document {
+namespace components::document {
     namespace internal {
         template<typename T>
         class tape_ref;
@@ -103,7 +103,7 @@ namespace components::new_document {
                 return tape.tape_ref_type();
             }
 
-            std::pmr::string serialize() const noexcept { return tape.serialize(); }
+            inline bool usable() const noexcept { return tape.usable(); }
 
             // Cast this element to a null-terminated C string.
             document_result<const char*> get_c_str() const noexcept {
@@ -699,4 +699,4 @@ namespace components::new_document {
         }
 
     } // namespace impl
-} // namespace components::new_document
+} // namespace components::document

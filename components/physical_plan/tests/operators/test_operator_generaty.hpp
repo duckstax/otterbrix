@@ -49,7 +49,7 @@ inline void fill_collection(context_ptr& collection) {
     std::pmr::vector<document_ptr> documents(collection->resource);
     documents.reserve(100);
     for (int i = 1; i <= 100; ++i) {
-        documents.emplace_back(gen_doc(i));
+        documents.emplace_back(gen_doc(i, collection->resource));
     }
     services::collection::operators::operator_insert insert(collection->collection_.get(), std::move(documents));
     insert.on_execute(nullptr);

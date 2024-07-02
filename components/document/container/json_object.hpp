@@ -1,9 +1,9 @@
 #pragma once
 
 #include <absl/container/flat_hash_map.h>
-#include <components/new_document/base.hpp>
+#include <components/document/base.hpp>
 
-namespace components::new_document::json {
+namespace components::document::json {
     struct json_trie_node_hash {
         using is_transparent = void;
 
@@ -84,4 +84,4 @@ namespace components::new_document::json {
         flat_map_t map_;
     };
 
-} // namespace components::new_document::json
+} // namespace components::document::json

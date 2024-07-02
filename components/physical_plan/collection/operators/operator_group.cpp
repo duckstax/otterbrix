@@ -28,12 +28,12 @@ namespace services::collection::operators {
 
     void operator_group_t::create_list_documents() {
         for (const auto& doc : left_->output()->documents()) {
-            auto new_doc = components::document::make_document();
+            auto new_doc = components::document::make_document(context_->resource());
             bool is_valid = true;
             for (const auto& key : keys_) {
                 auto value = key.getter->value(doc);
                 if (value) {
-                    new_doc->set(key.name, *value);
+                    new_doc->set(key.name, value);
                 } else {
                     is_valid = false;
                     break;
@@ -42,7 +42,7 @@ namespace services::collection::operators {
             if (is_valid) {
                 bool is_new = true;
                 for (std::size_t i = 0; i < output_->documents().size(); ++i) {
-                    if (is_equals_documents(new_doc, output_->documents().at(i))) {
+                    if (document_t::is_equals_documents(new_doc, output_->documents().at(i))) {
                         input_documents_.at(i)->append(doc);
                         is_new = false;
                         break;
@@ -67,7 +67,7 @@ namespace services::collection::operators {
                 aggregator->set_children(
                     boost::intrusive_ptr(new operator_empty_t(context_, input_documents_.at(i)->copy())));
                 aggregator->on_execute(pipeline_context);
-                document->set(value.name, *aggregator->value());
+                document->set(value.name, aggregator->value());
             }
         }
     }

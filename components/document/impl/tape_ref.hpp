@@ -3,7 +3,7 @@
 #include <components/types/types.hpp>
 #include <cstring>
 
-namespace components::new_document {
+namespace components::document {
     namespace impl {
         template<typename T>
         class base_document;
@@ -161,4 +161,4 @@ namespace components::new_document {
         }
 
     } // namespace internal
-} // namespace components::new_document
+} // namespace components::document

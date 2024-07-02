@@ -1,13 +1,13 @@
 #pragma once
 
-#include <components/new_document/base.hpp>
-#include <components/new_document/impl/error.hpp>
-#include <components/new_document/impl/tape_ref.hpp>
+#include <components/document/base.hpp>
+#include <components/document/impl/error.hpp>
+#include <components/document/impl/tape_ref.hpp>
 
 #include <memory>
 #include <memory_resource>
 
-namespace components::new_document::impl {
+namespace components::document::impl {
 
     template<typename T>
     class element;
@@ -86,19 +86,19 @@ namespace components::new_document::impl {
         immutable_document& operator=(immutable_document&& other) noexcept;
         immutable_document& operator=(const immutable_document&) = delete;
 
-        const uint64_t& get_tape_impl(size_t json_index) const { return tape[json_index]; }
-        const uint8_t& get_string_buf_impl(size_t json_index) const { return string_buf[json_index]; }
-        const uint8_t* get_string_buf_ptr_impl() const noexcept { return string_buf.get(); }
+        const uint64_t& get_tape_impl(size_t json_index) const { return tape_[json_index]; }
+        const uint8_t& get_string_buf_impl(size_t json_index) const { return string_buf_[json_index]; }
+        const uint8_t* get_string_buf_ptr_impl() const noexcept { return string_buf_.get(); }
 
         error_code allocate(size_t len) noexcept;
 
         size_t capacity() const noexcept;
-        size_t size_impl() const noexcept { return next_tape_loc - tape.get(); }
+        size_t size_impl() const noexcept { return next_tape_loc - tape_.get(); }
 
     private:
         allocator_type* allocator_;
-        std::unique_ptr<uint64_t[], array_deleter<uint64_t>> tape{};
-        std::unique_ptr<uint8_t[], array_deleter<uint8_t>> string_buf{};
+        std::unique_ptr<uint64_t[], array_deleter<uint64_t>> tape_{};
+        std::unique_ptr<uint8_t[], array_deleter<uint8_t>> string_buf_{};
         size_t allocated_capacity{0};
 
         uint64_t* next_tape_loc = nullptr;
@@ -112,7 +112,7 @@ namespace components::new_document::impl {
 
         mutable_document() noexcept = default;
 
-        explicit mutable_document(allocator_type*) noexcept;
+        explicit mutable_document(allocator_type*);
 
         ~mutable_document() noexcept override = default;
 
@@ -124,15 +124,17 @@ namespace components::new_document::impl {
 
         mutable_document& operator=(const mutable_document&) = delete;
 
-        const uint64_t& get_tape_impl(size_t json_index) const { return tape[json_index]; }
-        const uint8_t& get_string_buf_impl(size_t json_index) const { return string_buf[json_index]; }
-        const uint8_t* get_string_buf_ptr_impl() const noexcept { return string_buf.data(); }
+        const uint64_t& get_tape_impl(size_t json_index) const { return tape_[json_index]; }
+        const uint64_t* get_tape_ptr_impl() const noexcept { return tape_.data(); }
+        const uint8_t& get_string_buf_impl(size_t json_index) const { return string_buf_[json_index]; }
+        const uint8_t* get_string_buf_ptr_impl() const noexcept { return string_buf_.data(); }
 
-        size_t size_impl() const noexcept { return tape.size(); }
+        size_t size_impl() const noexcept { return tape_.size(); }
+        size_t string_buf_size_impl() const noexcept { return string_buf_.size(); }
 
     private:
-        std::pmr::vector<uint64_t> tape{};
-        std::pmr::vector<uint8_t> string_buf{};
+        std::pmr::vector<uint64_t> tape_{};
+        std::pmr::vector<uint8_t> string_buf_{};
         friend class tape_writer_to_mutable;
     }; // class mutable_document
 
@@ -142,4 +144,4 @@ namespace components::new_document::impl {
         return {array, array_deleter<T>(allocator, n)};
     }
 
-} // namespace components::new_document::impl
+} // namespace components::document::impl

@@ -22,6 +22,9 @@ TEST_CASE("operator::insert") {
 
 TEST_CASE("operator::full_scan") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::eq") {
         auto cond =
@@ -30,7 +33,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
@@ -43,7 +46,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 99);
@@ -56,7 +59,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 10);
@@ -71,7 +74,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 11);
@@ -84,7 +87,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 89);
@@ -99,7 +102,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 90);
@@ -112,7 +115,7 @@ TEST_CASE("operator::full_scan") {
                        predicates::create_predicate(d(collection), cond),
                        components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
@@ -121,6 +124,9 @@ TEST_CASE("operator::full_scan") {
 
 TEST_CASE("operator::delete") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::delete") {
         REQUIRE(d(collection)->storage().size() == 100);
@@ -131,7 +137,7 @@ TEST_CASE("operator::delete") {
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::ql::limit_t::unlimit())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->storage().size() == 90);
@@ -146,7 +152,7 @@ TEST_CASE("operator::delete") {
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::ql::limit_t::limit_one())));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->storage().size() == 99);

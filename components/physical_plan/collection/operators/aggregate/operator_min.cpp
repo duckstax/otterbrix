@@ -10,6 +10,7 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_min_t::aggregate_impl() {
+        auto doc = components::document::make_document(context_->resource());
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
             auto min =
@@ -19,10 +20,11 @@ namespace services::collection::operators::aggregate {
                                      return get_value_from_document(doc1, key_) < get_value_from_document(doc2, key_);
                                  });
             if (min != documents.cend()) {
-                return components::document::make_document(key_result_, *get_value_from_document(*min, key_));
+                doc->set(key_result_, get_value_from_document(*min, key_));
             }
         }
-        return components::document::make_document(key_result_, 0);
+        doc->set(key_result_, 0);
+        return doc;
     }
 
     std::string operator_min_t::key_impl() const { return key_result_; }

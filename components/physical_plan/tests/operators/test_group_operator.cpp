@@ -66,9 +66,9 @@ TEST_CASE("operator::group::sort") {
         REQUIRE(sort->output()->size() == 8);
 
         auto check = [](const document_ptr& doc, bool is1, bool is2, bool is3) {
-            REQUIRE(document_view_t(doc).get_bool("even") == is1);
-            REQUIRE(document_view_t(doc).get_bool("three") == is2);
-            REQUIRE(document_view_t(doc).get_bool("five") == is3);
+            REQUIRE(doc->get_bool("even") == is1);
+            REQUIRE(doc->get_bool("three") == is2);
+            REQUIRE(doc->get_bool("five") == is3);
         };
         check(sort->output()->documents().at(0), false, false, false);
         check(sort->output()->documents().at(1), false, false, true);
@@ -101,14 +101,14 @@ TEST_CASE("operator::group::all") {
         sort->on_execute(nullptr);
         REQUIRE(sort->output()->size() == 8);
 
-        document_view_t view0(sort->output()->documents().at(0));
-        REQUIRE(view0.get_long("count") == 26);
-        REQUIRE(view0.get_long("sum") == 1268);
-        REQUIRE(std::fabs(view0.get_double("avg") - 48.77) < 0.01);
+        auto doc0 = sort->output()->documents().at(0);
+        REQUIRE(doc0->get_long("count") == 26);
+        REQUIRE(doc0->get_long("sum") == 1268);
+        REQUIRE(std::fabs(doc0->get_double("avg") - 48.77) < 0.01);
 
-        document_view_t view1(sort->output()->documents().at(1));
-        REQUIRE(view1.get_long("count") == 7);
-        REQUIRE(view1.get_long("sum") == 365);
-        REQUIRE(std::fabs(view1.get_double("avg") - 52.14) < 0.01);
+        auto doc1 = sort->output()->documents().at(1);
+        REQUIRE(doc1->get_long("count") == 7);
+        REQUIRE(doc1->get_long("sum") == 365);
+        REQUIRE(std::fabs(doc1->get_double("avg") - 52.14) < 0.01);
     }
 }

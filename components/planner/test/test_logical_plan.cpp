@@ -167,18 +167,18 @@ TEST_CASE("logical_plan::insert") {
         REQUIRE(node->to_string() == R"_($insert: {$documents: 0})_");
     }
     {
-        std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1)};
+        std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1, core::pmr::default_resource())};
         components::ql::insert_many_t insert{database_name, collection_name, documents};
         components::planner::planner_t planner;
         auto node = planner.create_plan(resource, &insert);
         REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
     }
     {
-        std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1),
-                                                                          gen_doc(2),
-                                                                          gen_doc(3),
-                                                                          gen_doc(4),
-                                                                          gen_doc(5)};
+        std::pmr::vector<components::document::document_ptr> documents = {gen_doc(1, core::pmr::default_resource()),
+                                                                          gen_doc(2, core::pmr::default_resource()),
+                                                                          gen_doc(3, core::pmr::default_resource()),
+                                                                          gen_doc(4, core::pmr::default_resource()),
+                                                                          gen_doc(5, core::pmr::default_resource())};
         components::ql::insert_many_t insert{database_name, collection_name, documents};
         components::planner::planner_t planner;
         auto node = planner.create_plan(resource, &insert);
@@ -186,7 +186,7 @@ TEST_CASE("logical_plan::insert") {
     }
     {
         std::pmr::vector<components::document::document_ptr> documents = {};
-        components::ql::insert_one_t insert{database_name, collection_name, gen_doc(1)};
+        components::ql::insert_one_t insert{database_name, collection_name, gen_doc(1, core::pmr::default_resource())};
         components::planner::planner_t planner;
         auto node = planner.create_plan(resource, &insert);
         REQUIRE(node->to_string() == R"_($insert: {$documents: 1})_");
@@ -235,7 +235,7 @@ TEST_CASE("logical_plan::update") {
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto match = components::ql::aggregate::make_match(
         make_compare_expression(resource, compare_type::eq, key("key"), core::parameter_id_t(1)));
-    auto update = document_from_json(R"_({"$set": {"count": 100}})_");
+    auto update = document_t::document_from_json(R"_({"$set": {"count": 100}})_", resource);
     components::ql::storage_parameters parameters{};
     {
         auto ql_update = components::ql::update_many_t(database_name, collection_name, match, parameters, update, true);

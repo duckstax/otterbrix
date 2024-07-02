@@ -122,22 +122,23 @@ namespace components::sql::impl {
         return false;
     }
 
-    document::wrapper_value_t parse_value(const token_t& token) {
+    document::value_t
+    parse_value(const token_t& token, document::impl::mutable_document* tape, std::pmr::memory_resource* resource) {
         if (token.type == token_type::string_literal) {
-            return ::document::wrapper_value_t(token_clean_value(token));
+            return document::value_t(resource, tape, token_clean_value(token));
         } else if (token.type == token_type::number_literal) {
             if (is_integer(token.value())) {
-                return ::document::wrapper_value_t(std::atol(token.value().data()));
+                return document::value_t(resource, tape, std::atol(token.value().data()));
             } else {
                 // TODO we don't support float in this case?
-                return ::document::wrapper_value_t(std::atof(token.value().data()));
+                return document::value_t(resource, tape, std::atof(token.value().data()));
             }
         } else if (is_token_bool_value_true(token)) {
-            return ::document::wrapper_value_t(true);
+            return document::value_t(resource, tape, true);
         } else if (is_token_bool_value_false(token)) {
-            return ::document::wrapper_value_t(false);
+            return document::value_t(resource, tape, false);
         }
-        return ::document::wrapper_value_t(nullptr);
+        return document::value_t(resource, tape, nullptr);
     }
 
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields) {
@@ -169,7 +170,10 @@ namespace components::sql::impl {
         return true;
     }
 
-    parser_result parse_field_values(lexer_t& lexer, std::pmr::vector<::document::wrapper_value_t>& values) {
+    parser_result parse_field_values(lexer_t& lexer,
+                                     std::pmr::vector<document::value_t>& values,
+                                     document::impl::mutable_document* tape,
+                                     std::pmr::memory_resource* resource) {
         values.clear();
         auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bracket_round_open) {
@@ -180,7 +184,7 @@ namespace components::sql::impl {
             if (!is_token_field_value(token)) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
             }
-            values.push_back(parse_value(token));
+            values.push_back(parse_value(token, tape, resource));
             token = lexer.next_not_whitespace_token();
             if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};

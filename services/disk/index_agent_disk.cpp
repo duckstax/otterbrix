@@ -11,7 +11,7 @@ namespace services::disk {
                                            const path_t& path_db,
                                            collection::context_collection_t* collection,
                                            const index_name_t& index_name,
-                                           core::type compare_type,
+                                           logical_type compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
@@ -44,7 +44,7 @@ namespace services::disk {
 
     bool index_agent_disk_t::is_dropped() const { return is_dropped_; }
 
-    void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::insert(session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
         actor_zeta::send(current_message()->sender(),
@@ -54,7 +54,7 @@ namespace services::disk {
                          collection_);
     }
 
-    void index_agent_disk_t::remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::remove(session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::remove {}, session: {}", value.to_string(), session.data());
         index_disk_->remove(key, value);
         actor_zeta::send(current_message()->sender(),
@@ -65,7 +65,7 @@ namespace services::disk {
     }
 
     void index_agent_disk_t::find(session_id_t& session,
-                                  const wrapper_value_t& value,
+                                  const value_t& value,
                                   components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 

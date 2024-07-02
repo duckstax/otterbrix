@@ -1,7 +1,7 @@
 #include "json_array.hpp"
 #include <components/document/json_trie_node.hpp>
 
-namespace components::new_document::json {
+namespace components::document::json {
 
     json_array::json_array(json_array::allocator_type* allocator)
         : items_(allocator) {}
@@ -85,4 +85,4 @@ namespace components::new_document::json {
         return true;
     }
 
-} // namespace components::new_document::json
+} // namespace components::document::json

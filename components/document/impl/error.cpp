@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace components::new_document {
+namespace components::document {
 
     const char* error_message(error_code error) noexcept {
         // If you're using error_code, we're trusting you got it from the enum.
@@ -26,4 +26,4 @@ namespace components::new_document {
 
     } // namespace internal
 
-} // namespace components::new_document
+} // namespace components::document
