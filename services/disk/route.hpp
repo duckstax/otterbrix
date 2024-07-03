@@ -24,5 +24,5 @@ namespace services::disk {
         fix_wal_id
     };
 
-    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::disk, type); }
+    constexpr auto handler_id(route type) { return handler_id(group_id_t::disk, type); }
 } // namespace services::disk
