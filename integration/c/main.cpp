@@ -336,7 +336,7 @@ extern "C" double document_get_double_by_index(doc_ptr ptr, int32_t index) {
 extern "C" char* document_get_string_by_key(doc_ptr ptr, string_view_t key_raw) {
     auto doc_storage = convert_document(ptr);
     std::pmr::string key(key_raw.data, key_raw.size);
-    auto str = doc_storage->document->get_as<std::pmr::string>(key);
+    auto str = doc_storage->document->get_string(key);
     char* str_ptr = new char[sizeof(str)];
     std::strcpy(str_ptr, str.data());
     return str_ptr;
@@ -344,7 +344,7 @@ extern "C" char* document_get_string_by_key(doc_ptr ptr, string_view_t key_raw) 
 
 extern "C" char* document_get_string_by_index(doc_ptr ptr, int32_t index) {
     auto doc_storage = convert_document(ptr);
-    auto str = doc_storage->document->get_as<std::pmr::string>(std::to_string(static_cast<uint32_t>(index)));
+    auto str = doc_storage->document->get_string(std::to_string(static_cast<uint32_t>(index)));
     char* str_ptr = new char[sizeof(str)];
     std::strcpy(str_ptr, str.data());
     return str_ptr;

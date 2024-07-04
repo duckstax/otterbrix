@@ -54,7 +54,7 @@ build_index(const msgpack::object& msg_object,
     return res;
 }
 
-const document_ptr components::document::msgpack_decoder_t::to_structure_(const msgpack::object& msg_object) {
+const document_ptr components::document::msgpack_decoder_t::to_document(const msgpack::object& msg_object) {
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
     res->immut_src_ = new (allocator->allocate(sizeof(impl::immutable_document))) impl::immutable_document(allocator);

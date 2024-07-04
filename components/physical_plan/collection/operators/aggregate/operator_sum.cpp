@@ -16,7 +16,7 @@ namespace services::collection::operators::aggregate {
             auto tape = std::make_unique<components::document::impl::mutable_document>(context_->resource());
             components::document::value_t sum_{};
             std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                sum_ = sum(sum_, get_value_from_document(doc, key_), tape.get(), context_->resource());
+                sum_ = sum(sum_, get_value_from_document(doc, key_, tape.get()), tape.get(), context_->resource());
             });
             result->set(key_result_, sum_);
         };

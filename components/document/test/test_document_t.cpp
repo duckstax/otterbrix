@@ -68,10 +68,10 @@ TEST_CASE("document_t::compare") {
     doc1->set(more, value2);
     doc2->set(more, value1);
 
-    REQUIRE(doc1->compare(*doc2, less) == compare_t::less);
-    REQUIRE(doc1->compare(*doc2, equals) == compare_t::equals);
-    REQUIRE(doc1->compare(*doc2, equals_null) == compare_t::equals);
-    REQUIRE(doc1->compare(*doc2, more) == compare_t::more);
+    REQUIRE(doc1->compare(less, doc2, less) == compare_t::less);
+    REQUIRE(doc1->compare(equals, doc2, equals) == compare_t::equals);
+    REQUIRE(doc1->compare(equals_null, doc2, equals_null) == compare_t::equals);
+    REQUIRE(doc1->compare(more, doc2, more) == compare_t::more);
 }
 
 TEST_CASE("document_t::tiny int") {

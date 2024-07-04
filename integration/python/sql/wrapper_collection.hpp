@@ -42,7 +42,7 @@ namespace otterbrix {
         wrapper_cursor_ptr delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
-        bool create_index(const py::list& keys, index_type type, core::type compare);
+        bool create_index(const py::list& keys, index_type type, logical_type compare);
 
     private:
         const std::string name_;

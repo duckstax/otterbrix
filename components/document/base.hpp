@@ -8,7 +8,7 @@
 
 namespace components::document {
 
-    using int128_t = absl::int128;
+    using int128_t = __int128_t;
 
     template<typename T, typename = std::enable_if_t<std::is_floating_point_v<T>>>
     static inline bool is_equals(T x, T y) {

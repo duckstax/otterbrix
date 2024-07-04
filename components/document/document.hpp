@@ -28,6 +28,7 @@ namespace components::document {
         NO_SUCH_ELEMENT,
         INVALID_INDEX,
         INVALID_JSON_POINTER,
+        INVALID_TYPE
     };
 
     enum class special_type
@@ -38,8 +39,6 @@ namespace components::document {
     };
 
     class document_t final : public allocator_intrusive_ref_counter<document_t> {
-        friend class msgpack_decoder_t;
-
     public:
         using ptr = boost::intrusive_ptr<document_t>;
         using allocator_type = std::pmr::memory_resource;
@@ -62,6 +61,8 @@ namespace components::document {
 
         template<class T>
         error_code_t set(std::string_view json_pointer, T value);
+
+        error_code_t set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer);
 
         error_code_t set_array(std::string_view json_pointer);
 
@@ -177,7 +178,9 @@ namespace components::document {
             return T();
         }
 
-        compare_t compare(const document_t& other, std::string_view json_pointer) const;
+        compare_t compare(std::string_view json_pointer, const ptr& other, std::string_view other_json_pointer) const;
+
+        compare_t compare(std::string_view json_pointer, value_t value) const;
 
         std::pmr::string to_json() const;
 
@@ -185,7 +188,7 @@ namespace components::document {
 
         bool is_equals(std::string_view json_pointer, value_t value);
 
-        value_t get_value(std::string_view json_pointer);
+        value_t get_value(std::string_view json_pointer, impl::mutable_document* tape);
 
         bool update(const ptr& update);
 
@@ -242,6 +245,8 @@ namespace components::document {
                                                    allocator_type* allocator);
 
         friend ptr make_upsert_document(const ptr& source);
+        friend class msgpack_decoder_t;
+        friend class py_handle_decoder_t;
     };
 
     using document_ptr = document_t::ptr;

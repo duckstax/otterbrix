@@ -27,8 +27,8 @@ namespace components::index {
             for (auto j = range.first; j != range.second; ++j) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                if ((!(i->is_null(key)))) {
-                    auto data = i->get_value(key);
+                if (!(i->is_null(key))) {
+                    auto data = i->get_value(key, index->tape());
                     index->insert(data, i);
                 }
             }
@@ -44,8 +44,8 @@ namespace components::index {
             for (auto j = range.first; j != range.second; ++j) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                if ((!(doc.second->is_null(key)))) {
-                    auto data = doc.second->get_value(key);
+                if (!(doc.second->is_null(key))) {
+                    auto data = doc.second->get_value(key, index->tape());
                     index->insert(data, {doc.first, doc.second});
                 }
             }
@@ -59,8 +59,8 @@ namespace components::index {
             if (j->which() == key_t::type::string) {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
-                if ((!(doc->is_null(key)))) {
-                    auto data = doc->get_value(key);
+                if (!(doc->is_null(key))) {
+                    auto data = doc->get_value(key, index->tape());
                     index->insert(data, doc);
                 }
             }
@@ -102,7 +102,7 @@ namespace components::index {
     value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
         auto keys = index->keys();
         if (keys.first != keys.second) {
-            return components::index::value_t(document->get_value(keys.first->as_string()));
+            return document->get_value(keys.first->as_string(), index->tape());
             //todo: multi values index
         }
         return value_t{};

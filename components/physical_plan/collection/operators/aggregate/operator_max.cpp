@@ -13,14 +13,14 @@ namespace services::collection::operators::aggregate {
         auto doc = components::document::make_document(context_->resource());
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
-            auto max =
-                std::max_element(documents.cbegin(),
-                                 documents.cend(),
-                                 [&](const document_ptr& doc1, const document_ptr& doc2) {
-                                     return get_value_from_document(doc1, key_) < get_value_from_document(doc2, key_);
-                                 });
+            auto max = std::max_element(documents.cbegin(),
+                                        documents.cend(),
+                                        [&](const document_ptr& doc1, const document_ptr& doc2) {
+                                            return doc1->compare(key_.as_string(), doc2, key_.as_string()) ==
+                                                   components::document::compare_t::less;
+                                        });
             if (max != documents.cend()) {
-                doc->set(key_result_, get_value_from_document(*max, key_));
+                doc->set(key_result_, *max, key_.as_string());
             }
         }
         doc->set(key_result_, 0);

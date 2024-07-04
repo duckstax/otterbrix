@@ -129,7 +129,7 @@ namespace components::document {
 
     template<typename K>
     void tape_builder<K>::build(int128_t value) noexcept {
-        append3(__int128_t(value), types::physical_type::INT128);
+        append3(value, types::physical_type::INT128);
     }
 
     template<typename K>

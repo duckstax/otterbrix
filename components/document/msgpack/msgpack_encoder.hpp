@@ -127,7 +127,7 @@ namespace components::document {
         msgpack_decoder_t& operator=(msgpack_decoder_t&&) = delete;
 
     public:
-        const static document_ptr to_structure_(const msgpack::object& msg_object);
+        const static document_ptr to_document(const msgpack::object& msg_object);
     };
 } // namespace components::document
 
@@ -142,7 +142,7 @@ namespace msgpack {
                     if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
-                    v = components::document::msgpack_decoder_t::to_structure_(o);
+                    v = components::document::msgpack_decoder_t::to_document(o);
                     return o;
                 }
             };

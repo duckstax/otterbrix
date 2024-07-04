@@ -167,7 +167,7 @@ TEST_CASE("operator::delete") {
                                                                 predicates::create_predicate(d(collection), cond),
                                                                 components::ql::limit_t(5))));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         delete_.on_execute(&pipeline_context);
         REQUIRE(d(collection)->storage().size() == 95);
@@ -176,18 +176,22 @@ TEST_CASE("operator::delete") {
 
 TEST_CASE("operator::update") {
     auto collection = init_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::update") {
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
-        add_parameter(parameters, core::parameter_id_t(2), 999);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
+        add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond =
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check =
             make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        auto script_update =
+            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", resource);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -212,15 +216,16 @@ TEST_CASE("operator::update") {
 
     SECTION("find::update_one") {
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
-        add_parameter(parameters, core::parameter_id_t(2), 999);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
+        add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond =
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check =
             make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        auto script_update =
+            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", resource);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -245,15 +250,16 @@ TEST_CASE("operator::update") {
 
     SECTION("find::update_limit") {
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
-        add_parameter(parameters, core::parameter_id_t(2), 999);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
+        add_parameter(parameters, core::parameter_id_t(2), new_value(999));
         components::pipeline::context_t pipeline_context(std::move(parameters));
 
         auto cond =
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         auto cond_check =
             make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(2));
-        auto script_update = components::document::document_from_json(R"({"$set": {"count": 999}})");
+        auto script_update =
+            components::document::document_t::document_from_json(R"({"$set": {"count": 999}})", resource);
         {
             full_scan scan(d(collection),
                            predicates::create_predicate(d(collection), cond_check),
@@ -279,6 +285,10 @@ TEST_CASE("operator::update") {
 
 TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
@@ -291,7 +301,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
@@ -302,7 +312,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::ne, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 99);
@@ -313,7 +323,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 10);
@@ -326,7 +336,7 @@ TEST_CASE("operator::index_scan") {
                                             core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 11);
@@ -337,7 +347,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::lt, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 89);
@@ -350,7 +360,7 @@ TEST_CASE("operator::index_scan") {
                                             core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::unlimit());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 90);
@@ -361,7 +371,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t::limit_one());
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 1);
@@ -372,7 +382,7 @@ TEST_CASE("operator::index_scan") {
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         index_scan scan(d(collection), cond, components::ql::limit_t(3));
         components::ql::storage_parameters parameters;
-        add_parameter(parameters, core::parameter_id_t(1), 90);
+        add_parameter(parameters, core::parameter_id_t(1), new_value(90));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         scan.on_execute(&pipeline_context);
         REQUIRE(scan.output()->size() == 3);
@@ -403,6 +413,10 @@ TEST_CASE("operator::transfer_scan") {
 
 TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
@@ -414,7 +428,7 @@ TEST_CASE("operator::index::delete_and_update") {
         auto cond_check =
             make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
-        add_parameter(parameters_check, core::parameter_id_t(1), 50);
+        add_parameter(parameters_check, core::parameter_id_t(1), new_value(50));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
             index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
@@ -427,7 +441,7 @@ TEST_CASE("operator::index::delete_and_update") {
                                                 key("count"),
                                                 core::parameter_id_t(1));
             components::ql::storage_parameters parameters;
-            add_parameter(parameters, core::parameter_id_t(1), 60);
+            add_parameter(parameters, core::parameter_id_t(1), new_value(60));
             components::pipeline::context_t pipeline_context(std::move(parameters));
             operator_delete delete_(d(collection));
             delete_.set_children(
@@ -444,7 +458,7 @@ TEST_CASE("operator::index::delete_and_update") {
         auto cond_check =
             make_compare_expression(d(collection)->resource(), compare_type::eq, key("count"), core::parameter_id_t(1));
         components::ql::storage_parameters parameters_check;
-        add_parameter(parameters_check, core::parameter_id_t(1), 50);
+        add_parameter(parameters_check, core::parameter_id_t(1), new_value(50));
         components::pipeline::context_t pipeline_context_check(std::move(parameters_check));
         {
             index_scan scan(d(collection), cond_check, components::ql::limit_t::unlimit());
@@ -452,7 +466,8 @@ TEST_CASE("operator::index::delete_and_update") {
             REQUIRE(scan.output()->size() == 1);
         }
         {
-            auto script_update = components::document::document_from_json(R"({"$set": {"count": 0}})");
+            auto script_update =
+                components::document::document_t::document_from_json(R"({"$set": {"count": 0}})", resource);
             operator_update update(d(collection), script_update, false);
             update.set_children(
                 boost::intrusive_ptr(new index_scan(d(collection), cond_check, components::ql::limit_t::unlimit())));

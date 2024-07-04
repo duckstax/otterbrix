@@ -180,15 +180,17 @@ namespace components::document {
         return new (allocator_->allocate(sizeof(document_t))) document_t({this}, allocator_, node_ptr);
     }
 
-    compare_t document_t::compare(const document_t& other, std::string_view json_pointer) const {
-        if (is_valid() && !other.is_valid())
+    compare_t document_t::compare(std::string_view json_pointer,
+                                  const document_ptr& other,
+                                  std::string_view other_json_pointer) const {
+        if (is_valid() && !other->is_valid())
             return compare_t::less;
-        if (!is_valid() && other.is_valid())
+        if (!is_valid() && other->is_valid())
             return compare_t::more;
-        if (!is_valid())
+        if (!is_valid() && !other->is_valid())
             return compare_t::equals;
         auto node = find_node_const(json_pointer).first;
-        auto other_node = other.find_node_const(json_pointer).first;
+        auto other_node = other->find_node_const(other_json_pointer).first;
         auto exists = node != nullptr;
         auto other_exists = other_node != nullptr;
         if (exists && !other_exists)
@@ -211,6 +213,37 @@ namespace components::document {
         }
     }
 
+    compare_t document_t::compare(std::string_view json_pointer, value_t value) const {
+        if (is_valid() && !value) {
+            return compare_t::less;
+        }
+        if (!is_valid() && value) {
+            return compare_t::more;
+        }
+        if (!is_valid() && !value) {
+            return compare_t::equals;
+        }
+        auto node = find_node_const(json_pointer).first;
+        bool exists = node != nullptr;
+        if (exists && !value) {
+            return compare_t::less;
+        }
+        if (!exists && value) {
+            return compare_t::more;
+        }
+        if (!exists && !value) {
+            return compare_t::equals;
+        }
+
+        if (node->is_immut()) {
+            return compare_(node->get_immut(), value.element());
+        } else if (node->is_mut()) {
+            return compare_(node->get_mut(), value.element());
+        } else {
+            return compare_t::equals;
+        }
+    }
+
     document_t::document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index)
         : allocator_(allocator)
         , immut_src_(nullptr)
@@ -219,6 +252,42 @@ namespace components::document {
         , element_ind_(index)
         , ancestors_(std::pmr::vector<ptr>({std::move(ancestor)}, allocator_))
         , is_root_(false) {}
+
+    error_code_t document_t::set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer) {
+        switch (other->type_by_key(other_json_pointer)) {
+            case types::logical_type::NA:
+                return set(json_pointer, nullptr);
+            case types::logical_type::BOOLEAN:
+                return set(json_pointer, other->get_bool(other_json_pointer));
+            case types::logical_type::TINYINT:
+                return set(json_pointer, other->get_tinyint(other_json_pointer));
+            case types::logical_type::SMALLINT:
+                return set(json_pointer, other->get_smallint(other_json_pointer));
+            case types::logical_type::INTEGER:
+                return set(json_pointer, other->get_int(other_json_pointer));
+            case types::logical_type::BIGINT:
+                return set(json_pointer, other->get_long(other_json_pointer));
+            case types::logical_type::HUGEINT:
+            case types::logical_type::UHUGEINT:
+                return set(json_pointer, other->get_hugeint(other_json_pointer));
+            case types::logical_type::FLOAT:
+                return set(json_pointer, other->get_float(other_json_pointer));
+            case types::logical_type::DOUBLE:
+                return set(json_pointer, other->get_double(other_json_pointer));
+            case types::logical_type::UTINYINT:
+                return set(json_pointer, other->get_utinyint(other_json_pointer));
+            case types::logical_type::USMALLINT:
+                return set(json_pointer, other->get_usmallint(other_json_pointer));
+            case types::logical_type::UINTEGER:
+                return set(json_pointer, other->get_uint(other_json_pointer));
+            case types::logical_type::UBIGINT:
+                return set(json_pointer, other->get_ulong(other_json_pointer));
+            case types::logical_type::STRING_LITERAL:
+                return set(json_pointer, other->get_string(other_json_pointer));
+            default:
+                return error_code_t::INVALID_TYPE;
+        }
+    }
 
     error_code_t document_t::set_array(std::string_view json_pointer) {
         return set_(json_pointer, special_type::ARRAY);
@@ -632,7 +701,7 @@ namespace components::document {
         }
     }
 
-    value_t document_t::get_value(std::string_view json_pointer) {
+    value_t document_t::get_value(std::string_view json_pointer, impl::mutable_document* tape) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
@@ -648,9 +717,65 @@ namespace components::document {
             return value_t{};
         }
         if (node->is_immut()) {
-            return value_t{*node->get_immut()};
+            auto element = node->get_immut();
+            switch (element->physical_type()) {
+                case types::physical_type::BOOL_FALSE:
+                    return value_t{allocator_, tape, false};
+                case types::physical_type::BOOL_TRUE:
+                    return value_t{allocator_, tape, true};
+                case types::physical_type::UINT8:
+                case types::physical_type::UINT16:
+                case types::physical_type::UINT32:
+                case types::physical_type::UINT64:
+                    return value_t{allocator_, tape, element->get_uint64().value()};
+                case types::physical_type::INT8:
+                case types::physical_type::INT16:
+                case types::physical_type::INT32:
+                case types::physical_type::INT64:
+                    return value_t{allocator_, tape, element->get_int64().value()};
+                case types::physical_type::UINT128:
+                case types::physical_type::INT128:
+                    return value_t{allocator_, tape, element->get_int128().value()};
+                case types::physical_type::FLOAT:
+                case types::physical_type::DOUBLE:
+                    return value_t{allocator_, tape, element->get_double().value()};
+                case types::physical_type::STRING:
+                    return value_t{allocator_, tape, element->get_string().value()};
+                case types::physical_type::NA:
+                    return value_t{allocator_, tape, nullptr};
+                default:
+                    return value_t{};
+            }
         } else if (node->is_mut()) {
-            return value_t{*node->get_mut()};
+            auto element = node->get_mut();
+            switch (element->physical_type()) {
+                case types::physical_type::BOOL_FALSE:
+                    return value_t{allocator_, tape, false};
+                case types::physical_type::BOOL_TRUE:
+                    return value_t{allocator_, tape, true};
+                case types::physical_type::UINT8:
+                case types::physical_type::UINT16:
+                case types::physical_type::UINT32:
+                case types::physical_type::UINT64:
+                    return value_t{allocator_, tape, element->get_uint64().value()};
+                case types::physical_type::INT8:
+                case types::physical_type::INT16:
+                case types::physical_type::INT32:
+                case types::physical_type::INT64:
+                    return value_t{allocator_, tape, element->get_int64().value()};
+                case types::physical_type::UINT128:
+                case types::physical_type::INT128:
+                    return value_t{allocator_, tape, element->get_int128().value()};
+                case types::physical_type::FLOAT:
+                case types::physical_type::DOUBLE:
+                    return value_t{allocator_, tape, element->get_double().value()};
+                case types::physical_type::STRING:
+                    return value_t{allocator_, tape, element->get_string().value()};
+                case types::physical_type::NA:
+                    return value_t{allocator_, tape, nullptr};
+                default:
+                    return value_t{};
+            }
         }
         return value_t{};
     }
@@ -677,26 +802,231 @@ namespace components::document {
                 } else {
                     key_field = it_field->first->get_mut()->get_string();
                 }
-                auto old_value = get_value(key_field);
-                value_t new_value{};
                 if (key_update == "$set") {
                     if (it_field->second->is_immut()) {
-                        new_value.set(*it_field->second->get_immut());
+                        auto elem = it_field->second->get_immut();
+                        switch (elem->physical_type()) {
+                            case types::physical_type::BOOL_FALSE:
+                            case types::physical_type::BOOL_TRUE: {
+                                auto new_value = elem->get_bool().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::UINT8:
+                            case types::physical_type::UINT16:
+                            case types::physical_type::UINT32:
+                            case types::physical_type::UINT64: {
+                                auto new_value = elem->get_uint64().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::INT8:
+                            case types::physical_type::INT16:
+                            case types::physical_type::INT32:
+                            case types::physical_type::INT64: {
+                                auto new_value = elem->get_int64().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::UINT128:
+                            case types::physical_type::INT128: {
+                                auto new_value = elem->get_int128().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::FLOAT:
+                            case types::physical_type::DOUBLE: {
+                                auto new_value = elem->get_double().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::STRING: {
+                                auto new_value = elem->get_string().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
                     } else {
-                        new_value.set(*it_field->second->get_mut());
+                        auto elem = it_field->second->get_mut();
+                        switch (elem->physical_type()) {
+                            case types::physical_type::BOOL_FALSE:
+                            case types::physical_type::BOOL_TRUE: {
+                                auto new_value = elem->get_bool().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::UINT8:
+                            case types::physical_type::UINT16:
+                            case types::physical_type::UINT32:
+                            case types::physical_type::UINT64: {
+                                auto new_value = elem->get_uint64().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::INT8:
+                            case types::physical_type::INT16:
+                            case types::physical_type::INT32:
+                            case types::physical_type::INT64: {
+                                auto new_value = elem->get_int64().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::UINT128:
+                            case types::physical_type::INT128: {
+                                auto new_value = elem->get_int128().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::FLOAT:
+                            case types::physical_type::DOUBLE: {
+                                auto new_value = elem->get_double().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            case types::physical_type::STRING: {
+                                auto new_value = elem->get_string().value();
+                                if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                    set(key_field, new_value);
+                                    result = true;
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
                     }
-                } else if (key_update == "$inc") {
+                }
+                if (key_update == "$inc") {
                     if (it_field->second->is_immut()) {
-                        new_value = sum(old_value, value_t{*it_field->second->get_immut()}, tape.get(), allocator_);
+                        auto elem = it_field->second->get_immut();
+                        switch (elem->physical_type()) {
+                            case types::physical_type::BOOL_FALSE:
+                            case types::physical_type::BOOL_TRUE: {
+                                auto new_value = elem->get_bool().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::UINT8:
+                            case types::physical_type::UINT16:
+                            case types::physical_type::UINT32:
+                            case types::physical_type::UINT64: {
+                                auto new_value = elem->get_uint64().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::INT8:
+                            case types::physical_type::INT16:
+                            case types::physical_type::INT32:
+                            case types::physical_type::INT64: {
+                                auto new_value = elem->get_int64().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::UINT128:
+                            case types::physical_type::INT128: {
+                                auto new_value = elem->get_int128().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::FLOAT:
+                            case types::physical_type::DOUBLE: {
+                                auto new_value = elem->get_double().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::STRING: {
+                                auto new_value = elem->get_string().value();
+                                set(key_field,
+                                    std::string(new_value) + std::string(get_as<decltype(new_value)>(key_field)));
+                                break;
+                            }
+                            default:
+                                break;
+                        }
                     } else {
-                        new_value = sum(old_value, value_t{*it_field->second->get_mut()}, tape.get(), allocator_);
+                        auto elem = it_field->second->get_mut();
+                        switch (elem->physical_type()) {
+                            case types::physical_type::BOOL_FALSE:
+                            case types::physical_type::BOOL_TRUE: {
+                                auto new_value = elem->get_bool().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::UINT8:
+                            case types::physical_type::UINT16:
+                            case types::physical_type::UINT32:
+                            case types::physical_type::UINT64: {
+                                auto new_value = elem->get_uint64().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::INT8:
+                            case types::physical_type::INT16:
+                            case types::physical_type::INT32:
+                            case types::physical_type::INT64: {
+                                auto new_value = elem->get_int64().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::UINT128:
+                            case types::physical_type::INT128: {
+                                auto new_value = elem->get_int128().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::FLOAT:
+                            case types::physical_type::DOUBLE: {
+                                auto new_value = elem->get_double().value();
+                                set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                                break;
+                            }
+                            case types::physical_type::STRING: {
+                                auto new_value = elem->get_string().value();
+                                set(key_field,
+                                    std::string(new_value) + std::string(get_as<decltype(new_value)>(key_field)));
+                                break;
+                            }
+                            default:
+                                break;
+                        }
                     }
                 }
-                //todo impl others methods
-                if (new_value && new_value != old_value) {
-                    set(key_field, new_value);
-                    result = true;
-                }
+                result = true;
             }
         }
         return result;

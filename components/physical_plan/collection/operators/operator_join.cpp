@@ -15,8 +15,8 @@ namespace services::collection::operators {
     bool operator_join_t::check_expressions_(const components::document::document_ptr& left,
                                              const components::document::document_ptr& right) {
         for (const auto& expr : expressions_) {
-            if (left->get_value(expr->left().expr->key().as_string()) !=
-                right->get_value(expr->right().expr->key().as_string())) {
+            if (left->compare(expr->left().expr->key().as_string(), right, expr->right().expr->key().as_string()) !=
+                components::document::compare_t::equals) {
                 return false;
             }
         }

@@ -119,11 +119,7 @@ namespace msgpack {
                     o.pack_map(v.parameters.size());
                     for (auto it : v.parameters) {
                         o.pack(it.first);
-                        if (it.second.is_immut()) {
-                            to_msgpack_(o, it.second.get_immut());
-                        } else {
-                            to_msgpack_(o, it.second.get_mut());
-                        }
+                        to_msgpack_(o, it.second.element());
                     }
                     return o;
                 }
@@ -140,11 +136,7 @@ namespace msgpack {
                     uint32_t i = 0;
                     for (auto it : v.parameters) {
                         o.via.map.ptr[i].key = msgpack::object(it.first, o.zone);
-                        if (it.second.is_immut()) {
-                            to_msgpack_(it.second.get_immut(), o.via.map.ptr[i].val);
-                        } else {
-                            to_msgpack_(it.second.get_mut(), o.via.map.ptr[i].val);
-                        }
+                        to_msgpack_(it.second.element(), o.via.map.ptr[i].val);
                         ++i;
                     }
                 }

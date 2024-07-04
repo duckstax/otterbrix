@@ -12,6 +12,8 @@ using id_par = core::parameter_id_t;
 
 TEST_CASE("python::test_collection") {
     auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
     test_spaces space(config);
@@ -96,7 +98,7 @@ TEST_CASE("python::test_collection") {
                                                                          key{"count"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 90);
+            ql->add_parameter(id_par{1}, new_value(90));
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 9);
@@ -110,7 +112,7 @@ TEST_CASE("python::test_collection") {
                                                                          key{"countStr"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, std::string_view{"9$"});
+            ql->add_parameter(id_par{1}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 10);
@@ -130,8 +132,8 @@ TEST_CASE("python::test_collection") {
                                                                                 key{"countStr"},
                                                                                 id_par{2}));
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 90);
-            ql->add_parameter(id_par{2}, std::string_view{"9$"});
+            ql->add_parameter(id_par{1}, new_value(90));
+            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 18);
@@ -158,9 +160,9 @@ TEST_CASE("python::test_collection") {
                                                                                     key{"count"},
                                                                                     id_par{3}));
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr_and)));
-            ql->add_parameter(id_par{1}, 90);
-            ql->add_parameter(id_par{2}, std::string_view{"9$"});
-            ql->add_parameter(id_par{3}, 30);
+            ql->add_parameter(id_par{1}, new_value(90));
+            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
+            ql->add_parameter(id_par{3}, new_value(30));
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 3);
@@ -188,7 +190,7 @@ TEST_CASE("python::test_collection") {
                                                                          key{"_id"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, gen_id(1, resource));
+            ql->add_parameter(id_par{1}, new_value(gen_id(1, resource)));
             auto cur = dispatcher->find_one(session, ql);
             REQUIRE(cur->next()->get_long("count") == 1);
         }
@@ -200,7 +202,7 @@ TEST_CASE("python::test_collection") {
                                                                          key{"count"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 10);
+            ql->add_parameter(id_par{1}, new_value(10));
             auto cur = dispatcher->find_one(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 10);
@@ -219,8 +221,8 @@ TEST_CASE("python::test_collection") {
                                                                                 key{"countStr"},
                                                                                 id_par{2}));
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, 90);
-            ql->add_parameter(id_par{2}, std::string_view{"9$"});
+            ql->add_parameter(id_par{1}, new_value(90));
+            ql->add_parameter(id_par{2}, new_value(std::string_view{"9$"}));
             auto cur = dispatcher->find_one(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->next()->get_long("count") == 99);

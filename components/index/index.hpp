@@ -80,13 +80,15 @@ namespace components::index {
 
         void clean_memory_to_new_elements(std::size_t count) noexcept;
 
+        document::impl::mutable_document* tape();
+
     protected:
         index_t(std::pmr::memory_resource* resource,
                 index_type type,
                 std::string name,
                 const keys_base_storage_t& keys);
 
-        virtual void insert_impl(value_t value_key, index_value_t) = 0;
+        virtual void insert_impl(value_t, index_value_t) = 0;
         virtual void insert_impl(document::document_ptr) = 0;
         virtual void remove_impl(value_t value_key) = 0;
         virtual range find_impl(const value_t& value) const = 0;
@@ -103,6 +105,7 @@ namespace components::index {
         std::string name_;
         keys_base_storage_t keys_;
         actor_zeta::address_t disk_agent_{actor_zeta::address_t::empty_address()};
+        std::unique_ptr<document::impl::mutable_document> tape_;
 
         friend class index_engine_t;
     };

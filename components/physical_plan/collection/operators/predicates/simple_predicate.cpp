@@ -28,8 +28,8 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value == it->second;
+                                                     return document->compare(expr->key().as_string(), it->second) ==
+                                                            components::document::compare_t::equals;
                                                  }
                                              })};
             case compare_type::ne:
@@ -40,8 +40,8 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value != it->second;
+                                                     return document->compare(expr->key().as_string(), it->second) !=
+                                                            components::document::compare_t::equals;
                                                  }
                                              })};
             case compare_type::gt:
@@ -52,8 +52,8 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value > it->second;
+                                                     return document->compare(expr->key().as_string(), it->second) ==
+                                                            components::document::compare_t::more;
                                                  }
                                              })};
             case compare_type::gte:
@@ -64,8 +64,9 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value >= it->second;
+                                                     auto comp = document->compare(expr->key().as_string(), it->second);
+                                                     return comp == components::document::compare_t::equals ||
+                                                            comp == components::document::compare_t::more;
                                                  }
                                              })};
             case compare_type::lt:
@@ -76,8 +77,8 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value < it->second;
+                                                     return document->compare(expr->key().as_string(), it->second) ==
+                                                            components::document::compare_t::less;
                                                  }
                                              })};
             case compare_type::lte:
@@ -88,8 +89,9 @@ namespace services::collection::operators::predicates {
                                                  if (it == parameters->parameters.end()) {
                                                      return false;
                                                  } else {
-                                                     auto value = get_value_from_document(document, expr->key());
-                                                     return value && value <= it->second;
+                                                     auto comp = document->compare(expr->key().as_string(), it->second);
+                                                     return comp == components::document::compare_t::equals ||
+                                                            comp == components::document::compare_t::less;
                                                  }
                                              })};
             case compare_type::regex:
@@ -101,9 +103,9 @@ namespace services::collection::operators::predicates {
                         if (it == parameters->parameters.end()) {
                             return false;
                         } else {
-                            auto value = get_value_from_document(document, expr->key());
-                            return value && value.physical_type() == components::types::physical_type::STRING &&
-                                   std::regex_match(value.as_string().data(),
+                            return document->type_by_key(expr->key().as_string()) ==
+                                       components::types::logical_type::STRING_LITERAL &&
+                                   std::regex_match(document->get_string(expr->key().as_string()).data(),
                                                     std::regex(fmt::format(".*{}.*", it->second.as_string())));
                         }
                     })};

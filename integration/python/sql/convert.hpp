@@ -11,11 +11,24 @@
 
 namespace py = pybind11;
 
-auto to_document(const py::handle& source) -> components::document::document_ptr;
-auto from_document(const components::document::document_view_t& document) -> py::object;
+namespace components::document {
+    class py_handle_decoder_t {
+        py_handle_decoder_t() = delete;
+        py_handle_decoder_t(const py_handle_decoder_t&) = delete;
+        py_handle_decoder_t(py_handle_decoder_t&&) = delete;
+        py_handle_decoder_t& operator=(const py_handle_decoder_t&) = delete;
+        py_handle_decoder_t& operator=(py_handle_decoder_t&&) = delete;
 
-auto from_object(const components::document::document_view_t& document, const std::string& key) -> py::object;
-auto from_object(const components::document::document_view_t& document, uint32_t index) -> py::object;
+    public:
+        const static document_ptr to_document(const py::handle& source);
+    };
+} // namespace components::document
+
+auto to_document(const py::handle& obj) -> document_ptr;
+auto from_document(const document_ptr& document) -> py::object;
+
+auto from_object(const document_ptr& document, const std::string& key) -> py::object;
+auto from_object(const document_ptr& document, uint32_t index) -> py::object;
 
 auto to_pylist(const std::pmr::vector<std::string>& src) -> py::list;
 auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src) -> py::list;

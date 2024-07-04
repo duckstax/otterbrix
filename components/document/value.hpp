@@ -45,6 +45,7 @@ namespace components::document {
         template<class T>
         T as() const;
 
+        bool is_bool() const noexcept;
         bool is_int() const noexcept;
         bool is_unsigned() const noexcept;
         bool is_int128() const noexcept;
@@ -55,14 +56,10 @@ namespace components::document {
 
         explicit operator bool() const;
 
-        bool is_immut() const noexcept;
-        bool is_mut() const noexcept;
-
-        const impl::element<impl::immutable_document>* get_immut() const;
-        const impl::element<impl::mutable_document>* get_mut() const;
+        const impl::element<impl::mutable_document>* element() const noexcept;
 
     private:
-        std::variant<impl::element<impl::mutable_document>, impl::element<impl::immutable_document>> element_;
+        impl::element<impl::mutable_document> element_;
     };
 
     std::string to_string(const value_t& value);
@@ -81,7 +78,7 @@ namespace components::document {
 
     template<class T>
     T value_t::as() const {
-        return std::visit([](auto&& doc) -> T { return doc.template get<T>; }, element_);
+        return element_.get<T>();
     }
 
 } // namespace components::document

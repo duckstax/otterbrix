@@ -16,7 +16,7 @@ TEST_CASE("single_field_index:base") {
     single_field_index_t index(resource, "single_count", {key("count")});
     for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
         auto doc = gen_doc(i, resource);
-        index.insert(doc->get_value(std::string_view("count")), doc);
+        index.insert(doc->get_value(std::string_view("count"), tape.get()), doc);
     }
     {
         value_t value(resource, tape.get(), 10);
@@ -70,7 +70,7 @@ TEST_CASE("single_field_index:base") {
     {
         for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
             auto doc = gen_doc(i, resource);
-            index.insert(doc->get_value(std::string_view("count")), doc);
+            index.insert(doc->get_value(std::string_view("count"), tape.get()), doc);
         }
         value_t value(resource, tape.get(), 10);
         auto find_range = index.find(value);

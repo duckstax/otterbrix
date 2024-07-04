@@ -20,6 +20,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
     config.wal.on = false;
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto* resource = std::pmr::get_default_resource();
 
     INFO("initialization") {
         {
@@ -38,7 +39,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, resource) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
@@ -181,6 +182,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
     config.wal.on = false;
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto* resource = std::pmr::get_default_resource();
 
     INFO("initialization") {
         {
@@ -196,7 +198,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, resource) << "', "
                       << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
             }
             dispatcher->execute_sql(session, query.str());
@@ -215,7 +217,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->size() == 10);
         int number = 0;
         while (auto doc = cur->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
@@ -238,7 +240,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->size() == 10);
         int number = 9;
         while (auto doc = cur->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
@@ -261,7 +263,7 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = otterbrix::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->get_error().type == error_code_t::database_not_exists);
+        REQUIRE(cur->get_error().type == cursor::error_code_t::database_not_exists);
     }
 
     INFO("create database") {
@@ -273,7 +275,7 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = otterbrix::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->get_error().type == error_code_t::collection_not_exists);
+        REQUIRE(cur->get_error().type == cursor::error_code_t::collection_not_exists);
     }
 }
 
@@ -284,6 +286,7 @@ TEST_CASE("integration::cpp::test_collection::sql::index") {
     config.wal.on = false;
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto* resource = std::pmr::get_default_resource();
 
     INFO("initialization") {
         {
@@ -310,7 +313,7 @@ TEST_CASE("integration::cpp::test_collection::sql::index") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, resource) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());

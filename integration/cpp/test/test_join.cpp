@@ -21,6 +21,8 @@ TEST_CASE("integration::cpp::test_join") {
     test_spaces space(config);
     auto dispatcher = space.dispatcher();
 
+    auto* resource = std::pmr::get_default_resource();
+
     INFO("initialization") {
         auto session = otterbrix::session_id_t();
         {
@@ -33,7 +35,7 @@ TEST_CASE("integration::cpp::test_join") {
             query << "INSERT INTO " << database_name << "." << collection_name_1
                   << " (_id, name, key_1, key_2) VALUES ";
             for (int num = 0, reversed = 100; num < 101; ++num, --reversed) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, resource) << "', "
                       << "'Name " << num << "', " << num << ", " << reversed << ")" << (reversed == 0 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
@@ -44,8 +46,8 @@ TEST_CASE("integration::cpp::test_join") {
             std::stringstream query;
             query << "INSERT INTO " << database_name << "." << collection_name_2 << " (_id, value, key) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1001) << "', " << (num + 25) * 2 * 10 << ", " << (num + 25) * 2 << ")"
-                      << (num == 99 ? ";" : ", ");
+                query << "('" << gen_id(num + 1001, resource) << "', " << (num + 25) * 2 * 10 << ", " << (num + 25) * 2
+                      << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());
@@ -71,7 +73,7 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == (num + 25) * 2);
                 REQUIRE(cur->get()->get_long("key") == (num + 25) * 2);
                 REQUIRE(cur->get()->get_long("value") == (num + 25) * 2 * 10);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string((num + 25) * 2));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string((num + 25) * 2)));
             }
         }
     }
@@ -95,7 +97,7 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == num);
                 REQUIRE(cur->get()->get_long("key") == 0);
                 REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
             }
             for (int num = 0; num < 50; num += 2) {
                 REQUIRE(cur->has_next());
@@ -103,20 +105,20 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == num + 50);
                 REQUIRE(cur->get()->get_long("key") == num + 50);
                 REQUIRE(cur->get()->get_long("value") == (num + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num + 50));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 50)));
                 REQUIRE(cur->has_next());
                 cur->next();
                 REQUIRE(cur->get()->get_long("key_1") == num + 51);
                 REQUIRE(cur->get()->get_long("key") == 0);
                 REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num + 51));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 51)));
             }
             REQUIRE(cur->has_next());
             cur->next();
             REQUIRE(cur->get()->get_long("key_1") == 100);
             REQUIRE(cur->get()->get_long("key") == 100);
             REQUIRE(cur->get()->get_long("value") == 1000);
-            REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(100));
+            REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
         }
     }
 
@@ -139,7 +141,7 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == num * 2 + 50);
                 REQUIRE(cur->get()->get_long("key") == num * 2 + 50);
                 REQUIRE(cur->get()->get_long("value") == (num * 2 + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num * 2 + 50));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num * 2 + 50)));
             }
             for (int num = 0; num < 74; ++num) {
                 REQUIRE(cur->has_next());
@@ -171,7 +173,7 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == num);
                 REQUIRE(cur->get()->get_long("key") == 0);
                 REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num)));
             }
             for (int num = 0; num < 50; num += 2) {
                 REQUIRE(cur->has_next());
@@ -179,20 +181,20 @@ TEST_CASE("integration::cpp::test_join") {
                 REQUIRE(cur->get()->get_long("key_1") == num + 50);
                 REQUIRE(cur->get()->get_long("key") == num + 50);
                 REQUIRE(cur->get()->get_long("value") == (num + 50) * 10);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num + 50));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 50)));
                 REQUIRE(cur->has_next());
                 cur->next();
                 REQUIRE(cur->get()->get_long("key_1") == num + 51);
                 REQUIRE(cur->get()->get_long("key") == 0);
                 REQUIRE(cur->get()->get_long("value") == 0);
-                REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(num + 51));
+                REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(num + 51)));
             }
             REQUIRE(cur->has_next());
             cur->next();
             REQUIRE(cur->get()->get_long("key_1") == 100);
             REQUIRE(cur->get()->get_long("key") == 100);
             REQUIRE(cur->get()->get_long("value") == 1000);
-            REQUIRE(cur->get()->get_string("name") == "Name " + std::to_string(100));
+            REQUIRE(cur->get()->get_string("name") == std::pmr::string("Name " + std::to_string(100)));
             for (int num = 0; num < 74; ++num) {
                 REQUIRE(cur->has_next());
                 cur->next();

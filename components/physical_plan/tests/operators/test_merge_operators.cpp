@@ -13,6 +13,10 @@ using key = components::expressions::key_t;
 using components::ql::add_parameter;
 
 TEST_CASE("operator_merge::and") {
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     auto collection = init_collection();
     auto cond1 =
         make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
@@ -26,14 +30,18 @@ TEST_CASE("operator_merge::and") {
                                                            predicates::create_predicate(d(collection), cond2),
                                                            components::ql::limit_t::unlimit())));
     components::ql::storage_parameters parameters;
-    add_parameter(parameters, core::parameter_id_t(1), 50);
-    add_parameter(parameters, core::parameter_id_t(2), 60);
+    add_parameter(parameters, core::parameter_id_t(1), new_value(50));
+    add_parameter(parameters, core::parameter_id_t(2), new_value(60));
     components::pipeline::context_t pipeline_context(std::move(parameters));
     op_and.on_execute(&pipeline_context);
     REQUIRE(op_and.output()->size() == 10);
 }
 
 TEST_CASE("operator_merge::or") {
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     auto collection = init_collection();
     auto cond1 =
         make_compare_expression(d(collection)->resource(), compare_type::lte, key("count"), core::parameter_id_t(1));
@@ -47,14 +55,18 @@ TEST_CASE("operator_merge::or") {
                                                           predicates::create_predicate(d(collection), cond2),
                                                           components::ql::limit_t::unlimit())));
     components::ql::storage_parameters parameters;
-    add_parameter(parameters, core::parameter_id_t(1), 10);
-    add_parameter(parameters, core::parameter_id_t(2), 90);
+    add_parameter(parameters, core::parameter_id_t(1), new_value(10));
+    add_parameter(parameters, core::parameter_id_t(2), new_value(90));
     components::pipeline::context_t pipeline_context(std::move(parameters));
     op_or.on_execute(&pipeline_context);
     REQUIRE(op_or.output()->size() == 20);
 }
 
 TEST_CASE("operator_merge::not") {
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     auto collection = init_collection();
     auto cond =
         make_compare_expression(d(collection)->resource(), compare_type::gt, key("count"), core::parameter_id_t(1));
@@ -63,13 +75,17 @@ TEST_CASE("operator_merge::not") {
                                                            predicates::create_predicate(d(collection), cond),
                                                            components::ql::limit_t::unlimit())));
     components::ql::storage_parameters parameters;
-    add_parameter(parameters, core::parameter_id_t(1), 10);
+    add_parameter(parameters, core::parameter_id_t(1), new_value(10));
     components::pipeline::context_t pipeline_context(std::move(parameters));
     op_not.on_execute(&pipeline_context);
     REQUIRE(op_not.output()->size() == 10);
 }
 
 TEST_CASE("operator_merge::complex") {
+    auto* resource = std::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+
     auto collection = init_collection();
     //  "$and": [
     //    {"$or": [{"count": {"$lte": 10}}, {"count": {"$gt": 90}}]},
@@ -102,10 +118,10 @@ TEST_CASE("operator_merge::complex") {
                                                             components::ql::limit_t::unlimit())));
     op->set_children(std::move(op_or), std::move(op_and));
     components::ql::storage_parameters parameters;
-    add_parameter(parameters, core::parameter_id_t(1), 10);
-    add_parameter(parameters, core::parameter_id_t(2), 90);
-    add_parameter(parameters, core::parameter_id_t(3), 5);
-    add_parameter(parameters, core::parameter_id_t(4), 95);
+    add_parameter(parameters, core::parameter_id_t(1), new_value(10));
+    add_parameter(parameters, core::parameter_id_t(2), new_value(90));
+    add_parameter(parameters, core::parameter_id_t(3), new_value(5));
+    add_parameter(parameters, core::parameter_id_t(4), new_value(95));
     components::pipeline::context_t pipeline_context(std::move(parameters));
     op->on_execute(&pipeline_context);
     REQUIRE(op->output()->size() == 10);

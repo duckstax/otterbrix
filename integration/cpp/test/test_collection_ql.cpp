@@ -22,6 +22,9 @@ TEST_CASE("integration::cpp::test_collection::ql") {
 
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     INFO("initialization") {
         {
@@ -37,7 +40,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     INFO("insert") {
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
         for (int num = 0; num < 100; ++num) {
-            documents.push_back(gen_doc(num));
+            documents.push_back(gen_doc(num, std::pmr::get_default_resource()));
         }
         ql::insert_many_t ins{database_name, collection_name, documents};
         {
@@ -70,7 +73,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 90);
+            agg.add_parameter(id_par{1}, new_value(90));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
@@ -87,7 +90,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 90);
+            agg.add_parameter(id_par{1}, new_value(90));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
@@ -100,7 +103,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                                 compare_type::gt,
                                                                                 key{"count"},
                                                                                 id_par{1});
-            del.add_parameter(id_par{1}, 90);
+            del.add_parameter(id_par{1}, new_value(90));
             components::ql::variant_statement_t ql{del};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
@@ -114,7 +117,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 90);
+            agg.add_parameter(id_par{1}, new_value(90));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE_FALSE(cur->is_success());
@@ -131,7 +134,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 20);
+            agg.add_parameter(id_par{1}, new_value(20));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->size() == 20);
@@ -143,12 +146,10 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                                 compare_type::lt,
                                                                                 key{"count"},
                                                                                 id_par{1});
-            upd.add_parameter(id_par{1}, 20);
-            auto upd_value = ::document::impl::dict_t::new_dict();
-            auto value = ::document::impl::dict_t::new_dict();
-            value->set("count", 1000);
-            upd_value->set("$set", value);
-            upd.update_ = make_document(upd_value);
+            upd.add_parameter(id_par{1}, new_value(20));
+            upd.update_ = make_document(std::pmr::get_default_resource());
+            upd.update_->set_dict("$set");
+            upd.update_->get_dict("$set")->set("count", 1000);
             components::ql::variant_statement_t ql{upd};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
@@ -162,7 +163,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 20);
+            agg.add_parameter(id_par{1}, new_value(20));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE_FALSE(cur->is_success());
@@ -176,7 +177,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
                                                                          key{"count"},
                                                                          id_par{1});
             agg.append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            agg.add_parameter(id_par{1}, 1000);
+            agg.add_parameter(id_par{1}, new_value(1000));
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
