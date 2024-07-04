@@ -10,8 +10,9 @@ namespace services::collection::operators::get {
         : operator_get_t()
         , key_(key) {}
 
-    components::document::value_t simple_value_t::get_value_impl(const document_ptr& document) {
-        return get_value_from_document(document, key_);
+    components::document::value_t simple_value_t::get_value_impl(const document_ptr& document,
+                                                                 components::document::impl::mutable_document* tape) {
+        return get_value_from_document(document, key_, tape);
     }
 
 } // namespace services::collection::operators::get
