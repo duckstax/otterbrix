@@ -45,7 +45,6 @@ namespace components::index {
 
     private:
         storage_t storage_;
-        std::unique_ptr<document::impl::mutable_document> tape_;
     };
 
 } // namespace components::index
