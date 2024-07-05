@@ -35,7 +35,8 @@ namespace components::index {
 
     auto single_field_index_t::insert_impl(document::document_ptr doc) -> void {
         auto id = document::get_document_id(doc);
-        insert_impl(doc->get_value(keys().first->as_string(), tape_.get()), {id, std::move(doc)});
+        auto value = doc->get_value(keys().first->as_string(), tape_.get());
+        insert_impl(std::move(value), {id, std::move(doc)});
     }
 
     auto single_field_index_t::remove_impl(components::index::value_t key) -> void {

@@ -78,7 +78,10 @@ namespace components::document {
 
     double value_t::as_double() const noexcept { return element_.get_double().value(); }
 
-    std::string_view value_t::as_string() const noexcept { return element_.get_string().value(); }
+    std::string_view value_t::as_string() const noexcept {
+        return element_.physical_type() == types::physical_type::STRING ? element_.get_string().value()
+                                                                        : get_string_bytes();
+    }
 
     bool value_t::is_bool() const noexcept {
         switch (physical_type()) {
@@ -170,5 +173,22 @@ namespace components::document {
             default: // special values can't be addad
                 return value1;
         }
+    }
+
+    std::string_view value_t::get_string_bytes() const noexcept {
+        char* res = new char[4];
+        if (is_int()) {
+            auto temp = as_int();
+            memcpy(res, &temp, 4);
+        } else if (is_unsigned()) {
+            auto temp = as_unsigned();
+            memcpy(res, &temp, 4);
+        } else if (is_double()) {
+            auto temp = as_double();
+            memcpy(res, &temp, 4);
+        } else {
+            memset(res, 0, 4);
+        }
+        return std::string_view(res, 4);
     }
 } // namespace components::document

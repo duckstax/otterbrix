@@ -220,7 +220,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
-            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_double("avg_") == (number % 20 + (number + 10) % 20) / 2);
             REQUIRE(doc->get_long("min_") == number % 20);
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             ++number;
@@ -243,7 +243,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
-            REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_double("avg_") == (number % 20 + (number + 10) % 20) / 2);
             REQUIRE(doc->get_long("min_") == number % 20);
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             --number;

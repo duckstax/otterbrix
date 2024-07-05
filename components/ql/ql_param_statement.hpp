@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ql_statement.hpp"
+#include <boost/smart_ptr/intrusive_ptr.hpp>
+#include <boost/smart_ptr/intrusive_ref_counter.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/document/value.hpp>
 #include <components/expressions/msgpack.hpp>
@@ -13,9 +15,26 @@ namespace components::ql {
 
     using expr_value_t = document::value_t;
 
+    class tape_wrapper : public boost::intrusive_ref_counter<tape_wrapper> {
+    public:
+        explicit tape_wrapper()
+            : tape_(new document::impl::mutable_document(std::pmr::get_default_resource())) {}
+        ~tape_wrapper() { delete tape_; }
+        document::impl::mutable_document* tape() const { return tape_; }
+
+    private:
+        document::impl::mutable_document* tape_;
+    };
+
     struct storage_parameters {
         std::unordered_map<core::parameter_id_t, expr_value_t> parameters;
-        document::impl::mutable_document* tape; // TODO: remove memory leak
+
+        explicit storage_parameters()
+            : tape_(new tape_wrapper()) {}
+        document::impl::mutable_document* tape() const { return tape_->tape(); }
+
+    private:
+        boost::intrusive_ptr<tape_wrapper> tape_; // TODO: make into unique_ptr
     };
 
     template<class Value>
@@ -23,7 +42,7 @@ namespace components::ql {
                        core::parameter_id_t id,
                        Value value,
                        std::pmr::memory_resource* resource) {
-        storage.parameters.emplace(id, expr_value_t(resource, storage.tape, value));
+        storage.parameters.emplace(id, expr_value_t(resource, storage.tape(), value));
     }
 
     inline void add_parameter(storage_parameters& storage, core::parameter_id_t id, expr_value_t value) {
@@ -101,10 +120,9 @@ namespace msgpack {
                     if (o.type != msgpack::type::MAP) {
                         throw msgpack::type_error();
                     }
-                    v.tape = new components::document::impl::mutable_document(core::pmr::default_resource());
                     for (uint32_t i = 0; i < o.via.map.size; ++i) {
                         auto key = o.via.map.ptr[i].key.as<core::parameter_id_t>();
-                        auto value = to_structure_(o.via.map.ptr[i].val, v.tape, core::pmr::default_resource());
+                        auto value = to_structure_(o.via.map.ptr[i].val, v.tape(), core::pmr::default_resource());
                         v.parameters.emplace(key, value);
                     }
                     return o;

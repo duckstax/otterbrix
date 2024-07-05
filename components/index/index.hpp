@@ -99,13 +99,16 @@ namespace components::index {
 
         virtual void clean_memory_to_new_elements_impl(std::size_t count) = 0;
 
+    protected:
+        std::unique_ptr<document::impl::mutable_document> tape_{
+            new document::impl::mutable_document(std::pmr::get_default_resource())};
+
     private:
         std::pmr::memory_resource* resource_;
         index_type type_;
         std::string name_;
         keys_base_storage_t keys_;
         actor_zeta::address_t disk_agent_{actor_zeta::address_t::empty_address()};
-        std::unique_ptr<document::impl::mutable_document> tape_;
 
         friend class index_engine_t;
     };

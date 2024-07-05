@@ -412,10 +412,9 @@ namespace components::document {
         if (_usually_false(json_pointer.empty())) {
             return {current, error_code_t::SUCCESS};
         }
-        if (_usually_false(json_pointer[0] != '/')) {
-            return {nullptr, error_code_t::INVALID_JSON_POINTER};
+        if (json_pointer[0] == '/') {
+            json_pointer.remove_prefix(1);
         }
-        json_pointer.remove_prefix(1);
         for (auto key : string_splitter(json_pointer, '/')) {
             if (current->is_object()) {
                 std::pmr::string unescaped_key;
@@ -445,7 +444,7 @@ namespace components::document {
                                                 uint32_t& index) {
         size_t pos = json_pointer.find_last_of('/');
         if (pos == std::string::npos) {
-            return error_code_t::INVALID_JSON_POINTER;
+            pos = 0;
         }
         auto container_json_pointer = json_pointer.substr(0, pos);
         auto node_error = find_node(container_json_pointer);
@@ -456,7 +455,7 @@ namespace components::document {
             return error_code_t::NO_SUCH_CONTAINER;
         }
         container = node_error.first;
-        view_key = json_pointer.substr(pos + 1);
+        view_key = json_pointer.at(pos) == '/' ? json_pointer.substr(pos + 1) : json_pointer;
         if (container->is_object()) {
             is_view_key = true;
             std::pmr::string unescaped_key;

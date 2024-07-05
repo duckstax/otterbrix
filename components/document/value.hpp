@@ -59,6 +59,8 @@ namespace components::document {
         const impl::element<impl::mutable_document>* element() const noexcept;
 
     private:
+        std::string_view get_string_bytes() const noexcept;
+
         impl::element<impl::mutable_document> element_;
     };
 

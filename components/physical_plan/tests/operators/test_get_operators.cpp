@@ -19,20 +19,20 @@ TEST_CASE("operator::get::get_value") {
     REQUIRE(getter->value(doc, tape.get()));
     REQUIRE(getter->value(doc, tape.get()).as_string() == "1");
 
-    getter = get::simple_value_t::create(key("countArray.0"));
+    getter = get::simple_value_t::create(key("countArray/0"));
     REQUIRE(getter->value(doc, tape.get()));
     REQUIRE(getter->value(doc, tape.get()).as_int() == 1);
 
-    getter = get::simple_value_t::create(key("countDict.even"));
+    getter = get::simple_value_t::create(key("countDict/even"));
     REQUIRE(getter->value(doc, tape.get()));
     REQUIRE(getter->value(doc, tape.get()).as_bool() == false);
 
-    getter = get::simple_value_t::create(key("no_valid"));
+    getter = get::simple_value_t::create(key("invalid"));
     REQUIRE_FALSE(getter->value(doc, tape.get()));
 
-    getter = get::simple_value_t::create(key("countArray.10"));
+    getter = get::simple_value_t::create(key("countArray/10"));
     REQUIRE_FALSE(getter->value(doc, tape.get()));
 
-    getter = get::simple_value_t::create(key("countDict.no_valid"));
+    getter = get::simple_value_t::create(key("countDict/invalid"));
     REQUIRE_FALSE(getter->value(doc, tape.get()));
 }

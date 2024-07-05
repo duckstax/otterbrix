@@ -42,9 +42,9 @@ TEST_CASE("operator::group::base") {
     SECTION("base::all::dict") {
         operator_group_t group(d(collection));
         group.set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
-        group.add_key("even", get::simple_value_t::create(key("countDict.even")));
-        group.add_key("three", get::simple_value_t::create(key("countDict.three")));
-        group.add_key("five", get::simple_value_t::create(key("countDict.five")));
+        group.add_key("even", get::simple_value_t::create(key("countDict/even")));
+        group.add_key("three", get::simple_value_t::create(key("countDict/three")));
+        group.add_key("five", get::simple_value_t::create(key("countDict/five")));
         group.on_execute(nullptr);
         REQUIRE(group.output()->size() == 8);
     }
@@ -56,9 +56,9 @@ TEST_CASE("operator::group::sort") {
     SECTION("sort::all") {
         auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));
         group->set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
-        group->add_key("even", get::simple_value_t::create(key("countDict.even")));
-        group->add_key("three", get::simple_value_t::create(key("countDict.three")));
-        group->add_key("five", get::simple_value_t::create(key("countDict.five")));
+        group->add_key("even", get::simple_value_t::create(key("countDict/even")));
+        group->add_key("three", get::simple_value_t::create(key("countDict/three")));
+        group->add_key("five", get::simple_value_t::create(key("countDict/five")));
         auto sort = boost::intrusive_ptr(new operator_sort_t(d(collection)));
         sort->set_children(std::move(group));
         sort->add({"even", "three", "five"});
@@ -87,9 +87,9 @@ TEST_CASE("operator::group::all") {
     SECTION("sort::all") {
         auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));
         group->set_children(boost::intrusive_ptr(new transfer_scan(d(collection), components::ql::limit_t::unlimit())));
-        group->add_key("even", get::simple_value_t::create(key("countDict.even")));
-        group->add_key("three", get::simple_value_t::create(key("countDict.three")));
-        group->add_key("five", get::simple_value_t::create(key("countDict.five")));
+        group->add_key("even", get::simple_value_t::create(key("countDict/even")));
+        group->add_key("three", get::simple_value_t::create(key("countDict/three")));
+        group->add_key("five", get::simple_value_t::create(key("countDict/five")));
 
         group->add_value("count", boost::intrusive_ptr(new aggregate::operator_count_t(d(collection))));
         group->add_value("sum", boost::intrusive_ptr(new aggregate::operator_sum_t(d(collection), key("count"))));

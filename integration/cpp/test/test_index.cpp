@@ -131,7 +131,19 @@ TEST_CASE("integration::test_index::base") {
 
     INFO("find") {
         CHECK_FIND_ALL();
-        CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
+        do {
+            auto session = otterbrix::session_id_t();
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::eq,
+                                                                         key{"count"},
+                                                                         id_par{1});
+            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+            ql->add_parameter(id_par{1}, new_value(10));
+            auto c = dispatcher->find(session, ql);
+            REQUIRE(c->size() == 1);
+        } while (false);
+        //CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
         CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90);
         CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9);
         CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99);

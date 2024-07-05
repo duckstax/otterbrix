@@ -41,7 +41,7 @@ namespace components::document {
                  typename std::enable_if<std::is_unsigned<From>::value, uint8_t>::type = 2>
         document_result<To> cast_from(internal::tape_ref<K> tape) noexcept {
             From result = tape.template next_tape_value<From>();
-            // Wrapping max in parens to handle Windows issue: https://stackoverflow.com/questions/11544073/how-do-i-deal-with-the-max-macro-in-windows-h-colliding-with-max-in-std
+            // Wrapping max in parens to handle Windows issue
             if (result > From((std::numeric_limits<To>::max)())) {
                 return NUMBER_OUT_OF_RANGE;
             }

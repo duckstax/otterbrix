@@ -21,10 +21,10 @@ using namespace components;
             REQUIRE(upd.parameter(core::parameter_id_t(uint16_t(i))) == PARAMS.at(i));                                 \
         }                                                                                                              \
         auto doc = upd.update_;                                                                                        \
-        auto view = doc->get_dict("$set");                                                                             \
-        REQUIRE(view->count() == FIELDS.size());                                                                       \
+        auto dict = doc->get_dict("$set");                                                                             \
+        REQUIRE(dict->count() == FIELDS.size());                                                                       \
         for (auto f : FIELDS) {                                                                                        \
-            REQUIRE(view->is_equals(f.first, f.second));                                                               \
+            REQUIRE(dict->is_equals(f.first, f.second));                                                               \
         }                                                                                                              \
     }
 

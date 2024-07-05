@@ -21,6 +21,7 @@ namespace services::collection::operators::aggregate {
                                         });
             if (max != documents.cend()) {
                 doc->set(key_result_, *max, key_.as_string());
+                return doc;
             }
         }
         doc->set(key_result_, 0);

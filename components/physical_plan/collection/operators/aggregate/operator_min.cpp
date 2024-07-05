@@ -22,6 +22,7 @@ namespace services::collection::operators::aggregate {
                                         });
             if (min != documents.cend()) {
                 doc->set(key_result_, get_value_from_document(*min, key_, tape.get()));
+                return doc;
             }
         }
         doc->set(key_result_, 0);

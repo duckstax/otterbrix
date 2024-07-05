@@ -19,8 +19,9 @@ namespace services::collection::operators::aggregate {
                 sum_ = sum(sum_, get_value_from_document(doc, key_, tape.get()), tape.get(), context_->resource());
             });
             result->set(key_result_, sum_);
-        };
-        result->set(key_result_, 0);
+        } else {
+            result->set(key_result_, 0);
+        }
         return result;
     }
 

@@ -204,7 +204,7 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
         parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
     } else {
         auto value = aggregate->add_parameter(
-            to_value(condition, aggregate->parameters().tape, std::pmr::get_default_resource()));
+            to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource()));
         auto sub_condition = make_compare_expression(resource, type, ex_key_t(real_key), value);
         if (sub_condition->is_union()) {
             parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate);
@@ -271,7 +271,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
 
 aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition,
                                                             aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape, std::pmr::get_default_resource());
+    auto value = to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));
@@ -281,7 +281,7 @@ aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& co
 }
 
 scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape, std::pmr::get_default_resource());
+    auto value = to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));

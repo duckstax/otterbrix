@@ -734,8 +734,6 @@ TEST_CASE("document_t:: json pointer failure") {
 
     auto doc = make_document(allocator);
 
-    REQUIRE(doc->set("m~0n", false) == error_code_t::INVALID_JSON_POINTER);
-
     REQUIRE(doc->set("/m~2n", false) == error_code_t::INVALID_JSON_POINTER);
 
     REQUIRE(doc->set("/m~2n/key", false) == error_code_t::INVALID_JSON_POINTER);
