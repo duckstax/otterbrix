@@ -1,39 +1,27 @@
 #pragma once
 
-#include <absl/container/flat_hash_map.h>
+#include "absl/container/btree_map.h"
 #include <components/document/base.hpp>
 
 namespace components::document::json {
-    struct json_trie_node_hash {
-        using is_transparent = void;
 
-        size_t operator()(const boost::intrusive_ptr<json_trie_node>& n) const;
-        size_t operator()(const std::string_view& sv) const;
-    };
-
-    struct json_trie_node_eq {
-        using is_transparent = void;
-
+    struct json_trie_node_less {
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) const noexcept;
+        bool operator()(const std::string_view& lhs, const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
                         const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
     };
 
     class json_object {
-        using flat_map_t =
-            absl::flat_hash_map<boost::intrusive_ptr<json_trie_node>,
-                                boost::intrusive_ptr<json_trie_node>,
-                                json_trie_node_hash,
-                                json_trie_node_eq,
-                                std::pmr::polymorphic_allocator<std::pair<boost::intrusive_ptr<json_trie_node>,
-                                                                          boost::intrusive_ptr<json_trie_node>>>>;
-        using iterator = flat_map_t::iterator;
-        using const_iterator = flat_map_t::const_iterator;
+        using tree = absl::
+            btree_map<boost::intrusive_ptr<json_trie_node>, boost::intrusive_ptr<json_trie_node>, json_trie_node_less>;
+        using iterator = tree::iterator;
+        using const_iterator = tree::const_iterator;
 
     public:
         using allocator_type = std::pmr::memory_resource;
 
-        explicit json_object(allocator_type* allocator) noexcept;
+        explicit json_object(allocator_type* allocator);
 
         ~json_object() = default;
 
@@ -81,7 +69,8 @@ namespace components::document::json {
         static json_object* merge(json_object& object1, json_object& object2, allocator_type* allocator);
 
     private:
-        flat_map_t map_;
+        tree map_;
+        std::pmr::memory_resource* resource_;
     };
 
 } // namespace components::document::json

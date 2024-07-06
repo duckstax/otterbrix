@@ -236,9 +236,17 @@ namespace components::document {
         }
 
         if (node->is_immut()) {
-            return compare_(node->get_immut(), value.element());
+            if (value.is_immut()) {
+                return compare_(node->get_immut(), value.get_immut());
+            } else {
+                return compare_(node->get_immut(), value.get_mut());
+            }
         } else if (node->is_mut()) {
-            return compare_(node->get_mut(), value.element());
+            if (value.is_immut()) {
+                return compare_(node->get_mut(), value.get_immut());
+            } else {
+                return compare_(node->get_mut(), value.get_mut());
+            }
         } else {
             return compare_t::equals;
         }
@@ -716,65 +724,9 @@ namespace components::document {
             return value_t{};
         }
         if (node->is_immut()) {
-            auto element = node->get_immut();
-            switch (element->physical_type()) {
-                case types::physical_type::BOOL_FALSE:
-                    return value_t{allocator_, tape, false};
-                case types::physical_type::BOOL_TRUE:
-                    return value_t{allocator_, tape, true};
-                case types::physical_type::UINT8:
-                case types::physical_type::UINT16:
-                case types::physical_type::UINT32:
-                case types::physical_type::UINT64:
-                    return value_t{allocator_, tape, element->get_uint64().value()};
-                case types::physical_type::INT8:
-                case types::physical_type::INT16:
-                case types::physical_type::INT32:
-                case types::physical_type::INT64:
-                    return value_t{allocator_, tape, element->get_int64().value()};
-                case types::physical_type::UINT128:
-                case types::physical_type::INT128:
-                    return value_t{allocator_, tape, element->get_int128().value()};
-                case types::physical_type::FLOAT:
-                case types::physical_type::DOUBLE:
-                    return value_t{allocator_, tape, element->get_double().value()};
-                case types::physical_type::STRING:
-                    return value_t{allocator_, tape, element->get_string().value()};
-                case types::physical_type::NA:
-                    return value_t{allocator_, tape, nullptr};
-                default:
-                    return value_t{};
-            }
+            return value_t{*node->get_immut()};
         } else if (node->is_mut()) {
-            auto element = node->get_mut();
-            switch (element->physical_type()) {
-                case types::physical_type::BOOL_FALSE:
-                    return value_t{allocator_, tape, false};
-                case types::physical_type::BOOL_TRUE:
-                    return value_t{allocator_, tape, true};
-                case types::physical_type::UINT8:
-                case types::physical_type::UINT16:
-                case types::physical_type::UINT32:
-                case types::physical_type::UINT64:
-                    return value_t{allocator_, tape, element->get_uint64().value()};
-                case types::physical_type::INT8:
-                case types::physical_type::INT16:
-                case types::physical_type::INT32:
-                case types::physical_type::INT64:
-                    return value_t{allocator_, tape, element->get_int64().value()};
-                case types::physical_type::UINT128:
-                case types::physical_type::INT128:
-                    return value_t{allocator_, tape, element->get_int128().value()};
-                case types::physical_type::FLOAT:
-                case types::physical_type::DOUBLE:
-                    return value_t{allocator_, tape, element->get_double().value()};
-                case types::physical_type::STRING:
-                    return value_t{allocator_, tape, element->get_string().value()};
-                case types::physical_type::NA:
-                    return value_t{allocator_, tape, nullptr};
-                default:
-                    return value_t{};
-            }
+            return value_t{*node->get_mut()};
         }
         return value_t{};
     }

@@ -33,7 +33,7 @@ namespace components::document::json {
 
         json_trie_node(const json_trie_node&) = delete;
 
-        json_trie_node& operator=(json_trie_node&&) noexcept = delete;
+        json_trie_node& operator=(json_trie_node&&) noexcept;
 
         json_trie_node& operator=(const json_trie_node&) = delete;
 
