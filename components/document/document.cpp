@@ -118,7 +118,7 @@ namespace components::document {
 
     bool document_t::is_long(std::string_view json_pointer) const { return is_as<int64_t>(json_pointer); }
 
-    bool document_t::is_hugeint(std::string_view json_pointer) const { return is_as<__int128_t>(json_pointer); }
+    bool document_t::is_hugeint(std::string_view json_pointer) const { return is_as<absl::int128>(json_pointer); }
 
     bool document_t::is_float(std::string_view json_pointer) const { return is_as<float>(json_pointer); }
 
@@ -154,7 +154,7 @@ namespace components::document {
 
     int64_t document_t::get_long(std::string_view json_pointer) const { return get_as<int64_t>(json_pointer); }
 
-    __int128_t document_t::get_hugeint(std::string_view json_pointer) const { return get_as<__int128_t>(json_pointer); }
+    absl::int128 document_t::get_hugeint(std::string_view json_pointer) const { return get_as<absl::int128>(json_pointer); }
 
     float document_t::get_float(std::string_view json_pointer) const { return get_as<float>(json_pointer); }
 

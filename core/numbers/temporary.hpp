@@ -13,13 +13,13 @@ namespace core::numbers {
 
     template<typename T>
     auto to_string(T value) -> std::string {
-        if constexpr (std::is_same_v<T, __int128_t>) {
+        if constexpr (std::is_same_v<T, absl::int128>) {
             auto s = std::string{};
             auto const sign = value < 0;
             if (sign) {
                 value += 1; // avoid overflowing if value == _int128_t lowest
                 value *= -1;
-                if (value == std::numeric_limits<__int128_t>::max())
+                if (value == std::numeric_limits<absl::int128>::max())
                     return "-170141183460469231731687303715884105728";
                 value += 1;
             }

@@ -134,7 +134,7 @@ namespace components::document {
 
         int64_t get_long(std::string_view json_pointer) const;
 
-        __int128_t get_hugeint(std::string_view json_pointer) const;
+        absl::int128 get_hugeint(std::string_view json_pointer) const;
 
         float get_float(std::string_view json_pointer) const;
 
@@ -422,7 +422,7 @@ namespace components::document {
                 case logical_type::BIGINT:
                     return equals_<int64_t>(element1, element2);
                 case logical_type::HUGEINT:
-                    return equals_<__int128_t>(element1, element2);
+                    return equals_<absl::int128>(element1, element2);
                 case logical_type::UTINYINT:
                     return equals_<uint8_t>(element1, element2);
                 case logical_type::USMALLINT:

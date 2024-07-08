@@ -36,14 +36,14 @@ namespace components::dataframe {
     using device_storage_type_t =
       std::conditional_t<std::is_same_v<core::numbers::decimal32,  T>, int32_t,
       std::conditional_t<std::is_same_v<core::numbers::decimal64,  T>, int64_t,
-      std::conditional_t<std::is_same_v<core::numbers::decimal128, T>, __int128_t, T>>>;
+      std::conditional_t<std::is_same_v<core::numbers::decimal128, T>, absl::int128, T>>>;
     // clang-format on
 
     template<typename T>
     constexpr bool type_id_matches_device_storage_type(type_id id) {
         return (id == type_id::decimal32 && std::is_same_v<T, int32_t>) ||
                (id == type_id::decimal64 && std::is_same_v<T, int64_t>) ||
-               (id == type_id::decimal128 && std::is_same_v<T, __int128_t>) || id == type_to_id<T>();
+               (id == type_id::decimal128 && std::is_same_v<T, absl::int128>) || id == type_to_id<T>();
     }
 
 #define stringify_detail(x) #x
@@ -120,7 +120,7 @@ namespace components::dataframe {
     map_numeric_scalar(int16_t)
     map_numeric_scalar(int32_t)
     map_numeric_scalar(int64_t)
-    map_numeric_scalar(__int128_t)
+    map_numeric_scalar(absl::int128)
     map_numeric_scalar(uint8_t)
     map_numeric_scalar(uint16_t)
     map_numeric_scalar(uint32_t)
