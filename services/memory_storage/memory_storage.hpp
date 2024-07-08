@@ -63,10 +63,19 @@ namespace services {
         void close_cursor(components::session::session_id_t& session, std::set<collection_full_name_t>&& collections);
         void load(components::session::session_id_t& session, const disk::result_load_t& result);
 
-        actor_zeta::scheduler_abstract_t* scheduler_impl() noexcept final;
-        void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
+        actor_zeta::scheduler_abstract_t* make_scheduler() noexcept;
+        auto make_type() const noexcept -> const char* const;
+        actor_zeta::behavior_t behavior();
 
     private:
+        actor_zeta::behavior_t sync_;
+        actor_zeta::behavior_t load_;
+        actor_zeta::behavior_t size_;
+        actor_zeta::behavior_t create_documents_finish_;
+        actor_zeta::behavior_t execute_plan_;
+        actor_zeta::behavior_t execute_plan_finish_;
+        actor_zeta::behavior_t close_cursor_;
+
         spin_lock lock_;
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
@@ -78,6 +87,9 @@ namespace services {
         collection_storage_t collections_;
         session_storage_t sessions_;
         std::unique_ptr<load_buffer_t> load_buffer_;
+
+    private:
+        void enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit* unit) final;
 
         bool is_exists_database_(const database_name_t& name) const;
         bool is_exists_collection_(const collection_full_name_t& name) const;
@@ -93,13 +105,13 @@ namespace services {
         void drop_collection_(components::session::session_id_t& session,
                               components::logical_plan::node_ptr logical_plan);
 
-        void execute_plan_(components::session::session_id_t& session,
-                           components::logical_plan::node_ptr logical_plan,
-                           components::ql::storage_parameters parameters);
+        void execute_plan(components::session::session_id_t& session,
+                          components::logical_plan::node_ptr logical_plan,
+                          components::ql::storage_parameters parameters);
 
-        void execute_plan_finish_(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
+        void execute_plan_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
-        void create_documents_finish_(components::session::session_id_t& session);
+        void create_documents_finish(components::session::session_id_t& session);
     };
 
 } // namespace services
