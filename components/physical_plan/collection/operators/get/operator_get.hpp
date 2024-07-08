@@ -7,7 +7,7 @@ namespace services::collection::operators::get {
     class operator_get_t : public boost::intrusive_ref_counter<operator_get_t> {
     public:
         components::document::value_t value(const components::document::document_ptr& document,
-                                            components::document::impl::mutable_document* tape);
+                                            components::document::impl::base_document* tape);
 
         operator_get_t(const operator_get_t&) = delete;
         operator_get_t& operator=(const operator_get_t&) = delete;
@@ -18,7 +18,7 @@ namespace services::collection::operators::get {
 
     private:
         virtual components::document::value_t get_value_impl(const components::document::document_ptr& document,
-                                                             components::document::impl::mutable_document* tape) = 0;
+                                                             components::document::impl::base_document* tape) = 0;
     };
 
     using operator_get_ptr = boost::intrusive_ptr<operator_get_t>;
