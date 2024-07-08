@@ -74,10 +74,10 @@ namespace services::collection::operators {
             auto doc = left_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
-                if (it_field->first->is_immut()) {
-                    empty_left->set(it_field->first->get_immut()->get_string(), nullptr);
+                if (it_field->key->is_immut()) {
+                    empty_left->set(it_field->key->get_immut()->get_string(), nullptr);
                 } else {
-                    empty_left->set(it_field->first->get_mut()->get_string(), nullptr);
+                    empty_left->set(it_field->key->get_mut()->get_string(), nullptr);
                 }
             }
         }
@@ -85,10 +85,10 @@ namespace services::collection::operators {
             auto doc = right_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
-                if (it_field->first->is_immut()) {
-                    empty_right->set(it_field->first->get_immut()->get_string(), nullptr);
+                if (it_field->key->is_immut()) {
+                    empty_right->set(it_field->key->get_immut()->get_string(), nullptr);
                 } else {
-                    empty_right->set(it_field->first->get_mut()->get_string(), nullptr);
+                    empty_right->set(it_field->key->get_mut()->get_string(), nullptr);
                 }
             }
         }
@@ -124,10 +124,10 @@ namespace services::collection::operators {
             auto doc = right_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
-                if (it_field->first->is_immut()) {
-                    empty_right->set(it_field->first->get_immut()->get_string(), nullptr);
+                if (it_field->key->is_immut()) {
+                    empty_right->set(it_field->key->get_immut()->get_string(), nullptr);
                 } else {
-                    empty_right->set(it_field->first->get_mut()->get_string(), nullptr);
+                    empty_right->set(it_field->key->get_mut()->get_string(), nullptr);
                 }
             }
         }
@@ -152,10 +152,10 @@ namespace services::collection::operators {
             auto doc = left_->output()->documents().front();
             auto fields = doc->json_trie()->as_object();
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
-                if (it_field->first->is_immut()) {
-                    empty_left->set(it_field->first->get_immut()->get_string(), nullptr);
+                if (it_field->key->is_immut()) {
+                    empty_left->set(it_field->key->get_immut()->get_string(), nullptr);
                 } else {
-                    empty_left->set(it_field->first->get_mut()->get_string(), nullptr);
+                    empty_left->set(it_field->key->get_mut()->get_string(), nullptr);
                 }
             }
         }

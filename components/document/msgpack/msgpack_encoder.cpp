@@ -84,8 +84,8 @@ void to_msgpack_(const json_trie_node* value, msgpack::object& o) {
         int i = 0;
         for (auto it = dict->begin(); it != dict->end(); ++it) {
             o.via.map.ptr[i].key.type = msgpack::type::object_type::STR;
-            to_msgpack_(it->first.get(), o.via.map.ptr[i].key);
-            to_msgpack_(it->second.get(), o.via.map.ptr[i].val);
+            to_msgpack_(it->key.get(), o.via.map.ptr[i].key);
+            to_msgpack_(it->value.get(), o.via.map.ptr[i].val);
             ++i;
         }
     } else if (value->type() == json_type::ARRAY) {

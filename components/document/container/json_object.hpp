@@ -1,20 +1,25 @@
 #pragma once
 
-#include "absl/container/btree_map.h"
+#include "absl/container/btree_set.h"
 #include <components/document/base.hpp>
 
 namespace components::document::json {
+
+    struct node_pack {
+        boost::intrusive_ptr<json_trie_node> key;
+        boost::intrusive_ptr<json_trie_node> value;
+    };
 
     struct json_trie_node_less {
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) const noexcept;
         bool operator()(const std::string_view& lhs, const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
                         const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
+        bool operator()(const node_pack& lhs, const node_pack& rhs) const noexcept;
     };
 
     class json_object {
-        using tree = absl::
-            btree_map<boost::intrusive_ptr<json_trie_node>, boost::intrusive_ptr<json_trie_node>, json_trie_node_less>;
+        using tree = absl::btree_set<node_pack, json_trie_node_less>;
         using iterator = tree::iterator;
         using const_iterator = tree::const_iterator;
 

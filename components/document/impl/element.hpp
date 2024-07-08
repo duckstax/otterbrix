@@ -49,11 +49,11 @@ namespace components::document {
         }
 
         // specifications for __int128_t:
-        template<
-            typename K,
-            typename From,
-            typename To,
-            typename std::enable_if_t<std::is_same<From, absl::int128>::value && std::is_signed<To>::value, uint8_t> = 0>
+        template<typename K,
+                 typename From,
+                 typename To,
+                 typename std::enable_if_t<std::is_same<From, absl::int128>::value && std::is_signed<To>::value,
+                                           uint8_t> = 0>
         document_result<To> cast_from(internal::tape_ref<K> tape) noexcept {
             From result = tape.template next_tape_value<From>();
             if (result > From((std::numeric_limits<To>::max)()) || result < From((std::numeric_limits<To>::min)())) {
@@ -62,11 +62,11 @@ namespace components::document {
             return static_cast<To>(result);
         }
 
-        template<
-            typename K,
-            typename From,
-            typename To,
-            typename std::enable_if_t<std::is_signed<From>::value && std::is_same<To, absl::int128>::value, uint8_t> = 0>
+        template<typename K,
+                 typename From,
+                 typename To,
+                 typename std::enable_if_t<std::is_signed<From>::value && std::is_same<To, absl::int128>::value,
+                                           uint8_t> = 0>
         document_result<To> cast_from(internal::tape_ref<K> tape) noexcept {
             From result = tape.template next_tape_value<From>();
             if (result > From((std::numeric_limits<To>::max)()) || result < From((std::numeric_limits<To>::min)())) {
@@ -608,7 +608,8 @@ namespace components::document {
             }
 
             template<typename T>
-            typename std::enable_if<std::is_same<T, absl::int128>::value, document_result<T>>::type get() const noexcept {
+            typename std::enable_if<std::is_same<T, absl::int128>::value, document_result<T>>::type
+            get() const noexcept {
                 return get_int128();
             }
 

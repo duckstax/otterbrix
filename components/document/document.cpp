@@ -154,7 +154,9 @@ namespace components::document {
 
     int64_t document_t::get_long(std::string_view json_pointer) const { return get_as<int64_t>(json_pointer); }
 
-    absl::int128 document_t::get_hugeint(std::string_view json_pointer) const { return get_as<absl::int128>(json_pointer); }
+    absl::int128 document_t::get_hugeint(std::string_view json_pointer) const {
+        return get_as<absl::int128>(json_pointer);
+    }
 
     float document_t::get_float(std::string_view json_pointer) const { return get_as<float>(json_pointer); }
 
@@ -736,26 +738,26 @@ namespace components::document {
         auto dict = update->json_trie()->as_object();
         for (auto it_update = dict->begin(); it_update != dict->end(); ++it_update) {
             std::string_view key_update;
-            if (it_update->first->is_immut()) {
-                key_update = it_update->first->get_immut()->get_string();
+            if (it_update->key->is_immut()) {
+                key_update = it_update->key->get_immut()->get_string();
             } else {
-                key_update = it_update->first->get_mut()->get_string();
+                key_update = it_update->key->get_mut()->get_string();
             }
-            auto fields = it_update->second->as_object();
+            auto fields = it_update->value->as_object();
             if (!fields) {
                 break;
             }
             auto tape = std::make_unique<impl::mutable_document>(allocator_);
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
                 std::string_view key_field;
-                if (it_field->first->is_immut()) {
-                    key_field = it_field->first->get_immut()->get_string();
+                if (it_field->key->is_immut()) {
+                    key_field = it_field->key->get_immut()->get_string();
                 } else {
-                    key_field = it_field->first->get_mut()->get_string();
+                    key_field = it_field->key->get_mut()->get_string();
                 }
                 if (key_update == "$set") {
-                    if (it_field->second->is_immut()) {
-                        auto elem = it_field->second->get_immut();
+                    if (it_field->value->is_immut()) {
+                        auto elem = it_field->value->get_immut();
                         switch (elem->physical_type()) {
                             case types::physical_type::BOOL_FALSE:
                             case types::physical_type::BOOL_TRUE: {
@@ -818,7 +820,7 @@ namespace components::document {
                                 break;
                         }
                     } else {
-                        auto elem = it_field->second->get_mut();
+                        auto elem = it_field->value->get_mut();
                         switch (elem->physical_type()) {
                             case types::physical_type::BOOL_FALSE:
                             case types::physical_type::BOOL_TRUE: {
@@ -883,8 +885,8 @@ namespace components::document {
                     }
                 }
                 if (key_update == "$inc") {
-                    if (it_field->second->is_immut()) {
-                        auto elem = it_field->second->get_immut();
+                    if (it_field->value->is_immut()) {
+                        auto elem = it_field->value->get_immut();
                         switch (elem->physical_type()) {
                             case types::physical_type::BOOL_FALSE:
                             case types::physical_type::BOOL_TRUE: {
@@ -930,7 +932,7 @@ namespace components::document {
                                 break;
                         }
                     } else {
-                        auto elem = it_field->second->get_mut();
+                        auto elem = it_field->value->get_mut();
                         switch (elem->physical_type()) {
                             case types::physical_type::BOOL_FALSE:
                             case types::physical_type::BOOL_TRUE: {
@@ -1065,21 +1067,21 @@ namespace components::document {
         for (auto it = source->element_ind_->as_object()->begin(); it != source->element_ind_->as_object()->end();
              ++it) {
             std::string_view cmd;
-            if (it->first->is_mut()) {
-                cmd = it->first->get_mut()->get_string().value();
+            if (it->key->is_mut()) {
+                cmd = it->key->get_mut()->get_string().value();
             } else {
-                cmd = it->first->get_immut()->get_string().value();
+                cmd = it->key->get_immut()->get_string().value();
             }
             if (cmd == "$set" || cmd == "$inc") {
-                auto values = it->second->get_object();
+                auto values = it->value->get_object();
                 for (auto it_field = values->begin(); it_field != values->end(); ++it_field) {
                     std::string_view key;
-                    if (it_field->first->is_mut()) {
-                        key = it_field->first->get_mut()->get_string().value();
+                    if (it_field->key->is_mut()) {
+                        key = it_field->key->get_mut()->get_string().value();
                     } else {
-                        key = it_field->first->get_immut()->get_string().value();
+                        key = it_field->key->get_immut()->get_string().value();
                     }
-                    doc->set_(key, it_field->second->make_deep_copy());
+                    doc->set_(key, it_field->value->make_deep_copy());
                 }
             }
         }
