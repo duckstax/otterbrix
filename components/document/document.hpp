@@ -152,9 +152,6 @@ namespace components::document {
             if (node_ptr == nullptr) {
                 return false;
             }
-            if (node_ptr->is_immut()) {
-                return node_ptr->get_immut()->is<T>();
-            }
             if (node_ptr->is_mut()) {
                 return node_ptr->get_mut()->is<T>();
             }
@@ -166,10 +163,6 @@ namespace components::document {
             const auto node_ptr = find_node_const(json_pointer).first;
             if (node_ptr == nullptr) {
                 return T();
-            }
-            if (node_ptr->is_immut()) {
-                auto res = node_ptr->get_immut()->get<T>();
-                return res.error() == error_code::SUCCESS ? res.value() : T();
             }
             if (node_ptr->is_mut()) {
                 auto res = node_ptr->get_mut()->get<T>();
@@ -188,7 +181,7 @@ namespace components::document {
 
         bool is_equals(std::string_view json_pointer, value_t value);
 
-        value_t get_value(std::string_view json_pointer, impl::mutable_document* tape);
+        value_t get_value(std::string_view json_pointer, impl::base_document* tape);
 
         bool update(const ptr& update);
 
@@ -208,9 +201,8 @@ namespace components::document {
         document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index);
 
         allocator_type* allocator_;
-        impl::immutable_document* immut_src_;
-        impl::mutable_document* mut_src_;
-        tape_builder<impl::tape_writer_to_mutable> builder_{};
+        impl::base_document* mut_src_;
+        tape_builder builder_{};
         boost::intrusive_ptr<json_trie_node_element> element_ind_;
         std::pmr::vector<ptr> ancestors_{};
         bool is_root_;
@@ -236,12 +228,11 @@ namespace components::document {
                                         std::string_view& view_key,
                                         uint32_t& index);
 
-        template<typename T>
-        static void build_primitive(tape_builder<T>& builder, const boost::json::value& value) noexcept;
+        static void build_primitive(tape_builder& builder, const boost::json::value& value) noexcept;
 
         static json_trie_node_element* build_index(const boost::json::value& value,
-                                                   tape_builder<impl::tape_writer_to_immutable>& builder,
-                                                   impl::immutable_document* immut_src,
+                                                   tape_builder& builder,
+                                                   impl::base_document* mut_src,
                                                    allocator_type* allocator);
 
         friend ptr make_upsert_document(const ptr& source);
@@ -394,58 +385,7 @@ namespace components::document {
                                std::pmr::string& unescaped_key,
                                document_t::allocator_type* allocator);
 
-    template<class T, typename FirstType, typename SecondType>
-    compare_t equals_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
-        T v1 = element1->template get<T>();
-        T v2 = element2->template get<T>();
-        if (v1 < v2)
-            return compare_t::less;
-        if (v1 > v2)
-            return compare_t::more;
-        return compare_t::equals;
-    }
-
-    template<typename FirstType, typename SecondType>
-    compare_t compare_(const impl::element<FirstType>* element1, const impl::element<SecondType>* element2) {
-        using types::logical_type;
-
-        auto type1 = element1->logical_type();
-
-        if (type1 == element2->logical_type()) {
-            switch (type1) {
-                case logical_type::TINYINT:
-                    return equals_<int8_t>(element1, element2);
-                case logical_type::SMALLINT:
-                    return equals_<int16_t>(element1, element2);
-                case logical_type::INTEGER:
-                    return equals_<int32_t>(element1, element2);
-                case logical_type::BIGINT:
-                    return equals_<int64_t>(element1, element2);
-                case logical_type::HUGEINT:
-                    return equals_<absl::int128>(element1, element2);
-                case logical_type::UTINYINT:
-                    return equals_<uint8_t>(element1, element2);
-                case logical_type::USMALLINT:
-                    return equals_<uint16_t>(element1, element2);
-                case logical_type::UINTEGER:
-                    return equals_<uint32_t>(element1, element2);
-                case logical_type::UBIGINT:
-                    return equals_<uint64_t>(element1, element2);
-                case logical_type::FLOAT:
-                    return equals_<float>(element1, element2);
-                case logical_type::DOUBLE:
-                    return equals_<double>(element1, element2);
-                case logical_type::STRING_LITERAL:
-                    return equals_<std::string_view>(element1, element2);
-                case logical_type::BOOLEAN:
-                    return equals_<bool>(element1, element2);
-                case logical_type::NA:
-                    return compare_t::equals;
-            }
-        }
-
-        return compare_t::equals;
-    }
+    compare_t compare_(const impl::element* element1, const impl::element* element2);
 
     document_id_t get_document_id(const document_ptr& doc);
 

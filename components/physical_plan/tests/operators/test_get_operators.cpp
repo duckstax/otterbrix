@@ -8,7 +8,7 @@ using key = components::expressions::key_t;
 
 TEST_CASE("operator::get::get_value") {
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto doc = gen_doc(1, resource);
 
     auto getter = get::simple_value_t::create(key("count"));

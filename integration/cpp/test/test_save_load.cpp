@@ -20,7 +20,7 @@ using id_par = core::parameter_id_t;
 uint gen_doc_number(uint n_db, uint n_col, uint n_doc) { return 10000 * n_db + 100 * n_col + n_doc; }
 
 cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
-                      impl::mutable_document* tape,
+                      impl::base_document* tape,
                       const database_name_t& db_name,
                       const collection_name_t& col_name,
                       int n_doc) {
@@ -43,7 +43,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
 TEST_CASE("python::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
 
     SECTION("initialization") {
         test_clear_directory(config);
@@ -87,7 +87,7 @@ TEST_CASE("python::test_save_load::disk") {
 TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("initialization") {

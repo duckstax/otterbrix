@@ -29,7 +29,7 @@ namespace services::collection::operators {
     void operator_group_t::create_list_documents() {
         for (const auto& doc : left_->output()->documents()) {
             auto new_doc = components::document::make_document(context_->resource());
-            auto tape = std::make_unique<components::document::impl::mutable_document>(context_->resource());
+            auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
             bool is_valid = true;
             for (const auto& key : keys_) {
                 auto value = key.getter->value(doc, tape.get());

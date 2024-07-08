@@ -16,19 +16,14 @@ namespace components::document {
     }
 
     namespace impl {
-        template<typename K>
         class element;
-        class immutable_document;
-        class mutable_document;
+        class base_document;
     } // namespace impl
 
     namespace json {
         class json_trie_node;
         class json_array;
         class json_object;
-
-        using immutable_part = impl::element<impl::immutable_document>;
-        using mutable_part = impl::element<impl::mutable_document>;
     } // namespace json
 
     enum binary_type : uint8_t

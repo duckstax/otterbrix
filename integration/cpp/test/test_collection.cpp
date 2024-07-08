@@ -12,7 +12,7 @@ using id_par = core::parameter_id_t;
 
 TEST_CASE("python::test_collection") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);

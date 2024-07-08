@@ -12,7 +12,7 @@ using key = components::expressions::key_t;
 
 TEST_CASE("single_field_index:base") {
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     single_field_index_t index(resource, "single_count", {key("count")});
     for (int i : {0, 1, 10, 5, 6, 2, 8, 13}) {
         auto doc = gen_doc(i, resource);

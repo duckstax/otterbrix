@@ -17,7 +17,7 @@ using components::ql::add_parameter;
 TEST_CASE("operator::aggregate::count") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("count::all") {
@@ -50,7 +50,7 @@ TEST_CASE("operator::aggregate::count") {
 TEST_CASE("operator::aggregate::min") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("min::all") {
@@ -81,7 +81,7 @@ TEST_CASE("operator::aggregate::min") {
 TEST_CASE("operator::aggregate::max") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("max::all") {
@@ -112,7 +112,7 @@ TEST_CASE("operator::aggregate::max") {
 TEST_CASE("operator::aggregate::sum") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("sum::all") {
@@ -143,7 +143,7 @@ TEST_CASE("operator::aggregate::sum") {
 TEST_CASE("operator::aggregate::avg") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("avg::all") {

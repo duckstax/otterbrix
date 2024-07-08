@@ -577,8 +577,11 @@ TEST_CASE("document_t::move") {
 
     auto doc = document_t::document_from_json(json, allocator);
     auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto new_json = doc->to_json();
 
+    doc->get_string("/foo/waldo");
     REQUIRE(doc->move("/foo/waldo", "/qux/thud") == error_code_t::SUCCESS);
+    new_json = doc->to_json();
 
     REQUIRE(document_t::is_equals_documents(doc, res_doc));
 }

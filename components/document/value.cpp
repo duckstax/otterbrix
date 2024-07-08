@@ -2,22 +2,14 @@
 
 namespace components::document {
 
-    value_t::value_t(impl::element<impl::mutable_document> element)
+    value_t::value_t(impl::element element)
         : element_(element) {}
 
-    value_t::value_t(impl::element<impl::immutable_document> element)
-        : element_(element) {}
+    void value_t::set(impl::element element) { element_ = element; }
 
-    void value_t::set(impl::element<impl::mutable_document> element) { element_ = element; }
-    void value_t::set(impl::element<impl::immutable_document> element) { element_ = element; }
+    types::physical_type value_t::physical_type() const noexcept { return element_.physical_type(); }
 
-    types::physical_type value_t::physical_type() const noexcept {
-        return std::visit([](auto&& doc) -> types::physical_type { return doc.physical_type(); }, element_);
-    }
-
-    types::logical_type value_t::logical_type() const noexcept {
-        return std::visit([](auto&& doc) -> types::logical_type { return doc.logical_type(); }, element_);
-    }
+    types::logical_type value_t::logical_type() const noexcept { return element_.logical_type(); }
 
     bool value_t::operator==(const value_t& rhs) const {
         switch (physical_type()) {
@@ -74,33 +66,21 @@ namespace components::document {
         }
     }
 
-    bool value_t::as_bool() const noexcept {
-        return std::visit([](auto&& doc) -> bool { return doc.get_bool().value(); }, element_);
-    }
+    bool value_t::as_bool() const noexcept { return element_.get_bool().value(); }
 
-    int64_t value_t::as_int() const noexcept {
-        return std::visit([](auto&& doc) -> int64_t { return doc.get_int64().value(); }, element_);
-    }
+    int64_t value_t::as_int() const noexcept { return element_.get_int64().value(); }
 
-    uint64_t value_t::as_unsigned() const noexcept {
-        return std::visit([](auto&& doc) -> uint64_t { return doc.get_uint64().value(); }, element_);
-    }
+    uint64_t value_t::as_unsigned() const noexcept { return element_.get_uint64().value(); }
 
-    int128_t value_t::as_int128() const noexcept {
-        return std::visit([](auto&& doc) -> int128_t { return doc.get_int128().value(); }, element_);
-    }
+    int128_t value_t::as_int128() const noexcept { return element_.get_int128().value(); }
 
-    float value_t::as_float() const noexcept {
-        return std::visit([](auto&& doc) -> float { return doc.get_float().value(); }, element_);
-    }
+    float value_t::as_float() const noexcept { return element_.get_float().value(); }
 
-    double value_t::as_double() const noexcept {
-        return std::visit([](auto&& doc) -> double { return doc.get_double().value(); }, element_);
-    }
+    double value_t::as_double() const noexcept { return element_.get_double().value(); }
 
     std::string_view value_t::as_string() const noexcept {
         if (physical_type() == types::physical_type::STRING) {
-            return std::visit([](auto&& doc) -> std::string_view { return doc.get_string().value(); }, element_);
+            return element_.get_string().value();
         } else {
             return get_string_bytes();
         }
@@ -152,27 +132,12 @@ namespace components::document {
 
     bool value_t::is_string() const noexcept { return physical_type() == types::physical_type::STRING; }
 
-    value_t::operator bool() const {
-        return std::visit([](auto&& doc) -> bool { return doc.usable(); }, element_);
-    }
+    value_t::operator bool() const { return element_.usable(); }
 
-    bool value_t::is_immut() const noexcept {
-        return std::holds_alternative<impl::element<impl::immutable_document>>(element_);
-    }
-    bool value_t::is_mut() const noexcept {
-        return std::holds_alternative<impl::element<impl::mutable_document>>(element_);
-    }
-    const impl::element<impl::immutable_document>* value_t::get_immut() const noexcept {
-        return &std::get<impl::element<impl::immutable_document>>(element_);
-    }
-    const impl::element<impl::mutable_document>* value_t::get_mut() const noexcept {
-        return &std::get<impl::element<impl::mutable_document>>(element_);
-    }
+    const impl::element* value_t::get_element() const noexcept { return &element_; }
 
-    value_t sum(const value_t& value1,
-                const value_t& value2,
-                impl::mutable_document* tape,
-                std::pmr::memory_resource* resource) {
+    value_t
+    sum(const value_t& value1, const value_t& value2, impl::base_document* tape, std::pmr::memory_resource* resource) {
         if (!value1) {
             return value2;
         }

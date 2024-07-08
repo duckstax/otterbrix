@@ -1,8 +1,7 @@
 #include "msgpack_encoder.hpp"
 #include <msgpack.hpp>
 
-void build_primitive(components::document::tape_builder<components::document::impl::tape_writer_to_immutable>& builder,
-                     const msgpack::object& msg_object) noexcept {
+void build_primitive(components::document::tape_builder& builder, const msgpack::object& msg_object) noexcept {
     switch (msg_object.type) {
         case msgpack::type::NIL:
             builder.visit_null_atom();
@@ -26,28 +25,27 @@ void build_primitive(components::document::tape_builder<components::document::im
     }
 }
 
-json_trie_node*
-build_index(const msgpack::object& msg_object,
-            components::document::tape_builder<components::document::impl::tape_writer_to_immutable>& builder,
-            components::document::impl::immutable_document* immut_src,
-            document_t::allocator_type* allocator) {
+json_trie_node* build_index(const msgpack::object& msg_object,
+                            components::document::tape_builder& builder,
+                            components::document::impl::base_document* mut_src,
+                            document_t::allocator_type* allocator) {
     json_trie_node* res;
     if (msg_object.type == msgpack::type::MAP) {
         res = json_trie_node::create_object(allocator);
         const auto& obj = msg_object.via.map;
         for (auto const& [current_key, val] : obj) {
-            res->as_object()->set(build_index(current_key, builder, immut_src, allocator),
-                                  build_index(val, builder, immut_src, allocator));
+            res->as_object()->set(build_index(current_key, builder, mut_src, allocator),
+                                  build_index(val, builder, mut_src, allocator));
         }
     } else if (msg_object.type == msgpack::type::ARRAY) {
         res = json_trie_node::create_array(allocator);
         const auto& arr = msg_object.via.array;
         uint32_t i = 0;
         for (const auto& it : arr) {
-            res->as_array()->set(i++, build_index(it, builder, immut_src, allocator));
+            res->as_array()->set(i++, build_index(it, builder, mut_src, allocator));
         }
     } else {
-        auto element = immut_src->next_element();
+        auto element = mut_src->next_element();
         build_primitive(builder, msg_object);
         res = json_trie_node::create(element, allocator);
     }
@@ -57,21 +55,13 @@ build_index(const msgpack::object& msg_object,
 const document_ptr components::document::msgpack_decoder_t::to_document(const msgpack::object& msg_object) {
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
-    res->immut_src_ = new (allocator->allocate(sizeof(impl::immutable_document))) impl::immutable_document(allocator);
+    res->mut_src_ = new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator);
 
-    // temp solution to size problem: convert to json and use it's size, since it is guarantied to be bigger
-    // same as in document_t::document_from_json
-    std::stringstream ss;
-    ss << msg_object;
-
-    if (res->immut_src_->allocate(ss.str().size()) != components::document::SUCCESS) {
-        return nullptr;
-    }
-    tape_builder<impl::tape_writer_to_immutable> builder(allocator, *res->immut_src_);
+    tape_builder builder(allocator, *res->mut_src_);
     auto obj = res->element_ind_->as_object();
     for (auto& [key, val] : msg_object.via.map) {
-        obj->set(build_index(key, builder, res->immut_src_, allocator),
-                 build_index(val, builder, res->immut_src_, allocator));
+        obj->set(build_index(key, builder, res->mut_src_, allocator),
+                 build_index(val, builder, res->mut_src_, allocator));
     }
     return res;
 }
@@ -97,9 +87,54 @@ void to_msgpack_(const json_trie_node* value, msgpack::object& o) {
             to_msgpack_(it->get(), o.via.array.ptr[i]);
             ++i;
         }
-    } else if (value->type() == json_type::IMMUT) {
-        to_msgpack_(value->get_immut(), o);
-    } else if (value->type() == json_type::MUT) {
+    }
+    if (value->type() == json_type::MUT) {
         to_msgpack_(value->get_mut(), o);
+    }
+}
+
+void to_msgpack_(const element* value, msgpack::object& o) {
+    switch (value->logical_type()) {
+        case logical_type::BOOLEAN: {
+            o.type = msgpack::type::BOOLEAN;
+            o.via.boolean = value->get_bool().value();
+            break;
+        }
+        case logical_type::UTINYINT:
+        case logical_type::USMALLINT:
+        case logical_type::UINTEGER:
+        case logical_type::UBIGINT: {
+            o.type = msgpack::type::POSITIVE_INTEGER;
+            o.via.u64 = value->get_uint64().value();
+            break;
+        }
+        case logical_type::TINYINT:
+        case logical_type::SMALLINT:
+        case logical_type::INTEGER:
+        case logical_type::BIGINT: {
+            o.type = msgpack::type::NEGATIVE_INTEGER;
+            o.via.i64 = value->get_int64().value();
+            break;
+        }
+        case logical_type::FLOAT:
+        case logical_type::DOUBLE: {
+            o.type = msgpack::type::FLOAT64;
+            o.via.f64 = value->get_double().value();
+            break;
+        }
+        case logical_type::STRING_LITERAL: {
+            std::string s(value->get_string().value());
+            o.type = msgpack::type::object_type::STR;
+            o.via.str.size = uint32_t(s.size());
+            o.via.str.ptr = s.c_str();
+            break;
+        }
+        case logical_type::NA: {
+            o.type = msgpack::type::object_type::NIL;
+            break;
+        }
+        default:
+            assert(false); // should be unreachable;
+            break;
     }
 }

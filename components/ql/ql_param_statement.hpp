@@ -18,12 +18,12 @@ namespace components::ql {
     class tape_wrapper : public boost::intrusive_ref_counter<tape_wrapper> {
     public:
         explicit tape_wrapper()
-            : tape_(new document::impl::mutable_document(std::pmr::get_default_resource())) {}
+            : tape_(new document::impl::base_document(std::pmr::get_default_resource())) {}
         ~tape_wrapper() { delete tape_; }
-        document::impl::mutable_document* tape() const { return tape_; }
+        document::impl::base_document* tape() const { return tape_; }
 
     private:
-        document::impl::mutable_document* tape_;
+        document::impl::base_document* tape_;
     };
 
     struct storage_parameters {
@@ -31,7 +31,7 @@ namespace components::ql {
 
         explicit storage_parameters()
             : tape_(new tape_wrapper()) {}
-        document::impl::mutable_document* tape() const { return tape_->tape(); }
+        document::impl::base_document* tape() const { return tape_->tape(); }
 
     private:
         boost::intrusive_ptr<tape_wrapper> tape_; // TODO: make into unique_ptr
@@ -85,7 +85,7 @@ namespace components::ql {
 } // namespace components::ql
 
 inline const components::document::value_t to_structure_(const msgpack::object& msg_object,
-                                                         components::document::impl::mutable_document* tape,
+                                                         components::document::impl::base_document* tape,
                                                          std::pmr::memory_resource* resource) {
     switch (msg_object.type) {
         case msgpack::type::NIL:
@@ -137,11 +137,7 @@ namespace msgpack {
                     o.pack_map(v.parameters.size());
                     for (auto it : v.parameters) {
                         o.pack(it.first);
-                        if (it.second.is_immut()) {
-                            to_msgpack_(o, it.second.get_immut());
-                        } else {
-                            to_msgpack_(o, it.second.get_mut());
-                        }
+                        to_msgpack_(o, it.second.get_element());
                     }
                     return o;
                 }
@@ -158,11 +154,7 @@ namespace msgpack {
                     uint32_t i = 0;
                     for (auto it : v.parameters) {
                         o.via.map.ptr[i].key = msgpack::object(it.first, o.zone);
-                        if (it.second.is_immut()) {
-                            to_msgpack_(it.second.get_immut(), o.via.map.ptr[i].val);
-                        } else {
-                            to_msgpack_(it.second.get_mut(), o.via.map.ptr[i].val);
-                        }
+                        to_msgpack_(it.second.get_element(), o.via.map.ptr[i].val);
                         ++i;
                     }
                 }

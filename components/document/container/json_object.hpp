@@ -61,13 +61,9 @@ namespace components::document::json {
 
         json_object* make_deep_copy() const;
 
-        std::pmr::string to_json(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
-                                 std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
+        std::pmr::string to_json(std::pmr::string (*)(const impl::element*, std::pmr::memory_resource*)) const;
 
-        bool equals(const json_object& other,
-                    bool (*)(const immutable_part*, const immutable_part*),
-                    bool (*)(const mutable_part*, const mutable_part*),
-                    bool (*)(const immutable_part*, const mutable_part*)) const;
+        bool equals(const json_object& other, bool (*)(const impl::element*, const impl::element*)) const;
 
         json_object* make_copy_except_deleter(allocator_type* allocator) const;
 

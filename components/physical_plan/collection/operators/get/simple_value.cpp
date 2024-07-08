@@ -11,7 +11,7 @@ namespace services::collection::operators::get {
         , key_(key) {}
 
     components::document::value_t simple_value_t::get_value_impl(const document_ptr& document,
-                                                                 components::document::impl::mutable_document* tape) {
+                                                                 components::document::impl::base_document* tape) {
         return get_value_from_document(document, key_, tape);
     }
 

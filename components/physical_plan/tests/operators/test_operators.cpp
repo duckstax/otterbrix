@@ -23,7 +23,7 @@ TEST_CASE("operator::insert") {
 TEST_CASE("operator::full_scan") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::eq") {
@@ -125,7 +125,7 @@ TEST_CASE("operator::full_scan") {
 TEST_CASE("operator::delete") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::delete") {
@@ -177,7 +177,7 @@ TEST_CASE("operator::delete") {
 TEST_CASE("operator::update") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     SECTION("find::update") {
@@ -286,7 +286,7 @@ TEST_CASE("operator::update") {
 TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     components::index::keys_base_storage_t keys(collection->resource);
@@ -414,7 +414,7 @@ TEST_CASE("operator::transfer_scan") {
 TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     components::index::keys_base_storage_t keys(collection->resource);

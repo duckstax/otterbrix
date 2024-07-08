@@ -14,7 +14,7 @@ using components::ql::add_parameter;
 
 TEST_CASE("operator_merge::and") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     auto collection = init_collection();
@@ -39,7 +39,7 @@ TEST_CASE("operator_merge::and") {
 
 TEST_CASE("operator_merge::or") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     auto collection = init_collection();
@@ -64,7 +64,7 @@ TEST_CASE("operator_merge::or") {
 
 TEST_CASE("operator_merge::not") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     auto collection = init_collection();
@@ -83,7 +83,7 @@ TEST_CASE("operator_merge::not") {
 
 TEST_CASE("operator_merge::complex") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     auto collection = init_collection();

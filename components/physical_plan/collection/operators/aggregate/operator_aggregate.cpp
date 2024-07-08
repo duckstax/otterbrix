@@ -15,8 +15,7 @@ namespace services::collection::operators::aggregate {
         doc->set(key, output_->documents().at(0), key_impl());
     }
 
-    components::document::value_t
-    operator_aggregate_t::value(components::document::impl::mutable_document* tape) const {
+    components::document::value_t operator_aggregate_t::value(components::document::impl::base_document* tape) const {
         return output_->documents().at(0)->get_value(key_impl(), tape);
     }
 } // namespace services::collection::operators::aggregate

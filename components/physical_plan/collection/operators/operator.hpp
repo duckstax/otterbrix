@@ -118,6 +118,6 @@ namespace services::collection::operators {
 
     components::document::value_t get_value_from_document(const components::document::document_ptr& doc,
                                                           const components::expressions::key_t& key,
-                                                          components::document::impl::mutable_document* tape);
+                                                          components::document::impl::base_document* tape);
 
 } // namespace services::collection::operators

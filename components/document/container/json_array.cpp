@@ -56,29 +56,26 @@ namespace components::document::json {
         return copy;
     }
 
-    std::pmr::string
-    json_array::to_json(std::pmr::string (*to_json_immut)(const immutable_part*, std::pmr::memory_resource*),
-                        std::pmr::string (*to_json_mut)(const mutable_part*, std::pmr::memory_resource*)) const {
+    std::pmr::string json_array::to_json(std::pmr::string (*to_json_mut)(const impl::element*,
+                                                                         std::pmr::memory_resource*)) const {
         std::pmr::string res(items_.get_allocator().resource());
         res.append("[");
         for (auto& it : items_) {
             if (res.size() > 1) {
                 res.append(",");
             }
-            res.append(it->to_json(to_json_immut, to_json_mut));
+            res.append(it->to_json(to_json_mut));
         }
         return res.append("]");
     }
 
     bool json_array::equals(const json_array& other,
-                            bool (*immut_equals_immut)(const immutable_part*, const immutable_part*),
-                            bool (*mut_equals_mut)(const mutable_part*, const mutable_part*),
-                            bool (*immut_equals_mut)(const immutable_part*, const mutable_part*)) const {
+                            bool (*mut_equals_mut)(const impl::element*, const impl::element*)) const {
         if (size() != other.size()) {
             return false;
         }
         for (size_t i = 0; i < size(); ++i) {
-            if (!items_[i]->equals(other.items_[i].get(), immut_equals_immut, mut_equals_mut, immut_equals_mut)) {
+            if (!items_[i]->equals(other.items_[i].get(), mut_equals_mut)) {
                 return false;
             }
         }

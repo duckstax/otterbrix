@@ -80,7 +80,7 @@ namespace components::index {
 
         void clean_memory_to_new_elements(std::size_t count) noexcept;
 
-        document::impl::mutable_document* tape();
+        document::impl::base_document* tape();
 
     protected:
         index_t(std::pmr::memory_resource* resource,
@@ -100,8 +100,8 @@ namespace components::index {
         virtual void clean_memory_to_new_elements_impl(std::size_t count) = 0;
 
     protected:
-        std::unique_ptr<document::impl::mutable_document> tape_{
-            new document::impl::mutable_document(std::pmr::get_default_resource())};
+        std::unique_ptr<document::impl::base_document> tape_{
+            new document::impl::base_document(std::pmr::get_default_resource())};
 
     private:
         std::pmr::memory_resource* resource_;

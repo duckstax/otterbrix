@@ -50,7 +50,7 @@ namespace components::document {
             void tie(T& value, error_code& error) && noexcept {
                 error = this->mut;
                 if (!error) {
-                    value = std::forward<document_result_base<T>>(*this).immut;
+                    value = std::forward<document_result_base<T>>(*this).mut;
                 }
             }
 
@@ -80,9 +80,9 @@ namespace components::document {
 
             operator T&&() && noexcept(false) { return std::forward<document_result_base<T>>(*this).take_value(); }
 
-            const T& value_unsafe() const& noexcept { return this->immut; }
+            const T& value_unsafe() const& noexcept { return this->mut; }
 
-            T&& value_unsafe() && noexcept { return std::forward<T>(this->immut); }
+            T&& value_unsafe() && noexcept { return std::forward<T>(this->mut); }
 
         }; // struct document_result_base
 

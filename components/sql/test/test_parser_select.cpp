@@ -50,7 +50,7 @@ using vec = std::vector<v>;
 
 TEST_CASE("parser::select_from_where") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::mutable_document>(resource);
+    auto tape = std::make_unique<document::impl::base_document>(resource);
     auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
 
     TEST_SIMPLE_SELECT(R"_(select * from schema.table;)_", R"_($aggregate: {})_", vec());
@@ -145,7 +145,7 @@ TEST_CASE("parser::select_from_where") {
 
 TEST_CASE("parser::select_from_order_by") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::mutable_document>(resource);
+    auto tape = std::make_unique<document::impl::base_document>(resource);
     auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
 
     TEST_SIMPLE_SELECT(R"_(select * from schema.table order by number;)_",
@@ -179,7 +179,7 @@ TEST_CASE("parser::select_from_order_by") {
 
 TEST_CASE("parser::select_from_fields") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::mutable_document>(resource);
+    auto tape = std::make_unique<document::impl::base_document>(resource);
     auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
 
     TEST_SIMPLE_SELECT(R"_(select number, name, "count" from schema.table;)_",
@@ -215,7 +215,7 @@ TEST_CASE("parser::select_from_fields::errors") {
 
 TEST_CASE("parser::select_without_from") {
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::mutable_document>(resource);
+    auto tape = std::make_unique<document::impl::base_document>(resource);
     auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
 
     TEST_SELECT_WITHOUT_FROM(R"_(select 10 number;)_",

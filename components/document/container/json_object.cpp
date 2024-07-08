@@ -4,9 +4,7 @@
 namespace components::document::json {
 
     bool operator==(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) {
-        if (lhs->is_immut()) {
-            return lhs->get_immut()->get_string().value() == rhs;
-        } else if (lhs->is_mut()) {
+        if (lhs->is_mut()) {
             return lhs->get_mut()->get_string().value() == rhs;
         } else {
             return false;
@@ -15,30 +13,16 @@ namespace components::document::json {
 
     bool json_trie_node_less::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
                                          const std::string_view& rhs) const noexcept {
-        if (lhs->is_immut()) {
-            return lhs->get_immut()->get_string().value() < rhs;
-        } else if (lhs->is_mut()) {
+        if (lhs->is_mut()) {
             return lhs->get_mut()->get_string().value() < rhs;
-        } else {
-            return false;
-        }
-    }
-    bool json_trie_node_less::operator()(const std::string_view& lhs,
-                                         const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept {
-        if (rhs->is_immut()) {
-            return lhs < rhs->get_immut()->get_string().value();
-        } else if (rhs->is_mut()) {
-            return lhs < rhs->get_mut()->get_string().value();
         } else {
             return false;
         }
     }
     bool json_trie_node_less::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
                                          const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept {
-        if (rhs->is_immut()) {
-            return json_trie_node_less()(lhs, rhs->get_immut()->get_string().value());
-        } else if (rhs->is_mut()) {
-            return json_trie_node_less()(lhs, rhs->get_mut()->get_string().value());
+        if (lhs->is_mut() && rhs->is_mut()) {
+            return lhs->get_mut()->get_string().value() < rhs->get_mut()->get_string().value();
         } else {
             return false;
         }
@@ -122,9 +106,6 @@ namespace components::document::json {
         if (res == map_.end()) {
             return false;
         }
-        if (res->key->is_immut()) {
-            return res->key->get_immut()->get_string() == key;
-        }
         return res->key->get_mut()->get_string() == key;
     }
 
@@ -138,9 +119,8 @@ namespace components::document::json {
         return copy;
     }
 
-    std::pmr::string
-    json_object::to_json(std::pmr::string (*to_json_immut)(const immutable_part*, std::pmr::memory_resource*),
-                         std::pmr::string (*to_json_mut)(const mutable_part*, std::pmr::memory_resource*)) const {
+    std::pmr::string json_object::to_json(std::pmr::string (*to_json_mut)(const impl::element*,
+                                                                          std::pmr::memory_resource*)) const {
         std::pmr::string res(resource_);
         res.append("{");
         for (auto& it : map_) {
@@ -148,24 +128,19 @@ namespace components::document::json {
             if (res.size() > 1) {
                 res.append(",");
             }
-            res.append(key->to_json(to_json_immut, to_json_mut))
-                .append(":")
-                .append(it.value->to_json(to_json_immut, to_json_mut));
+            res.append(key->to_json(to_json_mut)).append(":").append(it.value->to_json(to_json_mut));
         }
         return res.append("}");
     }
 
     bool json_object::equals(const json_object& other,
-                             bool (*immut_equals_immut)(const immutable_part*, const immutable_part*),
-                             bool (*mut_equals_mut)(const mutable_part*, const mutable_part*),
-                             bool (*immut_equals_mut)(const immutable_part*, const mutable_part*)) const {
+                             bool (*mut_equals_mut)(const impl::element*, const impl::element*)) const {
         if (size() != other.size()) {
             return false;
         }
         for (auto& it : map_) {
             auto next_node2 = other.map_.find(it);
-            if (next_node2 == other.map_.end() ||
-                !it.value->equals(next_node2->value.get(), immut_equals_immut, mut_equals_mut, immut_equals_mut)) {
+            if (next_node2 == other.map_.end() || !it.value->equals(next_node2->value.get(), mut_equals_mut)) {
                 return false;
             }
         }

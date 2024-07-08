@@ -120,7 +120,7 @@ TEST_CASE("integration::test_index::base") {
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     INFO("initialization") {
@@ -156,7 +156,7 @@ TEST_CASE("integration::test_index::save_load") {
     auto config = test_create_config("/tmp/otterbrix/integration/test_index/save_load");
     test_clear_directory(config);
     auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::mutable_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(resource);
     auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
 
     INFO("initialization") {

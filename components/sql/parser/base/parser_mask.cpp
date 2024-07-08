@@ -123,7 +123,7 @@ namespace components::sql::impl {
     }
 
     document::value_t
-    parse_value(const token_t& token, document::impl::mutable_document* tape, std::pmr::memory_resource* resource) {
+    parse_value(const token_t& token, document::impl::base_document* tape, std::pmr::memory_resource* resource) {
         if (token.type == token_type::string_literal) {
             return document::value_t(resource, tape, token_clean_value(token));
         } else if (token.type == token_type::number_literal) {
@@ -172,7 +172,7 @@ namespace components::sql::impl {
 
     parser_result parse_field_values(lexer_t& lexer,
                                      std::pmr::vector<document::value_t>& values,
-                                     document::impl::mutable_document* tape,
+                                     document::impl::base_document* tape,
                                      std::pmr::memory_resource* resource) {
         values.clear();
         auto token = lexer.next_not_whitespace_token();

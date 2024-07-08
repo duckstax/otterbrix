@@ -22,9 +22,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 using components::document::document_ptr;
 using components::document::value_t;
 
-value_t to_value(const py::handle& obj,
-                 components::document::impl::mutable_document* tape,
-                 std::pmr::memory_resource* resource) {
+value_t
+to_value(const py::handle& obj, components::document::impl::base_document* tape, std::pmr::memory_resource* resource) {
     if (py::isinstance<py::bool_>(obj)) {
         return value_t{resource, tape, obj.cast<bool>()};
     } else if (py::isinstance<py::int_>(obj)) {
@@ -39,8 +38,7 @@ value_t to_value(const py::handle& obj,
     }
 }
 
-void build_primitive(components::document::tape_builder<components::document::impl::tape_writer_to_mutable>& builder,
-                     const py::handle& obj) noexcept {
+void build_primitive(components::document::tape_builder& builder, const py::handle& obj) noexcept {
     if (py::isinstance<py::bool_>(obj)) {
         builder.build(obj.cast<bool>());
     } else if (py::isinstance<py::int_>(obj)) {
@@ -55,11 +53,10 @@ void build_primitive(components::document::tape_builder<components::document::im
     }
 }
 
-json_trie_node*
-build_index(const py::handle& py_obj,
-            components::document::tape_builder<components::document::impl::tape_writer_to_mutable>& builder,
-            components::document::impl::mutable_document* mut_src,
-            document_t::allocator_type* allocator) {
+json_trie_node* build_index(const py::handle& py_obj,
+                            components::document::tape_builder& builder,
+                            components::document::impl::base_document* mut_src,
+                            document_t::allocator_type* allocator) {
     json_trie_node* res;
 
     if (py::isinstance<py::dict>(py_obj)) {
@@ -86,8 +83,8 @@ const document_ptr components::document::py_handle_decoder_t::to_document(const 
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
     // todo: is there a good way to calculate required size for immutable?
-    res->mut_src_ = new (allocator->allocate(sizeof(impl::mutable_document))) impl::mutable_document(allocator);
-    tape_builder<impl::tape_writer_to_mutable> builder(allocator, *res->mut_src_);
+    res->mut_src_ = new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator);
+    tape_builder builder(allocator, *res->mut_src_);
     auto obj = res->element_ind_->as_object();
     for (const py::handle key : py_obj) {
         obj->set(build_index(key, builder, res->mut_src_, allocator),

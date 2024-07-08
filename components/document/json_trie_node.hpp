@@ -15,13 +15,9 @@ namespace components::document::json {
     {
         OBJECT,
         ARRAY,
-        IMMUT,
         MUT,
         DELETER,
     };
-
-    using immutable_part = impl::element<impl::immutable_document>;
-    using mutable_part = impl::element<impl::mutable_document>;
 
     class json_trie_node : public allocator_intrusive_ref_counter<json_trie_node> {
     public:
@@ -45,15 +41,11 @@ namespace components::document::json {
 
         bool is_array() const noexcept;
 
-        bool is_immut() const noexcept;
-
         bool is_mut() const noexcept;
 
         bool is_deleter() const noexcept;
 
-        const immutable_part* get_immut() const;
-
-        const mutable_part* get_mut() const;
+        const impl::element* get_mut() const;
 
         const json_array* get_array() const;
 
@@ -63,19 +55,13 @@ namespace components::document::json {
 
         json_object* as_object();
 
-        std::pmr::string to_json(std::pmr::string (*)(const immutable_part*, std::pmr::memory_resource*),
-                                 std::pmr::string (*)(const mutable_part*, std::pmr::memory_resource*)) const;
+        std::pmr::string to_json(std::pmr::string (*)(const impl::element*, std::pmr::memory_resource*)) const;
 
-        bool equals(const json_trie_node* other,
-                    bool (*)(const immutable_part*, const immutable_part*),
-                    bool (*)(const mutable_part*, const mutable_part*),
-                    bool (*)(const immutable_part*, const mutable_part*)) const;
+        bool equals(const json_trie_node* other, bool (*)(const impl::element*, const impl::element*)) const;
 
         static json_trie_node* merge(json_trie_node* node1, json_trie_node* node2, allocator_type* allocator);
 
-        static json_trie_node* create(immutable_part value, allocator_type* allocator);
-
-        static json_trie_node* create(mutable_part value, allocator_type* allocator);
+        static json_trie_node* create(impl::element value, allocator_type* allocator);
 
         static json_trie_node* create_array(allocator_type* allocator);
 
@@ -92,8 +78,7 @@ namespace components::document::json {
         union value_type {
             json_object obj;
             json_array arr;
-            immutable_part immut;
-            mutable_part mut;
+            impl::element mut;
 
             value_type(json_object&& value)
                 : obj(std::move(value)) {}
@@ -101,10 +86,7 @@ namespace components::document::json {
             value_type(json_array&& value)
                 : arr(std::move(value)) {}
 
-            value_type(immutable_part value)
-                : immut(value) {}
-
-            value_type(mutable_part value)
+            value_type(impl::element value)
                 : mut(value) {}
 
             value_type() {}

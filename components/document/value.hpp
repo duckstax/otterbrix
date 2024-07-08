@@ -14,13 +14,11 @@ namespace components::document {
     class value_t {
     public:
         template<typename T>
-        explicit value_t(std::pmr::memory_resource* allocator, impl::mutable_document* tape, T value);
-        explicit value_t(impl::element<impl::mutable_document> element);
-        explicit value_t(impl::element<impl::immutable_document> element);
+        explicit value_t(std::pmr::memory_resource* allocator, impl::base_document* tape, T value);
+        explicit value_t(impl::element element);
         explicit value_t() = default;
 
-        void set(impl::element<impl::mutable_document> element);
-        void set(impl::element<impl::immutable_document> element);
+        void set(impl::element element);
 
         types::physical_type physical_type() const noexcept;
         types::logical_type logical_type() const noexcept;
@@ -56,35 +54,30 @@ namespace components::document {
 
         explicit operator bool() const;
 
-        bool is_immut() const noexcept;
-        bool is_mut() const noexcept;
-
-        const impl::element<impl::immutable_document>* get_immut() const noexcept;
-        const impl::element<impl::mutable_document>* get_mut() const noexcept;
+        const impl::element* get_element() const noexcept;
 
     private:
         std::string_view get_string_bytes() const noexcept;
 
-        std::variant<impl::element<impl::mutable_document>, impl::element<impl::immutable_document>> element_;
+        impl::element element_;
     };
 
     std::string to_string(const value_t& value);
 
-    value_t sum(const value_t& value1,
-                const value_t& value2,
-                impl::mutable_document* tape,
-                std::pmr::memory_resource* resource);
+    value_t
+    sum(const value_t& value1, const value_t& value2, impl::base_document* tape, std::pmr::memory_resource* resource);
 
     template<typename T>
-    value_t::value_t(std::pmr::memory_resource* allocator, impl::mutable_document* tape, T value) {
-        auto builder = components::document::tape_builder<impl::tape_writer_to_mutable>(allocator, *tape);
+    value_t::value_t(std::pmr::memory_resource* allocator, impl::base_document* tape, T value) {
+        auto builder = tape_builder(allocator, *tape);
         element_ = tape->next_element();
         builder.build(value);
     }
 
     template<class T>
     T value_t::as() const {
-        return std::visit([](auto&& doc) -> T { return doc.template get<T>(); }, element_);
+        return element_.get<T>();
+        ;
     }
 
 } // namespace components::document

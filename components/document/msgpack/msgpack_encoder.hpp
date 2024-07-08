@@ -10,8 +10,8 @@ using components::document::json::json_trie_node;
 using components::document::json::json_type;
 using components::types::logical_type;
 
-template<typename Stream, typename T>
-void to_msgpack_(msgpack::packer<Stream>& o, const element<T>* value) {
+template<typename Stream>
+void to_msgpack_(msgpack::packer<Stream>& o, const element* value) {
     switch (value->logical_type()) {
         case logical_type::BOOLEAN: {
             o.pack(value->get_bool().value());
@@ -44,6 +44,8 @@ void to_msgpack_(msgpack::packer<Stream>& o, const element<T>* value) {
             o.pack(msgpack::type::nil_t());
             break;
         }
+        default:
+            break;
     }
 }
 
@@ -62,8 +64,6 @@ void to_msgpack_(msgpack::packer<Stream>& o, const json_trie_node* value) {
         for (auto it = array->begin(); it != array->end(); ++it) {
             to_msgpack_(o, it->get());
         }
-    } else if (value->type() == json_type::IMMUT) {
-        to_msgpack_(o, value->get_immut());
     } else if (value->type() == json_type::MUT) {
         to_msgpack_(o, value->get_mut());
     }
@@ -71,52 +71,7 @@ void to_msgpack_(msgpack::packer<Stream>& o, const json_trie_node* value) {
 
 void to_msgpack_(const json_trie_node* value, msgpack::object& o);
 
-template<typename T>
-void to_msgpack_(const element<T>* value, msgpack::object& o) {
-    switch (value->logical_type()) {
-        case logical_type::BOOLEAN: {
-            o.type = msgpack::type::BOOLEAN;
-            o.via.boolean = value->get_bool().value();
-            break;
-        }
-        case logical_type::UTINYINT:
-        case logical_type::USMALLINT:
-        case logical_type::UINTEGER:
-        case logical_type::UBIGINT: {
-            o.type = msgpack::type::POSITIVE_INTEGER;
-            o.via.u64 = value->get_uint64().value();
-            break;
-        }
-        case logical_type::TINYINT:
-        case logical_type::SMALLINT:
-        case logical_type::INTEGER:
-        case logical_type::BIGINT: {
-            o.type = msgpack::type::NEGATIVE_INTEGER;
-            o.via.i64 = value->get_int64().value();
-            break;
-        }
-        case logical_type::FLOAT:
-        case logical_type::DOUBLE: {
-            o.type = msgpack::type::FLOAT64;
-            o.via.f64 = value->get_double().value();
-            break;
-        }
-        case logical_type::STRING_LITERAL: {
-            std::string s(value->get_string().value());
-            o.type = msgpack::type::object_type::STR;
-            o.via.str.size = uint32_t(s.size());
-            o.via.str.ptr = s.c_str();
-            break;
-        }
-        case logical_type::NA: {
-            o.type = msgpack::type::object_type::NIL;
-            break;
-        }
-        default:
-            assert(false); // should be unreachable;
-            break;
-    }
-}
+void to_msgpack_(const element* value, msgpack::object& o);
 
 namespace components::document {
     class msgpack_decoder_t {

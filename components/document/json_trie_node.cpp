@@ -15,11 +15,8 @@ namespace components::document::json {
             case ARRAY:
                 value_.arr.~json_array();
                 break;
-            case IMMUT:
-                value_.immut.~immutable_part();
-                break;
             case MUT:
-                value_.mut.~mutable_part();
+                value_.mut.~element();
                 break;
         }
     }
@@ -34,9 +31,6 @@ namespace components::document::json {
                 break;
             case ARRAY:
                 value_.arr = std::move(other.value_.arr);
-                break;
-            case IMMUT:
-                value_.immut = other.value_.immut;
                 break;
             case MUT:
                 value_.mut = other.value_.mut;
@@ -54,9 +48,6 @@ namespace components::document::json {
                 break;
             case ARRAY:
                 value_.arr = std::move(other.value_.arr);
-                break;
-            case IMMUT:
-                value_.immut = other.value_.immut;
                 break;
             case MUT:
                 value_.mut = other.value_.mut;
@@ -83,8 +74,6 @@ namespace components::document::json {
                 allocator_->deallocate(ptr, size);
                 return copy;
             }
-            case IMMUT:
-                return create(value_.immut, allocator_);
             case MUT:
                 return create(value_.mut, allocator_);
             case DELETER:
@@ -98,20 +87,11 @@ namespace components::document::json {
 
     bool json_trie_node::is_array() const noexcept { return type_ == ARRAY; }
 
-    bool json_trie_node::is_immut() const noexcept { return type_ == IMMUT; }
-
     bool json_trie_node::is_mut() const noexcept { return type_ == MUT; }
 
     bool json_trie_node::is_deleter() const noexcept { return type_ == DELETER; }
 
-    const immutable_part* json_trie_node::get_immut() const {
-        if (_usually_false(!is_immut())) {
-            return nullptr;
-        }
-        return &value_.immut;
-    }
-
-    const mutable_part* json_trie_node::get_mut() const {
+    const impl::element* json_trie_node::get_mut() const {
         if (_usually_false(!is_mut())) {
             return nullptr;
         }
@@ -136,16 +116,13 @@ namespace components::document::json {
 
     json_object* json_trie_node::as_object() { return const_cast<json_object*>(get_object()); }
 
-    std::pmr::string
-    json_trie_node::to_json(std::pmr::string (*to_json_immut)(const immutable_part*, std::pmr::memory_resource*),
-                            std::pmr::string (*to_json_mut)(const mutable_part*, std::pmr::memory_resource*)) const {
+    std::pmr::string json_trie_node::to_json(std::pmr::string (*to_json_mut)(const impl::element*,
+                                                                             std::pmr::memory_resource*)) const {
         switch (type_) {
             case OBJECT:
-                return value_.obj.to_json(to_json_immut, to_json_mut);
+                return value_.obj.to_json(to_json_mut);
             case ARRAY:
-                return value_.arr.to_json(to_json_immut, to_json_mut);
-            case IMMUT:
-                return to_json_immut(&value_.immut, allocator_);
+                return value_.arr.to_json(to_json_mut);
             case MUT:
                 return to_json_mut(&value_.mut, allocator_);
             case DELETER:
@@ -154,25 +131,15 @@ namespace components::document::json {
     }
 
     bool json_trie_node::equals(const json_trie_node* other,
-                                bool (*immut_equals_immut)(const immutable_part*, const immutable_part*),
-                                bool (*mut_equals_mut)(const mutable_part*, const mutable_part*),
-                                bool (*immut_equals_mut)(const immutable_part*, const mutable_part*)) const {
+                                bool (*mut_equals_mut)(const impl::element*, const impl::element*)) const {
         if (type_ != other->type_) {
-            if (type_ == IMMUT && other->type_ == MUT) {
-                return immut_equals_mut(&value_.immut, &other->value_.mut);
-            }
-            if (type_ == MUT && other->type_ == IMMUT) {
-                return immut_equals_mut(&other->value_.immut, &value_.mut);
-            }
             return false;
         }
         switch (type_) {
             case OBJECT:
-                return value_.obj.equals(other->value_.obj, immut_equals_immut, mut_equals_mut, immut_equals_mut);
+                return value_.obj.equals(other->value_.obj, mut_equals_mut);
             case ARRAY:
-                return value_.arr.equals(other->value_.arr, immut_equals_immut, mut_equals_mut, immut_equals_mut);
-            case IMMUT:
-                return immut_equals_immut(&value_.immut, &other->value_.immut);
+                return value_.arr.equals(other->value_.arr, mut_equals_mut);
             case MUT:
                 return mut_equals_mut(&value_.mut, &other->value_.mut);
             case DELETER:
@@ -199,11 +166,7 @@ namespace components::document::json {
         return res;
     }
 
-    json_trie_node* json_trie_node::create(immutable_part value, json_trie_node::allocator_type* allocator) {
-        return new (allocator->allocate(sizeof(json_trie_node))) json_trie_node(allocator, value, IMMUT);
-    }
-
-    json_trie_node* json_trie_node::create(mutable_part value, json_trie_node::allocator_type* allocator) {
+    json_trie_node* json_trie_node::create(impl::element value, json_trie_node::allocator_type* allocator) {
         return new (allocator->allocate(sizeof(json_trie_node))) json_trie_node(allocator, value, MUT);
     }
 

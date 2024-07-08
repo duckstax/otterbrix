@@ -11,7 +11,7 @@ namespace services::collection::operators::aggregate {
 
     document_ptr operator_min_t::aggregate_impl() {
         auto doc = components::document::make_document(context_->resource());
-        auto tape = std::make_unique<components::document::impl::mutable_document>(context_->resource());
+        auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
             auto min = std::min_element(documents.cbegin(),

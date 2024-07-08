@@ -3,6 +3,10 @@ project(document)
 set(${PROJECT_NAME}_SOURCES
         container/json_object.cpp
         container/json_array.cpp
+        impl/tape_builder.cpp
+        impl/element.cpp
+        impl/tape_ref.cpp
+        impl/tape_writer.cpp
         impl/document.cpp
         impl/error.cpp
         msgpack/msgpack_encoder.cpp
