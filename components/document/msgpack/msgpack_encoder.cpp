@@ -55,13 +55,10 @@ json_trie_node* build_index(const msgpack::object& msg_object,
 const document_ptr components::document::msgpack_decoder_t::to_document(const msgpack::object& msg_object) {
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
-    res->mut_src_ = new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator);
-
-    tape_builder builder(allocator, *res->mut_src_);
     auto obj = res->element_ind_->as_object();
     for (auto& [key, val] : msg_object.via.map) {
-        obj->set(build_index(key, builder, res->mut_src_, allocator),
-                 build_index(val, builder, res->mut_src_, allocator));
+        obj->set(build_index(key, res->builder_, res->mut_src_, allocator),
+                 build_index(val, res->builder_, res->mut_src_, allocator));
     }
     return res;
 }

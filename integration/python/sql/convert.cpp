@@ -82,13 +82,10 @@ json_trie_node* build_index(const py::handle& py_obj,
 const document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj) {
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
-    // todo: is there a good way to calculate required size for immutable?
-    res->mut_src_ = new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator);
-    tape_builder builder(allocator, *res->mut_src_);
     auto obj = res->element_ind_->as_object();
     for (const py::handle key : py_obj) {
-        obj->set(build_index(key, builder, res->mut_src_, allocator),
-                 build_index(py_obj[key], builder, res->mut_src_, allocator));
+        obj->set(build_index(key, res->builder_, res->mut_src_, allocator),
+                 build_index(py_obj[key], res->builder_, res->mut_src_, allocator));
     }
     return res;
 }
