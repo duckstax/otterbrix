@@ -707,6 +707,8 @@ TEST_CASE("document_t::copy independent") {
 
     REQUIRE(doc->copy("/foo", "/qux/foo") == error_code_t::SUCCESS);
 
+    auto mid_json = doc->to_json();
+
     REQUIRE(doc->remove("/qux/foo/waldo") == error_code_t::SUCCESS);
 
     REQUIRE(document_t::is_equals_documents(doc, res_doc));

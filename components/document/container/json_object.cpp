@@ -11,28 +11,33 @@ namespace components::document::json {
         }
     }
 
-    bool json_trie_node_less::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
-                                         const std::string_view& rhs) const noexcept {
+    size_t json_trie_node_hash::operator()(const boost::intrusive_ptr<json_trie_node>& n) const {
+        return std::hash<std::string_view>{}(n->get_mut()->get_string().value());
+    }
+    size_t json_trie_node_hash::operator()(const std::string_view& sv) const {
+        return std::hash<std::string_view>{}(sv);
+    }
+
+    bool json_trie_node_eq::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
+                                       const std::string_view& rhs) const noexcept {
         if (lhs->is_mut()) {
-            return lhs->get_mut()->get_string().value() < rhs;
+            return lhs->get_mut()->get_string().value() == rhs;
         } else {
             return false;
         }
     }
-    bool json_trie_node_less::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
-                                         const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept {
+    bool json_trie_node_eq::operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
+                                       const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept {
         if (lhs->is_mut() && rhs->is_mut()) {
-            return lhs->get_mut()->get_string().value() < rhs->get_mut()->get_string().value();
+            return lhs->get_mut()->get_string().value() == rhs->get_mut()->get_string().value();
         } else {
             return false;
         }
-    }
-    bool json_trie_node_less::operator()(const node_pack& lhs, const node_pack& rhs) const noexcept {
-        return json_trie_node_less()(lhs.key, rhs.key);
     }
 
     json_object::json_object(json_object::allocator_type* allocator)
-        : resource_(allocator) {}
+        : map_(allocator)
+        , resource_(allocator) {}
 
     json_object::iterator json_object::begin() { return map_.begin(); }
 
@@ -47,75 +52,44 @@ namespace components::document::json {
     json_object::const_iterator json_object::cend() const { return map_.cend(); }
 
     const json_trie_node* json_object::get(std::string_view key) const {
-        auto res =
-            std::lower_bound(map_.begin(), map_.end(), key, [](const node_pack& lhs, const std::string_view& rhs) {
-                return json_trie_node_less()(lhs.key, rhs);
-            });
-        if (res == map_.end() || !(res->key == key)) {
+        auto res = map_.find(key);
+        if (res == map_.end()) {
             return nullptr;
         }
-        return res->value.get();
+        return res->second.get();
     }
 
     void json_object::set(json_trie_node* key, json_trie_node* value) {
-        map_.emplace(node_pack{boost::intrusive_ptr<json_trie_node>(key), boost::intrusive_ptr<json_trie_node>(value)});
+        map_.emplace(boost::intrusive_ptr<json_trie_node>(key), boost::intrusive_ptr<json_trie_node>(value));
     }
     void json_object::set(std::string_view key, json_trie_node* value) {
-        auto res =
-            std::lower_bound(map_.begin(), map_.end(), key, [](const node_pack& lhs, const std::string_view& rhs) {
-                return json_trie_node_less()(lhs.key, rhs);
-            });
-        if (res == map_.end() || !(res->key == key)) {
-            return;
-        }
-        res->value = boost::intrusive_ptr<json_trie_node>(value);
+        map_.at(key) = boost::intrusive_ptr<json_trie_node>(value);
     }
 
     void json_object::set(boost::intrusive_ptr<json_trie_node>&& key, boost::intrusive_ptr<json_trie_node>&& value) {
-        map_.emplace(node_pack{std::move(key), std::move(value)});
+        map_.emplace(std::move(key), std::move(value));
     }
     void json_object::set(std::string_view key, boost::intrusive_ptr<json_trie_node>&& value) {
-        auto res =
-            std::lower_bound(map_.begin(), map_.end(), key, [](const node_pack& lhs, const std::string_view& rhs) {
-                return json_trie_node_less()(lhs.key, rhs);
-            });
-        if (res == map_.end() || !(res->key == key)) {
-            return;
-        }
-        res->value = std::move(value);
+        map_.at(key) = std::move(value);
     }
 
     boost::intrusive_ptr<json_trie_node> json_object::remove(std::string_view key) {
-        auto found =
-            std::lower_bound(map_.begin(), map_.end(), key, [](const node_pack& lhs, const std::string_view& rhs) {
-                return json_trie_node_less()(lhs.key, rhs);
-            });
-        if (found == map_.end() || !(found->key == key)) {
+        auto found = map_.find(key);
+        if (found == map_.end()) {
             return nullptr;
         }
-        auto copy = found->value;
+        auto copy = found->second;
         map_.erase(found);
         return copy;
     }
 
-    bool json_object::contains(std::string_view key) const noexcept {
-        auto res =
-            std::lower_bound(map_.begin(), map_.end(), key, [](const node_pack& lhs, const std::string_view& rhs) {
-                return json_trie_node_less()(lhs.key, rhs);
-            });
-        if (res == map_.end()) {
-            return false;
-        }
-        return res->key->get_mut()->get_string() == key;
-    }
+    bool json_object::contains(std::string_view key) const noexcept { return map_.contains(key); }
 
     size_t json_object::size() const noexcept { return map_.size(); }
 
     json_object* json_object::make_deep_copy() const {
         auto copy = new (resource_->allocate(sizeof(json_object))) json_object(resource_);
-        for (auto& it : map_) {
-            copy->map_.emplace(node_pack{it.key->make_deep_copy(), it.value->make_deep_copy()});
-        }
+        copy->map_ = map_;
         return copy;
     }
 
@@ -124,11 +98,11 @@ namespace components::document::json {
         std::pmr::string res(resource_);
         res.append("{");
         for (auto& it : map_) {
-            auto key = it.key;
             if (res.size() > 1) {
                 res.append(",");
             }
-            res.append(key->to_json(to_json_mut)).append(":").append(it.value->to_json(to_json_mut));
+            res.append(it.first->to_json(to_json_mut)).append(":");
+            res.append(it.second->to_json(to_json_mut));
         }
         return res.append("}");
     }
@@ -139,8 +113,8 @@ namespace components::document::json {
             return false;
         }
         for (auto& it : map_) {
-            auto next_node2 = other.map_.find(it);
-            if (next_node2 == other.map_.end() || !it.value->equals(next_node2->value.get(), mut_equals_mut)) {
+            auto next_node2 = other.map_.find(it.first);
+            if (next_node2 == other.map_.end() || !it.second->equals(next_node2->second.get(), mut_equals_mut)) {
                 return false;
             }
         }
@@ -150,7 +124,7 @@ namespace components::document::json {
     json_object* json_object::make_copy_except_deleter(allocator_type* allocator) const {
         auto copy = new (allocator->allocate(sizeof(json_object))) json_object(allocator);
         for (auto& it : map_) {
-            if (it.value->is_deleter()) {
+            if (it.second->is_deleter()) {
                 continue;
             }
             copy->map_.emplace(it);
@@ -162,19 +136,19 @@ namespace components::document::json {
     json_object::merge(json_object& object1, json_object& object2, json_object::allocator_type* allocator) {
         auto res = new (allocator->allocate(sizeof(json_object))) json_object(allocator);
         for (auto& it : object2.map_) {
-            if (it.value->is_deleter()) {
+            if (it.second->is_deleter()) {
                 continue;
             }
-            auto next = object1.map_.find(it);
+            auto next = object1.map_.find(it.first);
             if (next == object1.map_.end()) {
                 res->map_.emplace(it);
             } else {
-                res->map_.emplace(
-                    node_pack{it.key, std::move(json_trie_node::merge(next->value.get(), it.value.get(), allocator))});
+                res->map_.emplace(it.first,
+                                  std::move(json_trie_node::merge(next->second.get(), it.second.get(), allocator)));
             }
         }
         for (auto& it : object1.map_) {
-            if (object2.map_.find(it) == object2.map_.end()) {
+            if (object2.map_.find(it.first) == object2.map_.end()) {
                 res->map_.emplace(it);
             }
         }

@@ -691,15 +691,15 @@ namespace components::document {
         bool result = false;
         auto dict = update->json_trie()->as_object();
         for (auto it_update = dict->begin(); it_update != dict->end(); ++it_update) {
-            std::string_view key_update = it_update->key->get_mut()->get_string();
-            auto fields = it_update->value->as_object();
+            std::string_view key_update = it_update->first->get_mut()->get_string();
+            auto fields = it_update->second->as_object();
             if (!fields) {
                 break;
             }
             for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
-                std::string_view key_field = it_field->key->get_mut()->get_string();
+                std::string_view key_field = it_field->first->get_mut()->get_string();
                 if (key_update == "$set") {
-                    auto elem = it_field->value->get_mut();
+                    auto elem = it_field->second->get_mut();
                     switch (elem->physical_type()) {
                         case types::physical_type::BOOL_FALSE:
                         case types::physical_type::BOOL_TRUE: {
@@ -763,7 +763,7 @@ namespace components::document {
                     }
                 }
                 if (key_update == "$inc") {
-                    auto elem = it_field->value->get_mut();
+                    auto elem = it_field->second->get_mut();
                     switch (elem->physical_type()) {
                         case types::physical_type::BOOL_FALSE:
                         case types::physical_type::BOOL_TRUE: {
@@ -949,17 +949,17 @@ namespace components::document {
         for (auto it = source->element_ind_->as_object()->begin(); it != source->element_ind_->as_object()->end();
              ++it) {
             std::string_view cmd;
-            if (it->key->is_mut()) {
-                cmd = it->key->get_mut()->get_string().value();
+            if (it->first->is_mut()) {
+                cmd = it->first->get_mut()->get_string().value();
             }
             if (cmd == "$set" || cmd == "$inc") {
-                auto values = it->value->get_object();
+                auto values = it->second->get_object();
                 for (auto it_field = values->begin(); it_field != values->end(); ++it_field) {
                     std::string_view key;
-                    if (it_field->key->is_mut()) {
-                        key = it_field->key->get_mut()->get_string().value();
+                    if (it_field->first->is_mut()) {
+                        key = it_field->first->get_mut()->get_string().value();
                     }
-                    doc->set_(key, it_field->value->make_deep_copy());
+                    doc->set_(key, it_field->second->make_deep_copy());
                 }
             }
         }

@@ -1,25 +1,33 @@
 #pragma once
 
-#include "absl/container/btree_set.h"
+#include <absl/container/flat_hash_map.h>
 #include <components/document/base.hpp>
 
 namespace components::document::json {
+    struct json_trie_node_hash {
+        using is_transparent = void;
 
-    struct node_pack {
-        boost::intrusive_ptr<json_trie_node> key;
-        boost::intrusive_ptr<json_trie_node> value;
+        size_t operator()(const boost::intrusive_ptr<json_trie_node>& n) const;
+        size_t operator()(const std::string_view& sv) const;
     };
 
-    struct json_trie_node_less {
+    struct json_trie_node_eq {
+        using is_transparent = void;
+
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs, const std::string_view& rhs) const noexcept;
         bool operator()(const std::string_view& lhs, const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
         bool operator()(const boost::intrusive_ptr<json_trie_node>& lhs,
                         const boost::intrusive_ptr<json_trie_node>& rhs) const noexcept;
-        bool operator()(const node_pack& lhs, const node_pack& rhs) const noexcept;
     };
 
     class json_object {
-        using tree = absl::btree_set<node_pack, json_trie_node_less>;
+        using tree =
+            absl::flat_hash_map<boost::intrusive_ptr<json_trie_node>,
+                                boost::intrusive_ptr<json_trie_node>,
+                                json_trie_node_hash,
+                                json_trie_node_eq,
+                                std::pmr::polymorphic_allocator<std::pair<boost::intrusive_ptr<json_trie_node>,
+                                                                          boost::intrusive_ptr<json_trie_node>>>>;
         using iterator = tree::iterator;
         using const_iterator = tree::const_iterator;
 
