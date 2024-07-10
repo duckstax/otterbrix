@@ -94,11 +94,82 @@ auto to_document(const py::handle& source) -> document_ptr {
     return components::document::py_handle_decoder_t::to_document(source);
 }
 
-auto from_document(const document_ptr& document) -> py::object {}
+auto from_object(const element* value) -> py::object {
+    switch (value->logical_type()) {
+        case logical_type::BOOLEAN:
+            return py::bool_(value->get_bool().value());
+        case logical_type::UTINYINT:
+        case logical_type::USMALLINT:
+        case logical_type::UINTEGER:
+        case logical_type::UBIGINT:
+            return py::int_(value->get_uint64().value());
+        case logical_type::TINYINT:
+        case logical_type::SMALLINT:
+        case logical_type::INTEGER:
+        case logical_type::BIGINT:
+            return py::int_(value->get_int64().value());
+        case logical_type::FLOAT:
+        case logical_type::DOUBLE:
+            return py::float_(value->get_double().value());
+        case logical_type::STRING_LITERAL:
+            return py::str(value->get_string().value());
+        default:
+            return py::none();
+    }
+}
 
-auto from_object(const document_ptr& document, const std::string& key) -> py::object {}
+auto from_object(const json_trie_node* value) -> py::object {
+    if (value->type() == json_type::OBJECT) {
+        py::dict dict;
+        for (auto it = value->get_object()->begin(); it != value->get_object()->end(); ++it) {
+            std::string key(it->first->get_mut()->get_string().value());
+            dict[py::str(key)] = from_object(it->second.get());
+        }
+        return std::move(dict);
+    } else if (value->type() == json_type::ARRAY) {
+        py::list list;
+        for (uint32_t i = 0; i < value->get_array()->size(); ++i) {
+            list.append(from_object(value->get_array()->get(i)));
+        }
+        return std::move(list);
+    }
+    if (value->type() == json_type::MUT) {
+        return from_object(value->get_mut());
+    }
+    return py::none();
+}
 
-auto from_object(const document_ptr& document, uint32_t index) -> py::object {}
+auto from_document(const document_ptr& document) -> py::object {
+    auto node = document->json_trie();
+    return node ? from_object(node.get()) : py::none();
+}
+
+auto from_object(const document_ptr& document, const std::string& key) -> py::object {
+    return py::none();
+    if (!document->is_exists(key)) {
+        return py::none();
+    }
+    if (document->is_array(key)) {
+        return from_document(document->get_array(key));
+    } else if (document->is_dict(key)) {
+        return from_document(document->get_dict(key));
+    } else {
+        return from_object(document->get_value(key).get_element());
+    }
+}
+auto from_object(const document_ptr& document, uint32_t index) -> py::object {
+    auto key = std::to_string(index);
+    if (!document->is_exists(key)) {
+        return py::none();
+    }
+    if (document->is_array(key)) {
+        return from_document(document->get_array(key));
+    } else if (document->is_dict(key)) {
+        return from_document(document->get_dict(key));
+    } else {
+        return from_object(document->get_value(key).get_element());
+    }
+}
 
 auto to_pylist(const std::pmr::vector<std::string>& src) -> py::list {
     py::list res;
