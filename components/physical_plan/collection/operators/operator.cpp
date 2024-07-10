@@ -87,9 +87,8 @@ namespace services::collection::operators {
         , state_(read_write_operator_state::pending) {}
 
     components::document::value_t get_value_from_document(const components::document::document_ptr& doc,
-                                                          const components::expressions::key_t& key,
-                                                          components::document::impl::base_document* tape) {
-        return doc->get_value(key.as_string(), tape);
+                                                          const components::expressions::key_t& key) {
+        return doc->get_value(key.as_string());
     }
 
 } // namespace services::collection::operators
