@@ -11,9 +11,7 @@ namespace components::document {
         using allocator_type = std::pmr::memory_resource;
 
         tape_builder() noexcept;
-        tape_builder(allocator_type* allocator, impl::base_document& doc) noexcept;
-
-        ~tape_builder();
+        tape_builder(impl::base_document& doc) noexcept;
 
         tape_builder(tape_builder&&) noexcept;
 
@@ -44,8 +42,7 @@ namespace components::document {
         void visit_null_atom() noexcept;
 
     private:
-        allocator_type* allocator_;
-        impl::tape_writer* tape_;
+        impl::tape_writer tape_;
 
         void append(uint64_t val, types::physical_type t) noexcept;
 
@@ -60,7 +57,7 @@ namespace components::document {
     void tape_builder::append2(uint64_t val, T val2, types::physical_type t) noexcept {
         append(val, t);
         static_assert(sizeof(val2) == sizeof(uint64_t), "Type is not 64 bits!");
-        tape_->copy(&val2);
+        tape_.copy(&val2);
     }
 
     template<typename T>
@@ -68,8 +65,8 @@ namespace components::document {
         append(0, t);
         static_assert(sizeof(val2) == 2 * sizeof(uint64_t), "Type is not 128 bits!");
         auto data = reinterpret_cast<uint64_t*>(&val2);
-        tape_->copy(data);
-        tape_->copy(data + 1);
+        tape_.copy(data);
+        tape_.copy(data + 1);
     }
 
 } // namespace components::document

@@ -24,7 +24,7 @@ TEST_CASE("operator::full_scan") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("find::eq") {
         auto cond =
@@ -126,7 +126,7 @@ TEST_CASE("operator::delete") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("find::delete") {
         REQUIRE(d(collection)->storage().size() == 100);
@@ -178,7 +178,7 @@ TEST_CASE("operator::update") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("find::update") {
         components::ql::storage_parameters parameters;
@@ -287,7 +287,7 @@ TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");
@@ -415,7 +415,7 @@ TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     components::index::keys_base_storage_t keys(collection->resource);
     keys.emplace_back("count");

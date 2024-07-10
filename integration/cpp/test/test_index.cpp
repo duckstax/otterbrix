@@ -121,7 +121,7 @@ TEST_CASE("integration::test_index::base") {
     auto* dispatcher = space.dispatcher();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
         INIT_COLLECTION();
@@ -157,7 +157,7 @@ TEST_CASE("integration::test_index::save_load") {
     test_clear_directory(config);
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
         test_spaces space(config);

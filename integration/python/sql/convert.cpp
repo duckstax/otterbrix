@@ -25,16 +25,16 @@ using components::document::value_t;
 value_t
 to_value(const py::handle& obj, components::document::impl::base_document* tape, std::pmr::memory_resource* resource) {
     if (py::isinstance<py::bool_>(obj)) {
-        return value_t{resource, tape, obj.cast<bool>()};
+        return value_t{tape, obj.cast<bool>()};
     } else if (py::isinstance<py::int_>(obj)) {
-        return value_t{resource, tape, obj.cast<long>()};
+        return value_t{tape, obj.cast<long>()};
     } else if (py::isinstance<py::float_>(obj)) {
-        return value_t{resource, tape, obj.cast<double>()};
+        return value_t{tape, obj.cast<double>()};
     } else if (py::isinstance<py::bytes>(obj)) {
         py::module base64 = py::module::import("base64");
-        return value_t{resource, tape, base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>()};
+        return value_t{tape, base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>()};
     } else if (py::isinstance<py::str>(obj)) {
-        return value_t{resource, tape, obj.cast<std::string>()};
+        return value_t{tape, obj.cast<std::string>()};
     }
 }
 

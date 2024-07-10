@@ -17,7 +17,7 @@ std::string gen_str_new_value(int i, std::size_t size = 5) {
 TEST_CASE("index_disk::string") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     std::filesystem::path path{"/tmp/index_disk/string"};
     std::filesystem::remove_all(path);
@@ -52,7 +52,7 @@ TEST_CASE("index_disk::string") {
 TEST_CASE("index_disk::int32") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     std::filesystem::path path{"/tmp/index_disk/int32"};
     std::filesystem::remove_all(path);
@@ -87,7 +87,7 @@ TEST_CASE("index_disk::int32") {
 TEST_CASE("index_disk::uint32") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     std::filesystem::path path{"/tmp/index_disk/uint32"};
     std::filesystem::remove_all(path);
@@ -122,7 +122,7 @@ TEST_CASE("index_disk::uint32") {
 TEST_CASE("index_disk::double") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     std::filesystem::path path{"/tmp/index_disk/double"};
     std::filesystem::remove_all(path);
@@ -157,7 +157,7 @@ TEST_CASE("index_disk::double") {
 TEST_CASE("index_disk::multi_values::int32") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     std::filesystem::path path{"/tmp/index_disk/int32_multi"};
     std::filesystem::remove_all(path);

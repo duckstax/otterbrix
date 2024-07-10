@@ -125,20 +125,20 @@ namespace components::sql::impl {
     document::value_t
     parse_value(const token_t& token, document::impl::base_document* tape, std::pmr::memory_resource* resource) {
         if (token.type == token_type::string_literal) {
-            return document::value_t(resource, tape, token_clean_value(token));
+            return document::value_t(tape, token_clean_value(token));
         } else if (token.type == token_type::number_literal) {
             if (is_integer(token.value())) {
-                return document::value_t(resource, tape, std::atol(token.value().data()));
+                return document::value_t(tape, std::atol(token.value().data()));
             } else {
                 // TODO we don't support float in this case?
-                return document::value_t(resource, tape, std::atof(token.value().data()));
+                return document::value_t(tape, std::atof(token.value().data()));
             }
         } else if (is_token_bool_value_true(token)) {
-            return document::value_t(resource, tape, true);
+            return document::value_t(tape, true);
         } else if (is_token_bool_value_false(token)) {
-            return document::value_t(resource, tape, false);
+            return document::value_t(tape, false);
         }
-        return document::value_t(resource, tape, nullptr);
+        return document::value_t(tape, nullptr);
     }
 
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields) {

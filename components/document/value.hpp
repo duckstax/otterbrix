@@ -14,7 +14,7 @@ namespace components::document {
     class value_t {
     public:
         template<typename T>
-        explicit value_t(std::pmr::memory_resource* allocator, impl::base_document* tape, T value);
+        explicit value_t(impl::base_document* tape, T value);
         explicit value_t(impl::element element);
         explicit value_t() = default;
 
@@ -68,8 +68,8 @@ namespace components::document {
     sum(const value_t& value1, const value_t& value2, impl::base_document* tape, std::pmr::memory_resource* resource);
 
     template<typename T>
-    value_t::value_t(std::pmr::memory_resource* allocator, impl::base_document* tape, T value) {
-        auto builder = tape_builder(allocator, *tape);
+    value_t::value_t(impl::base_document* tape, T value) {
+        auto builder = tape_builder(*tape);
         element_ = tape->next_element();
         builder.build(value);
     }

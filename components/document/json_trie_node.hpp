@@ -69,7 +69,6 @@ namespace components::document::json {
 
         static json_trie_node* create_deleter(allocator_type* allocator);
 
-    protected:
         allocator_type* get_allocator() override;
 
     private:

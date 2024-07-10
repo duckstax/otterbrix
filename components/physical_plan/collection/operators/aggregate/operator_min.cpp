@@ -10,18 +10,20 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_min_t::aggregate_impl() {
-        auto doc = components::document::make_document(context_->resource());
-        auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
+        auto resource = (left_ && left_->output() && !left_->output()->documents().empty())
+                            ? left_->output()->documents().at(0)->get_allocator()
+                            : context_->resource();
+        auto doc = components::document::make_document(resource);
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
             auto min = std::min_element(documents.cbegin(),
                                         documents.cend(),
                                         [&](const document_ptr& doc1, const document_ptr& doc2) {
-                                            return get_value_from_document(doc1, key_, tape.get()) <
-                                                   get_value_from_document(doc2, key_, tape.get());
+                                            return doc1->compare(key_.as_string(), doc2, key_.as_string()) ==
+                                                   components::document::compare_t::less;
                                         });
             if (min != documents.cend()) {
-                doc->set(key_result_, get_value_from_document(*min, key_, tape.get()));
+                doc->set(key_result_, *min, key_.as_string());
                 return doc;
             }
         }

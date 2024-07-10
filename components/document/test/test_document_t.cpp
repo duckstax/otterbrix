@@ -7,8 +7,8 @@ using components::document::document_t;
 using components::document::error_code_t;
 
 TEST_CASE("document_t::is/get value") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = gen_doc(1, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = gen_doc(1, &allocator);
 
     REQUIRE(doc->is_exists());
     REQUIRE(doc->is_dict());
@@ -44,9 +44,9 @@ TEST_CASE("document_t::is/get value") {
 }
 
 TEST_CASE("document_t::compare") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = make_document(allocator);
-    auto doc2 = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = make_document(&allocator);
+    auto doc2 = make_document(&allocator);
 
     std::string_view less("/less");
     std::string_view equals("/equals");
@@ -75,8 +75,8 @@ TEST_CASE("document_t::compare") {
 }
 
 TEST_CASE("document_t::tiny int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
     uint16_t value = 3;
@@ -97,8 +97,8 @@ TEST_CASE("document_t::tiny int") {
 }
 
 TEST_CASE("document_t::small int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
     uint16_t value = 3;
@@ -119,8 +119,8 @@ TEST_CASE("document_t::small int") {
 }
 
 TEST_CASE("document_t::int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countInt");
     int32_t value = 3;
@@ -142,8 +142,8 @@ TEST_CASE("document_t::int") {
 }
 
 TEST_CASE("document_t::unsigned tiny int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
     uint16_t value = 3;
@@ -165,8 +165,8 @@ TEST_CASE("document_t::unsigned tiny int") {
 }
 
 TEST_CASE("document_t::unsigned small int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
     uint16_t value = 3;
@@ -188,8 +188,8 @@ TEST_CASE("document_t::unsigned small int") {
 }
 
 TEST_CASE("document_t::unsigned int") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countUnsignedInt");
     uint32_t value = 3;
@@ -211,8 +211,8 @@ TEST_CASE("document_t::unsigned int") {
 }
 
 TEST_CASE("document_t::hugeint") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/countHugeInt");
     int128_t value = 3;
@@ -234,8 +234,8 @@ TEST_CASE("document_t::hugeint") {
 }
 
 TEST_CASE("document_t::float") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/valueFloat");
     float value = 2.3f;
@@ -248,8 +248,8 @@ TEST_CASE("document_t::float") {
 }
 
 TEST_CASE("document_t::cast signed to signed") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = make_document(allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
 
     std::string_view key("/value");
     int64_t value = -1;
@@ -259,8 +259,8 @@ TEST_CASE("document_t::cast signed to signed") {
 }
 
 TEST_CASE("document_t::set") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = gen_doc(1, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = gen_doc(1, &allocator);
 
     std::string_view key("/newValue");
     std::string_view value("new value");
@@ -296,10 +296,10 @@ TEST_CASE("document_t::set doc") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = gen_doc(1, allocator);
-    auto nestedDoc = document_t::document_from_json(json, allocator);
+    auto doc = gen_doc(1, &allocator);
+    auto nestedDoc = document_t::document_from_json(json, &allocator);
 
     std::string_view key("/nestedDoc");
     REQUIRE(doc->set(key, nestedDoc) == error_code_t::SUCCESS);
@@ -343,13 +343,13 @@ TEST_CASE("document_t::merge") {
   "tags": [ "example" ]
 }
   )";
-        auto allocator = std::pmr::new_delete_resource();
-        auto target_doc = document_t::document_from_json(target, allocator);
-        auto patch_doc = document_t::document_from_json(patch, allocator);
+        auto allocator = std::pmr::synchronized_pool_resource();
+        auto target_doc = document_t::document_from_json(target, &allocator);
+        auto patch_doc = document_t::document_from_json(patch, &allocator);
 
         patch_doc->set_deleter("/author/familyName");
 
-        auto res = document_t::merge(target_doc, patch_doc, allocator);
+        auto res = document_t::merge(target_doc, patch_doc, &allocator);
 
         REQUIRE(res->is_exists());
         REQUIRE(res->count() == 6);
@@ -408,9 +408,9 @@ TEST_CASE("document_t::is_equals_documents") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = document_t::document_from_json(json, allocator);
-    auto doc2 = document_t::document_from_json(json, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = document_t::document_from_json(json, &allocator);
+    auto doc2 = document_t::document_from_json(json, &allocator);
 
     int64_t int64_t_value = 2;
     doc1->set("/number", int64_t_value);
@@ -437,9 +437,9 @@ TEST_CASE("document_t::is_equals_documents fail when different types") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = document_t::document_from_json(json, allocator);
-    auto doc2 = document_t::document_from_json(json, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = document_t::document_from_json(json, &allocator);
+    auto doc2 = document_t::document_from_json(json, &allocator);
 
     int64_t int64_t_value = 2;
     uint64_t uint64_t_value = 2;
@@ -467,9 +467,9 @@ TEST_CASE("document_t::is_equals_documents fail when different values") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = document_t::document_from_json(json, allocator);
-    auto doc2 = document_t::document_from_json(json, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = document_t::document_from_json(json, &allocator);
+    auto doc2 = document_t::document_from_json(json, &allocator);
 
     int64_t int64_t_value = 2;
     int64_t int64_t_other_value = 3;
@@ -494,10 +494,10 @@ TEST_CASE("document_t::remove") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
 
     REQUIRE(doc->remove("/baz") == error_code_t::SUCCESS);
 
@@ -513,10 +513,10 @@ TEST_CASE("document_t::remove fail when no element") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(json, &allocator);
 
     REQUIRE(doc->remove("/bar") == error_code_t::NO_SUCH_ELEMENT);
 
@@ -537,10 +537,10 @@ TEST_CASE("document_t::remove when removing array element") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
 
     REQUIRE(doc->remove("/foo/1") == error_code_t::SUCCESS);
 
@@ -573,10 +573,10 @@ TEST_CASE("document_t::move") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
     auto new_json = doc->to_json();
 
     doc->get_string("/foo/waldo");
@@ -600,10 +600,10 @@ TEST_CASE("document_t::move fail when no element") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(json, &allocator);
 
     REQUIRE(doc->move("/foo/wald", "/qux/thud") == error_code_t::NO_SUCH_ELEMENT);
 
@@ -624,10 +624,10 @@ TEST_CASE("document_t::move when moving array element") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
 
     REQUIRE(doc->move("/foo/1", "/foo/3") == error_code_t::SUCCESS);
 
@@ -661,10 +661,10 @@ TEST_CASE("document_t::copy") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
 
     REQUIRE(doc->copy("/foo/waldo", "/qux/thud") == error_code_t::SUCCESS);
 
@@ -700,10 +700,10 @@ TEST_CASE("document_t::copy independent") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
-    auto res_doc = document_t::document_from_json(res_json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
+    auto res_doc = document_t::document_from_json(res_json, &allocator);
 
     REQUIRE(doc->copy("/foo", "/qux/foo") == error_code_t::SUCCESS);
 
@@ -715,9 +715,9 @@ TEST_CASE("document_t::copy independent") {
 }
 
 TEST_CASE("document_t:: json pointer escape /") {
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = make_document(allocator);
+    auto doc = make_document(&allocator);
 
     REQUIRE(doc->set("/m~1n", true) == error_code_t::SUCCESS);
 
@@ -725,9 +725,9 @@ TEST_CASE("document_t:: json pointer escape /") {
 }
 
 TEST_CASE("document_t:: json pointer escape ~") {
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = make_document(allocator);
+    auto doc = make_document(&allocator);
 
     REQUIRE(doc->set("/m~0n", true) == error_code_t::SUCCESS);
 
@@ -735,9 +735,9 @@ TEST_CASE("document_t:: json pointer escape ~") {
 }
 
 TEST_CASE("document_t:: json pointer failure") {
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = make_document(allocator);
+    auto doc = make_document(&allocator);
 
     REQUIRE(doc->set("/m~2n", false) == error_code_t::INVALID_JSON_POINTER);
 
@@ -761,9 +761,9 @@ TEST_CASE("document_t:: json pointer read") {
 }
   )";
 
-    auto allocator = std::pmr::new_delete_resource();
+    auto allocator = std::pmr::synchronized_pool_resource();
 
-    auto doc = document_t::document_from_json(json, allocator);
+    auto doc = document_t::document_from_json(json, &allocator);
 
     REQUIRE(document_t::is_equals_documents(doc->get_dict(""), doc));
 

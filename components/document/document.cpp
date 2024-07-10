@@ -9,38 +9,34 @@
 namespace components::document {
 
     document_t::document_t()
-        : allocator_(nullptr)
-        , mut_src_(nullptr)
+        : mut_src_(nullptr)
         , element_ind_(nullptr)
         , is_root_(false) {}
 
     document_t::~document_t() {
         if (is_root_) {
-            mr_delete(allocator_, mut_src_);
+            mr_delete(element_ind_->get_allocator(), mut_src_);
         }
     }
 
     document_t::document_t(document_t&& other) noexcept
-        : allocator_(other.allocator_)
-        , mut_src_(other.mut_src_)
-        , builder_(allocator_, *mut_src_)
+        : mut_src_(other.mut_src_)
+        , builder_(*mut_src_)
         , element_ind_(std::move(other.element_ind_))
         , ancestors_(std::move(other.ancestors_))
         , is_root_(other.is_root_) {
-        other.allocator_ = nullptr;
         other.mut_src_ = nullptr;
         other.is_root_ = false;
     }
 
     document_t::document_t(document_t::allocator_type* allocator, bool is_root)
-        : allocator_(allocator)
-        , mut_src_(is_root ? new (allocator_->allocate(sizeof(impl::base_document))) impl::base_document(allocator_)
+        : mut_src_(is_root ? new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator)
                            : nullptr)
-        , element_ind_(is_root ? json_trie_node_element::create_object(allocator_) : nullptr)
-        , ancestors_(allocator_)
+        , element_ind_(is_root ? json_trie_node_element::create_object(allocator) : nullptr)
+        , ancestors_(allocator)
         , is_root_(is_root) {
         if (is_root) {
-            builder_ = components::document::tape_builder(allocator_, *mut_src_);
+            builder_ = components::document::tape_builder(*mut_src_);
         }
     }
 
@@ -57,7 +53,7 @@ namespace components::document {
         }
     }
 
-    bool document_t::is_valid() const { return allocator_ != nullptr; }
+    bool document_t::is_valid() const { return element_ind_ != nullptr; }
 
     std::size_t document_t::count(std::string_view json_pointer) const {
         const auto value_ptr = find_node_const(json_pointer).first;
@@ -152,7 +148,7 @@ namespace components::document {
     double document_t::get_double(std::string_view json_pointer) const { return get_as<double>(json_pointer); }
 
     std::pmr::string document_t::get_string(std::string_view json_pointer) const {
-        return std::pmr::string(get_as<std::string_view>(json_pointer), allocator_);
+        return std::pmr::string(get_as<std::string_view>(json_pointer), element_ind_->get_allocator());
     }
 
     document_t::ptr document_t::get_array(std::string_view json_pointer) {
@@ -160,7 +156,8 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_array()) {
             return nullptr; // temporarily
         }
-        return new (allocator_->allocate(sizeof(document_t))) document_t({this}, allocator_, node_ptr);
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+            document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
     document_t::ptr document_t::get_dict(std::string_view json_pointer) {
@@ -168,7 +165,8 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_object()) {
             return nullptr; // temporarily
         }
-        return new (allocator_->allocate(sizeof(document_t))) document_t({this}, allocator_, node_ptr);
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+            document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
     compare_t document_t::compare(std::string_view json_pointer,
@@ -228,11 +226,10 @@ namespace components::document {
     }
 
     document_t::document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index)
-        : allocator_(allocator)
-        , mut_src_(ancestor->mut_src_)
-        , builder_(allocator_, *mut_src_)
+        : mut_src_(ancestor->mut_src_)
+        , builder_(*mut_src_)
         , element_ind_(index)
-        , ancestors_(std::pmr::vector<ptr>({std::move(ancestor)}, allocator_))
+        , ancestors_(std::pmr::vector<ptr>({std::move(ancestor)}, allocator))
         , is_root_(false) {}
 
     error_code_t document_t::set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer) {
@@ -331,7 +328,8 @@ namespace components::document {
                 } else {
                     auto element = mut_src_->next_element();
                     builder_.build(is_view_key ? view_key : key);
-                    container->as_object()->set(json_trie_node_element::create(element, allocator_), std::move(value));
+                    container->as_object()->set(json_trie_node_element::create(element, container->get_allocator()),
+                                                std::move(value));
                 }
             } else {
                 container->as_array()->set(index, std::move(value));
@@ -348,14 +346,15 @@ namespace components::document {
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
         if (res == error_code_t::SUCCESS) {
-            auto node = creators[static_cast<int>(value)](allocator_);
+            auto node = creators[static_cast<int>(value)](container->get_allocator());
             if (container->is_object()) {
                 if (container->as_object()->contains(is_view_key ? view_key : key)) {
                     container->as_object()->set(is_view_key ? view_key : key, node);
                 } else {
                     auto element = mut_src_->next_element();
                     builder_.build(is_view_key ? view_key : key);
-                    container->as_object()->set(json_trie_node_element::create(element, allocator_), node);
+                    container->as_object()->set(json_trie_node_element::create(element, container->get_allocator()),
+                                                node);
                 }
             } else {
                 container->as_array()->set(index, node);
@@ -401,7 +400,7 @@ namespace components::document {
             if (current->is_object()) {
                 std::pmr::string unescaped_key;
                 bool is_unescaped;
-                auto error = unescape_key_(key, is_unescaped, unescaped_key, allocator_);
+                auto error = unescape_key_(key, is_unescaped, unescaped_key, element_ind_->get_allocator());
                 if (error != error_code_t::SUCCESS) {
                     return {nullptr, error};
                 }
@@ -442,7 +441,7 @@ namespace components::document {
             is_view_key = true;
             std::pmr::string unescaped_key;
             bool is_unescaped;
-            auto error = unescape_key_(view_key, is_unescaped, unescaped_key, allocator_);
+            auto error = unescape_key_(view_key, is_unescaped, unescaped_key, container->get_allocator());
             if (error != error_code_t::SUCCESS) {
                 return error;
             }
@@ -529,9 +528,8 @@ namespace components::document {
         auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator, is_root);
         res->ancestors_.push_back(document1);
         res->ancestors_.push_back(document2);
-        res->element_ind_.reset(json_trie_node_element::merge(document1->element_ind_.get(),
-                                                              document2->element_ind_.get(),
-                                                              res->allocator_));
+        res->element_ind_.reset(
+            json_trie_node_element::merge(document1->element_ind_.get(), document2->element_ind_.get(), allocator));
         return res;
     }
 
@@ -581,7 +579,7 @@ namespace components::document {
         return doc1->element_ind_->equals(doc2->element_ind_.get(), &is_equals_value);
     }
 
-    document_t::allocator_type* document_t::get_allocator() { return allocator_; }
+    document_t::allocator_type* document_t::get_allocator() { return element_ind_->get_allocator(); }
 
     std::pmr::string value_to_string(const impl::element* value, std::pmr::memory_resource* allocator) {
         using types::logical_type;
@@ -945,7 +943,7 @@ namespace components::document {
     document_id_t get_document_id(const document_ptr& doc) { return document_id_t{doc->get_string("/_id")}; }
 
     document_ptr make_upsert_document(const document_ptr& source) {
-        auto doc = make_document(source->allocator_);
+        auto doc = make_document(source->get_allocator());
         for (auto it = source->element_ind_->as_object()->begin(); it != source->element_ind_->as_object()->end();
              ++it) {
             std::string_view cmd;

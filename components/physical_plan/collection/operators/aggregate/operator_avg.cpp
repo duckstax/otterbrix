@@ -10,14 +10,17 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_avg_t::aggregate_impl() {
-        auto result = components::document::make_document(context_->resource());
-        auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
+        auto resource = (left_ && left_->output() && !left_->output()->documents().empty())
+                            ? left_->output()->documents().at(0)->get_allocator()
+                            : context_->resource();
+        auto result = components::document::make_document(resource);
+        auto tape = std::make_unique<components::document::impl::base_document>(resource);
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
             if (!documents.empty()) {
                 components::document::value_t sum_{};
                 std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                    sum_ = sum(sum_, get_value_from_document(doc, key_, tape.get()), tape.get(), context_->resource());
+                    sum_ = sum(sum_, get_value_from_document(doc, key_, tape.get()), tape.get(), resource);
                 });
                 result->set(key_result_, sum_.as_double() / double(documents.size()));
                 return result;

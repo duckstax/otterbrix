@@ -18,7 +18,7 @@ TEST_CASE("operator::aggregate::count") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("count::all") {
         operator_count_t count(d(collection));
@@ -51,7 +51,7 @@ TEST_CASE("operator::aggregate::min") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("min::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -82,7 +82,7 @@ TEST_CASE("operator::aggregate::max") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("max::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -113,7 +113,7 @@ TEST_CASE("operator::aggregate::sum") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("sum::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);
@@ -144,7 +144,7 @@ TEST_CASE("operator::aggregate::avg") {
     auto collection = init_collection();
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("avg::all") {
         auto cond = make_compare_expression(d(collection)->resource(), compare_type::all_true);

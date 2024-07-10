@@ -3,37 +3,26 @@
 namespace components::document {
 
     tape_builder::tape_builder() noexcept
-        : tape_(nullptr)
-        , allocator_(nullptr) {}
-
-    tape_builder::~tape_builder() { mr_delete(allocator_, tape_); }
+        : tape_() {}
 
     tape_builder::tape_builder(tape_builder&& other) noexcept
-        : allocator_(other.allocator_)
-        , tape_(other.tape_) {
-        other.allocator_ = nullptr;
-        other.tape_ = nullptr;
-    }
+        : tape_(std::move(other.tape_)) {}
 
     tape_builder& tape_builder::operator=(tape_builder&& other) noexcept {
         if (this == &other) {
             return *this;
         }
-        allocator_ = other.allocator_;
-        tape_ = other.tape_;
-        other.allocator_ = nullptr;
-        other.tape_ = nullptr;
+        tape_ = std::move(other.tape_);
         return *this;
     }
 
-    tape_builder::tape_builder(allocator_type* allocator, impl::base_document& doc) noexcept
-        : allocator_(allocator)
-        , tape_(new (allocator_->allocate(sizeof(impl::tape_writer))) impl::tape_writer(doc)) {}
+    tape_builder::tape_builder(impl::base_document& doc) noexcept
+        : tape_(doc) {}
 
     void tape_builder::build(std::string_view value) noexcept {
         // we advance the point, accounting for the fact that we have a NULL termination
-        append(tape_->next_string_buf_index(), types::physical_type::STRING);
-        tape_->append_string(value);
+        append(tape_.next_string_buf_index(), types::physical_type::STRING);
+        tape_.append_string(value);
     }
 
     void tape_builder::build(int8_t value) noexcept { append(value, types::physical_type::INT8); }
@@ -54,7 +43,7 @@ namespace components::document {
 
     void tape_builder::build(uint64_t value) noexcept {
         append(0, types::physical_type::UINT64);
-        tape_->append(value);
+        tape_.append(value);
     }
 
     void tape_builder::build(float value) noexcept {
@@ -74,7 +63,7 @@ namespace components::document {
     void tape_builder::visit_null_atom() noexcept { append(0, types::physical_type::NA); }
 
     void tape_builder::append(uint64_t val, types::physical_type t) noexcept {
-        tape_->append(val | (static_cast<uint64_t>(t) << 56));
+        tape_.append(val | (static_cast<uint64_t>(t) << 56));
     }
 
 } // namespace components::document

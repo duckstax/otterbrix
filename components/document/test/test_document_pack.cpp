@@ -7,7 +7,8 @@
 using namespace components::document;
 
 TEST_CASE("native pack document") {
-    auto doc1 = gen_doc(10, std::pmr::get_default_resource());
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(10, &allocator);
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, doc1);
 
@@ -29,7 +30,8 @@ TEST_CASE("native pack document") {
 }
 
 TEST_CASE("native pack document and zone") {
-    auto doc1 = gen_doc(10, std::pmr::get_default_resource());
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(10, &allocator);
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, doc1);
 

@@ -1,4 +1,5 @@
 #include "generaty.hpp"
+#include <cassert>
 
 void gen_array(int num, const document_ptr& array) {
     for (int i = 0; i < 5; ++i) {

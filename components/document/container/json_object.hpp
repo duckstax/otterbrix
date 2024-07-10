@@ -79,7 +79,6 @@ namespace components::document::json {
 
     private:
         tree map_;
-        std::pmr::memory_resource* resource_;
     };
 
 } // namespace components::document::json

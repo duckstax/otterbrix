@@ -36,8 +36,7 @@ namespace components::document::json {
     }
 
     json_object::json_object(json_object::allocator_type* allocator)
-        : map_(allocator)
-        , resource_(allocator) {}
+        : map_(allocator) {}
 
     json_object::iterator json_object::begin() { return map_.begin(); }
 
@@ -88,14 +87,15 @@ namespace components::document::json {
     size_t json_object::size() const noexcept { return map_.size(); }
 
     json_object* json_object::make_deep_copy() const {
-        auto copy = new (resource_->allocate(sizeof(json_object))) json_object(resource_);
+        auto copy = new (map_.get_allocator().resource()->allocate(sizeof(json_object)))
+            json_object(map_.get_allocator().resource());
         copy->map_ = map_;
         return copy;
     }
 
     std::pmr::string json_object::to_json(std::pmr::string (*to_json_mut)(const impl::element*,
                                                                           std::pmr::memory_resource*)) const {
-        std::pmr::string res(resource_);
+        std::pmr::string res(map_.get_allocator().resource());
         res.append("{");
         for (auto& it : map_) {
             if (res.size() > 1) {

@@ -52,7 +52,7 @@ using fields = std::vector<std::pair<std::string, v>>;
 TEST_CASE("parser::update") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<document::impl::base_document>(resource);
-    auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_UPDATE("update schema.table set count = 10;",
                        R"_($match: {$all_true})_",
@@ -85,7 +85,7 @@ TEST_CASE("parser::update") {
 TEST_CASE("parser::update_where") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<document::impl::base_document>(resource);
-    auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_UPDATE("update schema.table set count = 10 where id = 1;",
                        R"_($match: {"id": {$eq: #0}})_",

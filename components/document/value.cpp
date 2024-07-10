@@ -148,27 +148,26 @@ namespace components::document {
         switch (value1.physical_type()) {
             case types::physical_type::BOOL_FALSE:
             case types::physical_type::BOOL_TRUE:
-                return value_t{resource, tape, value1.as_bool() + value2.as_bool()};
+                return value_t{tape, value1.as_bool() + value2.as_bool()};
             case types::physical_type::UINT8:
             case types::physical_type::UINT16:
             case types::physical_type::UINT32:
             case types::physical_type::UINT64:
-                return value_t{resource, tape, value1.as_unsigned() + value2.as_unsigned()};
+                return value_t{tape, value1.as_unsigned() + value2.as_unsigned()};
             case types::physical_type::INT8:
             case types::physical_type::INT16:
             case types::physical_type::INT32:
             case types::physical_type::INT64:
-                return value_t{resource, tape, value1.as_int() + value2.as_int()};
+                return value_t{tape, value1.as_int() + value2.as_int()};
             case types::physical_type::UINT128:
             case types::physical_type::INT128:
-                return value_t{resource, tape, value1.as_int128() + value2.as_int128()};
+                return value_t{tape, value1.as_int128() + value2.as_int128()};
             case types::physical_type::FLOAT:
-                return value_t{resource, tape, value1.as_float() + value2.as_float()};
+                return value_t{tape, value1.as_float() + value2.as_float()};
             case types::physical_type::DOUBLE:
-                return value_t{resource, tape, value1.as_double() + value2.as_double()};
+                return value_t{tape, value1.as_double() + value2.as_double()};
             case types::physical_type::STRING:
-                return value_t{resource,
-                               tape,
+                return value_t{tape,
                                std::pmr::string(value1.as_string(), resource) +
                                    std::pmr::string(value2.as_string(), resource)};
             default: // special values can't be addad

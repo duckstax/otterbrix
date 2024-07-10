@@ -42,7 +42,7 @@ namespace components::ql {
                        core::parameter_id_t id,
                        Value value,
                        std::pmr::memory_resource* resource) {
-        storage.parameters.emplace(id, expr_value_t(resource, storage.tape(), value));
+        storage.parameters.emplace(id, expr_value_t(storage.tape(), value));
     }
 
     inline void add_parameter(storage_parameters& storage, core::parameter_id_t id, expr_value_t value) {
@@ -89,19 +89,18 @@ inline const components::document::value_t to_structure_(const msgpack::object& 
                                                          std::pmr::memory_resource* resource) {
     switch (msg_object.type) {
         case msgpack::type::NIL:
-            return components::document::value_t(resource, tape, nullptr);
+            return components::document::value_t(tape, nullptr);
         case msgpack::type::BOOLEAN:
-            return components::document::value_t(resource, tape, msg_object.via.boolean);
+            return components::document::value_t(tape, msg_object.via.boolean);
         case msgpack::type::POSITIVE_INTEGER:
-            return components::document::value_t(resource, tape, msg_object.via.u64);
+            return components::document::value_t(tape, msg_object.via.u64);
         case msgpack::type::NEGATIVE_INTEGER:
-            return components::document::value_t(resource, tape, msg_object.via.i64);
+            return components::document::value_t(tape, msg_object.via.i64);
         case msgpack::type::FLOAT32:
         case msgpack::type::FLOAT64:
-            return components::document::value_t(resource, tape, msg_object.via.f64);
+            return components::document::value_t(tape, msg_object.via.f64);
         case msgpack::type::STR:
-            return components::document::value_t(resource,
-                                                 tape,
+            return components::document::value_t(tape,
                                                  std::string_view(msg_object.via.str.ptr, msg_object.via.str.size));
         default:
             return components::document::value_t();

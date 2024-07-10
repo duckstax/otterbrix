@@ -43,7 +43,7 @@ using vec = std::vector<v>;
 TEST_CASE("parser::delete_from_where") {
     auto* resource = std::pmr::get_default_resource();
     auto tape = std::make_unique<document::impl::base_document>(resource);
-    auto new_value = [&](auto value) { return v{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_DELETE("delete from schema.table where number == 10;",
                        R"_($match: {"number": {$eq: #0}})_",

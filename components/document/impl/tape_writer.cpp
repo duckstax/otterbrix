@@ -2,6 +2,10 @@
 
 namespace components::document::impl {
 
+    tape_writer::tape_writer()
+        : tape_ptr(nullptr)
+        , current_string_buf(nullptr) {}
+
     tape_writer::tape_writer(impl::base_document& doc)
         : tape_ptr(&doc.tape_)
         , current_string_buf(&doc.string_buf_) {}

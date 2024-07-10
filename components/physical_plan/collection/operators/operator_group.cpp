@@ -28,8 +28,8 @@ namespace services::collection::operators {
 
     void operator_group_t::create_list_documents() {
         for (const auto& doc : left_->output()->documents()) {
-            auto new_doc = components::document::make_document(context_->resource());
-            auto tape = std::make_unique<components::document::impl::base_document>(context_->resource());
+            auto new_doc = components::document::make_document(doc->get_allocator());
+            auto tape = std::make_unique<components::document::impl::base_document>(doc->get_allocator());
             bool is_valid = true;
             for (const auto& key : keys_) {
                 auto value = key.getter->value(doc, tape.get());
@@ -51,7 +51,7 @@ namespace services::collection::operators {
                 }
                 if (is_new) {
                     output_->append(new_doc);
-                    auto input_doc = make_operator_data(context_->resource());
+                    auto input_doc = make_operator_data(doc->get_allocator());
                     input_doc->append(doc);
                     input_documents_.push_back(std::move(input_doc));
                 }

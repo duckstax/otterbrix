@@ -21,8 +21,8 @@ TEST_CASE("document_t::value from json") {
   }
 }
   )";
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc = document_t::document_from_json(json, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = document_t::document_from_json(json, &allocator);
 
     REQUIRE(doc->is_exists());
     REQUIRE(doc->is_exists("/count"));
@@ -31,10 +31,10 @@ TEST_CASE("document_t::value from json") {
 }
 
 TEST_CASE("document_t::json") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = gen_doc(1, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(1, &allocator);
     auto json = doc1->to_json();
-    auto doc2 = document_t::document_from_json(std::string(json), allocator);
+    auto doc2 = document_t::document_from_json(std::string(json), &allocator);
 
     REQUIRE(doc1->get_string("/_id") == doc2->get_string("/_id"));
     REQUIRE(doc1->get_ulong("/count") == doc2->get_ulong("/count"));
@@ -52,10 +52,10 @@ TEST_CASE("document_t::json") {
 }
 
 TEST_CASE("document_t::serialization") {
-    auto allocator = std::pmr::new_delete_resource();
-    auto doc1 = gen_doc(1, allocator);
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(1, &allocator);
     auto ser1 = serialize_document(doc1);
-    auto doc2 = deserialize_document(std::string(ser1), allocator);
+    auto doc2 = deserialize_document(std::string(ser1), &allocator);
     REQUIRE(doc1->get_string("/_id") == doc2->get_string("/_id"));
     REQUIRE(doc1->get_ulong("/count") == doc2->get_ulong("/count"));
     REQUIRE(doc1->get_array("/countArray")->count() == doc2->get_array("/countArray")->count());

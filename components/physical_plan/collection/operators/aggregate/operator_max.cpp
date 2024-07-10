@@ -10,7 +10,10 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_max_t::aggregate_impl() {
-        auto doc = components::document::make_document(context_->resource());
+        auto resource = (left_ && left_->output() && !left_->output()->documents().empty())
+                            ? left_->output()->documents().at(0)->get_allocator()
+                            : context_->resource();
+        auto doc = components::document::make_document(resource);
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
             auto max = std::max_element(documents.cbegin(),

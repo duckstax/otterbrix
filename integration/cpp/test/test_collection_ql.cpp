@@ -24,7 +24,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     auto* dispatcher = space.dispatcher();
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
         {

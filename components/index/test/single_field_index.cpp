@@ -19,7 +19,7 @@ TEST_CASE("single_field_index:base") {
         index.insert(doc->get_value(std::string_view("count"), tape.get()), doc);
     }
     {
-        value_t value(resource, tape.get(), 10);
+        value_t value(tape.get(), 10);
         auto find_range = index.find(value);
         REQUIRE(find_range.first != find_range.second);
         REQUIRE(find_range.first->doc->get_long("count") == 10);
@@ -27,12 +27,12 @@ TEST_CASE("single_field_index:base") {
         REQUIRE(++find_range.first == find_range.second);
     }
     {
-        value_t value(resource, tape.get(), 11);
+        value_t value(tape.get(), 11);
         auto find_range = index.find(value);
         REQUIRE(find_range.first == find_range.second);
     }
     {
-        value_t value(resource, tape.get(), 4);
+        value_t value(tape.get(), 4);
         auto find_range = index.lower_bound(value);
         REQUIRE(find_range.first == index.cbegin());
         REQUIRE(find_range.first->doc->get_long("count") == 0);
@@ -41,7 +41,7 @@ TEST_CASE("single_field_index:base") {
         REQUIRE(++find_range.first == find_range.second);
     }
     {
-        value_t value(resource, tape.get(), 5);
+        value_t value(tape.get(), 5);
         auto find_range = index.lower_bound(value);
         REQUIRE(find_range.first == index.cbegin());
         REQUIRE(find_range.first->doc->get_long("count") == 0);
@@ -50,7 +50,7 @@ TEST_CASE("single_field_index:base") {
         REQUIRE(++find_range.first == find_range.second);
     }
     {
-        value_t value(resource, tape.get(), 6);
+        value_t value(tape.get(), 6);
         auto find_range = index.upper_bound(value);
         REQUIRE(find_range.second == index.cend());
         REQUIRE(find_range.first->doc->get_long("count") == 8);
@@ -59,7 +59,7 @@ TEST_CASE("single_field_index:base") {
         REQUIRE(++find_range.first == find_range.second);
     }
     {
-        value_t value(resource, tape.get(), 7);
+        value_t value(tape.get(), 7);
         auto find_range = index.upper_bound(value);
         REQUIRE(find_range.second == index.cend());
         REQUIRE(find_range.first->doc->get_long("count") == 8);
@@ -72,7 +72,7 @@ TEST_CASE("single_field_index:base") {
             auto doc = gen_doc(i, resource);
             index.insert(doc->get_value(std::string_view("count"), tape.get()), doc);
         }
-        value_t value(resource, tape.get(), 10);
+        value_t value(tape.get(), 10);
         auto find_range = index.find(value);
         REQUIRE(find_range.first != find_range.second);
         REQUIRE(std::distance(find_range.first, find_range.second) == 2);

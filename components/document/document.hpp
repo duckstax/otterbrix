@@ -191,7 +191,6 @@ namespace components::document {
 
         static bool is_equals_documents(const ptr& doc1, const ptr& doc2);
 
-    protected:
         allocator_type* get_allocator() override;
 
     private:
@@ -200,7 +199,6 @@ namespace components::document {
 
         document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index);
 
-        allocator_type* allocator_;
         impl::base_document* mut_src_;
         tape_builder builder_{};
         boost::intrusive_ptr<json_trie_node_element> element_ind_;
@@ -249,7 +247,7 @@ namespace components::document {
         auto build_value = [&]() {
             auto element1 = mut_src_->next_element();
             builder_.build(value);
-            return json_trie_node_element::create(element1, allocator_);
+            return json_trie_node_element::create(element1, element_ind_->get_allocator());
         };
 
         json_trie_node_element* container;
@@ -266,7 +264,7 @@ namespace components::document {
                 } else {
                     auto element = mut_src_->next_element();
                     builder_.build(is_view_key ? view_key : key);
-                    auto key_node = json_trie_node_element::create(element, allocator_);
+                    auto key_node = json_trie_node_element::create(element, element_ind_->get_allocator());
                     auto value_node = build_value();
                     container->as_object()->set(key_node, value_node);
                 }
@@ -317,7 +315,7 @@ namespace components::document {
                     builder_.build(nullptr);
                     break;
             }
-            return json_trie_node_element::create(element1, allocator_);
+            return json_trie_node_element::create(element1, element_ind_->get_allocator());
         };
 
         json_trie_node_element* container;
@@ -334,7 +332,7 @@ namespace components::document {
                 } else {
                     auto element = mut_src_->next_element();
                     builder_.build(is_view_key ? view_key : key);
-                    auto key_node = json_trie_node_element::create(element, allocator_);
+                    auto key_node = json_trie_node_element::create(element, element_ind_->get_allocator());
                     auto value_node = build_value();
                     container->as_object()->set(key_node, value_node);
                 }

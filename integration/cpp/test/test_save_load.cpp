@@ -24,7 +24,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                       const database_name_t& db_name,
                       const collection_name_t& col_name,
                       int n_doc) {
-    auto new_value = [&](auto value) { return value_t{dispatcher->resource(), tape, value}; };
+    auto new_value = [&](auto value) { return value_t{tape, value}; };
     auto session_doc = otterbrix::session_id_t();
     auto* ql = new components::ql::aggregate_statement{db_name, col_name};
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
@@ -88,7 +88,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
     auto* resource = actor_zeta::detail::pmr::get_default_resource();
     auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{resource, tape.get(), value}; };
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("initialization") {
         test_clear_directory(config);

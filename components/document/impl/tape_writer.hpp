@@ -8,6 +8,7 @@ namespace components::document::impl {
 
     class tape_writer {
     public:
+        tape_writer();
         tape_writer(impl::base_document& doc);
 
         void append(uint64_t val) noexcept;
