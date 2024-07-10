@@ -285,6 +285,10 @@ namespace services::wal {
                                                                  actor_zeta::scheduler_raw scheduler,
                                                                  log_t& log)
         : actor_zeta::cooperative_supervisor<manager_wal_replicate_empty_t>(mr)
+        , always_success_(actor_zeta::make_behavior(resource(),
+                                                    empty_handler_id(),
+                                                    this,
+                                                    &manager_wal_replicate_empty_t::always_success))
         , e_(scheduler) {
         trace(log, "manager_wal_replicate_empty_t");
         // using namespace componeid(core::route::sync), &manager_wal_replicate_empty_t::nothing<address_pack&>);
@@ -311,12 +315,7 @@ namespace services::wal {
                 case handler_id(route::update_one):
                 case handler_id(route::update_many):
                 case handler_id(route::create_index): {
-                    // TO DO WHERE GET SESSION?
-                    actor_zeta::send(current_message()->sender(),
-                                     address(),
-                                     services::wal::handler_id(services::wal::route::success),
-                                     session,
-                                     services::wal::id_t(0));
+                    always_success_(msg);
                     break;
                 }
                 case handler_id(route::create):

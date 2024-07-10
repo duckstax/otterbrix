@@ -9,6 +9,7 @@
 #include <components/session/session.hpp>
 #include <configuration/configuration.hpp>
 #include <core/excutor.hpp>
+#include <core/handler_by_id.hpp>
 #include <core/spinlock/spinlock.hpp>
 
 #include "base.hpp"
@@ -100,11 +101,12 @@ namespace services::wal {
         auto make_type() const noexcept -> const char* const;
 
     private:
+        actor_zeta::behavior_t always_success_;
+
         auto enqueue_impl(actor_zeta::message_ptr, actor_zeta::execution_unit*) -> void final;
         actor_zeta::scheduler_raw e_;
 
-        template<class T>
-        auto always_success(session_id_t& session, T&&) -> void {
+        auto always_success(session_id_t& session, components::ql::ql_statement_t&) -> void {
             actor_zeta::send(current_message()->sender(),
                              address(),
                              services::wal::handler_id(services::wal::route::success),
