@@ -168,7 +168,7 @@ public class Tests
                 Assert.IsTrue(doc.GetString("name") == "Name " + number.ToString());
                 Assert.IsTrue(doc.GetLong("count_") == 10);
                 Assert.IsTrue(doc.GetLong("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
-                Assert.IsTrue(doc.GetLong("avg_") == (number % 20 + (number + 10) % 20) / 2);
+                Assert.IsTrue(doc.GetDouble("avg_") == (number % 20 + (number + 10) % 20) / 2);
                 Assert.IsTrue(doc.GetLong("min_") == number % 20);
                 Assert.IsTrue(doc.GetLong("max_") == (number + 10) % 20);
                 number++;
@@ -188,7 +188,7 @@ public class Tests
                 Assert.IsTrue(doc.GetString("name") == "Name " + number.ToString());
                 Assert.IsTrue(doc.GetLong("count_") == 10);
                 Assert.IsTrue(doc.GetLong("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
-                Assert.IsTrue(doc.GetLong("avg_") == (number % 20 + (number + 10) % 20) / 2);
+                Assert.IsTrue(doc.GetDouble("avg_") == (number % 20 + (number + 10) % 20) / 2);
                 Assert.IsTrue(doc.GetLong("min_") == number % 20);
                 Assert.IsTrue(doc.GetLong("max_") == (number + 10) % 20);
                 number--;

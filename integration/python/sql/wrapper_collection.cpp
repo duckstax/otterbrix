@@ -173,7 +173,7 @@ namespace otterbrix {
             auto cur = ptr_->find_one(session_tmp, statement.get());
             debug(log_, "wrapper_collection::find_one {}", cur->size() > 0);
             if (cur->size() > 0) {
-                return from_document(cur->next());
+                return from_document(cur->next()).cast<py::dict>();
             }
             return py::dict();
         }

@@ -22,8 +22,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 using components::document::document_ptr;
 using components::document::value_t;
 
-value_t
-to_value(const py::handle& obj, components::document::impl::base_document* tape, std::pmr::memory_resource* resource) {
+value_t to_value(const py::handle& obj, components::document::impl::base_document* tape) {
     if (py::isinstance<py::bool_>(obj)) {
         return value_t{tape, obj.cast<bool>()};
     } else if (py::isinstance<py::int_>(obj)) {
@@ -79,7 +78,7 @@ json_trie_node* build_index(const py::handle& py_obj,
     return res;
 }
 
-const document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj) {
+document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj) {
     auto* allocator = std::pmr::get_default_resource();
     auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
     auto obj = res->element_ind_->as_object();
@@ -94,7 +93,7 @@ auto to_document(const py::handle& source) -> document_ptr {
     return components::document::py_handle_decoder_t::to_document(source);
 }
 
-auto from_object(const element* value) -> py::object {
+auto from_document(const element* value) -> py::object {
     switch (value->logical_type()) {
         case logical_type::BOOLEAN:
             return py::bool_(value->get_bool().value());
@@ -118,34 +117,33 @@ auto from_object(const element* value) -> py::object {
     }
 }
 
-auto from_object(const json_trie_node* value) -> py::object {
+auto from_document(const json_trie_node* value) -> py::object {
     if (value->type() == json_type::OBJECT) {
         py::dict dict;
         for (auto it = value->get_object()->begin(); it != value->get_object()->end(); ++it) {
             std::string key(it->first->get_mut()->get_string().value());
-            dict[py::str(key)] = from_object(it->second.get());
+            dict[py::str(key)] = from_document(it->second.get());
         }
         return std::move(dict);
     } else if (value->type() == json_type::ARRAY) {
         py::list list;
         for (uint32_t i = 0; i < value->get_array()->size(); ++i) {
-            list.append(from_object(value->get_array()->get(i)));
+            list.append(from_document(value->get_array()->get(i)));
         }
         return std::move(list);
     }
     if (value->type() == json_type::MUT) {
-        return from_object(value->get_mut());
+        return from_document(value->get_mut());
     }
     return py::none();
 }
 
 auto from_document(const document_ptr& document) -> py::object {
     auto node = document->json_trie();
-    return node ? from_object(node.get()) : py::none();
+    return node ? from_document(node.get()) : py::none();
 }
 
 auto from_object(const document_ptr& document, const std::string& key) -> py::object {
-    return py::none();
     if (!document->is_exists(key)) {
         return py::none();
     }
@@ -154,7 +152,7 @@ auto from_object(const document_ptr& document, const std::string& key) -> py::ob
     } else if (document->is_dict(key)) {
         return from_document(document->get_dict(key));
     } else {
-        return from_object(document->get_value(key).get_element());
+        return from_document(document->get_value(key).get_element());
     }
 }
 auto from_object(const document_ptr& document, uint32_t index) -> py::object {
@@ -167,7 +165,7 @@ auto from_object(const document_ptr& document, uint32_t index) -> py::object {
     } else if (document->is_dict(key)) {
         return from_document(document->get_dict(key));
     } else {
-        return from_object(document->get_value(key).get_element());
+        return from_document(document->get_value(key).get_element());
     }
 }
 
@@ -268,8 +266,7 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
     } else if (py::isinstance<py::list>(condition) || py::isinstance<py::tuple>(condition)) {
         parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
     } else {
-        auto value = aggregate->add_parameter(
-            to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource()));
+        auto value = aggregate->add_parameter(to_value(condition, aggregate->parameters().tape()));
         auto sub_condition = make_compare_expression(resource, type, ex_key_t(real_key), value);
         if (sub_condition->is_union()) {
             parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate);
@@ -336,7 +333,7 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
 
 aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition,
                                                             aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource());
+    auto value = to_value(condition, aggregate->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));
@@ -346,7 +343,7 @@ aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& co
 }
 
 scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
-    auto value = to_value(condition, aggregate->parameters().tape(), std::pmr::get_default_resource());
+    auto value = to_value(condition, aggregate->parameters().tape());
     if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
         value.as_string().at(0) == '$') {
         return ex_key_t(value.as_string().substr(1));

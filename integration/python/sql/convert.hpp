@@ -20,7 +20,7 @@ namespace components::document {
         py_handle_decoder_t& operator=(py_handle_decoder_t&&) = delete;
 
     public:
-        const static document_ptr to_document(const py::handle& source);
+        static document_ptr to_document(const py::handle& source);
     };
 } // namespace components::document
 
