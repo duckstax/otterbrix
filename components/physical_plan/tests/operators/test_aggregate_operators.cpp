@@ -27,7 +27,7 @@ TEST_CASE("operator::aggregate::count") {
                                                               predicates::create_predicate(d(collection), cond),
                                                               components::ql::limit_t::unlimit())));
         count.on_execute(nullptr);
-        REQUIRE(count.value(tape.get()).as_unsigned() == 100);
+        REQUIRE(count.value().as_unsigned() == 100);
     }
 
     SECTION("count::match") {
@@ -43,7 +43,7 @@ TEST_CASE("operator::aggregate::count") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         count.on_execute(&pipeline_context);
-        REQUIRE(count.value(tape.get()).as_unsigned() == 10);
+        REQUIRE(count.value().as_unsigned() == 10);
     }
 }
 
@@ -60,7 +60,7 @@ TEST_CASE("operator::aggregate::min") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         min_.on_execute(nullptr);
-        REQUIRE(min_.value(tape.get()).as_unsigned() == 1);
+        REQUIRE(min_.value().as_unsigned() == 1);
     }
 
     SECTION("min::match") {
@@ -74,7 +74,7 @@ TEST_CASE("operator::aggregate::min") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(80));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         min_.on_execute(&pipeline_context);
-        REQUIRE(min_.value(tape.get()).as_unsigned() == 81);
+        REQUIRE(min_.value().as_unsigned() == 81);
     }
 }
 
@@ -91,7 +91,7 @@ TEST_CASE("operator::aggregate::max") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         max_.on_execute(nullptr);
-        REQUIRE(max_.value(tape.get()).as_unsigned() == 100);
+        REQUIRE(max_.value().as_unsigned() == 100);
     }
 
     SECTION("max::match") {
@@ -105,7 +105,7 @@ TEST_CASE("operator::aggregate::max") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(20));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         max_.on_execute(&pipeline_context);
-        REQUIRE(max_.value(tape.get()).as_unsigned() == 19);
+        REQUIRE(max_.value().as_unsigned() == 19);
     }
 }
 
@@ -122,7 +122,7 @@ TEST_CASE("operator::aggregate::sum") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         sum_.on_execute(nullptr);
-        REQUIRE(sum_.value(tape.get()).as_unsigned() == 5050);
+        REQUIRE(sum_.value().as_unsigned() == 5050);
     }
 
     SECTION("sum::match") {
@@ -136,7 +136,7 @@ TEST_CASE("operator::aggregate::sum") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         sum_.on_execute(&pipeline_context);
-        REQUIRE(sum_.value(tape.get()).as_unsigned() == 45);
+        REQUIRE(sum_.value().as_unsigned() == 45);
     }
 }
 
@@ -153,7 +153,7 @@ TEST_CASE("operator::aggregate::avg") {
                                                              predicates::create_predicate(d(collection), cond),
                                                              components::ql::limit_t::unlimit())));
         avg_.on_execute(nullptr);
-        REQUIRE(components::document::is_equals(avg_.value(tape.get()).as_double(), 50.5));
+        REQUIRE(components::document::is_equals(avg_.value().as_double(), 50.5));
     }
 
     SECTION("avg::match") {
@@ -167,6 +167,6 @@ TEST_CASE("operator::aggregate::avg") {
         add_parameter(parameters, core::parameter_id_t(1), new_value(10));
         components::pipeline::context_t pipeline_context(std::move(parameters));
         avg_.on_execute(&pipeline_context);
-        REQUIRE(components::document::is_equals(avg_.value(tape.get()).as_double(), 5.0));
+        REQUIRE(components::document::is_equals(avg_.value().as_double(), 5.0));
     }
 }

@@ -32,7 +32,7 @@ namespace services::collection::operators {
             auto tape = std::make_unique<components::document::impl::base_document>(doc->get_allocator());
             bool is_valid = true;
             for (const auto& key : keys_) {
-                auto value = key.getter->value(doc, tape.get());
+                auto value = key.getter->value(doc);
                 if (value) {
                     new_doc->set(key.name, value);
                 } else {

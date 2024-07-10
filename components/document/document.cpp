@@ -664,7 +664,7 @@ namespace components::document {
         }
     }
 
-    value_t document_t::get_value(std::string_view json_pointer, impl::base_document* tape) {
+    value_t document_t::get_value(std::string_view json_pointer) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;

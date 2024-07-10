@@ -28,7 +28,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(i->is_null(key))) {
-                    auto data = i->get_value(key, index->tape());
+                    auto data = i->get_value(key);
                     index->insert(data, i);
                 }
             }
@@ -45,7 +45,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(doc.second->is_null(key))) {
-                    auto data = doc.second->get_value(key, index->tape());
+                    auto data = doc.second->get_value(key);
                     index->insert(data, {doc.first, doc.second});
                 }
             }
@@ -60,7 +60,7 @@ namespace components::index {
                 const auto& key_tmp = *j;
                 const std::string& key = key_tmp.as_string(); // hack
                 if (!(doc->is_null(key))) {
-                    auto data = doc->get_value(key, index->tape());
+                    auto data = doc->get_value(key);
                     index->insert(data, doc);
                 }
             }
@@ -102,7 +102,7 @@ namespace components::index {
     value_t get_value_by_index(const index_ptr& index, const document_ptr& document) {
         auto keys = index->keys();
         if (keys.first != keys.second) {
-            return document->get_value(keys.first->as_string(), index->tape());
+            return document->get_value(keys.first->as_string());
             //todo: multi values index
         }
         return value_t{};

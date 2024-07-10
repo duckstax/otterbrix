@@ -181,7 +181,7 @@ namespace components::document {
 
         bool is_equals(std::string_view json_pointer, value_t value);
 
-        value_t get_value(std::string_view json_pointer, impl::base_document* tape);
+        value_t get_value(std::string_view json_pointer);
 
         bool update(const ptr& update);
 
