@@ -152,7 +152,7 @@ TEST_CASE("example::sql::group_by") {
         REQUIRE(c->size() == 10);
         int number = 0;
         while (auto doc = c->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
@@ -173,7 +173,7 @@ TEST_CASE("example::sql::group_by") {
         REQUIRE(c->size() == 10);
         int number = 9;
         while (auto doc = c->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);

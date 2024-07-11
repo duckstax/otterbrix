@@ -6,5 +6,5 @@ using namespace components::document;
 
 void gen_array(int num, const document_ptr& array);
 void gen_dict(int num, const document_ptr& dict);
-std::pmr::string gen_id(int num, std::pmr::memory_resource* resource);
+std::pmr::string gen_id(int num, std::pmr::memory_resource* resource = std::pmr::get_default_resource());
 document_ptr gen_doc(int num, std::pmr::memory_resource* resource);

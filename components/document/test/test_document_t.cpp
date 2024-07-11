@@ -258,6 +258,17 @@ TEST_CASE("document_t::cast signed to signed") {
     REQUIRE(doc->get_int(key) == value);
 }
 
+TEST_CASE("document_t::cast float to int") {
+    auto allocator = std::pmr::synchronized_pool_resource();
+    auto doc = make_document(&allocator);
+
+    std::string_view key("/value");
+    float value = 4.0f;
+    doc->set(key, value);
+
+    REQUIRE(doc->get_int(key) == value);
+}
+
 TEST_CASE("document_t::set") {
     auto allocator = std::pmr::synchronized_pool_resource();
     auto doc = gen_doc(1, &allocator);

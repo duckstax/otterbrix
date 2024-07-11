@@ -149,6 +149,12 @@ namespace components::document::impl {
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, uint8_t>(tape_);
                 }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, uint8_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, uint8_t>(tape_);
+                }
                 default:
                     return INCORRECT_TYPE;
             }
@@ -183,6 +189,12 @@ namespace components::document::impl {
                 }
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, uint16_t>(tape_);
+                }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, uint16_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, uint16_t>(tape_);
                 }
                 default:
                     return INCORRECT_TYPE;
@@ -219,6 +231,12 @@ namespace components::document::impl {
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, uint32_t>(tape_);
                 }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, uint32_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, uint32_t>(tape_);
+                }
                 default:
                     return INCORRECT_TYPE;
             }
@@ -253,6 +271,12 @@ namespace components::document::impl {
                 }
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, uint64_t>(tape_);
+                }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, uint64_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, uint64_t>(tape_);
                 }
                 default:
                     return INCORRECT_TYPE;
@@ -289,6 +313,12 @@ namespace components::document::impl {
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, int8_t>(tape_);
                 }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, int8_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, int8_t>(tape_);
+                }
                 default:
                     return INCORRECT_TYPE;
             }
@@ -323,6 +353,12 @@ namespace components::document::impl {
                 }
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, int16_t>(tape_);
+                }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, int16_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, int16_t>(tape_);
                 }
                 default:
                     return INCORRECT_TYPE;
@@ -359,6 +395,12 @@ namespace components::document::impl {
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, int32_t>(tape_);
                 }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, int32_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, int32_t>(tape_);
+                }
                 default:
                     return INCORRECT_TYPE;
             }
@@ -393,6 +435,12 @@ namespace components::document::impl {
                 }
                 case types::physical_type::INT128: {
                     return cast_from<absl::int128, int64_t>(tape_);
+                }
+                case types::physical_type::FLOAT: {
+                    return cast_from<float, int64_t>(tape_);
+                }
+                case types::physical_type::DOUBLE: {
+                    return cast_from<double, int64_t>(tape_);
                 }
                 default:
                     return INCORRECT_TYPE;
