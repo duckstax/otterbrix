@@ -21,15 +21,19 @@ namespace components::document {
         more = 1
     };
 
-    enum class error_code_t
-    {
-        SUCCESS,
-        NO_SUCH_CONTAINER,
-        NO_SUCH_ELEMENT,
-        INVALID_INDEX,
-        INVALID_JSON_POINTER,
-        INVALID_TYPE
-    };
+    namespace impl {
+
+        enum class error_code_t
+        {
+            SUCCESS,
+            NO_SUCH_CONTAINER,
+            NO_SUCH_ELEMENT,
+            INVALID_INDEX,
+            INVALID_JSON_POINTER,
+            INVALID_TYPE
+        };
+
+    } // namespace impl
 
     enum class special_type
     {
@@ -60,23 +64,23 @@ namespace components::document {
         types::logical_type type_by_key(std::string_view json_pointer);
 
         template<class T>
-        error_code_t set(std::string_view json_pointer, T value);
+        impl::error_code_t set(std::string_view json_pointer, T value);
 
-        error_code_t set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer);
+        impl::error_code_t set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer);
 
-        error_code_t set_array(std::string_view json_pointer);
+        impl::error_code_t set_array(std::string_view json_pointer);
 
-        error_code_t set_dict(std::string_view json_pointer);
+        impl::error_code_t set_dict(std::string_view json_pointer);
 
-        error_code_t set_deleter(std::string_view json_pointer);
+        impl::error_code_t set_deleter(std::string_view json_pointer);
 
-        error_code_t set_null(std::string_view json_pointer);
+        impl::error_code_t set_null(std::string_view json_pointer);
 
-        error_code_t remove(std::string_view json_pointer);
+        impl::error_code_t remove(std::string_view json_pointer);
 
-        error_code_t move(std::string_view json_pointer_from, std::string_view json_pointer_to);
+        impl::error_code_t move(std::string_view json_pointer_from, std::string_view json_pointer_to);
 
-        error_code_t copy(std::string_view json_pointer_from, std::string_view json_pointer_to);
+        impl::error_code_t copy(std::string_view json_pointer_from, std::string_view json_pointer_to);
 
         bool is_valid() const;
 
@@ -209,22 +213,23 @@ namespace components::document {
                                                  json_trie_node_element::create_array,
                                                  json_trie_node_element::create_deleter};
 
-        error_code_t set_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>&& value);
+        impl::error_code_t set_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>&& value);
 
-        error_code_t set_(std::string_view json_pointer, special_type value);
+        impl::error_code_t set_(std::string_view json_pointer, special_type value);
 
-        error_code_t remove_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>& node);
+        impl::error_code_t remove_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>& node);
 
-        std::pair<json_trie_node_element*, error_code_t> find_node(std::string_view json_pointer);
+        std::pair<json_trie_node_element*, impl::error_code_t> find_node(std::string_view json_pointer);
 
-        std::pair<const json_trie_node_element*, error_code_t> find_node_const(std::string_view json_pointer) const;
+        std::pair<const json_trie_node_element*, impl::error_code_t>
+        find_node_const(std::string_view json_pointer) const;
 
-        error_code_t find_container_key(std::string_view json_pointer,
-                                        json_trie_node_element*& container,
-                                        bool& is_view_key,
-                                        std::pmr::string& key,
-                                        std::string_view& view_key,
-                                        uint32_t& index);
+        impl::error_code_t find_container_key(std::string_view json_pointer,
+                                              json_trie_node_element*& container,
+                                              bool& is_view_key,
+                                              std::pmr::string& key,
+                                              std::string_view& view_key,
+                                              uint32_t& index);
 
         static void build_primitive(tape_builder& builder, const boost::json::value& value) noexcept;
 
@@ -243,7 +248,7 @@ namespace components::document {
     document_ptr make_document(document_t::allocator_type* allocator);
 
     template<class T>
-    inline error_code_t document_t::set(std::string_view json_pointer, T value) {
+    inline impl::error_code_t document_t::set(std::string_view json_pointer, T value) {
         auto build_value = [&]() {
             auto element1 = mut_src_->next_element();
             builder_.build(value);
@@ -257,7 +262,7 @@ namespace components::document {
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
         // key-value pair will be written backwards
-        if (res == error_code_t::SUCCESS) {
+        if (res == impl::error_code_t::SUCCESS) {
             if (container->is_object()) {
                 if (container->as_object()->contains(is_view_key ? view_key : key)) {
                     container->as_object()->set(is_view_key ? view_key : key, build_value());
@@ -276,7 +281,7 @@ namespace components::document {
     }
 
     template<>
-    inline error_code_t document_t::set(std::string_view json_pointer, value_t value) {
+    inline impl::error_code_t document_t::set(std::string_view json_pointer, value_t value) {
         auto build_value = [&]() {
             auto element1 = mut_src_->next_element();
             switch (value.physical_type()) {
@@ -325,7 +330,7 @@ namespace components::document {
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
         // key-value pair will be written backwards
-        if (res == error_code_t::SUCCESS) {
+        if (res == impl::error_code_t::SUCCESS) {
             if (container->is_object()) {
                 if (container->as_object()->contains(is_view_key ? view_key : key)) {
                     container->as_object()->set(is_view_key ? view_key : key, build_value());
@@ -344,17 +349,17 @@ namespace components::document {
     }
 
     template<>
-    inline error_code_t document_t::set(std::string_view json_pointer, const std::string& value) {
+    inline impl::error_code_t document_t::set(std::string_view json_pointer, const std::string& value) {
         return set(json_pointer, std::string_view(value));
     }
 
     template<>
-    inline error_code_t document_t::set(std::string_view json_pointer, special_type value) {
+    inline impl::error_code_t document_t::set(std::string_view json_pointer, special_type value) {
         return set_(json_pointer, value);
     }
 
     template<>
-    inline error_code_t document_t::set(std::string_view json_pointer, document_ptr value) {
+    inline impl::error_code_t document_t::set(std::string_view json_pointer, document_ptr value) {
         ancestors_.push_back(value);
         auto copy = value->element_ind_;
         return set_(json_pointer, std::move(copy));
@@ -378,10 +383,10 @@ namespace components::document {
     template<typename T>
     std::pmr::string create_pmr_string_(T value, std::pmr::memory_resource* allocator);
 
-    error_code_t unescape_key_(std::string_view key,
-                               bool& is_unescaped,
-                               std::pmr::string& unescaped_key,
-                               document_t::allocator_type* allocator);
+    impl::error_code_t unescape_key_(std::string_view key,
+                                     bool& is_unescaped,
+                                     std::pmr::string& unescaped_key,
+                                     document_t::allocator_type* allocator);
 
     compare_t compare_(const impl::element* element1, const impl::element* element2);
 

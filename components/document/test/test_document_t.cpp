@@ -4,7 +4,7 @@
 
 using components::document::compare_t;
 using components::document::document_t;
-using components::document::error_code_t;
+using components::document::impl::error_code_t;
 
 TEST_CASE("document_t::is/get value") {
     auto allocator = std::pmr::synchronized_pool_resource();

@@ -232,7 +232,7 @@ namespace components::document {
         , ancestors_(std::pmr::vector<ptr>({std::move(ancestor)}, allocator))
         , is_root_(false) {}
 
-    error_code_t document_t::set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer) {
+    impl::error_code_t document_t::set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer) {
         switch (other->type_by_key(other_json_pointer)) {
             case types::logical_type::NA:
                 return set(json_pointer, nullptr);
@@ -264,64 +264,65 @@ namespace components::document {
             case types::logical_type::STRING_LITERAL:
                 return set(json_pointer, other->get_string(other_json_pointer));
             default:
-                return error_code_t::INVALID_TYPE;
+                return impl::error_code_t::INVALID_TYPE;
         }
     }
 
-    error_code_t document_t::set_array(std::string_view json_pointer) {
+    impl::error_code_t document_t::set_array(std::string_view json_pointer) {
         return set_(json_pointer, special_type::ARRAY);
     }
 
-    error_code_t document_t::set_dict(std::string_view json_pointer) {
+    impl::error_code_t document_t::set_dict(std::string_view json_pointer) {
         return set_(json_pointer, special_type::OBJECT);
     }
 
-    error_code_t document_t::set_deleter(std::string_view json_pointer) {
+    impl::error_code_t document_t::set_deleter(std::string_view json_pointer) {
         return set_(json_pointer, special_type::DELETER);
     }
 
-    error_code_t document_t::set_null(std::string_view json_pointer) { return set(json_pointer, nullptr); }
+    impl::error_code_t document_t::set_null(std::string_view json_pointer) { return set(json_pointer, nullptr); }
 
-    error_code_t document_t::remove(std::string_view json_pointer) {
+    impl::error_code_t document_t::remove(std::string_view json_pointer) {
         boost::intrusive_ptr<json_trie_node_element> ignored;
         return remove_(json_pointer, ignored);
     }
 
-    error_code_t document_t::move(std::string_view json_pointer_from, std::string_view json_pointer_to) {
+    impl::error_code_t document_t::move(std::string_view json_pointer_from, std::string_view json_pointer_to) {
         boost::intrusive_ptr<json_trie_node_element> node;
         auto res = remove_(json_pointer_from, node);
-        if (res != error_code_t::SUCCESS) {
+        if (res != impl::error_code_t::SUCCESS) {
             return res;
         }
         return set_(json_pointer_to, std::move(node));
     }
 
-    error_code_t document_t::copy(std::string_view json_pointer_from, std::string_view json_pointer_to) {
+    impl::error_code_t document_t::copy(std::string_view json_pointer_from, std::string_view json_pointer_to) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
         std::string_view view_key;
         uint32_t index;
         auto res = find_container_key(json_pointer_from, container, is_view_key, key, view_key, index);
-        if (res != error_code_t::SUCCESS) {
+        if (res != impl::error_code_t::SUCCESS) {
             return res;
         }
         auto node = container->is_object() ? container->get_object()->get(is_view_key ? view_key : key)
                                            : container->get_array()->get(index);
         if (node == nullptr) {
-            return error_code_t::NO_SUCH_ELEMENT;
+            return impl::error_code_t::NO_SUCH_ELEMENT;
         }
         return set_(json_pointer_to, node->make_deep_copy());
     }
 
-    error_code_t document_t::set_(std::string_view json_pointer, boost::intrusive_ptr<json_trie_node_element>&& value) {
+    impl::error_code_t document_t::set_(std::string_view json_pointer,
+                                        boost::intrusive_ptr<json_trie_node_element>&& value) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
         std::string_view view_key;
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
-        if (res == error_code_t::SUCCESS) {
+        if (res == impl::error_code_t::SUCCESS) {
             if (container->is_object()) {
                 if (container->as_object()->contains(is_view_key ? view_key : key)) {
                     container->as_object()->set(is_view_key ? view_key : key, std::move(value));
@@ -338,14 +339,14 @@ namespace components::document {
         return res;
     }
 
-    error_code_t document_t::set_(std::string_view json_pointer, special_type value) {
+    impl::error_code_t document_t::set_(std::string_view json_pointer, special_type value) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
         std::string_view view_key;
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
-        if (res == error_code_t::SUCCESS) {
+        if (res == impl::error_code_t::SUCCESS) {
             auto node = creators[static_cast<int>(value)](container->get_allocator());
             if (container->is_object()) {
                 if (container->as_object()->contains(is_view_key ? view_key : key)) {
@@ -363,35 +364,36 @@ namespace components::document {
         return res;
     }
 
-    error_code_t document_t::remove_(std::string_view json_pointer,
-                                     boost::intrusive_ptr<json_trie_node_element>& node) {
+    impl::error_code_t document_t::remove_(std::string_view json_pointer,
+                                           boost::intrusive_ptr<json_trie_node_element>& node) {
         json_trie_node_element* container;
         bool is_view_key;
         std::pmr::string key;
         std::string_view view_key;
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
-        if (res != error_code_t::SUCCESS) {
+        if (res != impl::error_code_t::SUCCESS) {
             return res;
         }
         node = container->is_object() ? container->as_object()->remove(is_view_key ? view_key : key)
                                       : container->as_array()->remove(index);
         if (node == nullptr) {
-            return error_code_t::NO_SUCH_ELEMENT;
+            return impl::error_code_t::NO_SUCH_ELEMENT;
         }
-        return error_code_t::SUCCESS;
+        return impl::error_code_t::SUCCESS;
     }
 
-    std::pair<document_t::json_trie_node_element*, error_code_t> document_t::find_node(std::string_view json_pointer) {
+    std::pair<document_t::json_trie_node_element*, impl::error_code_t>
+    document_t::find_node(std::string_view json_pointer) {
         auto node_error = find_node_const(json_pointer);
         return {const_cast<json_trie_node_element*>(node_error.first), node_error.second};
     }
 
-    std::pair<const document_t::json_trie_node_element*, error_code_t>
+    std::pair<const document_t::json_trie_node_element*, impl::error_code_t>
     document_t::find_node_const(std::string_view json_pointer) const {
         const auto* current = element_ind_.get();
         if (_usually_false(json_pointer.empty())) {
-            return {current, error_code_t::SUCCESS};
+            return {current, impl::error_code_t::SUCCESS};
         }
         if (json_pointer[0] == '/') {
             json_pointer.remove_prefix(1);
@@ -401,39 +403,39 @@ namespace components::document {
                 std::pmr::string unescaped_key;
                 bool is_unescaped;
                 auto error = unescape_key_(key, is_unescaped, unescaped_key, element_ind_->get_allocator());
-                if (error != error_code_t::SUCCESS) {
+                if (error != impl::error_code_t::SUCCESS) {
                     return {nullptr, error};
                 }
                 current = current->get_object()->get(is_unescaped ? unescaped_key : key);
             } else if (current->is_array()) {
                 current = current->get_array()->get(atol(key.data()));
             } else {
-                return {nullptr, error_code_t::NO_SUCH_ELEMENT};
+                return {nullptr, impl::error_code_t::NO_SUCH_ELEMENT};
             }
             if (current == nullptr) {
-                return {nullptr, error_code_t::NO_SUCH_ELEMENT};
+                return {nullptr, impl::error_code_t::NO_SUCH_ELEMENT};
             }
         }
-        return {current, error_code_t::SUCCESS};
+        return {current, impl::error_code_t::SUCCESS};
     }
 
-    error_code_t document_t::find_container_key(std::string_view json_pointer,
-                                                json_trie_node_element*& container,
-                                                bool& is_view_key,
-                                                std::pmr::string& key,
-                                                std::string_view& view_key,
-                                                uint32_t& index) {
+    impl::error_code_t document_t::find_container_key(std::string_view json_pointer,
+                                                      json_trie_node_element*& container,
+                                                      bool& is_view_key,
+                                                      std::pmr::string& key,
+                                                      std::string_view& view_key,
+                                                      uint32_t& index) {
         size_t pos = json_pointer.find_last_of('/');
         if (pos == std::string::npos) {
             pos = 0;
         }
         auto container_json_pointer = json_pointer.substr(0, pos);
         auto node_error = find_node(container_json_pointer);
-        if (node_error.second == error_code_t::INVALID_JSON_POINTER) {
+        if (node_error.second == impl::error_code_t::INVALID_JSON_POINTER) {
             return node_error.second;
         }
-        if (node_error.second == error_code_t::NO_SUCH_ELEMENT) {
-            return error_code_t::NO_SUCH_CONTAINER;
+        if (node_error.second == impl::error_code_t::NO_SUCH_ELEMENT) {
+            return impl::error_code_t::NO_SUCH_CONTAINER;
         }
         container = node_error.first;
         view_key = json_pointer.at(pos) == '/' ? json_pointer.substr(pos + 1) : json_pointer;
@@ -442,24 +444,24 @@ namespace components::document {
             std::pmr::string unescaped_key;
             bool is_unescaped;
             auto error = unescape_key_(view_key, is_unescaped, unescaped_key, container->get_allocator());
-            if (error != error_code_t::SUCCESS) {
+            if (error != impl::error_code_t::SUCCESS) {
                 return error;
             }
             if (is_unescaped) {
                 key = std::move(unescaped_key);
                 is_view_key = false;
             }
-            return error_code_t::SUCCESS;
+            return impl::error_code_t::SUCCESS;
         }
         if (container->is_array()) {
             auto raw_index = atol(view_key.data());
             if (raw_index < 0) {
-                return error_code_t::INVALID_INDEX;
+                return impl::error_code_t::INVALID_INDEX;
             }
             index = std::min(uint32_t(raw_index), uint32_t(container->get_array()->size()));
-            return error_code_t::SUCCESS;
+            return impl::error_code_t::SUCCESS;
         }
-        return error_code_t::NO_SUCH_CONTAINER;
+        return impl::error_code_t::NO_SUCH_CONTAINER;
     }
 
     void document_t::build_primitive(tape_builder& builder, const boost::json::value& value) noexcept {
@@ -671,7 +673,7 @@ namespace components::document {
         std::string_view view_key;
         uint32_t index;
         auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
-        if (res != error_code_t::SUCCESS) {
+        if (res != impl::error_code_t::SUCCESS) {
             return value_t{};
         }
         auto node = container->is_object() ? container->get_object()->get(is_view_key ? view_key : key)
@@ -860,10 +862,10 @@ namespace components::document {
         return new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
     }
 
-    error_code_t unescape_key_(std::string_view key,
-                               bool& is_unescaped,
-                               std::pmr::string& unescaped_key,
-                               document_t::allocator_type* allocator) {
+    impl::error_code_t unescape_key_(std::string_view key,
+                                     bool& is_unescaped,
+                                     std::pmr::string& unescaped_key,
+                                     document_t::allocator_type* allocator) {
         size_t escape = key.find('~');
         if (escape != std::string_view::npos) {
             is_unescaped = true;
@@ -877,15 +879,15 @@ namespace components::document {
                         unescaped.replace(escape, 2, "/");
                         break;
                     default:
-                        return error_code_t::INVALID_JSON_POINTER;
+                        return impl::error_code_t::INVALID_JSON_POINTER;
                 }
                 escape = unescaped.find('~', escape + 1);
             } while (escape != std::string::npos);
             unescaped_key = std::move(unescaped);
-            return error_code_t::SUCCESS;
+            return impl::error_code_t::SUCCESS;
         }
         is_unescaped = false;
-        return error_code_t::SUCCESS;
+        return impl::error_code_t::SUCCESS;
     }
 
     template<class T>
