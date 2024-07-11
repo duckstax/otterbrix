@@ -166,7 +166,7 @@ namespace components::document {
             }
             if (node_ptr->is_mut()) {
                 auto res = node_ptr->get_mut()->get<T>();
-                return res.error() == error_code::SUCCESS ? res.value() : T();
+                return res.error() == impl::error_code::SUCCESS ? res.value() : T();
             }
             return T();
         }

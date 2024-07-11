@@ -85,8 +85,7 @@ namespace components::ql {
 } // namespace components::ql
 
 inline const components::document::value_t to_structure_(const msgpack::object& msg_object,
-                                                         components::document::impl::base_document* tape,
-                                                         std::pmr::memory_resource* resource) {
+                                                         components::document::impl::base_document* tape) {
     switch (msg_object.type) {
         case msgpack::type::NIL:
             return components::document::value_t(tape, nullptr);
@@ -121,7 +120,7 @@ namespace msgpack {
                     }
                     for (uint32_t i = 0; i < o.via.map.size; ++i) {
                         auto key = o.via.map.ptr[i].key.as<core::parameter_id_t>();
-                        auto value = to_structure_(o.via.map.ptr[i].val, v.tape(), core::pmr::default_resource());
+                        auto value = to_structure_(o.via.map.ptr[i].val, v.tape());
                         v.parameters.emplace(key, value);
                     }
                     return o;
