@@ -15,7 +15,6 @@
 using namespace services::wal;
 using namespace components::ql;
 using namespace components::expressions;
-using actor_zeta::detail::pmr::get_default_resource;
 
 constexpr auto database_name = "test_database";
 constexpr auto collection_name = "test_collection";
@@ -164,7 +163,7 @@ TEST_CASE("delete one test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_one");
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(get_default_resource(),
+        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
@@ -199,7 +198,7 @@ TEST_CASE("delete many test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_many");
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(get_default_resource(),
+        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
@@ -234,7 +233,7 @@ TEST_CASE("update one test") {
     auto test_wal = create_test_wal("/tmp/wal/update_one");
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(get_default_resource(),
+        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
@@ -274,7 +273,7 @@ TEST_CASE("update many test") {
     auto test_wal = create_test_wal("/tmp/wal/update_many");
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(get_default_resource(),
+        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
