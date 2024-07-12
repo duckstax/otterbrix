@@ -62,7 +62,7 @@ using context_ptr = std::unique_ptr<context_t>;
 context_ptr make_context(log_t& log) {
     auto context = std::make_unique<context_t>();
     context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    context->resource = actor_zeta::detail::pmr::get_default_resource();
+    context->resource = actor_zeta::detail::pmr::synchronized_pool_resource();
     context->manager_database_ =
         actor_zeta::spawn_supervisor<manager_database_t>(context->resource, context->scheduler_.get(), log);
     context->database_ =

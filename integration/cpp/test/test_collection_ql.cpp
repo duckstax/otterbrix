@@ -22,8 +22,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
 
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
@@ -40,7 +39,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     INFO("insert") {
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
         for (int num = 0; num < 100; ++num) {
-            documents.push_back(gen_doc(num, std::pmr::get_default_resource()));
+            documents.push_back(gen_doc(num, dispatcher->resource()));
         }
         ql::insert_many_t ins{database_name, collection_name, documents};
         {
@@ -59,7 +58,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     INFO("find") {
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
@@ -67,7 +66,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
@@ -84,7 +83,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     INFO("delete") {
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
@@ -98,7 +97,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::delete_many_t del{database_name, collection_name};
+            components::ql::delete_many_t del{database_name, collection_name, dispatcher->resource()};
             del.match_.query = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                                 compare_type::gt,
                                                                                 key{"count"},
@@ -111,7 +110,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
@@ -128,7 +127,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
     INFO("update") {
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::lt,
                                                                          key{"count"},
@@ -141,13 +140,13 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::update_many_t upd{database_name, collection_name};
+            components::ql::update_many_t upd{database_name, collection_name, dispatcher->resource()};
             upd.match_.query = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                                 compare_type::lt,
                                                                                 key{"count"},
                                                                                 id_par{1});
             upd.add_parameter(id_par{1}, new_value(20));
-            upd.update_ = make_document(std::pmr::get_default_resource());
+            upd.update_ = make_document(dispatcher->resource());
             upd.update_->set_dict("$set");
             upd.update_->get_dict("$set")->set("count", 1000);
             components::ql::variant_statement_t ql{upd};
@@ -157,7 +156,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::lt,
                                                                          key{"count"},
@@ -171,7 +170,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
         }
         {
             auto session = otterbrix::session_id_t();
-            components::ql::aggregate_statement agg{database_name, collection_name};
+            components::ql::aggregate_statement agg{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},

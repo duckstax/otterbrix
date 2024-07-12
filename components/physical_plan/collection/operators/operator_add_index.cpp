@@ -30,10 +30,10 @@ namespace services::collection::operators {
         // If no documents exist and current index hasn't compare type, add to pending indexes vector
         if (context_->storage().empty()) {
             trace(context_->log(), "No documents found, add create_index to pending indexes");
-            pipeline_context->send(pipeline_context->current_message_sender,
-                                   services::collection::handler_id(services::collection::route::execute_plan_finish),
-                                   components::cursor::make_cursor(core::pmr::default_resource(),
-                                                                   components::cursor::operation_status_t::success));
+            pipeline_context->send(
+                pipeline_context->current_message_sender,
+                services::collection::handler_id(services::collection::route::execute_plan_finish),
+                components::cursor::make_cursor(context_->resource(), components::cursor::operation_status_t::success));
             context_->pending_indexes().emplace_back(
                 pending_index_create{std::make_unique<components::ql::create_index_t>(std::move(*index_ql_.get())),
                                      std::make_unique<components::pipeline::context_t>(std::move(*pipeline_context))});
@@ -49,7 +49,7 @@ namespace services::collection::operators {
             pipeline_context->send(
                 pipeline_context->current_message_sender,
                 services::collection::handler_id(services::collection::route::execute_plan_finish),
-                components::cursor::make_cursor(core::pmr::default_resource(),
+                components::cursor::make_cursor(context_->resource(),
                                                 components::cursor::error_code_t::index_create_fail,
                                                 "index with name : " + index_ql_->name_ + " fail to deduce type"));
             return;

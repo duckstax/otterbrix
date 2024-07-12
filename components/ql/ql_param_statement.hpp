@@ -17,8 +17,8 @@ namespace components::ql {
 
     class tape_wrapper : public boost::intrusive_ref_counter<tape_wrapper> {
     public:
-        explicit tape_wrapper()
-            : tape_(new document::impl::base_document(std::pmr::get_default_resource())) {}
+        explicit tape_wrapper(std::pmr::memory_resource* resource)
+            : tape_(new document::impl::base_document(resource)) {}
         ~tape_wrapper() { delete tape_; }
         document::impl::base_document* tape() const { return tape_; }
 
@@ -27,11 +27,14 @@ namespace components::ql {
     };
 
     struct storage_parameters {
-        std::unordered_map<core::parameter_id_t, expr_value_t> parameters;
+        std::pmr::unordered_map<core::parameter_id_t, expr_value_t> parameters;
 
-        explicit storage_parameters()
-            : tape_(new tape_wrapper()) {}
+        explicit storage_parameters(std::pmr::memory_resource* resource)
+            : parameters(resource)
+            , tape_(new tape_wrapper(resource)) {}
+
         document::impl::base_document* tape() const { return tape_->tape(); }
+        std::pmr::memory_resource* resource() const { return parameters.get_allocator().resource(); }
 
     private:
         boost::intrusive_ptr<tape_wrapper> tape_; // TODO: make into unique_ptr
@@ -53,8 +56,12 @@ namespace components::ql {
 
     class ql_param_statement_t : public ql_statement_t {
     public:
-        ql_param_statement_t(statement_type type, database_name_t database, collection_name_t collection);
-        ql_param_statement_t() = default;
+        ql_param_statement_t(statement_type type,
+                             database_name_t database,
+                             collection_name_t collection,
+                             std::pmr::memory_resource* resource);
+        ql_param_statement_t(std::pmr::memory_resource* resource)
+            : values_(resource) {}
 
         bool is_parameters() const override;
         auto parameters() const -> const storage_parameters&;
@@ -79,53 +86,50 @@ namespace components::ql {
 
     private:
         uint16_t counter_{0};
-        storage_parameters values_{};
+        storage_parameters values_;
     };
 
-} // namespace components::ql
-
-inline const components::document::value_t to_structure_(const msgpack::object& msg_object,
-                                                         components::document::impl::base_document* tape) {
-    switch (msg_object.type) {
-        case msgpack::type::NIL:
-            return components::document::value_t(tape, nullptr);
-        case msgpack::type::BOOLEAN:
-            return components::document::value_t(tape, msg_object.via.boolean);
-        case msgpack::type::POSITIVE_INTEGER:
-            return components::document::value_t(tape, msg_object.via.u64);
-        case msgpack::type::NEGATIVE_INTEGER:
-            return components::document::value_t(tape, msg_object.via.i64);
-        case msgpack::type::FLOAT32:
-        case msgpack::type::FLOAT64:
-            return components::document::value_t(tape, msg_object.via.f64);
-        case msgpack::type::STR:
-            return components::document::value_t(tape,
-                                                 std::string_view(msg_object.via.str.ptr, msg_object.via.str.size));
-        default:
-            return components::document::value_t();
+    inline components::document::value_t to_structure_(const msgpack::object& msg_object,
+                                                       components::document::impl::base_document* tape) {
+        switch (msg_object.type) {
+            case msgpack::type::NIL:
+                return components::document::value_t(tape, nullptr);
+            case msgpack::type::BOOLEAN:
+                return components::document::value_t(tape, msg_object.via.boolean);
+            case msgpack::type::POSITIVE_INTEGER:
+                return components::document::value_t(tape, msg_object.via.u64);
+            case msgpack::type::NEGATIVE_INTEGER:
+                return components::document::value_t(tape, msg_object.via.i64);
+            case msgpack::type::FLOAT32:
+            case msgpack::type::FLOAT64:
+                return components::document::value_t(tape, msg_object.via.f64);
+            case msgpack::type::STR:
+                return components::document::value_t(tape,
+                                                     std::string_view(msg_object.via.str.ptr, msg_object.via.str.size));
+            default:
+                return components::document::value_t();
+        }
     }
-}
+
+    inline components::ql::storage_parameters to_storage_parameters(const msgpack::object& msg_object,
+                                                                    std::pmr::memory_resource* resource) {
+        components::ql::storage_parameters result(resource);
+        if (msg_object.type != msgpack::type::MAP) {
+            throw msgpack::type_error();
+        }
+        for (uint32_t i = 0; i < msg_object.via.map.size; ++i) {
+            auto key = msg_object.via.map.ptr[i].key.as<core::parameter_id_t>();
+            auto value = to_structure_(msg_object.via.map.ptr[i].val, result.tape());
+            result.parameters.emplace(key, value);
+        }
+        return result;
+    }
+} // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<components::ql::storage_parameters> final {
-                msgpack::object const& operator()(msgpack::object const& o,
-                                                  components::ql::storage_parameters& v) const {
-                    if (o.type != msgpack::type::MAP) {
-                        throw msgpack::type_error();
-                    }
-                    for (uint32_t i = 0; i < o.via.map.size; ++i) {
-                        auto key = o.via.map.ptr[i].key.as<core::parameter_id_t>();
-                        auto value = to_structure_(o.via.map.ptr[i].val, v.tape());
-                        v.parameters.emplace(key, value);
-                    }
-                    return o;
-                }
-            };
 
             template<>
             struct pack<components::ql::storage_parameters> final {

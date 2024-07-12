@@ -84,18 +84,18 @@ constexpr int kDocuments = 100;
         dispatcher->drop_index(session, &ql);                                                                          \
     } while (false)
 
-#define CHECK_FIND_ALL()                                                                                               \
+#define CHECK_FIND_ALL(RESOURCE)                                                                                       \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name};                            \
+        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, RESOURCE};                  \
         auto c = dispatcher->find(session, ql);                                                                        \
         REQUIRE(c->size() == kDocuments);                                                                              \
     } while (false)
 
-#define CHECK_FIND(KEY, COMPARE, VALUE, COUNT)                                                                         \
+#define CHECK_FIND(KEY, COMPARE, VALUE, COUNT, RESOURCE)                                                               \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name};                            \
+        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, RESOURCE};                  \
         auto expr =                                                                                                    \
             components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1});    \
         ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));                      \
@@ -104,7 +104,7 @@ constexpr int kDocuments = 100;
         REQUIRE(c->size() == COUNT);                                                                                   \
     } while (false)
 
-#define CHECK_FIND_COUNT(COMPARE, VALUE, COUNT) CHECK_FIND("count", COMPARE, VALUE, COUNT)
+#define CHECK_FIND_COUNT(COMPARE, VALUE, COUNT, RESOURCE) CHECK_FIND("count", COMPARE, VALUE, COUNT, RESOURCE)
 
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
@@ -119,8 +119,7 @@ TEST_CASE("integration::test_index::base") {
     test_clear_directory(config);
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
+    auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
@@ -130,10 +129,10 @@ TEST_CASE("integration::test_index::base") {
     }
 
     INFO("find") {
-        CHECK_FIND_ALL();
+        CHECK_FIND_ALL(dispatcher->resource());
         do {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
@@ -144,20 +143,17 @@ TEST_CASE("integration::test_index::base") {
             REQUIRE(c->size() == 1);
         } while (false);
         //CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
-        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90);
-        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9);
-        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99);
-        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91);
-        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10);
+        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10, dispatcher->resource());
     }
 }
 
 TEST_CASE("integration::test_index::save_load") {
     auto config = test_create_config("/tmp/otterbrix/integration/test_index/save_load");
     test_clear_directory(config);
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
         test_spaces space(config);
@@ -174,14 +170,16 @@ TEST_CASE("integration::test_index::save_load") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
+        auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+        auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
-        CHECK_FIND_ALL();
-        CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
-        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90);
-        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9);
-        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99);
-        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91);
-        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10);
+        CHECK_FIND_ALL(dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91, dispatcher->resource());
+        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10, dispatcher->resource());
     }
 }
 
@@ -265,7 +263,7 @@ TEST_CASE("integration::test_index::index already exist") {
     }
 
     INFO("find") {
-        CHECK_FIND_ALL();
+        CHECK_FIND_ALL(dispatcher->resource());
         CHECK_EXISTS_INDEX("ncount", true);
         CHECK_EXISTS_INDEX("scount", true);
         CHECK_EXISTS_INDEX("dcount", true);
@@ -361,7 +359,7 @@ TEST_CASE("integration::test_index::no_type save_load") {
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
 
-        CHECK_FIND_ALL();
+        CHECK_FIND_ALL(dispatcher->resource());
         // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
         // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
         // CHECK_FIND_COUNT(compare_type::lt, 10, 9);

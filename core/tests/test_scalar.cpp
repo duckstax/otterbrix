@@ -47,8 +47,8 @@ TEMPLATE_TEST_CASE("unitialized",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::scalar<TestType> scalar(mr);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::scalar<TestType> scalar(&mr);
     REQUIRE(nullptr != scalar.data());
 }
 
@@ -61,10 +61,10 @@ TEMPLATE_TEST_CASE("initialValue",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     REQUIRE(nullptr != scalar.data());
     REQUIRE(gen.value == scalar.value());
 }
@@ -78,10 +78,10 @@ TEMPLATE_TEST_CASE("const ptr data",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     auto const* data = scalar.data();
     REQUIRE(nullptr != data);
 }
@@ -95,14 +95,14 @@ TEMPLATE_TEST_CASE("copy ctor",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     REQUIRE(nullptr != scalar.data());
     REQUIRE(value == scalar.value());
 
-    core::scalar<TestType> copy{mr, scalar};
+    core::scalar<TestType> copy{&mr, scalar};
     REQUIRE(nullptr != copy.data());
     REQUIRE(copy.data() != scalar.data());
     REQUIRE(copy.value() == scalar.value());
@@ -117,10 +117,10 @@ TEMPLATE_TEST_CASE("move ctor",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     REQUIRE(nullptr != scalar.data());
     REQUIRE(value == scalar.value());
 
@@ -143,10 +143,10 @@ TEMPLATE_TEST_CASE("set value",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     REQUIRE(nullptr != scalar.data());
 
     auto expected = gen.random_value();
@@ -164,10 +164,10 @@ TEMPLATE_TEST_CASE("set value to zero",
                    std::int64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     gen_scalar<TestType> gen;
     auto value = gen.value;
-    core::scalar<TestType> scalar(mr, value);
+    core::scalar<TestType> scalar(&mr, value);
     REQUIRE(nullptr != scalar.data());
 
     scalar.set_value_to_zero();

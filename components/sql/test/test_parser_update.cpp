@@ -7,7 +7,7 @@ using namespace components;
 
 #define TEST_SIMPLE_UPDATE(QUERY, RESULT, PARAMS, FIELDS)                                                              \
     SECTION(QUERY) {                                                                                                   \
-        auto res = sql::parse(resource, QUERY);                                                                        \
+        auto res = sql::parse(&resource, QUERY);                                                                       \
         auto ql = res.ql;                                                                                              \
         REQUIRE(std::holds_alternative<ql::update_many_t>(ql));                                                        \
         auto& upd = std::get<ql::update_many_t>(ql);                                                                   \
@@ -31,14 +31,14 @@ using namespace components;
 #define TEST_NO_VALID_UPDATE(QUERY)                                                                                    \
     SECTION(QUERY) {                                                                                                   \
         auto query = QUERY;                                                                                            \
-        auto res = sql::parse(resource, query);                                                                        \
+        auto res = sql::parse(&resource, query);                                                                       \
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));                                               \
     }
 
 #define TEST_ERROR_UPDATE(QUERY, ERROR, TEXT, POS)                                                                     \
     SECTION(QUERY) {                                                                                                   \
         auto query = QUERY;                                                                                            \
-        auto res = sql::parse(resource, query);                                                                        \
+        auto res = sql::parse(&resource, query);                                                                       \
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));                                               \
         REQUIRE(res.error.error() == ERROR);                                                                           \
         REQUIRE(res.error.mistake() == TEXT);                                                                          \
@@ -50,8 +50,8 @@ using vec = std::vector<v>;
 using fields = std::vector<std::pair<std::string, v>>;
 
 TEST_CASE("parser::update") {
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::base_document>(resource);
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto tape = std::make_unique<document::impl::base_document>(&resource);
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_UPDATE("update schema.table set count = 10;",
@@ -62,7 +62,7 @@ TEST_CASE("parser::update") {
     TEST_SIMPLE_UPDATE("update schema.table set name = 'new name';",
                        R"_($match: {$all_true})_",
                        vec({}),
-                       fields({{"name", new_value(std::pmr::string("new name", resource))}}));
+                       fields({{"name", new_value(std::pmr::string("new name", &resource))}}));
 
     TEST_SIMPLE_UPDATE("update schema.table set is_doc = true;",
                        R"_($match: {$all_true})_",
@@ -83,8 +83,8 @@ TEST_CASE("parser::update") {
 }
 
 TEST_CASE("parser::update_where") {
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::base_document>(resource);
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto tape = std::make_unique<document::impl::base_document>(&resource);
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_UPDATE("update schema.table set count = 10 where id = 1;",
@@ -117,14 +117,14 @@ TEST_CASE("parser::update_where") {
 }
 
 TEST_CASE("parser::update no valid queries") {
-    auto* resource = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
 
     TEST_NO_VALID_UPDATE("update schema.table where number == 10;");
     TEST_NO_VALID_UPDATE("update;");
 }
 
 TEST_CASE("parser::update errors") {
-    auto* resource = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
 
     TEST_ERROR_UPDATE("update schema.table set name = 'new name',;", sql::parse_error::syntax_error, ";", 42);
 

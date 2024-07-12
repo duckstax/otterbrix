@@ -38,6 +38,8 @@ namespace services::wal {
         void create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data);
         ~wal_replicate_t() override;
 
+        std::pmr::memory_resource* resource() const;
+
     private:
         void send_success(session_id_t& session, address_t& sender);
 
@@ -54,6 +56,7 @@ namespace services::wal {
         size_tt read_size(size_t start_index) const;
         buffer_t read(size_t start_index, size_t finish_index) const;
 
+        std::pmr::memory_resource* resource_;
         log_t log_;
         configuration::config_wal config_;
         atomic_id_t id_{0};

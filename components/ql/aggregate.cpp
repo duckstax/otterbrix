@@ -3,8 +3,10 @@
 
 namespace components::ql {
 
-    aggregate_statement::aggregate_statement(database_name_t database, collection_name_t collection)
-        : ql_param_statement_t(statement_type::aggregate, std::move(database), std::move(collection)) {}
+    aggregate_statement::aggregate_statement(database_name_t database,
+                                             collection_name_t collection,
+                                             std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::aggregate, std::move(database), std::move(collection), resource) {}
 
     void aggregate_statement::append(aggregate::operator_type type, aggregate::operator_storage_t storage) {
         aggregate_operator_.append(type, std::move(storage));
@@ -34,8 +36,10 @@ namespace components::ql {
         return s.str();
     }
 
-    aggregate_ptr make_aggregate(const database_name_t& database, const collection_name_t& collection) {
-        return new aggregate_statement(database, collection);
+    aggregate_ptr make_aggregate(const database_name_t& database,
+                                 const collection_name_t& collection,
+                                 std::pmr::memory_resource* resource) {
+        return new aggregate_statement(database, collection, resource);
     }
 
     const aggregate::match_t& get_match(const aggregate_statement& aggregate) {

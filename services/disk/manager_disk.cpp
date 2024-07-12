@@ -74,11 +74,11 @@ namespace services::disk {
     void manager_disk_t::create_agent() {
         auto name_agent = "agent_disk_" + std::to_string(agents_.size() + 1);
         trace(log_, "manager_disk create_agent : {}", name_agent);
-        auto address =
-            spawn_actor<agent_disk_t>([this](agent_disk_t* ptr) { agents_.emplace_back(agent_disk_ptr(ptr)); },
-                                      config_.path,
-                                      name_agent,
-                                      log_);
+        //auto address =
+        spawn_actor<agent_disk_t>([this](agent_disk_t* ptr) { agents_.emplace_back(agent_disk_ptr(ptr)); },
+                                  config_.path,
+                                  name_agent,
+                                  log_);
     }
 
     auto manager_disk_t::load(session_id_t& session) -> void {

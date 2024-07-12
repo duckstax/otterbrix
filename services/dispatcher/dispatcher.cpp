@@ -529,7 +529,7 @@ namespace services::dispatcher {
         auto logic_plan = planner.create_plan(resource_, statement);
         auto parameters = statement->is_parameters()
                               ? static_cast<components::ql::ql_param_statement_t*>(statement)->take_parameters()
-                              : components::ql::storage_parameters{};
+                              : components::ql::storage_parameters{resource_};
         return {logic_plan, parameters};
     }
 

@@ -22,6 +22,7 @@ namespace services::wal {
                                      log_t& log,
                                      configuration::config_wal config)
         : actor_zeta::basic_async_actor(manager, "wal")
+        , resource_(manager->resource())
         , log_(log.clone())
         , config_(std::move(config)) {
         add_handler(handler_id(route::load), &wal_replicate_t::load);
@@ -60,6 +61,7 @@ namespace services::wal {
     }
 
     wal_replicate_t::~wal_replicate_t() { trace(log_, "delete wal_replicate_t"); }
+    std::pmr::memory_resource* wal_replicate_t::resource() const { return resource_; }
 
     size_tt read_size_impl(buffer_t& input, int index_start) {
         size_tt size_tmp = 0;
@@ -276,7 +278,7 @@ namespace services::wal {
                 record.last_crc32 = o.via.array.ptr[0].as<crc32_t>();
                 record.id = o.via.array.ptr[1].as<services::wal::id_t>();
                 record.type = static_cast<components::ql::statement_type>(o.via.array.ptr[2].as<char>());
-                record.set_data(o.via.array.ptr[3]);
+                record.set_data(o.via.array.ptr[3], resource_);
             } else {
                 record.type = components::ql::statement_type::unused;
                 //todo: error wal content

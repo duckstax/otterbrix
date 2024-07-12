@@ -10,26 +10,27 @@ const std::string collection_name = "test_collection";
 using namespace services::disk;
 
 TEST_CASE("sync documents from disk") {
-    auto* resouce = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     SECTION("save document into disk") {
         remove((file_db + "/metadata").data());
         disk_t disk(file_db);
         for (int num = 1; num <= 100; ++num) {
             disk.save_document(database_name,
                                collection_name,
-                               document_id_t(gen_id(num, resouce)),
-                               gen_doc(num, resouce));
+                               document_id_t(gen_id(num, &resource)),
+                               gen_doc(num, &resource));
         }
     }
 
     SECTION("load document from disk") {
         disk_t disk(file_db);
         for (int num = 1; num <= 100; ++num) {
-            auto doc = disk.load_document(database_name, collection_name, document_id_t(gen_id(num, resouce)));
+            auto doc =
+                disk.load_document(database_name, collection_name, document_id_t(gen_id(num, &resource)), &resource);
             REQUIRE(doc != nullptr);
-            REQUIRE(doc->get_string("_id") == gen_id(num, resouce));
+            REQUIRE(doc->get_string("_id") == gen_id(num, &resource));
             REQUIRE(doc->get_long("count") == num);
-            REQUIRE(doc->get_string("countStr") == std::pmr::string(std::to_string(num), resouce));
+            REQUIRE(doc->get_string("countStr") == std::pmr::string(std::to_string(num), &resource));
             REQUIRE(doc->get_double("countDouble") == Approx(float(num) + 0.1));
             REQUIRE(doc->get_bool("countBool") == (num % 2 != 0));
             REQUIRE(doc->get_array("countArray")->count() == 5);
@@ -40,15 +41,16 @@ TEST_CASE("sync documents from disk") {
     SECTION("delete document from disk") {
         disk_t disk(file_db);
         for (int num = 1; num <= 100; num += 2) {
-            disk.remove_document(database_name, collection_name, document_id_t(gen_id(num, resouce)));
+            disk.remove_document(database_name, collection_name, document_id_t(gen_id(num, &resource)));
         }
         for (int num = 1; num <= 100; ++num) {
-            auto doc = disk.load_document(database_name, collection_name, document_id_t(gen_id(num, resouce)));
+            auto doc =
+                disk.load_document(database_name, collection_name, document_id_t(gen_id(num, &resource)), &resource);
             if (num % 2 == 0) {
                 REQUIRE(doc != nullptr);
-                REQUIRE(doc->get_string("_id") == gen_id(num, resouce));
+                REQUIRE(doc->get_string("_id") == gen_id(num, &resource));
                 REQUIRE(doc->get_long("count") == num);
-                REQUIRE(doc->get_string("countStr") == std::pmr::string(std::to_string(num), resouce));
+                REQUIRE(doc->get_string("countStr") == std::pmr::string(std::to_string(num), &resource));
                 REQUIRE(doc->get_double("countDouble") == Approx(float(num) + 0.1));
                 REQUIRE(doc->get_bool("countBool") == (num % 2 != 0));
                 REQUIRE(doc->get_array("countArray")->count() == 5);
@@ -64,7 +66,7 @@ TEST_CASE("sync documents from disk") {
         auto id_documents = disk.load_list_documents(database_name, collection_name);
         REQUIRE(id_documents.size() == 50);
         for (const auto& id : id_documents) {
-            auto doc = disk.load_document(id);
+            auto doc = disk.load_document(id, &resource);
             REQUIRE(doc != nullptr);
         }
     }

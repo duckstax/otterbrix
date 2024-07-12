@@ -21,8 +21,6 @@ TEST_CASE("integration::cpp::test_join") {
     test_spaces space(config);
     auto dispatcher = space.dispatcher();
 
-    auto* resource = std::pmr::get_default_resource();
-
     INFO("initialization") {
         auto session = otterbrix::session_id_t();
         {
@@ -35,7 +33,7 @@ TEST_CASE("integration::cpp::test_join") {
             query << "INSERT INTO " << database_name << "." << collection_name_1
                   << " (_id, name, key_1, key_2) VALUES ";
             for (int num = 0, reversed = 100; num < 101; ++num, --reversed) {
-                query << "('" << gen_id(num + 1, resource) << "', "
+                query << "('" << gen_id(num + 1, dispatcher->resource()) << "', "
                       << "'Name " << num << "', " << num << ", " << reversed << ")" << (reversed == 0 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
@@ -46,8 +44,8 @@ TEST_CASE("integration::cpp::test_join") {
             std::stringstream query;
             query << "INSERT INTO " << database_name << "." << collection_name_2 << " (_id, value, key) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1001, resource) << "', " << (num + 25) * 2 * 10 << ", " << (num + 25) * 2
-                      << ")" << (num == 99 ? ";" : ", ");
+                query << "('" << gen_id(num + 1001, dispatcher->resource()) << "', " << (num + 25) * 2 * 10 << ", "
+                      << (num + 25) * 2 << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
             REQUIRE(cur->is_success());

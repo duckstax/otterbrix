@@ -47,9 +47,7 @@ namespace services::collection::executor {
                              address(),
                              handler_id(route::execute_plan_finish),
                              session,
-                             make_cursor(std::pmr::get_default_resource(),
-                                         error_code_t::create_phisical_plan_error,
-                                         "invalid query plan"));
+                             make_cursor(resource_, error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
         plan->set_as_root();

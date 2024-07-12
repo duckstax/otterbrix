@@ -26,7 +26,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
                       int n_doc) {
     auto new_value = [&](auto value) { return value_t{tape, value}; };
     auto session_doc = otterbrix::session_id_t();
-    auto* ql = new components::ql::aggregate_statement{db_name, col_name};
+    auto* ql = new components::ql::aggregate_statement{db_name, col_name, dispatcher->resource()};
     auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                  compare_type::eq,
                                                                  key{"_id"},
@@ -42,10 +42,9 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
 
 TEST_CASE("python::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
 
     SECTION("initialization") {
+        auto resource = std::pmr::synchronized_pool_resource();
         test_clear_directory(config);
         services::disk::disk_t disk(config.disk.path);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
@@ -55,7 +54,7 @@ TEST_CASE("python::test_save_load::disk") {
                 auto col_name = collection_name + "_" + std::to_string(n_col);
                 disk.append_collection(db_name, col_name);
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
-                    auto doc = gen_doc(int(n_doc), std::pmr::get_default_resource());
+                    auto doc = gen_doc(int(n_doc), &resource);
                     doc->set("number", gen_doc_number(n_db, n_col, n_doc));
                     disk.save_document(db_name, col_name, get_document_id(doc), doc);
                 }
@@ -66,6 +65,7 @@ TEST_CASE("python::test_save_load::disk") {
     SECTION("load") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
+        auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
         dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
@@ -86,9 +86,6 @@ TEST_CASE("python::test_save_load::disk") {
 
 TEST_CASE("python::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     SECTION("initialization") {
         test_clear_directory(config);
@@ -115,6 +112,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     SECTION("extending wal") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
+        auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+        auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
         services::wal::wal_replicate_t wal(nullptr, log, config.wal);
@@ -136,7 +135,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params;
+                    components::ql::storage_parameters params(dispatcher->resource());
                     components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(1));
                     components::ql::delete_one_t delete_one(db_name, col_name, match, params);
                     wal.delete_one(session, address, delete_one);
@@ -154,7 +153,7 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                                         key{"count"},
                                                                                         core::parameter_id_t{2}));
                     auto match = components::ql::aggregate::make_match(expr);
-                    components::ql::storage_parameters params;
+                    components::ql::storage_parameters params(dispatcher->resource());
                     components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(2));
                     components::ql::add_parameter(params, core::parameter_id_t{2}, new_value(4));
                     components::ql::delete_many_t delete_many(db_name, col_name, match, params);
@@ -167,14 +166,15 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          compare_type::eq,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params;
+                    components::ql::storage_parameters params(dispatcher->resource());
                     components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(5));
                     components::ql::update_one_t update_one(
                         db_name,
                         col_name,
                         match,
                         params,
-                        components::document::document_t::document_from_json(R"({"$set": {"count": 0}})", resource),
+                        components::document::document_t::document_from_json(R"({"$set": {"count": 0}})",
+                                                                             dispatcher->resource()),
                         false);
                     wal.update_one(session, address, update_one);
                 }
@@ -185,14 +185,15 @@ TEST_CASE("python::test_save_load::disk+wal") {
                                                                          compare_type::gt,
                                                                          key{"count"},
                                                                          core::parameter_id_t{1}));
-                    components::ql::storage_parameters params;
+                    components::ql::storage_parameters params(dispatcher->resource());
                     components::ql::add_parameter(params, core::parameter_id_t{1}, new_value(5));
                     components::ql::update_many_t update_many(
                         db_name,
                         col_name,
                         match,
                         params,
-                        components::document::document_t::document_from_json(R"({"$set": {"count": 1000}})", resource),
+                        components::document::document_t::document_from_json(R"({"$set": {"count": 1000}})",
+                                                                             dispatcher->resource()),
                         false);
                     wal.update_many(session, address, update_many);
                 }
@@ -203,6 +204,8 @@ TEST_CASE("python::test_save_load::disk+wal") {
     SECTION("load") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
+        auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+        auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
         dispatcher->load();
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);

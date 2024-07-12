@@ -14,6 +14,14 @@ void gen_dict(int num, const document_ptr& dict) {
     dict->set("/five", num % 5 == 0);
 }
 
+std::string gen_id(int num) {
+    auto res = std::to_string(num);
+    while (res.size() < 24) {
+        res = "0" + res;
+    }
+    return res;
+}
+
 std::pmr::string gen_id(int num, std::pmr::memory_resource* resource) {
     std::pmr::string res{std::to_string(num), resource};
     while (res.size() < 24) {

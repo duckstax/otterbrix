@@ -20,11 +20,11 @@ namespace components::document {
         py_handle_decoder_t& operator=(py_handle_decoder_t&&) = delete;
 
     public:
-        static document_ptr to_document(const py::handle& source);
+        static document_ptr to_document(const py::handle& source, std::pmr::memory_resource* resource);
     };
 } // namespace components::document
 
-auto to_document(const py::handle& obj) -> document_ptr;
+auto to_document(const py::handle& obj, std::pmr::memory_resource* resource) -> document_ptr;
 auto from_document(const document_ptr& document) -> py::object;
 
 auto from_object(const document_ptr& document, const std::string& key) -> py::object;
@@ -36,7 +36,8 @@ auto to_pylist(const std::pmr::vector<components::document::document_id_t>& src)
 auto to_sorter(const py::handle& sort_dict) -> services::storage::sort::sorter_t;
 auto to_order(const py::object& order) -> services::storage::sort::order;
 
-auto to_statement(const py::handle& source, components::ql::aggregate_statement*) -> void;
+auto to_statement(const py::handle& source, components::ql::aggregate_statement*, std::pmr::memory_resource* resource)
+    -> void;
 auto test_to_statement(const py::handle& source) -> py::str;
 
 auto pack_to_match(const py::object& object) -> py::list;

@@ -5,6 +5,46 @@
 #include <actor-zeta/detail/pmr/default_resource.hpp>
 #include <msgpack.hpp>
 
+namespace components::expressions {
+
+    inline components::expressions::compare_expression_ptr to_compare_expression(const msgpack::object& msg_object,
+                                                                                 std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 4) {
+            throw msgpack::type_error();
+        }
+        auto type = static_cast<components::expressions::compare_type>(msg_object.via.array.ptr[0].as<uint8_t>());
+        auto key = msg_object.via.array.ptr[1].as<components::expressions::key_t>();
+        auto value = msg_object.via.array.ptr[2].as<core::parameter_id_t>();
+        auto result = components::expressions::make_compare_expression(resource, type, key, value);
+        for (uint32_t i = 0; i < msg_object.via.array.ptr[3].via.array.size; ++i) {
+            result->append_child(to_compare_expression(msg_object.via.array.ptr[3].via.array.ptr[i], resource));
+        }
+        return result;
+    }
+    inline components::expressions::expression_ptr to_expression(const msgpack::object& msg_object,
+                                                                 std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 2) {
+            throw msgpack::type_error();
+        }
+        auto group = static_cast<components::expressions::expression_group>(msg_object.via.array.ptr[0].as<uint8_t>());
+        switch (group) {
+            case components::expressions::expression_group::compare:
+                return to_compare_expression(msg_object.via.array.ptr[1], resource);
+            default:
+                //todo: error not valid expression
+                break;
+        }
+        return nullptr;
+    }
+
+} // namespace components::expressions
+
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
@@ -74,33 +114,6 @@ namespace msgpack {
                 }
             };
 
-            // compare_expression_t
-            template<>
-            struct convert<components::expressions::compare_expression_ptr> final {
-                msgpack::object const& operator()(msgpack::object const& o,
-                                                  components::expressions::compare_expression_ptr& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-                    if (o.via.array.size != 4) {
-                        throw msgpack::type_error();
-                    }
-                    auto type = static_cast<components::expressions::compare_type>(o.via.array.ptr[0].as<uint8_t>());
-                    auto key = o.via.array.ptr[1].as<components::expressions::key_t>();
-                    auto value = o.via.array.ptr[2].as<core::parameter_id_t>();
-                    v = components::expressions::make_compare_expression(
-                        actor_zeta::detail::pmr::get_default_resource(),
-                        type,
-                        key,
-                        value);
-                    for (uint32_t i = 0; i < o.via.array.ptr[3].via.array.size; ++i) {
-                        v->append_child(
-                            o.via.array.ptr[3].via.array.ptr[i].as<components::expressions::compare_expression_ptr>());
-                    }
-                    return o;
-                }
-            };
-
             template<>
             struct pack<components::expressions::compare_expression_ptr> final {
                 template<typename Stream>
@@ -135,31 +148,6 @@ namespace msgpack {
                     for (uint32_t i = 0; i < v->children().size(); ++i) {
                         o.via.array.ptr[3].via.array.ptr[i] = msgpack::object(v->children().at(i), o.zone);
                     }
-                }
-            };
-
-            // expression_ptr
-            template<>
-            struct convert<components::expressions::expression_ptr> final {
-                msgpack::object const& operator()(msgpack::object const& o,
-                                                  components::expressions::expression_ptr& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-                    if (o.via.array.size != 2) {
-                        throw msgpack::type_error();
-                    }
-                    auto group =
-                        static_cast<components::expressions::expression_group>(o.via.array.ptr[0].as<uint8_t>());
-                    switch (group) {
-                        case components::expressions::expression_group::compare:
-                            v = o.via.array.ptr[1].as<components::expressions::compare_expression_ptr>();
-                            break;
-                        default:
-                            //todo: error not valid expression
-                            break;
-                    }
-                    return o;
                 }
             };
 

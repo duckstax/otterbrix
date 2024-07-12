@@ -54,22 +54,23 @@ namespace services::disk {
         db_->Put(rocksdb::WriteOptions(), gen_key(database, collection, id), to_string_view(sbuf));
     }
 
-    document_ptr disk_t::load_document(const rocks_id& id_rocks) const {
+    document_ptr disk_t::load_document(const rocks_id& id_rocks, std::pmr::memory_resource* resource) const {
         std::string sbuf;
         auto status = db_->Get(rocksdb::ReadOptions(), id_rocks, &sbuf);
         if (status.ok()) {
             msgpack::unpacked msg;
             msgpack::unpack(msg, sbuf.data(), sbuf.size());
             msgpack::object obj = msg.get();
-            return obj.as<document_ptr>();
+            return components::document::to_document(obj, resource);
         }
         return nullptr;
     }
 
     document_ptr disk_t::load_document(const database_name_t& database,
                                        const collection_name_t& collection,
-                                       const document_id_t& id) const {
-        return load_document(gen_key(database, collection, id));
+                                       const document_id_t& id,
+                                       std::pmr::memory_resource* resource) const {
+        return load_document(gen_key(database, collection, id), resource);
     }
 
     void disk_t::remove_document(const database_name_t& database,

@@ -29,7 +29,7 @@ private:
 };
 
 TEST_CASE("base index created") {
-    actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     auto index_engine = make_index_engine(resource);
     auto one_id = make_index<dummy>(index_engine, {"1"});
     auto two_id = make_index<dummy>(index_engine, {"1", "2"});

@@ -13,7 +13,8 @@ using namespace services::collection::operators;
 using key = components::expressions::key_t;
 
 TEST_CASE("operator::group::base") {
-    auto collection = init_collection();
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto collection = init_collection(&resource);
 
     SECTION("base::all::no_valid") {
         operator_group_t group(d(collection));
@@ -51,7 +52,8 @@ TEST_CASE("operator::group::base") {
 }
 
 TEST_CASE("operator::group::sort") {
-    auto collection = init_collection();
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto collection = init_collection(&resource);
 
     SECTION("sort::all") {
         auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));
@@ -82,7 +84,8 @@ TEST_CASE("operator::group::sort") {
 }
 
 TEST_CASE("operator::group::all") {
-    auto collection = init_collection();
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto collection = init_collection(&resource);
 
     SECTION("sort::all") {
         auto group = boost::intrusive_ptr(new operator_group_t(d(collection)));

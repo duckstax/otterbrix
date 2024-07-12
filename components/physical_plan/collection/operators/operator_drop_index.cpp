@@ -32,7 +32,7 @@ namespace services::collection::operators {
         if (!index_ptr) {
             pipeline_context->send(pipeline_context->current_message_sender,
                                    collection::handler_id(collection::route::execute_plan_finish),
-                                   make_cursor(default_resource(), error_code_t::collection_not_exists));
+                                   make_cursor(context_->resource(), error_code_t::collection_not_exists));
             return;
         }
 
@@ -45,6 +45,6 @@ namespace services::collection::operators {
         components::index::drop_index(context_->index_engine(), index_ptr);
         pipeline_context->send(pipeline_context->current_message_sender,
                                collection::handler_id(collection::route::execute_plan_finish),
-                               make_cursor(default_resource(), operation_status_t::success));
+                               make_cursor(context_->resource(), operation_status_t::success));
     }
 } // namespace services::collection::operators

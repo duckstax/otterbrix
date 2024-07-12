@@ -60,7 +60,7 @@ namespace otterbrix {
     std::string wrapper_collection::insert_one(const py::handle& document) {
         trace(log_, "wrapper_collection::insert_one");
         if (py::isinstance<py::dict>(document)) {
-            auto doc = to_document(document);
+            auto doc = to_document(document, ptr_->resource());
             generate_document_id_if_not_exists(doc);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->insert_one(session_tmp, database_, name_, doc);
@@ -81,7 +81,7 @@ namespace otterbrix {
         if (py::isinstance<py::list>(documents)) {
             std::pmr::vector<components::document::document_ptr> docs;
             for (const auto document : documents) {
-                auto doc = to_document(document);
+                auto doc = to_document(document, ptr_->resource());
                 generate_document_id_if_not_exists(doc);
                 docs.push_back(std::move(doc));
             }
@@ -107,9 +107,9 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::update_one(py::object cond, py::object fields, bool upsert) {
         trace(log_, "wrapper_collection::update_one");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
-            auto update = to_document(fields);
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto update = to_document(fields, ptr_->resource());
             generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_one(session_tmp, statement.get(), std::move(update), upsert);
@@ -130,9 +130,9 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
         trace(log_, "wrapper_collection::update_many");
         if (py::isinstance<py::dict>(cond) && py::isinstance<py::dict>(fields)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
-            auto update = to_document(fields);
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
+            auto update = to_document(fields, ptr_->resource());
             generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_many(session_tmp, statement.get(), std::move(update), upsert);
@@ -153,8 +153,8 @@ namespace otterbrix {
     auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
         trace(log_, "wrapper_collection::find");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->find(session_tmp, statement.get());
             debug(log_, "wrapper_collection::find {} records", cur->size());
@@ -167,8 +167,8 @@ namespace otterbrix {
     auto wrapper_collection::find_one(py::object cond) -> py::dict {
         trace(log_, "wrapper_collection::find_one");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->find_one(session_tmp, statement.get());
             debug(log_, "wrapper_collection::find_one {}", cur->size() > 0);
@@ -184,8 +184,8 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::delete_one(py::object cond) {
         trace(log_, "wrapper_collection::delete_one");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_one(session_tmp, statement.get());
             if (cur->is_error()) {
@@ -202,8 +202,8 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_collection::delete_many(py::object cond) {
         trace(log_, "wrapper_collection::delete_many");
         if (py::isinstance<py::dict>(cond)) {
-            auto statement = components::ql::make_aggregate(database_, name_);
-            to_statement(pack_to_match(cond), statement.get());
+            auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
+            to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->delete_many(session_tmp, statement.get());
             if (cur->is_error()) {

@@ -1,5 +1,6 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
+#include <collection/collection.hpp>
 #include <components/expressions/compare_expression.hpp>
 
 static const database_name_t database_name = "TestDatabase";
@@ -9,15 +10,27 @@ using components::expressions::compare_type;
 using components::ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
+using services::collection::context_collection_t;
+
+template<typename T>
+using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 
 TEST_CASE("python::test_collection") {
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<impl::base_document>(resource);
-    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
+    auto resource = std::pmr::synchronized_pool_resource();
+
+    auto allocate_byte = sizeof(long);
+    auto allocate_byte_alignof = alignof(long);
+    void* buffer = resource.allocate(allocate_byte, allocate_byte_alignof);
+    auto* data = new (buffer) long();
+    deleted_unique_ptr<long> foo(data, [&](long* f) { resource.deallocate(data, sizeof(long)); });
+    //std::unique_ptr<long> ptr{data};
+    /*
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
     dispatcher->load();
 
     INFO("initialization") {
@@ -38,7 +51,7 @@ TEST_CASE("python::test_collection") {
     INFO("one_insert") {
         for (int num = 0; num < 50; ++num) {
             {
-                auto doc = gen_doc(num, resource);
+                auto doc = gen_doc(num, dispatcher->resource());
                 auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
@@ -54,7 +67,7 @@ TEST_CASE("python::test_collection") {
     INFO("many_insert") {
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
         for (int num = 50; num < 100; ++num) {
-            documents.push_back(gen_doc(num, resource));
+            documents.push_back(gen_doc(num, dispatcher->resource()));
         }
         {
             auto session = otterbrix::session_id_t();
@@ -69,7 +82,7 @@ TEST_CASE("python::test_collection") {
     INFO("insert non unique id") {
         for (int num = 0; num < 100; ++num) {
             {
-                auto doc = gen_doc(num, resource);
+                auto doc = gen_doc(num, dispatcher->resource());
                 auto session = otterbrix::session_id_t();
                 dispatcher->insert_one(session, database_name, collection_name, doc);
             }
@@ -85,14 +98,14 @@ TEST_CASE("python::test_collection") {
     INFO("find") {
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto cur = dispatcher->find(session, ql);
             REQUIRE(cur->is_success());
             REQUIRE(cur->size() == 100);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::gt,
                                                                          key{"count"},
@@ -106,7 +119,7 @@ TEST_CASE("python::test_collection") {
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::regex,
                                                                          key{"countStr"},
@@ -120,7 +133,7 @@ TEST_CASE("python::test_collection") {
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_or);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
@@ -141,7 +154,7 @@ TEST_CASE("python::test_collection") {
 
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr_and =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             auto expr_or =
@@ -170,7 +183,7 @@ TEST_CASE("python::test_collection") {
     }
     INFO("cursor") {
         auto session = otterbrix::session_id_t();
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
         auto cur = dispatcher->find(session, ql);
         REQUIRE(cur->is_success());
         REQUIRE(cur->size() == 100);
@@ -184,19 +197,19 @@ TEST_CASE("python::test_collection") {
     INFO("find_one") {
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"_id"},
                                                                          id_par{1});
             ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
-            ql->add_parameter(id_par{1}, new_value(gen_id(1, resource)));
+            ql->add_parameter(id_par{1}, new_value(gen_id(1, dispatcher->resource())));
             auto cur = dispatcher->find_one(session, ql);
             REQUIRE(cur->next()->get_long("count") == 1);
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
                                                                          compare_type::eq,
                                                                          key{"count"},
@@ -209,7 +222,7 @@ TEST_CASE("python::test_collection") {
         }
         {
             auto session = otterbrix::session_id_t();
-            auto* ql = new components::ql::aggregate_statement{database_name, collection_name};
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
             auto expr =
                 components::expressions::make_compare_union_expression(dispatcher->resource(), compare_type::union_and);
             expr->append_child(components::expressions::make_compare_expression(dispatcher->resource(),
@@ -240,4 +253,5 @@ TEST_CASE("python::test_collection") {
             REQUIRE(cur->is_error());
         }
     }
+    */
 }

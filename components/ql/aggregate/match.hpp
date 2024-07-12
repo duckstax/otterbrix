@@ -8,7 +8,7 @@ namespace components::ql::aggregate {
 
     struct match_t final {
         static constexpr operator_type type = operator_type::match;
-        expressions::expression_ptr query;
+        expressions::expression_ptr query{nullptr};
     };
 
     match_t make_match(expressions::expression_ptr&& query);
@@ -19,21 +19,18 @@ namespace components::ql::aggregate {
         return stream;
     }
 
+    inline match_t to_match(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
+        match_t result;
+        result.query = expressions::to_expression(msg_object, resource);
+        return result;
+    }
+
 } // namespace components::ql::aggregate
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<components::ql::aggregate::match_t> final {
-                msgpack::object const& operator()(msgpack::object const& o,
-                                                  components::ql::aggregate::match_t& v) const {
-                    v.query = o.as<components::expressions::expression_ptr>();
-                    return o;
-                }
-            };
 
             template<>
             struct pack<components::ql::aggregate::match_t> final {

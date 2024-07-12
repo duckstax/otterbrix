@@ -34,6 +34,7 @@ namespace services::disk {
         auto fix_wal_id(wal::id_t wal_id) -> void;
 
     private:
+        std::pmr::memory_resource* resource_;
         log_t log_;
         disk_t disk_;
     };

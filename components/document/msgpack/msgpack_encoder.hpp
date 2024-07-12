@@ -82,25 +82,35 @@ namespace components::document {
         msgpack_decoder_t& operator=(msgpack_decoder_t&&) = delete;
 
     public:
-        const static document_ptr to_document(const msgpack::object& msg_object);
+        const static document_ptr to_document(const msgpack::object& msg_object, std::pmr::memory_resource* resource);
     };
+
+    inline document_ptr to_document(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::MAP) {
+            throw msgpack::type_error();
+        }
+        return components::document::msgpack_decoder_t::to_document(msg_object, resource);
+    }
+
+    inline std::pmr::vector<document_ptr> to_documents(const msgpack::object& msg_object,
+                                                       std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        auto arr = msg_object.via.array;
+        std::pmr::vector<document_ptr> res(resource);
+        res.reserve(arr.size);
+        for (uint32_t i = 0; i < arr.size; i++) {
+            res.push_back(components::document::msgpack_decoder_t::to_document(arr.ptr[i], resource));
+        }
+        return res;
+    }
 } // namespace components::document
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<document_ptr> final {
-                msgpack::object const& operator()(msgpack::object const& o, document_ptr& v) const {
-                    if (o.type != msgpack::type::MAP) {
-                        throw msgpack::type_error();
-                    }
-                    v = components::document::msgpack_decoder_t::to_document(o);
-                    return o;
-                }
-            };
 
             template<>
             struct pack<document_ptr> final {

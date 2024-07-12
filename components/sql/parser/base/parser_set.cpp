@@ -3,9 +3,9 @@
 
 namespace components::sql::impl {
 
-    parser_result parse_set(std::pmr::memory_resource* resource, lexer_t& lexer, document::document_ptr& doc) {
-        auto doc_value = document::make_document(resource);
-        auto tape = std::make_unique<document::impl::base_document>(resource);
+    parser_result parse_set(lexer_t& lexer, document::document_ptr& doc) {
+        auto doc_value = document::make_document(doc->get_allocator());
+        auto tape = std::make_unique<document::impl::base_document>(doc->get_allocator());
         auto token = lexer.current_significant_token();
         do {
             token = lexer.next_not_whitespace_token();
@@ -21,7 +21,7 @@ namespace components::sql::impl {
             if (!is_token_field_value(token)) {
                 return parser_result{parse_error::syntax_error, token, "not valid update query"};
             }
-            auto value = parse_value(token, tape.get(), resource);
+            auto value = parse_value(token, tape.get(), doc->get_allocator());
             if (!value) {
                 return parser_result{parse_error::not_valid_value, token, "not valid value in update query"};
             }

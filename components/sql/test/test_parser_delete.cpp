@@ -5,7 +5,7 @@ using namespace components;
 
 #define TEST_SIMPLE_DELETE(QUERY, RESULT, PARAMS)                                                                      \
     SECTION(QUERY) {                                                                                                   \
-        auto res = sql::parse(resource, QUERY);                                                                        \
+        auto res = sql::parse(&resource, QUERY);                                                                       \
         auto ql = res.ql;                                                                                              \
         REQUIRE(std::holds_alternative<ql::delete_many_t>(ql));                                                        \
         auto& del = std::get<ql::delete_many_t>(ql);                                                                   \
@@ -23,14 +23,14 @@ using namespace components;
 #define TEST_NO_VALID_DELETE(QUERY)                                                                                    \
     SECTION(QUERY) {                                                                                                   \
         auto query = QUERY;                                                                                            \
-        auto res = sql::parse(resource, query);                                                                        \
+        auto res = sql::parse(&resource, query);                                                                       \
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));                                               \
     }
 
 #define TEST_ERROR_DELETE(QUERY, ERROR, TEXT, POS)                                                                     \
     SECTION(QUERY) {                                                                                                   \
         auto query = QUERY;                                                                                            \
-        auto res = sql::parse(resource, query);                                                                        \
+        auto res = sql::parse(&resource, query);                                                                       \
         REQUIRE(std::holds_alternative<ql::unused_statement_t>(res.ql));                                               \
         REQUIRE(res.error.error() == ERROR);                                                                           \
         REQUIRE(res.error.mistake() == TEXT);                                                                          \
@@ -41,8 +41,8 @@ using v = ::document::value_t;
 using vec = std::vector<v>;
 
 TEST_CASE("parser::delete_from_where") {
-    auto* resource = std::pmr::get_default_resource();
-    auto tape = std::make_unique<document::impl::base_document>(resource);
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto tape = std::make_unique<document::impl::base_document>(&resource);
     auto new_value = [&](auto value) { return v{tape.get(), value}; };
 
     TEST_SIMPLE_DELETE("delete from schema.table where number == 10;",
@@ -56,13 +56,13 @@ TEST_CASE("parser::delete_from_where") {
 }
 
 TEST_CASE("parser::delete no valid queries") {
-    auto* resource = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
 
     TEST_NO_VALID_DELETE("delete * from .table where number == 10;");
 }
 
 TEST_CASE("parser::delete errors") {
-    auto* resource = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
 
     TEST_ERROR_DELETE("delete from schema.table where number == 10 group by name;",
                       sql::parse_error::syntax_error,

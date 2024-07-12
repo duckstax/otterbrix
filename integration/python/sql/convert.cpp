@@ -78,19 +78,19 @@ json_trie_node* build_index(const py::handle& py_obj,
     return res;
 }
 
-document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj) {
-    auto* allocator = std::pmr::get_default_resource();
-    auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator);
+document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj,
+                                                                    std::pmr::memory_resource* resource) {
+    auto res = new (resource->allocate(sizeof(document_t))) document_t(resource);
     auto obj = res->element_ind_->as_object();
     for (const py::handle key : py_obj) {
-        obj->set(build_index(key, res->builder_, res->mut_src_, allocator),
-                 build_index(py_obj[key], res->builder_, res->mut_src_, allocator));
+        obj->set(build_index(key, res->builder_, res->mut_src_, resource),
+                 build_index(py_obj[key], res->builder_, res->mut_src_, resource));
     }
     return res;
 }
 
-auto to_document(const py::handle& source) -> document_ptr {
-    return components::document::py_handle_decoder_t::to_document(source);
+auto to_document(const py::handle& source, std::pmr::memory_resource* resource) -> document_ptr {
+    return components::document::py_handle_decoder_t::to_document(source, resource);
 }
 
 auto from_document(const element* value) -> py::object {
@@ -416,8 +416,8 @@ components::ql::aggregate::sort_t parse_sort(const py::handle& condition) {
     return sort;
 }
 
-auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource(); //todo
+auto to_statement(const py::handle& source, aggregate_statement* aggregate, std::pmr::memory_resource* resource)
+    -> void {
     auto is_sequence = py::isinstance<py::sequence>(source);
 
     if (!is_sequence) {
@@ -493,8 +493,9 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> v
 }
 
 auto test_to_statement(const py::handle& source) -> py::str {
-    aggregate_statement aggregate("database", "collection");
-    to_statement(source, &aggregate);
+    auto resource = std::pmr::synchronized_pool_resource();
+    aggregate_statement aggregate("database", "collection", &resource);
+    to_statement(source, &aggregate, &resource);
     std::stringstream stream;
     stream << aggregate;
     return stream.str();

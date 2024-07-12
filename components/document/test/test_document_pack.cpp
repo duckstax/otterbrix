@@ -7,16 +7,15 @@
 using namespace components::document;
 
 TEST_CASE("native pack document") {
-    auto allocator = std::pmr::synchronized_pool_resource();
-    auto doc1 = gen_doc(10, &allocator);
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(10, &resource);
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, doc1);
 
     msgpack::unpacked msg;
     msgpack::unpack(msg, sbuf.data(), sbuf.size());
 
-    msgpack::object obj = msg.get();
-    auto doc2 = obj.as<document_ptr>();
+    auto doc2 = to_document(msg.get(), &resource);
 
     REQUIRE(doc1->count() == doc2->count());
     REQUIRE(doc1->get_string("/_id") == doc2->get_string("/_id"));
@@ -30,14 +29,14 @@ TEST_CASE("native pack document") {
 }
 
 TEST_CASE("native pack document and zone") {
-    auto allocator = std::pmr::synchronized_pool_resource();
-    auto doc1 = gen_doc(10, &allocator);
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto doc1 = gen_doc(10, &resource);
     msgpack::sbuffer sbuf;
     msgpack::pack(sbuf, doc1);
 
     msgpack::zone zone;
     msgpack::object obj = msgpack::unpack(zone, sbuf.data(), sbuf.size());
-    auto doc2 = obj.as<document_ptr>();
+    auto doc2 = to_document(obj, &resource);
 
     REQUIRE(doc1->count() == doc2->count());
     REQUIRE(doc1->get_string("/_id") == doc2->get_string("/_id"));

@@ -5,7 +5,7 @@ using namespace components;
 
 #define TEST_JOIN(QUERY, RESULT, PARAMS)                                                                               \
     SECTION(QUERY) {                                                                                                   \
-        auto res = sql::parse(resource, QUERY);                                                                        \
+        auto res = sql::parse(&resource, QUERY);                                                                       \
         auto ql = res.ql;                                                                                              \
         REQUIRE(std::holds_alternative<ql::join_t>(ql));                                                               \
         auto& join = std::get<ql::join_t>(ql);                                                                         \
@@ -22,7 +22,7 @@ using v = document::value_t;
 using vec = std::vector<v>;
 
 TEST_CASE("parser::join") {
-    auto* resource = std::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
 
     INFO("join types") {
         TEST_JOIN(R"_(select * from col1 join col2 on col1.id = col2.id_col1;)_",
