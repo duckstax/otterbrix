@@ -128,7 +128,7 @@ namespace services {
                 drop_collection_(session, std::move(logical_plan));
                 break;
             default:
-                execute_plan(session, std::move(logical_plan), std::move(parameters));
+                execute_plan_impl(session, std::move(logical_plan), std::move(parameters));
                 break;
         }
     }
@@ -331,11 +331,11 @@ namespace services {
         }
     }
 
-    void memory_storage_t::execute_plan(components::session::session_id_t& session,
-                                        components::logical_plan::node_ptr logical_plan,
-                                        components::ql::storage_parameters parameters) {
+    void memory_storage_t::execute_plan_impl(components::session::session_id_t& session,
+                                             components::logical_plan::node_ptr logical_plan,
+                                             components::ql::storage_parameters parameters) {
         trace(log_,
-              "memory_storage_t:execute_plan: collection: {}, sesion: {}",
+              "memory_storage_t:execute_plan_impl: collection: {}, sesion: {}",
               logical_plan->collection_full_name().to_string(),
               session.data());
         auto dependency_tree_collections_names = logical_plan->collection_dependencies();
@@ -345,7 +345,7 @@ namespace services {
                 dependency_tree_collections_names.extract(dependency_tree_collections_names.begin()).value();
             if (!check_collection_(session, name)) {
                 trace(log_,
-                      "memory_storage_t:execute_plan: collection not found {}, sesion: {}",
+                      "memory_storage_t:execute_plan_impl: collection not found {}, sesion: {}",
                       name.to_string(),
                       session.data());
                 return;

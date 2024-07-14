@@ -105,9 +105,9 @@ namespace services {
         void drop_collection_(components::session::session_id_t& session,
                               components::logical_plan::node_ptr logical_plan);
 
-        void execute_plan(components::session::session_id_t& session,
-                          components::logical_plan::node_ptr logical_plan,
-                          components::ql::storage_parameters parameters);
+        void execute_plan_impl(components::session::session_id_t& session,
+                               components::logical_plan::node_ptr logical_plan,
+                               components::ql::storage_parameters parameters);
 
         void execute_plan_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
 
