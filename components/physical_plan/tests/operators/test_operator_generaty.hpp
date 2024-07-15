@@ -11,17 +11,20 @@ using namespace services::collection;
 
 struct context_t {
     actor_zeta::scheduler_ptr scheduler_;
-    actor_zeta::detail::pmr::memory_resource* resource;
+    std::pmr::memory_resource* resource;
     std::unique_ptr<memory_storage_t> memory_storage_;
-    std::unique_ptr<context_collection_t> collection_;
+    std::unique_ptr<context_collection_t, std::function<void(context_collection_t*)>> collection_;
+
+    context_t(std::pmr::memory_resource* r)
+        : resource(r)
+        , collection_(nullptr, [&](context_collection_t* c) { mr_delete(resource, c); }) {}
 };
 
 using context_ptr = std::unique_ptr<context_t>;
 
 inline context_ptr make_context(log_t& log, std::pmr::memory_resource* resource) {
-    auto context = std::make_unique<context_t>();
+    auto context = std::make_unique<context_t>(resource);
     context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    context->resource = resource;
     context->memory_storage_ =
         actor_zeta::spawn_supervisor<memory_storage_t>(context->resource, context->scheduler_.get(), log);
 

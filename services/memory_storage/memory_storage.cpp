@@ -20,10 +20,11 @@ namespace services {
     memory_storage_t::load_buffer_t::load_buffer_t(std::pmr::memory_resource* resource)
         : collections(resource) {}
 
-    memory_storage_t::memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
+    memory_storage_t::memory_storage_t(std::pmr::memory_resource* resource,
                                        actor_zeta::scheduler_raw scheduler,
                                        log_t& log)
         : actor_zeta::cooperative_supervisor<memory_storage_t>(resource, "memory_storage")
+        , executor_(nullptr, [&](collection::executor::executor_t* agent) { mr_delete(this->resource(), agent); })
         , log_(log.clone())
         , e_(scheduler)
         , databases_(resource)
@@ -31,7 +32,7 @@ namespace services {
         ZoneScoped;
         trace(log_, "memory_storage start thread pool");
         executor_address_ = spawn_actor<services::collection::executor::executor_t>(
-            [this](services::collection::executor::executor_t* ptr) { executor_ = ptr; },
+            [this](services::collection::executor::executor_t* ptr) { executor_.reset(ptr); },
             resource,
             std::move(log_.clone()));
         add_handler(core::handler_id(core::route::sync), &memory_storage_t::sync);
@@ -48,7 +49,7 @@ namespace services {
 
     memory_storage_t::~memory_storage_t() {
         ZoneScoped;
-        trace(log_, "delete memory_resource");
+        trace(log_, "delete memory_storage");
     }
 
     void memory_storage_t::sync(const address_pack& pack) {

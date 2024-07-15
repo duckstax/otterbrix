@@ -23,7 +23,10 @@ namespace services::wal {
         using file_ptr = std::unique_ptr<core::file::file_t>;
 
     public:
-        wal_replicate_t(base_manager_wal_replicate_t* manager, log_t& log, configuration::config_wal config);
+        wal_replicate_t(base_manager_wal_replicate_t* manager,
+                        log_t& log,
+                        configuration::config_wal config,
+                        std::pmr::memory_resource* resource = nullptr);
         virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(session_id_t& session, address_t& sender, components::ql::create_database_t& data);
         void drop_database(session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
@@ -89,6 +92,6 @@ namespace services::wal {
         void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const final;
     };
 
-    using wal_replicate_ptr = std::unique_ptr<wal_replicate_t>;
+    using wal_replicate_ptr = std::unique_ptr<wal_replicate_t, std::function<void(wal_replicate_t*)>>;
 
 } //namespace services::wal

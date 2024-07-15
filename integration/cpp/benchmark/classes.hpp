@@ -87,7 +87,7 @@ aggregate_statement_raw_ptr create_aggregate(const collection_name_t& collection
     aggregate::match_t match;
     if (!key.empty()) {
         aggregate->add_parameter(core::parameter_id_t{1}, value);
-        match.query = make_compare_expression(actor_zeta::detail::pmr::synchronized_pool_resource(),
+        match.query = make_compare_expression(std::pmr::synchronized_pool_resource(),
                                               compare,
                                               components::expressions::key_t{key},
                                               core::parameter_id_t{1});

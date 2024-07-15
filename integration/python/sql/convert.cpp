@@ -80,7 +80,7 @@ json_trie_node* build_index(const py::handle& py_obj,
 
 document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj,
                                                                     std::pmr::memory_resource* resource) {
-    auto res = new (resource->allocate(sizeof(document_t))) document_t(resource);
+    auto res = new (resource->allocate(sizeof(document_t))) document_t(resource, true);
     auto obj = res->element_ind_->as_object();
     for (const py::handle key : py_obj) {
         obj->set(build_index(key, res->builder_, res->mut_src_, resource),

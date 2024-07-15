@@ -51,9 +51,7 @@ namespace services {
             manager_disk = 1
         };
 
-        memory_storage_t(actor_zeta::detail::pmr::memory_resource* resource,
-                         actor_zeta::scheduler_raw scheduler,
-                         log_t& log);
+        memory_storage_t(std::pmr::memory_resource* resource, actor_zeta::scheduler_raw scheduler, log_t& log);
         ~memory_storage_t();
 
         void sync(const address_pack& pack);
@@ -73,7 +71,7 @@ namespace services {
         actor_zeta::address_t manager_dispatcher_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t manager_disk_{actor_zeta::address_t::empty_address()};
         actor_zeta::address_t executor_address_{actor_zeta::address_t::empty_address()};
-        services::collection::executor::executor_t* executor_ = nullptr;
+        services::collection::executor::executor_ptr executor_{nullptr};
         log_t log_;
         actor_zeta::scheduler_raw e_;
         database_storage_t databases_;

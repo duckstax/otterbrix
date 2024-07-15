@@ -20,9 +20,10 @@ namespace services::wal {
 
     wal_replicate_t::wal_replicate_t(base_manager_wal_replicate_t* manager,
                                      log_t& log,
-                                     configuration::config_wal config)
+                                     configuration::config_wal config,
+                                     std::pmr::memory_resource* resource)
         : actor_zeta::basic_async_actor(manager, "wal")
-        , resource_(manager->resource())
+        , resource_(resource ? resource : manager->resource())
         , log_(log.clone())
         , config_(std::move(config)) {
         add_handler(handler_id(route::load), &wal_replicate_t::load);

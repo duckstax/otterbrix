@@ -39,6 +39,6 @@ namespace services::disk {
         disk_t disk_;
     };
 
-    using agent_disk_ptr = std::unique_ptr<agent_disk_t>;
+    using agent_disk_ptr = std::unique_ptr<agent_disk_t, std::function<void(agent_disk_t*)>>;
 
 } //namespace services::disk

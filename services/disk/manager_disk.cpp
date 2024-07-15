@@ -24,8 +24,7 @@ namespace services::disk {
         }
     } // namespace
 
-    base_manager_disk_t::base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,
-                                             actor_zeta::scheduler_raw scheduler)
+    base_manager_disk_t::base_manager_disk_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_disk_t>(mr, "manager_disk")
         , e_(scheduler) {}
 
@@ -36,7 +35,7 @@ namespace services::disk {
         execute(this, current_message());
     }
 
-    manager_disk_t::manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_disk_t::manager_disk_t(std::pmr::memory_resource* mr,
                                    actor_zeta::scheduler_raw scheduler,
                                    configuration::config_disk config,
                                    log_t& log)
@@ -75,10 +74,13 @@ namespace services::disk {
         auto name_agent = "agent_disk_" + std::to_string(agents_.size() + 1);
         trace(log_, "manager_disk create_agent : {}", name_agent);
         //auto address =
-        spawn_actor<agent_disk_t>([this](agent_disk_t* ptr) { agents_.emplace_back(agent_disk_ptr(ptr)); },
-                                  config_.path,
-                                  name_agent,
-                                  log_);
+        spawn_actor<agent_disk_t>(
+            [this](agent_disk_t* ptr) {
+                agents_.emplace_back(ptr, [&](agent_disk_t* agent) { mr_delete(resource(), agent); });
+            },
+            config_.path,
+            name_agent,
+            log_);
     }
 
     auto manager_disk_t::load(session_id_t& session) -> void {
@@ -205,7 +207,11 @@ namespace services::disk {
             trace(log_, "manager_disk: create_index_agent : {}", name);
             index_agents_.erase(name);
             auto address_agent = spawn_actor<index_agent_disk_t>(
-                [&](index_agent_disk_t* ptr) { index_agents_.insert_or_assign(name, index_agent_disk_ptr(ptr)); },
+                [&](index_agent_disk_t* ptr) {
+                    index_agents_.insert_or_assign(name, index_agent_disk_ptr{ptr, [&](index_agent_disk_t* agent) {
+                                                                                  mr_delete(resource(), agent);
+                                                                              }});
+                },
                 resource(),
                 config_.path,
                 collection,
@@ -359,8 +365,7 @@ namespace services::disk {
         }
     }
 
-    manager_disk_empty_t::manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource* mr,
-                                               actor_zeta::scheduler_raw scheduler)
+    manager_disk_empty_t::manager_disk_empty_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler)
         : base_manager_disk_t(mr, scheduler) {
         add_handler(core::handler_id(core::route::sync),
                     &manager_disk_empty_t::nothing<std::tuple<actor_zeta::address_t, actor_zeta::address_t>>);

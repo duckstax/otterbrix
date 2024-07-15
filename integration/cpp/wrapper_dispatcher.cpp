@@ -16,7 +16,7 @@ using namespace components::cursor;
 
 namespace otterbrix {
 
-    wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,
+    wrapper_dispatcher_t::wrapper_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::address_t manager_dispatcher,
                                                log_t& log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr, "wrapper_dispatcher")

@@ -80,7 +80,7 @@ namespace services::dispatcher {
         std::vector<services::wal::record_t> records_;
     };
 
-    using dispatcher_ptr = std::unique_ptr<dispatcher_t>;
+    using dispatcher_ptr = std::unique_ptr<dispatcher_t, std::function<void(dispatcher_t*)>>;
 
     class manager_dispatcher_t final : public actor_zeta::cooperative_supervisor<manager_dispatcher_t> {
     public:
@@ -99,7 +99,7 @@ namespace services::dispatcher {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
         }
 
-        manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
+        manager_dispatcher_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
 
         ~manager_dispatcher_t() override;
 

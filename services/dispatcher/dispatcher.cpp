@@ -533,7 +533,7 @@ namespace services::dispatcher {
         return {logic_plan, parameters};
     }
 
-    manager_dispatcher_t::manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_dispatcher_t::manager_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::scheduler_raw scheduler,
                                                log_t& log)
         : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
@@ -568,7 +568,9 @@ namespace services::dispatcher {
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
         trace(log_, "manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
         auto target = spawn_actor<dispatcher_t>(
-            [this, name](dispatcher_t* ptr) { dispatchers_.emplace_back(dispatcher_ptr(ptr)); },
+            [this, name](dispatcher_t* ptr) {
+                dispatchers_.emplace_back(ptr, [&](dispatcher_t* agent) { mr_delete(resource(), agent); });
+            },
             resource(),
             memory_storage_,
             manager_wal_,
