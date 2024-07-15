@@ -21,7 +21,7 @@ namespace components::sql::impl {
             if (!is_token_field_value(token)) {
                 return parser_result{parse_error::syntax_error, token, "not valid update query"};
             }
-            auto value = parse_value(token, tape.get(), doc->get_allocator());
+            auto value = parse_value(token, tape.get());
             if (!value) {
                 return parser_result{parse_error::not_valid_value, token, "not valid value in update query"};
             }

@@ -122,8 +122,7 @@ namespace components::sql::impl {
         return false;
     }
 
-    document::value_t
-    parse_value(const token_t& token, document::impl::base_document* tape, std::pmr::memory_resource* resource) {
+    document::value_t parse_value(const token_t& token, document::impl::base_document* tape) {
         if (token.type == token_type::string_literal) {
             return document::value_t(tape, token_clean_value(token));
         } else if (token.type == token_type::number_literal) {
@@ -172,8 +171,7 @@ namespace components::sql::impl {
 
     parser_result parse_field_values(lexer_t& lexer,
                                      std::pmr::vector<document::value_t>& values,
-                                     document::impl::base_document* tape,
-                                     std::pmr::memory_resource* resource) {
+                                     document::impl::base_document* tape) {
         values.clear();
         auto token = lexer.next_not_whitespace_token();
         if (token.type != token_type::bracket_round_open) {
@@ -184,7 +182,7 @@ namespace components::sql::impl {
             if (!is_token_field_value(token)) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};
             }
-            values.push_back(parse_value(token, tape, resource));
+            values.push_back(parse_value(token, tape));
             token = lexer.next_not_whitespace_token();
             if (token.type != token_type::comma && token.type != token_type::bracket_round_close) {
                 return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid values list"};

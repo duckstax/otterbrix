@@ -170,7 +170,7 @@ TEST_CASE("delete one test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num, &resource);
+        add_parameter(parameters, core::parameter_id_t{1}, num);
         delete_one_t data(database_name, collection_name, match, parameters);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -206,7 +206,7 @@ TEST_CASE("delete many test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num, &resource);
+        add_parameter(parameters, core::parameter_id_t{1}, num);
         delete_many_t data(database_name, collection_name, match, parameters);
         auto session = components::session::session_id_t();
         auto address = actor_zeta::base::address_t::address_t::empty_address();
@@ -242,7 +242,7 @@ TEST_CASE("update one test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num, &resource);
+        add_parameter(parameters, core::parameter_id_t{1}, num);
         auto update = components::document::document_t::document_from_json(R"({"$set": {"count": )" +
                                                                                std::to_string(num + 10) + "}}",
                                                                            &resource);
@@ -284,7 +284,7 @@ TEST_CASE("update many test") {
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));
         storage_parameters parameters(&resource);
-        add_parameter(parameters, core::parameter_id_t{1}, num, &resource);
+        add_parameter(parameters, core::parameter_id_t{1}, num);
         auto update =
             document_t::document_from_json(R"({"$set": {"count": )" + std::to_string(num + 10) + "}}", &resource);
         update_many_t data(database_name, collection_name, match, parameters, update, num % 2 == 0);

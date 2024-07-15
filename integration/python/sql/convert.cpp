@@ -35,6 +35,7 @@ value_t to_value(const py::handle& obj, components::document::impl::base_documen
     } else if (py::isinstance<py::str>(obj)) {
         return value_t{tape, obj.cast<std::string>()};
     }
+    return value_t{};
 }
 
 void build_primitive(components::document::tape_builder& builder, const py::handle& obj) noexcept {

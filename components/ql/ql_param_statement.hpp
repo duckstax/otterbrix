@@ -41,10 +41,7 @@ namespace components::ql {
     };
 
     template<class Value>
-    void add_parameter(storage_parameters& storage,
-                       core::parameter_id_t id,
-                       Value value,
-                       std::pmr::memory_resource* resource) {
+    void add_parameter(storage_parameters& storage, core::parameter_id_t id, Value value) {
         storage.parameters.emplace(id, expr_value_t(storage.tape(), value));
     }
 

@@ -59,7 +59,7 @@ namespace components::sql::insert::impl {
         while (is_first || (token = lexer.next_not_whitespace_token()).type == token_type::comma) {
             std::pmr::vector<document::value_t> values(resource);
             auto tape = std::make_unique<document::impl::base_document>(resource);
-            res = parse_field_values(lexer, values, tape.get(), resource);
+            res = parse_field_values(lexer, values, tape.get());
             if (res.is_error()) {
                 return res;
             }

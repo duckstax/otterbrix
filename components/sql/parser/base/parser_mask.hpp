@@ -52,12 +52,10 @@ namespace components::sql::impl {
 
     bool contains_mask_element(lexer_t& lexer, const mask_element_t& elem);
 
-    document::value_t
-    parse_value(const token_t& token, document::impl::base_document* tape, std::pmr::memory_resource* resource);
+    document::value_t parse_value(const token_t& token, document::impl::base_document* tape);
     parser_result parse_field_names(lexer_t& lexer, std::pmr::vector<std::string>& fields);
     parser_result parse_field_values(lexer_t& lexer,
                                      std::pmr::vector<document::value_t>& values,
-                                     document::impl::base_document* tape,
-                                     std::pmr::memory_resource* resource);
+                                     document::impl::base_document* tape);
 
 } // namespace components::sql::impl

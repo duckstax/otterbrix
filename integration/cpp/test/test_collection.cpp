@@ -18,13 +18,6 @@ using deleted_unique_ptr = std::unique_ptr<T, std::function<void(T*)>>;
 TEST_CASE("python::test_collection") {
     auto resource = std::pmr::synchronized_pool_resource();
 
-    auto allocate_byte = sizeof(long);
-    auto allocate_byte_alignof = alignof(long);
-    void* buffer = resource.allocate(allocate_byte, allocate_byte_alignof);
-    auto* data = new (buffer) long();
-    deleted_unique_ptr<long> foo(data, [&](long* f) { resource.deallocate(data, sizeof(long)); });
-    //std::unique_ptr<long> ptr{data};
-    /*
     auto config = test_create_config("/tmp/test_collection");
     test_clear_directory(config);
     test_spaces space(config);
@@ -253,5 +246,4 @@ TEST_CASE("python::test_collection") {
             REQUIRE(cur->is_error());
         }
     }
-    */
 }
