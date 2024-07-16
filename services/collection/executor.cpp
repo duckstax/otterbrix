@@ -22,19 +22,68 @@ namespace services::collection::executor {
         , parameters(parameters)
         , context_storage_(context_storage) {}
 
-    executor_t::executor_t(services::memory_storage_t* memory_storage, std::pmr::memory_resource* resource, log_t&& log)
-        : actor_zeta::basic_async_actor(memory_storage, "plan executor")
+    executor_t::executor_t(services::memory_storage_t* memory_storage,
+                           std::pmr::memory_resource* mem_resource,
+                           log_t&& log)
+        : actor_zeta::basic_actor<executor_t>(memory_storage, mem_resource)
         , memory_storage_(memory_storage->address())
-        , resource_(resource)
-        , plans_(resource_)
-        , log_(log) {
-        add_handler(handler_id(route::execute_plan), &executor_t::execute_plan);
-        add_handler(handler_id(route::create_documents), &executor_t::create_documents);
-        add_handler(handler_id(index::route::success_create), &executor_t::create_index_finish);
-        add_handler(handler_id(index::route::error), &executor_t::create_index_finish_index_exist);
-        add_handler(handler_id(index::route::success), &executor_t::index_modify_finish);
-        add_handler(handler_id(index::route::success_find), &executor_t::index_find_finish);
+        , plans_(resource())
+        , log_(log)
+        , execute_plan_(
+              actor_zeta::make_behavior(resource(), handler_id(route::execute_plan), this, &executor_t::execute_plan))
+        , create_documents_(actor_zeta::make_behavior(resource(),
+                                                      handler_id(route::create_documents),
+                                                      this,
+                                                      &executor_t::create_documents))
+        , create_index_finish_(actor_zeta::make_behavior(resource(),
+                                                         handler_id(index::route::success_create),
+                                                         this,
+                                                         &executor_t::create_index_finish))
+        , create_index_finish_index_exist_(actor_zeta::make_behavior(resource(),
+                                                                     handler_id(index::route::error),
+                                                                     this,
+                                                                     &executor_t::create_index_finish_index_exist))
+        , index_modify_finish_(actor_zeta::make_behavior(resource(),
+                                                         handler_id(index::route::success),
+                                                         this,
+                                                         &executor_t::index_modify_finish))
+        , index_find_finish_(actor_zeta::make_behavior(resource(),
+                                                       handler_id(index::route::success_find),
+                                                       this,
+                                                       &executor_t::index_find_finish)) {}
+
+    actor_zeta::behavior_t executor_t::behavior() {
+        return actor_zeta::make_behavior(resource(), [this](actor_zeta::message* msg) -> void {
+            switch (msg->command()) {
+                case handler_id(route::execute_plan): {
+                    execute_plan_(msg);
+                    break;
+                }
+                case handler_id(route::create_documents): {
+                    create_documents_(msg);
+                    break;
+                }
+                case handler_id(index::route::success_create): {
+                    create_index_finish_(msg);
+                    break;
+                }
+                case handler_id(index::route::error): {
+                    create_index_finish_index_exist_(msg);
+                    break;
+                }
+                case handler_id(index::route::success): {
+                    index_modify_finish_(msg);
+                    break;
+                }
+                case handler_id(index::route::success_find): {
+                    index_find_finish_(msg);
+                    break;
+                }
+            }
+        });
     }
+
+    auto executor_t::make_type() const noexcept -> const char* const { return "executor"; }
 
     void executor_t::execute_plan(const components::session::session_id_t& session,
                                   components::logical_plan::node_ptr logical_plan,
