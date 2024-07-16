@@ -2,7 +2,6 @@
 
 #include "compare_expression.hpp"
 #include "expression.hpp"
-#include <actor-zeta/detail/pmr/default_resource.hpp>
 #include <msgpack.hpp>
 
 namespace components::expressions {

@@ -1,8 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include <actor-zeta/detail/pmr/default_resource.hpp>
-#include <actor-zeta/detail/pmr/memory_resource.hpp>
-
 #include "components/index/index_engine.hpp"
 #include "components/index/single_field_index.hpp"
 #include "components/tests/generaty.hpp"

@@ -70,15 +70,15 @@ struct gen_column {
     core::buffer all_null_mask;
 };
 
-void verify_column_views(column_t& col) {
+void verify_column_views(column_t& col, std::pmr::memory_resource* resource) {
     column_view view = col;
     mutable_column_view mutable_view = col;
     REQUIRE(col.type() == view.type());
     REQUIRE(col.type() == mutable_view.type());
     REQUIRE(col.size() == view.size());
     REQUIRE(col.size() == mutable_view.size());
-    REQUIRE(col.null_count() == view.null_count());
-    REQUIRE(col.null_count() == mutable_view.null_count());
+    REQUIRE(col.null_count() == view.null_count(resource));
+    REQUIRE(col.null_count() == mutable_view.null_count(resource));
     REQUIRE(col.nullable() == view.nullable());
     REQUIRE(col.nullable() == mutable_view.nullable());
     REQUIRE(col.num_children() == view.num_children());
@@ -221,7 +221,7 @@ TEMPLATE_TEST_CASE("copy data no mask", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.null_count());
     REQUIRE(gen.num_elements() == col.size());
     REQUIRE(0 == col.num_children());
-    verify_column_views(col);
+    verify_column_views(col, &resource);
     column_view v = col;
     REQUIRE(v.head() != gen.data.data());
     REQUIRE(equal(v.head(), gen.data.data(), gen.data.size()));
@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("move data no mask", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.null_count());
     REQUIRE(gen.num_elements() == col.size());
     REQUIRE(0 == col.num_children());
-    verify_column_views(col);
+    verify_column_views(col, &resource);
     column_view v = col;
     REQUIRE(v.head() == original_data);
 }
@@ -255,7 +255,7 @@ TEMPLATE_TEST_CASE("copy data and mask", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.null_count());
     REQUIRE(gen.num_elements() == col.size());
     REQUIRE(0 == col.num_children());
-    verify_column_views(col);
+    verify_column_views(col, &resource);
     column_view v = col;
     REQUIRE(v.head() != gen.data.data());
     REQUIRE(v.null_mask() != gen.all_valid_mask.data());
@@ -274,7 +274,7 @@ TEMPLATE_TEST_CASE("move data and mask", "[column][template]", std::int32_t) {
     REQUIRE(0 == col.null_count());
     REQUIRE(gen.num_elements() == col.size());
     REQUIRE(0 == col.num_children());
-    verify_column_views(col);
+    verify_column_views(col, &resource);
     column_view v = col;
     REQUIRE(v.head() == original_data);
     REQUIRE(v.null_mask() == original_mask);
@@ -285,7 +285,7 @@ TEMPLATE_TEST_CASE("copy constructor no mask", "[column][template]", std::int32_
     gen_column<TestType> gen(&resource);
     column_t original{&resource, gen.type(), gen.num_elements(), std::move(gen.data), core::buffer{&resource}};
     column_t copy{&resource, original};
-    verify_column_views(copy);
+    verify_column_views(copy, &resource);
     REQUIRE(equal(original, copy));
     column_view original_view = original;
     column_view copy_view = copy;
@@ -297,7 +297,7 @@ TEMPLATE_TEST_CASE("copy constructor with mask", "[column][template]", std::int3
     gen_column<TestType> gen(&resource);
     column_t original{&resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask)};
     column_t copy{&resource, original};
-    verify_column_views(copy);
+    verify_column_views(copy, &resource);
     REQUIRE(equal(original, copy));
     column_view original_view = original;
     column_view copy_view = copy;
@@ -313,7 +313,7 @@ TEMPLATE_TEST_CASE("move constructor no mask", "[column][template]", std::int32_
     column_t moved_to{std::move(original)};
     REQUIRE(0 == original.size());
     REQUIRE(data_type{type_id::empty} == original.type());
-    verify_column_views(moved_to);
+    verify_column_views(moved_to, &resource);
     column_view moved_to_view = moved_to;
     REQUIRE(original_data == moved_to_view.head());
 }
@@ -325,7 +325,7 @@ TEMPLATE_TEST_CASE("move constructor with mask", "[column][template]", std::int3
     auto original_data = original.view().head();
     auto original_mask = original.view().null_mask();
     column_t moved_to{std::move(original)};
-    verify_column_views(moved_to);
+    verify_column_views(moved_to, &resource);
     REQUIRE(0 == original.size());
     REQUIRE(data_type{type_id::empty} == original.type());
     column_view moved_to_view = moved_to;
@@ -342,7 +342,7 @@ TEMPLATE_TEST_CASE("device uvector constructor no mask", "[column][template]", s
               original.begin());
     auto original_data = original.data();
     column_t moved_to{&resource, std::move(original), core::buffer{&resource}};
-    verify_column_views(moved_to);
+    verify_column_views(moved_to, &resource);
     column_view moved_to_view = moved_to;
     REQUIRE(original_data == moved_to_view.head());
 }
@@ -357,7 +357,7 @@ TEMPLATE_TEST_CASE("device uvector constructor with mask", "[column][template]",
     auto original_data = original.data();
     auto original_mask = gen.all_valid_mask.data();
     column_t moved_to{&resource, std::move(original), std::move(gen.all_valid_mask)};
-    verify_column_views(moved_to);
+    verify_column_views(moved_to, &resource);
     column_view moved_to_view = moved_to;
     REQUIRE(original_data == moved_to_view.head());
     REQUIRE(original_mask == moved_to_view.null_mask());
@@ -384,7 +384,7 @@ TEMPLATE_TEST_CASE("construct with children", "[column][template]", std::int32_t
                  core::buffer{&resource, gen.all_valid_mask},
                  unknown_null_count,
                  std::move(children)};
-    verify_column_views(col);
+    verify_column_views(col, &resource);
     REQUIRE(2 == col.num_children());
     REQUIRE(data_type{type_id::int8} == col.child(0).type());
     REQUIRE(42 == col.child(0).size());
@@ -451,7 +451,7 @@ TEMPLATE_TEST_CASE("column view constructor with mask", "[column][template]", st
     column_t original{&resource, gen.type(), gen.num_elements(), std::move(gen.data), std::move(gen.all_valid_mask)};
     column_view original_view = original;
     column_t copy{&resource, original_view};
-    verify_column_views(copy);
+    verify_column_views(copy, &resource);
     REQUIRE(equal(original, copy));
     column_view copy_view = copy;
     REQUIRE(original_view.head() != copy_view.head());

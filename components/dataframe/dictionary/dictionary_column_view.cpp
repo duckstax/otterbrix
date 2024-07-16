@@ -17,8 +17,9 @@ namespace components::dataframe::dictionary {
 
     column::column_view dictionary_column_view::indices() const noexcept { return child(0); }
 
-    column::column_view dictionary_column_view::get_indices_annotated() const noexcept {
-        return column_view(indices().type(), size(), indices().head(), null_mask(), null_count(), offset());
+    column::column_view
+    dictionary_column_view::get_indices_annotated(std::pmr::memory_resource* resource) const noexcept {
+        return column_view(indices().type(), size(), indices().head(), null_mask(), null_count(resource), offset());
     }
 
     column::column_view dictionary_column_view::keys() const noexcept { return child(1); }

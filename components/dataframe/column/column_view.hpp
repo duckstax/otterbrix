@@ -41,10 +41,13 @@ namespace components::dataframe::column {
             [[nodiscard]] bool is_empty() const noexcept { return size() == 0; }
             [[nodiscard]] data_type type() const noexcept { return _type; }
             [[nodiscard]] bool nullable() const noexcept { return nullptr != _null_mask; }
-            [[nodiscard]] size_type null_count() const;
-            [[nodiscard]] size_type null_count(size_type begin, size_type end) const;
-            [[nodiscard]] bool has_nulls() const { return null_count() > 0; }
-            [[nodiscard]] bool has_nulls(size_type begin, size_type end) const { return null_count(begin, end) > 0; }
+            [[nodiscard]] size_type null_count(std::pmr::memory_resource* resource) const;
+            [[nodiscard]] size_type
+            null_count(size_type begin, size_type end, std::pmr::memory_resource* resource) const;
+            [[nodiscard]] bool has_nulls(std::pmr::memory_resource* resource) const { return null_count(resource) > 0; }
+            [[nodiscard]] bool has_nulls(size_type begin, size_type end, std::pmr::memory_resource* resource) const {
+                return null_count(begin, end, resource) > 0;
+            }
 
             [[nodiscard]] bitmask_type const* null_mask() const noexcept { return _null_mask; }
             [[nodiscard]] size_type offset() const noexcept { return _offset; }
