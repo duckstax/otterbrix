@@ -56,7 +56,7 @@ namespace {
     }
 } // namespace
 
-extern "C" otterbrix_ptr otterbrix_create(config_t cfg, string_view_t database, string_view_t collection) {
+extern "C" otterbrix_ptr otterbrix_create(config_t cfg) {
     auto config = create_config();
     config.log.level = static_cast<log_t::level>(cfg.level);
     config.log.path = std::string(cfg.log_path.data, cfg.log_path.size);
@@ -69,11 +69,6 @@ extern "C" otterbrix_ptr otterbrix_create(config_t cfg, string_view_t database, 
     auto pod_space = std::make_unique<pod_space_t>();
     pod_space->space = std::make_unique<spaces_t>(config);
     pod_space->state = state_t::created;
-    auto session = otterbrix::session_id_t();
-    std::string database_str(database.data, database.size);
-    std::string collection_str(collection.data, collection.size);
-    pod_space->space->dispatcher()->create_database(session, database_str);
-    pod_space->space->dispatcher()->create_collection(session, database_str, collection_str);
     return reinterpret_cast<void*>(pod_space.release());
 }
 
@@ -90,6 +85,31 @@ extern "C" cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query_raw) {
     auto session = otterbrix::session_id_t();
     std::string query(query_raw.data, query_raw.size);
     auto cursor = pod_space->space->dispatcher()->execute_sql(session, query);
+    auto cursor_storage = std::make_unique<cursor_storage_t>();
+    cursor_storage->cursor = cursor;
+    cursor_storage->state = state_t::created;
+    return reinterpret_cast<void*>(cursor_storage.release());
+}
+
+extern "C" cursor_ptr create_database(otterbrix_ptr ptr, string_view_t database_name) {
+    auto pod_space = convert_otterbrix(ptr);
+    assert(database_name.data != nullptr);
+    auto session = otterbrix::session_id_t();
+    std::string database(database_name.data, database_name.size);
+    auto cursor = pod_space->space->dispatcher()->create_database(session, database);
+    auto cursor_storage = std::make_unique<cursor_storage_t>();
+    cursor_storage->cursor = cursor;
+    cursor_storage->state = state_t::created;
+    return reinterpret_cast<void*>(cursor_storage.release());
+}
+
+extern "C" cursor_ptr create_collection(otterbrix_ptr ptr, string_view_t database_name, string_view_t collection_name) {
+    auto pod_space = convert_otterbrix(ptr);
+    assert(database_name.data != nullptr);
+    auto session = otterbrix::session_id_t();
+    std::string database(database_name.data, database_name.size);
+    std::string collection(collection_name.data, collection_name.size);
+    auto cursor = pod_space->space->dispatcher()->create_collection(session, database, collection);
     auto cursor_storage = std::make_unique<cursor_storage_t>();
     cursor_storage->cursor = cursor;
     cursor_storage->state = state_t::created;
