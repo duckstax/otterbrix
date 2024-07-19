@@ -418,7 +418,7 @@ namespace services::dispatcher {
                     break;
                 }
                 default: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: non processed type");
+                    trace(log_, "dispatcher_t::execute_ql_finish: non processed type - {}", to_string(ql->type()));
                 }
             }
 

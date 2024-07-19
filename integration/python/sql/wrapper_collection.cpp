@@ -14,7 +14,7 @@ namespace otterbrix {
 
     using components::document::document_id_t;
 
-    void generate_document_id_if_not_exists(components::document::document_ptr& document) {
+    void generate_document_id_if_not_exists(document_ptr& document) {
         if (!document->is_exists(std::string_view("_id"))) {
             document->set("_id", document_id_t().to_string());
         }
@@ -110,7 +110,6 @@ namespace otterbrix {
             auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
             to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto update = to_document(fields, ptr_->resource());
-            generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_one(session_tmp, statement.get(), std::move(update), upsert);
             if (cur->is_error()) {
@@ -133,7 +132,6 @@ namespace otterbrix {
             auto statement = components::ql::make_aggregate(database_, name_, ptr_->resource());
             to_statement(pack_to_match(cond), statement.get(), ptr_->resource());
             auto update = to_document(fields, ptr_->resource());
-            generate_document_id_if_not_exists(update);
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->update_many(session_tmp, statement.get(), std::move(update), upsert);
             if (cur->is_error()) {

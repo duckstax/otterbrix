@@ -10,11 +10,20 @@ database = client[database_name]
 collection = database[collection_name]
 
 
+def gen_id(num):
+    res = str(num)
+    while (len(res) < 24):
+        res = '0' + res
+    return res
+
+
 @pytest.fixture()
 def gen_collection(request):
     collection = database[collection_name]
+    docs = []
     for num in range(100):
         obj = {}
+        obj['_id'] = gen_id(num)
         obj['count'] = num
         obj['countStr'] = str(num)
         obj['countFloat'] = float(num) + 0.1
@@ -29,7 +38,8 @@ def gen_collection(request):
         obj['nestedArray'] = [[num + i] for i in range(5)]
         obj['dictArray'] = [{'number': num + i} for i in range(5)]
         obj['mixedDict'] = copy.deepcopy(obj)
-        collection.insert_one(obj)
+        docs.append(obj)
+    collection.insert_many(docs)
 
     def finalize():
         collection.drop()
