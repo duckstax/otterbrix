@@ -54,6 +54,10 @@ jobs:
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com
 
+      - name: Test conan
+        run: |
+          ls -alh 
+
       - name: Download and Install conan dependencies
         run: |
           pwd
