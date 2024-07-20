@@ -29,7 +29,7 @@ jobs:
     container: k0tb9g9m0t/manylinux-bazel-2014
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: Set env
         run: |
