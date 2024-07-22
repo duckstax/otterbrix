@@ -8,13 +8,16 @@ namespace components::ql {
                                const collection_name_t& collection,
                                const aggregate::match_t& match,
                                const storage_parameters& parameters)
-        : ql_param_statement_t(statement_type::delete_one, database, collection)
+        : ql_param_statement_t(statement_type::delete_one, database, collection, parameters.resource())
         , match_(match) {
         set_parameters(parameters);
     }
 
     delete_one_t::delete_one_t(components::ql::aggregate_statement_raw_ptr condition)
-        : ql_param_statement_t(statement_type::delete_one, condition->database_, condition->collection_) {
+        : ql_param_statement_t(statement_type::delete_one,
+                               condition->database_,
+                               condition->collection_,
+                               condition->parameters().resource()) {
         if (condition->count_operators() > 0) {
             match_ = condition->get_operator<components::ql::aggregate::match_t>(0);
         } else {

@@ -10,15 +10,22 @@ namespace services::collection::operators::aggregate {
         , key_(std::move(key)) {}
 
     document_ptr operator_sum_t::aggregate_impl() {
+        auto resource = (left_ && left_->output() && !left_->output()->documents().empty())
+                            ? left_->output()->documents().at(0)->get_allocator()
+                            : context_->resource();
+        auto result = components::document::make_document(resource);
         if (left_ && left_->output()) {
             const auto& documents = left_->output()->documents();
-            document::wrapper_value_t sum_(nullptr);
+            auto tape = std::make_unique<components::document::impl::base_document>(resource);
+            components::document::value_t sum_{};
             std::for_each(documents.cbegin(), documents.cend(), [&](const document_ptr& doc) {
-                sum_ = sum(sum_, get_value_from_document(doc, key_));
+                sum_ = sum(sum_, get_value_from_document(doc, key_), tape.get(), resource);
             });
-            return components::document::make_document(key_result_, *sum_);
+            result->set(key_result_, sum_);
+        } else {
+            result->set(key_result_, 0);
         }
-        return components::document::make_document(key_result_, 0);
+        return result;
     }
 
     std::string operator_sum_t::key_impl() const { return key_result_; }

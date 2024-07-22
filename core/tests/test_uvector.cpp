@@ -8,9 +8,9 @@
 #include <memory_resource>
 
 TEMPLATE_TEST_CASE("memory resource", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
-    std::pmr::memory_resource* resource = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(resource, 128);
-    REQUIRE(vec.memory_resource() == std::pmr::get_default_resource());
+    auto resource = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&resource, 128);
+    REQUIRE(vec.memory_resource() == &resource);
 }
 
 TEMPLATE_TEST_CASE("zero size constructor",
@@ -20,8 +20,8 @@ TEMPLATE_TEST_CASE("zero size constructor",
                    std::uint64_t,
                    float,
                    double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, 0);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, 0);
     REQUIRE(vec.size() == 0);
     REQUIRE(vec.end() == vec.begin());
     REQUIRE(vec.is_empty());
@@ -35,8 +35,8 @@ TEMPLATE_TEST_CASE("non zero size constructor",
                    float,
                    double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
     REQUIRE(vec.size() == size);
     REQUIRE(vec.ssize() == size);
     REQUIRE(vec.data() != nullptr);
@@ -46,10 +46,10 @@ TEMPLATE_TEST_CASE("non zero size constructor",
 }
 
 TEMPLATE_TEST_CASE("copy constructor", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
+    auto mr = std::pmr::synchronized_pool_resource();
     auto const size{12345};
-    core::uvector<TestType> vec(mr, size);
-    core::uvector<TestType> uv_copy(mr, vec);
+    core::uvector<TestType> vec(&mr, size);
+    core::uvector<TestType> uv_copy(&mr, vec);
     REQUIRE(uv_copy.size() == vec.size());
     REQUIRE(uv_copy.data() != nullptr);
     REQUIRE(uv_copy.end() == uv_copy.begin() + uv_copy.size());
@@ -59,8 +59,8 @@ TEMPLATE_TEST_CASE("copy constructor", "[vector][template]", std::int8_t, std::i
 
 TEMPLATE_TEST_CASE("resize smaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
     auto* original_data = vec.data();
     auto* original_begin = vec.begin();
 
@@ -79,8 +79,8 @@ TEMPLATE_TEST_CASE("resize smaller", "[vector][template]", std::int8_t, std::int
 
 TEMPLATE_TEST_CASE("resize larger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
     auto* original_data = vec.data();
     auto* original_begin = vec.begin();
 
@@ -104,8 +104,8 @@ TEMPLATE_TEST_CASE("resize larger", "[vector][template]", std::int8_t, std::int3
 
 TEMPLATE_TEST_CASE("reserve smaller", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
     auto* const original_data = vec.data();
     auto* const original_begin = vec.begin();
     auto const original_capacity = vec.capacity();
@@ -121,8 +121,8 @@ TEMPLATE_TEST_CASE("reserve smaller", "[vector][template]", std::int8_t, std::in
 
 TEMPLATE_TEST_CASE("reserve larger", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
     vec.set_element(0, 1);
     auto* const original_data = vec.data();
     auto* const original_begin = vec.begin();
@@ -139,8 +139,8 @@ TEMPLATE_TEST_CASE("reserve larger", "[vector][template]", std::int8_t, std::int
 
 TEMPLATE_TEST_CASE("resize to zero", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
     vec.resize(0);
 
     REQUIRE(vec.size() == 0);
@@ -153,8 +153,8 @@ TEMPLATE_TEST_CASE("resize to zero", "[vector][template]", std::int8_t, std::int
 
 TEMPLATE_TEST_CASE("release", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const original_size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, original_size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, original_size);
 
     auto* original_data = vec.data();
 
@@ -169,8 +169,8 @@ TEMPLATE_TEST_CASE("release", "[vector][template]", std::int8_t, std::int32_t, s
 
 TEMPLATE_TEST_CASE("element pointer", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
         REQUIRE(vec.element_ptr(i) != nullptr);
     }
@@ -178,8 +178,8 @@ TEMPLATE_TEST_CASE("element pointer", "[vector][template]", std::int8_t, std::in
 
 TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
         auto init = static_cast<TestType>(i);
         vec.set_element(i, init);
@@ -189,8 +189,8 @@ TEMPLATE_TEST_CASE("get set element", "[vector][template]", std::int8_t, std::in
 
 TEMPLATE_TEST_CASE("set element zero", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
     for (std::size_t i = 0; i < vec.size(); ++i) {
         vec.set_element_to_zero(i);
         REQUIRE(TestType{0} == vec.element(i));
@@ -205,8 +205,8 @@ TEMPLATE_TEST_CASE("front back element",
                    float,
                    double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
 
     auto const first = TestType{42};
     auto const last = TestType{13};
@@ -219,8 +219,8 @@ TEMPLATE_TEST_CASE("front back element",
 
 TEMPLATE_TEST_CASE("iterators", "[vector][template]", std::int8_t, std::int32_t, std::uint64_t, float, double) {
     auto const size{12345};
-    std::pmr::memory_resource* mr = std::pmr::get_default_resource();
-    core::uvector<TestType> vec(mr, size);
+    auto mr = std::pmr::synchronized_pool_resource();
+    core::uvector<TestType> vec(&mr, size);
 
     REQUIRE(vec.begin() == vec.data());
     REQUIRE(vec.cbegin() == vec.data());

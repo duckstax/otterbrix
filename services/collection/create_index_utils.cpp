@@ -2,16 +2,17 @@
 
 #include <components/index/disk/route.hpp>
 #include <components/index/single_field_index.hpp>
+#include <components/types/types.hpp>
 
 namespace services::collection {
 
-    bool try_update_index_compare(const components::document::document_view_t& doc,
+    bool try_update_index_compare(const components::document::document_ptr& doc,
                                   components::ql::create_index_ptr& index_ql) {
         switch (index_ql->index_compare_) {
-            case core::type::undef: {
+            case components::types::logical_type::UNKNOWN: {
                 // TODO use types based on statistic
-                const auto deduced_type = doc.type_by_key(index_ql->keys_[0].as_string());
-                if (deduced_type == core::type::undef) {
+                const auto deduced_type = doc->type_by_key(index_ql->keys_[0].as_string());
+                if (deduced_type == components::types::logical_type::INVALID) {
                     return false;
                 }
                 index_ql->index_compare_ = deduced_type;
@@ -82,10 +83,9 @@ namespace services::collection {
 
         assert(!(context->storage().empty()) && "Require non empty document storage");
 
-        const auto doc_view = document_view_t(context->storage().begin()->second);
         for (auto& [index, pipeline_context] : context->pending_indexes()) {
             assert(index != nullptr && "pending index is null");
-            if (!try_update_index_compare(doc_view, index)) {
+            if (!try_update_index_compare(context->storage().begin()->second, index)) {
                 error(context->log(),
                       "Can't deduce compare type for index: {} with key {}",
                       index->name_,

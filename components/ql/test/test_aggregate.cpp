@@ -30,25 +30,25 @@ std::string debug(const T& value) {
 }
 
 TEST_CASE("aggregate::match") {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
-    auto match = make_match(make_compare_expression(resource, compare_type::eq, key("key"), parameter_id_t(1)));
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto match = make_match(make_compare_expression(&resource, compare_type::eq, key("key"), parameter_id_t(1)));
     REQUIRE(debug(match) == R"_($match: {"key": {$eq: #1}})_");
 }
 
 TEST_CASE("aggregate::group") {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     {
         group_t group;
-        auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
+        auto scalar_expr = make_scalar_expression(&resource, scalar_type::get_field, key("_id"));
         scalar_expr->append_param(key("date"));
         append_expr(group, std::move(scalar_expr));
-        auto agg_expr = make_aggregate_expression(resource, aggregate_type::sum, key("total"));
-        auto expr_multiply = make_scalar_expression(resource, scalar_type::multiply);
+        auto agg_expr = make_aggregate_expression(&resource, aggregate_type::sum, key("total"));
+        auto expr_multiply = make_scalar_expression(&resource, scalar_type::multiply);
         expr_multiply->append_param(key("price"));
         expr_multiply->append_param(key("quantity"));
         agg_expr->append_param(std::move(expr_multiply));
         append_expr(group, std::move(agg_expr));
-        agg_expr = make_aggregate_expression(resource, aggregate_type::avg, key("avg_quantity"));
+        agg_expr = make_aggregate_expression(&resource, aggregate_type::avg, key("avg_quantity"));
         agg_expr->append_param(key("quantity"));
         append_expr(group, std::move(agg_expr));
         REQUIRE(
@@ -57,10 +57,10 @@ TEST_CASE("aggregate::group") {
     }
     {
         group_t group;
-        auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
+        auto scalar_expr = make_scalar_expression(&resource, scalar_type::get_field, key("_id"));
         scalar_expr->append_param(key("date"));
         append_expr(group, std::move(scalar_expr));
-        scalar_expr = make_scalar_expression(resource, scalar_type::multiply, key("count_4"));
+        scalar_expr = make_scalar_expression(&resource, scalar_type::multiply, key("count_4"));
         scalar_expr->append_param(parameter_id_t(1));
         scalar_expr->append_param(key("count"));
         append_expr(group, std::move(scalar_expr));
@@ -77,21 +77,21 @@ TEST_CASE("aggregate::sort") {
 }
 
 TEST_CASE("aggregate") {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     SECTION("aggregate::only_match") {
-        aggregate_statement aggregate("database", "collection");
+        aggregate_statement aggregate("database", "collection", &resource);
         aggregate.append(
             operator_type::match,
-            make_match(make_compare_expression(resource, compare_type::eq, key("key"), parameter_id_t(1))));
+            make_match(make_compare_expression(&resource, compare_type::eq, key("key"), parameter_id_t(1))));
         REQUIRE(debug(aggregate) == R"_($aggregate: {$match: {"key": {$eq: #1}}})_");
     }
     SECTION("aggregate::only_group") {
-        aggregate_statement aggregate("database", "collection");
+        aggregate_statement aggregate("database", "collection", &resource);
         group_t group;
-        auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
+        auto scalar_expr = make_scalar_expression(&resource, scalar_type::get_field, key("_id"));
         scalar_expr->append_param(key("date"));
         append_expr(group, std::move(scalar_expr));
-        scalar_expr = make_scalar_expression(resource, scalar_type::multiply, key("count_4"));
+        scalar_expr = make_scalar_expression(&resource, scalar_type::multiply, key("count_4"));
         scalar_expr->append_param(parameter_id_t(1));
         scalar_expr->append_param(key("count"));
         append_expr(group, std::move(scalar_expr));
@@ -99,7 +99,7 @@ TEST_CASE("aggregate") {
         REQUIRE(debug(aggregate) == R"_($aggregate: {$group: {_id: "$date", count_4: {$multiply: [#1, "$count"]}}})_");
     }
     SECTION("aggregate::only_sort") {
-        aggregate_statement aggregate("database", "collection");
+        aggregate_statement aggregate("database", "collection", &resource);
         sort_t sort;
         append_sort(sort, key("name"), sort_order::asc);
         append_sort(sort, key("count"), sort_order::desc);
@@ -107,17 +107,17 @@ TEST_CASE("aggregate") {
         REQUIRE(debug(aggregate) == R"_($aggregate: {$sort: {name: 1, count: -1}})_");
     }
     SECTION("aggregate::all") {
-        aggregate_statement aggregate("database", "collection");
+        aggregate_statement aggregate("database", "collection", &resource);
 
         aggregate.append(
             operator_type::match,
-            make_match(make_compare_expression(resource, compare_type::eq, key("key"), parameter_id_t(1))));
+            make_match(make_compare_expression(&resource, compare_type::eq, key("key"), parameter_id_t(1))));
 
         group_t group;
-        auto scalar_expr = make_scalar_expression(resource, scalar_type::get_field, key("_id"));
+        auto scalar_expr = make_scalar_expression(&resource, scalar_type::get_field, key("_id"));
         scalar_expr->append_param(key("date"));
         append_expr(group, std::move(scalar_expr));
-        scalar_expr = make_scalar_expression(resource, scalar_type::multiply, key("count_4"));
+        scalar_expr = make_scalar_expression(&resource, scalar_type::multiply, key("count_4"));
         scalar_expr->append_param(parameter_id_t(1));
         scalar_expr->append_param(key("count"));
         append_expr(group, std::move(scalar_expr));

@@ -44,7 +44,7 @@ namespace components::dataframe::dictionary {
     std::unique_ptr<column::column_t> make_dictionary_column(std::pmr::memory_resource* resource,
                                                              column::column_view const& keys_column,
                                                              column::column_view const& indices_column) {
-        assertion_exception_msg(!keys_column.has_nulls(), "keys column must not have nulls");
+        assertion_exception_msg(!keys_column.has_nulls(resource), "keys column must not have nulls");
         if (keys_column.is_empty()) {
             return column::make_empty_column(resource, type_id::dictionary32);
         }
@@ -52,7 +52,7 @@ namespace components::dataframe::dictionary {
         auto keys_copy = std::make_unique<column::column_t>(resource, keys_column);
         auto indices_copy = type_dispatcher(indices_column.type(), dispatch_create_indices{}, resource, indices_column);
         core::buffer null_mask{resource, 0};
-        auto null_count = indices_column.null_count();
+        auto null_count = indices_column.null_count(resource);
         if (null_count) {
             null_mask = detail::copy_bitmask(resource, indices_column);
         }

@@ -18,7 +18,7 @@ namespace components::sql::select::impl {
             return false;
         }
 
-        ql::aggregate_statement agg{"", ""};
+        ql::aggregate_statement agg{"", "", resource};
         token = lexer.next_not_whitespace_token();
 
         // fields

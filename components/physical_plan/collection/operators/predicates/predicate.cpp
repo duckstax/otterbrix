@@ -1,6 +1,6 @@
 #include "predicate.hpp"
 #include "simple_predicate.hpp"
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 
 namespace services::collection::operators::predicates {
 

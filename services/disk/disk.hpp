@@ -34,10 +34,11 @@ namespace services::disk {
                            const collection_name_t& collection,
                            const document_id_t& id,
                            const document_ptr& document);
-        [[nodiscard]] document_ptr load_document(const rocks_id& id_rocks) const;
+        [[nodiscard]] document_ptr load_document(const rocks_id& id_rocks, std::pmr::memory_resource* resource) const;
         [[nodiscard]] document_ptr load_document(const database_name_t& database,
                                                  const collection_name_t& collection,
-                                                 const document_id_t& id) const;
+                                                 const document_id_t& id,
+                                                 std::pmr::memory_resource* resource) const;
         void
         remove_document(const database_name_t& database, const collection_name_t& collection, const document_id_t& id);
         [[nodiscard]] std::vector<rocks_id> load_list_documents(const database_name_t& database,

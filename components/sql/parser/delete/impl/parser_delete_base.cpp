@@ -40,7 +40,7 @@ namespace components::sql::delete_::impl {
             schema = table;
             table = std::string(token.value());
         }
-        statement = ql::delete_many_t{schema, table};
+        statement = ql::delete_many_t{schema, table, resource};
         assert(std::holds_alternative<ql::delete_many_t>(statement) &&
                "[components::sql::impl::parser_result parse_delete_base]: [ql::delete_many_t] variant statement holds "
                "the alternative");

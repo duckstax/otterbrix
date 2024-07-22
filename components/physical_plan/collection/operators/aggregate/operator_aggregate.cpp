@@ -11,8 +11,11 @@ namespace services::collection::operators::aggregate {
         output_->append(aggregate_impl());
     }
 
-    document::wrapper_value_t operator_aggregate_t::value() const {
-        return document::wrapper_value_t(document_view_t(output_->documents().at(0)).get_value(key_impl()));
+    void operator_aggregate_t::set_value(document_ptr& doc, std::string_view key) const {
+        doc->set(key, output_->documents().at(0), key_impl());
     }
 
+    components::document::value_t operator_aggregate_t::value() const {
+        return output_->documents().at(0)->get_value(key_impl());
+    }
 } // namespace services::collection::operators::aggregate

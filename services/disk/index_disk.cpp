@@ -5,7 +5,7 @@ namespace services::disk {
 
     class base_comparator : public rocksdb::Comparator {
     public:
-        virtual rocksdb::Slice slice(const document::wrapper_value_t& value) const = 0;
+        virtual rocksdb::Slice slice(const components::document::value_t& value) const = 0;
     };
 
     template<class T>
@@ -20,8 +20,8 @@ namespace services::disk {
             return rocksdb::Slice{reinterpret_cast<const char*>(&value), sizeof(T)};
         }
 
-        rocksdb::Slice slice(const document::wrapper_value_t& value) const final {
-            return rocksdb::Slice{value->as_string()};
+        rocksdb::Slice slice(const components::document::value_t& value) const final {
+            return rocksdb::Slice{value.as_string()};
         }
 
         const char* Name() const final { return "comparator"; }
@@ -32,8 +32,8 @@ namespace services::disk {
     };
 
     template<>
-    rocksdb::Slice comparator<std::string>::slice(const document::wrapper_value_t& value) const {
-        return rocksdb::Slice{value->as_string()};
+    rocksdb::Slice comparator<std::string>::slice(const components::document::value_t& value) const {
+        return rocksdb::Slice{value.as_string()};
     }
 
     template<>
@@ -71,9 +71,9 @@ namespace services::disk {
 
 #define ADD_TYPE_SLICE(TYPE, FUNC)                                                                                     \
     template<>                                                                                                         \
-    rocksdb::Slice comparator<TYPE>::slice(const document::wrapper_value_t& value) const {                             \
+    rocksdb::Slice comparator<TYPE>::slice(const components::document::value_t& value) const {                         \
         static TYPE v;                                                                                                 \
-        v = TYPE(value->FUNC());                                                                                       \
+        v = TYPE(value.FUNC());                                                                                        \
         return slice(v);                                                                                               \
     }
 
@@ -89,34 +89,35 @@ namespace services::disk {
     ADD_TYPE_SLICE(double, as_double)
     ADD_TYPE_SLICE(bool, as_bool)
 
-    std::unique_ptr<base_comparator> make_comparator(core::type compare_type) {
+    std::unique_ptr<base_comparator> make_comparator(components::types::logical_type compare_type) {
         switch (compare_type) {
-            case core::type::str:
+            case components::types::logical_type::STRING_LITERAL:
                 return std::make_unique<comparator<std::string>>();
-            case core::type::int8:
+            case components::types::logical_type::TINYINT:
                 return std::make_unique<comparator<int8_t>>();
-            case core::type::int16:
+            case components::types::logical_type::SMALLINT:
                 return std::make_unique<comparator<int16_t>>();
-            case core::type::int32:
+            case components::types::logical_type::INTEGER:
                 return std::make_unique<comparator<int32_t>>();
-            case core::type::int64:
+            case components::types::logical_type::BIGINT:
                 return std::make_unique<comparator<int64_t>>();
-            case core::type::uint8:
+            case components::types::logical_type::UTINYINT:
                 return std::make_unique<comparator<uint8_t>>();
-            case core::type::uint16:
+            case components::types::logical_type::USMALLINT:
                 return std::make_unique<comparator<uint16_t>>();
-            case core::type::uint32:
+            case components::types::logical_type::UINTEGER:
                 return std::make_unique<comparator<uint32_t>>();
-            case core::type::uint64:
+            case components::types::logical_type::UBIGINT:
                 return std::make_unique<comparator<uint64_t>>();
-            case core::type::float32:
+            case components::types::logical_type::FLOAT:
                 return std::make_unique<comparator<float>>();
-            case core::type::float64:
+            case components::types::logical_type::DOUBLE:
                 return std::make_unique<comparator<double>>();
-            case core::type::bool8:
+            case components::types::logical_type::BOOLEAN:
                 return std::make_unique<comparator<bool>>();
+            default:
+                return std::make_unique<comparator<std::string>>();
         }
-        return std::make_unique<comparator<std::string>>();
     }
 
     rocksdb::Slice to_slice(const index_disk_t::result& values) {
@@ -130,7 +131,7 @@ namespace services::disk {
         std::memcpy(docs.data() + size, slice.data(), slice.size());
     }
 
-    index_disk_t::index_disk_t(const path_t& path, core::type compare_type)
+    index_disk_t::index_disk_t(const path_t& path, components::types::logical_type compare_type)
         : path_(path)
         , db_(nullptr)
         , comparator_(make_comparator(compare_type)) {
@@ -152,7 +153,7 @@ namespace services::disk {
 
     index_disk_t::~index_disk_t() = default;
 
-    void index_disk_t::insert(const wrapper_value_t& key, const document_id_t& value) {
+    void index_disk_t::insert(const value_t& key, const document_id_t& value) {
         auto values = find(key);
         if (std::find(values.begin(), values.end(), value) == values.end()) {
             values.push_back(value);
@@ -160,9 +161,9 @@ namespace services::disk {
         }
     }
 
-    void index_disk_t::remove(wrapper_value_t key) { db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key)); }
+    void index_disk_t::remove(value_t key) { db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key)); }
 
-    void index_disk_t::remove(const wrapper_value_t& key, const document_id_t& doc) {
+    void index_disk_t::remove(const value_t& key, const document_id_t& doc) {
         auto values = find(key);
         if (!values.empty()) {
             values.erase(std::remove(values.begin(), values.end(), doc), values.end());
@@ -174,7 +175,7 @@ namespace services::disk {
         }
     }
 
-    void index_disk_t::find(const wrapper_value_t& value, result& res) const {
+    void index_disk_t::find(const value_t& value, result& res) const {
         rocksdb::PinnableSlice slice;
         auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
         if (!status.IsNotFound()) {
@@ -182,13 +183,13 @@ namespace services::disk {
         }
     }
 
-    index_disk_t::result index_disk_t::find(const wrapper_value_t& value) const {
+    index_disk_t::result index_disk_t::find(const value_t& value) const {
         index_disk_t::result res;
         find(value, res);
         return res;
     }
 
-    void index_disk_t::lower_bound(const wrapper_value_t& value, result& res) const {
+    void index_disk_t::lower_bound(const value_t& value, result& res) const {
         rocksdb::ReadOptions options;
         auto upper_bound = comparator_->slice(value);
         options.iterate_upper_bound = &upper_bound;
@@ -199,13 +200,13 @@ namespace services::disk {
         delete it;
     }
 
-    index_disk_t::result index_disk_t::lower_bound(const wrapper_value_t& value) const {
+    index_disk_t::result index_disk_t::lower_bound(const value_t& value) const {
         index_disk_t::result res;
         lower_bound(value, res);
         return res;
     }
 
-    void index_disk_t::upper_bound(const wrapper_value_t& value, result& res) const {
+    void index_disk_t::upper_bound(const value_t& value, result& res) const {
         rocksdb::ReadOptions options;
         auto lower_bound = comparator_->slice(value);
         options.iterate_lower_bound = &lower_bound;
@@ -220,7 +221,7 @@ namespace services::disk {
         delete it;
     }
 
-    index_disk_t::result index_disk_t::upper_bound(const wrapper_value_t& value) const {
+    index_disk_t::result index_disk_t::upper_bound(const value_t& value) const {
         index_disk_t::result res;
         upper_bound(value, res);
         return res;

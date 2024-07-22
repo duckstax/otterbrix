@@ -11,17 +11,20 @@ using namespace services::collection;
 
 struct context_t {
     actor_zeta::scheduler_ptr scheduler_;
-    actor_zeta::detail::pmr::memory_resource* resource;
+    std::pmr::memory_resource* resource;
     std::unique_ptr<memory_storage_t> memory_storage_;
-    std::unique_ptr<context_collection_t> collection_;
+    std::unique_ptr<context_collection_t, std::function<void(context_collection_t*)>> collection_;
+
+    context_t(std::pmr::memory_resource* r)
+        : resource(r)
+        , collection_(nullptr, [&](context_collection_t* c) { mr_delete(resource, c); }) {}
 };
 
 using context_ptr = std::unique_ptr<context_t>;
 
-inline context_ptr make_context(log_t& log) {
-    auto context = std::make_unique<context_t>();
+inline context_ptr make_context(log_t& log, std::pmr::memory_resource* resource) {
+    auto context = std::make_unique<context_t>(resource);
     context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    context->resource = actor_zeta::detail::pmr::get_default_resource();
     context->memory_storage_ =
         actor_zeta::spawn_supervisor<memory_storage_t>(context->resource, context->scheduler_.get(), log);
 
@@ -39,24 +42,24 @@ inline context_ptr make_context(log_t& log) {
 
 inline context_collection_t* d(context_ptr& ptr) { return ptr->collection_.get(); }
 
-inline context_ptr create_collection() {
+inline context_ptr create_collection(std::pmr::memory_resource* resource) {
     static auto log = initialization_logger("python", "/tmp/docker_logs/");
     log.set_level(log_t::level::trace);
-    return make_context(log);
+    return make_context(log, resource);
 }
 
 inline void fill_collection(context_ptr& collection) {
     std::pmr::vector<document_ptr> documents(collection->resource);
     documents.reserve(100);
     for (int i = 1; i <= 100; ++i) {
-        documents.emplace_back(gen_doc(i));
+        documents.emplace_back(gen_doc(i, collection->resource));
     }
     services::collection::operators::operator_insert insert(collection->collection_.get(), std::move(documents));
     insert.on_execute(nullptr);
 }
 
-inline context_ptr init_collection() {
-    auto collection = create_collection();
+inline context_ptr init_collection(std::pmr::memory_resource* resource) {
+    auto collection = create_collection(resource);
     fill_collection(collection);
     return collection;
 }

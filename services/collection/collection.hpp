@@ -8,7 +8,6 @@
 
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
-#include <components/document/document_view.hpp>
 #include <components/index/index_engine.hpp>
 #include <components/log/log.hpp>
 #include <components/logical_plan/node.hpp>
@@ -33,7 +32,6 @@ namespace services::collection {
     using document_ptr = components::document::document_ptr;
     using storage_t = core::pmr::btree::btree_t<document_id_t, document_ptr>;
     using cursor_storage_t = std::pmr::unordered_map<session_id_t, std::unique_ptr<components::cursor::sub_cursor_t>>;
-    using document_view_t = components::document::document_view_t;
 
     namespace executor {
         class executor_t;

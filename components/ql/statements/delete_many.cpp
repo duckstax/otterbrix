@@ -8,16 +8,21 @@ namespace components::ql {
                                  const collection_name_t& collection,
                                  const aggregate::match_t& match,
                                  const storage_parameters& parameters)
-        : ql_param_statement_t(statement_type::delete_many, database, collection)
+        : ql_param_statement_t(statement_type::delete_many, database, collection, parameters.resource())
         , match_(match) {
         set_parameters(parameters);
     }
 
-    delete_many_t::delete_many_t(const database_name_t& database, const collection_name_t& collection)
-        : ql_param_statement_t(statement_type::delete_many, database, collection) {}
+    delete_many_t::delete_many_t(const database_name_t& database,
+                                 const collection_name_t& collection,
+                                 std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::delete_many, database, collection, resource) {}
 
     delete_many_t::delete_many_t(components::ql::aggregate_statement_raw_ptr condition)
-        : ql_param_statement_t(statement_type::delete_many, condition->database_, condition->collection_) {
+        : ql_param_statement_t(statement_type::delete_many,
+                               condition->database_,
+                               condition->collection_,
+                               condition->parameters().resource()) {
         if (condition->count_operators() > 0) {
             match_ = condition->get_operator<components::ql::aggregate::match_t>(0);
         } else {
