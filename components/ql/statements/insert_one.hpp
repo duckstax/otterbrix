@@ -9,10 +9,11 @@
 
 namespace components::ql {
     struct insert_one_t : ql_statement_t {
-        insert_one_t(const database_name_t& database,
-                     const collection_name_t& collection,
-                     components::document::document_ptr document);
-        insert_one_t() = default;
+        explicit insert_one_t(const database_name_t& database,
+                              const collection_name_t& collection,
+                              components::document::document_ptr document);
+        explicit insert_one_t(std::pmr::memory_resource* resource)
+            : document_(document::make_document(resource)) {}
         insert_one_t(const insert_one_t&) = default;
         insert_one_t& operator=(const insert_one_t&) = default;
         insert_one_t(insert_one_t&&) = default;
@@ -20,31 +21,25 @@ namespace components::ql {
         ~insert_one_t();
         components::document::document_ptr document_;
     };
+
+    inline insert_one_t to_insert_one(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 3) {
+            throw msgpack::type_error();
+        }
+        auto database = msg_object.via.array.ptr[0].as<std::string>();
+        auto collection = msg_object.via.array.ptr[1].as<std::string>();
+        auto document = document::to_document(msg_object.via.array.ptr[2], resource);
+        return insert_one_t(database, collection, document);
+    }
 } // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<components::ql::insert_one_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::insert_one_t& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-
-                    if (o.via.array.size != 3) {
-                        throw msgpack::type_error();
-                    }
-
-                    auto database = o.via.array.ptr[0].as<std::string>();
-                    auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto document = o.via.array.ptr[2].as<components::document::document_ptr>();
-                    v = components::ql::insert_one_t(database, collection, document);
-                    return o;
-                }
-            };
 
             template<>
             struct pack<components::ql::insert_one_t> final {

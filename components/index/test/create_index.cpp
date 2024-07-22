@@ -1,15 +1,12 @@
 #include <catch2/catch.hpp>
 
-#include <actor-zeta/detail/pmr/default_resource.hpp>
-#include <actor-zeta/detail/pmr/memory_resource.hpp>
-
 #include "components/index/index_engine.hpp"
 
 using namespace components::index;
 
 class dummy final : public index_t {
 public:
-    explicit dummy(actor_zeta::detail::pmr::memory_resource* resource, const keys_base_storage_t& keys)
+    explicit dummy(std::pmr::memory_resource* resource, const keys_base_storage_t& keys)
         : index_t(resource, components::ql::index_type::single, keys) {}
 
 private:
@@ -29,7 +26,7 @@ private:
 };
 
 TEST_CASE("base index created") {
-    actor_zeta::detail::pmr::memory_resource* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     auto index_engine = make_index_engine(resource);
     auto one_id = make_index<dummy>(index_engine, {"1"});
     auto two_id = make_index<dummy>(index_engine, {"1", "2"});

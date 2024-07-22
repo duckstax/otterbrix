@@ -14,7 +14,7 @@ namespace services::wal {
         components::ql::variant_statement_t data;
 
         bool is_valid() const;
-        void set_data(msgpack::object& object);
+        void set_data(msgpack::object& object, std::pmr::memory_resource* resource);
     };
 
 } // namespace services::wal

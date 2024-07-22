@@ -13,9 +13,12 @@ namespace components::ql {
         ql_statement_ptr right{nullptr};
         std::vector<expressions::expression_ptr> expressions;
 
-        join_t();
-        join_t(database_name_t database, collection_name_t collection);
-        join_t(database_name_t database, collection_name_t collection, join_type join);
+        explicit join_t(std::pmr::memory_resource* resource);
+        explicit join_t(database_name_t database, collection_name_t collection, std::pmr::memory_resource* resource);
+        explicit join_t(database_name_t database,
+                        collection_name_t collection,
+                        join_type join,
+                        std::pmr::memory_resource* resource);
         std::string to_string() const;
     };
 
@@ -44,6 +47,6 @@ namespace components::ql {
 
     using join_ptr = boost::intrusive_ptr<join_t>;
 
-    join_ptr make_join(join_type join);
+    join_ptr make_join(join_type join, std::pmr::memory_resource* resource);
 
 } // namespace components::ql

@@ -6,7 +6,7 @@
 
 namespace services::wal {
 
-    base_manager_wal_replicate_t::base_manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr,
+    base_manager_wal_replicate_t::base_manager_wal_replicate_t(std::pmr::memory_resource* mr,
                                                                actor_zeta::scheduler_raw scheduler)
         : actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t>(mr, "manager_wal")
         , e_(scheduler) {}
@@ -19,7 +19,7 @@ namespace services::wal {
         execute(this, current_message());
     }
 
-    manager_wal_replicate_t::manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_wal_replicate_t::manager_wal_replicate_t(std::pmr::memory_resource* mr,
                                                      actor_zeta::scheduler_raw scheduler,
                                                      configuration::config_wal config,
                                                      log_t& log)
@@ -50,13 +50,17 @@ namespace services::wal {
         if (config_.sync_to_disk) {
             trace(log_, "manager_wal_replicate_t::create_wal_worker");
             auto address = spawn_actor<wal_replicate_t>(
-                [this](wal_replicate_t* ptr) { dispatchers_.emplace_back(wal_replicate_ptr(ptr)); },
+                [this](wal_replicate_t* ptr) {
+                    dispatchers_.emplace_back(ptr, [&](wal_replicate_t* agent) { mr_delete(resource(), agent); });
+                },
                 log_,
                 config_);
         } else {
             trace(log_, "manager_wal_replicate_t::create_wal_worker without disk");
             auto address = spawn_actor<wal_replicate_without_disk_t>(
-                [this](wal_replicate_t* ptr) { dispatchers_.emplace_back(wal_replicate_ptr(ptr)); },
+                [this](wal_replicate_t* ptr) {
+                    dispatchers_.emplace_back(ptr, [&](wal_replicate_t* agent) { mr_delete(resource(), agent); });
+                },
                 log_,
                 config_);
         }
@@ -182,7 +186,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_wal_replicate_empty_t::manager_wal_replicate_empty_t(std::pmr::memory_resource* mr,
                                                                  actor_zeta::scheduler_raw scheduler,
                                                                  log_t& log)
         : base_manager_wal_replicate_t(mr, scheduler) {

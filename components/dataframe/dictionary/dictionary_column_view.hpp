@@ -27,7 +27,7 @@ namespace components::dataframe::dictionary {
 
         [[nodiscard]] column_view parent() const noexcept;
         [[nodiscard]] column_view indices() const noexcept;
-        [[nodiscard]] column_view get_indices_annotated() const noexcept;
+        [[nodiscard]] column_view get_indices_annotated(std::pmr::memory_resource* resource) const noexcept;
         [[nodiscard]] column_view keys() const noexcept;
         [[nodiscard]] data_type keys_type() const noexcept;
         [[nodiscard]] size_type keys_size() const noexcept;

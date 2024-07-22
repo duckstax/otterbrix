@@ -2,14 +2,17 @@
 
 namespace components::ql {
 
-    join_t::join_t()
-        : ql_param_statement_t(statement_type::join, {}, {}) {}
+    join_t::join_t(std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::join, {}, {}, resource) {}
 
-    join_t::join_t(database_name_t database, collection_name_t collection)
-        : ql_param_statement_t(statement_type::join, database, collection) {}
+    join_t::join_t(database_name_t database, collection_name_t collection, std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::join, database, collection, resource) {}
 
-    join_t::join_t(database_name_t database, collection_name_t collection, join_type join)
-        : ql_param_statement_t(statement_type::join, database, collection)
+    join_t::join_t(database_name_t database,
+                   collection_name_t collection,
+                   join_type join,
+                   std::pmr::memory_resource* resource)
+        : ql_param_statement_t(statement_type::join, database, collection, resource)
         , join(join) {}
 
     std::string join_t::to_string() const {
@@ -19,6 +22,8 @@ namespace components::ql {
         return s.str();
     }
 
-    join_ptr make_join(join_type join) { return new join_t(database_name_t(), collection_name_t(), join); }
+    join_ptr make_join(join_type join, std::pmr::memory_resource* resource) {
+        return new join_t(database_name_t(), collection_name_t(), join, resource);
+    }
 
 } // namespace components::ql

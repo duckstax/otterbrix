@@ -16,7 +16,7 @@ using namespace components::cursor;
 
 namespace otterbrix {
 
-    wrapper_dispatcher_t::wrapper_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,
+    wrapper_dispatcher_t::wrapper_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::address_t manager_dispatcher,
                                                log_t& log)
         : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr, "wrapper_dispatcher")
@@ -248,13 +248,11 @@ namespace otterbrix {
         auto parse_result = components::sql::parse(resource(), query);
         if (parse_result.error) {
             error(log_, parse_result.error.what());
-            return make_cursor(std::pmr::get_default_resource(),
-                               error_code_t::sql_parse_error,
-                               parse_result.error.what().data());
+            return make_cursor(resource(), error_code_t::sql_parse_error, parse_result.error.what().data());
         } else {
             return execute_ql(session, parse_result.ql);
         }
-        return make_cursor(std::pmr::get_default_resource(), error_code_t::sql_parse_error, "not valid sql");
+        return make_cursor(resource(), error_code_t::sql_parse_error, "not valid sql");
     }
 
     auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {

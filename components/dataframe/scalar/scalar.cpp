@@ -176,7 +176,7 @@ namespace components::dataframe::scalar {
         template class fixed_width_scalar<int16_t>;
         template class fixed_width_scalar<int32_t>;
         template class fixed_width_scalar<int64_t>;
-        ///template class fixed_width_scalar<__int128_t>;
+        ///template class fixed_width_scalar<absl::int128>;
         template class fixed_width_scalar<uint8_t>;
         template class fixed_width_scalar<uint16_t>;
         template class fixed_width_scalar<uint32_t>;
@@ -213,7 +213,7 @@ namespace components::dataframe::scalar {
     template class numeric_scalar<int16_t>;
     template class numeric_scalar<int32_t>;
     template class numeric_scalar<int64_t>;
-    ///template class numeric_scalar<__int128_t>;
+    ///template class numeric_scalar<absl::int128>;
     template class numeric_scalar<uint8_t>;
     template class numeric_scalar<uint16_t>;
     template class numeric_scalar<uint32_t>;

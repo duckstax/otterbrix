@@ -48,7 +48,7 @@ namespace components::cursor {
             sorted_.reserve(size_);
             for (auto& sub : sub_cursor_) {
                 for (auto& document : sub->data()) {
-                    sorted_.emplace_back(&document);
+                    sorted_.emplace_back(document);
                 }
             }
         }
@@ -66,7 +66,7 @@ namespace components::cursor {
             auto i = index;
             for (const auto& sub : sub_cursor_) {
                 if (i < sub->size()) {
-                    return &sub->data()[i];
+                    return sub->data()[i];
                 }
                 i -= sub->size();
             }
@@ -96,13 +96,13 @@ namespace components::cursor {
 
     size_t sub_cursor_t::size() const { return data_.size(); }
 
-    std::pmr::vector<data_t>& sub_cursor_t::data() { return data_; }
+    std::pmr::vector<data_ptr>& sub_cursor_t::data() { return data_; }
 
     sub_cursor_t::sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name)
         : collection_name_(collection_name)
         , data_(resource) {}
 
-    void sub_cursor_t::append(data_t data) { data_.push_back(std::move(data)); }
+    void sub_cursor_t::append(data_ptr data) { data_.push_back(std::move(data)); }
 
     cursor_t_ptr make_cursor(std::pmr::memory_resource* resource, operation_status_t op_status) {
         return cursor_t_ptr{new cursor_t(resource, op_status)};

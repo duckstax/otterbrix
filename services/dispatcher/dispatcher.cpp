@@ -418,7 +418,7 @@ namespace services::dispatcher {
                     break;
                 }
                 default: {
-                    trace(log_, "dispatcher_t::execute_ql_finish: non processed type");
+                    trace(log_, "dispatcher_t::execute_ql_finish: non processed type - {}", to_string(ql->type()));
                 }
             }
 
@@ -529,11 +529,11 @@ namespace services::dispatcher {
         auto logic_plan = planner.create_plan(resource_, statement);
         auto parameters = statement->is_parameters()
                               ? static_cast<components::ql::ql_param_statement_t*>(statement)->take_parameters()
-                              : components::ql::storage_parameters{};
+                              : components::ql::storage_parameters{resource_};
         return {logic_plan, parameters};
     }
 
-    manager_dispatcher_t::manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource* mr,
+    manager_dispatcher_t::manager_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::scheduler_raw scheduler,
                                                log_t& log)
         : actor_zeta::cooperative_supervisor<manager_dispatcher_t>(mr, "manager_dispatcher")
@@ -568,7 +568,9 @@ namespace services::dispatcher {
     void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
         trace(log_, "manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
         auto target = spawn_actor<dispatcher_t>(
-            [this, name](dispatcher_t* ptr) { dispatchers_.emplace_back(dispatcher_ptr(ptr)); },
+            [this, name](dispatcher_t* ptr) {
+                dispatchers_.emplace_back(ptr, [&](dispatcher_t* agent) { mr_delete(resource(), agent); });
+            },
             resource(),
             memory_storage_,
             manager_wal_,

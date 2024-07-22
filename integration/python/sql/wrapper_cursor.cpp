@@ -86,7 +86,7 @@ py::tuple wrapper_cursor::get_error() const {
     return py::make_tuple(type, ptr_->get_error().what);
 }
 
-std::string wrapper_cursor::print() { return ptr_->get()->to_json(); }
+std::string wrapper_cursor::print() { return std::string(ptr_->get()->to_json()); }
 
 wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
     if (py::isinstance<py::dict>(sorter)) {
@@ -97,6 +97,6 @@ wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
     return *this;
 }
 
-py::object wrapper_cursor::get_(const std::string& key) const { return from_object(*ptr_->get(), key); }
+py::object wrapper_cursor::get_(const std::string& key) const { return from_object(ptr_->get(), key); }
 
-py::object wrapper_cursor::get_(std::size_t index) const { return from_document(*ptr_->get(index)); }
+py::object wrapper_cursor::get_(std::size_t index) const { return from_document(ptr_->get(index)); }

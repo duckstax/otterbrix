@@ -1,20 +1,17 @@
 #include "generaty.hpp"
+#include <cassert>
 
-document::retained_t<document::impl::array_t> gen_array(int num) {
-    auto array = document::impl::array_t::new_array();
+void gen_array(int num, const document_ptr& array) {
     for (int i = 0; i < 5; ++i) {
-        array->append(num + i);
+        array->set("/" + std::to_string(i), num + i);
     }
-    return array;
 }
 
-document::retained_t<document::impl::dict_t> gen_dict(int num) {
-    auto dict = document::impl::dict_t::new_dict();
-    dict->set("odd", num % 2 != 0);
-    dict->set("even", num % 2 == 0);
-    dict->set("three", num % 3 == 0);
-    dict->set("five", num % 5 == 0);
-    return dict;
+void gen_dict(int num, const document_ptr& dict) {
+    dict->set("/odd", num % 2 != 0);
+    dict->set("/even", num % 2 == 0);
+    dict->set("/three", num % 3 == 0);
+    dict->set("/five", num % 5 == 0);
 }
 
 std::string gen_id(int num) {
@@ -25,32 +22,47 @@ std::string gen_id(int num) {
     return res;
 }
 
-document_ptr gen_doc(int num) {
-    auto doc = document::impl::dict_t::new_dict();
-    doc->set("_id", gen_id(num));
-    doc->set("count", num);
-    doc->set("countStr", std::to_string(num));
-    doc->set("countDouble", float(num) + 0.1);
-    doc->set("countBool", num % 2 != 0);
-    doc->set("countArray", gen_array(num));
-    doc->set("countDict", gen_dict(num));
-    auto array = document::impl::array_t::new_array();
-    for (int i = 0; i < 5; ++i) {
-        array->append(gen_array(num + i));
+std::pmr::string gen_id(int num, std::pmr::memory_resource* resource) {
+    std::pmr::string res{std::to_string(num), resource};
+    while (res.size() < 24) {
+        res = "0" + res;
     }
-    doc->set("nestedArray", array);
-    array = document::impl::array_t::new_array();
+    return res;
+}
+
+document_ptr gen_doc(int num, std::pmr::memory_resource* resource) {
+    document_ptr doc = make_document(resource);
+    doc->set("/_id", gen_id(num, resource));
+    doc->set("/count", num);
+    doc->set("/countStr", std::to_string(num));
+    doc->set("/countDouble", float(num) + 0.1);
+    doc->set("/countBool", num % 2 != 0);
+    doc->set_array("/countArray");
+    gen_array(num, doc->get_array("/countArray"));
+    doc->set_dict("/countDict");
+    gen_dict(num, doc->get_dict("/countDict"));
+    doc->set_array("/nestedArray");
+    auto array = doc->get_array("/nestedArray");
     for (int i = 0; i < 5; ++i) {
-        auto dict = document::impl::dict_t::new_dict();
-        dict->set("number", num + i);
-        array->append(dict);
+        auto json_pointer = "/" + std::to_string(i);
+        array->set_array(json_pointer);
+        gen_array(num + i, array->get_array(json_pointer));
     }
-    doc->set("dictArray", array);
-    auto dict = document::impl::dict_t::new_dict();
+    doc->set_array("/dictArray");
+    array = doc->get_array("/dictArray");
     for (int i = 0; i < 5; ++i) {
-        auto number = std::to_string(num + i);
-        dict->set(number, gen_dict(num + i));
+        auto json_pointer = "/" + std::to_string(i);
+        array->set_dict(json_pointer);
+        auto dict = array->get_dict(json_pointer);
+        dict->set("/number", num + i);
     }
-    doc->set("mixedDict", dict);
-    return make_document(doc);
+    doc->set_dict("/mixedDict");
+    auto dict = doc->get_dict("/mixedDict");
+    for (int i = 0; i < 5; ++i) {
+        auto json_pointer = "/" + std::to_string(num + i);
+        dict->set_dict(json_pointer);
+        gen_dict(num + i, dict->get_dict(json_pointer));
+    }
+    doc->set_null("/null");
+    return doc;
 }

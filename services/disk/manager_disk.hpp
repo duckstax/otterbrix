@@ -17,7 +17,7 @@ namespace services::disk {
 
     class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
     protected:
-        base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
+        base_manager_disk_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
 
     private:
         actor_zeta::scheduler_raw e_;
@@ -41,7 +41,7 @@ namespace services::disk {
             manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
         }
 
-        manager_disk_t(actor_zeta::detail::pmr::memory_resource*,
+        manager_disk_t(std::pmr::memory_resource*,
                        actor_zeta::scheduler_raw,
                        configuration::config_disk config,
                        log_t& log);
@@ -109,7 +109,7 @@ namespace services::disk {
 
     class manager_disk_empty_t final : public base_manager_disk_t {
     public:
-        manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
+        manager_disk_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
         void create_index_agent(session_id_t& session,

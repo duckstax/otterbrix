@@ -13,6 +13,8 @@ namespace components::index {
         assert(resource != nullptr);
     }
 
+    document::impl::base_document* index_t::tape() { return tape_.get(); }
+
     index_t::range index_t::find(const value_t& value) const { return find_impl(value); }
 
     index_t::range index_t::lower_bound(const value_t& value) const { return lower_bound_impl(value); }

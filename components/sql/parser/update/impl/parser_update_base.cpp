@@ -48,13 +48,13 @@ namespace components::sql::update::impl {
             return components::sql::impl::parser_result{parse_error::syntax_error, token, "not valid update query"};
         }
 
-        statement = ql::update_many_t{schema, table};
+        statement = ql::update_many_t{schema, table, resource};
         assert(std::holds_alternative<ql::update_many_t>(statement) &&
                "[components::sql::impl::parser_result parse_update_base]: [ql::update_many_t] variant statement holds "
                "the alternative");
         auto& upd = std::get<ql::update_many_t>(statement);
 
-        auto res = parse_set(resource, lexer, upd.update_);
+        auto res = parse_set(lexer, upd.update_);
         if (res.is_error()) {
             statement = ql::unused_statement_t{};
             return res;

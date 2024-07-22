@@ -1,303 +1,970 @@
 #include "document.hpp"
-
-#include <boost/json.hpp>
 #include <boost/json/src.hpp>
-#include <components/document/core/array.hpp>
-#include <components/document/core/dict.hpp>
-#include <components/document/document_view.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+#include <charconv>
+#include <components/document/base.hpp>
+#include <components/document/string_splitter.hpp>
+#include <utility>
 
 namespace components::document {
 
-    using ::document::impl::array_t;
-    using ::document::impl::dict_t;
-    using ::document::impl::value_type;
-
-    document_const_value_t inc_(document_view_t::const_value_ptr src, document_view_t::const_value_ptr value) {
-        if (value->type() == ::document::impl::value_type::number) {
-            if (src->is_unsigned()) {
-                return ::document::impl::new_value(src->as_unsigned() + value->as_unsigned());
-            } else if (src->is_int()) {
-                return ::document::impl::new_value(src->as_int() + value->as_int());
-            } else if (src->is_double()) {
-                return ::document::impl::new_value(src->as_double() + value->as_double());
-            }
-        }
-        //todo error not valid type
-        return nullptr;
-    }
-
-    document_const_value_t get_value_by_key_(const document_const_value_t& object, const std::string& key) {
-        if (object->type() == value_type::dict) {
-            return object->as_dict()->get(key);
-        } else if (object->type() == value_type::array) {
-            try {
-                return object->as_array()->get(uint32_t(std::atol(key.c_str())));
-            } catch (...) {
-            }
-        }
-        return nullptr;
-    }
-
-    document_const_value_t get_value_by_key_(const document_const_value_t& object, std::string_view key) {
-        if (object->type() == value_type::dict) {
-            return object->as_dict()->get(key);
-        } else if (object->type() == value_type::array) {
-            try {
-                return object->as_array()->get(uint32_t(std::atol(key.data())));
-            } catch (...) {
-            }
-        }
-        return nullptr;
-    }
-
-    void
-    set_new_value_(const document_const_value_t& object, const std::string& key, const document_const_value_t& value) {
-        auto dot_pos = key.find('.');
-        if (dot_pos != std::string::npos) {
-            auto key_parent = key.substr(0, dot_pos);
-            auto object_parent = get_value_by_key_(object, key_parent);
-            if (!object_parent) {
-                auto dot_pos_next = key.find('.', dot_pos + 1);
-                auto key_next =
-                    key.substr(dot_pos + 1,
-                               (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
-                if (key_next.find_first_not_of("0123456789") == std::string::npos) {
-                    set_new_value_(object, key_parent, array_t::new_array().detach());
-                } else {
-                    set_new_value_(object, key_parent, dict_t::new_dict().detach());
-                }
-                object_parent = get_value_by_key_(object, key_parent);
-                if (!object_parent && object->type() == value_type::array) {
-                    object_parent = object->as_array()->get(object->as_array()->count() - 1);
-                }
-            }
-            if (object_parent) {
-                set_new_value_(object_parent, key.substr(dot_pos + 1, key.size() - dot_pos), value);
-            }
-        } else {
-            if (object->type() == value_type::dict) {
-                object->as_dict()->set(key, value);
-            } else if (object->type() == value_type::array) {
-                try {
-                    auto index = uint32_t(std::atol(key.c_str()));
-                    if (index < object->as_array()->count()) {
-                        object->as_array()->set(index, value);
-                    } else {
-                        object->as_array()->append(value);
-                    }
-                } catch (...) {
-                }
-            }
-        }
-    }
-
-    void
-    set_new_value_(const document_const_value_t& object, std::string_view key, const document_const_value_t& value) {
-        auto dot_pos = key.find('.');
-        if (dot_pos != std::string::npos) {
-            auto key_parent = key.substr(0, dot_pos);
-            auto object_parent = get_value_by_key_(object, key_parent);
-            if (!object_parent) {
-                auto dot_pos_next = key.find('.', dot_pos + 1);
-                auto key_next =
-                    key.substr(dot_pos + 1,
-                               (dot_pos_next == std::string::npos ? key.size() : dot_pos_next) - dot_pos - 1);
-                if (key_next.find_first_not_of("0123456789") == std::string::npos) {
-                    set_new_value_(object, key_parent, array_t::new_array().detach());
-                } else {
-                    set_new_value_(object, key_parent, dict_t::new_dict().detach());
-                }
-                object_parent = get_value_by_key_(object, key_parent);
-                if (!object_parent && object->type() == value_type::array) {
-                    object_parent = object->as_array()->get(object->as_array()->count() - 1);
-                }
-            }
-            if (object_parent) {
-                set_new_value_(object_parent, key.substr(dot_pos + 1, key.size() - dot_pos), value);
-            }
-        } else {
-            if (object->type() == value_type::dict) {
-                object->as_dict()->set(key, value);
-            } else if (object->type() == value_type::array) {
-                try {
-                    auto index = uint32_t(std::atol(key.data()));
-                    if (index < object->as_array()->count()) {
-                        object->as_array()->set(index, value);
-                    } else {
-                        object->as_array()->append(value);
-                    }
-                } catch (...) {
-                }
-            }
-        }
-    }
-
     document_t::document_t()
-        : value_(dict_t::new_dict()) {}
+        : mut_src_(nullptr)
+        , element_ind_(nullptr)
+        , is_root_(false) {}
 
-    document_t::document_t(document_value_t value)
-        : value_(std::move(value)) {}
+    document_t::~document_t() {
+        if (is_root_) {
+            mr_delete(element_ind_->get_allocator(), mut_src_);
+        }
+    }
+
+    document_t::document_t(document_t&& other) noexcept
+        : mut_src_(other.mut_src_)
+        , builder_(*mut_src_)
+        , element_ind_(std::move(other.element_ind_))
+        , ancestors_(std::move(other.ancestors_))
+        , is_root_(other.is_root_) {
+        other.mut_src_ = nullptr;
+        other.is_root_ = false;
+    }
+
+    document_t::document_t(document_t::allocator_type* allocator, bool is_root)
+        : mut_src_(is_root ? new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator)
+                           : nullptr)
+        , element_ind_(is_root ? json_trie_node_element::create_object(allocator) : nullptr)
+        , ancestors_(allocator)
+        , is_root_(is_root) {
+        if (is_root) {
+            builder_ = components::document::tape_builder(*mut_src_);
+        }
+    }
+
+    types::logical_type document_t::type_by_key(std::string_view json_pointer) {
+        const auto value_ptr = find_node_const(json_pointer).first;
+        if (value_ptr == nullptr) {
+            return types::logical_type::INVALID;
+        } else if (value_ptr->is_object()) {
+            return types::logical_type::MAP;
+        } else if (value_ptr->is_array()) {
+            return types::logical_type::ARRAY;
+        } else {
+            return value_ptr->get_mut()->logical_type();
+        }
+    }
+
+    bool document_t::is_valid() const { return element_ind_ != nullptr; }
+
+    std::size_t document_t::count(std::string_view json_pointer) const {
+        const auto value_ptr = find_node_const(json_pointer).first;
+        if (value_ptr == nullptr) {
+            return 0;
+        }
+        if (value_ptr->is_object()) {
+            return value_ptr->get_object()->size();
+        }
+        if (value_ptr->is_array()) {
+            return value_ptr->get_array()->size();
+        }
+        return 0;
+    }
+
+    bool document_t::is_exists(std::string_view json_pointer) const {
+        return find_node_const(json_pointer).first != nullptr;
+    }
+
+    bool document_t::is_null(std::string_view json_pointer) const {
+        const auto node_ptr = find_node_const(json_pointer).first;
+        if (node_ptr == nullptr) {
+            return false;
+        }
+        if (node_ptr->is_mut()) {
+            return node_ptr->get_mut()->is_null();
+        }
+        return false;
+        ;
+    }
+
+    bool document_t::is_bool(std::string_view json_pointer) const { return is_as<bool>(json_pointer); }
+
+    bool document_t::is_utinyint(std::string_view json_pointer) const { return is_as<uint16_t>(json_pointer); }
+
+    bool document_t::is_usmallint(std::string_view json_pointer) const { return is_as<uint16_t>(json_pointer); }
+
+    bool document_t::is_uint(std::string_view json_pointer) const { return is_as<uint32_t>(json_pointer); }
+
+    bool document_t::is_ulong(std::string_view json_pointer) const { return is_as<uint64_t>(json_pointer); }
+
+    bool document_t::is_tinyint(std::string_view json_pointer) const { return is_as<int8_t>(json_pointer); }
+
+    bool document_t::is_smallint(std::string_view json_pointer) const { return is_as<int16_t>(json_pointer); }
+
+    bool document_t::is_int(std::string_view json_pointer) const { return is_as<int32_t>(json_pointer); }
+
+    bool document_t::is_long(std::string_view json_pointer) const { return is_as<int64_t>(json_pointer); }
+
+    bool document_t::is_hugeint(std::string_view json_pointer) const { return is_as<absl::int128>(json_pointer); }
+
+    bool document_t::is_float(std::string_view json_pointer) const { return is_as<float>(json_pointer); }
+
+    bool document_t::is_double(std::string_view json_pointer) const { return is_as<double>(json_pointer); }
+
+    bool document_t::is_string(std::string_view json_pointer) const { return is_as<std::string_view>(json_pointer); }
+
+    bool document_t::is_array(std::string_view json_pointer) const {
+        const auto node_ptr = find_node_const(json_pointer).first;
+        return node_ptr != nullptr && node_ptr->is_array();
+    }
+
+    bool document_t::is_dict(std::string_view json_pointer) const {
+        const auto node_ptr = find_node_const(json_pointer).first;
+        return node_ptr != nullptr && node_ptr->is_object();
+    }
+
+    bool document_t::get_bool(std::string_view json_pointer) const { return get_as<bool>(json_pointer); }
+
+    uint8_t document_t::get_utinyint(std::string_view json_pointer) const { return get_as<uint8_t>(json_pointer); }
+
+    uint16_t document_t::get_usmallint(std::string_view json_pointer) const { return get_as<uint16_t>(json_pointer); }
+
+    uint32_t document_t::get_uint(std::string_view json_pointer) const { return get_as<uint32_t>(json_pointer); }
+
+    uint64_t document_t::get_ulong(std::string_view json_pointer) const { return get_as<uint64_t>(json_pointer); }
+
+    int8_t document_t::get_tinyint(std::string_view json_pointer) const { return get_as<int8_t>(json_pointer); }
+
+    int16_t document_t::get_smallint(std::string_view json_pointer) const { return get_as<int16_t>(json_pointer); }
+
+    int32_t document_t::get_int(std::string_view json_pointer) const { return get_as<int32_t>(json_pointer); }
+
+    int64_t document_t::get_long(std::string_view json_pointer) const { return get_as<int64_t>(json_pointer); }
+
+    absl::int128 document_t::get_hugeint(std::string_view json_pointer) const {
+        return get_as<absl::int128>(json_pointer);
+    }
+
+    float document_t::get_float(std::string_view json_pointer) const { return get_as<float>(json_pointer); }
+
+    double document_t::get_double(std::string_view json_pointer) const { return get_as<double>(json_pointer); }
+
+    std::pmr::string document_t::get_string(std::string_view json_pointer) const {
+        return std::pmr::string(get_as<std::string_view>(json_pointer), element_ind_->get_allocator());
+    }
+
+    document_t::ptr document_t::get_array(std::string_view json_pointer) {
+        const auto node_ptr = find_node(json_pointer).first;
+        if (node_ptr == nullptr || !node_ptr->is_array()) {
+            return nullptr; // temporarily
+        }
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+            document_t({this}, element_ind_->get_allocator(), node_ptr);
+    }
+
+    document_t::ptr document_t::get_dict(std::string_view json_pointer) {
+        const auto node_ptr = find_node(json_pointer).first;
+        if (node_ptr == nullptr || !node_ptr->is_object()) {
+            return nullptr; // temporarily
+        }
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+            document_t({this}, element_ind_->get_allocator(), node_ptr);
+    }
+
+    compare_t document_t::compare(std::string_view json_pointer,
+                                  const document_ptr& other,
+                                  std::string_view other_json_pointer) const {
+        if (is_valid() && !other->is_valid())
+            return compare_t::less;
+        if (!is_valid() && other->is_valid())
+            return compare_t::more;
+        if (!is_valid() && !other->is_valid())
+            return compare_t::equals;
+        auto node = find_node_const(json_pointer).first;
+        auto other_node = other->find_node_const(other_json_pointer).first;
+        auto exists = node != nullptr;
+        auto other_exists = other_node != nullptr;
+        if (exists && !other_exists)
+            return compare_t::less;
+        if (!exists && other_exists)
+            return compare_t::more;
+        if (!exists)
+            return compare_t::equals;
+
+        if (node->is_mut() && other_node->is_mut()) {
+            return compare_(node->get_mut(), other_node->get_mut());
+        } else {
+            return compare_t::equals;
+        }
+    }
+
+    compare_t document_t::compare(std::string_view json_pointer, value_t value) const {
+        if (is_valid() && !value) {
+            return compare_t::less;
+        }
+        if (!is_valid() && value) {
+            return compare_t::more;
+        }
+        if (!is_valid() && !value) {
+            return compare_t::equals;
+        }
+        auto node = find_node_const(json_pointer).first;
+        bool exists = node != nullptr;
+        if (exists && !value) {
+            return compare_t::less;
+        }
+        if (!exists && value) {
+            return compare_t::more;
+        }
+        if (!exists && !value) {
+            return compare_t::equals;
+        }
+
+        if (node->is_mut()) {
+            return compare_(node->get_mut(), value.get_element());
+        } else {
+            return compare_t::equals;
+        }
+    }
+
+    document_t::document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index)
+        : mut_src_(ancestor->mut_src_)
+        , builder_(*mut_src_)
+        , element_ind_(index)
+        , ancestors_(std::pmr::vector<ptr>({std::move(ancestor)}, allocator))
+        , is_root_(false) {}
+
+    impl::error_code_t document_t::set(std::string_view json_pointer, ptr other, std::string_view other_json_pointer) {
+        switch (other->type_by_key(other_json_pointer)) {
+            case types::logical_type::NA:
+                return set(json_pointer, nullptr);
+            case types::logical_type::BOOLEAN:
+                return set(json_pointer, other->get_bool(other_json_pointer));
+            case types::logical_type::TINYINT:
+                return set(json_pointer, other->get_tinyint(other_json_pointer));
+            case types::logical_type::SMALLINT:
+                return set(json_pointer, other->get_smallint(other_json_pointer));
+            case types::logical_type::INTEGER:
+                return set(json_pointer, other->get_int(other_json_pointer));
+            case types::logical_type::BIGINT:
+                return set(json_pointer, other->get_long(other_json_pointer));
+            case types::logical_type::HUGEINT:
+            case types::logical_type::UHUGEINT:
+                return set(json_pointer, other->get_hugeint(other_json_pointer));
+            case types::logical_type::FLOAT:
+                return set(json_pointer, other->get_float(other_json_pointer));
+            case types::logical_type::DOUBLE:
+                return set(json_pointer, other->get_double(other_json_pointer));
+            case types::logical_type::UTINYINT:
+                return set(json_pointer, other->get_utinyint(other_json_pointer));
+            case types::logical_type::USMALLINT:
+                return set(json_pointer, other->get_usmallint(other_json_pointer));
+            case types::logical_type::UINTEGER:
+                return set(json_pointer, other->get_uint(other_json_pointer));
+            case types::logical_type::UBIGINT:
+                return set(json_pointer, other->get_ulong(other_json_pointer));
+            case types::logical_type::STRING_LITERAL:
+                return set(json_pointer, other->get_string(other_json_pointer));
+            default:
+                return impl::error_code_t::INVALID_TYPE;
+        }
+    }
+
+    impl::error_code_t document_t::set_array(std::string_view json_pointer) {
+        return set_(json_pointer, special_type::ARRAY);
+    }
+
+    impl::error_code_t document_t::set_dict(std::string_view json_pointer) {
+        return set_(json_pointer, special_type::OBJECT);
+    }
+
+    impl::error_code_t document_t::set_deleter(std::string_view json_pointer) {
+        return set_(json_pointer, special_type::DELETER);
+    }
+
+    impl::error_code_t document_t::set_null(std::string_view json_pointer) { return set(json_pointer, nullptr); }
+
+    impl::error_code_t document_t::remove(std::string_view json_pointer) {
+        boost::intrusive_ptr<json_trie_node_element> ignored;
+        return remove_(json_pointer, ignored);
+    }
+
+    impl::error_code_t document_t::move(std::string_view json_pointer_from, std::string_view json_pointer_to) {
+        boost::intrusive_ptr<json_trie_node_element> node;
+        auto res = remove_(json_pointer_from, node);
+        if (res != impl::error_code_t::SUCCESS) {
+            return res;
+        }
+        return set_(json_pointer_to, std::move(node));
+    }
+
+    impl::error_code_t document_t::copy(std::string_view json_pointer_from, std::string_view json_pointer_to) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer_from, container, is_view_key, key, view_key, index);
+        if (res != impl::error_code_t::SUCCESS) {
+            return res;
+        }
+        auto node = container->is_object() ? container->get_object()->get(is_view_key ? view_key : key)
+                                           : container->get_array()->get(index);
+        if (node == nullptr) {
+            return impl::error_code_t::NO_SUCH_ELEMENT;
+        }
+        return set_(json_pointer_to, node->make_deep_copy());
+    }
+
+    impl::error_code_t document_t::set_(std::string_view json_pointer,
+                                        boost::intrusive_ptr<json_trie_node_element>&& value) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        if (res == impl::error_code_t::SUCCESS) {
+            if (container->is_object()) {
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, std::move(value));
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    container->as_object()->set(json_trie_node_element::create(element, container->get_allocator()),
+                                                std::move(value));
+                }
+            } else {
+                container->as_array()->set(index, std::move(value));
+            }
+        }
+        return res;
+    }
+
+    impl::error_code_t document_t::set_(std::string_view json_pointer, special_type value) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        if (res == impl::error_code_t::SUCCESS) {
+            auto node = creators[static_cast<int>(value)](container->get_allocator());
+            if (container->is_object()) {
+                if (container->as_object()->contains(is_view_key ? view_key : key)) {
+                    container->as_object()->set(is_view_key ? view_key : key, node);
+                } else {
+                    auto element = mut_src_->next_element();
+                    builder_.build(is_view_key ? view_key : key);
+                    container->as_object()->set(json_trie_node_element::create(element, container->get_allocator()),
+                                                node);
+                }
+            } else {
+                container->as_array()->set(index, node);
+            }
+        }
+        return res;
+    }
+
+    impl::error_code_t document_t::remove_(std::string_view json_pointer,
+                                           boost::intrusive_ptr<json_trie_node_element>& node) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        if (res != impl::error_code_t::SUCCESS) {
+            return res;
+        }
+        node = container->is_object() ? container->as_object()->remove(is_view_key ? view_key : key)
+                                      : container->as_array()->remove(index);
+        if (node == nullptr) {
+            return impl::error_code_t::NO_SUCH_ELEMENT;
+        }
+        return impl::error_code_t::SUCCESS;
+    }
+
+    std::pair<document_t::json_trie_node_element*, impl::error_code_t>
+    document_t::find_node(std::string_view json_pointer) {
+        auto node_error = find_node_const(json_pointer);
+        return {const_cast<json_trie_node_element*>(node_error.first), node_error.second};
+    }
+
+    std::pair<const document_t::json_trie_node_element*, impl::error_code_t>
+    document_t::find_node_const(std::string_view json_pointer) const {
+        const auto* current = element_ind_.get();
+        if (_usually_false(json_pointer.empty())) {
+            return {current, impl::error_code_t::SUCCESS};
+        }
+        if (json_pointer[0] == '/') {
+            json_pointer.remove_prefix(1);
+        }
+        for (auto key : string_splitter(json_pointer, '/')) {
+            if (current->is_object()) {
+                std::pmr::string unescaped_key;
+                bool is_unescaped;
+                auto error = unescape_key_(key, is_unescaped, unescaped_key, element_ind_->get_allocator());
+                if (error != impl::error_code_t::SUCCESS) {
+                    return {nullptr, error};
+                }
+                current = current->get_object()->get(is_unescaped ? unescaped_key : key);
+            } else if (current->is_array()) {
+                current = current->get_array()->get(atol(key.data()));
+            } else {
+                return {nullptr, impl::error_code_t::NO_SUCH_ELEMENT};
+            }
+            if (current == nullptr) {
+                return {nullptr, impl::error_code_t::NO_SUCH_ELEMENT};
+            }
+        }
+        return {current, impl::error_code_t::SUCCESS};
+    }
+
+    impl::error_code_t document_t::find_container_key(std::string_view json_pointer,
+                                                      json_trie_node_element*& container,
+                                                      bool& is_view_key,
+                                                      std::pmr::string& key,
+                                                      std::string_view& view_key,
+                                                      uint32_t& index) {
+        size_t pos = json_pointer.find_last_of('/');
+        if (pos == std::string::npos) {
+            pos = 0;
+        }
+        auto container_json_pointer = json_pointer.substr(0, pos);
+        auto node_error = find_node(container_json_pointer);
+        if (node_error.second == impl::error_code_t::INVALID_JSON_POINTER) {
+            return node_error.second;
+        }
+        if (node_error.second == impl::error_code_t::NO_SUCH_ELEMENT) {
+            return impl::error_code_t::NO_SUCH_CONTAINER;
+        }
+        container = node_error.first;
+        view_key = json_pointer.at(pos) == '/' ? json_pointer.substr(pos + 1) : json_pointer;
+        if (container->is_object()) {
+            is_view_key = true;
+            std::pmr::string unescaped_key;
+            bool is_unescaped;
+            auto error = unescape_key_(view_key, is_unescaped, unescaped_key, container->get_allocator());
+            if (error != impl::error_code_t::SUCCESS) {
+                return error;
+            }
+            if (is_unescaped) {
+                key = std::move(unescaped_key);
+                is_view_key = false;
+            }
+            return impl::error_code_t::SUCCESS;
+        }
+        if (container->is_array()) {
+            auto raw_index = atol(view_key.data());
+            if (raw_index < 0) {
+                return impl::error_code_t::INVALID_INDEX;
+            }
+            index = std::min(uint32_t(raw_index), uint32_t(container->get_array()->size()));
+            return impl::error_code_t::SUCCESS;
+        }
+        return impl::error_code_t::NO_SUCH_CONTAINER;
+    }
+
+    void document_t::build_primitive(tape_builder& builder, const boost::json::value& value) noexcept {
+        // Use the fact that most scalars are going to be either strings or numbers.
+        if (value.is_string()) {
+            auto& str = value.get_string();
+            builder.build(str);
+        } else if (value.is_number()) {
+            if (value.is_double()) {
+                builder.build(value.get_double());
+            } else if (value.is_int64()) {
+                builder.build(value.get_int64());
+            } else if (value.is_uint64()) {
+                builder.build(value.get_uint64());
+            }
+        } else
+            // true, false, null are uncommon.
+            if (value.is_bool()) {
+            builder.build(value.get_bool());
+        } else if (value.is_null()) {
+            builder.visit_null_atom();
+        }
+    }
+
+    document_t::json_trie_node_element* document_t::build_index(const boost::json::value& value,
+                                                                tape_builder& builder,
+                                                                impl::base_document* mut_src,
+                                                                allocator_type* allocator) {
+        document_t::json_trie_node_element* res;
+        if (value.is_object()) {
+            res = json_trie_node_element::create_object(allocator);
+            const auto& boost_obj = value.get_object();
+            for (auto const& [current_key, val] : boost_obj) {
+                res->as_object()->set(build_index(current_key, builder, mut_src, allocator),
+                                      build_index(val, builder, mut_src, allocator));
+            }
+        } else if (value.is_array()) {
+            res = json_trie_node_element::create_array(allocator);
+            const auto& boost_arr = value.get_array();
+            uint32_t i = 0;
+            for (const auto& it : boost_arr) {
+                res->as_array()->set(i++, build_index(it, builder, mut_src, allocator));
+            }
+        } else {
+            auto element = mut_src->next_element();
+            build_primitive(builder, value);
+            res = json_trie_node_element::create(element, allocator);
+        }
+        return res;
+    }
+
+    document_t::ptr document_t::document_from_json(const std::string& json, document_t::allocator_type* allocator) {
+        auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
+        auto tree = boost::json::parse(json);
+        auto obj = res->element_ind_->as_object();
+        for (auto& [key, val] : tree.get_object()) {
+            obj->set(build_index(key, res->builder_, res->mut_src_, allocator),
+                     build_index(val, res->builder_, res->mut_src_, allocator));
+        }
+        return res;
+    }
+
+    document_t::ptr
+    document_t::merge(document_t::ptr& document1, document_t::ptr& document2, document_t::allocator_type* allocator) {
+        auto is_root = false;
+        auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator, is_root);
+        res->ancestors_.push_back(document1);
+        res->ancestors_.push_back(document2);
+        res->element_ind_.reset(
+            json_trie_node_element::merge(document1->element_ind_.get(), document2->element_ind_.get(), allocator));
+        return res;
+    }
+
+    bool is_equals_value(const impl::element* value1, const impl::element* value2) {
+        using types::logical_type;
+
+        auto type1 = value1->logical_type();
+
+        if (type1 != value2->logical_type()) {
+            return false;
+        }
+
+        switch (type1) {
+            case logical_type::TINYINT:
+                return value1->get_int8().value() == value2->get_int8().value();
+            case logical_type::SMALLINT:
+                return value1->get_int16().value() == value2->get_int16().value();
+            case logical_type::INTEGER:
+                return value1->get_int32().value() == value2->get_int32().value();
+            case logical_type::BIGINT:
+                return value1->get_int64().value() == value2->get_int64().value();
+            case logical_type::HUGEINT:
+                return value1->get_int128().value() == value2->get_int128().value();
+            case logical_type::UTINYINT:
+                return value1->get_uint8().value() == value2->get_uint8().value();
+            case logical_type::USMALLINT:
+                return value1->get_uint16().value() == value2->get_uint16().value();
+            case logical_type::UINTEGER:
+                return value1->get_uint32().value() == value2->get_uint32().value();
+            case logical_type::UBIGINT:
+                return value1->get_uint64().value() == value2->get_uint64().value();
+            case logical_type::FLOAT:
+                return is_equals(value1->get_float().value(), value2->get_float().value());
+            case logical_type::DOUBLE:
+                return is_equals(value1->get_double().value(), value2->get_double().value());
+            case logical_type::STRING_LITERAL:
+                return value1->get_string().value() == value2->get_string().value();
+            case logical_type::BOOLEAN:
+                return value1->get_bool().value() == value2->get_bool().value();
+            case logical_type::NA:
+                return true;
+        }
+        return false;
+    }
+
+    bool document_t::is_equals_documents(const document_ptr& doc1, const document_ptr& doc2) {
+        return doc1->element_ind_->equals(doc2->element_ind_.get(), &is_equals_value);
+    }
+
+    document_t::allocator_type* document_t::get_allocator() { return element_ind_->get_allocator(); }
+
+    std::pmr::string value_to_string(const impl::element* value, std::pmr::memory_resource* allocator) {
+        using types::logical_type;
+
+        switch (value->logical_type()) {
+            case logical_type::TINYINT:
+                return create_pmr_string_(value->get_int8().value(), allocator);
+            case logical_type::SMALLINT:
+                return create_pmr_string_(value->get_int16().value(), allocator);
+            case logical_type::INTEGER:
+                return create_pmr_string_(value->get_int32().value(), allocator);
+            case logical_type::BIGINT:
+                return create_pmr_string_(value->get_int64().value(), allocator);
+            case logical_type::HUGEINT:
+                return {
+                    "hugeint",
+                    allocator}; //TODO support value ! a new json parser is needed for it (boost::json::parser does not support int128)
+            case logical_type::UTINYINT:
+                return create_pmr_string_(value->get_uint8().value(), allocator);
+            case logical_type::USMALLINT:
+                return create_pmr_string_(value->get_uint16().value(), allocator);
+            case logical_type::UINTEGER:
+                return create_pmr_string_(value->get_uint32().value(), allocator);
+            case logical_type::UBIGINT:
+                return create_pmr_string_(value->get_uint64().value(), allocator);
+            case logical_type::FLOAT:
+                return create_pmr_string_(value->get_float().value(), allocator);
+            case logical_type::DOUBLE:
+                return create_pmr_string_(value->get_double().value(), allocator);
+            case logical_type::STRING_LITERAL: {
+                std::pmr::string tmp(allocator);
+                tmp.append("\"").append(value->get_string().value()).append("\"");
+                return tmp;
+            }
+            case logical_type::BOOLEAN: {
+                std::pmr::string tmp(allocator);
+                if (value->get_bool()) {
+                    tmp.append("true");
+                } else {
+                    tmp.append("false");
+                }
+                return tmp;
+            }
+            case logical_type::NA:
+                return {"null", allocator};
+        }
+        return {};
+    }
+
+    std::pmr::string document_t::to_json() const { return element_ind_->to_json(&value_to_string); }
+
+    boost::intrusive_ptr<json::json_trie_node> document_t::json_trie() const { return element_ind_; }
+
+    bool document_t::is_equals(std::string_view json_pointer, value_t value) {
+        switch (value.physical_type()) {
+            case types::physical_type::NA:
+                return is_null(json_pointer);
+            case types::physical_type::BOOL_FALSE:
+            case types::physical_type::BOOL_TRUE:
+                return value.as_bool() == get_bool(json_pointer);
+            case types::physical_type::UINT8:
+            case types::physical_type::UINT16:
+            case types::physical_type::UINT32:
+            case types::physical_type::UINT64:
+                return value.as_unsigned() == get_ulong(json_pointer);
+            case types::physical_type::INT8:
+            case types::physical_type::INT16:
+            case types::physical_type::INT32:
+            case types::physical_type::INT64:
+                return value.as_int() == get_long(json_pointer);
+            case types::physical_type::UINT128:
+            case types::physical_type::INT128:
+                return value.as_int128() == get_hugeint(json_pointer);
+            case types::physical_type::FLOAT:
+                return value.as_float() == get_float(json_pointer);
+            case types::physical_type::DOUBLE:
+                return value.as_double() == get_double(json_pointer);
+            case types::physical_type::STRING:
+                return value.as_string() == get_string(json_pointer);
+            default:
+                return false;
+        }
+    }
+
+    value_t document_t::get_value(std::string_view json_pointer) {
+        json_trie_node_element* container;
+        bool is_view_key;
+        std::pmr::string key;
+        std::string_view view_key;
+        uint32_t index;
+        auto res = find_container_key(json_pointer, container, is_view_key, key, view_key, index);
+        if (res != impl::error_code_t::SUCCESS) {
+            return value_t{};
+        }
+        auto node = container->is_object() ? container->get_object()->get(is_view_key ? view_key : key)
+                                           : container->get_array()->get(index);
+        if (node == nullptr) {
+            return value_t{};
+        }
+        if (node->is_mut()) {
+            return value_t{*node->get_mut()};
+        }
+        return value_t{};
+    }
 
     bool document_t::update(const ptr& update) {
         bool result = false;
-        document_view_t view(this);
-        auto dict = document_view_t(update).as_dict();
-        for (auto it_update = dict->begin(); it_update; ++it_update) {
-            auto key_update = static_cast<std::string>(it_update.key()->as_string());
-            auto fields = it_update.value()->as_dict();
+        auto dict = update->json_trie()->as_object();
+        for (auto it_update = dict->begin(); it_update != dict->end(); ++it_update) {
+            std::string_view key_update = it_update->first->get_mut()->get_string();
+            auto fields = it_update->second->as_object();
             if (!fields) {
                 break;
             }
-            for (auto it_field = fields->begin(); it_field; ++it_field) {
-                auto key_field = it_field.key()->as_string();
-                auto old_value = view.get_value(key_field);
-                document_const_value_t new_value = nullptr;
+            for (auto it_field = fields->begin(); it_field != fields->end(); ++it_field) {
+                std::string_view key_field = it_field->first->get_mut()->get_string();
                 if (key_update == "$set") {
-                    new_value = ::document::impl::new_value(it_field.value());
-                } else if (key_update == "$inc") {
-                    new_value = inc_(old_value, it_field.value());
+                    auto elem = it_field->second->get_mut();
+                    switch (elem->physical_type()) {
+                        case types::physical_type::BOOL_FALSE:
+                        case types::physical_type::BOOL_TRUE: {
+                            auto new_value = elem->get_bool().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        case types::physical_type::UINT8:
+                        case types::physical_type::UINT16:
+                        case types::physical_type::UINT32:
+                        case types::physical_type::UINT64: {
+                            auto new_value = elem->get_uint64().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        case types::physical_type::INT8:
+                        case types::physical_type::INT16:
+                        case types::physical_type::INT32:
+                        case types::physical_type::INT64: {
+                            auto new_value = elem->get_int64().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        case types::physical_type::UINT128:
+                        case types::physical_type::INT128: {
+                            auto new_value = elem->get_int128().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        case types::physical_type::FLOAT:
+                        case types::physical_type::DOUBLE: {
+                            auto new_value = elem->get_double().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        case types::physical_type::STRING: {
+                            auto new_value = elem->get_string().value();
+                            if (get_as<decltype(new_value)>(key_field) != new_value) {
+                                set(key_field, new_value);
+                                result = true;
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
                 }
-                //todo impl others methods
-                if (new_value && !new_value->is_equal(old_value)) {
-                    set_(key_field, new_value);
-                    result = true;
+                if (key_update == "$inc") {
+                    auto elem = it_field->second->get_mut();
+                    switch (elem->physical_type()) {
+                        case types::physical_type::BOOL_FALSE:
+                        case types::physical_type::BOOL_TRUE: {
+                            auto new_value = elem->get_bool().value();
+                            set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                            break;
+                        }
+                        case types::physical_type::UINT8:
+                        case types::physical_type::UINT16:
+                        case types::physical_type::UINT32:
+                        case types::physical_type::UINT64: {
+                            auto new_value = elem->get_uint64().value();
+                            set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                            break;
+                        }
+                        case types::physical_type::INT8:
+                        case types::physical_type::INT16:
+                        case types::physical_type::INT32:
+                        case types::physical_type::INT64: {
+                            auto new_value = elem->get_int64().value();
+                            set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                            break;
+                        }
+                        case types::physical_type::UINT128:
+                        case types::physical_type::INT128: {
+                            auto new_value = elem->get_int128().value();
+                            set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                            break;
+                        }
+                        case types::physical_type::FLOAT:
+                        case types::physical_type::DOUBLE: {
+                            auto new_value = elem->get_double().value();
+                            set(key_field, new_value + get_as<decltype(new_value)>(key_field));
+                            break;
+                        }
+                        case types::physical_type::STRING: {
+                            auto new_value = elem->get_string().value();
+                            set(key_field,
+                                std::string(new_value) + std::string(get_as<decltype(new_value)>(key_field)));
+                            break;
+                        }
+                        default:
+                            break;
+                    }
                 }
+                result = true;
             }
         }
         return result;
     }
 
-    void document_t::set_(const std::string& key, const document_const_value_t& value) {
-        set_new_value_(value_, key, value);
+    std::pmr::string serialize_document(const document_ptr& document) { return document->to_json(); }
+
+    document_ptr deserialize_document(const std::string& text, document_t::allocator_type* allocator) {
+        return document_t::document_from_json(text, allocator);
     }
 
-    void document_t::set_(std::string_view key, const document_const_value_t& value) {
-        set_new_value_(value_, key, value);
-    }
-
-    core::type document_t::type_by_key(const std::string& key) const {
-        const auto value = get_value_by_key_(value_, key);
-        if (value == nullptr) {
-            return core::type::undef;
+    template<typename T>
+    constexpr size_t max_digits() {
+        if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                return std::numeric_limits<T>::digits10 + 2;
+            } else {
+                return std::numeric_limits<T>::digits10 + 1;
+            }
+        } else {
+            return std::numeric_limits<T>::max_digits10 + 3;
         }
-        return value->schema_type();
     }
 
-    core::type document_t::type_by_key(std::string_view key) const {
-        const auto value = get_value_by_key_(value_, key);
-        if (value == nullptr) {
-            return core::type::undef;
-        }
-        return value->schema_type();
-    }
-
-    document_ptr combine_documents(const document_ptr& left, const document_ptr& right) {
-        auto combined_doc = make_document();
-        document_view_t combined_doc_view(combined_doc);
-        {
-            document_view_t view(left);
-            auto fields = view.as_dict();
-            for (auto it_field = fields->begin(); it_field; ++it_field) {
-                combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
+    template<typename T>
+    std::pmr::string create_pmr_string_(T value, std::pmr::memory_resource* allocator) {
+        std::array<char, max_digits<T>() + 1> buffer{}; // to include space for null terminator
+        int size = 0;
+        if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_signed_v<T>) {
+                size = std::sprintf(buffer.data(), "%i", value);
+            } else {
+                size = std::sprintf(buffer.data(), "%u", value);
+            }
+        } else {
+            if constexpr (std::is_same_v<T, float>) {
+                size = std::sprintf(buffer.data(), "%.9g", value);
+            } else if (std::is_same_v<T, double>) {
+                size = std::sprintf(buffer.data(), "%.17g", value);
+            } else {
+                // unexpected type
+                assert(false);
             }
         }
-        {
-            document_view_t view(right);
-            auto fields = view.as_dict();
-            for (auto it_field = fields->begin(); it_field; ++it_field) {
-                if (!combined_doc_view.as_dict()->get(it_field.key()->as_string())) {
-                    combined_doc->set(static_cast<std::string>(it_field.key()->as_string()), it_field.value());
+        assert(size > 0);
+        return {buffer.data(), buffer.data() + size, allocator}; // null terminator is not included
+    }
+
+    document_ptr make_document(document_t::allocator_type* allocator) {
+        return new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
+    }
+
+    impl::error_code_t unescape_key_(std::string_view key,
+                                     bool& is_unescaped,
+                                     std::pmr::string& unescaped_key,
+                                     document_t::allocator_type* allocator) {
+        size_t escape = key.find('~');
+        if (escape != std::string_view::npos) {
+            is_unescaped = true;
+            std::pmr::string unescaped(key, allocator);
+            do {
+                switch (unescaped[escape + 1]) {
+                    case '0':
+                        unescaped.replace(escape, 2, "~");
+                        break;
+                    case '1':
+                        unescaped.replace(escape, 2, "/");
+                        break;
+                    default:
+                        return impl::error_code_t::INVALID_JSON_POINTER;
                 }
+                escape = unescaped.find('~', escape + 1);
+            } while (escape != std::string::npos);
+            unescaped_key = std::move(unescaped);
+            return impl::error_code_t::SUCCESS;
+        }
+        is_unescaped = false;
+        return impl::error_code_t::SUCCESS;
+    }
+
+    template<class T>
+    compare_t equals_(const impl::element* element1, const impl::element* element2) {
+        T v1 = element1->get<T>();
+        T v2 = element2->get<T>();
+        if (v1 < v2)
+            return compare_t::less;
+        if (v1 > v2)
+            return compare_t::more;
+        return compare_t::equals;
+    }
+
+    compare_t compare_(const impl::element* element1, const impl::element* element2) {
+        using types::logical_type;
+
+        auto type1 = element1->logical_type();
+
+        if (type1 == element2->logical_type()) {
+            switch (type1) {
+                case logical_type::TINYINT:
+                    return equals_<int8_t>(element1, element2);
+                case logical_type::SMALLINT:
+                    return equals_<int16_t>(element1, element2);
+                case logical_type::INTEGER:
+                    return equals_<int32_t>(element1, element2);
+                case logical_type::BIGINT:
+                    return equals_<int64_t>(element1, element2);
+                case logical_type::HUGEINT:
+                    return equals_<absl::int128>(element1, element2);
+                case logical_type::UTINYINT:
+                    return equals_<uint8_t>(element1, element2);
+                case logical_type::USMALLINT:
+                    return equals_<uint16_t>(element1, element2);
+                case logical_type::UINTEGER:
+                    return equals_<uint32_t>(element1, element2);
+                case logical_type::UBIGINT:
+                    return equals_<uint64_t>(element1, element2);
+                case logical_type::FLOAT:
+                    return equals_<float>(element1, element2);
+                case logical_type::DOUBLE:
+                    return equals_<double>(element1, element2);
+                case logical_type::STRING_LITERAL:
+                    return equals_<std::string_view>(element1, element2);
+                case logical_type::BOOLEAN:
+                    return equals_<bool>(element1, element2);
+                case logical_type::NA:
+                    return compare_t::equals;
             }
         }
-        return combined_doc;
+
+        return compare_t::equals;
     }
 
-    document_ptr make_document() { return new document_t(); }
-
-    document_ptr make_document(const ::document::impl::dict_t* dict) {
-        return new document_t(::document::impl::dict_t::new_dict(dict));
-    }
-
-    document_ptr make_document(const ::document::impl::array_t* array) {
-        return new document_t(::document::impl::array_t::new_array(array));
-    }
-
-    document_ptr make_document(const ::document::impl::value_t* value) {
-        if (value->type() == value_type::dict) {
-            return make_document(value->as_dict());
-        } else if (value->type() == value_type::array) {
-            return make_document(value->as_array());
-        }
-        return nullptr;
-    }
+    document_id_t get_document_id(const document_ptr& doc) { return document_id_t{doc->get_string("/_id")}; }
 
     document_ptr make_upsert_document(const document_ptr& source) {
-        auto doc = make_document();
-        document_view_t view(source);
-        const auto* update_dict = view.as_dict();
-        for (auto it = update_dict->begin(); it; ++it) {
-            auto cmd = static_cast<std::string_view>(it.key()->as_string());
+        auto doc = make_document(source->get_allocator());
+        for (auto it = source->element_ind_->as_object()->begin(); it != source->element_ind_->as_object()->end();
+             ++it) {
+            std::string_view cmd;
+            if (it->first->is_mut()) {
+                cmd = it->first->get_mut()->get_string().value();
+            }
             if (cmd == "$set" || cmd == "$inc") {
-                auto values = it.value()->as_dict();
-                for (auto it_field = values->begin(); it_field; ++it_field) {
-                    auto key = static_cast<std::string>(it_field.key()->as_string());
-                    doc->set(key, it_field.value());
+                auto values = it->second->get_object();
+                for (auto it_field = values->begin(); it_field != values->end(); ++it_field) {
+                    std::string_view key;
+                    if (it_field->first->is_mut()) {
+                        key = it_field->first->get_mut()->get_string().value();
+                    }
+                    doc->set_(key, it_field->second->make_deep_copy());
                 }
             }
         }
-        doc->set("_id", view.get_string("_id"));
+        doc->set("/_id", doc->get_string("/_id"));
         return doc;
-    }
-
-    document_id_t get_document_id(const document_ptr& document) {
-        return components::document::document_view_t(document).id();
-    }
-
-    document_const_value_t json2value(const boost::json::value& item) {
-        if (item.is_bool()) {
-            return ::document::impl::new_value(item.get_bool());
-        } else if (item.is_uint64()) {
-            return ::document::impl::new_value(item.get_uint64());
-        } else if (item.is_int64()) {
-            return ::document::impl::new_value(item.get_int64());
-        } else if (item.is_double()) {
-            return ::document::impl::new_value(item.get_double());
-        } else if (item.is_string()) {
-            return ::document::impl::new_value(std::string(item.get_string().c_str()));
-        } else if (item.is_array()) {
-            auto array = ::document::impl::array_t::new_array();
-            for (const auto& child : item.get_array()) {
-                array->append(json2value(child));
-            }
-            return array->as_array();
-        } else if (item.is_object()) {
-            auto dict = ::document::impl::dict_t::new_dict();
-            for (const auto& child : item.get_object()) {
-                dict->set(std::string(child.key()), json2value(child.value()));
-            }
-            return dict->as_dict();
-        }
-        return ::document::impl::value_t::null_value;
-    }
-
-    document_ptr document_from_json(const std::string& json) {
-        auto doc = make_document();
-        auto tree = boost::json::parse(json);
-        for (const auto& item : tree.as_object()) {
-            doc->set(std::string(item.key()), json2value(item.value()));
-        }
-        return doc;
-    }
-
-    std::string document_to_json(const document_ptr& doc) { return document_view_t(doc).to_json(); }
-
-    std::string serialize_document(const document_ptr& document) { return document_to_json(document); }
-
-    document_ptr deserialize_document(const std::string& text) { return document_from_json(text); }
-
-    bool is_equals_documents(const document_ptr& doc1, const document_ptr& doc2) {
-        return document_view_t(doc1).get_value()->is_equal(document_view_t(doc2).get_value());
     }
 
 } // namespace components::document

@@ -7,6 +7,7 @@ namespace services::disk {
 
     agent_disk_t::agent_disk_t(base_manager_disk_t* manager, const path_t& path_db, const name_t& name, log_t& log)
         : actor_zeta::basic_async_actor(manager, name)
+        , resource_(manager->resource())
         , log_(log.clone())
         , disk_(path_db) {
         trace(log_, "agent_disk::create");
@@ -30,7 +31,7 @@ namespace services::disk {
             for (auto& collection : database.collections) {
                 auto id_documents = disk_.load_list_documents(database.name, collection.name);
                 for (const auto& id : id_documents) {
-                    collection.documents.push_back(disk_.load_document(id));
+                    collection.documents.push_back(disk_.load_document(id, resource_));
                 }
             }
         }

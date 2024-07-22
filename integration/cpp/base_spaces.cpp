@@ -22,16 +22,15 @@ namespace otterbrix {
         trace(log_, "spaces::spaces()");
 
         ///scheduler_.reset(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter());
-        resource = actor_zeta::detail::pmr::get_default_resource();
 
         trace(log_, "manager_wal start");
         if (config.wal.on) {
-            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(resource,
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(&resource,
                                                                                                 scheduler_.get(),
                                                                                                 config.wal,
                                                                                                 log_);
         } else {
-            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_empty_t>(resource,
+            manager_wal_ = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_empty_t>(&resource,
                                                                                                       scheduler_.get(),
                                                                                                       log_);
         }
@@ -39,28 +38,28 @@ namespace otterbrix {
 
         trace(log_, "manager_disk start");
         if (config.disk.on) {
-            manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(resource,
+            manager_disk_ = actor_zeta::spawn_supervisor<services::disk::manager_disk_t>(&resource,
                                                                                          scheduler_.get(),
                                                                                          config.disk,
                                                                                          log_);
         } else {
             manager_disk_ =
-                actor_zeta::spawn_supervisor<services::disk::manager_disk_empty_t>(resource, scheduler_.get());
+                actor_zeta::spawn_supervisor<services::disk::manager_disk_empty_t>(&resource, scheduler_.get());
         }
         trace(log_, "manager_disk finish");
 
         trace(log_, "memory_storage start");
-        memory_storage_ = actor_zeta::spawn_supervisor<services::memory_storage_t>(resource, scheduler_.get(), log_);
+        memory_storage_ = actor_zeta::spawn_supervisor<services::memory_storage_t>(&resource, scheduler_.get(), log_);
         trace(log_, "memory_storage finish");
 
         trace(log_, "manager_dispatcher start");
         manager_dispatcher_ =
-            actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(resource,
+            actor_zeta::spawn_supervisor<services::dispatcher::manager_dispatcher_t>(&resource,
                                                                                      scheduler_dispather_.get(),
                                                                                      log_);
         trace(log_, "manager_dispatcher finish");
 
-        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(resource, manager_dispatcher_->address(), log_);
+        wrapper_dispatcher_ = std::make_unique<wrapper_dispatcher_t>(&resource, manager_dispatcher_->address(), log_);
         trace(log_, "manager_dispatcher create dispatcher");
 
         actor_zeta::send(

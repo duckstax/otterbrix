@@ -17,32 +17,29 @@ namespace components::ql {
         explicit delete_one_t(components::ql::aggregate_statement_raw_ptr condition);
         delete_one_t() = default;
         ~delete_one_t() final;
-        components::ql::aggregate::match_t match_;
+
+        components::ql::aggregate::match_t match_{};
     };
+
+    inline delete_one_t to_delete_one(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 4) {
+            throw msgpack::type_error();
+        }
+        auto database = msg_object.via.array.ptr[0].as<std::string>();
+        auto collection = msg_object.via.array.ptr[1].as<std::string>();
+        auto condition = aggregate::to_match(msg_object.via.array.ptr[2], resource);
+        auto parameters = to_storage_parameters(msg_object.via.array.ptr[3], resource);
+        return delete_one_t(database, collection, condition, parameters);
+    }
 } // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<components::ql::delete_one_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::delete_one_t& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-                    if (o.via.array.size != 4) {
-                        throw msgpack::type_error();
-                    }
-                    auto database = o.via.array.ptr[0].as<std::string>();
-                    auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto condition = o.via.array.ptr[2].as<components::ql::aggregate::match_t>();
-                    auto parameters = o.via.array.ptr[3].as<components::ql::storage_parameters>();
-                    v = components::ql::delete_one_t(database, collection, condition, parameters);
-                    return o;
-                }
-            };
 
             template<>
             struct pack<components::ql::delete_one_t> final {

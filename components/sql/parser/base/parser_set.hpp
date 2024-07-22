@@ -7,7 +7,6 @@
 
 namespace components::sql::impl {
 
-    parser_result
-    parse_set(std::pmr::memory_resource* resource, lexer_t& lexer, components::document::document_ptr& doc);
+    parser_result parse_set(lexer_t& lexer, components::document::document_ptr& doc);
 
 } // namespace components::sql::impl

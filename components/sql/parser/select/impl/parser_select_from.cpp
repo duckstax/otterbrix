@@ -9,12 +9,12 @@ using namespace components::sql::impl;
 
 namespace components::sql::select::impl {
 
-#define PARSE_JOIN_MASK(MASK, TYPE)                                                                                    \
+#define PARSE_JOIN_MASK(MASK, TYPE, RESOURCE)                                                                          \
     {                                                                                                                  \
         lexer.save();                                                                                                  \
         auto status_order = MASK.check(lexer);                                                                         \
         if (status_order == mask_group_element_t::status::yes) {                                                       \
-            join = ql::make_join(ql::join_type::TYPE);                                                                 \
+            join = ql::make_join(ql::join_type::TYPE, RESOURCE);                                                       \
             return true;                                                                                               \
         } else if (status_order == mask_group_element_t::status::error) {                                              \
             return parser_result{parse_error::syntax_error, token, "not valid select query"};                          \
@@ -22,7 +22,8 @@ namespace components::sql::select::impl {
         lexer.restore();                                                                                               \
     }
 
-    components::sql::impl::parser_result parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join) {
+    components::sql::impl::parser_result
+    parse_join_type(components::sql::lexer_t& lexer, ql::join_ptr& join, std::pmr::memory_resource* resource) {
         static const mask_element_t mask_elem_join(token_type::bare_word, "join");
 
         static const mask_group_element_t mask_inner_join({"inner", "join"});
@@ -34,16 +35,16 @@ namespace components::sql::select::impl {
         lexer.save();
         auto token = lexer.current_significant_token();
         if (mask_elem_join == token) {
-            join = ql::make_join(ql::join_type::inner);
+            join = ql::make_join(ql::join_type::inner, resource);
             return true;
         }
         lexer.restore();
 
-        PARSE_JOIN_MASK(mask_inner_join, inner);
-        PARSE_JOIN_MASK(mask_full_outer_join, full);
-        PARSE_JOIN_MASK(mask_left_outer_join, left);
-        PARSE_JOIN_MASK(mask_right_outer_join, right);
-        PARSE_JOIN_MASK(mask_cross_join, cross);
+        PARSE_JOIN_MASK(mask_inner_join, inner, resource);
+        PARSE_JOIN_MASK(mask_full_outer_join, full, resource);
+        PARSE_JOIN_MASK(mask_left_outer_join, left, resource);
+        PARSE_JOIN_MASK(mask_right_outer_join, right, resource);
+        PARSE_JOIN_MASK(mask_cross_join, cross, resource);
 
         return true;
     }
@@ -91,7 +92,7 @@ namespace components::sql::select::impl {
         }
         lexer.restore();
 
-        auto agg = ql::make_aggregate("", "");
+        auto agg = ql::make_aggregate("", "", resource);
         token = lexer.next_not_whitespace_token();
 
         // fields
@@ -114,14 +115,14 @@ namespace components::sql::select::impl {
         while (true) {
             token = lexer.current_significant_token();
             ql::join_ptr sub_join = nullptr;
-            res = parse_join_type(lexer, sub_join);
+            res = parse_join_type(lexer, sub_join, resource);
             if (res.is_error()) {
                 return res;
             }
             if (sub_join) {
                 sub_join->left =
                     join ? static_cast<ql::ql_statement_ptr>(join) : static_cast<ql::ql_statement_ptr>(agg);
-                sub_join->right = ql::make_aggregate("", "");
+                sub_join->right = ql::make_aggregate("", "", resource);
                 lexer.next_not_whitespace_token();
                 res = parse_table_name(lexer, sub_join->right);
                 if (res.is_error()) {

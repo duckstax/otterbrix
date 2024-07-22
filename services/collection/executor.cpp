@@ -47,9 +47,7 @@ namespace services::collection::executor {
                              address(),
                              handler_id(route::execute_plan_finish),
                              session,
-                             make_cursor(std::pmr::get_default_resource(),
-                                         error_code_t::create_phisical_plan_error,
-                                         "invalid query plan"));
+                             make_cursor(resource_, error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
         plan->set_as_root();
@@ -202,7 +200,7 @@ namespace services::collection::executor {
                 std::make_unique<components::cursor::sub_cursor_t>(collection->resource(), collection->name()));
             if (plan->output()) {
                 for (const auto& document : plan->output()->documents()) {
-                    cursor.first->second->append(document_view_t(document));
+                    cursor.first->second->append(document);
                 }
             }
             if (cursor.first->second.get()->size() == 0) {
@@ -236,7 +234,7 @@ namespace services::collection::executor {
             auto cursor(new cursor_t(collection->resource()));
             auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
             for (const auto& id : documents) {
-                sub_cursor->append(document_view_t(collection->storage().at(id)));
+                sub_cursor->append(collection->storage().at(id));
             }
             cursor->push(sub_cursor);
             execute_sub_plan_finish_(session, cursor);
@@ -246,7 +244,7 @@ namespace services::collection::executor {
                 auto* sub_cursor =
                     new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), collection->name());
                 for (const auto& id : plan->modified()->documents()) {
-                    sub_cursor->append(document_view_t(collection->storage().at(id)));
+                    sub_cursor->append(collection->storage().at(id));
                 }
                 cursor->push(sub_cursor);
                 actor_zeta::send(collection->disk(),
@@ -290,11 +288,11 @@ namespace services::collection::executor {
         auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
         if (plan->modified()) {
             for (const auto& id : plan->modified()->documents()) {
-                sub_cursor->append(document_view_t(collection->storage().at(id)));
+                sub_cursor->append(collection->storage().at(id));
             }
         } else {
             for (const auto& doc : collection->storage()) {
-                sub_cursor->append(document_view_t(doc.second));
+                sub_cursor->append(doc.second);
             }
         }
         cursor->push(sub_cursor);
@@ -318,7 +316,7 @@ namespace services::collection::executor {
         auto* sub_cursor =
             new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), collection->name());
         for (const auto& id : plan->modified()->documents()) {
-            sub_cursor->append(document_view_t(nullptr));
+            sub_cursor->append(nullptr);
         }
         auto cursor = make_cursor(collection->resource());
         cursor->push(sub_cursor);

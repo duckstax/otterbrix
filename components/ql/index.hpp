@@ -44,7 +44,7 @@ namespace components::ql {
                        const collection_name_t& collection,
                        const std::string& name,
                        index_type type,
-                       core::type index_compare)
+                       types::logical_type index_compare)
             : ql_statement_t(statement_type::create_index, database, collection)
             , name_{name}
             , index_type_(type)
@@ -57,12 +57,12 @@ namespace components::ql {
             : ql_statement_t(statement_type::create_index, database, collection)
             , name_{name}
             , index_type_(type)
-            , index_compare_(core::type::undef) {}
+            , index_compare_(types::logical_type::UNKNOWN) {}
 
         create_index_t()
             : ql_statement_t(statement_type::create_index, {}, {})
             , index_type_(index_type::no_valid)
-            , index_compare_(core::type::str) {}
+            , index_compare_(types::logical_type::STRING_LITERAL) {}
 
         create_index_t(const create_index_t&) = default;
         create_index_t& operator=(const create_index_t&) = default;
@@ -80,7 +80,7 @@ namespace components::ql {
         std::string name_ = {"unnamed"};
         keys_base_storage_t keys_;
         index_type index_type_;
-        core::type index_compare_;
+        types::logical_type index_compare_;
     };
 
     struct drop_index_t final : ql_statement_t {
@@ -123,7 +123,7 @@ namespace msgpack {
                     v.collection_ = o.via.array.ptr[1].as<std::string>();
                     v.name_ = o.via.array.ptr[2].as<std::string>();
                     v.index_type_ = static_cast<components::ql::index_type>(o.via.array.ptr[3].as<uint8_t>());
-                    v.index_compare_ = static_cast<core::type>(o.via.array.ptr[4].as<uint8_t>());
+                    v.index_compare_ = static_cast<components::types::logical_type>(o.via.array.ptr[4].as<uint8_t>());
                     auto data = o.via.array.ptr[5].as<std::vector<std::string>>();
                     v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
                     return o;

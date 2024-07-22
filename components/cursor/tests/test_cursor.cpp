@@ -6,28 +6,26 @@
 using namespace core::pmr;
 
 TEST_CASE("cursor::construction") {
+    auto resource = std::pmr::synchronized_pool_resource();
     INFO("empty cursor") {
-        auto cursor = components::cursor::make_cursor(default_resource());
+        auto cursor = components::cursor::make_cursor(&resource);
         REQUIRE(cursor->is_success());
         REQUIRE_FALSE(cursor->is_error());
     }
     INFO("failed operation cursor") {
-        auto cursor =
-            components::cursor::make_cursor(default_resource(), components::cursor::operation_status_t::failure);
+        auto cursor = components::cursor::make_cursor(&resource, components::cursor::operation_status_t::failure);
         REQUIRE_FALSE(cursor->is_success());
         REQUIRE_FALSE(cursor->is_error());
     }
     INFO("successful operation cursor") {
-        auto cursor =
-            components::cursor::make_cursor(default_resource(), components::cursor::operation_status_t::success);
+        auto cursor = components::cursor::make_cursor(&resource, components::cursor::operation_status_t::success);
         REQUIRE(cursor->is_success());
         REQUIRE_FALSE(cursor->is_error());
     }
     INFO("error cursor") {
         std::string description = "error description";
-        auto cursor = components::cursor::make_cursor(default_resource(),
-                                                      components::cursor::error_code_t::other_error,
-                                                      description);
+        auto cursor =
+            components::cursor::make_cursor(&resource, components::cursor::error_code_t::other_error, description);
         REQUIRE_FALSE(cursor->is_success());
         REQUIRE(cursor->is_error());
         REQUIRE(cursor->get_error().type == components::cursor::error_code_t::other_error);
@@ -36,11 +34,12 @@ TEST_CASE("cursor::construction") {
 }
 
 TEST_CASE("cursor::sort") {
-    components::cursor::cursor_t cursor(default_resource());
+    auto resource = std::pmr::synchronized_pool_resource();
+    components::cursor::cursor_t cursor(&resource);
     for (int i = 0; i < 10; ++i) {
-        auto* sub_cursor = new components::cursor::sub_cursor_t(default_resource(), {});
+        auto* sub_cursor = new components::cursor::sub_cursor_t(&resource, {});
         for (int j = 0; j < 10; ++j) {
-            sub_cursor->append(document_view_t(gen_doc(10 * i + j + 1)));
+            sub_cursor->append(gen_doc(10 * i + j + 1, &resource));
         }
         cursor.push(sub_cursor);
     }

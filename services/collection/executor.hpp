@@ -77,4 +77,6 @@ namespace services::collection::executor {
         log_t log_;
     };
 
+    using executor_ptr = std::unique_ptr<executor_t, std::function<void(executor_t*)>>;
+
 } // namespace services::collection::executor

@@ -47,20 +47,19 @@ namespace components::dataframe::column {
         }
 
         // If null count is known, returns it. Else, compute and return it
-        size_type column_view_base::null_count() const {
-            auto* ptr = std::pmr::get_default_resource(); // todo hack
+        size_type column_view_base::null_count(std::pmr::memory_resource* resource) const {
             if (_null_count <= dataframe::unknown_null_count) {
-                _null_count = dataframe::detail::null_count(ptr, null_mask(), offset(), offset() + size());
+                _null_count = dataframe::detail::null_count(resource, null_mask(), offset(), offset() + size());
             }
             return _null_count;
         }
 
-        size_type column_view_base::null_count(size_type begin, size_type end) const {
+        size_type
+        column_view_base::null_count(size_type begin, size_type end, std::pmr::memory_resource* resource) const {
             assert((begin >= 0) && (end <= size()) && (begin <= end));
-            auto* ptr = std::pmr::get_default_resource(); // todo hack
-            return (null_count() == 0)
+            return (null_count(resource) == 0)
                        ? 0
-                       : dataframe::detail::null_count(ptr, null_mask(), offset() + begin, offset() + end);
+                       : dataframe::detail::null_count(resource, null_mask(), offset() + begin, offset() + end);
         }
 
         // Struct to use custom hash combine and fold expression

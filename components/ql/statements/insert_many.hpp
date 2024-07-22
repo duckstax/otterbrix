@@ -8,10 +8,11 @@
 
 namespace components::ql {
     struct insert_many_t : ql_statement_t {
-        insert_many_t(const database_name_t& database,
-                      const collection_name_t& collection,
-                      const std::pmr::vector<components::document::document_ptr>& documents);
-        insert_many_t() = default;
+        explicit insert_many_t(const database_name_t& database,
+                               const collection_name_t& collection,
+                               const std::pmr::vector<components::document::document_ptr>& documents);
+        explicit insert_many_t(std::pmr::memory_resource* resource)
+            : documents_(resource) {}
         insert_many_t(const insert_many_t&) = default;
         insert_many_t& operator=(const insert_many_t&) = default;
         insert_many_t(insert_many_t&&) = default;
@@ -19,31 +20,25 @@ namespace components::ql {
         ~insert_many_t();
         std::pmr::vector<components::document::document_ptr> documents_;
     };
+
+    inline insert_many_t to_insert_many(const msgpack::object& msg_object, std::pmr::memory_resource* resource) {
+        if (msg_object.type != msgpack::type::ARRAY) {
+            throw msgpack::type_error();
+        }
+        if (msg_object.via.array.size != 3) {
+            throw msgpack::type_error();
+        }
+        auto database = msg_object.via.array.ptr[0].as<std::string>();
+        auto collection = msg_object.via.array.ptr[1].as<std::string>();
+        auto documents = document::to_documents(msg_object.via.array.ptr[2], resource);
+        return insert_many_t(database, collection, documents);
+    }
 } // namespace components::ql
 
 // User defined class template specialization
 namespace msgpack {
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
-
-            template<>
-            struct convert<components::ql::insert_many_t> final {
-                msgpack::object const& operator()(msgpack::object const& o, components::ql::insert_many_t& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-
-                    if (o.via.array.size != 3) {
-                        throw msgpack::type_error();
-                    }
-
-                    auto database = o.via.array.ptr[0].as<std::string>();
-                    auto collection = o.via.array.ptr[1].as<std::string>();
-                    auto documents = o.via.array.ptr[2].as<std::pmr::vector<components::document::document_ptr>>();
-                    v = components::ql::insert_many_t(database, collection, documents);
-                    return o;
-                }
-            };
 
             template<>
             struct pack<components::ql::insert_many_t> final {
