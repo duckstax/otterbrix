@@ -4,7 +4,9 @@ on: [pull_request]
         
 env:
   BUILD_TYPE: Release
-  DEV_MODE: ON   
+  DEV_MODE: ON
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
   
 jobs:
   build-info:
@@ -29,7 +31,7 @@ jobs:
     container: quay.io/pypa/manylinux2014_x86_64
 
     steps:
-      #- uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set env
         run: |
