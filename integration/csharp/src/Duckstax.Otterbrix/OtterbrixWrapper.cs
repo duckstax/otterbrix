@@ -103,7 +103,7 @@ namespace Duckstax.Otterbrix
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr
-        OtterbrixCreate(TransferConfig config, StringPasser database, StringPasser collection);
+        OtterbrixCreate(TransferConfig config);
 
         [DllImport(libotterbrix,
                    EntryPoint = "otterbrix_destroy",
@@ -116,15 +116,29 @@ namespace Duckstax.Otterbrix
                    ExactSpelling = false,
                    CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr ExecuteSQL(IntPtr otterprixPtr, StringPasser sql);
+        [DllImport(libotterbrix,
+                   EntryPoint = "create_database",
+                   ExactSpelling = false,
+                   CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr CreateDatabase(IntPtr otterprixPtr, StringPasser databaseName);
+        [DllImport(libotterbrix,
+                   EntryPoint = "create_collection",
+                   ExactSpelling = false,
+                   CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr CreateCollection(IntPtr otterprixPtr, StringPasser databaseName, StringPasser collectionName);
 
-        public OtterbrixWrapper(Config config, string database, string collection) {
-            otterbrixPtr = OtterbrixCreate(new TransferConfig(ref config),
-                                           new StringPasser(ref database),
-                                           new StringPasser(ref collection));
+        public OtterbrixWrapper(Config config) {
+            otterbrixPtr = OtterbrixCreate(new TransferConfig(ref config));
         }
         ~OtterbrixWrapper() { OtterbrixDestroy(otterbrixPtr); }
         public CursorWrapper Execute(string sql) {
             return new CursorWrapper(ExecuteSQL(otterbrixPtr, new StringPasser(ref sql)));
+        }
+        public CursorWrapper CreateDatabase(string databaseName) {
+            return new CursorWrapper(CreateDatabase(otterbrixPtr, new StringPasser(ref databaseName)));
+        }
+        public CursorWrapper CreateCollection(string databaseName, string collectionName) {
+            return new CursorWrapper(CreateCollection(otterbrixPtr, new StringPasser(ref databaseName), new StringPasser(ref collectionName)));
         }
 
         private readonly IntPtr otterbrixPtr;
