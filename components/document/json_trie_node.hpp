@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <memory_resource>
+
 #include "container/json_array.hpp"
 #include "container/json_object.hpp"
 #include <components/document/base.hpp>
