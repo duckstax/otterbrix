@@ -1,37 +1,34 @@
 #include "../components/tests/generaty.hpp"
 #include "../document/document.hpp"
+#include "../document/msgpack/msgpack_encoder.hpp"
 #include <benchmark/benchmark.h>
 #include <memory_resource>
 
 using components::document::document_t;
 
-void read_wrong(benchmark::State& state) {
+static void read_wrong(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
     auto doc = gen_doc(1000, &allocator);
     std::string_view key_bool{"/countBool"};
 
-    auto f = [&doc, key_bool]() {
-        doc->is_long(key_bool);
-        doc->is_ulong(key_bool);
-        doc->is_double(key_bool);
-
-        doc->get_ulong(key_bool);
-        doc->get_long(key_bool);
-        doc->get_double(key_bool);
-        doc->get_string(key_bool);
-        doc->get_array(key_bool);
-        doc->get_dict(key_bool);
-    };
-
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            f();
+            doc->is_long(key_bool);
+            doc->is_ulong(key_bool);
+            doc->is_double(key_bool);
+
+            doc->get_ulong(key_bool);
+            doc->get_long(key_bool);
+            doc->get_double(key_bool);
+            doc->get_string(key_bool);
+            doc->get_array(key_bool);
+            doc->get_dict(key_bool);
         }
     }
 }
 BENCHMARK(read_wrong)->Arg(100000);
 
-void read(benchmark::State& state) {
+static void read(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
     auto doc = gen_doc(1000, &allocator);
     std::string_view key_int{"/count"};
@@ -41,30 +38,26 @@ void read(benchmark::State& state) {
     std::string_view key_array{"/countArray"};
     std::string_view key_dict{"/countDict"};
 
-    auto f = [&doc, key_int, key_str, key_double, key_bool, key_array, key_dict]() {
-        doc->is_exists(key_int);
-        doc->is_long(key_int);
-        doc->is_ulong(key_int);
-        doc->is_double(key_double);
-
-        doc->get_bool(key_bool);
-        doc->get_long(key_int);
-        doc->get_ulong(key_int);
-        doc->get_double(key_double);
-        doc->get_string(key_str);
-        doc->get_array(key_array);
-        doc->get_dict(key_dict);
-    };
-
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            f();
+            doc->is_exists(key_int);
+            doc->is_long(key_int);
+            doc->is_ulong(key_int);
+            doc->is_double(key_double);
+
+            doc->get_bool(key_bool);
+            doc->get_long(key_int);
+            doc->get_ulong(key_int);
+            doc->get_double(key_double);
+            doc->get_string(key_str);
+            doc->get_array(key_array);
+            doc->get_dict(key_dict);
         }
     }
 }
 BENCHMARK(read)->Arg(100000);
 
-void deep_read(benchmark::State& state) {
+static void deep_read(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
     auto doc = gen_doc(1000, &allocator);
     std::string_view array_int_key{"/countArray/3"};
@@ -75,33 +68,84 @@ void deep_read(benchmark::State& state) {
     std::string_view array_dict_int_key{"/dictArray/3/number"};
     std::string_view dict_dict_bool_key{"/mixedDict/1001/odd"};
 
-    auto f = [&doc,
-              array_int_key,
-              array_array_key,
-              dict_dict_key,
-              array_dict_key,
-              array_array_int_key,
-              array_dict_int_key,
-              dict_dict_bool_key]() {
-        doc->is_exists(array_int_key);
-        doc->is_int(array_int_key);
-        doc->is_long(array_int_key);
-
-        doc->get_bool(dict_dict_bool_key);
-        doc->get_long(array_int_key);
-        doc->get_long(array_array_int_key);
-        doc->get_long(array_dict_int_key);
-        doc->get_array(array_array_key);
-        doc->get_dict(dict_dict_key);
-        doc->get_dict(array_dict_key);
-    };
-
     for (auto _ : state) {
         for (int i = 0; i < state.range(0); ++i) {
-            f();
+            doc->is_exists(array_int_key);
+            doc->is_int(array_int_key);
+            doc->is_long(array_int_key);
+
+            doc->get_bool(dict_dict_bool_key);
+            doc->get_long(array_int_key);
+            doc->get_long(array_array_int_key);
+            doc->get_long(array_dict_int_key);
+            doc->get_array(array_array_key);
+            doc->get_dict(dict_dict_key);
+            doc->get_dict(array_dict_key);
         }
     }
 }
 BENCHMARK(deep_read)->Arg(100000);
+
+static void pack(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    auto doc = gen_doc(1000, &allocator);
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            msgpack::object o;
+            to_msgpack_(doc->json_trie().get(), o);
+        }
+    }
+}
+BENCHMARK(pack)->Arg(100000);
+
+static void unpack(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    auto doc = gen_doc(1000, &allocator);
+    msgpack::object o;
+    to_msgpack_(doc->json_trie().get(), o);
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            to_document(o, &allocator);
+        }
+    }
+}
+BENCHMARK(unpack)->Arg(100000);
+
+static void insert_surface(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    std::vector<document_ptr> v;
+    v.reserve(state.range(0));
+    for (int i = 0; i < state.range(0); ++i) {
+        v.emplace_back(gen_doc(i, &allocator));
+    }
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            v.at(i)->set("new_value", i);
+        }
+    }
+}
+BENCHMARK(insert_surface)->Arg(100000);
+
+static void insert_deep(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    std::vector<document_ptr> v;
+    v.reserve(state.range(0));
+    for (int i = 0; i < state.range(0); ++i) {
+        v.emplace_back(gen_doc(i, &allocator));
+    }
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            v.at(i)->set_dict("new_value0");
+            v.at(i)->set_dict("new_value0/new_value1");
+            v.at(i)->set_dict("new_value0/new_value1/new_value2");
+            v.at(i)->set("new_value0/new_value1/new_value2/new_value3", i);
+        }
+    }
+}
+BENCHMARK(insert_deep)->Arg(100000);
 
 BENCHMARK_MAIN();
