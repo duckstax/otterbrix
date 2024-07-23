@@ -26,7 +26,7 @@ static void read_wrong(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(read_wrong)->Arg(100000);
+BENCHMARK(read_wrong)->Arg(1000);
 
 static void read(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -55,7 +55,7 @@ static void read(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(read)->Arg(100000);
+BENCHMARK(read)->Arg(1000);
 
 static void deep_read(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -84,7 +84,7 @@ static void deep_read(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(deep_read)->Arg(100000);
+BENCHMARK(deep_read)->Arg(1000);
 
 static void pack(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -97,7 +97,7 @@ static void pack(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(pack)->Arg(100000);
+BENCHMARK(pack)->Arg(1000);
 
 static void unpack(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -111,7 +111,7 @@ static void unpack(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(unpack)->Arg(100000);
+BENCHMARK(unpack)->Arg(1000);
 
 static void insert_surface(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -127,7 +127,7 @@ static void insert_surface(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(insert_surface)->Arg(100000);
+BENCHMARK(insert_surface)->Arg(1000);
 
 static void insert_deep(benchmark::State& state) {
     auto allocator = std::pmr::unsynchronized_pool_resource();
@@ -146,6 +146,38 @@ static void insert_deep(benchmark::State& state) {
         }
     }
 }
-BENCHMARK(insert_deep)->Arg(100000);
+BENCHMARK(insert_deep)->Arg(1000);
+
+static void remove_surface(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    std::vector<document_ptr> v;
+    v.reserve(state.range(0));
+    for (int i = 0; i < state.range(0); ++i) {
+        v.emplace_back(gen_doc(i, &allocator));
+    }
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            v.at(i)->remove("count");
+        }
+    }
+}
+BENCHMARK(remove_surface)->Arg(1000);
+
+static void remove_deep(benchmark::State& state) {
+    auto allocator = std::pmr::unsynchronized_pool_resource();
+    std::vector<document_ptr> v;
+    v.reserve(state.range(0));
+    for (int i = 0; i < state.range(0); ++i) {
+        v.emplace_back(gen_doc(i, &allocator));
+    }
+
+    for (auto _ : state) {
+        for (int i = 0; i < state.range(0); ++i) {
+            v.at(i)->remove("dictArray/0/number");
+        }
+    }
+}
+BENCHMARK(remove_deep)->Arg(1000);
 
 BENCHMARK_MAIN();
