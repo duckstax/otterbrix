@@ -1,11 +1,12 @@
 name: manylinux2014
 
 on: [pull_request]
-        
+
 env:
   BUILD_TYPE: Release
-  DEV_MODE: ON   
-  
+  DEV_MODE: ON
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   build-info:
     name: Build info
@@ -26,7 +27,7 @@ jobs:
       matrix:
         PYTHON_VERSION: ${{ fromJson(needs.build-info.outputs.python-versions) }}
 
-    container: k0tb9g9m0t/manylinux-bazel-2014
+    container: quay.io/pypa/manylinux2014_x86_64
 
     steps:
       - uses: actions/checkout@v3
@@ -46,13 +47,12 @@ jobs:
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.62.0
+          pip3 install --retries=30 conan==1.64.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
-          conan config install conan
           conan remote add duckstax http://conan.duckstax.com
 
       - name: Download and Install conan dependencies
