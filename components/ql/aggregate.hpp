@@ -16,7 +16,9 @@ namespace components::ql {
 
     class aggregate_statement final : public ql_param_statement_t {
     public:
-        aggregate_statement(database_name_t database, collection_name_t collection);
+        aggregate_statement(database_name_t database,
+                            collection_name_t collection,
+                            std::pmr::memory_resource* resource);
 
         void append(aggregate::operator_type type, aggregate::operator_storage_t storage);
 
@@ -64,11 +66,12 @@ namespace components::ql {
         return stream;
     }
 
-    using aggregate_statement_ptr = std::unique_ptr<aggregate_statement>;
+    using aggregate_ptr = boost::intrusive_ptr<aggregate_statement>;
     using aggregate_statement_raw_ptr = aggregate_statement*;
 
-    aggregate_statement_ptr make_aggregate_statement(const database_name_t& database,
-                                                     const collection_name_t& collection);
+    aggregate_ptr make_aggregate(const database_name_t& database,
+                                 const collection_name_t& collection,
+                                 std::pmr::memory_resource* resource);
 
     const components::ql::aggregate::match_t& get_match(const aggregate_statement& aggregate);
 

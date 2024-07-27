@@ -1,24 +1,25 @@
 #include <pybind11/pybind11.h>
 
-#include "wrapper_client.hpp"
-#include "wrapper_collection.hpp"
-#include "wrapper_cursor.hpp"
-#include "wrapper_database.hpp"
-#include "wrapper_document.hpp"
-#include "wrapper_document_id.hpp"
+#include "sql/wrapper_client.hpp"
+#include "sql/wrapper_collection.hpp"
+#include "sql/wrapper_cursor.hpp"
+#include "sql/wrapper_database.hpp"
+#include "sql/wrapper_document.hpp"
+#include "sql/wrapper_document_id.hpp"
 
 #include <boost/uuid/uuid.hpp>            // uuid class
 #include <boost/uuid/uuid_generators.hpp> // generators
 #include <boost/uuid/uuid_io.hpp>         // streaming operators etc.
 
-#include "convert.hpp"
-#include "spaces.hpp"
+#include "sql/convert.hpp"
+#include "sql/spaces.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 using namespace otterbrix;
+using namespace core;
 
 PYBIND11_MODULE(otterbrix, m) {
     py::class_<wrapper_client>(m, "Client")
@@ -46,19 +47,19 @@ PYBIND11_MODULE(otterbrix, m) {
         .value("WILDCARD", index_type::wildcard)
         .export_values();
 
-    py::enum_<index_compare>(m, "CompareIndex")
-        .value("STR", index_compare::str)
-        .value("INT8", index_compare::int8)
-        .value("INT16", index_compare::int16)
-        .value("INT32", index_compare::int32)
-        .value("INT64", index_compare::int64)
-        .value("UINT8", index_compare::uint8)
-        .value("UINT16", index_compare::uint16)
-        .value("UINT32", index_compare::uint32)
-        .value("UINT64", index_compare::uint64)
-        .value("FLOAT32", index_compare::float32)
-        .value("FLOAT64", index_compare::float64)
-        .value("BOOL8", index_compare::bool8)
+    py::enum_<type>(m, "CompareIndex")
+        .value("STR", type::str)
+        .value("INT8", type::int8)
+        .value("INT16", type::int16)
+        .value("INT32", type::int32)
+        .value("INT64", type::int64)
+        .value("UINT8", type::uint8)
+        .value("UINT16", type::uint16)
+        .value("UINT32", type::uint32)
+        .value("UINT64", type::uint64)
+        .value("FLOAT32", type::float32)
+        .value("FLOAT64", type::float64)
+        .value("BOOL8", type::bool8)
         .export_values();
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")

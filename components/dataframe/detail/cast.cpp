@@ -72,7 +72,7 @@ namespace {
                                            input.size(),
                                            core::buffer{resource},
                                            detail::copy_bitmask(resource, input),
-                                           input.null_count()); //todo: impl
+                                           input.null_count(resource)); //todo: impl
     }
 
     template<typename From, typename To>
@@ -84,7 +84,7 @@ namespace {
                                                          size,
                                                          core::buffer{resource},
                                                          detail::copy_bitmask(resource, input),
-                                                         input.null_count());
+                                                         input.null_count(resource));
         column::mutable_column_view output_mutable = *output;
         if constexpr (is_supported_non_fixed_point_cast<From, To>()) {
             std::transform(input.begin<From>(), input.end<From>(), output_mutable.begin<To>(), unary_cast<To>);

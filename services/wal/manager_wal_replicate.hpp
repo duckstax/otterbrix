@@ -19,7 +19,7 @@ namespace services::wal {
 
     class base_manager_wal_replicate_t : public actor_zeta::cooperative_supervisor<base_manager_wal_replicate_t> {
     protected:
-        base_manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
+        base_manager_wal_replicate_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
 
     private:
         actor_zeta::scheduler_raw e_;
@@ -37,14 +37,18 @@ namespace services::wal {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t { manager_disk = 0, manager_dispatcher = 1 };
+        enum class unpack_rules : uint64_t
+        {
+            manager_disk = 0,
+            manager_dispatcher = 1
+        };
 
         void sync(address_pack& pack) {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
             manager_dispatcher_ = std::get<static_cast<uint64_t>(unpack_rules::manager_dispatcher)>(pack);
         }
 
-        manager_wal_replicate_t(actor_zeta::detail::pmr::memory_resource*,
+        manager_wal_replicate_t(std::pmr::memory_resource*,
                                 actor_zeta::scheduler_raw,
                                 configuration::config_wal,
                                 log_t&);
@@ -77,7 +81,7 @@ namespace services::wal {
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
     public:
-        manager_wal_replicate_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
+        manager_wal_replicate_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
 
         template<class T>
         auto always_success(session_id_t& session, T&&) -> void {

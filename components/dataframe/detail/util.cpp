@@ -14,8 +14,8 @@ namespace components::dataframe::detail {
             return type == type_id::string || type == type_id::list || type == type_id::structs;
         }
 
-        bool has_nonempty_null_rows(const column::column_view& input) {
-            if (!input.has_nulls()) {
+        bool has_nonempty_null_rows(const column::column_view& input, std::pmr::memory_resource* resource) {
+            if (!input.has_nulls(resource)) {
                 return false;
             }
 
@@ -29,17 +29,17 @@ namespace components::dataframe::detail {
                    }) > 0;
         }
 
-        bool has_nonempty_nulls(column::column_view const& input) {
+        bool has_nonempty_nulls(column::column_view const& input, std::pmr::memory_resource* resource) {
             auto const type = input.type().id();
             if (!type_may_have_nonempty_nulls(type)) {
                 return false;
             }
-            if ((type == type_id::string || type == type_id::list) && has_nonempty_null_rows(input)) {
+            if ((type == type_id::string || type == type_id::list) && has_nonempty_null_rows(input, resource)) {
                 return true;
             }
             if ((type == type_id::structs || type == type_id::list) &&
-                std::any_of(input.child_begin(), input.child_end(), [](const auto& child) {
-                    return has_nonempty_nulls(child);
+                std::any_of(input.child_begin(), input.child_end(), [resource](const auto& child) {
+                    return has_nonempty_nulls(child, resource);
                 })) {
                 return true;
             }
@@ -66,7 +66,12 @@ namespace components::dataframe::detail {
             }
         };
 
-        enum class gather_bitmask_op { dont_check, passthrough, nullify };
+        enum class gather_bitmask_op
+        {
+            dont_check,
+            passthrough,
+            nullify
+        };
 
         template<typename iterator>
         void gather_bitmask(std::pmr::memory_resource* resource,
@@ -129,7 +134,7 @@ namespace components::dataframe::detail {
                                                         size_type null_count,
                                                         std::unique_ptr<column::column_t>&& input) {
         input = superimpose_nulls_no_sanitize(resource, null_mask, null_count, std::move(input));
-        if (const auto input_view = input->view(); has_nonempty_nulls(input_view)) {
+        if (const auto input_view = input->view(); has_nonempty_nulls(input_view, resource)) {
             return purge_nonempty_nulls(resource, input_view);
         }
         return std::move(input);

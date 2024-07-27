@@ -19,6 +19,10 @@ set(SOURCE_${PROJECT_NAME}
     parser/database/impl/parser_database_create.cpp
     parser/database/impl/parser_database_drop.cpp
 
+    parser/table/parser_table.cpp
+    parser/table/impl/parser_table_create.cpp
+    parser/table/impl/parser_table_drop.cpp
+
     parser/delete/parser_delete.cpp
     parser/delete/impl/parser_delete_base.cpp
 
@@ -29,6 +33,10 @@ set(SOURCE_${PROJECT_NAME}
     parser/select/impl/parser_select_fields.cpp
     parser/select/impl/parser_select_from.cpp
     parser/select/impl/parser_select_without_from.cpp
+
+    parser/index/parser_index.cpp
+    parser/index/impl/parser_index_create.cpp
+    parser/index/impl/parser_index_drop.cpp
 
     parser/update/parser_update.cpp
     parser/update/impl/parser_update_base.cpp

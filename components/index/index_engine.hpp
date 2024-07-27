@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <map>
 #include <memory>
 #include <scoped_allocator>
@@ -10,23 +11,27 @@
 #include "core/pmr.hpp"
 #include "forward.hpp"
 #include "index.hpp"
-#include <components/pipeline/context.hpp>
+#include <components/physical_plan/context.hpp>
 #include <core/btree/btree.hpp>
 
 namespace components::index {
 
+    constexpr uint32_t INDEX_ID_UNDEFINED = std::numeric_limits<uint32_t>::max();
+
     struct index_engine_t final {
     public:
-        explicit index_engine_t(actor_zeta::detail::pmr::memory_resource* resource);
+        explicit index_engine_t(std::pmr::memory_resource* resource);
         auto matching(id_index id) -> index_t::pointer;
         auto matching(const keys_base_storage_t& query) -> index_t::pointer;
         auto matching(const actor_zeta::address_t& address) -> index_t::pointer;
         auto matching(const std::string& name) -> index_t::pointer;
+        auto has_index(const std::string& name)
+            -> bool; // TODO figure out how to make it faster (not using matching inside)
         auto add_index(const keys_base_storage_t&, index_ptr) -> uint32_t;
         auto add_disk_agent(id_index id, actor_zeta::address_t address) -> void;
         auto drop_index(index_t::pointer index) -> void;
         auto size() const -> std::size_t;
-        actor_zeta::detail::pmr::memory_resource* resource() noexcept;
+        std::pmr::memory_resource* resource() noexcept;
 
         void insert_document(const document_ptr& document, pipeline::context_t* pipeline_context);
         void delete_document(const document_ptr& document, pipeline::context_t* pipeline_context);
@@ -42,7 +47,7 @@ namespace components::index {
         using index_to_address_t = std::pmr::map<actor_zeta::address_t, index_t::pointer>;
         using index_to_name_t = std::pmr::unordered_map<std::string, index_t::pointer>;
 
-        actor_zeta::detail::pmr::memory_resource* resource_;
+        std::pmr::memory_resource* resource_;
         keys_to_doc_t mapper_;
         index_to_doc_t index_to_mapper_;
         index_to_address_t index_to_address_;
@@ -52,7 +57,7 @@ namespace components::index {
 
     using index_engine_ptr = core::pmr::unique_ptr<index_engine_t>;
 
-    auto make_index_engine(actor_zeta::detail::pmr::memory_resource* resource) -> index_engine_ptr;
+    auto make_index_engine(std::pmr::memory_resource* resource) -> index_engine_ptr;
     auto search_index(const index_engine_ptr& ptr, id_index id) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const keys_base_storage_t& query) -> index_t::pointer;
     auto search_index(const index_engine_ptr& ptr, const actor_zeta::address_t& address) -> index_t::pointer;

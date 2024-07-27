@@ -207,7 +207,7 @@ namespace components::dataframe::column {
                                                   view.size(),
                                                   core::buffer{resource, 0},
                                                   dataframe::detail::copy_bitmask(resource, view),
-                                                  view.null_count(),
+                                                  view.null_count(resource),
                                                   std::move(children));
             }
 
@@ -225,7 +225,7 @@ namespace components::dataframe::column {
                                  static_cast<const char*>(view.head()) + (view.offset() * size_of(view.type())),
                                  view.size() * size_of(view.type())},
                     dataframe::detail::copy_bitmask(resource, view),
-                    view.null_count(),
+                    view.null_count(resource),
                     std::move(children));
             }
 
@@ -258,7 +258,7 @@ namespace components::dataframe::column {
                 return make_structs_column(resource,
                                            num_rows,
                                            std::move(children),
-                                           view.null_count(),
+                                           view.null_count(resource),
                                            dataframe::detail::copy_bitmask(resource, view.null_mask(), begin, end));
             }
         };

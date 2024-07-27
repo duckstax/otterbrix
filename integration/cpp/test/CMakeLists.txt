@@ -8,6 +8,7 @@ set( ${PROJECT_NAME}_SOURCES
         test_collection_sql.cpp
         test_save_load.cpp
         test_index.cpp
+        test_join.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
@@ -46,13 +47,6 @@ target_link_libraries(
         CONAN_PKG::libbacktrace
 
 )
-
-if (WASM_BUILD)
-    target_link_libraries(
-            ${PROJECT_NAME} PRIVATE
-            CONAN_PKG::proxy-wasm-cpp-host
-    )
-endif ()
 
 include(CTest)
 include(Catch)

@@ -8,6 +8,7 @@ set(SOURCE_${PROJECT_NAME}
         aggregate/limit.cpp
         aggregate/match.cpp
         aggregate/sort.cpp
+        join/join.cpp
         statements/create_collection.cpp
         statements/create_database.cpp
         statements/delete_many.cpp
@@ -32,6 +33,7 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
         otterbrix::document
+        otterbrix::types
         otterbrix::expressions
         CONAN_PKG::boost
 )

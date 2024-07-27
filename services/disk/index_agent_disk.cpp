@@ -2,21 +2,23 @@
 #include "manager_disk.hpp"
 #include "result.hpp"
 #include <components/index/disk/route.hpp>
+#include <services/collection/collection.hpp>
 
 namespace services::disk {
 
     index_agent_disk_t::index_agent_disk_t(base_manager_disk_t* manager,
-                                           actor_zeta::detail::pmr::memory_resource* resource,
+                                           std::pmr::memory_resource* resource,
                                            const path_t& path_db,
-                                           const collection_name_t& collection_name,
+                                           collection::context_collection_t* collection,
                                            const index_name_t& index_name,
-                                           components::ql::index_compare compare_type,
+                                           logical_type compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
         , log_(log.clone())
-        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection_name / index_name, compare_type))
-        , collection_name_(collection_name) {
+        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection->name().collection / index_name,
+                                                     compare_type))
+        , collection_(collection) {
         trace(log_, "index_agent_disk::create {}", index_name);
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
         add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
@@ -26,31 +28,44 @@ namespace services::disk {
 
     index_agent_disk_t::~index_agent_disk_t() { trace(log_, "delete index_agent_disk_t"); }
 
-    const collection_name_t& index_agent_disk_t::collection_name() const { return collection_name_; }
+    const collection_name_t& index_agent_disk_t::collection_name() const { return collection_->name().collection; }
+    collection::context_collection_t* index_agent_disk_t::collection() const { return collection_; }
 
     void index_agent_disk_t::drop(session_id_t& session) {
         trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
         index_disk_->drop();
         is_dropped_ = true;
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
     bool index_agent_disk_t::is_dropped() const { return is_dropped_; }
 
-    void index_agent_disk_t::insert(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::insert(session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
-    void index_agent_disk_t::remove(session_id_t& session, const wrapper_value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::remove(session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::remove {}, session: {}", value.to_string(), session.data());
         index_disk_->remove(key, value);
-        actor_zeta::send(current_message()->sender(), address(), index::handler_id(index::route::success), session);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
     }
 
     void index_agent_disk_t::find(session_id_t& session,
-                                  const wrapper_value_t& value,
+                                  const value_t& value,
                                   components::expressions::compare_type compare) {
         using components::expressions::compare_type;
 
@@ -85,7 +100,8 @@ namespace services::disk {
                          address(),
                          index::handler_id(index::route::success_find),
                          session,
-                         res);
+                         res,
+                         collection_);
     }
 
 } //namespace services::disk

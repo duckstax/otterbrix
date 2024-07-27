@@ -1,12 +1,14 @@
 #pragma once
 
-#include "base.hpp"
+#include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
-#include <components/document/wrapper_value.hpp>
+#include <components/base/collection_full_name.hpp>
+#include <components/document/value.hpp>
 
 namespace components::ql {
 
-    enum class statement_type : char {
+    enum class statement_type : char
+    {
         unused = 0x00, // unused
         create_database,
         drop_database,
@@ -20,8 +22,44 @@ namespace components::ql {
         update_many,
         create_index,
         drop_index,
-        aggregate
+        aggregate,
+        join
     };
+
+    static inline std::string to_string(statement_type type) {
+        switch (type) {
+            case statement_type::unused:
+                return "unused";
+            case statement_type::create_database:
+                return "create_database";
+            case statement_type::drop_database:
+                return "drop_database";
+            case statement_type::create_collection:
+                return "create_collection";
+            case statement_type::drop_collection:
+                return "drop_collection";
+            case statement_type::insert_one:
+                return "insert_one";
+            case statement_type::insert_many:
+                return "insert_many";
+            case statement_type::delete_one:
+                return "delete_one";
+            case statement_type::delete_many:
+                return "delete_many";
+            case statement_type::update_one:
+                return "update_one";
+            case statement_type::update_many:
+                return "update_many";
+            case statement_type::create_index:
+                return "create_index";
+            case statement_type::drop_index:
+                return "drop_index";
+            case statement_type::aggregate:
+                return "aggregate";
+            default:
+                return "error_type";
+        }
+    }
 
     // Base struct for every QL statement
     struct ql_statement_t : public boost::intrusive_ref_counter<ql_statement_t> {
@@ -47,6 +85,8 @@ namespace components::ql {
         database_name_t database_;
         collection_name_t collection_;
     };
+
+    using ql_statement_ptr = boost::intrusive_ptr<ql_statement_t>;
 
     struct unused_statement_t : public ql_statement_t {
         unused_statement_t()

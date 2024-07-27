@@ -7,7 +7,12 @@ namespace components::sql {
 
     namespace {
 
-        enum class number_base { dec, hex, bin };
+        enum class number_base
+        {
+            dec,
+            hex,
+            bin
+        };
 
         inline bool is_word_char(char c) { return c == '_' || std::isalnum(c); }
 

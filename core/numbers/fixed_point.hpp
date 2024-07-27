@@ -12,13 +12,19 @@
 
 namespace core::numbers {
 
-    enum scale_type : int32_t {};
+    enum scale_type : int32_t
+    {
+    };
 
-    enum class Radix : int32_t { BASE_2 = 2, BASE_10 = 10 };
+    enum class Radix : int32_t
+    {
+        BASE_2 = 2,
+        BASE_10 = 10
+    };
 
     template<typename T>
     constexpr inline auto is_supported_representation_type() {
-        return std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t> || std::is_same_v<T, __int128_t>;
+        return std::is_same_v<T, int32_t> || std::is_same_v<T, int64_t> || std::is_same_v<T, absl::int128>;
     }
 
     template<typename T>
@@ -332,6 +338,6 @@ namespace core::numbers {
 
     using decimal32 = fixed_point<int32_t, Radix::BASE_10>;
     using decimal64 = fixed_point<int64_t, Radix::BASE_10>;
-    using decimal128 = fixed_point<__int128_t, Radix::BASE_10>;
+    using decimal128 = fixed_point<absl::int128, Radix::BASE_10>;
 
 } // namespace core::numbers

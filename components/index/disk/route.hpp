@@ -4,14 +4,13 @@
 
 namespace services::index {
 
-    enum class route : uint64_t {
+    enum class route : uint64_t
+    {
         create,
         drop,
-
         insert,
         remove,
         find,
-
         success,
         success_create,
         success_find,

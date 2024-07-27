@@ -42,48 +42,31 @@ namespace services::dispatcher {
         void load(components::session::session_id_t& session, actor_zeta::address_t sender);
         void load_from_disk_result(components::session::session_id_t& session,
                                    const services::disk::result_load_t& result);
-        void load_from_memory_resource_result(components::session::session_id_t& session,
-                                              components::cursor::list_addresses_t collections);
+        void load_from_memory_resource_result(components::session::session_id_t& session);
         void load_from_wal_result(components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);
         void execute_ql(components::session::session_id_t& session,
                         components::ql::ql_statement_t* ql,
                         actor_zeta::address_t address);
         void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-        void create_collection_finish(components::session::session_id_t& session,
-                                      actor_zeta::base::address_t collection_address);
         void size(components::session::session_id_t& session,
                   std::string& database_name,
                   std::string& collection,
-                  actor_zeta::address_t address);
-        void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr cursor);
-        void create_index(components::session::session_id_t& session,
-                          components::ql::create_index_t index,
-                          actor_zeta::address_t address);
-        void create_index_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-
-        void drop_index(components::session::session_id_t& session,
-                        components::ql::drop_index_t drop_index,
-                        actor_zeta::address_t address);
-
-        void drop_index_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-
+                  actor_zeta::base::address_t sender);
+        void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr&& cursor);
         void close_cursor(components::session::session_id_t& session);
         void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
-        bool check_load_from_wal(components::session::session_id_t& session);
+        bool load_from_wal_in_progress(components::session::session_id_t& session);
 
     private:
         log_t log_;
         actor_zeta::address_t manager_dispatcher_;
         std::pmr::memory_resource* resource_;
-        std::unordered_map<components::session::session_id_t, actor_zeta::address_t> last_collection_;
         actor_zeta::address_t memory_storage_;
         actor_zeta::address_t manager_wal_;
         actor_zeta::address_t manager_disk_;
         session_storage_t session_to_address_;
         std::unordered_map<components::session::session_id_t, std::unique_ptr<components::cursor::cursor_t>> cursor_;
-        std::unordered_map<collection_full_name_t, actor_zeta::address_t, collection_name_hash>
-            collection_address_book_;
         std::unordered_map<components::session::session_id_t, components::cursor::cursor_t_ptr>
             result_storage_; // to be able return result from wal_success
         disk::result_load_t load_result_;
@@ -97,13 +80,18 @@ namespace services::dispatcher {
         std::vector<services::wal::record_t> records_;
     };
 
-    using dispatcher_ptr = std::unique_ptr<dispatcher_t>;
+    using dispatcher_ptr = std::unique_ptr<dispatcher_t, std::function<void(dispatcher_t*)>>;
 
     class manager_dispatcher_t final : public actor_zeta::cooperative_supervisor<manager_dispatcher_t> {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t { memory_storage = 0, manager_wal = 1, manager_disk = 2 };
+        enum class unpack_rules : uint64_t
+        {
+            memory_storage = 0,
+            manager_wal = 1,
+            manager_disk = 2
+        };
 
         void sync(address_pack& pack) {
             memory_storage_ = std::get<static_cast<uint64_t>(unpack_rules::memory_storage)>(pack);
@@ -111,7 +99,7 @@ namespace services::dispatcher {
             manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
         }
 
-        manager_dispatcher_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
+        manager_dispatcher_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t& log);
 
         ~manager_dispatcher_t() override;
 
@@ -129,8 +117,6 @@ namespace services::dispatcher {
         void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
         void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(components::session::session_id_t& session);
-        void create_index(components::session::session_id_t& session, components::ql::create_index_t index);
-        void drop_index(components::session::session_id_t& session, components::ql::drop_index_t drop_index);
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;

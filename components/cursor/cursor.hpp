@@ -4,8 +4,8 @@
 
 #include <actor-zeta/actor-zeta.hpp>
 
-#include <components/document/document_view.hpp>
-#include <components/ql/base.hpp>
+#include <components/base/collection_full_name.hpp>
+#include <components/document/document.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
@@ -14,23 +14,28 @@
 
 namespace components::cursor {
 
-    using data_t = components::document::document_view_t;
-    using data_ptr = const data_t*;
+    using data_ptr = document::document_ptr;
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
-    enum class operation_status_t { success = 1, failure = 0 };
+    enum class operation_status_t
+    {
+        success = 1,
+        failure = 0
+    };
 
-    enum class error_code_t : int32_t {
+    enum class error_code_t : int32_t
+    {
         other_error = -1,
         none = 0,
         database_already_exists = 1,
         database_not_exists = 2,
         collection_already_exists = 3,
         collection_not_exists = 4,
-        collection_dropped = 5,
-        sql_parse_error = 6,
-        create_phisical_plan_error = 7
+        index_create_fail = 5,
+        collection_dropped = 6,
+        sql_parse_error = 7,
+        create_phisical_plan_error = 8
     };
 
     struct error_t {
@@ -41,28 +46,17 @@ namespace components::cursor {
         explicit error_t(error_code_t type, const std::string& what);
     };
 
-    struct list_addresses_t final {
-        struct res_t {
-            collection_full_name_t name;
-            actor_zeta::address_t address;
-        };
-
-        std::pmr::vector<res_t> addresses;
-
-        explicit list_addresses_t(std::pmr::memory_resource* resource);
-    };
-
     class sub_cursor_t : public boost::intrusive::list_base_hook<> {
     public:
-        sub_cursor_t(std::pmr::memory_resource* resource, actor_zeta::address_t collection);
-        actor_zeta::address_t& address();
+        sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name);
+        const collection_full_name_t& collection_name();
         std::size_t size() const;
-        std::pmr::vector<data_t>& data();
-        void append(data_t);
+        std::pmr::vector<data_ptr>& data();
+        void append(data_ptr);
 
     private:
-        actor_zeta::address_t collection_;
-        std::pmr::vector<data_t> data_;
+        collection_full_name_t collection_name_;
+        std::pmr::vector<data_ptr> data_;
     };
 
     class cursor_t : public boost::intrusive_ref_counter<cursor_t> {

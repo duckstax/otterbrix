@@ -4,7 +4,8 @@
 
 namespace components::sql {
 
-    enum class token_type {
+    enum class token_type
+    {
         unknow,
         whitespace,
         comment,

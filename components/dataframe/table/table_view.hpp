@@ -97,14 +97,15 @@ namespace components::dataframe::table {
         return std::any_of(view.begin(), view.end(), [](auto const& col) { return col.nullable(); });
     }
 
-    inline bool has_nulls(table_view const& view) {
-        return std::any_of(view.begin(), view.end(), [](auto const& col) { return col.has_nulls(); });
+    inline bool has_nulls(table_view const& view, std::pmr::memory_resource* resource) {
+        return std::any_of(view.begin(), view.end(), [resource](auto const& col) { return col.has_nulls(resource); });
     }
 
-    inline bool has_nested_nulls(table_view const& input) {
-        return std::any_of(input.begin(), input.end(), [](auto const& col) {
-            return col.has_nulls() || std::any_of(col.child_begin(), col.child_end(), [](auto const& child_col) {
-                       return has_nested_nulls(table_view{{child_col}});
+    inline bool has_nested_nulls(table_view const& input, std::pmr::memory_resource* resource) {
+        return std::any_of(input.begin(), input.end(), [resource](auto const& col) {
+            return col.has_nulls(resource) ||
+                   std::any_of(col.child_begin(), col.child_end(), [resource](auto const& child_col) {
+                       return has_nested_nulls(table_view{{child_col}}, resource);
                    });
         });
     }

@@ -7,13 +7,17 @@
 #include <core/excutor.hpp>
 #include <core/file/file.hpp>
 
+namespace services::collection {
+    class context_collection_t;
+}
+
 namespace services::disk {
 
     using session_id_t = ::components::session::session_id_t;
 
     class base_manager_disk_t : public actor_zeta::cooperative_supervisor<base_manager_disk_t> {
     protected:
-        base_manager_disk_t(actor_zeta::detail::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
+        base_manager_disk_t(std::pmr::memory_resource* mr, actor_zeta::scheduler_raw scheduler);
 
     private:
         actor_zeta::scheduler_raw e_;
@@ -28,7 +32,8 @@ namespace services::disk {
     public:
         using address_pack = std::tuple<actor_zeta::address_t, actor_zeta::address_t>;
 
-        enum class unpack_rules : uint64_t {
+        enum class unpack_rules : uint64_t
+        {
             manager_wal = 0,
         };
 
@@ -36,7 +41,7 @@ namespace services::disk {
             manager_wal_ = std::get<static_cast<uint64_t>(unpack_rules::manager_wal)>(pack);
         }
 
-        manager_disk_t(actor_zeta::detail::pmr::memory_resource*,
+        manager_disk_t(std::pmr::memory_resource*,
                        actor_zeta::scheduler_raw,
                        configuration::config_disk config,
                        log_t& log);
@@ -68,8 +73,12 @@ namespace services::disk {
 
         auto flush(session_id_t& session, wal::id_t wal_id) -> void;
 
-        void create_index_agent(session_id_t& session, const components::ql::create_index_t& index);
-        void drop_index_agent(session_id_t& session, const index_name_t& index_name);
+        void create_index_agent(session_id_t& session,
+                                const components::ql::create_index_t& index,
+                                services::collection::context_collection_t* collection);
+        void drop_index_agent(session_id_t& session,
+                              const index_name_t& index_name,
+                              services::collection::context_collection_t* collection);
         void drop_index_agent_success(session_id_t& session);
 
     private:
@@ -100,13 +109,12 @@ namespace services::disk {
 
     class manager_disk_empty_t final : public base_manager_disk_t {
     public:
-        manager_disk_empty_t(actor_zeta::detail::pmr::memory_resource*, actor_zeta::scheduler_raw);
+        manager_disk_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
         auto load(session_id_t& session) -> void;
         void create_index_agent(session_id_t& session,
-                                const collection_name_t&,
-                                const index_name_t&,
-                                components::ql::index_compare);
+                                const components::ql::create_index_t& index,
+                                services::collection::context_collection_t* collection);
 
         template<class... Args>
         auto nothing(Args&&...) -> void {}

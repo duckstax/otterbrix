@@ -35,7 +35,6 @@ COPY ./cmake ./cmake
 COPY ./components ./components
 COPY ./core ./core
 COPY ./services ./services
-COPY ./wasm ./wasm
 COPY ./example ./example
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
@@ -44,9 +43,9 @@ WORKDIR /app/build
 RUN cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DDEV_MODE=ON  -DSANITIZE_ADDRESS=ON && \
     cmake --build . --target all -- -j $(nproc)
 
-RUN ctest -C -V --output-on-failure
+RUN ctest -C -V --output-on-failure --timeout 60
 
-RUN cd integration/python/ && pytest
+RUN cd integration/python/ && pytest -v
 
 # Multistage build is faster and resulting image will be smaller
 FROM mcr.microsoft.com/dotnet/sdk:7.0

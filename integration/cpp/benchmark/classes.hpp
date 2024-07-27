@@ -36,7 +36,7 @@ private:
 
 template<bool on_wal, bool on_disk>
 void init_collection(const collection_name_t& collection_name) {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource();
+    auto resource = std::pmr::synchronized_pool_resource();
     auto* dispatcher = test_spaces<on_wal, on_disk>::get().dispatcher();
     auto session = otterbrix::session_id_t();
     dispatcher->create_database(session, database_name);
@@ -54,7 +54,7 @@ void create_index(const collection_name_t& collection_name) {
     auto session = otterbrix::session_id_t();
     create_index_t ql{database_name, collection_name, index_type::single, index_compare::int64};
     ql.keys_.emplace_back("count");
-    dispatcher->create_index(session, ql);
+    dispatcher->create_index(session, &ql);
 }
 
 template<bool on_wal, bool on_disk>
@@ -87,7 +87,7 @@ aggregate_statement_raw_ptr create_aggregate(const collection_name_t& collection
     aggregate::match_t match;
     if (!key.empty()) {
         aggregate->add_parameter(core::parameter_id_t{1}, value);
-        match.query = make_compare_expression(actor_zeta::detail::pmr::get_default_resource(),
+        match.query = make_compare_expression(std::pmr::synchronized_pool_resource(),
                                               compare,
                                               components::expressions::key_t{key},
                                               core::parameter_id_t{1});

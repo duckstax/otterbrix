@@ -38,7 +38,7 @@ TEST_CASE("integration::cpp::test_collection::sql::base") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, dispatcher->resource()) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
             }
             auto cur = dispatcher->execute_sql(session, query.str());
@@ -196,7 +196,7 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
             std::stringstream query;
             query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
             for (int num = 0; num < 100; ++num) {
-                query << "('" << gen_id(num + 1) << "', "
+                query << "('" << gen_id(num + 1, dispatcher->resource()) << "', "
                       << "'Name " << (num % 10) << "', " << (num % 20) << ")" << (num == 99 ? ";" : ", ");
             }
             dispatcher->execute_sql(session, query.str());
@@ -215,10 +215,11 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->size() == 10);
         int number = 0;
         while (auto doc = cur->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_double("avg_") == (number % 20 + (number + 10) % 20) / 2);
             REQUIRE(doc->get_long("min_") == number % 20);
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             ++number;
@@ -238,10 +239,11 @@ TEST_CASE("integration::cpp::test_collection::sql::group_by") {
         REQUIRE(cur->size() == 10);
         int number = 9;
         while (auto doc = cur->next()) {
-            REQUIRE(doc->get_string("name") == "Name " + std::to_string(number));
+            REQUIRE(doc->get_string("name") == std::pmr::string("Name " + std::to_string(number)));
             REQUIRE(doc->get_long("count_") == 10);
             REQUIRE(doc->get_long("sum_") == 5 * (number % 20) + 5 * ((number + 10) % 20));
             REQUIRE(doc->get_long("avg_") == (number % 20 + (number + 10) % 20) / 2);
+            REQUIRE(doc->get_double("avg_") == (number % 20 + (number + 10) % 20) / 2);
             REQUIRE(doc->get_long("min_") == number % 20);
             REQUIRE(doc->get_long("max_") == (number + 10) % 20);
             --number;
@@ -261,7 +263,7 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = otterbrix::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->get_error().type == error_code_t::database_not_exists);
+        REQUIRE(cur->get_error().type == cursor::error_code_t::database_not_exists);
     }
 
     INFO("create database") {
@@ -273,6 +275,94 @@ TEST_CASE("integration::cpp::test_collection::sql::invalid_queries") {
         auto session = otterbrix::session_id_t();
         auto cur = dispatcher->execute_sql(session, R"_(SELECT * FROM TestDatabase.TestCollection;)_");
         REQUIRE(cur->is_error());
-        REQUIRE(cur->get_error().type == error_code_t::collection_not_exists);
+        REQUIRE(cur->get_error().type == cursor::error_code_t::collection_not_exists);
+    }
+}
+
+TEST_CASE("integration::cpp::test_collection::sql::index") {
+    auto config = test_create_config("/tmp/test_collection_sql/base");
+    test_clear_directory(config);
+    config.disk.on = false;
+    config.wal.on = false;
+    test_spaces space(config);
+    auto* dispatcher = space.dispatcher();
+
+    INFO("initialization") {
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_database(session, database_name);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            dispatcher->create_collection(session, database_name, collection_name);
+        }
+    }
+
+    // [UNSTABLE] Lead to problems with documents insert
+    // TODO figure out how to fix
+    // INFO("create_pending_index") {
+    //     auto session = otterbrix::session_id_t();
+    //     auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_name ON TestDatabase.TestCollection (name);");
+    //     REQUIRE(cur->is_success());
+    // }
+
+    INFO("insert") {
+        {
+            auto session = otterbrix::session_id_t();
+            std::stringstream query;
+            query << "INSERT INTO TestDatabase.TestCollection (_id, name, count) VALUES ";
+            for (int num = 0; num < 100; ++num) {
+                query << "('" << gen_id(num + 1, dispatcher->resource()) << "', "
+                      << "'Name " << num << "', " << num << ")" << (num == 99 ? ";" : ", ");
+            }
+            auto cur = dispatcher->execute_sql(session, query.str());
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 100);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
+        }
+    }
+
+    INFO("create_index") {
+        auto session = otterbrix::session_id_t();
+        auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_count ON TestDatabase.TestCollection (count);");
+        REQUIRE(cur->is_success());
+    }
+
+    INFO("find") {
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session, "SELECT * FROM TestDatabase.TestCollection;");
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 100);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session,
+                                               "SELECT * FROM TestDatabase.TestCollection "
+                                               "WHERE count > 90;");
+            REQUIRE(cur->is_success());
+            REQUIRE(cur->size() == 9);
+        }
+        {
+            auto session = otterbrix::session_id_t();
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
+        }
+    }
+
+    INFO("drop") {
+        // TODO uncomment when create_pending_index is fixed
+        // {
+        //     auto session = otterbrix::session_id_t();
+        //     auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_name;");
+        //     REQUIRE(cur->is_success());
+        // }
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_count;");
+            REQUIRE(cur->is_success());
+        }
     }
 }

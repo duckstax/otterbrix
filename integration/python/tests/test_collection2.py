@@ -10,11 +10,20 @@ database = client[database_name]
 collection = database[collection_name]
 
 
+def gen_id(num):
+    res = str(num)
+    while (len(res) < 24):
+        res = '0' + res
+    return res
+
+
 @pytest.fixture()
 def gen_collection(request):
     collection = database[collection_name]
+    docs = []
     for num in range(100):
         obj = {}
+        obj['_id'] = gen_id(num)
         obj['count'] = num
         obj['countStr'] = str(num)
         obj['countFloat'] = float(num) + 0.1
@@ -29,7 +38,8 @@ def gen_collection(request):
         obj['nestedArray'] = [[num + i] for i in range(5)]
         obj['dictArray'] = [{'number': num + i} for i in range(5)]
         obj['mixedDict'] = copy.deepcopy(obj)
-        collection.insert_one(obj)
+        docs.append(obj)
+    collection.insert_many(docs)
 
     def finalize():
         collection.drop()
@@ -93,27 +103,27 @@ def test_greater_than(gen_collection):
 
 
 def test_find_in_subdocument(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict.count': 0})
+    c = gen_collection['collection'].find({'mixedDict/count': 0})
     assert c.count() == 1
-    assert gen_collection['collection'].find({'mixedDict.count': 0}).count() == 1
+    assert gen_collection['collection'].find({'mixedDict/count': 0}).count() == 1
 
 
 def test_find_in_subdocument_with_operator(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict.count': {'$gte': 50}})
+    c = gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}})
     assert c.count() == 50
-    assert gen_collection['collection'].find({'mixedDict.count': {'$gte': 50}}).count() == 50
+    assert gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}}).count() == 50
 
 
 def test_find_in_subdocument_3_levels(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict.countDict.even': True})
+    c = gen_collection['collection'].find({'mixedDict/countDict/even': True})
     assert c.count() == 50
-    assert gen_collection['collection'].find({'mixedDict.countDict.even': True}).count() == 50
+    assert gen_collection['collection'].find({'mixedDict/countDict/even': True}).count() == 50
 
 
 def test_find_in_subdocument_with_array(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict.countArray.3': {'$gt': 50}})
+    c = gen_collection['collection'].find({'mixedDict/countArray/3': {'$gt': 50}})
     assert c.count() == 52
-    assert gen_collection['collection'].find({'mixedDict.countArray.3': {"$gt": 50}}).count() == 52
+    assert gen_collection['collection'].find({'mixedDict/countArray/3': {"$gt": 50}}).count() == 52
 
 
 def test_sort_positive(gen_collection):

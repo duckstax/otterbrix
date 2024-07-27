@@ -3,7 +3,8 @@
 
 namespace services::wal {
 
-    enum class route : uint64_t {
+    enum class route : uint64_t
+    {
         create,
 
         load,

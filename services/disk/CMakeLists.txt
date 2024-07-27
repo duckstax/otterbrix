@@ -36,6 +36,7 @@ target_link_libraries(
     otterbrix_${PROJECT_NAME} PUBLIC
     otterbrix::file
     otterbrix::document
+    otterbrix::collection
     CONAN_PKG::spdlog
     CONAN_PKG::rocksdb
     CONAN_PKG::boost

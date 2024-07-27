@@ -10,9 +10,11 @@ from common import sys_call, collect_files_by_ext
 from termcolor import colored
 
 clang_versions = [
-  "clang-format-13",
+  "clang-format-11",
   "clang-format-12",
-  "/usr/local/opt/llvm/bin/clang-format" # llvm binaries installed by brew (keg only)
+  "clang-format-13",
+  "/usr/local/opt/llvm/bin/clang-format", # llvm binaries installed by brew (keg only)
+  "/opt/homebrew/bin/clang-format"
 ]
 
 ext_to_format = [
@@ -46,8 +48,15 @@ class Clang:
     if not clang_cmd:
       print("Can't find clang binary")
       sys.exit(1)
-      
+
     print(f"Found clang-format: {clang_cmd}")
+    cmd = "{} --version ".format(clang_cmd)
+    result, output = sys_call(cmd,
+                      working_dir=os.getcwd(),
+                      use_pipe=True)
+    if result:
+      s = output.decode("utf-8")
+      print(s)
 
     return clang_cmd
 

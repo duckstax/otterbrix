@@ -5,7 +5,7 @@ namespace services::wal {
 
     bool record_t::is_valid() const { return size > 0; }
 
-    void record_t::set_data(msgpack::object& object) {
+    void record_t::set_data(msgpack::object& object, std::pmr::memory_resource* resource) {
         using namespace components::ql;
         switch (type) {
             case statement_type::create_database:
@@ -21,22 +21,22 @@ namespace services::wal {
                 data = object.as<drop_collection_t>();
                 break;
             case statement_type::insert_one:
-                data = object.as<insert_one_t>();
+                data = to_insert_one(object, resource);
                 break;
             case statement_type::insert_many:
-                data = object.as<insert_many_t>();
+                data = to_insert_many(object, resource);
                 break;
             case statement_type::delete_one:
-                data = object.as<delete_one_t>();
+                data = to_delete_one(object, resource);
                 break;
             case statement_type::delete_many:
-                data = object.as<delete_many_t>();
+                data = to_delete_many(object, resource);
                 break;
             case statement_type::update_one:
-                data = object.as<update_one_t>();
+                data = to_update_one(object, resource);
                 break;
             case statement_type::update_many:
-                data = object.as<update_many_t>();
+                data = to_update_many(object, resource);
                 break;
             default:
                 break;

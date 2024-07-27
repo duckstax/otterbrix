@@ -5,11 +5,14 @@ set(SOURCE_${PROJECT_NAME}
         node_aggregate.cpp
         node_create_collection.cpp
         node_create_database.cpp
+        node_create_index.cpp
+        node_drop_index.cpp
         node_delete.cpp
         node_drop_collection.cpp
         node_drop_database.cpp
         node_group.cpp
         node_insert.cpp
+        node_join.cpp
         node_limit.cpp
         node_match.cpp
         node_sort.cpp
@@ -27,6 +30,7 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PRIVATE
         otterbrix::ql
+        otterbrix::types
         CONAN_PKG::boost
 )
 

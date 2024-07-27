@@ -24,7 +24,12 @@ typedef struct config_t {
     bool sync_to_disk;
 } config_t;
 
-typedef enum state_t { init, created, destroyed } state_t;
+typedef enum state_t
+{
+    init,
+    created,
+    destroyed
+} state_t;
 
 typedef void* otterbrix_ptr;
 typedef void* cursor_ptr;
@@ -35,11 +40,15 @@ typedef struct error_message {
     char* message;
 } error_message;
 
-otterbrix_ptr otterbrix_create(config_t cfg, string_view_t database, string_view_t collection);
+otterbrix_ptr otterbrix_create(config_t cfg);
 
 void otterbrix_destroy(otterbrix_ptr);
 
-cursor_ptr execute_sql(otterbrix_ptr, string_view_t query);
+cursor_ptr execute_sql(otterbrix_ptr ptr, string_view_t query);
+
+cursor_ptr create_database(otterbrix_ptr ptr, string_view_t database_name);
+
+cursor_ptr create_collection(otterbrix_ptr ptr, string_view_t database_name, string_view_t collection_name);
 
 void release_cursor(cursor_ptr ptr);
 

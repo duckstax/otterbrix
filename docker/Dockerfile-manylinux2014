@@ -24,7 +24,6 @@ COPY ./cmake ./cmake
 COPY ./components ./components
 COPY ./core ./core
 COPY ./services ./services
-COPY ./wasm ./wasm
 COPY ./example ./example
 COPY ./CMakeLists.txt ./CMakeLists.txt
 
@@ -32,10 +31,6 @@ RUN cp integration/python/otterbrix/* .
 #RUN cp integration/python/otterbrix/MANIFEST.in .
 #RUN cp integration/python/otterbrix/pyproject.toml .
 #RUN cp integration/python/otterbrix/get_path.py .
-RUN mkdir -p /app/wasm_bin/
-RUN ls
-RUN ls wasm_bin
-#./components/wasm_runner/tests/
 
 RUN   PYBIN=(/opt/python/*/bin) && \
       for BIN in "${PYBIN[@]}";  do  \
@@ -45,10 +40,9 @@ RUN   PYBIN=(/opt/python/*/bin) && \
           conan install . -s build_type=Release -if=$(echo "./$(${BIN}/python3 get_path.py )") && \
           ${BIN}/python3 setup.py bdist_wheel  --verbose  -DDEV_MODE=ON && \
           #${BIN}/python3 -m pip install --no-index --find-links . dist/otterbrix-*.whl  && \
-          cp /app/wasm_bin/*.wasm $(echo "./$(${BIN}/python3 get_path.py )/components/wasm_runner/tests/") && \
           cd $(echo "./$(${BIN}/python3 get_path.py )") && \
-          ctest  -C --output-on-failure && \
-          #pytest && \
+          ctest  -C -V --output-on-failure --timeout 60 && \
+          #pytest -v && \
           cd /app ; \
       fi \
       done
@@ -76,4 +70,4 @@ COPY ./integration  ./integration
 RUN pip3 install ./otterbrix-0.4.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 RUN python3 -c "import distutils.sysconfig as sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
 RUN python3 -c "from otterbrix import Client, DataBase, Collection"
-RUN pytest
+RUN pytest -v
