@@ -49,7 +49,6 @@ namespace otterbrix {
         actor_zeta::scheduler_ptr scheduler_;
         actor_zeta::scheduler_ptr scheduler_dispatcher_;
         services::dispatcher::manager_dispatcher_ptr manager_dispatcher_;
-        services::wal::manager_wal_ptr manager_wal_;
         std::variant<std::monostate, services::disk::manager_disk_empty_ptr, services::disk::manager_disk_ptr>
             manager_disk_;
         std::variant<std::monostate, services::wal::manager_wal_empty_ptr, services::wal::manager_wal_ptr> manager_wal_;

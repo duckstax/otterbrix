@@ -101,10 +101,12 @@ namespace services::wal {
         auto make_type() const noexcept -> const char* const;
 
     private:
+        log_t log_;
         actor_zeta::behavior_t always_success_;
 
         auto enqueue_impl(actor_zeta::message_ptr, actor_zeta::execution_unit*) -> void final;
         actor_zeta::scheduler_raw e_;
+        spin_lock lock_;
 
         auto always_success(session_id_t& session, components::ql::ql_statement_t&) -> void {
             actor_zeta::send(current_message()->sender(),

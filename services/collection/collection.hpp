@@ -49,7 +49,7 @@ namespace services::collection {
         explicit context_collection_t(std::pmr::memory_resource* resource,
                                       const collection_full_name_t& name,
                                       const actor_zeta::address_t& mdisk,
-                                      log_t&& log)
+                                      const log_t& log)
             : resource_(resource)
             , cursor_storage_(resource_)
             , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))

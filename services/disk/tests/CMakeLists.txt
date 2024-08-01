@@ -19,6 +19,7 @@ target_link_libraries(
     CONAN_PKG::rocksdb
     CONAN_PKG::boost
     CONAN_PKG::catch2
+    CONAN_PKG::actor-zeta
 )
 
 include(CTest)

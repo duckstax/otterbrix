@@ -273,7 +273,7 @@ TEST_CASE("operator::update") {
 
 TEST_CASE("operator::index_scan") {
     auto collection = create_collection();
-    components::index::keys_base_storage_t keys(collection->resource);
+    components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
@@ -397,7 +397,7 @@ TEST_CASE("operator::transfer_scan") {
 
 TEST_CASE("operator::index::delete_and_update") {
     auto collection = create_collection();
-    components::index::keys_base_storage_t keys(collection->resource);
+    components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",

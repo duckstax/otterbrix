@@ -50,13 +50,13 @@ namespace services {
                                                          &memory_storage_t::execute_plan_finish))
         , close_cursor_(actor_zeta::make_behavior(resource(),
                                                   collection::handler_id(collection::route::close_cursor),
+                                                  this,
                                                   &memory_storage_t::close_cursor)) {
         ZoneScoped;
         trace(log_, "memory_storage start thread pool");
 
         //TODO MIGHT BE CHANGED
         executor_address_ = spawn_actor([this](services::collection::executor::executor_t* ptr) { executor_ = ptr; },
-                                        resource(), // <--
                                         std::move(log_.clone()));
     }
 

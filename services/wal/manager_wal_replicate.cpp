@@ -285,6 +285,7 @@ namespace services::wal {
                                                                  actor_zeta::scheduler_raw scheduler,
                                                                  log_t& log)
         : actor_zeta::cooperative_supervisor<manager_wal_replicate_empty_t>(mr)
+        , log_(log)
         , always_success_(actor_zeta::make_behavior(resource(),
                                                     empty_handler_id(),
                                                     this,
@@ -294,11 +295,15 @@ namespace services::wal {
         // using namespace componeid(core::route::sync), &manager_wal_replicate_empty_t::nothing<address_pack&>);
     }
 
-    auto manager_wal_replicate_empty_t::enqueue_impl(actor_zeta::message_ptr, actor_zeta::execution_unit*) -> void {}
+    auto manager_wal_replicate_empty_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
+        std::unique_lock<spin_lock> _(lock_);
+        set_current_message(std::move(msg));
+        behavior()(current_message());
+    }
 
     auto manager_wal_replicate_empty_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* { return e_; }
 
-    auto manager_wal_replicate_empty_t::make_type() const noexcept -> const char* const { return "manager_wal"; }
+    auto manager_wal_replicate_empty_t::make_type() const noexcept -> const char* const { return "manager_wal_empty"; }
 
     actor_zeta::behavior_t manager_wal_replicate_empty_t::behavior() {
         return actor_zeta::make_behavior(resource(), [this](actor_zeta::message* msg) -> void {
@@ -315,6 +320,7 @@ namespace services::wal {
                 case handler_id(route::update_one):
                 case handler_id(route::update_many):
                 case handler_id(route::create_index): {
+                    trace(log_, "manager_wal_replicate_empty_t::return success");
                     always_success_(msg);
                     break;
                 }

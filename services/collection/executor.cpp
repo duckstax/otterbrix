@@ -22,10 +22,8 @@ namespace services::collection::executor {
         , parameters(parameters)
         , context_storage_(context_storage) {}
 
-    executor_t::executor_t(services::memory_storage_t* memory_storage,
-                           std::pmr::memory_resource* mem_resource,
-                           log_t&& log)
-        : actor_zeta::basic_actor<executor_t>(memory_storage, mem_resource)
+    executor_t::executor_t(services::memory_storage_t* memory_storage, log_t&& log)
+        : actor_zeta::basic_actor<executor_t>{memory_storage}
         , memory_storage_(memory_storage->address())
         , plans_(resource())
         , log_(log)

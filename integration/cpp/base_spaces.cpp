@@ -12,8 +12,6 @@ namespace otterbrix {
 
     using services::dispatcher::manager_dispatcher_t;
 
-    constexpr static auto name_dispatcher = "dispatcher";
-
     base_otterbrix_t::base_otterbrix_t(const configuration::config& config)
         : resource(std::pmr::get_default_resource())
         , scheduler_(new actor_zeta::shared_work(1, 1000))
@@ -108,7 +106,7 @@ namespace otterbrix {
         actor_zeta::send(manager_disk_address,
                          actor_zeta::address_t::empty_address(),
                          disk::handler_id(disk::route::create_agent));
-        manager_dispatcher_->create_dispatcher(name_dispatcher);
+        manager_dispatcher_->create_dispatcher();
         scheduler_dispatcher_->start();
         scheduler_->start();
         trace(log_, "spaces::spaces() final");

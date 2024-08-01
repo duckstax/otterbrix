@@ -18,7 +18,7 @@ namespace services::collection::executor {
 
     class executor_t final : public actor_zeta::basic_actor<executor_t> {
     public:
-        executor_t(services::memory_storage_t* memory_storage, std::pmr::memory_resource* resource, log_t&& log);
+        executor_t(services::memory_storage_t* memory_storage, log_t&& log);
         ~executor_t() = default;
 
         void execute_plan(const components::session::session_id_t& session,

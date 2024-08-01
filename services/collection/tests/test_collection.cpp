@@ -80,14 +80,14 @@ struct context_t final {
 
     actor_zeta::scheduler_ptr scheduler_;
     std::pmr::memory_resource* resource;
-    std::unique_ptr<manager_database_t> manager_database_;
-    std::unique_ptr<database_t> database_;
-    std::unique_ptr<collection_t> collection_;
+    std::unique_ptr<manager_database_t, actor_zeta::deleter> manager_database_;
+    std::unique_ptr<database_t, actor_zeta::deleter> database_;
+    std::unique_ptr<collection_t, actor_zeta::deleter> collection_;
 };
 
 using context_ptr = std::unique_ptr<context_t>;
 
-context_ptr make_context(log_t& log) { auto context = std::make_unique<context_t>(log); }
+context_ptr make_context(log_t& log) { return std::make_unique<context_t>(log); }
 
 collection_t* d(context_ptr& ptr) { return ptr->collection_.get(); }
 
