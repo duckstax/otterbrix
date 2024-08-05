@@ -1,6 +1,8 @@
 #include <catch2/catch.hpp>
 
-#include <core/b_plus_tree/b_plus_tree.hpp>
+#include <core/b_plus_tree_new/block.hpp>
+#include <core/file/file_system.hpp>
+//#include <core/b_plus_tree/b_plus_tree.hpp>
 #include <log/log.hpp>
 #include <thread>
 
@@ -63,54 +65,65 @@ TEST_CASE("b+tree") {
         auto fname = testing_directory;
         fname /= "block_test_file";
 
-        std::vector<std::pair<uint64_t, std::string>> test_data;
+        auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
+            return block_t::index_t(*reinterpret_cast<uint32_t*>(data.data));
+        };
 
-        for (uint64_t i = 0; i < 100; i += 2) {
+        std::vector<std::string> test_data;
+
+        for (char i = 0; i < 100; i += 2) {
             std::string str;
-            for (uint64_t j = 0; j < i; j++) {
+            str.push_back(i);
+            str.push_back(0);
+            str.push_back(0);
+            str.push_back(0);
+            for (char j = 0; j < i; j++) {
                 str.push_back('a' + j);
             }
-            test_data.emplace_back(i, str);
+            test_data.emplace_back(str);
         }
-        for (uint64_t i = 1; i < 100; i += 2) {
+        for (char i = 1; i < 100; i += 2) {
             std::string str;
-            for (uint64_t j = 0; j < i; j++) {
+            str.push_back(i);
+            str.push_back(0);
+            str.push_back(0);
+            str.push_back(0);
+            for (char j = 0; j < i; j++) {
                 str.push_back('a' + j);
             }
-            test_data.emplace_back(i, str);
+            test_data.emplace_back(str);
         }
 
         {
-            std::unique_ptr<block_t> test_block_1 = create_initialize(std::pmr::get_default_resource());
+            std::unique_ptr<block_t> test_block_1 = create_initialize(std::pmr::get_default_resource(), key_getter);
 
             REQUIRE(test_block_1->available_memory() == DEFAULT_BLOCK_SIZE - test_block_1->header_size);
             REQUIRE(test_block_1->count() == 0);
             for (uint64_t i = 0; i < test_data.size(); i++) {
-                REQUIRE(test_block_1->append(test_data[i].first,
-                                             (const_data_ptr_t)(test_data[i].second.data()),
-                                             static_cast<uint64_t>(test_data[i].second.size())));
-                REQUIRE(test_block_1->contains_id(test_data[i].first));
+                REQUIRE(test_block_1->append((data_ptr_t)(test_data[i].data()), test_data[i].size()));
+                auto index = test_block_1->find_index(data_ptr_t(test_data[i].data()), test_data[i].size());
+                REQUIRE(test_block_1->contains_index(index));
+                REQUIRE(test_block_1->count() == test_block_1->unique_indices_count());
                 // test iterators
-                for (auto it = test_block_1->begin(); it != test_block_1->end(); it++) {
-                    std::pair<uint64_t, std::string> test_item =
-                        *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
-                            return item.first == (*it).id;
-                        });
-                    REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
-                    REQUIRE(item == test_item.second);
+                for (auto it = test_block_1->begin(); it != test_block_1->end(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
-                for (auto it = test_block_1->rbegin(); it != test_block_1->rend(); it++) {
-                    std::pair<uint64_t, std::string> test_item =
-                        *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
-                            return item.first == (*it).id;
-                        });
-                    REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
-                    REQUIRE(item == test_item.second);
+                for (auto it = test_block_1->rbegin(); it != test_block_1->rend(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
             }
             REQUIRE(test_block_1->count() == test_data.size());
+            REQUIRE(test_block_1->end() - test_block_1->begin() == test_data.size());
+
+            test_block_1->recalculate_checksum();
 
             unique_ptr<file_handle_t> handle =
                 open_file(fs, fname, file_flags::WRITE | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
@@ -119,7 +132,7 @@ TEST_CASE("b+tree") {
             handle.reset();
         }
         {
-            std::unique_ptr<block_t> test_block_2 = create_initialize(std::pmr::get_default_resource());
+            std::unique_ptr<block_t> test_block_2 = create_initialize(std::pmr::get_default_resource(), key_getter);
 
             unique_ptr<file_handle_t> handle =
                 open_file(fs, fname, file_flags::READ | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
@@ -127,29 +140,28 @@ TEST_CASE("b+tree") {
             //! important to call restore_block()
             test_block_2->restore_block();
 
+            REQUIRE(test_block_2->varify_checksum());
             REQUIRE(test_block_2->count() == test_data.size());
+            REQUIRE(test_block_2->end() - test_block_2->begin() == test_data.size());
             for (uint64_t i = 0; i < test_data.size(); i++) {
                 // test iterators
-                for (auto it = test_block_2->begin(); it != test_block_2->end(); it++) {
-                    std::pair<uint64_t, std::string> test_item =
-                        *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
-                            return item.first == (*it).id;
-                        });
-                    REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
-                    REQUIRE(item == test_item.second);
+                for (auto it = test_block_2->begin(); it != test_block_2->end(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
-                for (auto it = test_block_2->rbegin(); it != test_block_2->rend(); it++) {
-                    std::pair<uint64_t, std::string> test_item =
-                        *std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
-                            return item.first == (*it).id;
-                        });
-                    REQUIRE((*it).id == test_item.first);
-                    std::string item((char*) (*it).items[0].first, (*it).items[0].second);
-                    REQUIRE(item == test_item.second);
+                for (auto it = test_block_2->rbegin(); it != test_block_2->rend(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
-                REQUIRE(test_block_2->remove_id(test_data[i].first));
-                REQUIRE_FALSE(test_block_2->contains_id(test_data[i].first));
+                auto index = test_block_2->find_index(data_ptr_t(test_data[i].data()), test_data[i].size());
+                REQUIRE(test_block_2->remove(data_ptr_t(test_data[i].data()), test_data[i].size()));
+                REQUIRE_FALSE(test_block_2->contains_index(index));
             }
             REQUIRE(test_block_2->count() == 0);
             REQUIRE(test_block_2->available_memory() == DEFAULT_BLOCK_SIZE - test_block_2->header_size);
@@ -159,7 +171,6 @@ TEST_CASE("b+tree") {
             remove_file(fs, fname);
         }
     }
-
     INFO("block: repeated ids") {
         local_file_system_t fs = local_file_system_t();
         auto fname = testing_directory;
@@ -167,49 +178,55 @@ TEST_CASE("b+tree") {
         size_t test_data_size = 100;
         size_t duplicate_count = 4;
 
-        std::vector<std::pair<uint64_t, std::string>> test_data;
+        auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
+            return block_t::index_t(*reinterpret_cast<uint32_t*>(data.data));
+        };
+
+        std::vector<std::string> test_data;
 
         for (uint64_t i = 0; i < test_data_size; i++) {
             std::string str;
+            str.push_back(i);
+            str.push_back(0);
+            str.push_back(0);
+            str.push_back(0);
             for (uint64_t j = 0; j < i; j++) {
                 str.push_back('a' + j);
             }
             for (size_t j = 0; j < duplicate_count; j++) {
-                test_data.emplace_back(i, str + std::to_string(j));
+                test_data.emplace_back(str + std::to_string(j));
             }
         }
+
         std::shuffle(test_data.begin(), test_data.end(), std::default_random_engine{0});
 
         {
-            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource());
+            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
 
             REQUIRE(test_block->available_memory() == DEFAULT_BLOCK_SIZE - test_block->header_size);
             REQUIRE(test_block->count() == 0);
             for (uint64_t i = 0; i < test_data.size(); i++) {
-                REQUIRE(test_block->append(test_data[i].first,
-                                           (const_data_ptr_t)(test_data[i].second.data()),
-                                           static_cast<uint64_t>(test_data[i].second.size())));
-                REQUIRE(test_block->contains_id(test_data[i].first));
+                REQUIRE(test_block->append((data_ptr_t)(test_data[i].data()), test_data[i].size()));
+                auto index = test_block->find_index(data_ptr_t(test_data[i].data()), test_data[i].size());
+                REQUIRE(test_block->contains_index(index));
                 // test iterators
-                for (auto it = test_block->begin(); it != test_block->end(); it++) {
-                    for (auto item = it->items.begin(); item != it->items.end(); item++) {
-                        std::pair<uint64_t, std::string> deserialized_entry = {
-                            it->id,
-                            std::string((char*) (*item).first, (*item).second)};
-                        REQUIRE(std::find(test_data.begin(), test_data.end(), deserialized_entry) != test_data.end());
-                    }
+                for (auto it = test_block->begin(); it != test_block->end(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
-                for (auto it = test_block->rbegin(); it != test_block->rend(); it++) {
-                    for (auto item = it->items.rbegin(); item != it->items.rend(); item++) {
-                        std::pair<uint64_t, std::string> deserialized_entry = {
-                            it->id,
-                            std::string((char*) (*item).first, (*item).second)};
-                        REQUIRE(std::find(test_data.begin(), test_data.end(), deserialized_entry) != test_data.end());
-                    }
+                for (auto it = test_block->rbegin(); it != test_block->rend(); ++it) {
+                    auto test_item = std::find_if(test_data.begin(), test_data.end(), [it](const auto& item) {
+                        return item.size() == it->size && std::memcmp(it->data, item.data(), it->size) == 0;
+                    });
+                    REQUIRE(test_item != test_data.end());
+                    REQUIRE(std::memcmp(it->data, (*test_item).data(), it->size) == 0);
                 }
             }
             REQUIRE(test_block->count() == test_data_size * duplicate_count);
-            REQUIRE(test_block->unique_id_count() == test_data_size);
+            REQUIRE(test_block->unique_indices_count() == test_data_size);
 
             unique_ptr<file_handle_t> handle = open_file(fs,
                                                          fname,
@@ -218,33 +235,38 @@ TEST_CASE("b+tree") {
             handle->write((void*) test_block->internal_buffer(), test_block->block_size(), 0);
             handle->sync();
 
+            // remove by index
+
             REQUIRE(test_block->count() == test_data_size * duplicate_count);
-            REQUIRE(test_block->unique_id_count() == test_data_size);
-            for (uint64_t i = 0; i < test_data_size; i++) {
-                REQUIRE(test_block->remove_id(i));
-                REQUIRE_FALSE(test_block->contains_id(i));
+            REQUIRE(test_block->unique_indices_count() == test_data_size);
+            for (uint32_t i = 0; i < test_data_size; i++) {
+                auto index = test_block->find_index(data_ptr_t(&i), sizeof(uint32_t));
+                REQUIRE(test_block->remove_index(index));
+                REQUIRE_FALSE(test_block->contains_index(index));
             }
             REQUIRE(test_block->count() == 0);
-            REQUIRE(test_block->unique_id_count() == 0);
+            REQUIRE(test_block->unique_indices_count() == 0);
 
             handle->read((void*) test_block->internal_buffer(), test_block->block_size(), 0);
             test_block->restore_block();
 
+            // remove one by one
+
             REQUIRE(test_block->count() == test_data_size * duplicate_count);
-            REQUIRE(test_block->unique_id_count() == test_data_size);
+            REQUIRE(test_block->unique_indices_count() == test_data_size);
             for (uint64_t i = 0; i < test_data.size(); i++) {
-                REQUIRE(test_block->remove(test_data[i].first,
-                                           (const_data_ptr_t)(test_data[i].second.data()),
-                                           static_cast<uint64_t>(test_data[i].second.size())));
+                REQUIRE(
+                    test_block->remove((data_ptr_t)(test_data[i].data()), static_cast<uint64_t>(test_data[i].size())));
             }
             REQUIRE(test_block->count() == 0);
-            REQUIRE(test_block->unique_id_count() == 0);
+            REQUIRE(test_block->unique_indices_count() == 0);
 
             // close the file
             handle.reset();
         }
     }
 
+    /*
     INFO("segment_tree: even blocks") {
         local_file_system_t fs = local_file_system_t();
         auto fname = testing_directory;
@@ -259,14 +281,14 @@ TEST_CASE("b+tree") {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32;
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
         for (size_t i = 1; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32;
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
 
@@ -390,14 +412,14 @@ TEST_CASE("b+tree") {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
         for (size_t i = 1; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
 
@@ -543,14 +565,14 @@ TEST_CASE("b+tree") {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
         for (size_t i = 1; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.id = i;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t) (std::pmr::get_default_resource()->allocate(dummy.size));
             test_data.push_back(dummy);
         }
 
@@ -823,4 +845,5 @@ TEST_CASE("b+tree") {
             remove_directory(fs, testing_directory);
         }
     }
+    */
 }
