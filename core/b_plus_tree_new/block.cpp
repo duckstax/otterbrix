@@ -1,7 +1,7 @@
 #include "block.hpp"
-#include "gap_tracker.hpp"
 #include <algorithm>
 #include <cassert>
+#include <core/buffer.hpp>
 #include <crc32c/crc32c.h>
 #include <cstring>
 
@@ -15,11 +15,13 @@ namespace core::b_plus_tree {
     }
     void block_t::iterator::rebuild_data() {
         if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
-            data_.data = block_->internal_buffer_ + metadata_->offset;
-            data_.size = metadata_->size;
+            data_.item.data = block_->internal_buffer_ + metadata_->offset;
+            data_.item.size = metadata_->size;
+            data_.index = block_->key_func_(data_.item);
         } else {
-            data_.data = nullptr;
-            data_.size = 0;
+            data_.item.data = nullptr;
+            data_.item.size = 0;
+            data_.index = index_t();
         }
     }
 
@@ -30,11 +32,13 @@ namespace core::b_plus_tree {
     }
     void block_t::r_iterator::rebuild_data() {
         if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
-            data_.data = block_->internal_buffer_ + metadata_->offset;
-            data_.size = metadata_->size;
+            data_.item.data = block_->internal_buffer_ + metadata_->offset;
+            data_.item.size = metadata_->size;
+            data_.index = block_->key_func_(data_.item);
         } else {
-            data_.data = nullptr;
-            data_.size = 0;
+            data_.item.data = nullptr;
+            data_.item.size = 0;
+            data_.index = index_t();
         }
     }
 
@@ -80,13 +84,17 @@ namespace core::b_plus_tree {
     bool block_t::append(data_ptr_t data, size_t size) noexcept { return append({data, size}); }
 
     bool block_t::append(item_data item) noexcept {
+        index_t index = key_func_(item);
+        return append(index, item);
+    }
+
+    bool block_t::append(const index_t& index, item_data item) noexcept {
         assert(is_valid_ && "block is not initialized!");
         assert(item.size != 0 && "can not append an empty buffer!");
         if (!is_memory_available(item.size)) {
             return false;
         }
 
-        index_t index = key_func_(item);
         auto range = find_index_range_(index);
         for (metadata* it = range.begin; it != range.end; it++) {
             if (it->size == item.size && std::memcmp(item.data, internal_buffer_ + it->offset, item.size) == 0) {
@@ -97,11 +105,6 @@ namespace core::b_plus_tree {
         (*count_)++;
         if (range.begin == range.end) {
             (*unique_indices_count_)++;
-        }
-
-        if (range.begin != range.end) {
-            bool r = true;
-            assert(r);
         }
 
         std::memmove(last_metadata_ - 1, last_metadata_, (range.begin - last_metadata_) * metadata_size);
@@ -116,12 +119,17 @@ namespace core::b_plus_tree {
 
         return true;
     }
+
     bool block_t::remove(data_ptr_t data, size_t size) noexcept { return remove({data, size}); }
 
     bool block_t::remove(item_data item) noexcept {
+        index_t index = key_func_(item);
+        return remove(index, item);
+    }
+
+    bool block_t::remove(const index_t& index, item_data item) noexcept {
         assert(is_valid_ && "block is not initialized!");
 
-        index_t index = key_func_(item);
         auto range = find_index_range_(index);
         if (range.begin == range.end) {
             return false;
@@ -167,33 +175,7 @@ namespace core::b_plus_tree {
         *count_ -= batch_size;
         (*unique_indices_count_)--;
 
-        gap_tracker_t tracker(header_size, data_ptr_t(buffer_) - internal_buffer_);
-
-        for (metadata* it = range.begin; it != range.end; it++) {
-            tracker.create_gap(gap_tracker_t::range_t{it->offset, it->size});
-        }
-
-        tracker.clean_gaps();
-        std::memmove(last_metadata_ + batch_size, last_metadata_, (range.begin - last_metadata_) * metadata_size);
-        available_memory_ += batch_size * metadata_size;
-        last_metadata_ += batch_size;
-
-        assert(tracker.untouched_spaces().size() != 0 && "gap tracker is broken, should not be empty");
-        uint32_t tracked_offset = 0;
-        uint32_t required_offset = 0;
-        auto next_it = tracker.untouched_spaces().begin() + 1;
-        for (auto it = tracker.untouched_spaces().begin(); next_it != tracker.untouched_spaces().end();
-             ++it, ++next_it) {
-            tracked_offset = it->offset + it->size - required_offset;
-            required_offset += next_it->offset - (it->offset + it->size);
-            std::memmove(internal_buffer_ + tracked_offset, internal_buffer_ + next_it->offset, next_it->size);
-            for (metadata* meta = last_metadata_; meta != end_; meta++) {
-                if (meta->offset >= next_it->offset && meta->offset < next_it->offset + next_it->size) {
-                    meta->offset -= required_offset;
-                }
-            }
-        }
-        buffer_ -= required_offset;
+        remove_range_(range);
 
         return true;
     }
@@ -205,9 +187,13 @@ namespace core::b_plus_tree {
     }
 
     bool block_t::contains(item_data item) const {
+        index_t index = key_func_(item);
+        return contains(index, item);
+    }
+
+    bool block_t::contains(const index_t& index, item_data item) const {
         assert(is_valid_ && "block is not initialized!");
 
-        index_t index = key_func_(item);
         auto range = find_index_range_(index);
 
         for (metadata* it = range.begin; it != range.end; it++) {
@@ -261,7 +247,7 @@ namespace core::b_plus_tree {
             return index_t();
         }
 
-        item_data item(internal_buffer_ + (end_ - 1)->offset, (end_ - 1)->size);
+        item_data item = metadata_to_item_data_(end_ - 1);
         return key_func_(item);
     }
     block_t::index_t block_t::max_index() const {
@@ -270,7 +256,7 @@ namespace core::b_plus_tree {
             return index_t();
         }
 
-        item_data item(internal_buffer_ + last_metadata_->offset, last_metadata_->size);
+        item_data item = metadata_to_item_data_(last_metadata_);
         return key_func_(item);
     }
 
@@ -283,7 +269,7 @@ namespace core::b_plus_tree {
 
     void block_t::reset() {
         *count_ = 0;
-        last_metadata_ = end_;
+        *unique_indices_count_ = 0;
         restore_block();
     }
 
@@ -323,21 +309,160 @@ namespace core::b_plus_tree {
         last_metadata_ = end_ - *unique_indices_count_;
     }
 
+    // TODO: try to split into smaller blocks if current size is greater then DEFAULT_BLOCK_SIZE
     std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>> block_t::split_append(const index_t& index,
-                                                                                        item_data item) {}
+                                                                                        item_data item) {
+        // if append is possible, split in half, append to required part
+        assert(is_valid_ && "block is not initialized!");
+        assert(available_memory_ + (buffer_ - internal_buffer_) <= full_size_);
+
+        std::unique_ptr<block_t> splited_block;
+
+        // calculate mid point (size wise)
+        size_t accumulated_size = 0;
+        metadata* split_item = last_metadata_;
+        for (; split_item < end_ && accumulated_size < full_size_ / 2; split_item++) {
+            accumulated_size += split_item->size + metadata_size;
+        }
+        if (split_item != end_) {
+            accumulated_size += split_item->size + metadata_size;
+        }
+
+        bool append_possible;
+        bool this_block;
+        index_t split_index = split_item == end_ ? index_t(false) : key_func_(metadata_to_item_data_(split_item));
+        if (split_item == end_ && (index > min_index() && index < max_index())) {
+            append_possible = false;
+        } else if (split_index < index) {
+            // will go into second block
+            append_possible = full_size_ - metadata_size > item.size + accumulated_size;
+            this_block = false;
+        } else {
+            // will go into first block
+            append_possible = available_memory_ + accumulated_size > item.size + metadata_size;
+            this_block = true;
+        }
+
+        if (append_possible) {
+            splited_block = std::move(split(split_item - last_metadata_));
+
+            if (this_block) {
+                append(index, item);
+            } else {
+                splited_block->append(index, item);
+            }
+
+            return {std::move(splited_block), nullptr};
+        }
+
+        split_item = find_index_range_(index).begin;
+        if (split_item == last_metadata_) {
+            splited_block = std::move(
+                create_initialize(resource_, key_func_, align_to_block_size(item.size + header_size + metadata_size)));
+            splited_block->append(index, item); // always true
+            return {std::move(splited_block), nullptr};
+        } else {
+            splited_block = std::move(split(split_item - last_metadata_));
+
+            if (append(index, item)) {
+                return {std::move(splited_block), nullptr};
+            }
+            if (splited_block->append(index, item)) {
+                return {std::move(splited_block), nullptr};
+            }
+
+            std::unique_ptr<block_t> middle_block =
+                create_initialize(resource_, key_func_, align_to_block_size(item.size + header_size + metadata_size));
+            middle_block->append(index, item); // always true
+            return {std::move(middle_block), std::move(splited_block)};
+        }
+    }
 
     std::unique_ptr<block_t> block_t::split(size_t count) {
         assert(is_valid_ && "block is not initialized!");
         assert(count <= *count_);
+
+        std::unique_ptr<block_t> splited_block = create_initialize(resource_, key_func_, full_size_);
+        if (count == 0) {
+            return splited_block;
+        }
+        if (count == *count_) {
+            // faster to swap pointers then to move all documents
+            std::swap(internal_buffer_, splited_block->internal_buffer_);
+            std::swap(buffer_, splited_block->buffer_);
+            std::swap(last_metadata_, splited_block->last_metadata_);
+            std::swap(end_, splited_block->end_);
+            std::swap(count_, splited_block->count_);
+            std::swap(unique_indices_count_, splited_block->unique_indices_count_);
+            std::swap(checksum_, splited_block->checksum_);
+            std::swap(available_memory_, splited_block->available_memory_);
+            return splited_block;
+        }
+
+        metadata* split_item = last_metadata_ + count;
+
+        std::vector<index_t> moved_indices;
+        moved_indices.reserve(count);
+        for (auto split_meta = split_item - 1; split_meta >= last_metadata_; split_meta--) {
+            auto item = metadata_to_item_data_(split_meta);
+            auto moved_index = key_func_(item);
+            splited_block->append(moved_index, item);
+            moved_indices.emplace_back(std::move(moved_index));
+        }
+        moved_indices.erase(std::unique(moved_indices.begin(), moved_indices.end()), moved_indices.end());
+
+        *count_ -= count;
+        *unique_indices_count_ -= key_func_(metadata_to_item_data_(split_item)) == moved_indices.front()
+                                      ? moved_indices.size() - 1
+                                      : moved_indices.size();
+
+        remove_range_({last_metadata_, split_item});
+
+        return splited_block;
     }
 
-    void block_t::merge(std::unique_ptr<block_t> other) {
+    void block_t::merge(std::unique_ptr<block_t>&& other) {
         assert(is_valid_ && "other is not initialized!");
         assert(other->is_valid_ && "other block is not initialized!");
         assert(available_memory_ >= other->occupied_memory());
         assert(available_memory_ + (buffer_ - internal_buffer_) <= full_size_);
         if (other->count() == 0) {
             return;
+        }
+
+        if (other->min_index() >= max_index()) {
+            size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
+            size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
+            std::memcpy(buffer_,
+                        other->internal_buffer_ + header_size,
+                        (other->buffer_ - other->internal_buffer_) - header_size);
+            buffer_ += additional_offset;
+            std::memcpy(last_metadata_ - other->count(), other->last_metadata_, metadata_size * other->count());
+            for (size_t i = 0; i < other->count(); i++) {
+                (--last_metadata_)->offset += delta_offset;
+            }
+            available_memory_ -= additional_offset + metadata_size * other->count();
+            *count_ += other->count();
+            *unique_indices_count_ += other->unique_indices_count();
+        } else if (other->max_index() <= min_index()) {
+            size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
+            size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
+            std::memcpy(buffer_, other->internal_buffer_ + header_size, additional_offset);
+            buffer_ += additional_offset;
+            std::memcpy(last_metadata_ - other->count(), last_metadata_, metadata_size * other->count());
+            std::memcpy(last_metadata_, other->last_metadata_, metadata_size * other->count());
+            for (metadata* it = last_metadata_; it < end_; it++) {
+                it->offset += delta_offset;
+            }
+            last_metadata_ -= other->count();
+            available_memory_ -= additional_offset + metadata_size * other->count();
+            *count_ += other->count();
+            *unique_indices_count_ += other->unique_indices_count();
+        } else {
+            // there is range overlaping and cannot be copied trivially
+            for (metadata* it = other->end_ - 1; it >= other->last_metadata_; it--) {
+                append(metadata_to_item_data_(it));
+            }
         }
     }
 
@@ -357,12 +482,71 @@ namespace core::b_plus_tree {
         metadata_range result;
         result.begin =
             std::lower_bound(last_metadata_, end_, index, [this](const metadata& meta, const index_t& index) {
-                return key_func_({internal_buffer_ + meta.offset, meta.size}) > index;
+                return key_func_(metadata_to_item_data_(&meta)) > index;
             });
         result.end = std::lower_bound(result.begin, end_, index, [this](const metadata& meta, const index_t& index) {
-            return key_func_({internal_buffer_ + meta.offset, meta.size}) >= index;
+            return key_func_(metadata_to_item_data_(&meta)) >= index;
         });
         return result;
+    }
+
+    void block_t::remove_range_(metadata_range range) {
+        assert(range.begin != range.end);
+        size_t batch_size = range.end - range.begin;
+
+        // similar to gap_tracker for segment tree but with limited and inversed funcionality
+        std::vector<std::pair<uint32_t, uint32_t>> untouched_spaces;
+        untouched_spaces.emplace_back(header_size, data_ptr_t(buffer_) - internal_buffer_);
+
+        for (metadata* it = range.begin; it != range.end; it++) {
+            auto untouched_gap = untouched_spaces.begin();
+            for (; untouched_gap < untouched_spaces.end(); ++untouched_gap) {
+                if (untouched_gap->first > it->offset) {
+                    break;
+                }
+            }
+            assert(untouched_gap != untouched_spaces.begin() && "required untouched_gap is out of tracker scope");
+            auto prev = untouched_gap - 1;
+            std::pair<uint32_t, uint32_t> next;
+            next.first = it->offset + it->size;
+            next.second = prev->second + prev->first - it->offset - it->size;
+            prev->second = it->offset - prev->first;
+            if (next.second != 0) {
+                untouched_spaces.emplace(untouched_gap, std::move(next));
+            }
+            available_memory_ += it->size;
+        }
+
+        for (size_t i = 0; i + 1 < untouched_spaces.size();) {
+            if (untouched_spaces[i].first + untouched_spaces[i].second == untouched_spaces[i + 1].first) {
+                untouched_spaces[i].second += untouched_spaces[i + 1].second;
+                untouched_spaces.erase(untouched_spaces.begin() + i + 1);
+            } else {
+                i++;
+            }
+        }
+        std::memmove(last_metadata_ + batch_size, last_metadata_, (range.begin - last_metadata_) * metadata_size);
+        available_memory_ += batch_size * metadata_size;
+        last_metadata_ += batch_size;
+
+        uint32_t tracked_offset = 0;
+        uint32_t required_offset = 0;
+        auto next_it = untouched_spaces.begin() + 1;
+        for (auto it = untouched_spaces.begin(); next_it != untouched_spaces.end(); ++it, ++next_it) {
+            tracked_offset = it->first + it->second - required_offset;
+            required_offset += next_it->first - (it->first + it->second);
+            std::memmove(internal_buffer_ + tracked_offset, internal_buffer_ + next_it->first, next_it->second);
+            for (metadata* meta = last_metadata_; meta != end_; meta++) {
+                if (meta->offset >= next_it->first && meta->offset < next_it->first + next_it->second) {
+                    meta->offset -= required_offset;
+                }
+            }
+        }
+        buffer_ -= required_offset;
+    }
+
+    block_t::item_data block_t::metadata_to_item_data_(const metadata* meta) const {
+        return {internal_buffer_ + meta->offset, meta->size};
     }
 
     size_t block_t::calculate_checksum_() const {

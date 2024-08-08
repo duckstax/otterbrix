@@ -12,6 +12,8 @@ namespace components::types {
     class physical_value {
     public:
         // currently supported values
+        //TODO: add constructor from a pointer, without memory ownership
+        //TODO: add heap option (where to allocate data_)
         explicit physical_value(); // nullptr_t
         explicit physical_value(bool);
         explicit physical_value(uint8_t);
@@ -47,6 +49,9 @@ namespace components::types {
 
         physical_type type() const noexcept;
 
+        // if physical_value was reinterpreted from memory, pointer will behave incorrectly
+        void replace(physical_value&& other);
+
     private:
         nullptr_t value(std::integral_constant<physical_type, physical_type::NA>) const noexcept;
         bool value(std::integral_constant<physical_type, physical_type::BOOL_FALSE>) const noexcept;
@@ -65,5 +70,8 @@ namespace components::types {
 
         uint8_t* data_ = nullptr;
     };
+
+    static_assert(sizeof(physical_value) == 8);
+    static_assert(alignof(physical_value) == 8);
 
 } // namespace components::types

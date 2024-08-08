@@ -1,7 +1,6 @@
 #pragma once
 
 #include "block.hpp"
-#include "gap_tracker.hpp"
 #include <chrono>
 #include <core/file/file_system.hpp>
 #include <map>
@@ -10,12 +9,73 @@
 
 namespace core::b_plus_tree {
 
+    class gap_tracker_t {
+    public:
+        struct gap_t {
+            size_t offset;
+            size_t size;
+        };
+
+        gap_tracker_t(size_t min, size_t max) { init(min, max); }
+        void init(size_t min, size_t max) {
+            empty_spaces_.clear();
+            empty_spaces_.push_back({min, max - min});
+        }
+        size_t find_gap(size_t size) {
+            auto gap = empty_spaces_.begin();
+            for (; gap < empty_spaces_.end(); gap++) {
+                if (gap->size >= size) {
+                    size_t result = gap->offset;
+                    if (gap->size == size) {
+                        empty_spaces_.erase(gap);
+                    } else {
+                        gap->offset += size;
+                        gap->size -= size;
+                    }
+                    return result;
+                }
+            }
+            assert(false && "Not enough memory in gap_tracker_t");
+            return INVALID_SIZE;
+        }
+        void remove_gap(gap_t required_gap) {
+            auto gap = empty_spaces_.begin();
+            for (; gap < empty_spaces_.end(); gap++) {
+                if (gap->offset > required_gap.offset) {
+                    break;
+                }
+            }
+            empty_spaces_.insert(gap, required_gap);
+
+            clean_gaps();
+        }
+        void clean_gaps() {
+            for (size_t i = 0; i < empty_spaces_.size() - 1;) {
+                if (empty_spaces_[i].offset + empty_spaces_[i].size == empty_spaces_[i + 1].offset) {
+                    empty_spaces_[i].size += empty_spaces_[i + 1].size;
+                    empty_spaces_.erase(empty_spaces_.begin() + static_cast<int32_t>(i) + 1);
+                } else {
+                    i++;
+                }
+            }
+        }
+        std::vector<gap_t>& empty_spaces() { return empty_spaces_; }
+
+    private:
+        std::vector<gap_t> empty_spaces_;
+    };
+
+    // TODO: move memory overflow checks to b_plus_tree
     class segment_tree_t {
         struct block_metadata {
             size_t file_offset;
             size_t size;
-            uint64_t min_id;
-            uint64_t max_id;
+            block_t::index_t min_index;
+            block_t::index_t max_index;
+        };
+        struct metadata_range {
+            block_metadata* begin = nullptr;
+            block_metadata* end = nullptr;
         };
         struct node_t {
             std::unique_ptr<block_t> block;
@@ -26,6 +86,9 @@ namespace core::b_plus_tree {
         static constexpr size_t block_metadata_size = sizeof(block_metadata);
 
     public:
+        using index_t = block_t::index_t;
+        using item_data = block_t::item_data;
+
         static constexpr double merge_check = 4.0 / 5.0; // 80%
         static constexpr size_t header_size =
             2 * DEFAULT_BLOCK_SIZE; // this will give 2^14 - 1 block capacity and 16 free bytes for something later
@@ -197,31 +260,37 @@ namespace core::b_plus_tree {
         friend class iterator;
         friend class r_iterator;
 
-        segment_tree_t(std::pmr::memory_resource* resource, std::unique_ptr<core::filesystem::file_handle_t> file);
+        segment_tree_t(std::pmr::memory_resource* resource,
+                       index_t (*func)(const item_data&),
+                       std::unique_ptr<filesystem::file_handle_t> file);
         ~segment_tree_t();
 
         // will try to maintain default block size if possible
-        bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        bool remove_id(uint64_t id);
-        [[nodiscard]] std::unique_ptr<segment_tree_t> split(std::unique_ptr<core::filesystem::file_handle_t> file);
+        bool append(data_ptr_t data, size_t size);
+        bool append(item_data item);
+        bool remove(data_ptr_t data, size_t size);
+        bool remove(item_data item);
+        bool remove_index(const index_t& index);
+        [[nodiscard]] std::unique_ptr<segment_tree_t> split(std::unique_ptr<filesystem::file_handle_t> file);
         // requires other->count() > this->count()
         void balance_with(std::unique_ptr<segment_tree_t>& other);
         void merge(std::unique_ptr<segment_tree_t>& other);
 
         // due to lazy loading this batch can't be const anymore
-        bool contains_id(uint64_t id);
-        bool contains(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        size_t item_count(uint64_t id);
-        std::pair<data_ptr_t, size_t> get_item(uint64_t id, size_t index);
-        void get_items(std::vector<std::pair<data_ptr_t, size_t>>& result, uint64_t id);
+        bool contains_index(const index_t& index);
+        bool contains(item_data item);
+        bool contains(const index_t& index, item_data item);
 
-        uint64_t min_id() const; // with 0 blocks will give [0,INVALID_ID] range:
-        uint64_t max_id() const; // with 0 blocks will give [0,INVALID_ID] range:
+        size_t item_count(const index_t& index);
+        item_data get_item(const index_t& index, size_t position);
+        void get_items(std::vector<item_data>& result, const index_t& index);
+
+        index_t min_index() const; // with 0 blocks will give [0,INVALID_ID] range:
+        index_t max_index() const; // with 0 blocks will give [0,INVALID_ID] range:
 
         size_t blocks_count() const;
         size_t count() const;
-        size_t unique_id_count() const;
+        size_t unique_indices_count() const;
         // flush to disk
         void flush();
         // load all tree segment at once from scratch
@@ -237,9 +306,32 @@ namespace core::b_plus_tree {
         r_iterator rbegin() const { return r_iterator({const_cast<segment_tree_t*>(this), metadata_end_ - 1}); }
         r_iterator rend() const { return r_iterator({const_cast<segment_tree_t*>(this), metadata_begin_ - 1}); }
 
+        void verify_metadata() {
+            if (segments_.empty())
+                return;
+
+            if (!segments_.begin()->block) {
+                load_segment_(metadata_begin_);
+            }
+            assert(metadata_begin_->min_index == segments_.begin()->block->min_index());
+            assert(metadata_begin_->max_index == segments_.begin()->block->max_index());
+            block_metadata* meta = metadata_begin_ + 1;
+            for (auto node = segments_.begin() + 1; node != segments_.end(); node++, meta++) {
+                if (!node->block) {
+                    load_segment_(meta);
+                }
+                assert(meta->min_index == node->block->min_index());
+                assert(meta->max_index == node->block->max_index());
+                assert(meta->min_index >= (meta - 1)->max_index);
+                assert(node->block->min_index() >= (node - 1)->block->min_index());
+            }
+        }
+
     private:
-        [[nodiscard]] node_t construct_new_node_(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        it find_node_(uint64_t id);
+        metadata_range find_range_(const index_t& index) const;
+        void remove_range_(metadata_range range);
+        [[nodiscard]] node_t construct_new_node_(const index_t& index, item_data item);
+        [[nodiscard]] node_t construct_new_node_(item_data item);
         void load_segment_(block_metadata* metadata);
         void unload_old_segments_();
         // header changes will be handled here:
@@ -248,6 +340,7 @@ namespace core::b_plus_tree {
         void close_gaps_();
 
         std::pmr::memory_resource* resource_;
+        index_t (*key_func_)(const item_data&);
         std::vector<node_t> segments_; // will become boost::intrusive
 
         size_t* header_;
@@ -258,7 +351,7 @@ namespace core::b_plus_tree {
         // keep track of gaps in block record and try to fill them when creating new blocks
         gap_tracker_t gap_tracker_{header_size, INVALID_SIZE};
 
-        std::unique_ptr<core::filesystem::file_handle_t> file_;
+        std::unique_ptr<filesystem::file_handle_t> file_;
     };
 
 } // namespace core::b_plus_tree

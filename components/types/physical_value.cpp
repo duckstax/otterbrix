@@ -175,7 +175,7 @@ namespace components::types {
     }
 
     physical_value& physical_value::operator=(const physical_value& other) {
-        if (*this == other) {
+        if (data_ == other.data_) {
             return *this;
         }
 
@@ -230,7 +230,7 @@ namespace components::types {
     }
 
     physical_value& physical_value::operator=(physical_value&& other) noexcept {
-        if (*this == other) {
+        if (data_ == other.data_) {
             return *this;
         }
 
@@ -382,6 +382,15 @@ namespace components::types {
         } else {
             return static_cast<physical_type>(*data_);
         }
+    }
+
+    void physical_value::replace(physical_value&& other) {
+        if (data_ == other.data_) {
+            return;
+        }
+
+        data_ = other.data_;
+        other.data_ = nullptr;
     }
 
     nullptr_t physical_value::value(std::integral_constant<physical_type, physical_type::NA>) const noexcept {

@@ -27,6 +27,8 @@ namespace core::b_plus_tree {
         return (size + (DEFAULT_BLOCK_SIZE - 1)) / DEFAULT_BLOCK_SIZE * DEFAULT_BLOCK_SIZE;
     }
 
+    //TODO: add function variants that takes both index and item to avoid creating unnecessary indices
+    //TODO: create a multi value index for secondary comparisons (this also could be used to make array into a key)
     class block_t {
     private:
         struct metadata {
@@ -49,6 +51,8 @@ namespace core::b_plus_tree {
             item_data(data_ptr_t d, size_t s) noexcept
                 : data(d)
                 , size(s) {}
+
+            explicit operator bool() const noexcept { return data != nullptr; }
         };
 
         struct metadata_range {
@@ -58,10 +62,14 @@ namespace core::b_plus_tree {
 
         class iterator {
         public:
+            struct iterator_data {
+                index_t index;
+                item_data item;
+            };
             iterator(const block_t* block, metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const iterator_data& operator*() const { return data_; }
+            inline const iterator_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const iterator& operator++() {
@@ -127,15 +135,19 @@ namespace core::b_plus_tree {
 
             const block_t* block_;
             metadata* metadata_;
-            item_data data_;
+            iterator_data data_;
         };
 
         class r_iterator {
         public:
+            struct iterator_data {
+                index_t index;
+                item_data item;
+            };
             r_iterator(const block_t* block, metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const iterator_data& operator*() const { return data_; }
+            inline const iterator_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const r_iterator& operator++() {
@@ -201,7 +213,7 @@ namespace core::b_plus_tree {
 
             const block_t* block_;
             metadata* metadata_;
-            item_data data_;
+            iterator_data data_;
         };
 
         friend class iterator;
@@ -225,13 +237,16 @@ namespace core::b_plus_tree {
 
         bool append(data_ptr_t data, size_t size) noexcept;
         bool append(item_data item) noexcept;
+        bool append(const index_t& index, item_data item) noexcept;
         bool remove(data_ptr_t data, size_t size) noexcept;
         bool remove(item_data item) noexcept;
+        bool remove(const index_t& index, item_data item) noexcept;
         // remove all entries with this index
         bool remove_index(const index_t& index);
 
         bool contains_index(const index_t& index) const;
         bool contains(item_data item) const;
+        bool contains(const index_t& index, item_data item) const;
         size_t item_count(const index_t& index) const;
         item_data get_item(const index_t& index, size_t position) const;
         void get_items(std::vector<item_data>& items, const index_t& index) const;
@@ -250,13 +265,12 @@ namespace core::b_plus_tree {
 
         // after splits this block will contain the first half
         // best case: second block >= first block
-        // worst case: 2 blocks will be created
         [[nodiscard]] std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>> split_append(const index_t& index,
                                                                                                  item_data item);
         // creates new block and puts last "count" elements there
         [[nodiscard]] std::unique_ptr<block_t> split(size_t count);
         // merge other block to this one
-        void merge(std::unique_ptr<block_t> block);
+        void merge(std::unique_ptr<block_t>&& block);
 
         void recalculate_checksum();
         // return false if block is not in the same state as when check sum was calculated
@@ -274,6 +288,8 @@ namespace core::b_plus_tree {
 
     private:
         metadata_range find_index_range_(const index_t& index) const;
+        void remove_range_(metadata_range range);
+        item_data metadata_to_item_data_(const metadata* meta) const;
         size_t calculate_checksum_() const;
 
         std::pmr::memory_resource* resource_;

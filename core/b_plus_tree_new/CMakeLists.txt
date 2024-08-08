@@ -2,12 +2,12 @@ project(b_plus_tree_new)
 
 set(header_${PROJECT_NAME}
         block.hpp
-        gap_tracker.hpp
+        segment_tree.hpp
         )
 
 set(source_${PROJECT_NAME}
         block.cpp
-        gap_tracker.cpp
+        segment_tree.cpp
         )
 
 add_library(otterbrix_${PROJECT_NAME}

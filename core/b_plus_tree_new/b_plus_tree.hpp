@@ -68,6 +68,7 @@ namespace core::b_plus_tree {
             base_node_t* find_node(uint64_t) override;
             bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
             bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
+            // TODO: return deleted count instead of bool here, in segment_tree and in block
             bool remove_id(uint64_t id);
             [[nodiscard]] leaf_node_t* split(std::unique_ptr<core::filesystem::file_handle_t> file,
                                              uint64_t segment_tree_id);
