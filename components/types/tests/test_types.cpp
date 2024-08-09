@@ -6,10 +6,10 @@ using namespace components::types;
 
 TEST_CASE("physical_value") {
     std::vector<physical_value> values;
+    std::string_view str1 = "test string";
+    std::string_view str2 = "bigger test string but shouldn't be; b < t";
 
     INFO("initialization") {
-        //REQUIRE(physical_value(uint8_t(53)) < physical_value(uint16_t(643)));
-
         values.emplace_back();
         values.emplace_back(false);
         values.emplace_back(true);
@@ -23,8 +23,8 @@ TEST_CASE("physical_value") {
         values.emplace_back(int64_t(-478346));
         values.emplace_back(float(-63.239f));
         values.emplace_back(double(577.3910246));
-        values.emplace_back(std::string("test string"));
-        values.emplace_back(std::string("bigger test string but shouldn't be; b < t"));
+        values.emplace_back(str1);
+        values.emplace_back(str2);
     }
 
     INFO("value getters") {
@@ -41,8 +41,8 @@ TEST_CASE("physical_value") {
         REQUIRE(values[10].value<physical_type::INT64>() == int64_t(-478346));
         REQUIRE(values[11].value<physical_type::FLOAT>() == float(-63.239f));
         REQUIRE(values[12].value<physical_type::DOUBLE>() == double(577.3910246));
-        REQUIRE(values[13].value<physical_type::STRING>() == std::string("test string"));
-        REQUIRE(values[14].value<physical_type::STRING>() == std::string("bigger test string but shouldn't be; b < t"));
+        REQUIRE(values[13].value<physical_type::STRING>() == str1);
+        REQUIRE(values[14].value<physical_type::STRING>() == str2);
     }
 
     INFO("sort") {
@@ -62,9 +62,9 @@ TEST_CASE("physical_value") {
         REQUIRE(values[10].type() == physical_type::UINT32);
         REQUIRE(values[11].type() == physical_type::UINT64);
         REQUIRE(values[12].type() == physical_type::STRING);
-        REQUIRE(values[12].value<physical_type::STRING>() == "bigger test string but shouldn't be; b < t");
+        REQUIRE(values[12].value<physical_type::STRING>() == str2);
         REQUIRE(values[13].type() == physical_type::STRING);
-        REQUIRE(values[13].value<physical_type::STRING>() == "test string");
+        REQUIRE(values[13].value<physical_type::STRING>() == str1);
         REQUIRE(values[14].type() == physical_type::NA);
     }
 }

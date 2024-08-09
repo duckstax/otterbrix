@@ -8,31 +8,22 @@
 
 namespace components::types {
 
-    // note: possibly add a memory resource
     class physical_value {
     public:
         // currently supported values
-        //TODO: add constructor from a pointer, without memory ownership
-        //TODO: add heap option (where to allocate data_)
+        // TODO: add memory ownership
         explicit physical_value(); // nullptr_t
+        explicit physical_value(nullptr_t);
         explicit physical_value(bool);
-        explicit physical_value(uint8_t);
-        explicit physical_value(uint16_t);
-        explicit physical_value(uint32_t);
-        explicit physical_value(uint64_t);
-        explicit physical_value(int8_t);
-        explicit physical_value(int16_t);
-        explicit physical_value(int32_t);
-        explicit physical_value(int64_t);
-        explicit physical_value(float);
-        explicit physical_value(double);
-        explicit physical_value(const std::string& value);
+        explicit physical_value(std::string_view value);
+        template<typename T>
+        explicit physical_value(T value); // all integral types
 
-        physical_value(const physical_value& other);
-        physical_value(physical_value&& other) noexcept;
-        physical_value& operator=(const physical_value& other);
-        physical_value& operator=(physical_value&& other) noexcept;
-        ~physical_value();
+        physical_value(const physical_value& other) noexcept = default;
+        physical_value(physical_value&& other) noexcept = default;
+        physical_value& operator=(const physical_value& other) noexcept = default;
+        physical_value& operator=(physical_value&& other) noexcept = default;
+        ~physical_value() = default;
 
         // if types convertable to each other, compared by value, otherwise returns physical type order
         bool operator<(const physical_value& other) const noexcept;
@@ -44,34 +35,76 @@ namespace components::types {
 
         template<physical_type Type>
         auto value() const noexcept {
-            return value(std::integral_constant<physical_type, Type>{});
+            return value_(std::integral_constant<physical_type, Type>{});
         }
 
         physical_type type() const noexcept;
 
-        // if physical_value was reinterpreted from memory, pointer will behave incorrectly
-        void replace(physical_value&& other);
-
     private:
-        nullptr_t value(std::integral_constant<physical_type, physical_type::NA>) const noexcept;
-        bool value(std::integral_constant<physical_type, physical_type::BOOL_FALSE>) const noexcept;
-        bool value(std::integral_constant<physical_type, physical_type::BOOL_TRUE>) const noexcept;
-        uint8_t value(std::integral_constant<physical_type, physical_type::UINT8>) const noexcept;
-        uint16_t value(std::integral_constant<physical_type, physical_type::UINT16>) const noexcept;
-        uint32_t value(std::integral_constant<physical_type, physical_type::UINT32>) const noexcept;
-        uint64_t value(std::integral_constant<physical_type, physical_type::UINT64>) const noexcept;
-        int8_t value(std::integral_constant<physical_type, physical_type::INT8>) const noexcept;
-        int16_t value(std::integral_constant<physical_type, physical_type::INT16>) const noexcept;
-        int32_t value(std::integral_constant<physical_type, physical_type::INT32>) const noexcept;
-        int64_t value(std::integral_constant<physical_type, physical_type::INT64>) const noexcept;
-        float value(std::integral_constant<physical_type, physical_type::FLOAT>) const noexcept;
-        double value(std::integral_constant<physical_type, physical_type::DOUBLE>) const noexcept;
-        std::string value(std::integral_constant<physical_type, physical_type::STRING>) const noexcept;
+        nullptr_t value_(std::integral_constant<physical_type, physical_type::NA>) const noexcept;
+        bool value_(std::integral_constant<physical_type, physical_type::BOOL_FALSE>) const noexcept;
+        bool value_(std::integral_constant<physical_type, physical_type::BOOL_TRUE>) const noexcept;
+        uint8_t value_(std::integral_constant<physical_type, physical_type::UINT8>) const noexcept;
+        uint16_t value_(std::integral_constant<physical_type, physical_type::UINT16>) const noexcept;
+        uint32_t value_(std::integral_constant<physical_type, physical_type::UINT32>) const noexcept;
+        uint64_t value_(std::integral_constant<physical_type, physical_type::UINT64>) const noexcept;
+        int8_t value_(std::integral_constant<physical_type, physical_type::INT8>) const noexcept;
+        int16_t value_(std::integral_constant<physical_type, physical_type::INT16>) const noexcept;
+        int32_t value_(std::integral_constant<physical_type, physical_type::INT32>) const noexcept;
+        int64_t value_(std::integral_constant<physical_type, physical_type::INT64>) const noexcept;
+        float value_(std::integral_constant<physical_type, physical_type::FLOAT>) const noexcept;
+        double value_(std::integral_constant<physical_type, physical_type::DOUBLE>) const noexcept;
+        std::string_view value_(std::integral_constant<physical_type, physical_type::STRING>) const noexcept;
 
-        uint8_t* data_ = nullptr;
+        template<typename T>
+        static constexpr physical_type get_type_() {
+            if constexpr (std::is_same_v<T, uint8_t>)
+                return physical_type::UINT8;
+            else if constexpr (std::is_same_v<T, uint16_t>)
+                return physical_type::UINT16;
+            else if constexpr (std::is_same_v<T, uint32_t>)
+                return physical_type::UINT32;
+            else if constexpr (std::is_same_v<T, uint64_t>)
+                return physical_type::UINT64;
+            else if constexpr (std::is_same_v<T, int8_t>)
+                return physical_type::INT8;
+            else if constexpr (std::is_same_v<T, int16_t>)
+                return physical_type::INT16;
+            else if constexpr (std::is_same_v<T, int32_t>)
+                return physical_type::INT32;
+            else if constexpr (std::is_same_v<T, int64_t>)
+                return physical_type::INT64;
+            else if constexpr (std::is_same_v<T, float>)
+                return physical_type::FLOAT;
+            else if constexpr (std::is_same_v<T, double>)
+                return physical_type::DOUBLE;
+            //static_assert(false && "should be unreachable");
+            return physical_type::NA;
+        }
+
+        physical_type type_ = physical_type::NA;
+        bool memory_ownership = false; // for now is always false
+        uint32_t size_ = 0;            // only for pointers
+        uint64_t data_ = 0;            // buffer but allocated on a stack to make it trivially copyable
     };
 
-    static_assert(sizeof(physical_value) == 8);
+    template<typename T>
+    physical_value::physical_value(T value)
+        : type_(physical_value::get_type_<T>()) {
+        std::memcpy(&data_, &value, sizeof(value));
+    }
+
+    static_assert(sizeof(physical_value) == 16);
     static_assert(alignof(physical_value) == 8);
+    static_assert(std::is_trivially_copy_assignable_v<physical_value>);
 
 } // namespace components::types
+
+namespace std {
+    template<>
+    class numeric_limits<components::types::physical_value> {
+    public:
+        static components::types::physical_value min() { return components::types::physical_value(false); }
+        static components::types::physical_value max() { return components::types::physical_value(); }
+    };
+} // namespace std
