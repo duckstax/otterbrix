@@ -20,6 +20,9 @@ namespace core::b_plus_tree {
 
     class btree_t {
     public:
+        using index_t = segment_tree_t::index_t;
+        using item_data = segment_tree_t::item_data;
+
         class base_node_t {
         public:
             base_node_t(std::pmr::memory_resource* resource, size_t min_node_capacity, size_t max_node_capacity);
@@ -35,12 +38,12 @@ namespace core::b_plus_tree {
             virtual size_t count() const = 0;
             virtual size_t unique_entry_count() const = 0;
 
-            virtual base_node_t* find_node(uint64_t id) = 0;
+            virtual base_node_t* find_node(const index_t&) = 0;
             virtual void balance(base_node_t* neighbour) = 0;
             virtual void merge(base_node_t* neighbour) = 0;
 
-            virtual uint64_t min_id() const = 0;
-            virtual uint64_t max_id() const = 0;
+            virtual index_t min_index() const = 0;
+            virtual index_t max_index() const = 0;
 
             // will be used everywhere
             base_node_t* left_node_ = nullptr;
@@ -56,7 +59,8 @@ namespace core::b_plus_tree {
         class leaf_node_t : public base_node_t {
         public:
             leaf_node_t(std::pmr::memory_resource* resource,
-                        std::unique_ptr<core::filesystem::file_handle_t> file,
+                        std::unique_ptr<filesystem::file_handle_t> file,
+                        index_t (*func)(const item_data&),
                         uint64_t segment_tree_id,
                         size_t min_node_capacity,
                         size_t max_node_capacity);
@@ -65,24 +69,22 @@ namespace core::b_plus_tree {
             bool is_inner_node() const override { return false; }
             bool is_leaf_node() const override { return true; }
 
-            base_node_t* find_node(uint64_t) override;
-            bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-            bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-            // TODO: return deleted count instead of bool here, in segment_tree and in block
-            bool remove_id(uint64_t id);
-            [[nodiscard]] leaf_node_t* split(std::unique_ptr<core::filesystem::file_handle_t> file,
-                                             uint64_t segment_tree_id);
+            base_node_t* find_node(const index_t&) override;
+            bool append(const index_t& index, item_data item);
+            bool remove(const index_t& index, item_data item);
+            bool remove_index(const index_t& index);
+            [[nodiscard]] leaf_node_t* split(std::unique_ptr<filesystem::file_handle_t> file, uint64_t segment_tree_id);
             void balance(base_node_t* neighbour) override;
             void merge(base_node_t* neighbour) override;
 
-            bool contains_id(uint64_t id);
-            bool contains(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-            size_t item_count(uint64_t id);
-            std::pair<data_ptr_t, size_t> get_item(uint64_t id, size_t index);
-            void get_items(std::vector<std::pair<data_ptr_t, size_t>>& result, uint64_t id);
+            bool contains_index(const index_t& index);
+            bool contains(const index_t& index, item_data item);
+            size_t item_count(const index_t& index);
+            item_data get_item(const index_t& index, size_t position);
+            void get_items(std::vector<item_data>& result, const index_t& index);
 
-            uint64_t min_id() const override;
-            uint64_t max_id() const override;
+            index_t min_index() const override;
+            index_t max_index() const override;
 
             size_t count() const override;
             size_t unique_entry_count() const override;
@@ -118,7 +120,7 @@ namespace core::b_plus_tree {
             void initialize(base_node_t* node_1, base_node_t* node_2);
             [[nodiscard]] base_node_t* deinitialize();
 
-            base_node_t* find_node(uint64_t id) override;
+            base_node_t* find_node(const index_t&) override;
             void insert(base_node_t* node);
             void remove(base_node_t* node);
             [[nodiscard]] inner_node_t* split();
@@ -129,8 +131,8 @@ namespace core::b_plus_tree {
             size_t count() const override;
             size_t unique_entry_count() const override;
 
-            uint64_t min_id() const override;
-            uint64_t max_id() const override;
+            index_t min_index() const override;
+            index_t max_index() const override;
 
         private:
             base_node_t** nodes_;
@@ -138,53 +140,59 @@ namespace core::b_plus_tree {
         };
 
         btree_t(std::pmr::memory_resource* resource,
-                core::filesystem::local_file_system_t& fs,
+                filesystem::local_file_system_t& fs,
                 std::string storage_directory,
+                index_t (*func)(const item_data&),
                 size_t max_node_capacity = DEFAULT_NODE_CAPACITY);
         ~btree_t();
 
         //template<typename T, typename Serializer>
-        //bool append(uint64_t id, T item, Serializer serializer);
-        bool append(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        bool remove(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        bool remove_id(uint64_t id);
+        //bool append(T item, Serializer serializer);
+        bool append(item_data item);
+        bool remove(item_data item);
+        //template<typename T>
+        //bool remove_index(T value); // transforms value to index_t
+        // TODO: return deleted count instead of bool here, in segment_tree and in block
+        bool remove_index(const index_t& index);
 
         template<typename T, typename Deserializer, typename Predicate>
-        bool scan_ascending(uint64_t min_id,
-                            uint64_t max_id,
+        bool scan_ascending(const index_t& min_index,
+                            const index_t& max_index,
                             size_t limit,
-                            std::vector<std::pair<uint64_t, T>>* result,
+                            std::vector<T>* result,
                             Deserializer deserializer,
                             Predicate predicate);
         template<typename T, typename Deserializer, typename Predicate>
-        bool scan_decending(uint64_t min_id,
-                            uint64_t max_id,
+        bool scan_decending(const index_t& min_index,
+                            const index_t& max_index,
                             size_t limit,
-                            std::vector<std::pair<uint64_t, T>>* result,
+                            std::vector<T>* result,
                             Deserializer deserializer,
                             Predicate predicate);
 
-        void list_ids(std::vector<uint64_t>& result);
+        void list_indices(std::vector<index_t>& result);
 
         // full flush and load for now
         // TODO: flush and load only modified leaves
         void flush();
         void load();
 
-        bool contains_id(uint64_t id);
-        bool contains(uint64_t id, const_data_ptr_t buffer, size_t buffer_size);
-        size_t item_count(uint64_t id);
-        std::pair<data_ptr_t, size_t> get_item(uint64_t id, size_t index);
-        void get_items(std::vector<std::pair<data_ptr_t, size_t>>& result, uint64_t id);
+        bool contains_index(const index_t& index);
+        bool contains(const index_t& index, item_data item);
+        size_t item_count(const index_t& index);
+        item_data get_item(const index_t& index, size_t position);
+        void get_items(std::vector<item_data>& result, const index_t& index);
         size_t size() const;
+        size_t unique_indices_count();
 
     private:
-        leaf_node_t* find_leaf_node_(uint64_t id);
+        leaf_node_t* find_leaf_node_(const index_t& index);
         void release_locks_(std::deque<base_node_t*>& modified_nodes) const;
         uint64_t get_unique_id_();
 
-        core::filesystem::local_file_system_t& fs_;
+        filesystem::local_file_system_t& fs_;
         std::pmr::memory_resource* resource_;
+        index_t (*key_func_)(const item_data&);
         std::shared_mutex tree_mutex_;
         base_node_t* root_ = nullptr;
         std::filesystem::path storage_directory_;
@@ -200,13 +208,13 @@ namespace core::b_plus_tree {
     };
 
     template<typename T, typename Deserializer, typename Predicate>
-    bool btree_t::scan_ascending(uint64_t min_id,
-                                 uint64_t max_id,
+    bool btree_t::scan_ascending(const index_t& min_index,
+                                 const index_t& max_index,
                                  size_t limit,
-                                 std::vector<std::pair<uint64_t, T>>* result,
+                                 std::vector<T>* result,
                                  Deserializer deserializer,
                                  Predicate predicate) {
-        auto first_leaf = find_leaf_node_(min_id);
+        auto first_leaf = find_leaf_node_(min_index);
         if (!first_leaf || limit == 0) {
             return false;
         }
@@ -215,27 +223,25 @@ namespace core::b_plus_tree {
         first_leaf->unlock_shared();
 
         while (first_leaf) {
-            if (first_leaf->min_id() > max_id) {
+            if (first_leaf->min_index() > max_index) {
                 break;
             }
 
             for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
                 for (auto it = block->begin(); it != block->end(); it++) {
-                    if (it->id > max_id) {
+                    if (it->index > max_index) {
                         tree_mutex_.unlock_shared();
                         return true;
-                    } else if (it->id < min_id) {
+                    } else if (it->index < min_index) {
                         continue;
                     }
-                    for (auto item = it->items.begin(); item != it->items.end(); item++) {
-                        T t = deserializer(reinterpret_cast<void*>(item->first), item->second);
-                        if (predicate(t)) {
-                            result->emplace_back(it->id, std::move(t));
-                            limit--;
-                            if (limit == 0) {
-                                tree_mutex_.unlock_shared();
-                                return true;
-                            }
+                    T t = deserializer(reinterpret_cast<void*>(it->item.data), it->item.size);
+                    if (predicate(t)) {
+                        result->emplace_back(std::move(t));
+                        limit--;
+                        if (limit == 0) {
+                            tree_mutex_.unlock_shared();
+                            return true;
                         }
                     }
                 }
@@ -248,13 +254,13 @@ namespace core::b_plus_tree {
     }
 
     template<typename T, typename Deserializer, typename Predicate>
-    bool btree_t::scan_decending(uint64_t min_id,
-                                 uint64_t max_id,
+    bool btree_t::scan_decending(const index_t& min_index,
+                                 const index_t& max_index,
                                  size_t limit,
-                                 std::vector<std::pair<uint64_t, T>>* result,
+                                 std::vector<T>* result,
                                  Deserializer deserializer,
                                  Predicate predicate) {
-        auto last_leaf = find_leaf_node_(max_id);
+        auto last_leaf = find_leaf_node_(max_index);
         if (!last_leaf || limit == 0) {
             return false;
         }
@@ -263,27 +269,25 @@ namespace core::b_plus_tree {
         last_leaf->unlock_shared();
 
         while (last_leaf) {
-            if (last_leaf->max_id() < min_id) {
+            if (last_leaf->max_index() < min_index) {
                 break;
             }
 
             for (auto block = last_leaf->rbegin(); block != last_leaf->rend(); block++) {
                 for (auto it = block->rbegin(); it != block->rend(); it++) {
-                    if (it->id < min_id) {
+                    if (it->index < min_index) {
                         tree_mutex_.unlock_shared();
                         return true;
-                    } else if (it->id > max_id) {
+                    } else if (it->index > max_index) {
                         continue;
                     }
-                    for (auto item = it->items.rbegin(); item != it->items.rend(); item++) {
-                        T t = deserializer(reinterpret_cast<void*>(item->first), item->second);
-                        if (predicate(t)) {
-                            result->emplace_back(it->id, std::move(t));
-                            limit--;
-                            if (limit == 0) {
-                                tree_mutex_.unlock_shared();
-                                return true;
-                            }
+                    T t = deserializer(reinterpret_cast<void*>(it->item.data), it->item.size);
+                    if (predicate(t)) {
+                        result->emplace_back(std::move(t));
+                        limit--;
+                        if (limit == 0) {
+                            tree_mutex_.unlock_shared();
+                            return true;
                         }
                     }
                 }

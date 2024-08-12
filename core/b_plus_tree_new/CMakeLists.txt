@@ -3,11 +3,13 @@ project(b_plus_tree_new)
 set(header_${PROJECT_NAME}
         block.hpp
         segment_tree.hpp
+        b_plus_tree.hpp
         )
 
 set(source_${PROJECT_NAME}
         block.cpp
         segment_tree.cpp
+        b_plus_tree.cpp
         )
 
 add_library(otterbrix_${PROJECT_NAME}

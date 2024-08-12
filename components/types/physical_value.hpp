@@ -96,7 +96,9 @@ namespace components::types {
 
     static_assert(sizeof(physical_value) == 16);
     static_assert(alignof(physical_value) == 8);
+    static_assert(std::is_trivially_copyable_v<physical_value>);
     static_assert(std::is_trivially_copy_assignable_v<physical_value>);
+    static_assert(std::is_trivially_move_assignable_v<physical_value>);
 
 } // namespace components::types
 

@@ -244,7 +244,7 @@ namespace core::b_plus_tree {
     block_t::index_t block_t::min_index() const {
         assert(is_valid_ && "block is not initialized!");
         if (last_metadata_ == end_) {
-            return index_t();
+            return std::numeric_limits<index_t>::min();
         }
 
         item_data item = metadata_to_item_data_(end_ - 1);
@@ -253,7 +253,7 @@ namespace core::b_plus_tree {
     block_t::index_t block_t::max_index() const {
         assert(is_valid_ && "block is not initialized!");
         if (last_metadata_ == end_) {
-            return index_t();
+            return std::numeric_limits<index_t>::max();
         }
 
         item_data item = metadata_to_item_data_(last_metadata_);
@@ -330,7 +330,8 @@ namespace core::b_plus_tree {
 
         bool append_possible;
         bool this_block;
-        index_t split_index = split_item == end_ ? index_t(false) : key_func_(metadata_to_item_data_(split_item));
+        index_t split_index =
+            split_item == end_ ? std::numeric_limits<index_t>::min() : key_func_(metadata_to_item_data_(split_item));
         if (split_item == end_ && (index > min_index() && index < max_index())) {
             append_possible = false;
         } else if (split_index < index) {
@@ -421,6 +422,48 @@ namespace core::b_plus_tree {
         return splited_block;
     }
 
+    std::unique_ptr<block_t> block_t::split_uniques(size_t count) {
+        assert(is_valid_ && "block is not initialized!");
+        assert(count <= *unique_indices_count_);
+
+        std::unique_ptr<block_t> splited_block = create_initialize(resource_, key_func_, full_size_);
+        if (count == 0) {
+            return splited_block;
+        }
+        if (count == *unique_indices_count_) {
+            // faster to swap pointers then to move all documents
+            std::swap(internal_buffer_, splited_block->internal_buffer_);
+            std::swap(buffer_, splited_block->buffer_);
+            std::swap(last_metadata_, splited_block->last_metadata_);
+            std::swap(end_, splited_block->end_);
+            std::swap(count_, splited_block->count_);
+            std::swap(unique_indices_count_, splited_block->unique_indices_count_);
+            std::swap(checksum_, splited_block->checksum_);
+            std::swap(available_memory_, splited_block->available_memory_);
+            return splited_block;
+        }
+
+        metadata* split_item = last_metadata_;
+        index_t prev_index = key_func_(metadata_to_item_data_(last_metadata_));
+        std::vector<index_t> moved_indices;
+        moved_indices.reserve(count);
+        for (size_t i = 1, index_count = 1; i < end_ - last_metadata_ && index_count <= count; i++) {
+            item_data item = metadata_to_item_data_(last_metadata_ + i);
+            index_t index = key_func_(item);
+            if (index != prev_index) {
+                prev_index = index;
+                index_count++;
+                moved_indices.emplace_back(index);
+            }
+            splited_block->append(metadata_to_item_data_(split_item++));
+            (*count_)--;
+        }
+        *unique_indices_count_ -= count;
+
+        remove_range_({last_metadata_, split_item});
+        return splited_block;
+    }
+
     void block_t::merge(std::unique_ptr<block_t>&& other) {
         assert(is_valid_ && "other is not initialized!");
         assert(other->is_valid_ && "other block is not initialized!");
@@ -431,6 +474,7 @@ namespace core::b_plus_tree {
         }
 
         if (other->min_index() >= max_index()) {
+            bool overlap = other->min_index() == max_index();
             size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
             size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
             std::memcpy(buffer_,
@@ -443,8 +487,9 @@ namespace core::b_plus_tree {
             }
             available_memory_ -= additional_offset + metadata_size * other->count();
             *count_ += other->count();
-            *unique_indices_count_ += other->unique_indices_count();
+            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
         } else if (other->max_index() <= min_index()) {
+            bool overlap = other->max_index() == min_index();
             size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
             size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
             std::memcpy(buffer_, other->internal_buffer_ + header_size, additional_offset);
@@ -457,7 +502,7 @@ namespace core::b_plus_tree {
             last_metadata_ -= other->count();
             available_memory_ -= additional_offset + metadata_size * other->count();
             *count_ += other->count();
-            *unique_indices_count_ += other->unique_indices_count();
+            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
         } else {
             // there is range overlaping and cannot be copied trivially
             for (metadata* it = other->end_ - 1; it >= other->last_metadata_; it--) {

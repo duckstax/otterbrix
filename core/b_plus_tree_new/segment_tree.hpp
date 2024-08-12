@@ -66,6 +66,7 @@ namespace core::b_plus_tree {
     };
 
     // TODO: move memory overflow checks to b_plus_tree
+    // TODO: add string buffer storage for min/max metadata indices
     class segment_tree_t {
         struct block_metadata {
             size_t file_offset;
@@ -268,8 +269,10 @@ namespace core::b_plus_tree {
         // will try to maintain default block size if possible
         bool append(data_ptr_t data, size_t size);
         bool append(item_data item);
+        bool append(const index_t& index, item_data item);
         bool remove(data_ptr_t data, size_t size);
         bool remove(item_data item);
+        bool remove(const index_t& index, item_data item);
         bool remove_index(const index_t& index);
         [[nodiscard]] std::unique_ptr<segment_tree_t> split(std::unique_ptr<filesystem::file_handle_t> file);
         // requires other->count() > this->count()
@@ -305,27 +308,6 @@ namespace core::b_plus_tree {
         iterator cend() const { return iterator(const_cast<segment_tree_t*>(this), metadata_end_); }
         r_iterator rbegin() const { return r_iterator({const_cast<segment_tree_t*>(this), metadata_end_ - 1}); }
         r_iterator rend() const { return r_iterator({const_cast<segment_tree_t*>(this), metadata_begin_ - 1}); }
-
-        void verify_metadata() {
-            if (segments_.empty())
-                return;
-
-            if (!segments_.begin()->block) {
-                load_segment_(metadata_begin_);
-            }
-            assert(metadata_begin_->min_index == segments_.begin()->block->min_index());
-            assert(metadata_begin_->max_index == segments_.begin()->block->max_index());
-            block_metadata* meta = metadata_begin_ + 1;
-            for (auto node = segments_.begin() + 1; node != segments_.end(); node++, meta++) {
-                if (!node->block) {
-                    load_segment_(meta);
-                }
-                assert(meta->min_index == node->block->min_index());
-                assert(meta->max_index == node->block->max_index());
-                assert(meta->min_index >= (meta - 1)->max_index);
-                assert(node->block->min_index() >= (node - 1)->block->min_index());
-            }
-        }
 
     private:
         metadata_range find_range_(const index_t& index) const;

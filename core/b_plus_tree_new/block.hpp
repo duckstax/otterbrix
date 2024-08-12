@@ -269,6 +269,8 @@ namespace core::b_plus_tree {
                                                                                                  item_data item);
         // creates new block and puts last "count" elements there
         [[nodiscard]] std::unique_ptr<block_t> split(size_t count);
+        // creates new block and puts last "count" indices there
+        [[nodiscard]] std::unique_ptr<block_t> split_uniques(size_t count);
         // merge other block to this one
         void merge(std::unique_ptr<block_t>&& block);
 
@@ -292,25 +294,25 @@ namespace core::b_plus_tree {
         item_data metadata_to_item_data_(const metadata* meta) const;
         size_t calculate_checksum_() const;
 
-        std::pmr::memory_resource* resource_;
+        std::pmr::memory_resource* resource_ = nullptr;
         index_t (*key_func_)(const item_data&);
         // The pointer to the internal buffer that will be read or written, including the buffer header
-        data_ptr_t internal_buffer_;
+        data_ptr_t internal_buffer_ = nullptr;
         bool is_valid_ = false;
 
         // start location of free part
-        data_ptr_t buffer_;
+        data_ptr_t buffer_ = nullptr;
         // store explicitly to avoid calculating it every time
-        metadata* end_;
+        metadata* end_ = nullptr;
         // where last written id/pointer pair is located
-        metadata* last_metadata_;
+        metadata* last_metadata_ = nullptr;
 
-        uint32_t full_size_;
+        uint32_t full_size_ = 0;
         // The size of free part
-        uint32_t available_memory_;
-        uint32_t* count_;
-        uint32_t* unique_indices_count_;
-        uint64_t* checksum_;
+        uint32_t available_memory_ = 0;
+        uint32_t* count_ = nullptr;
+        uint32_t* unique_indices_count_ = nullptr;
+        uint64_t* checksum_ = nullptr;
     };
 
     [[nodiscard]] static inline std::unique_ptr<block_t>
