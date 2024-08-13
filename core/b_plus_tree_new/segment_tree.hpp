@@ -319,6 +319,7 @@ namespace core::b_plus_tree {
         // header changes will be handled here:
         void insert_segment_(it pos, node_t&& block);
         void remove_segment_(it pos);
+        void update_metadata_(it pos, block_metadata* metadata);
         void close_gaps_();
 
         std::pmr::memory_resource* resource_;
@@ -334,6 +335,7 @@ namespace core::b_plus_tree {
         gap_tracker_t gap_tracker_{header_size, INVALID_SIZE};
 
         std::unique_ptr<filesystem::file_handle_t> file_;
+        std::vector<std::pair<std::string, std::string>> string_storage_;
     };
 
 } // namespace core::b_plus_tree

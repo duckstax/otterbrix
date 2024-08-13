@@ -16,6 +16,7 @@ namespace components::types {
         explicit physical_value(nullptr_t);
         explicit physical_value(bool);
         explicit physical_value(std::string_view value);
+        explicit physical_value(const std::string& value);
         template<typename T>
         explicit physical_value(T value); // all integral types
 

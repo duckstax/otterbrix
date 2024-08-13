@@ -45,6 +45,19 @@ private:
     std::pmr::memory_resource* resource_ = std::pmr::get_default_resource();
 };
 
+std::string gen_random(size_t len, size_t seed) {
+    std::string result;
+    result.reserve(len);
+    std::default_random_engine e{seed};
+    std::uniform_int_distribution uniform_dist('a', 'z');
+
+    for (size_t i = 0; i < len; ++i) {
+        result += uniform_dist(e);
+    }
+
+    return result;
+}
+
 TEST_CASE("block_t") {
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
@@ -305,6 +318,36 @@ TEST_CASE("block_t") {
             handle.reset();
         }
         remove_file(fs, fname);
+    }
+
+    INFO("block: string keys") {
+        constexpr size_t test_count = 500;
+        constexpr size_t test_length = 255;
+        std::vector<std::string> test_data;
+        test_data.reserve(test_count);
+        for (size_t i = 0; i < test_count; i++) {
+            test_data.emplace_back(gen_random(test_length, i + 1));
+        }
+
+        auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
+            return block_t::index_t(std::string_view((char*) data.data, data.size));
+        };
+
+        std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            REQUIRE(test_block->count() == i);
+            REQUIRE(test_block->unique_indices_count() == i);
+            REQUIRE(test_block->append((data_ptr_t) test_data[i].data(), test_data[i].size()));
+            REQUIRE(test_block->contains({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
+            REQUIRE(test_block->count() == i + 1);
+            REQUIRE(test_block->unique_indices_count() == i + 1);
+        }
+
+        std::sort(test_data.begin(), test_data.end());
+        for (uint64_t i = 0; i < test_count; i++) {
+            REQUIRE(test_block->contains_index(key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()})));
+        }
     }
 }
 
@@ -716,6 +759,56 @@ TEST_CASE("segment_tree") {
 
         std::pmr::get_default_resource()->deallocate(buffer, dummy_size);
     }
+
+    INFO("string keys") {
+        local_file_system_t fs = local_file_system_t();
+        auto fname = testing_directory;
+        fname /= "segtree_test_file_1";
+        unique_ptr<file_handle_t> handle =
+            open_file(fs, fname, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE);
+
+        constexpr size_t test_count = 500;
+        constexpr size_t test_length = 255;
+        std::vector<std::string> test_data;
+        test_data.reserve(test_count);
+        for (size_t i = 0; i < test_count; i++) {
+            test_data.emplace_back(gen_random(test_length, i + 1));
+        }
+
+        auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
+            return block_t::index_t(std::string_view((char*) data.data, data.size));
+        };
+
+        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            REQUIRE(tree.count() == i);
+            REQUIRE(tree.unique_indices_count() == i);
+            REQUIRE(tree.append((data_ptr_t) test_data[i].data(), test_data[i].size()));
+            REQUIRE(tree.contains({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
+            REQUIRE(tree.count() == i + 1);
+            REQUIRE(tree.unique_indices_count() == i + 1);
+        }
+
+        tree.flush();
+        tree.clean_load();
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            segment_tree_t::index_t index = key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()});
+            REQUIRE(tree.contains_index(index));
+            REQUIRE(tree.remove_index(index));
+            REQUIRE_FALSE(tree.contains_index(index));
+        }
+
+        tree.lazy_load();
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            segment_tree_t::index_t index = key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()});
+            REQUIRE(tree.contains_index(index));
+            REQUIRE(tree.remove({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
+            REQUIRE_FALSE(tree.contains_index(index));
+        }
+    }
 }
 
 TEST_CASE("b+tree") {
@@ -759,6 +852,9 @@ TEST_CASE("b+tree") {
         btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 12);
 
         for (uint64_t i = 0; i < 500; i++) {
+            if (i == 12) {
+                REQUIRE(true);
+            }
             REQUIRE_FALSE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE(tree.append({test_data[i].buffer, test_data[i].size}));
             REQUIRE(tree.unique_indices_count() == i + 1);
@@ -1068,10 +1164,56 @@ TEST_CASE("b+tree") {
         std::pmr::get_default_resource()->deallocate(fake_buffer, fake_item_size);
     }
 
-    INFO("deinitialization") {
+    INFO("btree: string keys") {
         local_file_system_t fs = local_file_system_t();
-        if (directory_exists(fs, testing_directory)) {
-            remove_directory(fs, testing_directory);
+        auto dname = testing_directory;
+        dname /= "btree_test4";
+
+        constexpr size_t test_count = 5000;
+        constexpr size_t test_length = 100;
+        std::vector<std::string> test_data;
+        test_data.reserve(test_count);
+        for (size_t i = 0; i < test_count; i++) {
+            test_data.emplace_back(gen_random(test_length, i + 1));
+        }
+
+        auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
+            return block_t::index_t(std::string_view((char*) data.data, data.size));
+        };
+
+        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 128);
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            REQUIRE(tree.size() == i);
+            REQUIRE(tree.unique_indices_count() == i);
+            if (i > 15) {
+                REQUIRE(true);
+            }
+            REQUIRE(tree.append({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
+            for (uint64_t j = 0; j <= i; j++) {
+                REQUIRE(tree.contains_index(key_getter({(data_ptr_t) test_data[j].data(), test_data[j].size()})));
+            }
+            REQUIRE(tree.size() == i + 1);
+            REQUIRE(tree.unique_indices_count() == i + 1);
+        }
+
+        tree.flush();
+        tree.load();
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            segment_tree_t::index_t index = key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()});
+            REQUIRE(tree.contains_index(index));
+            REQUIRE(tree.remove_index(index));
+            REQUIRE_FALSE(tree.contains_index(index));
+        }
+
+        tree.load();
+
+        for (uint64_t i = 0; i < test_count; i++) {
+            segment_tree_t::index_t index = key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()});
+            REQUIRE(tree.contains_index(index));
+            REQUIRE(tree.remove({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
+            REQUIRE_FALSE(tree.contains_index(index));
         }
     }
 }

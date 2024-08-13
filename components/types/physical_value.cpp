@@ -60,6 +60,13 @@ namespace components::types {
         size_ = value.size();
     }
 
+    physical_value::physical_value(const std::string& value)
+        : type_(physical_type::STRING) {
+        assert(value.size() <= uint32_t(-1));
+        data_ = reinterpret_cast<uint64_t>(value.data());
+        size_ = value.size();
+    }
+
     bool physical_value::operator<(const physical_value& other) const noexcept {
         // types order:
         // 1) booleans
