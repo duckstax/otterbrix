@@ -1,47 +1,50 @@
 #include "block.hpp"
 #include <algorithm>
 #include <cassert>
+#include <core/buffer.hpp>
+#include <crc32c/crc32c.h>
 #include <cstring>
 
 namespace core::b_plus_tree {
     size_t SECTOR_SIZE = 4096;
 
-    block_t::iterator::iterator(const block_t* block, block_t::item_metadata* metadata)
+    block_t::iterator::iterator(const block_t* block, block_t::metadata* metadata)
         : block_(block)
         , metadata_(metadata) {
         rebuild_data();
     }
     void block_t::iterator::rebuild_data() {
-        if (metadata_ < block_->end_ && metadata_ >= block_->last_item_metadata_) {
-            data_.id = metadata_->id;
-            data_.data = block_->internal_buffer_ + metadata_->offset;
-            data_.size = metadata_->size;
+        if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
+            data_.item.data = block_->internal_buffer_ + metadata_->offset;
+            data_.item.size = metadata_->size;
+            data_.index = block_->key_func_(data_.item);
         } else {
-            data_.id = INVALID_ID;
-            data_.data = nullptr;
-            data_.size = 0;
+            data_.item.data = nullptr;
+            data_.item.size = 0;
+            data_.index = index_t();
         }
     }
 
-    block_t::r_iterator::r_iterator(const block_t* block, block_t::item_metadata* metadata)
+    block_t::r_iterator::r_iterator(const block_t* block, block_t::metadata* metadata)
         : block_(block)
         , metadata_(metadata) {
         rebuild_data();
     }
     void block_t::r_iterator::rebuild_data() {
-        if (metadata_ < block_->end_ && metadata_ >= block_->last_item_metadata_) {
-            data_.id = metadata_->id;
-            data_.data = block_->internal_buffer_ + metadata_->offset;
-            data_.size = metadata_->size;
+        if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
+            data_.item.data = block_->internal_buffer_ + metadata_->offset;
+            data_.item.size = metadata_->size;
+            data_.index = block_->key_func_(data_.item);
         } else {
-            data_.id = INVALID_ID;
-            data_.data = nullptr;
-            data_.size = 0;
+            data_.item.data = nullptr;
+            data_.item.size = 0;
+            data_.index = index_t();
         }
     }
 
-    block_t::block_t(std::pmr::memory_resource* resource)
-        : resource_(resource) {}
+    block_t::block_t(std::pmr::memory_resource* resource, index_t (*func)(const item_data&))
+        : resource_(resource)
+        , key_func_(func) {}
 
     block_t::~block_t() {
         if (!internal_buffer_ || !is_valid_) {
@@ -52,13 +55,16 @@ namespace core::b_plus_tree {
 
     void block_t::initialize(size_t size) {
         assert(!is_valid_ && "block was already initialized!");
+        assert(size < MAX_BLOCK_SIZE && "block cannot handle this size!");
         assert((size & (SECTOR_SIZE - 1)) == 0 && "block size should be a multiple of SECTOR_SIZE!");
         internal_buffer_ = static_cast<data_ptr_t>(resource_->allocate(size));
         full_size_ = size;
-        checksum_ = reinterpret_cast<uint64_t*>(internal_buffer_);
-        count_ = reinterpret_cast<size_t*>(checksum_ + 1);
+        checksum_ = reinterpret_cast<size_t*>(internal_buffer_);
+        count_ = reinterpret_cast<uint32_t*>(checksum_ + 1);
         *count_ = 0;
-        end_ = reinterpret_cast<item_metadata*>(internal_buffer_ + size);
+        unique_indices_count_ = count_ + 1;
+        *unique_indices_count_ = 0;
+        end_ = reinterpret_cast<metadata*>(internal_buffer_ + size);
 
         restore_block();
     }
@@ -68,113 +74,160 @@ namespace core::b_plus_tree {
     size_t block_t::occupied_memory() const { return full_size_ - available_memory_ - header_size; }
 
     bool block_t::is_memory_available(size_t request_size) const {
-        return request_size <= available_memory_ + item_metadata_size;
+        return request_size + metadata_size <= available_memory_;
     }
 
-    bool block_t::is_empty() const { return last_item_metadata_ == end_; }
+    bool block_t::is_empty() const { return last_metadata_ == end_; }
 
     bool block_t::is_valid() const { return is_valid_; }
 
-    bool block_t::append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size) {
+    bool block_t::append(data_ptr_t data, size_t size) noexcept { return append({data, size}); }
+
+    bool block_t::append(item_data item) noexcept {
+        index_t index = key_func_(item);
+        return append(index, item);
+    }
+
+    bool block_t::append(const index_t& index, item_data item) noexcept {
         assert(is_valid_ && "block is not initialized!");
-        if (!is_memory_available(buffer_size)) {
+        assert(item.size != 0 && "can not append an empty buffer!");
+        if (!is_memory_available(item.size)) {
             return false;
         }
 
-        auto item = find_item_(id);
-        if (item != end_ && item->id == id) {
-            return false;
+        auto range = find_index_range_(index);
+        for (metadata* it = range.begin; it != range.end; it++) {
+            if (it->size == item.size && std::memcmp(item.data, internal_buffer_ + it->offset, item.size) == 0) {
+                return false;
+            }
         }
-
-        std::memmove(last_item_metadata_ - 1, last_item_metadata_, (item - last_item_metadata_) * item_metadata_size);
-        item--;
-        last_item_metadata_--;
-        item->id = id;
-        item->offset = buffer_ - internal_buffer_;
-        item->size = buffer_size;
-
-        std::memcpy(buffer_, append_buffer, buffer_size);
-        buffer_ += buffer_size;
-        available_memory_ -= buffer_size + item_metadata_size;
 
         (*count_)++;
+        if (range.begin == range.end) {
+            (*unique_indices_count_)++;
+        }
+
+        std::memmove(last_metadata_ - 1, last_metadata_, (range.begin - last_metadata_) * metadata_size);
+        range.begin--;
+        last_metadata_--;
+        range.begin->offset = static_cast<uint32_t>(buffer_ - internal_buffer_);
+        range.begin->size = item.size;
+
+        std::memcpy(buffer_, item.data, item.size);
+        buffer_ += item.size;
+        available_memory_ -= item.size + metadata_size;
+
         return true;
     }
 
-    bool block_t::remove(uint64_t id) {
-        assert(is_valid_ && "block is not initialized!");
-        auto item = find_item_(id);
+    bool block_t::remove(data_ptr_t data, size_t size) noexcept { return remove({data, size}); }
 
-        if (item == end_ || item->id != id) {
+    bool block_t::remove(item_data item) noexcept {
+        index_t index = key_func_(item);
+        return remove(index, item);
+    }
+
+    bool block_t::remove(const index_t& index, item_data item) noexcept {
+        assert(is_valid_ && "block is not initialized!");
+
+        auto range = find_index_range_(index);
+        if (range.begin == range.end) {
             return false;
         }
 
-        size_t chunk_size = item->size;
-        if (chunk_size == 0) {
-            std::memmove(last_item_metadata_ + 1,
-                         last_item_metadata_,
-                         (item - last_item_metadata_) * item_metadata_size);
-            last_item_metadata_++;
-            available_memory_ += item_metadata_size;
-        } else {
-            data_ptr_t chunk_start = internal_buffer_ + item->offset;
-            data_ptr_t next_chunk_start = chunk_start + (item)->size;
-            std::memmove(chunk_start, next_chunk_start, buffer_ - next_chunk_start);
-            buffer_ -= item->size;
-            available_memory_ += item->size + item_metadata_size;
-            std::memmove(last_item_metadata_ + 1,
-                         last_item_metadata_,
-                         (item - last_item_metadata_) * item_metadata_size);
-            last_item_metadata_++;
+        (*count_)--;
+        if (range.begin + 1 == range.end) {
+            (*unique_indices_count_)--;
+        }
+        for (metadata* it = range.begin; it != range.end; it++) {
+            if (it->size == item.size && std::memcmp(item.data, internal_buffer_ + it->offset, item.size) == 0) {
+                uint32_t chunk_size = it->size;
+                data_ptr_t chunk_start = internal_buffer_ + it->offset;
+                data_ptr_t next_chunk_start = chunk_start + it->size;
+                std::memmove(chunk_start, next_chunk_start, buffer_ - next_chunk_start);
+                buffer_ -= it->size;
+                available_memory_ += it->size + metadata_size;
+                std::memmove(last_metadata_ + 1, last_metadata_, (it - last_metadata_) * metadata_size);
+                last_metadata_++;
 
-            size_t offset = chunk_start - internal_buffer_;
-            for (auto it = last_item_metadata_; it != end_; it++) {
-                if (it->offset > offset) {
-                    it->offset -= chunk_size;
+                uint32_t offset = chunk_start - internal_buffer_;
+                for (auto it_ = last_metadata_; it_ != end_; it_++) {
+                    if (it_->offset > offset) {
+                        it_->offset -= chunk_size;
+                    }
                 }
             }
         }
 
-        (*count_)--;
         return true;
     }
 
-    bool block_t::contains(uint64_t id) const {
+    bool block_t::remove_index(const index_t& index) {
         assert(is_valid_ && "block is not initialized!");
-        auto item = find_item_(id);
-        return (item != end_ && item->id == id) ? true : false;
-    }
 
-    size_t block_t::size_of(uint64_t id) const {
-        assert(is_valid_ && "block is not initialized!");
-        auto item = find_item_(id);
-
-        if (item == end_ || item->id != id) {
-            return 0;
-        } else {
-            return item->size;
+        auto range = find_index_range_(index);
+        if (range.begin == range.end) {
+            return false;
         }
+
+        size_t batch_size = range.end - range.begin;
+
+        *count_ -= batch_size;
+        (*unique_indices_count_)--;
+
+        remove_range_(range);
+
+        return true;
     }
 
-    data_ptr_t block_t::data_of(uint64_t id) const {
+    bool block_t::contains_index(const index_t& index) const {
         assert(is_valid_ && "block is not initialized!");
-        auto item = find_item_(id);
+        auto range = find_index_range_(index);
+        return range.begin != range.end;
+    }
 
-        if (item == end_ || item->id != id) {
-            return nullptr;
-        } else {
-            return internal_buffer_ + item->offset;
+    bool block_t::contains(item_data item) const {
+        index_t index = key_func_(item);
+        return contains(index, item);
+    }
+
+    bool block_t::contains(const index_t& index, item_data item) const {
+        assert(is_valid_ && "block is not initialized!");
+
+        auto range = find_index_range_(index);
+
+        for (metadata* it = range.begin; it != range.end; it++) {
+            if (it->size == item.size && std::memcmp(item.data, internal_buffer_ + it->offset, item.size) == 0) {
+                return true;
+            }
         }
+
+        return false;
     }
 
-    std::pair<data_ptr_t, size_t> block_t::get_item(uint64_t id) const {
+    size_t block_t::item_count(const index_t& index) const {
         assert(is_valid_ && "block is not initialized!");
-        auto item = find_item_(id);
+        auto range = find_index_range_(index);
 
-        if (item == end_ || item->id != id) {
-            return {nullptr, 0};
-        } else {
-            return {internal_buffer_ + item->offset, item->size};
+        return range.end - range.begin;
+    }
+
+    block_t::item_data block_t::get_item(const index_t& index, size_t position) const {
+        assert(is_valid_ && "block is not initialized!");
+        auto range = find_index_range_(index);
+
+        assert(range.end - range.begin > position && "index position is out of range");
+
+        return {internal_buffer_ + (range.begin + position)->offset, (range.begin + position)->size};
+    }
+
+    void block_t::get_items(std::vector<item_data>& items, const index_t& index) const {
+        assert(is_valid_ && "block is not initialized!");
+        auto range = find_index_range_(index);
+
+        items.reserve(items.size() + range.end - range.begin);
+        for (metadata* it = range.begin; it != range.end; it++) {
+            items.emplace_back(internal_buffer_ + it->offset, it->size);
         }
     }
 
@@ -183,13 +236,28 @@ namespace core::b_plus_tree {
         return *count_;
     }
 
-    uint64_t block_t::first_id() const {
+    size_t block_t::unique_indices_count() const {
         assert(is_valid_ && "block is not initialized!");
-        return last_item_metadata_ == end_ ? INVALID_ID : (end_ - 1)->id;
+        return *unique_indices_count_;
     }
-    uint64_t block_t::last_id() const {
+
+    block_t::index_t block_t::min_index() const {
         assert(is_valid_ && "block is not initialized!");
-        return last_item_metadata_ == end_ ? INVALID_ID : last_item_metadata_->id;
+        if (last_metadata_ == end_) {
+            return std::numeric_limits<index_t>::min();
+        }
+
+        item_data item = metadata_to_item_data_(end_ - 1);
+        return key_func_(item);
+    }
+    block_t::index_t block_t::max_index() const {
+        assert(is_valid_ && "block is not initialized!");
+        if (last_metadata_ == end_) {
+            return std::numeric_limits<index_t>::max();
+        }
+
+        item_data item = metadata_to_item_data_(last_metadata_);
+        return key_func_(item);
     }
 
     data_ptr_t block_t::internal_buffer() {
@@ -201,158 +269,244 @@ namespace core::b_plus_tree {
 
     void block_t::reset() {
         *count_ = 0;
-        last_item_metadata_ = end_;
+        *unique_indices_count_ = 0;
         restore_block();
     }
 
     void block_t::restore_block() {
-        last_item_metadata_ = end_ - *count_;
+        last_metadata_ = end_ - *count_;
         buffer_ = internal_buffer_ + header_size;
-        for (auto it = last_item_metadata_; it < end_; it++) {
+        for (auto it = last_metadata_; it < end_; it++) {
             buffer_ += it->size;
         }
-        available_memory_ = reinterpret_cast<data_ptr_t>(last_item_metadata_) - buffer_;
+        available_memory_ = reinterpret_cast<data_ptr_t>(last_metadata_) - buffer_;
         is_valid_ = true;
     }
 
-    std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>>
-    block_t::split_append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size) {
+    void block_t::resize(size_t new_size) {
+        if (!is_valid_) {
+            return;
+        }
+
+        assert((new_size & (SECTOR_SIZE - 1)) == 0 && "block size should be a multiple of SECTOR_SIZE!");
+        assert(occupied_memory() < new_size && "block data won't fit in new size");
+        data_ptr_t new_buffer = static_cast<data_ptr_t>(resource_->allocate(new_size));
+        std::memcpy(new_buffer, internal_buffer_, buffer_ - internal_buffer_);
+        std::memcpy(new_buffer + new_size - *unique_indices_count_ * metadata_size,
+                    last_metadata_,
+                    *unique_indices_count_ * metadata_size);
+
+        size_t buffer_offset = buffer_ - internal_buffer_;
+        resource_->deallocate(internal_buffer_, full_size_);
+        internal_buffer_ = new_buffer;
+        buffer_ = internal_buffer_ + buffer_offset;
+        available_memory_ = new_size - full_size_;
+        full_size_ = new_size;
+        checksum_ = reinterpret_cast<uint64_t*>(internal_buffer_);
+        count_ = reinterpret_cast<uint32_t*>(checksum_ + 1);
+        unique_indices_count_ = count_ + 1;
+        end_ = reinterpret_cast<metadata*>(internal_buffer_ + new_size);
+        last_metadata_ = end_ - *unique_indices_count_;
+    }
+
+    // TODO: try to split into smaller blocks if current size is greater then DEFAULT_BLOCK_SIZE
+    std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>> block_t::split_append(const index_t& index,
+                                                                                        item_data item) {
         // if append is possible, split in half, append to required part
-        // if append is not possible, split by required id, try again
-        // if it fails again, third block is required
         assert(is_valid_ && "block is not initialized!");
         assert(available_memory_ + (buffer_ - internal_buffer_) <= full_size_);
 
-        std::unique_ptr<block_t> splited_block = create_initialize(resource_, full_size_);
+        std::unique_ptr<block_t> splited_block;
 
         // calculate mid point (size wise)
         size_t accumulated_size = 0;
-        item_metadata* split_item = last_item_metadata_;
+        metadata* split_item = last_metadata_;
         for (; split_item < end_ && accumulated_size < full_size_ / 2; split_item++) {
-            accumulated_size += split_item->size + item_metadata_size;
+            accumulated_size += split_item->size + metadata_size;
         }
         if (split_item != end_) {
-            accumulated_size += split_item->size + item_metadata_size;
+            accumulated_size += split_item->size + metadata_size;
         }
 
         bool append_possible;
         bool this_block;
-        if (split_item == end_ && (first_id() < id && last_id() > id || *count_ < 2)) {
+        index_t split_index =
+            split_item == end_ ? std::numeric_limits<index_t>::min() : key_func_(metadata_to_item_data_(split_item));
+        if (split_item == end_ && (index > min_index() && index < max_index())) {
             append_possible = false;
-        } else if (split_item->id < id) {
+        } else if (split_index < index) {
             // will go into second block
-            append_possible = full_size_ - item_metadata_size > buffer_size + accumulated_size;
+            append_possible = full_size_ - metadata_size > item.size + accumulated_size;
             this_block = false;
         } else {
             // will go into first block
-            append_possible = available_memory_ + accumulated_size > buffer_size + item_metadata_size;
+            append_possible = available_memory_ + accumulated_size > item.size + metadata_size;
             this_block = true;
         }
 
         if (append_possible) {
-            if (split_item == end_) {
-                std::memcpy(splited_block->internal_buffer_, internal_buffer_, full_size_);
-                splited_block->restore_block();
-                reset();
-            } else {
-                for (; split_item >= last_item_metadata_;) {
-                    splited_block->append(split_item->id, internal_buffer_ + split_item->offset, split_item->size);
-                    // nesessary to avoid buffer fragmentation
-                    // TODO: ??? move intems in chunks (actual data is consecutive inside each chunk)
-                    remove(split_item->id);
-                }
-            }
+            splited_block = std::move(split(split_item - last_metadata_));
 
             if (this_block) {
-                append(id, append_buffer, buffer_size);
+                append(index, item);
             } else {
-                splited_block->append(id, append_buffer, buffer_size);
+                splited_block->append(index, item);
             }
 
             return {std::move(splited_block), nullptr};
         }
 
-        split_item = find_item_(id);
-        if (split_item == end_ || (split_item != end_ && split_item->id < id)) {
-            split_item--;
-        }
-        for (; split_item >= last_item_metadata_;) {
-            splited_block->append(split_item->id, internal_buffer_ + split_item->offset, split_item->size);
-            // nesessary to avoid buffer fragmentation
-            // TODO: ??? move intems in chunks (actual data is consecutive inside each chunk)
-            remove(split_item->id);
-        }
-        if (append(id, append_buffer, buffer_size)) {
+        split_item = find_index_range_(index).begin;
+        if (split_item == last_metadata_) {
+            splited_block = std::move(
+                create_initialize(resource_, key_func_, align_to_block_size(item.size + header_size + metadata_size)));
+            splited_block->append(index, item); // always true
             return {std::move(splited_block), nullptr};
-        }
-        if (splited_block->append(id, append_buffer, buffer_size)) {
-            return {std::move(splited_block), nullptr};
-        }
+        } else {
+            splited_block = std::move(split(split_item - last_metadata_));
 
-        std::unique_ptr<block_t> middle_block =
-            create_initialize(resource_, align_to_block_size(buffer_size + header_size + item_metadata_size));
-        middle_block->append(id, append_buffer, buffer_size); // always true
-        return {std::move(middle_block), std::move(splited_block)};
+            if (append(index, item)) {
+                return {std::move(splited_block), nullptr};
+            }
+            if (splited_block->append(index, item)) {
+                return {std::move(splited_block), nullptr};
+            }
+
+            std::unique_ptr<block_t> middle_block =
+                create_initialize(resource_, key_func_, align_to_block_size(item.size + header_size + metadata_size));
+            middle_block->append(index, item); // always true
+            return {std::move(middle_block), std::move(splited_block)};
+        }
     }
 
     std::unique_ptr<block_t> block_t::split(size_t count) {
         assert(is_valid_ && "block is not initialized!");
         assert(count <= *count_);
 
-        std::unique_ptr<block_t> splited_block = create_initialize(resource_, full_size_);
-
-        if (count != 0) {
-            for (auto split_item = last_item_metadata_ + count - 1; split_item >= last_item_metadata_;) {
-                splited_block->append(split_item->id, internal_buffer_ + split_item->offset, split_item->size);
-                // nesessary to avoid buffer fragmentation
-                // TODO: ??? move intems in chunks (actual data is consecutive inside each chunk)
-                remove(split_item->id);
-            }
+        std::unique_ptr<block_t> splited_block = create_initialize(resource_, key_func_, full_size_);
+        if (count == 0) {
+            return splited_block;
         }
+        if (count == *count_) {
+            // faster to swap pointers then to move all documents
+            std::swap(internal_buffer_, splited_block->internal_buffer_);
+            std::swap(buffer_, splited_block->buffer_);
+            std::swap(last_metadata_, splited_block->last_metadata_);
+            std::swap(end_, splited_block->end_);
+            std::swap(count_, splited_block->count_);
+            std::swap(unique_indices_count_, splited_block->unique_indices_count_);
+            std::swap(checksum_, splited_block->checksum_);
+            std::swap(available_memory_, splited_block->available_memory_);
+            return splited_block;
+        }
+
+        metadata* split_item = last_metadata_ + count;
+
+        std::vector<index_t> moved_indices;
+        moved_indices.reserve(count);
+        for (auto split_meta = split_item - 1; split_meta >= last_metadata_; split_meta--) {
+            auto item = metadata_to_item_data_(split_meta);
+            auto moved_index = key_func_(item);
+            splited_block->append(moved_index, item);
+            moved_indices.emplace_back(std::move(moved_index));
+        }
+        moved_indices.erase(std::unique(moved_indices.begin(), moved_indices.end()), moved_indices.end());
+
+        *count_ -= count;
+        *unique_indices_count_ -= key_func_(metadata_to_item_data_(split_item)) == moved_indices.front()
+                                      ? moved_indices.size() - 1
+                                      : moved_indices.size();
+
+        remove_range_({last_metadata_, split_item});
+
         return splited_block;
     }
 
-    void block_t::merge(std::unique_ptr<block_t> block) {
+    std::unique_ptr<block_t> block_t::split_uniques(size_t count) {
         assert(is_valid_ && "block is not initialized!");
-        assert(block->is_valid_ && "block is not initialized!");
-        assert(available_memory_ >= block->occupied_memory());
+        assert(count <= *unique_indices_count_);
+
+        std::unique_ptr<block_t> splited_block = create_initialize(resource_, key_func_, full_size_);
+        if (count == 0) {
+            return splited_block;
+        }
+        if (count == *unique_indices_count_) {
+            // faster to swap pointers then to move all documents
+            std::swap(internal_buffer_, splited_block->internal_buffer_);
+            std::swap(buffer_, splited_block->buffer_);
+            std::swap(last_metadata_, splited_block->last_metadata_);
+            std::swap(end_, splited_block->end_);
+            std::swap(count_, splited_block->count_);
+            std::swap(unique_indices_count_, splited_block->unique_indices_count_);
+            std::swap(checksum_, splited_block->checksum_);
+            std::swap(available_memory_, splited_block->available_memory_);
+            return splited_block;
+        }
+
+        metadata* split_item = last_metadata_;
+        index_t prev_index = key_func_(metadata_to_item_data_(last_metadata_));
+        std::vector<index_t> moved_indices;
+        moved_indices.reserve(count);
+        for (size_t i = 1, index_count = 1; i < end_ - last_metadata_ && index_count <= count; i++) {
+            item_data item = metadata_to_item_data_(last_metadata_ + i);
+            index_t index = key_func_(item);
+            if (index != prev_index) {
+                prev_index = index;
+                index_count++;
+                moved_indices.emplace_back(index);
+            }
+            splited_block->append(metadata_to_item_data_(split_item++));
+            (*count_)--;
+        }
+        *unique_indices_count_ -= count;
+
+        remove_range_({last_metadata_, split_item});
+        return splited_block;
+    }
+
+    void block_t::merge(std::unique_ptr<block_t>&& other) {
+        assert(is_valid_ && "other is not initialized!");
+        assert(other->is_valid_ && "other block is not initialized!");
+        assert(available_memory_ >= other->occupied_memory());
         assert(available_memory_ + (buffer_ - internal_buffer_) <= full_size_);
-        if (block->count() == 0) {
+        if (other->count() == 0) {
             return;
         }
 
-        if (block->first_id() > last_id()) {
+        if (other->min_index() >= max_index()) {
+            bool overlap = other->min_index() == max_index();
             size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
-            size_t additional_offset = (block->buffer_ - block->internal_buffer_) - header_size;
+            size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
             std::memcpy(buffer_,
-                        block->internal_buffer_ + header_size,
-                        (block->buffer_ - block->internal_buffer_) - header_size);
+                        other->internal_buffer_ + header_size,
+                        (other->buffer_ - other->internal_buffer_) - header_size);
             buffer_ += additional_offset;
-            std::memcpy(last_item_metadata_ - block->count(),
-                        block->last_item_metadata_,
-                        item_metadata_size * block->count());
-            for (size_t i = 0; i < block->count(); i++) {
-                (--last_item_metadata_)->offset += delta_offset;
+            std::memcpy(last_metadata_ - other->count(), other->last_metadata_, metadata_size * other->count());
+            for (size_t i = 0; i < other->count(); i++) {
+                (--last_metadata_)->offset += delta_offset;
             }
-            available_memory_ -= additional_offset + item_metadata_size * block->count();
-            *count_ += block->count();
-        } else if (block->last_id() < first_id()) {
+            available_memory_ -= additional_offset + metadata_size * other->count();
+            *count_ += other->count();
+            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
+        } else if (other->max_index() <= min_index()) {
+            bool overlap = other->max_index() == min_index();
             size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
-            size_t additional_offset = (block->buffer_ - block->internal_buffer_) - header_size;
-            std::memcpy(buffer_, block->internal_buffer_ + header_size, additional_offset);
+            size_t additional_offset = (other->buffer_ - other->internal_buffer_) - header_size;
+            std::memcpy(buffer_, other->internal_buffer_ + header_size, additional_offset);
             buffer_ += additional_offset;
-            std::memcpy(last_item_metadata_ - block->count(), last_item_metadata_, item_metadata_size * block->count());
-            std::memcpy(last_item_metadata_, block->last_item_metadata_, item_metadata_size * block->count());
-            for (item_metadata* it = last_item_metadata_; it < end_; it++) {
+            std::memcpy(last_metadata_ - other->count(), last_metadata_, metadata_size * other->count());
+            std::memcpy(last_metadata_, other->last_metadata_, metadata_size * other->count());
+            for (metadata* it = last_metadata_; it < end_; it++) {
                 it->offset += delta_offset;
             }
-            last_item_metadata_ -= block->count();
-            available_memory_ -= additional_offset + item_metadata_size * block->count();
-            *count_ += block->count();
+            last_metadata_ -= other->count();
+            available_memory_ -= additional_offset + metadata_size * other->count();
+            *count_ += other->count();
+            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
         } else {
             // there is range overlaping and cannot be copied trivially
-            for (item_metadata* it = block->end_ - 1; it >= block->last_item_metadata_; it--) {
-                append(it->id, block->internal_buffer_ + it->offset, it->size);
+            for (metadata* it = other->end_ - 1; it >= other->last_metadata_; it--) {
+                append(metadata_to_item_data_(it));
             }
         }
     }
@@ -361,25 +515,90 @@ namespace core::b_plus_tree {
 
     bool block_t::varify_checksum() const { return *checksum_ == calculate_checksum_(); }
 
-    block_t::item_metadata* block_t::find_item_(uint64_t id) const {
-        if (!is_valid_) {
-            return end_;
-        }
-        return std::lower_bound(last_item_metadata_, end_, id, [](item_metadata& item, uint64_t id) {
-            return item.id > id;
-        });
+    block_t::index_t block_t::find_index(data_ptr_t data, size_t size) const noexcept {
+        return key_func_({data, size});
     }
 
-    uint64_t block_t::calculate_checksum_() const {
-        assert(is_valid_ && "block is not initialized!");
-        uint64_t size = full_size_ - (reinterpret_cast<data_ptr_t>(count_) - internal_buffer_);
-        uint64_t result = 5953;
-        // removing item can only change pointers location and item count, so count_ is included in checksum
-        uint64_t* window = count_;
-        for (uint64_t i = 0; i < size / 8; i++) {
-            result ^= window[i] * 13315146811210211749;
+    block_t::metadata_range block_t::find_index_range_(const index_t& index) const {
+        if (!is_valid_) {
+            return {end_, end_};
         }
+
+        metadata_range result;
+        result.begin =
+            std::lower_bound(last_metadata_, end_, index, [this](const metadata& meta, const index_t& index) {
+                return key_func_(metadata_to_item_data_(&meta)) > index;
+            });
+        result.end = std::lower_bound(result.begin, end_, index, [this](const metadata& meta, const index_t& index) {
+            return key_func_(metadata_to_item_data_(&meta)) >= index;
+        });
         return result;
+    }
+
+    void block_t::remove_range_(metadata_range range) {
+        assert(range.begin != range.end);
+        size_t batch_size = range.end - range.begin;
+
+        // similar to gap_tracker for segment tree but with limited and inversed funcionality
+        std::vector<std::pair<uint32_t, uint32_t>> untouched_spaces;
+        untouched_spaces.emplace_back(header_size, data_ptr_t(buffer_) - internal_buffer_);
+
+        for (metadata* it = range.begin; it != range.end; it++) {
+            auto untouched_gap = untouched_spaces.begin();
+            for (; untouched_gap < untouched_spaces.end(); ++untouched_gap) {
+                if (untouched_gap->first > it->offset) {
+                    break;
+                }
+            }
+            assert(untouched_gap != untouched_spaces.begin() && "required untouched_gap is out of tracker scope");
+            auto prev = untouched_gap - 1;
+            std::pair<uint32_t, uint32_t> next;
+            next.first = it->offset + it->size;
+            next.second = prev->second + prev->first - it->offset - it->size;
+            prev->second = it->offset - prev->first;
+            if (next.second != 0) {
+                untouched_spaces.emplace(untouched_gap, std::move(next));
+            }
+            available_memory_ += it->size;
+        }
+
+        for (size_t i = 0; i + 1 < untouched_spaces.size();) {
+            if (untouched_spaces[i].first + untouched_spaces[i].second == untouched_spaces[i + 1].first) {
+                untouched_spaces[i].second += untouched_spaces[i + 1].second;
+                untouched_spaces.erase(untouched_spaces.begin() + i + 1);
+            } else {
+                i++;
+            }
+        }
+        std::memmove(last_metadata_ + batch_size, last_metadata_, (range.begin - last_metadata_) * metadata_size);
+        available_memory_ += batch_size * metadata_size;
+        last_metadata_ += batch_size;
+
+        uint32_t tracked_offset = 0;
+        uint32_t required_offset = 0;
+        auto next_it = untouched_spaces.begin() + 1;
+        for (auto it = untouched_spaces.begin(); next_it != untouched_spaces.end(); ++it, ++next_it) {
+            tracked_offset = it->first + it->second - required_offset;
+            required_offset += next_it->first - (it->first + it->second);
+            std::memmove(internal_buffer_ + tracked_offset, internal_buffer_ + next_it->first, next_it->second);
+            for (metadata* meta = last_metadata_; meta != end_; meta++) {
+                if (meta->offset >= next_it->first && meta->offset < next_it->first + next_it->second) {
+                    meta->offset -= required_offset;
+                }
+            }
+        }
+        buffer_ -= required_offset;
+    }
+
+    block_t::item_data block_t::metadata_to_item_data_(const metadata* meta) const {
+        return {internal_buffer_ + meta->offset, meta->size};
+    }
+
+    size_t block_t::calculate_checksum_() const {
+        assert(is_valid_ && "block is not initialized!");
+        data_ptr_t crc_buffer = reinterpret_cast<data_ptr_t>(count_);
+        size_t size = full_size_ - (crc_buffer - internal_buffer_);
+        return crc32c::Crc32c(crc_buffer, size);
     }
 
 } // namespace core::b_plus_tree

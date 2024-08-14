@@ -1,7 +1,11 @@
 #pragma once
 
+#include <components/types/physical_value.hpp>
+
 #include <cassert>
+#include <components/types/types.hpp>
 #include <cstdlib>
+#include <functional>
 #include <memory>
 #include <memory_resource>
 #include <vector>
@@ -12,42 +16,60 @@ namespace core::b_plus_tree {
     typedef data_t* data_ptr_t;
     typedef const data_t* const_data_ptr_t;
 
-    // The maximum block id is 2^62 so invalid id could be all ones
-    constexpr uint64_t MAX_ID = 4611686018427387904;
-    constexpr uint64_t INVALID_ID = uint64_t(-1);
-    constexpr size_t INVALID_SIZE = size_t(-1);
+    constexpr size_t INVALID_SIZE = uint32_t(-1);
     // The default block size
     constexpr size_t DEFAULT_BLOCK_SIZE = 262144; // 32 Kb
+    // Block is used as page analog and 4 Gb is enough for that purpose
+    constexpr size_t MAX_BLOCK_SIZE = uint32_t(-1) - 1; // 4 Gb
 
     // Align size (ceiling)
     static inline size_t align_to_block_size(size_t size) {
-        return ((size + (DEFAULT_BLOCK_SIZE - 1)) / DEFAULT_BLOCK_SIZE) * DEFAULT_BLOCK_SIZE;
+        return (size + (DEFAULT_BLOCK_SIZE - 1)) / DEFAULT_BLOCK_SIZE * DEFAULT_BLOCK_SIZE;
     }
 
+    //TODO: add function variants that takes both index and item to avoid creating unnecessary indices
+    //TODO: create a multi value index for secondary comparisons (this also could be used to make array into a key)
     class block_t {
     private:
-        struct item_metadata {
-            uint64_t id;
-            size_t offset;
-            size_t size;
+        struct metadata {
+            uint32_t offset;
+            uint32_t size;
         };
 
     public:
-        static constexpr size_t item_metadata_size = sizeof(item_metadata);
-        static constexpr size_t header_size = sizeof(uint64_t) + sizeof(size_t);
+        using index_t = components::types::physical_value;
+        static constexpr size_t metadata_size = sizeof(metadata);
+        static constexpr size_t header_size = sizeof(uint64_t) + 2 * sizeof(uint32_t);
 
         struct item_data {
-            uint64_t id;
             data_ptr_t data;
             size_t size;
+
+            explicit item_data() noexcept
+                : data(nullptr)
+                , size(0) {}
+            item_data(data_ptr_t d, size_t s) noexcept
+                : data(d)
+                , size(s) {}
+
+            explicit operator bool() const noexcept { return data != nullptr; }
+        };
+
+        struct metadata_range {
+            metadata* begin = nullptr;
+            metadata* end = nullptr;
         };
 
         class iterator {
         public:
-            iterator(const block_t* block, item_metadata* metadata);
+            struct iterator_data {
+                index_t index;
+                item_data item;
+            };
+            iterator(const block_t* block, metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const iterator_data& operator*() const { return data_; }
+            inline const iterator_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const iterator& operator++() {
@@ -112,16 +134,20 @@ namespace core::b_plus_tree {
             void rebuild_data();
 
             const block_t* block_;
-            item_metadata* metadata_;
-            item_data data_;
+            metadata* metadata_;
+            iterator_data data_;
         };
 
         class r_iterator {
         public:
-            r_iterator(const block_t* block, item_metadata* metadata);
+            struct iterator_data {
+                index_t index;
+                item_data item;
+            };
+            r_iterator(const block_t* block, metadata* metadata);
 
-            inline const item_data& operator*() const { return data_; }
-            inline const item_data* operator->() const { return &data_; }
+            inline const iterator_data& operator*() const { return data_; }
+            inline const iterator_data* operator->() const { return &data_; }
 
             // note: metadata is stored in reverse order, so iterator increment and decrement is reversed
             inline const r_iterator& operator++() {
@@ -186,14 +212,14 @@ namespace core::b_plus_tree {
             void rebuild_data();
 
             const block_t* block_;
-            item_metadata* metadata_;
-            item_data data_;
+            metadata* metadata_;
+            iterator_data data_;
         };
 
         friend class iterator;
         friend class r_iterator;
 
-        block_t(std::pmr::memory_resource* resource);
+        block_t(std::pmr::memory_resource* resource, index_t (*func)(const item_data&));
         ~block_t();
         block_t(const block_t&) = delete;
         block_t(block_t&&) = default;
@@ -209,33 +235,44 @@ namespace core::b_plus_tree {
         bool is_empty() const;
         bool is_valid() const;
 
-        bool append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
-        bool remove(uint64_t id);
+        bool append(data_ptr_t data, size_t size) noexcept;
+        bool append(item_data item) noexcept;
+        bool append(const index_t& index, item_data item) noexcept;
+        bool remove(data_ptr_t data, size_t size) noexcept;
+        bool remove(item_data item) noexcept;
+        bool remove(const index_t& index, item_data item) noexcept;
+        // remove all entries with this index
+        bool remove_index(const index_t& index);
 
-        bool contains(uint64_t id) const;
-        size_t size_of(uint64_t id) const;
-        data_ptr_t data_of(uint64_t id) const;
-        std::pair<data_ptr_t, size_t> get_item(uint64_t id) const;
+        bool contains_index(const index_t& index) const;
+        bool contains(item_data item) const;
+        bool contains(const index_t& index, item_data item) const;
+        size_t item_count(const index_t& index) const;
+        item_data get_item(const index_t& index, size_t position) const;
+        void get_items(std::vector<item_data>& items, const index_t& index) const;
 
         size_t count() const;
-        uint64_t first_id() const;
-        uint64_t last_id() const;
+        size_t unique_indices_count() const;
+        index_t min_index() const;
+        index_t max_index() const;
 
         data_ptr_t internal_buffer();
         size_t block_size() const;
         // should be called when internal_buffer is used for reading to restore metadata
         void restore_block();
+        void resize(size_t new_size);
         void reset();
 
         // after splits this block will contain the first half
         // best case: second block >= first block
-        // worst case: 2 blocks will be created
-        [[nodiscard]] std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>>
-        split_append(uint64_t id, const_data_ptr_t append_buffer, size_t buffer_size);
+        [[nodiscard]] std::pair<std::unique_ptr<block_t>, std::unique_ptr<block_t>> split_append(const index_t& index,
+                                                                                                 item_data item);
         // creates new block and puts last "count" elements there
         [[nodiscard]] std::unique_ptr<block_t> split(size_t count);
+        // creates new block and puts last "count" indices there
+        [[nodiscard]] std::unique_ptr<block_t> split_uniques(size_t count);
         // merge other block to this one
-        void merge(std::unique_ptr<block_t> block);
+        void merge(std::unique_ptr<block_t>&& block);
 
         void recalculate_checksum();
         // return false if block is not in the same state as when check sum was calculated
@@ -245,35 +282,44 @@ namespace core::b_plus_tree {
         iterator begin() const { return cbegin(); }
         iterator end() const { return cend(); }
         iterator cbegin() const { return iterator(this, end_ - 1); }
-        iterator cend() const { return iterator(this, last_item_metadata_ - 1); }
-        r_iterator rbegin() const { return r_iterator({this, last_item_metadata_}); }
+        iterator cend() const { return iterator(this, last_metadata_ - 1); }
+        r_iterator rbegin() const { return r_iterator({this, last_metadata_}); }
         r_iterator rend() const { return r_iterator({this, end_}); }
 
-    private:
-        item_metadata* find_item_(uint64_t id) const;
-        uint64_t calculate_checksum_() const;
+        index_t find_index(data_ptr_t data, size_t size) const noexcept;
 
-        std::pmr::memory_resource* resource_;
+    private:
+        metadata_range find_index_range_(const index_t& index) const;
+        void remove_range_(metadata_range range);
+        item_data metadata_to_item_data_(const metadata* meta) const;
+        size_t calculate_checksum_() const;
+
+        std::pmr::memory_resource* resource_ = nullptr;
+        index_t (*key_func_)(const item_data&);
         // The pointer to the internal buffer that will be read or written, including the buffer header
-        data_ptr_t internal_buffer_;
+        data_ptr_t internal_buffer_ = nullptr;
         bool is_valid_ = false;
 
         // start location of free part
-        data_ptr_t buffer_;
+        data_ptr_t buffer_ = nullptr;
         // store explicitly to avoid calculating it every time
-        item_metadata* end_;
+        metadata* end_ = nullptr;
         // where last written id/pointer pair is located
-        item_metadata* last_item_metadata_;
-        size_t full_size_;
+        metadata* last_metadata_ = nullptr;
+
+        uint32_t full_size_ = 0;
         // The size of free part
-        size_t available_memory_;
-        size_t* count_;
-        uint64_t* checksum_;
+        uint32_t available_memory_ = 0;
+        uint32_t* count_ = nullptr;
+        uint32_t* unique_indices_count_ = nullptr;
+        uint64_t* checksum_ = nullptr;
     };
 
-    [[nodiscard]] static inline std::unique_ptr<block_t> create_initialize(std::pmr::memory_resource* resource,
-                                                                           size_t size = DEFAULT_BLOCK_SIZE) {
-        std::unique_ptr<block_t> block = std::make_unique<block_t>(resource);
+    [[nodiscard]] static inline std::unique_ptr<block_t>
+    create_initialize(std::pmr::memory_resource* resource,
+                      block_t::index_t (*func)(const block_t::item_data&),
+                      size_t size = DEFAULT_BLOCK_SIZE) {
+        std::unique_ptr<block_t> block = std::make_unique<block_t>(resource, func);
         block->initialize(size);
         return block;
     }
