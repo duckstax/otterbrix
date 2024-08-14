@@ -60,6 +60,13 @@ namespace components::types {
         size_ = value.size();
     }
 
+    physical_value::physical_value(const char* data, uint32_t size)
+        : type_(physical_type::STRING) {
+        assert(size <= uint32_t(-1));
+        data_ = reinterpret_cast<uint64_t>(data);
+        size_ = size;
+    }
+
     physical_value::physical_value(const std::pmr::string& value)
         : type_(physical_type::STRING) {
         assert(value.size() <= uint32_t(-1));
@@ -194,6 +201,14 @@ namespace components::types {
     bool physical_value::operator<=(const physical_value& other) const noexcept { return !(*this > other); }
 
     bool physical_value::operator>=(const physical_value& other) const noexcept { return !(*this < other); }
+
+    physical_value::operator bool() const noexcept {
+        if (type_ == physical_type::BOOL_TRUE) {
+            return true;
+        } else {
+            return data_ != 0;
+        }
+    }
 
     physical_type physical_value::type() const noexcept { return type_; }
 

@@ -4,6 +4,7 @@ set(header_${PROJECT_NAME}
         block.hpp
         segment_tree.hpp
         b_plus_tree.hpp
+        msgpack_reader/msgpack_reader.hpp
         )
 
 set(source_${PROJECT_NAME}
@@ -24,7 +25,9 @@ set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAM
 target_link_libraries(
         otterbrix_${PROJECT_NAME} PUBLIC
         CONAN_PKG::crc32c
+        CONAN_PKG::msgpack-cxx
         otterbrix::types
+        otterbrix::document
 )
 
 target_include_directories(

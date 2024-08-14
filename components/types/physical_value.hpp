@@ -17,6 +17,7 @@ namespace components::types {
         explicit physical_value(nullptr_t);
         explicit physical_value(bool);
         explicit physical_value(std::string_view value);
+        explicit physical_value(const char* data, uint32_t size);
         explicit physical_value(const std::pmr::string& value);
         template<typename T>
         explicit physical_value(T value); // all integral types
@@ -34,6 +35,8 @@ namespace components::types {
         bool operator!=(const physical_value& other) const noexcept;
         bool operator<=(const physical_value& other) const noexcept;
         bool operator>=(const physical_value& other) const noexcept;
+
+        operator bool() const noexcept;
 
         template<physical_type Type>
         auto value() const noexcept {
