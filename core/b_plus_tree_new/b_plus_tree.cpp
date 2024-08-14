@@ -268,7 +268,7 @@ namespace core::b_plus_tree {
 
     btree_t::btree_t(std::pmr::memory_resource* resource,
                      filesystem::local_file_system_t& fs,
-                     std::string storage_directory,
+                     const filesystem::path_t& storage_directory,
                      index_t (*func)(const item_data&),
                      size_t max_node_capacity)
         : fs_(fs)
@@ -296,7 +296,7 @@ namespace core::b_plus_tree {
         if (root_ == nullptr) {
             uint64_t segment_tree_id = get_unique_id_();
             std::filesystem::path file_name = storage_directory_;
-            file_name /= std::filesystem::path(segment_tree_name_ + std::to_string(segment_tree_id));
+            file_name /= std::filesystem::path(std::string(segment_tree_name_) + std::to_string(segment_tree_id));
             std::unique_ptr<core::filesystem::file_handle_t> file =
                 open_file(fs_, file_name, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE);
             root_ = static_cast<base_node_t*>(new leaf_node_t(resource_,
@@ -318,7 +318,7 @@ namespace core::b_plus_tree {
             } else {
                 uint64_t segment_tree_id = get_unique_id_();
                 std::filesystem::path file_name = storage_directory_;
-                file_name /= std::filesystem::path(segment_tree_name_ + std::to_string(segment_tree_id));
+                file_name /= std::filesystem::path(std::string(segment_tree_name_) + std::to_string(segment_tree_id));
                 std::unique_ptr<core::filesystem::file_handle_t> file =
                     open_file(fs_, file_name, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE);
                 leaf_node_t* splited_node = static_cast<leaf_node_t*>(root_)->split(std::move(file), segment_tree_id);
@@ -376,7 +376,7 @@ namespace core::b_plus_tree {
             // append to this node will require node split, which may cause appends and splits inside modified_nodes
             uint64_t segment_tree_id = get_unique_id_();
             std::filesystem::path file_name = storage_directory_;
-            file_name /= std::filesystem::path(segment_tree_name_ + std::to_string(segment_tree_id));
+            file_name /= std::filesystem::path(std::string(segment_tree_name_) + std::to_string(segment_tree_id));
             std::unique_ptr<core::filesystem::file_handle_t> file =
                 open_file(fs_, file_name, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE);
             leaf_node_t* splited_node =
@@ -803,7 +803,7 @@ namespace core::b_plus_tree {
             buffer_reader++;
             ids_.push_back(segment_tree_id);
             std::filesystem::path leaf_file_name = storage_directory_;
-            leaf_file_name /= std::filesystem::path(segment_tree_name_ + std::to_string(segment_tree_id));
+            leaf_file_name /= std::filesystem::path(std::string(segment_tree_name_) + std::to_string(segment_tree_id));
             assert(file_exists(fs_, leaf_file_name));
             std::unique_ptr<core::filesystem::file_handle_t> leaf_file =
                 open_file(fs_, leaf_file_name, file_flags::READ | file_flags::WRITE);

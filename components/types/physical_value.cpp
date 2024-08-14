@@ -60,7 +60,7 @@ namespace components::types {
         size_ = value.size();
     }
 
-    physical_value::physical_value(const std::string& value)
+    physical_value::physical_value(const std::pmr::string& value)
         : type_(physical_type::STRING) {
         assert(value.size() <= uint32_t(-1));
         data_ = reinterpret_cast<uint64_t>(value.data());
@@ -95,8 +95,8 @@ namespace components::types {
         // handle strings
 
         if (type_ == physical_type::STRING && other.type_ == physical_type::STRING) {
-            return std::string(reinterpret_cast<char*>(data_), size_) <
-                   std::string(reinterpret_cast<char*>(other.data_), other.size_);
+            return std::string_view(reinterpret_cast<char*>(data_), size_) <
+                   std::string_view(reinterpret_cast<char*>(other.data_), other.size_);
         }
 
         // handle booleans and non-comparable types

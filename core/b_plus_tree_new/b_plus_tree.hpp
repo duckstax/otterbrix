@@ -141,7 +141,7 @@ namespace core::b_plus_tree {
 
         btree_t(std::pmr::memory_resource* resource,
                 filesystem::local_file_system_t& fs,
-                std::string storage_directory,
+                const filesystem::path_t& storage_directory,
                 index_t (*func)(const item_data&),
                 size_t max_node_capacity = DEFAULT_NODE_CAPACITY);
         ~btree_t();
@@ -196,7 +196,7 @@ namespace core::b_plus_tree {
         std::shared_mutex tree_mutex_;
         base_node_t* root_ = nullptr;
         std::filesystem::path storage_directory_;
-        std::string segment_tree_name_ = "segmented_block";
+        std::string_view segment_tree_name_ = "segmented_block";
 
         size_t min_node_capacity_;    // == max / 4
         size_t merge_share_boundary_; // == max / 2

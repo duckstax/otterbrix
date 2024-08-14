@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <memory_resource>
 
 #include "types.hpp"
 
@@ -16,7 +17,7 @@ namespace components::types {
         explicit physical_value(nullptr_t);
         explicit physical_value(bool);
         explicit physical_value(std::string_view value);
-        explicit physical_value(const std::string& value);
+        explicit physical_value(const std::pmr::string& value);
         template<typename T>
         explicit physical_value(T value); // all integral types
 
