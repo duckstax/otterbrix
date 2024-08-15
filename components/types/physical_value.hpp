@@ -4,28 +4,32 @@
 #include <cstdint>
 #include <cstring>
 #include <memory_resource>
+#include <type_traits>
 
 #include "types.hpp"
 
 namespace components::types {
+    template<typename, typename = void>
+    constexpr bool is_buffer_like = false;
+    template<typename T>
+    constexpr bool
+        is_buffer_like<T, std::void_t<decltype(std::declval<T>().data()), decltype(std::declval<T>().size())>> = true;
 
     class physical_value {
     public:
         // currently supported values
         // TODO: add memory ownership
-        explicit physical_value(); // nullptr_t
+        explicit physical_value() = default; // nullptr_t
         explicit physical_value(nullptr_t);
         explicit physical_value(bool);
-        explicit physical_value(std::string_view value);
+        // string-like
+        template<typename T, typename = typename std::enable_if<is_buffer_like<T>>::type>
+        explicit physical_value(const T& value);
         explicit physical_value(const char* data, uint32_t size);
-        explicit physical_value(const std::pmr::string& value);
-        template<typename T>
-        explicit physical_value(T value); // all integral types
+        // all integral types
+        template<typename T, typename = typename std::enable_if<!is_buffer_like<T>>::type>
+        explicit physical_value(T value);
 
-        physical_value(const physical_value& other) noexcept = default;
-        physical_value(physical_value&& other) noexcept = default;
-        physical_value& operator=(const physical_value& other) noexcept = default;
-        physical_value& operator=(physical_value&& other) noexcept = default;
         ~physical_value() = default;
 
         // if types convertable to each other, compared by value, otherwise returns physical type order
@@ -93,7 +97,11 @@ namespace components::types {
         uint64_t data_ = 0;            // buffer but allocated on a stack to make it trivially copyable
     };
 
-    template<typename T>
+    template<typename T, typename = typename std::enable_if<is_buffer_like<T>>::type>
+    physical_value::physical_value(const T& value)
+        : physical_value(value.data(), value.size()) {}
+
+    template<typename T, typename = typename std::enable_if<!is_buffer_like<T>>::type>
     physical_value::physical_value(T value)
         : type_(physical_value::get_type_<T>()) {
         std::memcpy(&data_, &value, sizeof(value));

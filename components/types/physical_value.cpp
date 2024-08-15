@@ -48,30 +48,14 @@ namespace components::types {
         }
     }
 
-    physical_value::physical_value() {}
-
     physical_value::physical_value(bool value)
         : type_(value ? physical_type::BOOL_TRUE : physical_type::BOOL_FALSE) {}
 
-    physical_value::physical_value(std::string_view value)
-        : type_(physical_type::STRING) {
-        assert(value.size() <= uint32_t(-1));
-        data_ = reinterpret_cast<uint64_t>(value.data());
-        size_ = value.size();
-    }
-
     physical_value::physical_value(const char* data, uint32_t size)
-        : type_(physical_type::STRING) {
+        : type_(physical_type::STRING)
+        , size_(size)
+        , data_(reinterpret_cast<uint64_t>(data)) {
         assert(size <= uint32_t(-1));
-        data_ = reinterpret_cast<uint64_t>(data);
-        size_ = size;
-    }
-
-    physical_value::physical_value(const std::pmr::string& value)
-        : type_(physical_type::STRING) {
-        assert(value.size() <= uint32_t(-1));
-        data_ = reinterpret_cast<uint64_t>(value.data());
-        size_ = value.size();
     }
 
     bool physical_value::operator<(const physical_value& other) const noexcept {
