@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 
-#include <catch2/catch.hpp>
 #include <components/document/document.hpp>
 #include <components/document/msgpack/msgpack_encoder.hpp>
 #include <components/tests/generaty.hpp>
@@ -20,6 +19,7 @@ TEST_CASE("msgpack_reader") {
 
         msgpack::unpacked msg;
         msgpack::unpack(msg, sbuf.data(), sbuf.size());
+        auto index = get_field(msg.get(), "/_id");
 
         REQUIRE(doc1->get_string("/_id") == get_field(msg.get(), "/_id").value<physical_type::STRING>());
         REQUIRE(doc1->get_long("/count") == get_field(msg.get(), "/count").value<physical_type::UINT64>());
