@@ -96,7 +96,7 @@ namespace core::b_plus_tree {
             }
 
             metadata_range range = find_range_(index);
-            block_metadata* metadata = range.begin != metadata_end_ ? range.begin : range.begin - 1;
+            block_metadata* metadata = range.begin - (range.begin == metadata_end_);
             it append_node = segments_.begin() + (metadata - metadata_begin_);
             // check if item exists
             bool index_exists = false;
@@ -112,7 +112,7 @@ namespace core::b_plus_tree {
             }
             *unique_id_count_ += !index_exists;
             // go back to regular append
-            metadata = range.begin != metadata_end_ ? range.begin : range.begin - 1;
+            metadata = range.begin - (range.begin == metadata_end_);
             append_node = segments_.begin() + (metadata - metadata_begin_);
 
             if (!append_node->block) {
@@ -449,7 +449,7 @@ namespace core::b_plus_tree {
                 size_t count = node->block->unique_indices_count();
                 assert(count != 0);
                 // if indices are the same unique counter will be 1 less
-                count -= prev_index == node->block->max_index() ? 1 : 0;
+                count -= prev_index == node->block->max_index();
                 if (count <= rebalance_size) {
                     prev_index = node->block->min_index();
                     // move this block
@@ -464,7 +464,7 @@ namespace core::b_plus_tree {
                     *(other->unique_id_count_) -= count;
                 } else {
                     // split required amount from that block and break the loop
-                    size_t split_unique = rebalance_size + (prev_index == node->block->min_index() ? 1 : 0);
+                    size_t split_unique = rebalance_size + (prev_index == node->block->min_index());
                     if (split_unique == 0 || split_unique == node->block->unique_indices_count()) {
                         break;
                     }
@@ -495,7 +495,7 @@ namespace core::b_plus_tree {
                 size_t count = node->block->unique_indices_count();
                 assert(count != 0);
                 // if indices are the same unique counter will be 1 less
-                count -= prev_index == node->block->min_index() ? 1 : 0;
+                count -= prev_index == node->block->min_index();
                 if (count <= rebalance_size) {
                     prev_index = node->block->max_index();
                     // move this block

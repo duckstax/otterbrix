@@ -413,9 +413,8 @@ namespace core::b_plus_tree {
         moved_indices.erase(std::unique(moved_indices.begin(), moved_indices.end()), moved_indices.end());
 
         *count_ -= count;
-        *unique_indices_count_ -= key_func_(metadata_to_item_data_(split_item)) == moved_indices.front()
-                                      ? moved_indices.size() - 1
-                                      : moved_indices.size();
+        *unique_indices_count_ -=
+            moved_indices.size() - (key_func_(metadata_to_item_data_(split_item)) == moved_indices.front());
 
         remove_range_({last_metadata_, split_item});
 
@@ -487,7 +486,7 @@ namespace core::b_plus_tree {
             }
             available_memory_ -= additional_offset + metadata_size * other->count();
             *count_ += other->count();
-            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
+            *unique_indices_count_ += other->unique_indices_count() - overlap;
         } else if (other->max_index() <= min_index()) {
             bool overlap = other->max_index() == min_index();
             size_t delta_offset = (buffer_ - internal_buffer_) - header_size;
@@ -502,7 +501,7 @@ namespace core::b_plus_tree {
             last_metadata_ -= other->count();
             available_memory_ -= additional_offset + metadata_size * other->count();
             *count_ += other->count();
-            *unique_indices_count_ += other->unique_indices_count() - (overlap ? 1 : 0);
+            *unique_indices_count_ += other->unique_indices_count() - overlap;
         } else {
             // there is range overlaping and cannot be copied trivially
             for (metadata* it = other->end_ - 1; it >= other->last_metadata_; it--) {
