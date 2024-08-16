@@ -17,7 +17,7 @@ namespace core::b_plus_tree {
         if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
             data_.item.data = block_->internal_buffer_ + metadata_->offset;
             data_.item.size = metadata_->size;
-            data_.index = block_->key_func_(data_.item);
+            data_.index = metadata_->index;
         } else {
             data_.item.data = nullptr;
             data_.item.size = 0;
@@ -34,7 +34,7 @@ namespace core::b_plus_tree {
         if (metadata_ < block_->end_ && metadata_ >= block_->last_metadata_) {
             data_.item.data = block_->internal_buffer_ + metadata_->offset;
             data_.item.size = metadata_->size;
-            data_.index = block_->key_func_(data_.item);
+            data_.index = metadata_->index;
         } else {
             data_.item.data = nullptr;
             data_.item.size = 0;
@@ -117,6 +117,14 @@ namespace core::b_plus_tree {
         buffer_ += item.size;
         available_memory_ -= item.size + metadata_size;
 
+        if (index.type() == components::types::physical_type::STRING) {
+            auto sv = index.value<components::types::physical_type::STRING>();
+            range.begin->index =
+                index_t((char*) internal_buffer_ + range.begin->offset + (sv.data() - (char*) item.data), sv.size());
+        } else {
+            range.begin->index = index;
+        }
+
         return true;
     }
 
@@ -154,6 +162,10 @@ namespace core::b_plus_tree {
                 for (auto it_ = last_metadata_; it_ != end_; it_++) {
                     if (it_->offset > offset) {
                         it_->offset -= chunk_size;
+                        if (it_->index.type() == components::types::physical_type::STRING) {
+                            auto sv = it_->index.value<components::types::physical_type::STRING>();
+                            it_->index = index_t(sv.data() - chunk_size, sv.size());
+                        }
                     }
                 }
             }
@@ -247,8 +259,7 @@ namespace core::b_plus_tree {
             return std::numeric_limits<index_t>::min();
         }
 
-        item_data item = metadata_to_item_data_(end_ - 1);
-        return key_func_(item);
+        return (end_ - 1)->index;
     }
     block_t::index_t block_t::max_index() const {
         assert(is_valid_ && "block is not initialized!");
@@ -256,8 +267,7 @@ namespace core::b_plus_tree {
             return std::numeric_limits<index_t>::max();
         }
 
-        item_data item = metadata_to_item_data_(last_metadata_);
-        return key_func_(item);
+        return last_metadata_->index;
     }
 
     data_ptr_t block_t::internal_buffer() {
@@ -278,6 +288,9 @@ namespace core::b_plus_tree {
         buffer_ = internal_buffer_ + header_size;
         for (auto it = last_metadata_; it < end_; it++) {
             buffer_ += it->size;
+            if (it->index.type() == components::types::physical_type::STRING) {
+                it->index = key_func_({internal_buffer_ + it->offset, it->size});
+            }
         }
         available_memory_ = reinterpret_cast<data_ptr_t>(last_metadata_) - buffer_;
         is_valid_ = true;
@@ -295,6 +308,16 @@ namespace core::b_plus_tree {
         std::memcpy(new_buffer + new_size - *unique_indices_count_ * metadata_size,
                     last_metadata_,
                     *unique_indices_count_ * metadata_size);
+        metadata* new_last_metadata =
+            (metadata*) (new_buffer + full_size_ - ((data_ptr_t) last_metadata_ - internal_buffer_));
+        for (metadata* it = last_metadata_; (data_ptr_t) new_last_metadata < new_buffer + new_size;
+             new_last_metadata++, it++) {
+            if (it->index.type() == components::types::physical_type::STRING) {
+                auto sv = it->index.value<components::types::physical_type::STRING>();
+                new_last_metadata->index =
+                    index_t((char*) new_buffer + (sv.data() - (char*) internal_buffer_), sv.size());
+            }
+        }
 
         size_t buffer_offset = buffer_ - internal_buffer_;
         resource_->deallocate(internal_buffer_, full_size_);
@@ -330,8 +353,7 @@ namespace core::b_plus_tree {
 
         bool append_possible;
         bool this_block;
-        index_t split_index =
-            split_item == end_ ? std::numeric_limits<index_t>::min() : key_func_(metadata_to_item_data_(split_item));
+        index_t split_index = split_item == end_ ? std::numeric_limits<index_t>::min() : split_item->index;
         if (split_item == end_ && (index > min_index() && index < max_index())) {
             append_possible = false;
         } else if (split_index < index) {
@@ -406,15 +428,13 @@ namespace core::b_plus_tree {
         moved_indices.reserve(count);
         for (auto split_meta = split_item - 1; split_meta >= last_metadata_; split_meta--) {
             auto item = metadata_to_item_data_(split_meta);
-            auto moved_index = key_func_(item);
-            splited_block->append(moved_index, item);
-            moved_indices.emplace_back(std::move(moved_index));
+            splited_block->append(split_meta->index, item);
+            moved_indices.emplace_back(split_meta->index);
         }
         moved_indices.erase(std::unique(moved_indices.begin(), moved_indices.end()), moved_indices.end());
 
         *count_ -= count;
-        *unique_indices_count_ -=
-            moved_indices.size() - (key_func_(metadata_to_item_data_(split_item)) == moved_indices.front());
+        *unique_indices_count_ -= moved_indices.size() - (split_item->index == moved_indices.front());
 
         remove_range_({last_metadata_, split_item});
 
@@ -443,12 +463,12 @@ namespace core::b_plus_tree {
         }
 
         metadata* split_item = last_metadata_;
-        index_t prev_index = key_func_(metadata_to_item_data_(last_metadata_));
+        index_t prev_index = last_metadata_->index;
         std::vector<index_t> moved_indices;
         moved_indices.reserve(count);
         for (size_t i = 1, index_count = 1; i < end_ - last_metadata_ && index_count <= count; i++) {
             item_data item = metadata_to_item_data_(last_metadata_ + i);
-            index_t index = key_func_(item);
+            index_t index = (last_metadata_ + i)->index;
             if (index != prev_index) {
                 prev_index = index;
                 index_count++;
@@ -482,7 +502,14 @@ namespace core::b_plus_tree {
             buffer_ += additional_offset;
             std::memcpy(last_metadata_ - other->count(), other->last_metadata_, metadata_size * other->count());
             for (size_t i = 0; i < other->count(); i++) {
-                (--last_metadata_)->offset += delta_offset;
+                uint32_t old_offset = (--last_metadata_)->offset;
+                last_metadata_->offset += delta_offset;
+                if (last_metadata_->index.type() == components::types::physical_type::STRING) {
+                    auto sv = last_metadata_->index.value<components::types::physical_type::STRING>();
+                    last_metadata_->index = index_t((char*) internal_buffer_ + last_metadata_->offset +
+                                                        (sv.data() - ((char*) other->internal_buffer_ + old_offset)),
+                                                    sv.size());
+                }
             }
             available_memory_ -= additional_offset + metadata_size * other->count();
             *count_ += other->count();
@@ -494,9 +521,22 @@ namespace core::b_plus_tree {
             std::memcpy(buffer_, other->internal_buffer_ + header_size, additional_offset);
             buffer_ += additional_offset;
             std::memcpy(last_metadata_ - other->count(), last_metadata_, metadata_size * other->count());
+            for (metadata* it = last_metadata_ - other->count(); it != end_ - other->count(); it++) {
+                if (it->index.type() == components::types::physical_type::STRING) {
+                    auto sv = it->index.value<components::types::physical_type::STRING>();
+                    it->index = index_t(sv.data() - metadata_size * other->count(), sv.size());
+                }
+            }
             std::memcpy(last_metadata_, other->last_metadata_, metadata_size * other->count());
             for (metadata* it = last_metadata_; it < end_; it++) {
+                uint32_t old_offset = it->offset;
                 it->offset += delta_offset;
+                if (it->index.type() == components::types::physical_type::STRING) {
+                    auto sv = it->index.value<components::types::physical_type::STRING>();
+                    it->index = index_t((char*) internal_buffer_ + it->offset +
+                                            (sv.data() - ((char*) other->internal_buffer_ + old_offset)),
+                                        sv.size());
+                }
             }
             last_metadata_ -= other->count();
             available_memory_ -= additional_offset + metadata_size * other->count();
@@ -505,7 +545,7 @@ namespace core::b_plus_tree {
         } else {
             // there is range overlaping and cannot be copied trivially
             for (metadata* it = other->end_ - 1; it >= other->last_metadata_; it--) {
-                append(metadata_to_item_data_(it));
+                append(it->index, metadata_to_item_data_(it));
             }
         }
     }
@@ -513,10 +553,6 @@ namespace core::b_plus_tree {
     void block_t::recalculate_checksum() { *checksum_ = calculate_checksum_(); }
 
     bool block_t::varify_checksum() const { return *checksum_ == calculate_checksum_(); }
-
-    block_t::index_t block_t::find_index(data_ptr_t data, size_t size) const noexcept {
-        return key_func_({data, size});
-    }
 
     block_t::metadata_range block_t::find_index_range_(const index_t& index) const {
         if (!is_valid_) {
@@ -526,10 +562,10 @@ namespace core::b_plus_tree {
         metadata_range result;
         result.begin =
             std::lower_bound(last_metadata_, end_, index, [this](const metadata& meta, const index_t& index) {
-                return key_func_(metadata_to_item_data_(&meta)) > index;
+                return meta.index > index;
             });
         result.end = std::lower_bound(result.begin, end_, index, [this](const metadata& meta, const index_t& index) {
-            return key_func_(metadata_to_item_data_(&meta)) >= index;
+            return meta.index >= index;
         });
         return result;
     }
@@ -583,6 +619,10 @@ namespace core::b_plus_tree {
             for (metadata* meta = last_metadata_; meta != end_; meta++) {
                 if (meta->offset >= next_it->first && meta->offset < next_it->first + next_it->second) {
                     meta->offset -= required_offset;
+                    if (meta->index.type() == components::types::physical_type::STRING) {
+                        auto sv = meta->index.value<components::types::physical_type::STRING>();
+                        meta->index = index_t(sv.data() - required_offset, sv.size());
+                    }
                 }
             }
         }

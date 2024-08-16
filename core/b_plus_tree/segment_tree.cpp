@@ -254,7 +254,7 @@ namespace core::b_plus_tree {
                 if (remove_node->block->item_count(index) == 1) {
                     (*unique_id_count_)--;
                 }
-                remove_node->block->remove(item);
+                remove_node->block->remove(index, item);
 
                 if (remove_node->block->count() == 0) {
                     remove_segment_(remove_node);
@@ -767,17 +767,17 @@ namespace core::b_plus_tree {
                                           false});
             string_storage_.emplace_back();
             file_->read(segments_.back().block->internal_buffer(), metadata->size, metadata->file_offset);
-            segments_.back().block->restore_block();
             assert(segments_.back().block->varify_checksum() && "block was modified outside of segment tree");
             assert(segments_.back().block->count() != 0 && "block is empty");
+            segments_.back().block->restore_block();
             if (metadata->min_index.type() == physical_type::STRING) {
                 auto min_index = segments_.back().block->min_index();
-                string_storage_.back().first = std::pmr::string(min_index.value<physical_type::STRING>());
+                string_storage_.back().first = std::pmr::string(min_index.value<physical_type::STRING>(), resource_);
                 metadata->min_index = index_t(string_storage_.back().first);
             }
             if (metadata->max_index.type() == physical_type::STRING) {
                 auto max_index = segments_.back().block->max_index();
-                string_storage_.back().second = std::pmr::string(max_index.value<physical_type::STRING>());
+                string_storage_.back().second = std::pmr::string(max_index.value<physical_type::STRING>(), resource_);
                 metadata->max_index = index_t(string_storage_.back().second);
             }
         }
@@ -803,9 +803,8 @@ namespace core::b_plus_tree {
                 metadata->max_index.type() == physical_type::STRING) {
                 load_segment_(metadata);
                 update_metadata_(segments_.end() - 1, metadata);
+                segments_.back().block = nullptr;
             }
-
-            segments_.back().block = nullptr;
         }
     }
 
@@ -878,9 +877,9 @@ namespace core::b_plus_tree {
         }
 
         file_->read(node->block->internal_buffer(), metadata->size, metadata->file_offset);
-        node->block->restore_block();
         assert(node->block->count() && "block stored on disk should not be empty");
         assert(node->block->varify_checksum() && "block was modified outside of segment tree");
+        node->block->restore_block();
         node->last_used = std::chrono::system_clock::now();
         node->modified = false;
     }
@@ -941,14 +940,14 @@ namespace core::b_plus_tree {
         index_t min_index = pos->block->min_index();
         auto index_storage = string_storage_.begin() + (pos - segments_.begin());
         if (min_index.type() == physical_type::STRING) {
-            index_storage->first = std::pmr::string(min_index.value<physical_type::STRING>());
+            index_storage->first = std::pmr::string(min_index.value<physical_type::STRING>(), resource_);
             metadata->min_index = index_t(index_storage->first); //change reference to internal storage
         } else {
             metadata->min_index = min_index;
         }
         index_t max_index = pos->block->max_index();
         if (max_index.type() == physical_type::STRING) {
-            index_storage->second = std::pmr::string(max_index.value<physical_type::STRING>());
+            index_storage->second = std::pmr::string(max_index.value<physical_type::STRING>(), resource_);
             metadata->max_index = index_t(index_storage->second); //change reference to internal storage
         } else {
             metadata->max_index = max_index;

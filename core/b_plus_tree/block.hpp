@@ -27,17 +27,19 @@ namespace core::b_plus_tree {
         return (size + (DEFAULT_BLOCK_SIZE - 1)) / DEFAULT_BLOCK_SIZE * DEFAULT_BLOCK_SIZE;
     }
 
-    //TODO: add function variants that takes both index and item to avoid creating unnecessary indices
     //TODO: create a multi value index for secondary comparisons (this also could be used to make array into a key)
     class block_t {
+    public:
+        using index_t = components::types::physical_value;
+
     private:
         struct metadata {
             uint32_t offset;
             uint32_t size;
+            index_t index;
         };
 
     public:
-        using index_t = components::types::physical_value;
         static constexpr size_t metadata_size = sizeof(metadata);
         static constexpr size_t header_size = sizeof(uint64_t) + 2 * sizeof(uint32_t);
 
@@ -285,8 +287,6 @@ namespace core::b_plus_tree {
         iterator cend() const { return iterator(this, last_metadata_ - 1); }
         r_iterator rbegin() const { return r_iterator({this, last_metadata_}); }
         r_iterator rend() const { return r_iterator({this, end_}); }
-
-        index_t find_index(data_ptr_t data, size_t size) const noexcept;
 
     private:
         metadata_range find_index_range_(const index_t& index) const;
