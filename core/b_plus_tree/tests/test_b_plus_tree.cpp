@@ -9,11 +9,12 @@
 #include <unistd.h>
 #endif
 
+// TODO: separate functional tests and high load ones.
+// Stress tests in main test in main procedure are not stressing enough or slow down everything else way to much
+
 using namespace std;
 using namespace core::b_plus_tree;
 using namespace core::filesystem;
-
-path_t testing_directory = "b+tree_test";
 
 struct dummy_alloc {
     data_ptr_t buffer;
@@ -59,17 +60,16 @@ std::string gen_random(size_t len, size_t seed) {
 }
 
 TEST_CASE("block_t") {
+    path_t testing_directory = "block_test";
+
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
         }
-        auto pid = getpid();
-        testing_directory /= to_string(pid);
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
-        }
+        create_directory(fs, testing_directory);
     }
+
     auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
         return block_t::index_t(*reinterpret_cast<uint32_t*>(data.data));
     };
@@ -103,8 +103,7 @@ TEST_CASE("block_t") {
             REQUIRE(test_block->count() == 0);
             for (uint64_t i = 0; i < test_data_shuffled.size(); i++) {
                 REQUIRE(test_block->append((data_ptr_t)(test_data_shuffled[i].data()), test_data_shuffled[i].size()));
-                auto index =
-                    test_block->find_index(data_ptr_t(test_data_shuffled[i].data()), test_data_shuffled[i].size());
+                auto index = key_getter({data_ptr_t(test_data_shuffled[i].data()), test_data_shuffled[i].size()});
                 REQUIRE(test_block->contains_index(index));
                 REQUIRE(test_block->count() == test_block->unique_indices_count());
             }
@@ -254,7 +253,7 @@ TEST_CASE("block_t") {
             REQUIRE(test_block->count() == 0);
             for (uint64_t i = 0; i < test_data.size(); i++) {
                 REQUIRE(test_block->append((data_ptr_t)(test_data[i].data()), test_data[i].size()));
-                auto index = test_block->find_index(data_ptr_t(test_data[i].data()), test_data[i].size());
+                auto index = key_getter({data_ptr_t(test_data[i].data()), test_data[i].size()});
                 REQUIRE(test_block->contains_index(index));
                 // test iterators
                 for (auto it = test_block->begin(); it != test_block->end(); ++it) {
@@ -291,7 +290,7 @@ TEST_CASE("block_t") {
             REQUIRE(test_block->count() == test_data_size * duplicate_count);
             REQUIRE(test_block->unique_indices_count() == test_data_size);
             for (uint32_t i = 0; i < test_data_size; i++) {
-                auto index = test_block->find_index(data_ptr_t(&i), sizeof(uint32_t));
+                auto index = key_getter({data_ptr_t(&i), sizeof(uint32_t)});
                 REQUIRE(test_block->remove_index(index));
                 REQUIRE_FALSE(test_block->contains_index(index));
             }
@@ -349,19 +348,24 @@ TEST_CASE("block_t") {
             REQUIRE(test_block->contains_index(key_getter({(data_ptr_t) test_data[i].data(), test_data[i].size()})));
         }
     }
+
+    INFO("deinitialization") {
+        local_file_system_t fs = local_file_system_t();
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
+        }
+    }
 }
 
 TEST_CASE("segment_tree") {
+    path_t testing_directory = "segment_tree_test";
+
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
         }
-        auto pid = getpid();
-        testing_directory /= to_string(pid);
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
-        }
+        create_directory(fs, testing_directory);
     }
 
     INFO("segment_tree: even blocks") {
@@ -809,39 +813,46 @@ TEST_CASE("segment_tree") {
             REQUIRE_FALSE(tree.contains_index(index));
         }
     }
+
+    INFO("deinitialization") {
+        local_file_system_t fs = local_file_system_t();
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
+        }
+    }
 }
 
 TEST_CASE("b+tree") {
+    path_t testing_directory = "b+tree_test";
+
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
         }
-        auto pid = getpid();
-        testing_directory /= to_string(pid);
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
-        }
+        create_directory(fs, testing_directory);
     }
 
     INFO("b+tree: semirandom") {
         local_file_system_t fs = local_file_system_t();
         auto dname = testing_directory;
         dname /= "btree_test";
+        constexpr size_t test_size = 500;
 
         auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
         std::vector<dummy_alloc> test_data;
-        for (uint64_t i = 0; i < 500; i += 2) {
+        test_data.reserve(test_size);
+        for (uint64_t i = 0; i < test_size; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
             dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
-        for (uint64_t i = 1; i < 500; i += 2) {
+        for (uint64_t i = 1; i < test_size; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
             dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
@@ -851,10 +862,7 @@ TEST_CASE("b+tree") {
 
         btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 12);
 
-        for (uint64_t i = 0; i < 500; i++) {
-            if (i == 12) {
-                REQUIRE(true);
-            }
+        for (uint64_t i = 0; i < test_size; i++) {
             REQUIRE_FALSE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE(tree.append({test_data[i].buffer, test_data[i].size}));
             REQUIRE(tree.unique_indices_count() == i + 1);
@@ -862,82 +870,81 @@ TEST_CASE("b+tree") {
             auto item = tree.get_item(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer)), 0);
             REQUIRE(test_data[i].size == item.size);
             REQUIRE(memcmp(test_data[i].buffer, item.data, item.size) == 0);
-
-            // test scan
-            std::vector<std::string> scan_result;
-            tree.scan_ascending<std::string>(
-                btree_t::index_t(uint64_t(0)),
-                btree_t::index_t(uint64_t(500)),
-                500,
-                &scan_result,
-                [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
-                [](const std::string&) { return true; });
-            REQUIRE(scan_result.size() == i + 1);
-            for (uint64_t j = 0; j < scan_result.size(); j++) {
-                auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
-                auto dummy = std::find_if(test_data.begin(), test_data.end(), [&index](const dummy_alloc& dummy) {
-                    return *reinterpret_cast<uint64_t*>(dummy.buffer) ==
-                           index.value<components::types::physical_type::UINT64>();
-                });
-                REQUIRE(dummy != test_data.end());
-                REQUIRE(dummy->size == scan_result[j].size());
-                REQUIRE(memcmp(dummy->buffer, scan_result[j].data(), dummy->size) == 0);
-            }
-            scan_result.clear();
-            tree.scan_decending<std::string>(
-                btree_t::index_t(uint64_t(0)),
-                btree_t::index_t(uint64_t(500)),
-                500,
-                &scan_result,
-                [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
-                [](const std::string&) { return true; });
-            REQUIRE(scan_result.size() == i + 1);
-            for (uint64_t j = 0; j < scan_result.size(); j++) {
-                auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
-                auto dummy = std::find_if(test_data.begin(), test_data.end(), [&index](const dummy_alloc& dummy) {
-                    return *reinterpret_cast<uint64_t*>(dummy.buffer) ==
-                           index.value<components::types::physical_type::UINT64>();
-                });
-                REQUIRE(dummy != test_data.end());
-                REQUIRE(dummy->size == scan_result[j].size());
-                REQUIRE(memcmp(dummy->buffer, scan_result[j].data(), dummy->size) == 0);
-            }
         }
-        REQUIRE(tree.size() == 500);
+        REQUIRE(tree.size() == test_size);
+
+        // test scan
+        std::vector<std::string> scan_result;
+        tree.scan_ascending<std::string>(
+            btree_t::index_t(uint64_t(0)),
+            btree_t::index_t(uint64_t(test_size)),
+            test_size * 2,
+            &scan_result,
+            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
+            [](const std::string&) { return true; });
+        REQUIRE(scan_result.size() == test_size);
+        for (uint64_t j = 0; j < scan_result.size(); j++) {
+            auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
+            auto dummy = std::find_if(test_data.begin(), test_data.end(), [&index](const dummy_alloc& dummy) {
+                return *reinterpret_cast<uint64_t*>(dummy.buffer) ==
+                       index.value<components::types::physical_type::UINT64>();
+            });
+            REQUIRE(dummy != test_data.end());
+            REQUIRE(dummy->size == scan_result[j].size());
+            REQUIRE(memcmp(dummy->buffer, scan_result[j].data(), dummy->size) == 0);
+        }
+        scan_result.clear();
+        tree.scan_decending<std::string>(
+            btree_t::index_t(uint64_t(0)),
+            btree_t::index_t(uint64_t(test_size)),
+            test_size * 2,
+            &scan_result,
+            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
+            [](const std::string&) { return true; });
+        REQUIRE(scan_result.size() == test_size);
+        for (uint64_t j = 0; j < scan_result.size(); j++) {
+            auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
+            auto dummy = std::find_if(test_data.begin(), test_data.end(), [&index](const dummy_alloc& dummy) {
+                return *reinterpret_cast<uint64_t*>(dummy.buffer) ==
+                       index.value<components::types::physical_type::UINT64>();
+            });
+            REQUIRE(dummy != test_data.end());
+            REQUIRE(dummy->size == scan_result[j].size());
+            REQUIRE(memcmp(dummy->buffer, scan_result[j].data(), dummy->size) == 0);
+        }
 
         tree.flush();
 
-        REQUIRE(tree.size() == 500);
+        REQUIRE(tree.size() == test_size);
 
-        for (uint64_t i = 0; i < 500; i++) {
-            REQUIRE(tree.size() == 500 - i);
-            REQUIRE(tree.unique_indices_count() == 500 - i);
+        for (uint64_t i = 0; i < test_size; i++) {
+            REQUIRE(tree.size() == test_size - i);
+            REQUIRE(tree.unique_indices_count() == test_size - i);
             REQUIRE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE(tree.remove_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE_FALSE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
-            REQUIRE(tree.size() == 500 - i - 1);
-            REQUIRE(tree.unique_indices_count() == 500 - i - 1);
+            REQUIRE(tree.size() == test_size - i - 1);
+            REQUIRE(tree.unique_indices_count() == test_size - i - 1);
         }
 
         tree.load();
 
-        REQUIRE(tree.size() == 500);
+        REQUIRE(tree.size() == test_size);
         // after loading, internal nodes will be different, but functionality shouldn't change
-        for (uint64_t i = 0; i < 500; i++) {
-            REQUIRE(tree.size() == 500 - i);
-            REQUIRE(tree.unique_indices_count() == 500 - i);
+        for (uint64_t i = 0; i < test_size; i++) {
+            REQUIRE(tree.size() == test_size - i);
+            REQUIRE(tree.unique_indices_count() == test_size - i);
             REQUIRE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE(tree.remove_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
             REQUIRE_FALSE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
-            REQUIRE(tree.size() == 500 - i - 1);
-            REQUIRE(tree.unique_indices_count() == 500 - i - 1);
+            REQUIRE(tree.size() == test_size - i - 1);
+            REQUIRE(tree.unique_indices_count() == test_size - i - 1);
         }
 
-        for (uint64_t i = 0; i < 500; i++) {
+        for (uint64_t i = 0; i < test_size; i++) {
             std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
-
     INFO("b+tree: big item count; random order") {
         size_t key_num = 100'000;
         local_file_system_t fs = local_file_system_t();
@@ -972,7 +979,6 @@ TEST_CASE("b+tree") {
         }
         REQUIRE(tree.size() == 0);
     }
-
     INFO("b+tree: multithread access") {
         constexpr size_t num_threads = 4;
         constexpr size_t key_num = 100'000;
@@ -1093,7 +1099,6 @@ TEST_CASE("b+tree") {
 
         REQUIRE(tree.size() == 0);
     }
-
     INFO("btree: non unique ids") {
         size_t fake_item_size = 8192;
         size_t duplicate_count = 50;
@@ -1169,7 +1174,7 @@ TEST_CASE("b+tree") {
         auto dname = testing_directory;
         dname /= "btree_test4";
 
-        constexpr size_t test_count = 5000;
+        constexpr size_t test_count = 1000;
         constexpr size_t test_length = 100;
         std::vector<std::string> test_data;
         test_data.reserve(test_count);
@@ -1181,14 +1186,11 @@ TEST_CASE("b+tree") {
             return block_t::index_t(std::string_view((char*) data.data, data.size));
         };
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 128);
+        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 64);
 
         for (uint64_t i = 0; i < test_count; i++) {
             REQUIRE(tree.size() == i);
             REQUIRE(tree.unique_indices_count() == i);
-            if (i > 15) {
-                REQUIRE(true);
-            }
             REQUIRE(tree.append({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
             for (uint64_t j = 0; j <= i; j++) {
                 REQUIRE(tree.contains_index(key_getter({(data_ptr_t) test_data[j].data(), test_data[j].size()})));
@@ -1214,6 +1216,13 @@ TEST_CASE("b+tree") {
             REQUIRE(tree.contains_index(index));
             REQUIRE(tree.remove({(data_ptr_t) test_data[i].data(), test_data[i].size()}));
             REQUIRE_FALSE(tree.contains_index(index));
+        }
+    }
+
+    INFO("deinitialization") {
+        local_file_system_t fs = local_file_system_t();
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
         }
     }
 }

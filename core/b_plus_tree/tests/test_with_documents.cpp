@@ -13,19 +13,16 @@ using namespace core::b_plus_tree;
 using namespace core::filesystem;
 
 TEST_CASE("b+tree with documents") {
-    path_t testing_directory = "b+tree_test";
+    path_t testing_directory = "b+tree_documents_test";
 
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
         }
-        auto pid = getpid();
-        testing_directory /= to_string(pid);
-        if (!directory_exists(fs, testing_directory)) {
-            create_directory(fs, testing_directory);
-        }
+        create_directory(fs, testing_directory);
     }
+
     INFO("test block") {
         auto resource = std::pmr::synchronized_pool_resource();
         constexpr size_t test_size = 100;
@@ -194,5 +191,12 @@ TEST_CASE("b+tree with documents") {
         }
         REQUIRE(tree.size() == 0);
         REQUIRE(tree.unique_indices_count() == 0);
+    }
+
+    INFO("deinitialization") {
+        local_file_system_t fs = local_file_system_t();
+        if (directory_exists(fs, testing_directory)) {
+            remove_directory(fs, testing_directory);
+        }
     }
 }
