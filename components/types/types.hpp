@@ -5,7 +5,6 @@
 namespace components::types {
 
     // order change may break physical_value comparators
-
     enum class physical_type : uint8_t
     {
         BOOL_FALSE = 0,
