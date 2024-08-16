@@ -56,27 +56,6 @@ namespace components::document::json {
         return *this;
     }
 
-    json_trie_node& json_trie_node::operator=(json_trie_node&& other) noexcept {
-        allocator_ = other.allocator_;
-        type_ = other.type_;
-        other.allocator_ = nullptr;
-        switch (type_) {
-            case OBJECT:
-                value_.obj = std::move(other.value_.obj);
-                break;
-            case ARRAY:
-                value_.arr = std::move(other.value_.arr);
-                break;
-            case IMMUT:
-                value_.immut = other.value_.immut;
-                break;
-            case MUT:
-                value_.mut = other.value_.mut;
-                break;
-        }
-        return *this;
-    }
-
     json_trie_node* json_trie_node::make_deep_copy() const {
         switch (type_) {
             case OBJECT: {
