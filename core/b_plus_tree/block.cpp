@@ -228,7 +228,9 @@ namespace core::b_plus_tree {
         assert(is_valid_ && "block is not initialized!");
         auto range = find_index_range_(index);
 
-        assert(range.end - range.begin > position && "index position is out of range");
+        if (position >= range.end - range.begin) {
+            return {nullptr, 0};
+        }
 
         return {internal_buffer_ + (range.begin + position)->offset, (range.begin + position)->size};
     }

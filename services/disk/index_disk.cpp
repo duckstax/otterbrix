@@ -1,154 +1,74 @@
 #include "index_disk.hpp"
-#include <rocksdb/db.h>
+
+#include <msgpack/msgpack_encoder.hpp>
+
+#include "core/b_plus_tree/msgpack_reader/msgpack_reader.hpp"
 
 namespace services::disk {
 
-    class base_comparator : public rocksdb::Comparator {
-    public:
-        virtual rocksdb::Slice slice(const components::document::value_t& value) const = 0;
+    using namespace core::b_plus_tree;
+
+    auto key_getter = [](const btree_t::item_data& item) -> btree_t::index_t {
+        msgpack::unpacked msg;
+        msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
+            return true;
+        });
+        return get_field(msg.get(), "/0");
+    };
+    auto id_getter = [](const btree_t::item_data& item) -> btree_t::index_t {
+        msgpack::unpacked msg;
+        msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
+            return true;
+        });
+        return get_field(msg.get(), "/1");
     };
 
-    template<class T>
-    class comparator final : public base_comparator {
-    public:
-        comparator() = default;
-
-    private:
-        int Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const final { return a.compare(b); }
-
-        rocksdb::Slice slice(const T& value) const {
-            return rocksdb::Slice{reinterpret_cast<const char*>(&value), sizeof(T)};
-        }
-
-        rocksdb::Slice slice(const components::document::value_t& value) const final {
-            return rocksdb::Slice{value.as_string()};
-        }
-
-        const char* Name() const final { return "comparator"; }
-
-        void FindShortestSeparator(std::string*, const rocksdb::Slice&) const final {}
-
-        void FindShortSuccessor(std::string*) const final {}
-    };
-
-    template<>
-    rocksdb::Slice comparator<std::string>::slice(const components::document::value_t& value) const {
-        return rocksdb::Slice{value.as_string()};
-    }
-
-    template<>
-    int comparator<std::string>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
-        if (a.empty() && b.empty())
-            return 0;
-        if (!a.data())
-            return -1;
-        if (!b.data())
-            return 1;
-        return a.compare(b);
-    }
-
-    template<>
-    int comparator<double>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
-        auto a_ = *reinterpret_cast<const double*>(a.data());
-        auto b_ = *reinterpret_cast<const double*>(b.data());
-        if (a_ < b_)
-            return -1;
-        if (a_ > b_)
-            return 1;
-        return 0;
-    }
-
-    template<>
-    int comparator<float>::Compare(const rocksdb::Slice& a, const rocksdb::Slice& b) const {
-        auto a_ = *reinterpret_cast<const float*>(a.data());
-        auto b_ = *reinterpret_cast<const float*>(b.data());
-        if (a_ < b_)
-            return -1;
-        if (a_ > b_)
-            return 1;
-        return 0;
-    }
-
-#define ADD_TYPE_SLICE(TYPE, FUNC)                                                                                     \
-    template<>                                                                                                         \
-    rocksdb::Slice comparator<TYPE>::slice(const components::document::value_t& value) const {                         \
-        static TYPE v;                                                                                                 \
-        v = TYPE(value.FUNC());                                                                                        \
-        return slice(v);                                                                                               \
-    }
-
-    ADD_TYPE_SLICE(int8_t, as_int)
-    ADD_TYPE_SLICE(int16_t, as_int)
-    ADD_TYPE_SLICE(int32_t, as_int)
-    ADD_TYPE_SLICE(int64_t, as_int)
-    ADD_TYPE_SLICE(uint8_t, as_unsigned)
-    ADD_TYPE_SLICE(uint16_t, as_unsigned)
-    ADD_TYPE_SLICE(uint32_t, as_unsigned)
-    ADD_TYPE_SLICE(uint64_t, as_unsigned)
-    ADD_TYPE_SLICE(float, as_float)
-    ADD_TYPE_SLICE(double, as_double)
-    ADD_TYPE_SLICE(bool, as_bool)
-
-    std::unique_ptr<base_comparator> make_comparator(components::types::logical_type compare_type) {
-        switch (compare_type) {
-            case components::types::logical_type::STRING_LITERAL:
-                return std::make_unique<comparator<std::string>>();
-            case components::types::logical_type::TINYINT:
-                return std::make_unique<comparator<int8_t>>();
-            case components::types::logical_type::SMALLINT:
-                return std::make_unique<comparator<int16_t>>();
-            case components::types::logical_type::INTEGER:
-                return std::make_unique<comparator<int32_t>>();
-            case components::types::logical_type::BIGINT:
-                return std::make_unique<comparator<int64_t>>();
-            case components::types::logical_type::UTINYINT:
-                return std::make_unique<comparator<uint8_t>>();
-            case components::types::logical_type::USMALLINT:
-                return std::make_unique<comparator<uint16_t>>();
-            case components::types::logical_type::UINTEGER:
-                return std::make_unique<comparator<uint32_t>>();
-            case components::types::logical_type::UBIGINT:
-                return std::make_unique<comparator<uint64_t>>();
-            case components::types::logical_type::FLOAT:
-                return std::make_unique<comparator<float>>();
-            case components::types::logical_type::DOUBLE:
-                return std::make_unique<comparator<double>>();
-            case components::types::logical_type::BOOLEAN:
-                return std::make_unique<comparator<bool>>();
+    components::types::physical_value convert(const components::document::value_t& value) {
+        switch (value.physical_type()) {
+            case components::types::physical_type::BOOL_FALSE:
+            case components::types::physical_type::BOOL_TRUE:
+                return components::types::physical_value(value.as_bool());
+            case components::types::physical_type::UINT8:
+                return components::types::physical_value(value.as<uint8_t>());
+            case components::types::physical_type::INT8:
+                return components::types::physical_value(value.as<int8_t>());
+            case components::types::physical_type::UINT16:
+                return components::types::physical_value(value.as<uint16_t>());
+            case components::types::physical_type::INT16:
+                return components::types::physical_value(value.as<int16_t>());
+            case components::types::physical_type::UINT32:
+                return components::types::physical_value(value.as<uint32_t>());
+            case components::types::physical_type::INT32:
+                return components::types::physical_value(value.as<int32_t>());
+            case components::types::physical_type::UINT64:
+                return components::types::physical_value(value.as<uint64_t>());
+            case components::types::physical_type::INT64:
+                return components::types::physical_value(value.as<int64_t>());
+            case components::types::physical_type::UINT128:
+            case components::types::physical_type::INT128:
+                return components::types::physical_value(value.as_int128());
+            case components::types::physical_type::FLOAT:
+                return components::types::physical_value(value.as_float());
+            case components::types::physical_type::DOUBLE:
+                return components::types::physical_value(value.as_double());
+            case components::types::physical_type::STRING:
+                return components::types::physical_value(value.as_string());
+            case components::types::physical_type::NA:
+                return components::types::physical_value();
             default:
-                return std::make_unique<comparator<std::string>>();
+                assert(false && "unsupported type");
+                return components::types::physical_value();
         }
     }
 
-    rocksdb::Slice to_slice(const index_disk_t::result& values) {
-        return rocksdb::Slice{reinterpret_cast<const char*>(values.data()),
-                              values.size() * components::document::document_id_t::size};
-    }
-
-    void from_slice(const rocksdb::Slice& slice, index_disk_t::result& docs) {
-        auto size = docs.size();
-        docs.resize(size + slice.size() / components::document::document_id_t::size);
-        std::memcpy(docs.data() + size, slice.data(), slice.size());
-    }
-
-    index_disk_t::index_disk_t(const path_t& path, components::types::logical_type compare_type)
+    index_disk_t::index_disk_t(const path_t& path,
+                               components::types::logical_type compare_type,
+                               std::pmr::memory_resource* resource)
         : path_(path)
-        , db_(nullptr)
-        , comparator_(make_comparator(compare_type)) {
-        rocksdb::Options options;
-        options.OptimizeLevelStyleCompaction();
-        options.create_if_missing = true;
-        options.comparator = comparator_.get();
-        rocksdb::DB* db;
-        if (!std::filesystem::is_directory(path)) {
-            std::filesystem::create_directories(path);
-        }
-        auto status = rocksdb::DB::Open(options, path.string(), &db);
-        if (status.ok()) {
-            db_.reset(db);
-        } else {
-            throw std::runtime_error("db open failed");
-        }
+        , resource_(resource)
+        , fs_(core::filesystem::local_file_system_t())
+        , db_(std::make_unique<btree_t>(resource, fs_, path, key_getter)) {
+        db_->load();
     }
 
     index_disk_t::~index_disk_t() = default;
@@ -157,29 +77,41 @@ namespace services::disk {
         auto values = find(key);
         if (std::find(values.begin(), values.end(), value) == values.end()) {
             values.push_back(value);
-            db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
+            msgpack::sbuffer sbuf;
+            msgpack::packer packer(sbuf);
+            packer.pack_array(2);
+            to_msgpack_(packer, key.get_element());
+            packer.pack(value.to_string());
+            db_->append(data_ptr_t(sbuf.data()), sbuf.size());
+            db_->flush();
         }
     }
 
-    void index_disk_t::remove(value_t key) { db_->Delete(rocksdb::WriteOptions(), comparator_->slice(key)); }
+    void index_disk_t::remove(value_t key) {
+        db_->remove_index(convert(key));
+        db_->flush();
+    }
 
     void index_disk_t::remove(const value_t& key, const document_id_t& doc) {
         auto values = find(key);
         if (!values.empty()) {
             values.erase(std::remove(values.begin(), values.end(), doc), values.end());
-            if (values.empty()) {
-                remove(key);
-            } else {
-                db_->Put(rocksdb::WriteOptions(), comparator_->slice(key), to_slice(values));
-            }
+            msgpack::sbuffer sbuf;
+            msgpack::packer packer(sbuf);
+            packer.pack_array(2);
+            to_msgpack_(packer, key.get_element());
+            packer.pack(doc.to_string());
+            db_->remove(data_ptr_t(sbuf.data()), sbuf.size());
+            db_->flush();
         }
     }
 
     void index_disk_t::find(const value_t& value, result& res) const {
-        rocksdb::PinnableSlice slice;
-        auto status = db_->Get(rocksdb::ReadOptions(), db_->DefaultColumnFamily(), comparator_->slice(value), &slice);
-        if (!status.IsNotFound()) {
-            from_slice(slice, res);
+        auto index = convert(value);
+        size_t count = db_->item_count(index);
+        res.reserve(count);
+        for (size_t i = 0; i < count; i++) {
+            res.emplace_back(id_getter(db_->get_item(index, i)).value<components::types::physical_type::STRING>());
         }
     }
 
@@ -190,14 +122,16 @@ namespace services::disk {
     }
 
     void index_disk_t::lower_bound(const value_t& value, result& res) const {
-        rocksdb::ReadOptions options;
-        auto upper_bound = comparator_->slice(value);
-        options.iterate_upper_bound = &upper_bound;
-        rocksdb::Iterator* it = db_->NewIterator(options);
-        for (it->SeekToFirst(); it->Valid(); it->Next()) {
-            from_slice(it->value(), res);
-        }
-        delete it;
+        db_->scan_ascending(
+            std::numeric_limits<btree_t::index_t>::min(),
+            convert(value),
+            size_t(-1),
+            &res,
+            [](void* data, size_t size) {
+                return document_id_t(id_getter(btree_t::item_data{static_cast<data_ptr_t>(data), size})
+                                         .value<components::types::physical_type::STRING>());
+            },
+            [](const auto&) { return true; });
     }
 
     index_disk_t::result index_disk_t::lower_bound(const value_t& value) const {
@@ -207,18 +141,16 @@ namespace services::disk {
     }
 
     void index_disk_t::upper_bound(const value_t& value, result& res) const {
-        rocksdb::ReadOptions options;
-        auto lower_bound = comparator_->slice(value);
-        options.iterate_lower_bound = &lower_bound;
-        rocksdb::Iterator* it = db_->NewIterator(options);
-        it->SeekToFirst();
-        if (it->key() == lower_bound) {
-            it->Next();
-        }
-        for (; it->Valid(); it->Next()) {
-            from_slice(it->value(), res);
-        }
-        delete it;
+        db_->scan_decending(
+            convert(value),
+            std::numeric_limits<btree_t::index_t>::max(),
+            size_t(-1),
+            &res,
+            [](void* data, size_t size) {
+                return document_id_t(id_getter(btree_t::item_data{static_cast<data_ptr_t>(data), size})
+                                         .value<components::types::physical_type::STRING>());
+            },
+            [](const auto&) { return true; });
     }
 
     index_disk_t::result index_disk_t::upper_bound(const value_t& value) const {
@@ -228,8 +160,8 @@ namespace services::disk {
     }
 
     void index_disk_t::drop() {
-        db_.release();
-        std::filesystem::remove_all(path_);
+        db_.reset();
+        core::filesystem::remove_directory(fs_, path_);
     }
 
 } // namespace services::disk

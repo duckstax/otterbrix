@@ -9,7 +9,7 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, name)
         , resource_(manager->resource())
         , log_(log.clone())
-        , disk_(path_db) {
+        , disk_(path_db, resource_) {
         trace(log_, "agent_disk::create");
         add_handler(handler_id(route::load), &agent_disk_t::load);
         add_handler(handler_id(route::append_database), &agent_disk_t::append_database);
@@ -29,10 +29,7 @@ namespace services::disk {
         for (auto& database : *result) {
             database.set_collection(disk_.collections(database.name));
             for (auto& collection : database.collections) {
-                auto id_documents = disk_.load_list_documents(database.name, collection.name);
-                for (const auto& id : id_documents) {
-                    collection.documents.push_back(disk_.load_document(id, resource_));
-                }
+                disk_.load_documents(database.name, collection.name, collection.documents);
             }
         }
         actor_zeta::send(dispatcher, address(), handler_id(route::load_finish), session, result);
@@ -72,7 +69,7 @@ namespace services::disk {
         for (const auto& document : write_command.documents) {
             auto id = components::document::get_document_id(document);
             if (!id.is_null()) {
-                disk_.save_document(write_command.database, write_command.collection, id, document);
+                disk_.save_document(write_command.database, write_command.collection, document);
             }
         }
     }

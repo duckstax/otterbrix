@@ -16,8 +16,10 @@ namespace services::disk {
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
         , log_(log.clone())
-        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection->name().collection / index_name,
-                                                     compare_type))
+        , index_disk_(std::make_unique<index_disk_t>(path_db / collection->name().database /
+                                                         collection->name().collection / index_name,
+                                                     compare_type,
+                                                     resource_))
         , collection_(collection) {
         trace(log_, "index_agent_disk::create {}", index_name);
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);

@@ -48,7 +48,6 @@ target_link_libraries(
         #CONAN_PKG::date
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
-        CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt

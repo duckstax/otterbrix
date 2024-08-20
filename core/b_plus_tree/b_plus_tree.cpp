@@ -280,6 +280,7 @@ namespace core::b_plus_tree {
         , max_node_capacity_(max_node_capacity) {
         assert(max_node_capacity < MAX_NODE_CAPACITY);
         if (!directory_exists(fs_, storage_directory_)) {
+            create_directories(storage_directory_.parent_path());
             create_directory(fs_, storage_directory_);
         }
     }
@@ -289,6 +290,8 @@ namespace core::b_plus_tree {
             delete root_;
         }
     }
+
+    bool btree_t::append(data_ptr_t data, size_t size) { return append(item_data{data, size}); }
 
     bool btree_t::append(item_data item) {
         tree_mutex_.lock(); // needed for root check
@@ -428,6 +431,8 @@ namespace core::b_plus_tree {
         }
         return result;
     }
+
+    bool btree_t::remove(data_ptr_t data, size_t size) { return remove(item_data{data, size}); }
 
     bool btree_t::remove(item_data item) {
         index_t index = key_func_(item);
@@ -739,6 +744,8 @@ namespace core::b_plus_tree {
             return;
         }
 
+        std::filesystem::path file_name = storage_directory_;
+        file_name /= std::filesystem::path(metadata_file_name_);
         tree_mutex_.lock();
 
         // got root mutex, no need to lock nodes or save parent node
@@ -764,9 +771,6 @@ namespace core::b_plus_tree {
             node = static_cast<leaf_node_t*>(node->right_node_);
             i++;
         }
-
-        std::filesystem::path file_name = storage_directory_;
-        file_name /= std::filesystem::path(metadata_file_name_);
         std::unique_ptr<core::filesystem::file_handle_t> file =
             open_file(fs_, file_name, file_flags::WRITE | file_flags::FILE_CREATE);
         file->write(static_cast<void*>(buffer), METADATA_SIZE, 0);
@@ -776,14 +780,17 @@ namespace core::b_plus_tree {
     }
 
     void btree_t::load() {
+        std::filesystem::path file_name = storage_directory_;
+        file_name /= std::filesystem::path(metadata_file_name_);
+        if (!file_exists(fs_, file_name)) {
+            return;
+        }
+
         tree_mutex_.lock();
         if (root_) {
             delete root_;
             root_ = nullptr;
         }
-        std::filesystem::path file_name = storage_directory_;
-        file_name /= std::filesystem::path(metadata_file_name_);
-        assert(file_exists(fs_, file_name));
         std::unique_ptr<core::filesystem::file_handle_t> file = open_file(fs_, file_name, file_flags::READ);
         size_t* buffer = static_cast<size_t*>(resource_->allocate(METADATA_SIZE));
         file->read(static_cast<void*>(buffer), METADATA_SIZE, 0);

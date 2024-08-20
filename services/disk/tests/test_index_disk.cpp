@@ -22,31 +22,31 @@ TEST_CASE("index_disk::string") {
     std::filesystem::path path{"/tmp/index_disk/string"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::STRING_LITERAL);
+    auto index = index_disk_t(path, components::types::logical_type::STRING_LITERAL, &resource);
 
     for (int i = 1; i <= 100; ++i) {
-        index.insert(new_value(i), document_id_t{gen_id(i, &resource)});
+        index.insert(new_value(gen_id(i, &resource)), document_id_t{gen_id(i, &resource)});
     }
 
-    REQUIRE(index.find(new_value(1)).size() == 1);
-    REQUIRE(index.find(new_value(1)).front() == document_id_t{gen_id(1, &resource)});
-    REQUIRE(index.find(new_value(10)).size() == 1);
-    REQUIRE(index.find(new_value(10)).front() == document_id_t{gen_id(10, &resource)});
-    REQUIRE(index.find(new_value(100)).size() == 1);
-    REQUIRE(index.find(new_value(100)).front() == document_id_t{gen_id(100, &resource)});
-    REQUIRE(index.find(new_value(101)).empty());
-    REQUIRE(index.find(new_value(0)).empty());
+    REQUIRE(index.find(new_value(gen_id(1, &resource))).size() == 1);
+    REQUIRE(index.find(new_value(gen_id(1, &resource))).front() == document_id_t{gen_id(1, &resource)});
+    REQUIRE(index.find(new_value(gen_id(10, &resource))).size() == 1);
+    REQUIRE(index.find(new_value(gen_id(10, &resource))).front() == document_id_t{gen_id(10, &resource)});
+    REQUIRE(index.find(new_value(gen_id(100, &resource))).size() == 1);
+    REQUIRE(index.find(new_value(gen_id(100, &resource))).front() == document_id_t{gen_id(100, &resource)});
+    REQUIRE(index.find(new_value(gen_id(101, &resource))).empty());
+    REQUIRE(index.find(new_value(gen_id(0, &resource))).empty());
 
-    REQUIRE(index.lower_bound(new_value(10)).size() == 9);
-    REQUIRE(index.upper_bound(new_value(90)).size() == 10);
+    REQUIRE(index.lower_bound(new_value(gen_id(10, &resource))).size() == 9);
+    REQUIRE(index.upper_bound(new_value(gen_id(90, &resource))).size() == 10);
 
     for (int i = 2; i <= 100; i += 2) {
-        index.remove(new_value(i));
+        index.remove(new_value(gen_id(i)));
     }
 
-    REQUIRE(index.find(new_value(2)).empty());
-    REQUIRE(index.lower_bound(new_value(10)).size() == 5);
-    REQUIRE(index.upper_bound(new_value(90)).size() == 5);
+    REQUIRE(index.find(new_value(gen_id(2, &resource))).empty());
+    REQUIRE(index.lower_bound(new_value(gen_id(10, &resource))).size() == 5);
+    REQUIRE(index.upper_bound(new_value(gen_id(90, &resource))).size() == 5);
 }
 
 TEST_CASE("index_disk::int32") {
@@ -57,7 +57,7 @@ TEST_CASE("index_disk::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::INTEGER);
+    auto index = index_disk_t(path, components::types::logical_type::INTEGER, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(int64_t(i)), document_id_t{gen_id(i, &resource)});
@@ -92,7 +92,7 @@ TEST_CASE("index_disk::uint32") {
     std::filesystem::path path{"/tmp/index_disk/uint32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::UINTEGER);
+    auto index = index_disk_t(path, components::types::logical_type::UINTEGER, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(uint64_t(i)), document_id_t{gen_id(i, &resource)});
@@ -127,7 +127,7 @@ TEST_CASE("index_disk::double") {
     std::filesystem::path path{"/tmp/index_disk/double"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::DOUBLE);
+    auto index = index_disk_t(path, components::types::logical_type::DOUBLE, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(double(i)), document_id_t{gen_id(i, &resource)});
@@ -162,7 +162,7 @@ TEST_CASE("index_disk::multi_values::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32_multi"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::INTEGER);
+    auto index = index_disk_t(path, components::types::logical_type::INTEGER, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         for (int j = 0; j < 10; ++j) {

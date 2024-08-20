@@ -60,10 +60,7 @@ namespace services::disk {
         add_handler(handler_id(index::route::drop), &manager_disk_t::drop_index_agent);
         add_handler(handler_id(index::route::success), &manager_disk_t::drop_index_agent_success);
         if (!config_.path.empty()) {
-            if (!std::filesystem::is_directory(config_.path / "indexes")) {
-                std::filesystem::create_directories(config_.path / "indexes");
-            }
-            metafile_indexes_ = std::make_unique<core::file::file_t>(config_.path / "indexes/METADATA");
+            metafile_indexes_ = std::make_unique<core::file::file_t>(config_.path / "indexes_METADATA");
         }
         trace(log_, "manager_disk finish");
     }

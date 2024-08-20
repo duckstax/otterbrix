@@ -874,7 +874,7 @@ TEST_CASE("b+tree") {
         REQUIRE(tree.size() == test_size);
 
         // test scan
-        std::vector<std::string> scan_result;
+        std::pmr::vector<std::string> scan_result;
         tree.scan_ascending<std::string>(
             btree_t::index_t(uint64_t(0)),
             btree_t::index_t(uint64_t(test_size)),
@@ -895,7 +895,7 @@ TEST_CASE("b+tree") {
         }
         scan_result.clear();
         tree.scan_decending<std::string>(
-            btree_t::index_t(uint64_t(0)),
+            btree_t::index_t(int64_t(-1)),
             btree_t::index_t(uint64_t(test_size)),
             test_size * 2,
             &scan_result,
@@ -1057,7 +1057,7 @@ TEST_CASE("b+tree") {
         REQUIRE(tree.size() == key_num);
 
         {
-            std::vector<uint64_t> scan_result;
+            std::pmr::vector<uint64_t> scan_result;
             scan_result.reserve(key_num);
             tree.scan_ascending<uint64_t>(
                 std::numeric_limits<btree_t::index_t>::min(),

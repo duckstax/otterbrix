@@ -109,7 +109,7 @@ constexpr int kDocuments = 100;
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
         auto index_name = collection_name + "_" + NAME;                                                                \
-        auto path = config.disk.path / "indexes" / collection_name / index_name;                                       \
+        auto path = config.disk.path / database_name / collection_name / index_name;                                   \
         REQUIRE(std::filesystem::exists(path) == EXISTS);                                                              \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS);                                                        \
     } while (false)

@@ -3,8 +3,9 @@
 
 namespace services::disk {
 
-    metadata_t::metadata_ptr metadata_t::open(const path_t& file_name) {
-        return std::unique_ptr<metadata_t>(new metadata_t(file_name));
+    using namespace core::filesystem;
+    metadata_t::metadata_ptr metadata_t::open(local_file_system_t& fs, const path_t& file_name) {
+        return std::unique_ptr<metadata_t>(new metadata_t(fs, file_name));
     }
 
     metadata_t::databases_t metadata_t::databases() const {
@@ -87,9 +88,15 @@ namespace services::disk {
         return false;
     }
 
-    metadata_t::metadata_t(const path_t& file_name)
-        : file_(file_name) {
-        std::string data = file_.readall();
+    metadata_t::metadata_t(local_file_system_t& fs, const path_t& file_name)
+        : file_(open_file(fs,
+                          file_name,
+                          file_flags::WRITE | file_flags::READ | file_flags::FILE_CREATE,
+                          file_lock_type::NO_LOCK)) {
+        char* buffer = new char[file_->file_size()];
+        file_->read(buffer, file_->file_size());
+        std::string data(buffer, file_->file_size());
+        delete[] buffer;
         std::size_t pos_new_line = 0;
         auto pos_db = data.find(':', pos_new_line);
         while (pos_db != std::string::npos) {
@@ -122,7 +129,8 @@ namespace services::disk {
             }
             data += "\n";
         }
-        file_.rewrite(data);
+        file_->write(data.data(), data.size(), 0);
+        file_->truncate(data.size());
     }
 
 } //namespace services::disk

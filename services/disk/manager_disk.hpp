@@ -88,7 +88,7 @@ namespace services::disk {
         std::vector<agent_disk_ptr> agents_;
         index_agent_disk_storage_t index_agents_;
         command_storage_t commands_;
-        file_ptr metafile_indexes_;
+        std::unique_ptr<core::file::file_t> metafile_indexes_;
         session_id_t load_session_;
 
         struct removed_index_t {

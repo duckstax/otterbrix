@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "core/file/local_file_system.hpp"
+
 namespace services::disk {
 
     class metadata_t {
@@ -18,7 +20,7 @@ namespace services::disk {
         using file_t = core::file::file_t;
 
     public:
-        static metadata_ptr open(const path_t& file_name);
+        static metadata_ptr open(core::filesystem::local_file_system_t& fs, const path_t& file_name);
 
         databases_t databases() const;
         const collections_t& collections(const database_name_t& database) const;
@@ -41,9 +43,9 @@ namespace services::disk {
 
     private:
         data_t data_;
-        file_t file_;
+        std::unique_ptr<core::filesystem::file_handle_t> file_;
 
-        explicit metadata_t(const path_t& file_name);
+        explicit metadata_t(core::filesystem::local_file_system_t& fs, const path_t& file_name);
         void flush_();
     };
 
