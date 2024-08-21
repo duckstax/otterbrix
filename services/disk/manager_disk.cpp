@@ -213,7 +213,6 @@ namespace services::disk {
                 config_.path,
                 collection,
                 name,
-                index.index_compare_,
                 log_);
             if (session.data() != load_session_.data()) {
                 write_index_(index);

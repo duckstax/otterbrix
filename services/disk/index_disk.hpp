@@ -20,9 +20,7 @@ namespace services::disk {
     public:
         using result = std::pmr::vector<document_id_t>;
 
-        index_disk_t(const path_t& path,
-                     components::types::logical_type compare_type,
-                     std::pmr::memory_resource* resource);
+        index_disk_t(const path_t& path, std::pmr::memory_resource* resource);
         ~index_disk_t();
 
         void insert(const value_t& key, const document_id_t& value);

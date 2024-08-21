@@ -61,9 +61,7 @@ namespace services::disk {
         }
     }
 
-    index_disk_t::index_disk_t(const path_t& path,
-                               components::types::logical_type compare_type,
-                               std::pmr::memory_resource* resource)
+    index_disk_t::index_disk_t(const path_t& path, std::pmr::memory_resource* resource)
         : path_(path)
         , resource_(resource)
         , fs_(core::filesystem::local_file_system_t())

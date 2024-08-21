@@ -2,7 +2,6 @@
 
 #include "ql_statement.hpp"
 #include <components/expressions/key.hpp>
-#include <core/types.hpp>
 #include <memory_resource>
 #include <msgpack.hpp>
 #include <vector>
@@ -43,26 +42,14 @@ namespace components::ql {
         create_index_t(const database_name_t& database,
                        const collection_name_t& collection,
                        const std::string& name,
-                       index_type type,
-                       types::logical_type index_compare)
-            : ql_statement_t(statement_type::create_index, database, collection)
-            , name_{name}
-            , index_type_(type)
-            , index_compare_(index_compare) {}
-
-        create_index_t(const database_name_t& database,
-                       const collection_name_t& collection,
-                       const std::string& name,
                        index_type type = index_type::single)
             : ql_statement_t(statement_type::create_index, database, collection)
             , name_{name}
-            , index_type_(type)
-            , index_compare_(types::logical_type::UNKNOWN) {}
+            , index_type_(type) {}
 
         create_index_t()
             : ql_statement_t(statement_type::create_index, {}, {})
-            , index_type_(index_type::no_valid)
-            , index_compare_(types::logical_type::STRING_LITERAL) {}
+            , index_type_(index_type::no_valid) {}
 
         create_index_t(const create_index_t&) = default;
         create_index_t& operator=(const create_index_t&) = default;
@@ -80,7 +67,6 @@ namespace components::ql {
         std::string name_ = {"unnamed"};
         keys_base_storage_t keys_;
         index_type index_type_;
-        types::logical_type index_compare_;
     };
 
     struct drop_index_t final : ql_statement_t {
@@ -108,7 +94,7 @@ namespace components::ql {
 
 // User defined class template specialization
 namespace msgpack {
-    constexpr uint32_t CREATE_INDEX_SIZE = 6;
+    constexpr uint32_t CREATE_INDEX_SIZE = 5;
     constexpr uint32_t DROP_INDEX_SIZE = 3;
     MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
         namespace adaptor {
@@ -123,8 +109,7 @@ namespace msgpack {
                     v.collection_ = o.via.array.ptr[1].as<std::string>();
                     v.name_ = o.via.array.ptr[2].as<std::string>();
                     v.index_type_ = static_cast<components::ql::index_type>(o.via.array.ptr[3].as<uint8_t>());
-                    v.index_compare_ = static_cast<components::types::logical_type>(o.via.array.ptr[4].as<uint8_t>());
-                    auto data = o.via.array.ptr[5].as<std::vector<std::string>>();
+                    auto data = o.via.array.ptr[4].as<std::vector<std::string>>();
                     v.keys_ = components::ql::keys_base_storage_t(data.begin(), data.end());
                     return o;
                 }
@@ -139,7 +124,6 @@ namespace msgpack {
                     o.pack(v.collection_);
                     o.pack(v.name_);
                     o.pack(static_cast<uint8_t>(v.index_type_));
-                    o.pack(static_cast<uint8_t>(v.index_compare_));
                     o.pack(v.keys_);
                     return o;
                 }
@@ -157,9 +141,8 @@ namespace msgpack {
                     o.via.array.ptr[1] = msgpack::object(v.collection_, o.zone);
                     o.via.array.ptr[2] = msgpack::object(v.name_, o.zone);
                     o.via.array.ptr[3] = msgpack::object(static_cast<uint8_t>(v.index_type_), o.zone);
-                    o.via.array.ptr[4] = msgpack::object(static_cast<uint8_t>(v.index_compare_), o.zone);
                     std::vector<std::string> tmp(v.keys_.begin(), v.keys_.end());
-                    o.via.array.ptr[5] = msgpack::object(tmp, o.zone);
+                    o.via.array.ptr[4] = msgpack::object(tmp, o.zone);
                 }
             };
 

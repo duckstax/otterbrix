@@ -1,7 +1,7 @@
 import os
 import pytest
 import shutil
-from otterbrix import Client, DataBase, Collection, TypeIndex, CompareIndex
+from otterbrix import Client, DataBase, Collection, TypeIndex
 
 if os.path.isdir('./wal'):
     shutil.rmtree('./wal')
@@ -37,8 +37,8 @@ def insert(collection, num):
 @pytest.fixture()
 def gen_collection(request):
     collection = database[collection_name]
-    collection.create_index(['count'], TypeIndex.SINGLE, CompareIndex.INT64)
-    collection.create_index(['countStr'], TypeIndex.SINGLE, CompareIndex.STR)
+    collection.create_index(['count'], TypeIndex.SINGLE)
+    collection.create_index(['countStr'], TypeIndex.SINGLE)
     for num in range(1000):
         insert(collection, num)
 

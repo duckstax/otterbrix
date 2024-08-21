@@ -31,7 +31,6 @@ namespace services::disk {
                            const path_t&,
                            collection::context_collection_t*,
                            const index_name_t&,
-                           components::types::logical_type compare_type,
                            log_t&);
         ~index_agent_disk_t() final;
 
@@ -42,6 +41,7 @@ namespace services::disk {
         bool is_dropped() const;
 
         void insert(session_id_t& session, const value_t& key, const document_id_t& value);
+        void insert_many(session_id_t& session, const std::vector<std::pair<value_t, document_id_t>>& values);
         void remove(session_id_t& session, const value_t& key, const document_id_t& value);
         void find(session_id_t& session, const value_t& value, components::expressions::compare_type compare);
 

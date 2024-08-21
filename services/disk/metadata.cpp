@@ -93,10 +93,9 @@ namespace services::disk {
                           file_name,
                           file_flags::WRITE | file_flags::READ | file_flags::FILE_CREATE,
                           file_lock_type::NO_LOCK)) {
-        char* buffer = new char[file_->file_size()];
-        file_->read(buffer, file_->file_size());
-        std::string data(buffer, file_->file_size());
-        delete[] buffer;
+        std::unique_ptr<char[]> buffer(new char[file_->file_size()]);
+        file_->read(buffer.get(), file_->file_size());
+        std::string data(buffer.get(), file_->file_size());
         std::size_t pos_new_line = 0;
         auto pos_db = data.find(':', pos_new_line);
         while (pos_db != std::string::npos) {

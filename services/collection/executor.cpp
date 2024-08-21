@@ -7,7 +7,6 @@
 #include <components/physical_plan/collection/operators/scan/primary_key_scan.hpp>
 #include <components/physical_plan_generator/create_plan.hpp>
 #include <core/system_command.hpp>
-#include <services/collection/create_index_utils.hpp>
 #include <services/disk/route.hpp>
 #include <services/memory_storage/memory_storage.hpp>
 
@@ -120,7 +119,6 @@ namespace services::collection::executor {
         }
         components::pipeline::context_t pipeline_context{session, address(), memory_storage_, parameters};
         plan->on_execute(&pipeline_context);
-        // TODO figure is it possible to use for pending indexes
         if (!plan->is_executed()) {
             sessions::make_session(
                 collection->sessions(),
@@ -132,9 +130,6 @@ namespace services::collection::executor {
         switch (plan->type()) {
             case operators::operator_type::insert: {
                 insert_document_impl(session, collection, std::move(plan));
-                if (!collection->pending_indexes().empty()) {
-                    process_pending_indexes(collection);
-                }
                 return;
             }
             case operators::operator_type::remove: {

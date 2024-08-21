@@ -22,7 +22,7 @@ TEST_CASE("index_disk::string") {
     std::filesystem::path path{"/tmp/index_disk/string"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::STRING_LITERAL, &resource);
+    auto index = index_disk_t(path, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(gen_id(i, &resource)), document_id_t{gen_id(i, &resource)});
@@ -57,7 +57,7 @@ TEST_CASE("index_disk::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::INTEGER, &resource);
+    auto index = index_disk_t(path, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(int64_t(i)), document_id_t{gen_id(i, &resource)});
@@ -92,7 +92,7 @@ TEST_CASE("index_disk::uint32") {
     std::filesystem::path path{"/tmp/index_disk/uint32"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::UINTEGER, &resource);
+    auto index = index_disk_t(path, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(uint64_t(i)), document_id_t{gen_id(i, &resource)});
@@ -127,7 +127,7 @@ TEST_CASE("index_disk::double") {
     std::filesystem::path path{"/tmp/index_disk/double"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::DOUBLE, &resource);
+    auto index = index_disk_t(path, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         index.insert(new_value(double(i)), document_id_t{gen_id(i, &resource)});
@@ -162,7 +162,7 @@ TEST_CASE("index_disk::multi_values::int32") {
     std::filesystem::path path{"/tmp/index_disk/int32_multi"};
     std::filesystem::remove_all(path);
     std::filesystem::create_directories(path);
-    auto index = index_disk_t(path, components::types::logical_type::INTEGER, &resource);
+    auto index = index_disk_t(path, &resource);
 
     for (int i = 1; i <= 100; ++i) {
         for (int j = 0; j < 10; ++j) {
