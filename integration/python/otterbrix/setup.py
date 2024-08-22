@@ -2,7 +2,7 @@ from skbuild import setup
 
 setup(
     name="otterbrix",
-    version="1.0a7",
+    version="1.0a9",
     description="""
     Otterbrix is an open-source framework for developing conventional and analytical applications.
     By adding the Otterbrix module to their applications, developers unlock the ability to quickly process unstructured and loosely structured data.
