@@ -120,16 +120,17 @@ namespace services::disk {
     }
 
     void index_disk_t::lower_bound(const value_t& value, result& res) const {
+        auto max_index = convert(value);
         db_->scan_ascending(
             std::numeric_limits<btree_t::index_t>::min(),
-            convert(value),
+            max_index,
             size_t(-1),
             &res,
             [](void* data, size_t size) {
                 return document_id_t(id_getter(btree_t::item_data{static_cast<data_ptr_t>(data), size})
                                          .value<components::types::physical_type::STRING>());
             },
-            [](const auto&) { return true; });
+            [&max_index](const auto& index, const auto&) { return index != max_index; });
     }
 
     index_disk_t::result index_disk_t::lower_bound(const value_t& value) const {
@@ -139,6 +140,7 @@ namespace services::disk {
     }
 
     void index_disk_t::upper_bound(const value_t& value, result& res) const {
+        auto min_index = convert(value);
         db_->scan_decending(
             convert(value),
             std::numeric_limits<btree_t::index_t>::max(),
@@ -148,7 +150,7 @@ namespace services::disk {
                 return document_id_t(id_getter(btree_t::item_data{static_cast<data_ptr_t>(data), size})
                                          .value<components::types::physical_type::STRING>());
             },
-            [](const auto&) { return true; });
+            [&min_index](const auto& index, const auto&) { return index != min_index; });
     }
 
     index_disk_t::result index_disk_t::upper_bound(const value_t& value) const {

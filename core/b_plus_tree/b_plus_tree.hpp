@@ -157,31 +157,41 @@ namespace core::b_plus_tree {
         // TODO: return deleted count instead of bool here, in segment_tree and in block
         bool remove_index(const index_t& index);
 
-        template<typename T, typename Deserializer, typename Predicate>
-        bool full_scan(
-            std::pmr::vector<T>* result,
-            Deserializer deserializer,
-            Predicate predicate = [](const auto&) -> bool { return true; });
+        template<typename T, typename Deserializer>
+        bool full_scan(std::pmr::vector<T>* result, Deserializer deserializer);
 
-        // returns [min, max)
         template<typename T, typename Deserializer, typename Predicate>
-        bool scan_ascending(
-            const index_t& min_index,
-            const index_t& max_index,
-            size_t limit,
-            std::pmr::vector<T>* result,
-            Deserializer deserializer,
-            Predicate predicate = [](const auto&) -> bool { return true; });
+        bool full_scan(std::pmr::vector<T>* result, Deserializer deserializer, Predicate predicate);
 
-        // returns (min, max]
+        template<typename T, typename Deserializer>
+        bool scan_ascending(const index_t& min_index,
+                            const index_t& max_index,
+                            size_t limit,
+                            std::pmr::vector<T>* result,
+                            Deserializer deserializer);
+
         template<typename T, typename Deserializer, typename Predicate>
-        bool scan_decending(
-            const index_t& min_index,
-            const index_t& max_index,
-            size_t limit,
-            std::pmr::vector<T>* result,
-            Deserializer deserializer,
-            Predicate predicate = [](const auto&) -> bool { return true; });
+        bool scan_ascending(const index_t& min_index,
+                            const index_t& max_index,
+                            size_t limit,
+                            std::pmr::vector<T>* result,
+                            Deserializer deserializer,
+                            Predicate predicate);
+
+        template<typename T, typename Deserializer>
+        bool scan_decending(const index_t& min_index,
+                            const index_t& max_index,
+                            size_t limit,
+                            std::pmr::vector<T>* result,
+                            Deserializer deserializer);
+
+        template<typename T, typename Deserializer, typename Predicate>
+        bool scan_decending(const index_t& min_index,
+                            const index_t& max_index,
+                            size_t limit,
+                            std::pmr::vector<T>* result,
+                            Deserializer deserializer,
+                            Predicate prediacte);
 
         // unreliable for now, because physical_value does not own string buffer
         void list_indices(std::vector<index_t>& result);
@@ -221,6 +231,11 @@ namespace core::b_plus_tree {
         static constexpr std::string_view metadata_file_name_ = "metadata";
     };
 
+    template<typename T, typename Deserializer>
+    bool btree_t::full_scan(std::pmr::vector<T>* result, Deserializer deserializer) {
+        return full_scan(result, deserializer, [](const auto&, const auto&) { return true; });
+    }
+
     template<typename T, typename Deserializer, typename Predicate>
     bool btree_t::full_scan(std::pmr::vector<T>* result, Deserializer deserializer, Predicate predicate) {
         auto first_leaf = find_leaf_node_(std::numeric_limits<index_t>::min());
@@ -235,7 +250,7 @@ namespace core::b_plus_tree {
             for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
                 for (auto it = block->begin(); it != block->end(); it++) {
                     T t = deserializer(reinterpret_cast<void*>(it->item.data), it->item.size);
-                    if (predicate(t)) {
+                    if (predicate(it->index, t)) {
                         result->emplace_back(std::move(t));
                     }
                 }
@@ -245,6 +260,17 @@ namespace core::b_plus_tree {
 
         tree_mutex_.unlock_shared();
         return true;
+    }
+
+    template<typename T, typename Deserializer>
+    bool btree_t::scan_ascending(const index_t& min_index,
+                                 const index_t& max_index,
+                                 size_t limit,
+                                 std::pmr::vector<T>* result,
+                                 Deserializer deserializer) {
+        return scan_ascending(min_index, max_index, limit, result, deserializer, [](const auto&, const auto&) {
+            return true;
+        });
     }
 
     template<typename T, typename Deserializer, typename Predicate>
@@ -269,14 +295,14 @@ namespace core::b_plus_tree {
 
             for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
                 for (auto it = block->begin(); it != block->end(); it++) {
-                    if (it->index >= max_index) {
+                    if (it->index > max_index) {
                         tree_mutex_.unlock_shared();
                         return true;
                     } else if (it->index < min_index) {
                         continue;
                     }
                     T t = deserializer(reinterpret_cast<void*>(it->item.data), it->item.size);
-                    if (predicate(t)) {
+                    if (predicate(it->index, t)) {
                         result->emplace_back(std::move(t));
                         limit--;
                         if (limit == 0) {
@@ -291,6 +317,17 @@ namespace core::b_plus_tree {
 
         tree_mutex_.unlock_shared();
         return true;
+    }
+
+    template<typename T, typename Deserializer>
+    bool btree_t::scan_decending(const index_t& min_index,
+                                 const index_t& max_index,
+                                 size_t limit,
+                                 std::pmr::vector<T>* result,
+                                 Deserializer deserializer) {
+        return scan_decending(min_index, max_index, limit, result, deserializer, [](const auto&, const auto&) {
+            return true;
+        });
     }
 
     template<typename T, typename Deserializer, typename Predicate>
@@ -315,14 +352,14 @@ namespace core::b_plus_tree {
 
             for (auto block = last_leaf->rbegin(); block != last_leaf->rend(); block++) {
                 for (auto it = block->rbegin(); it != block->rend(); it++) {
-                    if (it->index <= min_index) {
+                    if (it->index < min_index) {
                         tree_mutex_.unlock_shared();
                         return true;
                     } else if (it->index > max_index) {
                         continue;
                     }
                     T t = deserializer(reinterpret_cast<void*>(it->item.data), it->item.size);
-                    if (predicate(t)) {
+                    if (predicate(it->index, t)) {
                         result->emplace_back(std::move(t));
                         limit--;
                         if (limit == 0) {

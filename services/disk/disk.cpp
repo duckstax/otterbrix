@@ -89,15 +89,10 @@ namespace services::disk {
     std::pmr::vector<document_id_t> disk_t::load_list_documents(const database_name_t& database,
                                                                 const collection_name_t& collection) const {
         std::pmr::vector<document_id_t> id_documents;
-        db_.at({database, collection})
-            ->full_scan(
-                &id_documents,
-                [](void* data, size_t size) {
-                    auto key =
-                        key_getter(core::b_plus_tree::btree_t::item_data{core::b_plus_tree::data_ptr_t(data), size});
-                    return document_id_t{key.value<components::types::physical_type::STRING>()};
-                },
-                [](auto) { return true; });
+        db_.at({database, collection})->full_scan(&id_documents, [](void* data, size_t size) {
+            auto key = key_getter(core::b_plus_tree::btree_t::item_data{core::b_plus_tree::data_ptr_t(data), size});
+            return document_id_t{key.value<components::types::physical_type::STRING>()};
+        });
 
         return id_documents;
     }
@@ -106,16 +101,12 @@ namespace services::disk {
                                 const collection_name_t& collection,
                                 std::pmr::vector<document_ptr>& result) const {
         result.reserve(db_.at({database, collection})->size());
-        db_.at({database, collection})
-            ->full_scan(
-                &result,
-                [&](void* data, size_t size) {
-                    msgpack::unpacked msg;
-                    msgpack::unpack(msg, (char*) data, size);
-                    msgpack::object obj = msg.get();
-                    return components::document::to_document(obj, resource_);
-                },
-                [](auto) { return true; });
+        db_.at({database, collection})->full_scan(&result, [&](void* data, size_t size) {
+            msgpack::unpacked msg;
+            msgpack::unpack(msg, (char*) data, size);
+            msgpack::object obj = msg.get();
+            return components::document::to_document(obj, resource_);
+        });
     }
 
     std::vector<database_name_t> disk_t::databases() const { return metadata_->databases(); }
