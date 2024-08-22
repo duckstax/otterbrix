@@ -84,11 +84,12 @@ namespace services::disk {
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         log_t log_;
+        core::filesystem::local_file_system_t fs_;
         configuration::config_disk config_;
         std::vector<agent_disk_ptr> agents_;
         index_agent_disk_storage_t index_agents_;
         command_storage_t commands_;
-        std::unique_ptr<core::file::file_t> metafile_indexes_;
+        file_ptr metafile_indexes_;
         session_id_t load_session_;
 
         struct removed_index_t {

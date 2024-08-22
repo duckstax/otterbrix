@@ -10,6 +10,7 @@
 namespace services::disk {
 
     using components::document::document_id_t;
+    using namespace core::filesystem;
 
     namespace {
         std::vector<std::unique_ptr<components::ql::create_index_t>>
@@ -41,6 +42,7 @@ namespace services::disk {
                                    log_t& log)
         : base_manager_disk_t(mr, scheduler)
         , log_(log.clone())
+        , fs_(core::filesystem::local_file_system_t())
         , config_(std::move(config))
         , metafile_indexes_(nullptr)
         , removed_indexes_(mr) {
@@ -60,7 +62,13 @@ namespace services::disk {
         add_handler(handler_id(index::route::drop), &manager_disk_t::drop_index_agent);
         add_handler(handler_id(index::route::success), &manager_disk_t::drop_index_agent_success);
         if (!config_.path.empty()) {
-            metafile_indexes_ = std::make_unique<core::file::file_t>(config_.path / "indexes_METADATA");
+            //if (!directory_exists(fs_, config.path)) {
+            //    create_directory(fs_, config.path);
+            //}
+            metafile_indexes_ = open_file(fs_,
+                                          config_.path / "indexes_METADATA",
+                                          file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE,
+                                          file_lock_type::NO_LOCK);
         }
         trace(log_, "manager_disk finish");
     }
@@ -277,15 +285,15 @@ namespace services::disk {
             msgpack::sbuffer buf;
             msgpack::pack(buf, index);
             auto size = buf.size();
-            metafile_indexes_->append(reinterpret_cast<void*>(&size), sizeof(size));
-            metafile_indexes_->append(buf.data(), buf.size());
+            metafile_indexes_->write(&size, sizeof(size), metafile_indexes_->file_size());
+            metafile_indexes_->write(buf.data(), buf.size(), metafile_indexes_->file_size());
         }
     }
 
     void manager_disk_t::load_indexes_([[maybe_unused]] session_id_t& session,
                                        const actor_zeta::address_t& dispatcher) {
         auto indexes = make_unique(read_indexes_());
-        metafile_indexes_->seek_eof();
+        metafile_indexes_->seek(metafile_indexes_->file_size());
         for (auto& index : indexes) {
             trace(log_, "manager_disk: load_indexes_ : {}", index->name());
             // Require to separate sessions for load and create index
@@ -306,15 +314,18 @@ namespace services::disk {
             constexpr auto count_byte_by_size = sizeof(size_t);
             size_t size;
             __off64_t offset = 0;
+            std::unique_ptr<char[]> size_str(new char[count_byte_by_size]);
             while (true) {
-                auto size_str = metafile_indexes_->read(count_byte_by_size, offset);
-                if (size_str.size() == count_byte_by_size) {
+                metafile_indexes_->seek(offset);
+                auto bytes_read = metafile_indexes_->read(size_str.get(), count_byte_by_size);
+                if (bytes_read == count_byte_by_size) {
                     offset += count_byte_by_size;
-                    std::memcpy(&size, size_str.data(), count_byte_by_size);
-                    auto buf = metafile_indexes_->read(size, offset);
+                    std::memcpy(&size, size_str.get(), count_byte_by_size);
+                    std::unique_ptr<char[]> buf(new char[size]);
+                    metafile_indexes_->read(buf.get(), size, offset);
                     offset += __off64_t(size);
                     msgpack::unpacked msg;
-                    msgpack::unpack(msg, buf.data(), buf.size());
+                    msgpack::unpack(msg, buf.get(), size);
                     auto index = msg.get().as<components::ql::create_index_t>();
                     if (collection.empty() || index.collection_ == collection) {
                         res.push_back(index);
@@ -338,7 +349,7 @@ namespace services::disk {
                                              return index.name() == index_name;
                                          }),
                           indexes.end());
-            metafile_indexes_->clear();
+            metafile_indexes_->truncate(0);
             for (const auto& index : indexes) {
                 write_index_(index);
             }
@@ -354,7 +365,7 @@ namespace services::disk {
                                              return index.collection_ == collection;
                                          }),
                           indexes.end());
-            metafile_indexes_->clear();
+            metafile_indexes_->truncate(0);
             for (const auto& index : indexes) {
                 write_index_(index);
             }
