@@ -1,3 +1,4 @@
+import os
 import pytest
 from otterbrix import Client, DataBase, Collection, TypeIndex
 
@@ -5,7 +6,7 @@ from otterbrix import Client, DataBase, Collection, TypeIndex
 database_name = "TestDatabase_1"
 collection_name = "TestCollection_1"
 
-client = Client("/test_collection_index")
+client = Client(os.getcwd() + "/test_collection_index")
 database = client[database_name]
 
 

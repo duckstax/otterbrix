@@ -8,7 +8,7 @@ namespace services::disk {
 
     using namespace core::b_plus_tree;
 
-    auto key_getter = [](const btree_t::item_data& item) -> btree_t::index_t {
+    auto item_key_getter = [](const btree_t::item_data& item) -> btree_t::index_t {
         msgpack::unpacked msg;
         msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
             return true;
@@ -65,7 +65,7 @@ namespace services::disk {
         : path_(path)
         , resource_(resource)
         , fs_(core::filesystem::local_file_system_t())
-        , db_(std::make_unique<btree_t>(resource, fs_, path, key_getter)) {
+        , db_(std::make_unique<btree_t>(resource, fs_, path, item_key_getter)) {
         db_->load();
     }
 
