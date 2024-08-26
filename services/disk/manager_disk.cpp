@@ -62,9 +62,7 @@ namespace services::disk {
         add_handler(handler_id(index::route::drop), &manager_disk_t::drop_index_agent);
         add_handler(handler_id(index::route::success), &manager_disk_t::drop_index_agent_success);
         if (!config_.path.empty()) {
-            //if (!directory_exists(fs_, config.path)) {
-            //    create_directory(fs_, config.path);
-            //}
+            create_directories(config_.path);
             metafile_indexes_ = open_file(fs_,
                                           config_.path / "indexes_METADATA",
                                           file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE,

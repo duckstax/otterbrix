@@ -23,9 +23,11 @@ namespace otterbrix {
         void operator=(const spaces&) = delete;
 
         static spaces* get_instance();
+        static spaces* get_instance(const std::filesystem::path& path);
 
     protected:
         spaces();
+        spaces(const std::filesystem::path& path);
     };
 
 } // namespace otterbrix

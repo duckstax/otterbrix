@@ -25,10 +25,7 @@ namespace services::disk {
         , db_(resource_)
         , metadata_(nullptr)
         , file_wal_id_(nullptr) {
-        if (!directory_exists(fs_, storage_directory)) {
-            create_directories(storage_directory.parent_path());
-            create_directory(fs_, storage_directory);
-        }
+        create_directories(storage_directory);
         metadata_ = metadata_t::open(fs_, storage_directory / "METADATA");
         file_wal_id_ = open_file(fs_,
                                  storage_directory / "WAL_ID",
@@ -127,10 +124,7 @@ namespace services::disk {
     bool disk_t::append_collection(const database_name_t& database, const collection_name_t& collection) {
         if (db_.find({database, collection}) == db_.end()) {
             path_t storage_directory = path_ / database / collection / base_index_name;
-            if (!directory_exists(fs_, storage_directory)) {
-                create_directories(storage_directory.parent_path());
-                create_directory(fs_, storage_directory);
-            }
+            create_directories(storage_directory);
             db_.emplace(collection_full_name_t{database, collection},
                         new core::b_plus_tree::btree_t(resource_, fs_, storage_directory, key_getter));
         }

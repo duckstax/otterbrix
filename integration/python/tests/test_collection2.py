@@ -5,7 +5,7 @@ from otterbrix import Client, DataBase, Collection
 database_name = "TestDatabase"
 collection_name = "TestCollection"
 
-client = Client() #todo host:port
+client = Client("/test_collection2") #todo host:port
 database = client[database_name]
 collection = database[collection_name]
 

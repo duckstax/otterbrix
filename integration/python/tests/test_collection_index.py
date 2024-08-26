@@ -1,19 +1,11 @@
-import os
 import pytest
-import shutil
 from otterbrix import Client, DataBase, Collection, TypeIndex
 
-if os.path.isdir('./wal'):
-    shutil.rmtree('./wal')
 
-if os.path.isdir('./disk'):
-    shutil.rmtree('./disk')
+database_name = "TestDatabase_1"
+collection_name = "TestCollection_1"
 
-
-database_name = "TestDatabase"
-collection_name = "TestCollection"
-
-client = Client()
+client = Client("/test_collection_index")
 database = client[database_name]
 
 

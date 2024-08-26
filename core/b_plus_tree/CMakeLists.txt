@@ -28,6 +28,7 @@ target_link_libraries(
         CONAN_PKG::msgpack-cxx
         otterbrix::types
         otterbrix::document
+        otterbrix::file
 )
 
 target_include_directories(

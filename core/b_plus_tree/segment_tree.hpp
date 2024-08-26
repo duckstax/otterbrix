@@ -66,7 +66,6 @@ namespace core::b_plus_tree {
     };
 
     // TODO: move memory overflow checks to b_plus_tree
-    // TODO: add string buffer storage for min/max metadata indices
     class segment_tree_t {
         struct block_metadata {
             size_t file_offset;

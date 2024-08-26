@@ -4,6 +4,7 @@
 #include <cstring>
 
 using file_flags = core::filesystem::file_flags;
+using file_lock_type = core::filesystem::file_lock_type;
 
 namespace core::b_plus_tree {
 
@@ -279,10 +280,7 @@ namespace core::b_plus_tree {
         , merge_share_boundary_(max_node_capacity / 2)
         , max_node_capacity_(max_node_capacity) {
         assert(max_node_capacity < MAX_NODE_CAPACITY);
-        if (!directory_exists(fs_, storage_directory_)) {
-            create_directories(storage_directory_.parent_path());
-            create_directory(fs_, storage_directory_);
-        }
+        create_directories(storage_directory_);
     }
 
     btree_t::~btree_t() {
@@ -780,8 +778,7 @@ namespace core::b_plus_tree {
     }
 
     void btree_t::load() {
-        std::filesystem::path file_name = storage_directory_;
-        file_name /= std::filesystem::path(metadata_file_name_);
+        std::filesystem::path file_name = storage_directory_ / std::filesystem::path(metadata_file_name_);
         if (!file_exists(fs_, file_name)) {
             return;
         }

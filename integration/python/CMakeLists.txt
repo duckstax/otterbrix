@@ -23,6 +23,7 @@ set(otterbrix_LIBS
         otterbrix::disk
         otterbrix::locks
         otterbrix::ql
+        otterbrix::b_plus_tree
 )
 
 #SET(PYTHON_EXECUTABLE python3)
