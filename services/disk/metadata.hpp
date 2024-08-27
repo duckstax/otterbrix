@@ -1,7 +1,6 @@
 #pragma once
 #include <boost/filesystem.hpp>
 #include <components/ql/ql_statement.hpp>
-#include <core/file/file.hpp>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -17,7 +16,6 @@ namespace services::disk {
         using databases_t = std::vector<database_name_t>;
         using data_t = std::unordered_map<database_name_t, collections_t>;
         using metadata_ptr = std::unique_ptr<metadata_t>;
-        using file_t = core::file::file_t;
 
     public:
         static metadata_ptr open(core::filesystem::local_file_system_t& fs, const path_t& file_name);

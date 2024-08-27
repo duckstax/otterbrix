@@ -8,7 +8,7 @@
 #include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
 #include <configuration/configuration.hpp>
-#include <core/file/file.hpp>
+#include <core/file/file_system.hpp>
 
 #include "dto.hpp"
 #include "record.hpp"
@@ -20,7 +20,7 @@ namespace services::wal {
     class wal_replicate_t : public actor_zeta::basic_async_actor {
         using session_id_t = components::session::session_id_t;
         using address_t = actor_zeta::address_t;
-        using file_ptr = std::unique_ptr<core::file::file_t>;
+        using file_ptr = std::unique_ptr<core::filesystem::file_handle_t>;
 
     public:
         wal_replicate_t(base_manager_wal_replicate_t* manager,
@@ -64,6 +64,7 @@ namespace services::wal {
         configuration::config_wal config_;
         atomic_id_t id_{0};
         crc32_t last_crc32_{0};
+        core::filesystem::local_file_system_t fs_;
         file_ptr file_;
 
 #ifdef DEV_MODE

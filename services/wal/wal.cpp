@@ -10,6 +10,8 @@
 namespace services::wal {
 
     constexpr static auto wal_name = ".wal";
+    using core::filesystem::file_flags;
+    using core::filesystem::file_lock_type;
 
     bool file_exist_(const std::filesystem::path& path) {
         std::filesystem::file_status s = std::filesystem::file_status{};
@@ -25,7 +27,8 @@ namespace services::wal {
         : actor_zeta::basic_async_actor(manager, "wal")
         , resource_(resource ? resource : manager->resource())
         , log_(log.clone())
-        , config_(std::move(config)) {
+        , config_(std::move(config))
+        , fs_(core::filesystem::local_file_system_t()) {
         add_handler(handler_id(route::load), &wal_replicate_t::load);
         add_handler(handler_id(route::create_database), &wal_replicate_t::create_database);
         add_handler(handler_id(route::drop_database), &wal_replicate_t::drop_database);
@@ -40,8 +43,11 @@ namespace services::wal {
         add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
         if (config_.sync_to_disk) {
             std::filesystem::create_directories(config_.path);
-            file_ = std::make_unique<core::file::file_t>(config_.path / wal_name);
-            file_->seek_eof();
+            file_ = open_file(fs_,
+                              config_.path / wal_name,
+                              file_flags::WRITE | file_flags::READ | file_flags::FILE_CREATE,
+                              file_lock_type::NO_LOCK);
+            file_->seek(file_->file_size());
             init_id();
         }
     }
@@ -53,10 +59,11 @@ namespace services::wal {
         }
     }
 
-    void wal_replicate_t::write_buffer(buffer_t& buffer) { file_->append(buffer.data(), buffer.size()); }
+    void wal_replicate_t::write_buffer(buffer_t& buffer) { file_->write(buffer.data(), buffer.size()); }
 
     void wal_replicate_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
-        file_->read(buffer, size, off64_t(start_index));
+        buffer.resize(size);
+        file_->read(buffer.data(), size, off64_t(start_index));
     }
 
     wal_replicate_t::~wal_replicate_t() { trace(log_, "delete wal_replicate_t"); }
