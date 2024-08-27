@@ -19,6 +19,7 @@ typedef struct config_t {
     string_view_t log_path;
     string_view_t wal_path;
     string_view_t disk_path;
+    string_view_t main_path;
     bool wal_on;
     bool disk_on;
     bool sync_to_disk;
