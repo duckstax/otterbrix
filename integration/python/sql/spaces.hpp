@@ -22,8 +22,8 @@ namespace otterbrix {
         spaces(spaces& other) = delete;
         void operator=(const spaces&) = delete;
 
-        static spaces* get_instance();
-        static spaces* get_instance(const std::filesystem::path& path);
+        static std::shared_ptr<spaces> get_instance();
+        static std::shared_ptr<spaces> get_instance(const std::filesystem::path& path);
 
     protected:
         spaces();

@@ -23,21 +23,8 @@ using namespace core;
 
 PYBIND11_MODULE(otterbrix, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init([]() {
-            auto* spaces = spaces::get_instance();
-            auto dispatcher = spaces->dispatcher();
-            dispatcher->load();
-            auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log, dispatcher);
-        }))
-        .def(py::init([](const py::str& s) {
-            std::string str(s);
-            auto* spaces = spaces::get_instance(str);
-            auto dispatcher = spaces->dispatcher();
-            dispatcher->load();
-            auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log, dispatcher);
-        }))
+        .def(py::init([]() { return new wrapper_client(spaces::get_instance()); }))
+        .def(py::init([](const py::str& s) { return new wrapper_client(spaces::get_instance(std::string(s))); }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)
         .def("execute", &wrapper_client::execute, py::arg("query"));
