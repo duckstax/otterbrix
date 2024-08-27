@@ -5,7 +5,6 @@
 #include <components/log/log.hpp>
 #include <configuration/configuration.hpp>
 #include <core/excutor.hpp>
-#include <core/file/file.hpp>
 
 namespace services::collection {
     class context_collection_t;

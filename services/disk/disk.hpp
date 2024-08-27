@@ -2,8 +2,6 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/ql/ql_statement.hpp>
-
-#include <core/file/file.hpp>
 #include <filesystem>
 #include <wal/base.hpp>
 
