@@ -5,6 +5,10 @@
 
 namespace core::filesystem {
 
+    struct path_hash {
+        size_t operator()(const std::filesystem::path& p) const noexcept { return std::filesystem::hash_value(p); }
+    };
+
     template<class FSC>
     class file_system final : private FSC {
     public:

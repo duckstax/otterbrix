@@ -14,7 +14,7 @@ public class Tests
 
     [Test]
     public void Base() {
-        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig());
+        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.CreateConfig(System.Environment.CurrentDirectory + "/Base"));
         {
             Assert.IsTrue(otterbrix.CreateDatabase("TestDatabase").IsSuccess());
             Assert.IsTrue(otterbrix.CreateCollection("TestDatabase", "TestCollection").IsSuccess());
@@ -147,7 +147,7 @@ public class Tests
 
     [Test]
     public void GroupBy() {
-        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig());
+        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.CreateConfig(System.Environment.CurrentDirectory + "/GroupBy"));
         {
             Assert.IsTrue(otterbrix.CreateDatabase("TestDatabase").IsSuccess());
             Assert.IsTrue(otterbrix.CreateCollection("TestDatabase", "TestCollection").IsSuccess());
@@ -206,7 +206,7 @@ public class Tests
 
     [Test]
     public void InvalidQueries() {
-        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig());
+        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.CreateConfig(System.Environment.CurrentDirectory + "/InvalidQueries"));
         {
             Assert.IsTrue(otterbrix.CreateDatabase("TestDatabase").IsSuccess());
             Assert.IsTrue(otterbrix.CreateCollection("TestDatabase", "TestCollection").IsSuccess());
@@ -227,7 +227,7 @@ public class Tests
         const string collectionName1 = "TestCollection_1";
         const string collectionName2 = "TestCollection_2";
 
-        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.DefaultConfig());
+        OtterbrixWrapper otterbrix = new OtterbrixWrapper(Config.CreateConfig(System.Environment.CurrentDirectory + "/TestJoin"));
         {
             Assert.IsTrue(otterbrix.CreateDatabase(databaseName).IsSuccess());
             Assert.IsTrue(otterbrix.CreateCollection(databaseName, collectionName1).IsSuccess());

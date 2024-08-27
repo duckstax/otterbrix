@@ -14,12 +14,23 @@ namespace otterbrix {
 
     constexpr static auto name_dispatcher = "dispatcher";
 
+    std::unordered_set<std::filesystem::path, core::filesystem::path_hash> base_otterbrix_t::paths_ = {};
+
     base_otterbrix_t::base_otterbrix_t(const configuration::config& config)
-        : scheduler_(new actor_zeta::shared_work(1, 1000))
+        : main_path_(config.main_path)
+        , scheduler_(new actor_zeta::shared_work(1, 1000))
         , scheduler_dispather_(new actor_zeta::shared_work(1, 1000)) {
         log_ = initialization_logger("python", config.log.path.c_str());
         log_.set_level(config.log.level);
         trace(log_, "spaces::spaces()");
+        {
+            std::lock_guard lock(m_);
+            if (paths_.find(main_path_) == paths_.end()) {
+                paths_.insert(main_path_);
+            } else {
+                throw std::runtime_error("otterbrix instance has to have unique directory");
+            }
+        }
 
         ///scheduler_.reset(new actor_zeta::shared_work(1, 1000), actor_zeta::detail::thread_pool_deleter());
 
@@ -101,6 +112,8 @@ namespace otterbrix {
         trace(log_, "delete spaces");
         scheduler_->stop();
         scheduler_dispather_->stop();
+        std::lock_guard lock(m_);
+        paths_.erase(main_path_);
     }
 
 } // namespace otterbrix

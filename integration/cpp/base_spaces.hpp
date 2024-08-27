@@ -5,6 +5,8 @@
 #include <components/log/log.hpp>
 #include <core/excutor.hpp>
 
+#include "core/file/file_system.hpp"
+
 namespace services {
 
     namespace dispatcher {
@@ -40,6 +42,7 @@ namespace otterbrix {
 
     protected:
         explicit base_otterbrix_t(const configuration::config& config);
+        std::filesystem::path main_path_;
         log_t log_;
         actor_zeta::scheduler_ptr scheduler_;
         actor_zeta::scheduler_ptr scheduler_dispather_;
@@ -49,6 +52,10 @@ namespace otterbrix {
         services::wal::manager_wal_ptr manager_wal_;
         services::memory_storage_ptr memory_storage_;
         std::unique_ptr<otterbrix::wrapper_dispatcher_t> wrapper_dispatcher_;
+
+    private:
+        static std::unordered_set<std::filesystem::path, core::filesystem::path_hash> paths_;
+        inline static std::mutex m_;
     };
 
 } // namespace otterbrix
