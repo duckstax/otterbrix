@@ -3,14 +3,11 @@
 #include "local_file_system.hpp"
 #include "virtual_file_system.hpp"
 
-namespace std {
-    template<>
-    struct hash<filesystem::path> {
-        size_t operator()(const filesystem::path& p) const noexcept { return filesystem::hash_value(p); }
-    };
-} // namespace std
-
 namespace core::filesystem {
+
+    struct path_hash {
+        size_t operator()(const std::filesystem::path& p) const noexcept { return std::filesystem::hash_value(p); }
+    };
 
     template<class FSC>
     class file_system final : private FSC {

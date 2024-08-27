@@ -5,6 +5,8 @@
 #include <components/log/log.hpp>
 #include <core/excutor.hpp>
 
+#include "core/file/file_system.hpp"
+
 namespace services {
 
     namespace dispatcher {
@@ -52,7 +54,7 @@ namespace otterbrix {
         std::unique_ptr<otterbrix::wrapper_dispatcher_t> wrapper_dispatcher_;
 
     private:
-        static std::unordered_set<std::filesystem::path> paths_;
+        static std::unordered_set<std::filesystem::path, core::filesystem::path_hash> paths_;
         inline static std::mutex m_;
     };
 

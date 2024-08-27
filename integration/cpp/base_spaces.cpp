@@ -14,7 +14,7 @@ namespace otterbrix {
 
     constexpr static auto name_dispatcher = "dispatcher";
 
-    std::unordered_set<std::filesystem::path> base_otterbrix_t::paths_ = {};
+    std::unordered_set<std::filesystem::path, core::filesystem::path_hash> base_otterbrix_t::paths_ = {};
 
     base_otterbrix_t::base_otterbrix_t(const configuration::config& config)
         : main_path_(config.main_path)
