@@ -3,6 +3,7 @@ project(test_otterbrix)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
+        test_instances.cpp
         test_collection.cpp
         test_collection_ql.cpp
         test_collection_sql.cpp
