@@ -28,6 +28,13 @@ namespace configuration {
         config_disk disk;
 
         static config default_config() { return config(); }
+        static config create_config(const std::filesystem::path& path) {
+            auto res = config();
+            res.disk.path = path / "disk";
+            res.log.path = path / "log";
+            res.wal.path = path / "wal";
+            return std::move(res);
+        }
     };
 
 } // namespace configuration

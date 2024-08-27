@@ -11,16 +11,17 @@ namespace services::disk {
                                            const path_t& path_db,
                                            collection::context_collection_t* collection,
                                            const index_name_t& index_name,
-                                           logical_type compare_type,
                                            log_t& log)
         : actor_zeta::basic_async_actor(manager, index_name)
         , resource_(resource)
         , log_(log.clone())
-        , index_disk_(std::make_unique<index_disk_t>(path_db / "indexes" / collection->name().collection / index_name,
-                                                     compare_type))
+        , index_disk_(std::make_unique<index_disk_t>(path_db / collection->name().database /
+                                                         collection->name().collection / index_name,
+                                                     resource_))
         , collection_(collection) {
         trace(log_, "index_agent_disk::create {}", index_name);
         add_handler(handler_id(index::route::insert), &index_agent_disk_t::insert);
+        add_handler(handler_id(index::route::insert_many), &index_agent_disk_t::insert_many);
         add_handler(handler_id(index::route::remove), &index_agent_disk_t::remove);
         add_handler(handler_id(index::route::find), &index_agent_disk_t::find);
         add_handler(handler_id(index::route::drop), &index_agent_disk_t::drop);
@@ -47,6 +48,19 @@ namespace services::disk {
     void index_agent_disk_t::insert(session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
+        actor_zeta::send(current_message()->sender(),
+                         address(),
+                         index::handler_id(index::route::success),
+                         session,
+                         collection_);
+    }
+
+    void index_agent_disk_t::insert_many(session_id_t& session,
+                                         const std::vector<std::pair<value_t, document_id_t>>& values) {
+        trace(log_, "index_agent_disk_t::insert_many: {}, session: {}", values.size(), session.data());
+        for (const auto& [key, value] : values) {
+            index_disk_->insert(key, value);
+        }
         actor_zeta::send(current_message()->sender(),
                          address(),
                          index::handler_id(index::route::success),

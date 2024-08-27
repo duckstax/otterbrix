@@ -7,14 +7,11 @@
 #include <filesystem>
 #include <memory_resource>
 
-namespace rocksdb {
-    class DB;
-} // namespace rocksdb
+#include "core/b_plus_tree/b_plus_tree.hpp"
 
 namespace services::disk {
 
-    class base_comparator;
-
+    // TODO: add checkpoints to avoid flushing b+tree after each call
     class index_disk_t {
         using document_id_t = components::document::document_id_t;
         using value_t = components::document::value_t;
@@ -23,7 +20,7 @@ namespace services::disk {
     public:
         using result = std::pmr::vector<document_id_t>;
 
-        index_disk_t(const path_t& path, components::types::logical_type compare_type);
+        index_disk_t(const path_t& path, std::pmr::memory_resource* resource);
         ~index_disk_t();
 
         void insert(const value_t& key, const document_id_t& value);
@@ -40,8 +37,9 @@ namespace services::disk {
 
     private:
         std::filesystem::path path_;
-        std::unique_ptr<rocksdb::DB> db_;
-        std::unique_ptr<base_comparator> comparator_;
+        std::pmr::memory_resource* resource_;
+        core::filesystem::local_file_system_t fs_;
+        std::unique_ptr<core::b_plus_tree::btree_t> db_;
     };
 
 } // namespace services::disk

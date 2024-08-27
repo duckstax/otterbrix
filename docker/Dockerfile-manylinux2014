@@ -16,7 +16,6 @@ COPY ./conanfile.txt ./conanfile.txt
 RUN conan install . --build missing  \
     --build fmt \
     --build spdlog  \
-    --build rocksdb  \
     -s build_type=Release
 
 COPY ./integration ./integration

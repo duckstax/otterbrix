@@ -62,7 +62,6 @@ jobs:
           conan install conanfile.txt --build missing  \
           --build fmt \
           --build spdlog  \
-          --build rocksdb  \
           -s build_type=Release
 
 

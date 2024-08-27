@@ -27,6 +27,7 @@ namespace services::wal {
         , config_(std::move(config))
         , log_(log.clone()) {
         trace(log_, "manager_wal_replicate_t");
+        create_directories(config_.path);
         add_handler(handler_id(route::create), &manager_wal_replicate_t::create_wal_worker);
         add_handler(handler_id(route::load), &manager_wal_replicate_t::load);
         add_handler(handler_id(route::create_database), &manager_wal_replicate_t::create_database);

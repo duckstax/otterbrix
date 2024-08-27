@@ -46,7 +46,7 @@ TEST_CASE("python::test_save_load::disk") {
     SECTION("initialization") {
         auto resource = std::pmr::synchronized_pool_resource();
         test_clear_directory(config);
-        services::disk::disk_t disk(config.disk.path);
+        services::disk::disk_t disk(config.disk.path, &resource);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             disk.append_database(db_name);
@@ -56,7 +56,7 @@ TEST_CASE("python::test_save_load::disk") {
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
                     auto doc = gen_doc(int(n_doc), &resource);
                     doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                    disk.save_document(db_name, col_name, get_document_id(doc), doc);
+                    disk.save_document(db_name, col_name, doc);
                 }
             }
         }

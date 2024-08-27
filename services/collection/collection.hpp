@@ -37,11 +37,6 @@ namespace services::collection {
         class executor_t;
     }
 
-    struct pending_index_create {
-        components::ql::create_index_ptr index_ql{nullptr};
-        std::unique_ptr<components::pipeline::context_t> context{nullptr};
-    };
-
     class context_collection_t final {
     public:
         explicit context_collection_t(std::pmr::memory_resource* resource,
@@ -83,8 +78,6 @@ namespace services::collection {
 
         actor_zeta::address_t disk() noexcept { return mdisk_; }
 
-        std::vector<pending_index_create>& pending_indexes() noexcept { return pending_indexes_to_create; }
-
     private:
         std::pmr::memory_resource* resource_;
         cursor_storage_t cursor_storage_;
@@ -99,7 +92,6 @@ namespace services::collection {
         actor_zeta::address_t mdisk_;
         log_t log_;
 
-        std::vector<pending_index_create> pending_indexes_to_create;
         bool dropped_{false};
     };
 

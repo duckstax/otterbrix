@@ -16,7 +16,6 @@ target_link_libraries(
     otterbrix::document
     otterbrix::disk
     otterbrix::test_generaty
-    CONAN_PKG::rocksdb
     CONAN_PKG::boost
     CONAN_PKG::catch2
 )

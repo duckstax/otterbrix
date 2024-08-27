@@ -874,14 +874,13 @@ TEST_CASE("b+tree") {
         REQUIRE(tree.size() == test_size);
 
         // test scan
-        std::vector<std::string> scan_result;
+        std::pmr::vector<std::string> scan_result;
         tree.scan_ascending<std::string>(
             btree_t::index_t(uint64_t(0)),
             btree_t::index_t(uint64_t(test_size)),
             test_size * 2,
             &scan_result,
-            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
-            [](const std::string&) { return true; });
+            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); });
         REQUIRE(scan_result.size() == test_size);
         for (uint64_t j = 0; j < scan_result.size(); j++) {
             auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
@@ -899,8 +898,7 @@ TEST_CASE("b+tree") {
             btree_t::index_t(uint64_t(test_size)),
             test_size * 2,
             &scan_result,
-            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); },
-            [](const std::string&) { return true; });
+            [](void* buf, uint64_t size) { return std::string(static_cast<char*>(buf), size); });
         REQUIRE(scan_result.size() == test_size);
         for (uint64_t j = 0; j < scan_result.size(); j++) {
             auto index = key_getter({data_ptr_t(scan_result[j].data()), scan_result[j].size()});
@@ -1057,15 +1055,13 @@ TEST_CASE("b+tree") {
         REQUIRE(tree.size() == key_num);
 
         {
-            std::vector<uint64_t> scan_result;
+            std::pmr::vector<uint64_t> scan_result;
             scan_result.reserve(key_num);
-            tree.scan_ascending<uint64_t>(
-                std::numeric_limits<btree_t::index_t>::min(),
-                std::numeric_limits<btree_t::index_t>::max(),
-                key_num * 2,
-                &scan_result,
-                [](void* buffer, size_t) { return *reinterpret_cast<uint64_t*>(buffer); },
-                [](uint64_t) { return true; });
+            tree.scan_ascending<uint64_t>(std::numeric_limits<btree_t::index_t>::min(),
+                                          std::numeric_limits<btree_t::index_t>::max(),
+                                          key_num * 2,
+                                          &scan_result,
+                                          [](void* buffer, size_t) { return *reinterpret_cast<uint64_t*>(buffer); });
             REQUIRE(scan_result.size() == key_num);
             for (uint64_t i = 0; i < key_num; i++) {
                 REQUIRE(i == scan_result[i]);

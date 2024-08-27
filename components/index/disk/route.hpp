@@ -9,6 +9,7 @@ namespace services::index {
         create,
         drop,
         insert,
+        insert_many,
         remove,
         find,
         success,

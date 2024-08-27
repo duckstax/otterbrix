@@ -2,7 +2,6 @@ project(collection)
 
 set(${PROJECT_NAME}_SOURCES
         create_index.cpp
-        create_index_utils.cpp
         executor.cpp
 )
 

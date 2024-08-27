@@ -39,9 +39,7 @@ namespace services::wal {
         add_handler(handler_id(route::update_many), &wal_replicate_t::update_many);
         add_handler(handler_id(route::create_index), &wal_replicate_t::create_index);
         if (config_.sync_to_disk) {
-            if (!file_exist_(config_.path)) {
-                std::filesystem::create_directory(config_.path);
-            }
+            std::filesystem::create_directories(config_.path);
             file_ = std::make_unique<core::file::file_t>(config_.path / wal_name);
             file_->seek_eof();
             init_id();

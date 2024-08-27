@@ -236,11 +236,10 @@ namespace otterbrix {
         throw std::runtime_error("wrapper_collection::find");
     }
     */
-    bool
-    wrapper_collection::create_index(const py::list& keys, index_type type, components::types::logical_type compare) {
+    bool wrapper_collection::create_index(const py::list& keys, index_type type) {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
-        components::ql::create_index_t index(database_, name_, name_, type, compare);
+        components::ql::create_index_t index(database_, name_, name_, type);
         for (const auto& key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }

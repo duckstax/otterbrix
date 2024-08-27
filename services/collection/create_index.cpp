@@ -39,14 +39,26 @@ namespace services::collection::executor {
         auto& create_index = sessions::find(collection->sessions(), session, name).get<sessions::create_index_t>();
         components::index::set_disk_agent(collection->index_engine(), create_index.id_index, index_address);
         components::index::insert(collection->index_engine(), create_index.id_index, collection->storage());
-        if (!create_index.is_pending) {
-            actor_zeta::send(create_index.client,
-                             address(),
-                             handler_id(route::execute_plan_finish),
-                             session,
-                             make_cursor(resource_, operation_status_t::success));
+        // TODO: revisit filling index_disk
+        if (index_address != actor_zeta::address_t::empty_address()) {
+            auto* index = components::index::search_index(collection->index_engine(), create_index.id_index);
+            auto range = index->keys();
+            std::vector<std::pair<components::document::value_t, document_id_t>> values;
+            values.reserve(collection->storage().size());
+            for (auto it = range.first; it != range.second; ++it) {
+                const auto& key_tmp = *it;
+                const std::string& key = key_tmp.as_string(); // hack
+                for (const auto& doc : collection->storage()) {
+                    values.emplace_back(doc.second->get_value(key), doc.first);
+                }
+            }
+            actor_zeta::send(index_address, address(), handler_id(index::route::insert_many), session, values);
         }
-        sessions::remove(collection->sessions(), session, name);
+        actor_zeta::send(create_index.client,
+                         address(),
+                         handler_id(route::execute_plan_finish),
+                         session,
+                         make_cursor(resource_, operation_status_t::success));
     }
 
     void executor_t::create_index_finish_index_exist(const session_id_t& session,
@@ -54,14 +66,12 @@ namespace services::collection::executor {
                                                      context_collection_t* collection) {
         debug(log_, "collection::create_index_finish_index_exist");
         auto& create_index = sessions::find(collection->sessions(), session, name).get<sessions::create_index_t>();
-        if (!create_index.is_pending) {
-            actor_zeta::send(
-                create_index.client,
-                address(),
-                handler_id(route::execute_plan_finish),
-                session,
-                make_cursor(resource_, error_code_t::index_create_fail, "index with name : " + name + " exist"));
-        }
+        actor_zeta::send(
+            create_index.client,
+            address(),
+            handler_id(route::execute_plan_finish),
+            session,
+            make_cursor(resource_, error_code_t::index_create_fail, "index with name : " + name + " exist"));
         sessions::remove(collection->sessions(), session, name);
     }
 

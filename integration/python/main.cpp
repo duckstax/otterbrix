@@ -23,13 +23,8 @@ using namespace core;
 
 PYBIND11_MODULE(otterbrix, m) {
     py::class_<wrapper_client>(m, "Client")
-        .def(py::init([]() {
-            auto* spaces = spaces::get_instance();
-            auto dispatcher = spaces->dispatcher();
-            dispatcher->load();
-            auto log = spaces::get_instance()->get_log().clone();
-            return new wrapper_client(log, dispatcher);
-        }))
+        .def(py::init([]() { return new wrapper_client(spaces::get_instance()); }))
+        .def(py::init([](const py::str& s) { return new wrapper_client(spaces::get_instance(std::string(s))); }))
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)
         .def("execute", &wrapper_client::execute, py::arg("query"));
@@ -45,21 +40,6 @@ PYBIND11_MODULE(otterbrix, m) {
         .value("MULTIKEY", index_type::multikey)
         .value("HASHED", index_type::hashed)
         .value("WILDCARD", index_type::wildcard)
-        .export_values();
-
-    py::enum_<type>(m, "CompareIndex")
-        .value("STR", type::str)
-        .value("INT8", type::int8)
-        .value("INT16", type::int16)
-        .value("INT32", type::int32)
-        .value("INT64", type::int64)
-        .value("UINT8", type::uint8)
-        .value("UINT16", type::uint16)
-        .value("UINT32", type::uint32)
-        .value("UINT64", type::uint64)
-        .value("FLOAT32", type::float32)
-        .value("FLOAT64", type::float64)
-        .value("BOOL8", type::bool8)
         .export_values();
 
     py::class_<wrapper_collection, boost::intrusive_ptr<wrapper_collection>>(m, "Collection")
@@ -84,7 +64,7 @@ PYBIND11_MODULE(otterbrix, m) {
         .def("delete_one", &wrapper_collection::delete_one, py::arg("filter") = py::dict())
         .def("delete_many", &wrapper_collection::delete_many, py::arg("filter") = py::dict())
         .def("drop", &wrapper_collection::drop)
-        .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"), py::arg("compare"))
+        .def("create_index", &wrapper_collection::create_index, py::arg("keys"), py::arg("type"))
         ///.def("aggregate", &wrapper_collection::aggregate, py::arg("pipeline") = py::sequence())
         ;
 
