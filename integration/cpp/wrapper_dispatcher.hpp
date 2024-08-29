@@ -17,6 +17,7 @@
 #include <components/ql/index.hpp>
 #include <components/ql/statements.hpp>
 #include <components/session/session.hpp>
+#include <integration/cpp/impl/session_blocker.hpp>
 
 namespace otterbrix {
 
@@ -82,13 +83,13 @@ namespace otterbrix {
 
     private:
         /// async method
-        auto load_finish() -> void;
+        auto load_finish(const session_id_t& session) -> void;
         auto execute_ql_finish(const session_id_t& session, components::cursor::cursor_t_ptr cursor) -> void;
         auto size_finish(const session_id_t& session, size_t size) -> void;
 
-        void init();
-        void wait();
-        void notify();
+        void init(const session_id_t& session);
+        void wait(const session_id_t& session);
+        void notify(const session_id_t& session);
 
         template<typename Tql>
         auto send_ql(const session_id_t& session, Tql& ql, std::string_view title, uint64_t handle)
@@ -103,7 +104,7 @@ namespace otterbrix {
         std::mutex output_mtx_;
         spin_lock input_mtx_;
         std::condition_variable cv_;
-        session_id_t input_session_;
+        impl::session_block_t blocker_;
         components::cursor::cursor_t_ptr cursor_store_;
         size_t size_store_;
         bool bool_store_;

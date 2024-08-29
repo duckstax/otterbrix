@@ -63,7 +63,8 @@ namespace services::dispatcher {
         if ((*result).empty()) {
             actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
-                             core::handler_id(core::route::load_finish));
+                             core::handler_id(core::route::load_finish),
+                             session);
             remove_session(session_to_address_, session);
             load_result_.clear();
         } else {
@@ -96,7 +97,8 @@ namespace services::dispatcher {
             trace(log_, "dispatcher_t::load_from_wal_result - empty records_");
             actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
-                             core::handler_id(core::route::load_finish));
+                             core::handler_id(core::route::load_finish),
+                             session);
             remove_session(session_to_address_, session);
             return;
         }
@@ -514,7 +516,8 @@ namespace services::dispatcher {
             if (--load_count_answers_ == 0) {
                 actor_zeta::send(find_session(session_to_address_, load_session_).address(),
                                  dispatcher_t::address(),
-                                 core::handler_id(core::route::load_finish));
+                                 core::handler_id(core::route::load_finish),
+                                 load_session_);
                 remove_session(session_to_address_, load_session_);
             }
             return true;

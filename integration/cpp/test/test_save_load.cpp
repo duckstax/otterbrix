@@ -40,7 +40,7 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
     return cur;
 }
 
-TEST_CASE("python::test_save_load::disk") {
+TEST_CASE("integration::cpp::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
 
     SECTION("initialization") {
@@ -84,7 +84,7 @@ TEST_CASE("python::test_save_load::disk") {
     }
 }
 
-TEST_CASE("python::test_save_load::disk+wal") {
+TEST_CASE("integration::cpp::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
 
     SECTION("initialization") {
