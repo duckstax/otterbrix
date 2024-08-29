@@ -297,7 +297,7 @@ namespace otterbrix {
 
     void wrapper_dispatcher_t::notify(const session_id_t& session) {
         blocker_.set_value(session, true);
-        cv_.notify_all();
+        cv_.notify_one();
     }
 
     cursor_t_ptr wrapper_dispatcher_t::send_ql_new(const session_id_t& session, components::ql::ql_statement_t* ql) {
