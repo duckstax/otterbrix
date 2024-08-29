@@ -6,7 +6,7 @@
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
 constexpr size_t doc_num = 1000;
-constexpr size_t num_threads = 1;
+constexpr size_t num_threads = 4;
 constexpr size_t work_per_thread = doc_num / num_threads;
 
 TEST_CASE("integration::cpp::test_otterbrix_multithread") {
