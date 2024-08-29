@@ -1,7 +1,6 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
-#include <integration/cpp/connector.hpp>
-#include <variant>
+#include <integration/cpp/connection.hpp>
 
 static const database_name_t database_name = "TestDatabase";
 static const collection_name_t collection_name = "TestCollection";
@@ -113,10 +112,10 @@ TEST_CASE("integration::cpp::test_connectors") {
         // REQUIRE can behave wierdly with threading, but storing result and checking it later works fine
         std::array<bool, num_threads> results;
 
-        //std::array<std::unique_ptr<otterbrix::connector_t>, num_threads> connectors;
-        //for (size_t i = 0; i < num_threads; i++) {
-        //    connectors[i] = std::make_unique<otterbrix::connector_t>(otterbrix);
-        //}
+        std::array<std::unique_ptr<otterbrix::connection_t>, num_threads> connectors;
+        for (size_t i = 0; i < num_threads; i++) {
+            connectors[i] = std::make_unique<otterbrix::connection_t>(otterbrix);
+        }
 
         std::function append_func = [&](size_t id) {
             size_t start = work_per_thread * id;
@@ -128,9 +127,7 @@ TEST_CASE("integration::cpp::test_connectors") {
                 query << "('" << gen_id(num + 1, otterbrix->dispatcher()->resource()) << "', "
                       << "'Name " << num << "', " << num << ")" << (num == end - 1 ? ";" : ", ");
             }
-            otterbrix::connector_t connector(otterbrix);
-            auto c = connector.execute(query.str());
-            //auto c = connectors[id]->execute(query.str());
+            auto c = connectors[id]->execute(query.str());
             //REQUIRE(c->size() == work_per_thread);
             results[id] = c->size() == work_per_thread;
         };

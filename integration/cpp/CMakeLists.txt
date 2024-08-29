@@ -5,7 +5,7 @@ set(${PROJECT_NAME}_sources
       base_spaces.cpp
       wrapper_dispatcher.cpp
       otterbrix.cpp
-      connector.cpp
+      connection.cpp
       impl/session_blocker.cpp
 )
 
