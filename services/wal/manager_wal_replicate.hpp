@@ -54,18 +54,18 @@ namespace services::wal {
                                 log_t&);
         ~manager_wal_replicate_t() final;
         void create_wal_worker();
-        void load(session_id_t& session, services::wal::id_t wal_id);
-        void create_database(session_id_t& session, components::ql::create_database_t& data);
-        void drop_database(session_id_t& session, components::ql::drop_database_t& data);
-        void create_collection(session_id_t& session, components::ql::create_collection_t& data);
-        void drop_collection(session_id_t& session, components::ql::drop_collection_t& data);
-        void insert_one(session_id_t& session, components::ql::insert_one_t& data);
-        void insert_many(session_id_t& session, components::ql::insert_many_t& data);
-        void delete_one(session_id_t& session, components::ql::delete_one_t& data);
-        void delete_many(session_id_t& session, components::ql::delete_many_t& data);
-        void update_one(session_id_t& session, components::ql::update_one_t& data);
-        void update_many(session_id_t& session, components::ql::update_many_t& data);
-        void create_index(session_id_t& session, components::ql::create_index_t& data);
+        void load(const session_id_t& session, services::wal::id_t wal_id);
+        void create_database(const session_id_t& session, components::ql::create_database_t& data);
+        void drop_database(const session_id_t& session, components::ql::drop_database_t& data);
+        void create_collection(const session_id_t& session, components::ql::create_collection_t& data);
+        void drop_collection(const session_id_t& session, components::ql::drop_collection_t& data);
+        void insert_one(const session_id_t& session, components::ql::insert_one_t& data);
+        void insert_many(const session_id_t& session, components::ql::insert_many_t& data);
+        void delete_one(const session_id_t& session, components::ql::delete_one_t& data);
+        void delete_many(const session_id_t& session, components::ql::delete_many_t& data);
+        void update_one(const session_id_t& session, components::ql::update_one_t& data);
+        void update_many(const session_id_t& session, components::ql::update_many_t& data);
+        void create_index(const session_id_t& session, components::ql::create_index_t& data);
 
     private:
         actor_zeta::address_t manager_disk_ = actor_zeta::address_t::empty_address();
@@ -84,7 +84,7 @@ namespace services::wal {
         manager_wal_replicate_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw, log_t&);
 
         template<class T>
-        auto always_success(session_id_t& session, T&&) -> void {
+        auto always_success(const session_id_t& session, T&&) -> void {
             actor_zeta::send(current_message()->sender(),
                              address(),
                              services::wal::handler_id(services::wal::route::success),

@@ -32,7 +32,7 @@ namespace services::disk {
     const collection_name_t& index_agent_disk_t::collection_name() const { return collection_->name().collection; }
     collection::context_collection_t* index_agent_disk_t::collection() const { return collection_; }
 
-    void index_agent_disk_t::drop(session_id_t& session) {
+    void index_agent_disk_t::drop(const session_id_t& session) {
         trace(log_, "index_agent_disk_t::drop, session: {}", session.data());
         index_disk_->drop();
         is_dropped_ = true;
@@ -45,7 +45,7 @@ namespace services::disk {
 
     bool index_agent_disk_t::is_dropped() const { return is_dropped_; }
 
-    void index_agent_disk_t::insert(session_id_t& session, const value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::insert(const session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::insert {}, session: {}", value.to_string(), session.data());
         index_disk_->insert(key, value);
         actor_zeta::send(current_message()->sender(),
@@ -55,7 +55,7 @@ namespace services::disk {
                          collection_);
     }
 
-    void index_agent_disk_t::insert_many(session_id_t& session,
+    void index_agent_disk_t::insert_many(const session_id_t& session,
                                          const std::vector<std::pair<value_t, document_id_t>>& values) {
         trace(log_, "index_agent_disk_t::insert_many: {}, session: {}", values.size(), session.data());
         for (const auto& [key, value] : values) {
@@ -68,7 +68,7 @@ namespace services::disk {
                          collection_);
     }
 
-    void index_agent_disk_t::remove(session_id_t& session, const value_t& key, const document_id_t& value) {
+    void index_agent_disk_t::remove(const session_id_t& session, const value_t& key, const document_id_t& value) {
         trace(log_, "index_agent_disk_t::remove {}, session: {}", value.to_string(), session.data());
         index_disk_->remove(key, value);
         actor_zeta::send(current_message()->sender(),
@@ -78,7 +78,7 @@ namespace services::disk {
                          collection_);
     }
 
-    void index_agent_disk_t::find(session_id_t& session,
+    void index_agent_disk_t::find(const session_id_t& session,
                                   const value_t& value,
                                   components::expressions::compare_type compare) {
         using components::expressions::compare_type;

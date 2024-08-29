@@ -26,7 +26,7 @@ namespace services::collection::executor {
                           components::ql::storage_parameters parameters,
                           services::context_storage_t&& context_storage);
 
-        void create_documents(session_id_t& session,
+        void create_documents(const session_id_t& session,
                               context_collection_t* collection,
                               const std::pmr::vector<document_ptr>& documents);
 

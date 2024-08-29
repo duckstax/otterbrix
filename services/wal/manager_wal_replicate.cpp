@@ -67,7 +67,7 @@ namespace services::wal {
         }
     }
 
-    void manager_wal_replicate_t::load(session_id_t& session, services::wal::id_t wal_id) {
+    void manager_wal_replicate_t::load(const session_id_t& session, services::wal::id_t wal_id) {
         trace(log_, "manager_wal_replicate_t::load, id: {}", wal_id);
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -77,7 +77,8 @@ namespace services::wal {
                          wal_id);
     }
 
-    void manager_wal_replicate_t::create_database(session_id_t& session, components::ql::create_database_t& data) {
+    void manager_wal_replicate_t::create_database(const session_id_t& session,
+                                                  components::ql::create_database_t& data) {
         trace(log_, "manager_wal_replicate_t::create_database {}", data.database_);
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -87,7 +88,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::drop_database(session_id_t& session, components::ql::drop_database_t& data) {
+    void manager_wal_replicate_t::drop_database(const session_id_t& session, components::ql::drop_database_t& data) {
         trace(log_, "manager_wal_replicate_t::drop_database {}", data.database_);
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -97,7 +98,8 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::create_collection(session_id_t& session, components::ql::create_collection_t& data) {
+    void manager_wal_replicate_t::create_collection(const session_id_t& session,
+                                                    components::ql::create_collection_t& data) {
         trace(log_, "manager_wal_replicate_t::create_collection {}::{}", data.database_, data.collection_);
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -107,7 +109,8 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::drop_collection(session_id_t& session, components::ql::drop_collection_t& data) {
+    void manager_wal_replicate_t::drop_collection(const session_id_t& session,
+                                                  components::ql::drop_collection_t& data) {
         trace(log_, "manager_wal_replicate_t::drop_collection {}::{}", data.database_, data.collection_);
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -117,7 +120,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::insert_one(session_id_t& session, components::ql::insert_one_t& data) {
+    void manager_wal_replicate_t::insert_one(const session_id_t& session, components::ql::insert_one_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_one");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -127,7 +130,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::insert_many(session_id_t& session, components::ql::insert_many_t& data) {
+    void manager_wal_replicate_t::insert_many(const session_id_t& session, components::ql::insert_many_t& data) {
         trace(log_, "manager_wal_replicate_t::insert_many");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -137,7 +140,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::delete_one(session_id_t& session, components::ql::delete_one_t& data) {
+    void manager_wal_replicate_t::delete_one(const session_id_t& session, components::ql::delete_one_t& data) {
         trace(log_, "manager_wal_replicate_t::delete_one");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -147,7 +150,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::delete_many(session_id_t& session, components::ql::delete_many_t& data) {
+    void manager_wal_replicate_t::delete_many(const session_id_t& session, components::ql::delete_many_t& data) {
         trace(log_, "manager_wal_replicate_t::delete_many");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -157,7 +160,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::update_one(session_id_t& session, components::ql::update_one_t& data) {
+    void manager_wal_replicate_t::update_one(const session_id_t& session, components::ql::update_one_t& data) {
         trace(log_, "manager_wal_replicate_t::update_one");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -167,7 +170,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::update_many(session_id_t& session, components::ql::update_many_t& data) {
+    void manager_wal_replicate_t::update_many(const session_id_t& session, components::ql::update_many_t& data) {
         trace(log_, "manager_wal_replicate_t::update_many");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),
@@ -177,7 +180,7 @@ namespace services::wal {
                          std::move(data));
     }
 
-    void manager_wal_replicate_t::create_index(session_id_t& session, components::ql::create_index_t& data) {
+    void manager_wal_replicate_t::create_index(const session_id_t& session, components::ql::create_index_t& data) {
         trace(log_, "manager_wal_replicate_t::create_index");
         actor_zeta::send(dispatchers_[0]->address(),
                          address(),

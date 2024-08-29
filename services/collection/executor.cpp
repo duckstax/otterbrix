@@ -53,7 +53,7 @@ namespace services::collection::executor {
         traverse_plan_(session, std::move(plan), std::move(parameters), std::move(context_storage));
     }
 
-    void executor_t::create_documents(components::session::session_id_t& session,
+    void executor_t::create_documents(const components::session::session_id_t& session,
                                       context_collection_t* collection,
                                       const std::pmr::vector<document_ptr>& documents) {
         trace(log_,
@@ -269,7 +269,9 @@ namespace services::collection::executor {
     void executor_t::insert_document_impl(const components::session::session_id_t& session,
                                           context_collection_t* collection,
                                           operators::operator_ptr plan) {
-        trace(log_, "executor::execute_plan : operators::operator_type::insert");
+        trace(log_,
+              "executor::execute_plan : operators::operator_type::insert {}",
+              plan->output() ? plan->output()->documents().size() : 0);
         actor_zeta::send(collection->disk(),
                          address(),
                          disk::handler_id(disk::route::write_documents),

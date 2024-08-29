@@ -38,32 +38,33 @@ namespace otterbrix {
         wait();
     }
 
-    auto wrapper_dispatcher_t::create_database(session_id_t& session, const database_name_t& database) -> cursor_t_ptr {
+    auto wrapper_dispatcher_t::create_database(const session_id_t& session, const database_name_t& database)
+        -> cursor_t_ptr {
         components::ql::create_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_database(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::drop_database(const components::session::session_id_t& session,
                                              const database_name_t& database) -> cursor_t_ptr {
         components::ql::drop_database_t ql{database};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::create_collection(session_id_t& session,
+    auto wrapper_dispatcher_t::create_collection(const session_id_t& session,
                                                  const database_name_t& database,
                                                  const collection_name_t& collection) -> cursor_t_ptr {
         components::ql::create_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::drop_collection(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::drop_collection(const components::session::session_id_t& session,
                                                const database_name_t& database,
                                                const collection_name_t& collection) -> cursor_t_ptr {
         components::ql::drop_collection_t ql{database, collection};
         return send_ql_new(session, &ql);
     }
 
-    auto wrapper_dispatcher_t::insert_one(session_id_t& session,
+    auto wrapper_dispatcher_t::insert_one(const session_id_t& session,
                                           const database_name_t& database,
                                           const collection_name_t& collection,
                                           document_ptr& document) -> cursor_t_ptr {
@@ -79,7 +80,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::insert_many(session_id_t& session,
+    auto wrapper_dispatcher_t::insert_many(const session_id_t& session,
                                            const database_name_t& database,
                                            const collection_name_t& collection,
                                            std::pmr::vector<document_ptr>& documents) -> cursor_t_ptr {
@@ -95,7 +96,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::find(session_id_t& session, components::ql::aggregate_statement_raw_ptr condition)
+    auto wrapper_dispatcher_t::find(const session_id_t& session, components::ql::aggregate_statement_raw_ptr condition)
         -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::find session: {}, database: {} collection: {} ",
@@ -106,7 +107,7 @@ namespace otterbrix {
         return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::find_one(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::find_one(const components::session::session_id_t& session,
                                         components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::find_one session: {}, database: {} collection: {} ",
@@ -117,7 +118,7 @@ namespace otterbrix {
         return send_ql_new(session, ql.get());
     }
 
-    auto wrapper_dispatcher_t::delete_one(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::delete_one(const components::session::session_id_t& session,
                                           components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::delete_one session: {}, database: {} collection: {} ",
@@ -136,7 +137,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::delete_many(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::delete_many(const components::session::session_id_t& session,
                                            components::ql::aggregate_statement_raw_ptr condition) -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::delete_many session: {}, database: {} collection: {} ",
@@ -155,7 +156,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::update_one(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::update_one(const components::session::session_id_t& session,
                                           components::ql::aggregate_statement_raw_ptr condition,
                                           document_ptr update,
                                           bool upsert) -> cursor_t_ptr {
@@ -176,7 +177,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::update_many(components::session::session_id_t& session,
+    auto wrapper_dispatcher_t::update_many(const components::session::session_id_t& session,
                                            components::ql::aggregate_statement_raw_ptr condition,
                                            document_ptr update,
                                            bool upsert) -> cursor_t_ptr {
@@ -197,7 +198,7 @@ namespace otterbrix {
         return std::move(cursor_store_);
     }
 
-    auto wrapper_dispatcher_t::size(session_id_t& session,
+    auto wrapper_dispatcher_t::size(const session_id_t& session,
                                     const database_name_t& database,
                                     const collection_name_t& collection) -> size_t {
         trace(log_, "wrapper_dispatcher_t::size session: {}, collection name : {} ", session.data(), collection);
@@ -212,19 +213,19 @@ namespace otterbrix {
         return std::move(size_store_);
     }
 
-    auto wrapper_dispatcher_t::create_index(session_id_t& session, components::ql::create_index_t* ql)
+    auto wrapper_dispatcher_t::create_index(const session_id_t& session, components::ql::create_index_t* ql)
         -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
         return send_ql_new(session, ql);
     }
 
-    auto wrapper_dispatcher_t::drop_index(session_id_t& session, components::ql::drop_index_t* ql)
+    auto wrapper_dispatcher_t::drop_index(const session_id_t& session, components::ql::drop_index_t* ql)
         -> components::cursor::cursor_t_ptr {
         trace(log_, "wrapper_dispatcher_t::create_index session: {}, index: {}", session.data(), ql->name());
         return send_ql_new(session, ql);
     }
 
-    auto wrapper_dispatcher_t::execute_ql(session_id_t& session, components::ql::variant_statement_t& query)
+    auto wrapper_dispatcher_t::execute_ql(const session_id_t& session, components::ql::variant_statement_t& query)
         -> cursor_t_ptr {
         using namespace components::ql;
 
@@ -242,7 +243,7 @@ namespace otterbrix {
             query);
     }
 
-    cursor_t_ptr wrapper_dispatcher_t::execute_sql(components::session::session_id_t& session,
+    cursor_t_ptr wrapper_dispatcher_t::execute_sql(const components::session::session_id_t& session,
                                                    const std::string& query) {
         trace(log_, "wrapper_dispatcher_t::execute sql session: {}", session.data());
         auto parse_result = components::sql::parse(resource(), query);
@@ -273,14 +274,14 @@ namespace otterbrix {
         notify();
     }
 
-    void wrapper_dispatcher_t::execute_ql_finish(session_id_t& session, cursor_t_ptr cursor) {
+    void wrapper_dispatcher_t::execute_ql_finish(const session_id_t& session, cursor_t_ptr cursor) {
         trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), cursor->is_success());
         cursor_store_ = cursor;
         input_session_ = session;
         notify();
     }
 
-    auto wrapper_dispatcher_t::size_finish(session_id_t& session, size_t size) -> void {
+    auto wrapper_dispatcher_t::size_finish(const session_id_t& session, size_t size) -> void {
         trace(log_, "wrapper_dispatcher_t::size_finish session: {} {}", session.data(), size);
         size_store_ = size;
         input_session_ = session;
@@ -299,7 +300,7 @@ namespace otterbrix {
         cv_.notify_all();
     }
 
-    cursor_t_ptr wrapper_dispatcher_t::send_ql_new(session_id_t& session, components::ql::ql_statement_t* ql) {
+    cursor_t_ptr wrapper_dispatcher_t::send_ql_new(const session_id_t& session, components::ql::ql_statement_t* ql) {
         trace(log_, "wrapper_dispatcher_t::send_ql session: {}, {} ", session.data(), ql->to_string());
         init();
         actor_zeta::send(manager_dispatcher_,
@@ -317,7 +318,7 @@ namespace otterbrix {
     }
 
     template<typename Tql>
-    auto wrapper_dispatcher_t::send_ql(session_id_t& session, Tql& ql, std::string_view title, uint64_t handle)
+    auto wrapper_dispatcher_t::send_ql(const session_id_t& session, Tql& ql, std::string_view title, uint64_t handle)
         -> cursor_t_ptr {
         trace(log_,
               "wrapper_dispatcher_t::{} session: {}, database: {} collection: {} ",
