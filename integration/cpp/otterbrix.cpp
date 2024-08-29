@@ -4,8 +4,9 @@ namespace {
     static const auto system_database = "system_database";
     static const auto system_collection = "system_collection";
 
-    auto base_make_otterbrix(configuration::config cfg) -> otterbrix::otterbrix_ptr {
-        auto* ptr = new otterbrix::otterbrix_t(configuration::config::default_config());
+    auto base_make_otterbrix(configuration::config cfg = configuration::config::default_config())
+        -> otterbrix::otterbrix_ptr {
+        auto* ptr = new otterbrix::otterbrix_t(cfg);
         auto id = otterbrix::session_id_t();
         ptr->dispatcher()->create_database(id, system_database);
         auto id_1 = otterbrix::session_id_t();
@@ -27,7 +28,7 @@ namespace otterbrix {
 
     auto make_otterbrix() -> otterbrix_ptr { return base_make_otterbrix(configuration::config::default_config()); }
 
-    auto make_otterbrix(configuration::config cfg) -> otterbrix_ptr { return base_make_otterbrix(cfg); }
+    auto make_otterbrix(configuration::config cfg) -> otterbrix_ptr { return base_make_otterbrix(std::move(cfg)); }
 
     auto execute_sql(const otterbrix_ptr& ptr, const std::string& query) -> components::cursor::cursor_t_ptr {
         return base_execute_sql(ptr.get(), query);
