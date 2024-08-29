@@ -1,15 +1,13 @@
 #include "wrapper_cursor.hpp"
 #include "convert.hpp"
-#include "integration/cpp/route.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-wrapper_cursor::wrapper_cursor(components::session::session_id_t session, wrapper_cursor::pointer cursor)
-    : session_(session)
-    , ptr_(cursor)
-    , dispatcher_(actor_zeta::address_t::empty_address()) {}
+wrapper_cursor::wrapper_cursor(pointer cursor, otterbrix::wrapper_dispatcher_t* dispatcher)
+    : ptr_(std::move(cursor))
+    , dispatcher_(dispatcher) {}
 void wrapper_cursor::close() { close_ = true; }
 
 bool wrapper_cursor::has_next() { return ptr_->has_next(); }
@@ -95,6 +93,10 @@ wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
         ptr_->sort(services::storage::sort::sorter_t(py::str(sorter).cast<std::string>(), to_order(order)));
     }
     return *this;
+}
+
+void wrapper_cursor::execute(std::string& query) {
+    ptr_ = dispatcher_->execute_sql(components::session::session_id_t(), query);
 }
 
 py::object wrapper_cursor::get_(const std::string& key) const { return from_object(ptr_->get(), key); }

@@ -23,16 +23,18 @@ namespace py = pybind11;
 namespace otterbrix {
     class PYBIND11_EXPORT wrapper_client final : public boost::intrusive_ref_counter<wrapper_client> {
     public:
-        wrapper_client(std::shared_ptr<spaces> space);
+        wrapper_client(spaces_ptr space);
         ~wrapper_client();
         wrapper_database_ptr get_or_create(const std::string& name);
         auto database_names() -> py::list;
         auto execute(const std::string& query) -> wrapper_cursor_ptr;
 
     private:
+        friend class wrapper_connection;
+
         std::unordered_map<std::string, wrapper_database_ptr> names_;
         const std::string name_;
-        std::shared_ptr<spaces> ptr_;
+        spaces_ptr ptr_;
         mutable log_t log_;
     };
 } // namespace otterbrix

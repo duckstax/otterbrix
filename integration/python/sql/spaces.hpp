@@ -17,17 +17,21 @@
 
 namespace otterbrix {
 
-    class PYBIND11_EXPORT spaces final : public base_otterbrix_t {
+    class PYBIND11_EXPORT spaces final
+        : public base_otterbrix_t
+        , public boost::intrusive_ref_counter<spaces> {
     public:
         spaces(spaces& other) = delete;
         void operator=(const spaces&) = delete;
 
-        static std::shared_ptr<spaces> get_instance();
-        static std::shared_ptr<spaces> get_instance(const std::filesystem::path& path);
+        static boost::intrusive_ptr<spaces> get_instance();
+        static boost::intrusive_ptr<spaces> get_instance(const std::filesystem::path& path);
 
     protected:
         spaces();
         spaces(const std::filesystem::path& path);
     };
+
+    using spaces_ptr = boost::intrusive_ptr<spaces>;
 
 } // namespace otterbrix
