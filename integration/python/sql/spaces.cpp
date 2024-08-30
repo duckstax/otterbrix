@@ -2,11 +2,9 @@
 
 namespace otterbrix {
 
-    std::shared_ptr<spaces> spaces::get_instance() { return std::shared_ptr<spaces>{new spaces()}; }
+    spaces_ptr spaces::get_instance() { return new spaces(); }
 
-    std::shared_ptr<spaces> spaces::get_instance(const std::filesystem::path& path) {
-        return std::shared_ptr<spaces>{new spaces(path)};
-    }
+    spaces_ptr spaces::get_instance(const std::filesystem::path& path) { return new spaces(path); }
 
     spaces::spaces()
         : base_otterbrix_t(configuration::config::default_config()) {}

@@ -48,37 +48,37 @@ namespace services::disk {
 
         void create_agent();
 
-        auto load(session_id_t& session) -> void;
-        auto load_indexes(session_id_t& session) -> void;
+        auto load(const session_id_t& session) -> void;
+        auto load_indexes(const session_id_t& session) -> void;
 
-        auto append_database(session_id_t& session, const database_name_t& database) -> void;
-        auto remove_database(session_id_t& session, const database_name_t& database) -> void;
+        auto append_database(const session_id_t& session, const database_name_t& database) -> void;
+        auto remove_database(const session_id_t& session, const database_name_t& database) -> void;
 
-        auto append_collection(session_id_t& session,
+        auto append_collection(const session_id_t& session,
                                const database_name_t& database,
                                const collection_name_t& collection) -> void;
-        auto remove_collection(session_id_t& session,
+        auto remove_collection(const session_id_t& session,
                                const database_name_t& database,
                                const collection_name_t& collection) -> void;
 
-        auto write_documents(session_id_t& session,
+        auto write_documents(const session_id_t& session,
                              const database_name_t& database,
                              const collection_name_t& collection,
                              const std::pmr::vector<document_ptr>& documents) -> void;
-        auto remove_documents(session_id_t& session,
+        auto remove_documents(const session_id_t& session,
                               const database_name_t& database,
                               const collection_name_t& collection,
                               const std::pmr::vector<document_id_t>& documents) -> void;
 
-        auto flush(session_id_t& session, wal::id_t wal_id) -> void;
+        auto flush(const session_id_t& session, wal::id_t wal_id) -> void;
 
-        void create_index_agent(session_id_t& session,
+        void create_index_agent(const session_id_t& session,
                                 const components::ql::create_index_t& index,
                                 services::collection::context_collection_t* collection);
-        void drop_index_agent(session_id_t& session,
+        void drop_index_agent(const session_id_t& session,
                               const index_name_t& index_name,
                               services::collection::context_collection_t* collection);
-        void drop_index_agent_success(session_id_t& session);
+        void drop_index_agent_success(const session_id_t& session);
 
     private:
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
@@ -100,7 +100,7 @@ namespace services::disk {
 
         auto agent() -> actor_zeta::address_t;
         void write_index_(const components::ql::create_index_t& index);
-        void load_indexes_(session_id_t& session, const actor_zeta::address_t& dispatcher);
+        void load_indexes_(const session_id_t& session, const actor_zeta::address_t& dispatcher);
         std::vector<components::ql::create_index_t> read_indexes_(const collection_name_t& collection_name) const;
         std::vector<components::ql::create_index_t> read_indexes_() const;
         void remove_index_(const index_name_t& index_name);
@@ -111,8 +111,8 @@ namespace services::disk {
     public:
         manager_disk_empty_t(std::pmr::memory_resource*, actor_zeta::scheduler_raw);
 
-        auto load(session_id_t& session) -> void;
-        void create_index_agent(session_id_t& session,
+        auto load(const session_id_t& session) -> void;
+        void create_index_agent(const session_id_t& session,
                                 const components::ql::create_index_t& index,
                                 services::collection::context_collection_t* collection);
 

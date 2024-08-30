@@ -37,13 +37,13 @@ namespace services::disk {
         const collection_name_t& collection_name() const;
         collection::context_collection_t* collection() const;
 
-        void drop(session_id_t& session);
+        void drop(const session_id_t& session);
         bool is_dropped() const;
 
-        void insert(session_id_t& session, const value_t& key, const document_id_t& value);
-        void insert_many(session_id_t& session, const std::vector<std::pair<value_t, document_id_t>>& values);
-        void remove(session_id_t& session, const value_t& key, const document_id_t& value);
-        void find(session_id_t& session, const value_t& value, components::expressions::compare_type compare);
+        void insert(const session_id_t& session, const value_t& key, const document_id_t& value);
+        void insert_many(const session_id_t& session, const std::vector<std::pair<value_t, document_id_t>>& values);
+        void remove(const session_id_t& session, const value_t& key, const document_id_t& value);
+        void find(const session_id_t& session, const value_t& value, components::expressions::compare_type compare);
 
     private:
         std::pmr::memory_resource* resource_;

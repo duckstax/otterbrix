@@ -20,7 +20,7 @@ namespace services::disk {
         agent_disk_t(base_manager_disk_t*, const path_t& path_db, const name_t& name, log_t& log);
         ~agent_disk_t();
 
-        auto load(session_id_t& session, actor_zeta::address_t dispatcher) -> void;
+        auto load(const session_id_t& session, actor_zeta::address_t dispatcher) -> void;
 
         auto append_database(const command_t& command) -> void;
         auto remove_database(const command_t& command) -> void;

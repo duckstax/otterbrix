@@ -50,20 +50,21 @@ namespace services::dispatcher {
 
     dispatcher_t::~dispatcher_t() { trace(log_, "delete dispatcher_t"); }
 
-    void dispatcher_t::load(components::session::session_id_t& session, actor_zeta::address_t sender) {
+    void dispatcher_t::load(const components::session::session_id_t& session, actor_zeta::address_t sender) {
         trace(log_, "dispatcher_t::load, session: {}", session.data());
         load_session_ = session;
         make_session(session_to_address_, session, session_t(std::move(sender)));
         actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::load), session);
     }
 
-    void dispatcher_t::load_from_disk_result(components::session::session_id_t& session,
+    void dispatcher_t::load_from_disk_result(const components::session::session_id_t& session,
                                              const disk::result_load_t& result) {
         trace(log_, "dispatcher_t::load_from_disk_result, session: {}, wal_id: {}", session.data(), result.wal_id());
         if ((*result).empty()) {
             actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
-                             core::handler_id(core::route::load_finish));
+                             core::handler_id(core::route::load_finish),
+                             session);
             remove_session(session_to_address_, session);
             load_result_.clear();
         } else {
@@ -76,14 +77,14 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::load_from_memory_resource_result(components::session::session_id_t& session) {
+    void dispatcher_t::load_from_memory_resource_result(const components::session::session_id_t& session) {
         trace(log_, "dispatcher_t::load_from_memory_resource_result, session: {}", session.data());
         actor_zeta::send(manager_disk_, address(), disk::handler_id(disk::route::load_indexes), session);
         actor_zeta::send(manager_wal_, address(), wal::handler_id(wal::route::load), session, load_result_.wal_id());
         load_result_.clear();
     }
 
-    void dispatcher_t::load_from_wal_result(components::session::session_id_t& session,
+    void dispatcher_t::load_from_wal_result(const components::session::session_id_t& session,
                                             std::vector<services::wal::record_t>& in_records) {
         // TODO think what to do with records
         records_ = std::move(in_records);
@@ -96,7 +97,8 @@ namespace services::dispatcher {
             trace(log_, "dispatcher_t::load_from_wal_result - empty records_");
             actor_zeta::send(find_session(session_to_address_, session).address(),
                              dispatcher_t::address(),
-                             core::handler_id(core::route::load_finish));
+                             core::handler_id(core::route::load_finish),
+                             session);
             remove_session(session_to_address_, session);
             return;
         }
@@ -212,7 +214,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::execute_ql(components::session::session_id_t& session,
+    void dispatcher_t::execute_ql(const components::session::session_id_t& session,
                                   ql_statement_t* ql,
                                   actor_zeta::base::address_t address) {
         trace(log_, "dispatcher_t::execute_ql: session {}, {}", session.data(), ql->to_string());
@@ -226,7 +228,7 @@ namespace services::dispatcher {
                          std::move(logic_plan.second));
     }
 
-    void dispatcher_t::execute_ql_finish(components::session::session_id_t& session, cursor_t_ptr result) {
+    void dispatcher_t::execute_ql_finish(const components::session::session_id_t& session, cursor_t_ptr result) {
         result_storage_[session] = result;
         auto& s = find_session(session_to_address_, session);
         auto* ql = s.get<ql_statement_t*>();
@@ -436,7 +438,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::size(components::session::session_id_t& session,
+    void dispatcher_t::size(const components::session::session_id_t& session,
                             std::string& database_name,
                             std::string& collection,
                             actor_zeta::base::address_t sender) {
@@ -453,7 +455,7 @@ namespace services::dispatcher {
                          collection_full_name_t{database_name, collection});
     }
 
-    void dispatcher_t::size_finish(components::session::session_id_t& session, cursor_t_ptr&& result) {
+    void dispatcher_t::size_finish(const components::session::session_id_t& session, cursor_t_ptr&& result) {
         trace(log_, "dispatcher_t::size_finish session: {}, size: {}", session.data(), result->size());
         actor_zeta::send(find_session(session_to_address_, session).address(),
                          dispatcher_t::address(),
@@ -463,7 +465,7 @@ namespace services::dispatcher {
         remove_session(session_to_address_, session);
     }
 
-    void dispatcher_t::close_cursor(components::session::session_id_t& session) {
+    void dispatcher_t::close_cursor(const components::session::session_id_t& session) {
         trace(log_, " dispatcher_t::close_cursor ");
         trace(log_, "Session : {}", session.data());
         auto it = cursor_.find(session);
@@ -483,7 +485,7 @@ namespace services::dispatcher {
         }
     }
 
-    void dispatcher_t::wal_success(components::session::session_id_t& session, services::wal::id_t wal_id) {
+    void dispatcher_t::wal_success(const components::session::session_id_t& session, services::wal::id_t wal_id) {
         trace(log_, "dispatcher_t::wal_success session : {}, wal id: {}", session.data(), wal_id);
         actor_zeta::send(manager_disk_, dispatcher_t::address(), disk::handler_id(disk::route::flush), session, wal_id);
 
@@ -509,12 +511,13 @@ namespace services::dispatcher {
     }
 
     // TODO separate change logic and condition check
-    bool dispatcher_t::load_from_wal_in_progress(components::session::session_id_t& session) {
+    bool dispatcher_t::load_from_wal_in_progress(const components::session::session_id_t& session) {
         if (find_session(session_to_address_, session).address().get() == manager_wal_.get()) {
             if (--load_count_answers_ == 0) {
                 actor_zeta::send(find_session(session_to_address_, load_session_).address(),
                                  dispatcher_t::address(),
-                                 core::handler_id(core::route::load_finish));
+                                 core::handler_id(core::route::load_finish),
+                                 load_session_);
                 remove_session(session_to_address_, load_session_);
             }
             return true;
@@ -565,7 +568,7 @@ namespace services::dispatcher {
         execute(this, current_message());
     }
 
-    void manager_dispatcher_t::create(components::session::session_id_t& session, std::string& name) {
+    void manager_dispatcher_t::create(const components::session::session_id_t& session, std::string& name) {
         trace(log_, "manager_dispatcher_t::create session: {} , name: {} ", session.data(), name);
         auto target = spawn_actor<dispatcher_t>(
             [this, name](dispatcher_t* ptr) {
@@ -579,7 +582,7 @@ namespace services::dispatcher {
             std::string(name));
     }
 
-    void manager_dispatcher_t::load(components::session::session_id_t& session) {
+    void manager_dispatcher_t::load(const components::session::session_id_t& session) {
         trace(log_, "manager_dispatcher_t::load session: {}", session.data());
         return actor_zeta::send(dispatcher(),
                                 address(),
@@ -588,7 +591,7 @@ namespace services::dispatcher {
                                 current_message()->sender());
     }
 
-    void manager_dispatcher_t::execute_ql(components::session::session_id_t& session, ql_statement_t* ql) {
+    void manager_dispatcher_t::execute_ql(const components::session::session_id_t& session, ql_statement_t* ql) {
         trace(log_, "manager_dispatcher_t::execute_ql session: {}, {}", session.data(), ql->to_string());
         return actor_zeta::send(dispatcher(),
                                 address(),
@@ -598,7 +601,7 @@ namespace services::dispatcher {
                                 current_message()->sender());
     }
 
-    void manager_dispatcher_t::size(components::session::session_id_t& session,
+    void manager_dispatcher_t::size(const components::session::session_id_t& session,
                                     std::string& database_name,
                                     std::string& collection) {
         trace(log_,
@@ -615,7 +618,7 @@ namespace services::dispatcher {
                          current_message()->sender());
     }
 
-    void manager_dispatcher_t::close_cursor(components::session::session_id_t&) {}
+    void manager_dispatcher_t::close_cursor(const components::session::session_id_t&) {}
 
     auto manager_dispatcher_t::dispatcher() -> actor_zeta::address_t { return dispatchers_[0]->address(); }
 

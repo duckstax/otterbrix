@@ -57,7 +57,7 @@ namespace services {
         manager_disk_ = std::get<static_cast<uint64_t>(unpack_rules::manager_disk)>(pack);
     }
 
-    void memory_storage_t::execute_plan(components::session::session_id_t& session,
+    void memory_storage_t::execute_plan(const components::session::session_id_t& session,
                                         components::logical_plan::node_ptr logical_plan,
                                         components::ql::storage_parameters parameters) {
         using components::logical_plan::node_type;
@@ -81,7 +81,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::size(components::session::session_id_t& session, collection_full_name_t&& name) {
+    void memory_storage_t::size(const components::session::session_id_t& session, collection_full_name_t&& name) {
         trace(log_, "collection {}::{}::size", name.database, name.collection);
         if (!check_collection_(session, name)) {
             return;
@@ -108,7 +108,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::close_cursor(components::session::session_id_t& session,
+    void memory_storage_t::close_cursor(const components::session::session_id_t& session,
                                         std::set<collection_full_name_t>&& collections) {
         for (const auto& name : collections) {
             if (check_collection_(session, name)) {
@@ -117,7 +117,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::load(components::session::session_id_t& session, const disk::result_load_t& result) {
+    void memory_storage_t::load(const components::session::session_id_t& session, const disk::result_load_t& result) {
         trace(log_, "memory_storage_t:load");
         load_buffer_ = std::make_unique<load_buffer_t>(resource());
         auto count_collections = std::accumulate(
@@ -169,7 +169,8 @@ namespace services {
         return collections_.contains(name);
     }
 
-    bool memory_storage_t::check_database_(components::session::session_id_t& session, const database_name_t& name) {
+    bool memory_storage_t::check_database_(const components::session::session_id_t& session,
+                                           const database_name_t& name) {
         if (!is_exists_database_(name)) {
             actor_zeta::send(current_message()->sender(),
                              this->address(),
@@ -181,7 +182,7 @@ namespace services {
         return true;
     }
 
-    bool memory_storage_t::check_collection_(components::session::session_id_t& session,
+    bool memory_storage_t::check_collection_(const components::session::session_id_t& session,
                                              const collection_full_name_t& name) {
         if (check_database_(session, name.database)) {
             if (!is_exists_collection_(name)) {
@@ -197,7 +198,7 @@ namespace services {
         return false;
     }
 
-    void memory_storage_t::create_database_(components::session::session_id_t& session,
+    void memory_storage_t::create_database_(const components::session::session_id_t& session,
                                             components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_database {}", logical_plan->database_name());
         if (is_exists_database_(logical_plan->database_name())) {
@@ -216,7 +217,7 @@ namespace services {
                          make_cursor(resource(), operation_status_t::success));
     }
 
-    void memory_storage_t::drop_database_(components::session::session_id_t& session,
+    void memory_storage_t::drop_database_(const components::session::session_id_t& session,
                                           components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_database {}", logical_plan->database_name());
         if (check_database_(session, logical_plan->database_name())) {
@@ -229,7 +230,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::create_collection_(components::session::session_id_t& session,
+    void memory_storage_t::create_collection_(const components::session::session_id_t& session,
                                               components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:create_collection {}", logical_plan->collection_full_name().to_string());
         if (check_database_(session, logical_plan->database_name())) {
@@ -256,7 +257,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::drop_collection_(components::session::session_id_t& session,
+    void memory_storage_t::drop_collection_(const components::session::session_id_t& session,
                                             components::logical_plan::node_ptr logical_plan) {
         trace(log_, "memory_storage_t:drop_collection {}", logical_plan->collection_full_name().to_string());
         if (check_collection_(session, logical_plan->collection_full_name())) {
@@ -274,7 +275,7 @@ namespace services {
         }
     }
 
-    void memory_storage_t::execute_plan_(components::session::session_id_t& session,
+    void memory_storage_t::execute_plan_(const components::session::session_id_t& session,
                                          components::logical_plan::node_ptr logical_plan,
                                          components::ql::storage_parameters parameters) {
         trace(log_,
@@ -305,7 +306,7 @@ namespace services {
                          std::move(collections_context_storage));
     }
 
-    void memory_storage_t::execute_plan_finish_(components::session::session_id_t& session, cursor_t_ptr result) {
+    void memory_storage_t::execute_plan_finish_(const components::session::session_id_t& session, cursor_t_ptr result) {
         auto& s = sessions_.at(session);
         debug(log_,
               "memory_storage_t:execute_plan_finish: session: {}, success: {}",
@@ -315,7 +316,7 @@ namespace services {
         sessions_.erase(session);
     }
 
-    void memory_storage_t::create_documents_finish_(components::session::session_id_t& session) {
+    void memory_storage_t::create_documents_finish_(const components::session::session_id_t& session) {
         if (!sessions_.contains(session)) {
             return;
         }

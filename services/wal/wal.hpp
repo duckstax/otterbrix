@@ -27,24 +27,25 @@ namespace services::wal {
                         log_t& log,
                         configuration::config_wal config,
                         std::pmr::memory_resource* resource = nullptr);
-        virtual void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id);
-        void create_database(session_id_t& session, address_t& sender, components::ql::create_database_t& data);
-        void drop_database(session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
-        void create_collection(session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
-        void drop_collection(session_id_t& session, address_t& sender, components::ql::drop_collection_t& data);
-        void insert_one(session_id_t& session, address_t& sender, components::ql::insert_one_t& data);
-        void insert_many(session_id_t& session, address_t& sender, components::ql::insert_many_t& data);
-        void delete_one(session_id_t& session, address_t& sender, components::ql::delete_one_t& data);
-        void delete_many(session_id_t& session, address_t& sender, components::ql::delete_many_t& data);
-        void update_one(session_id_t& session, address_t& sender, components::ql::update_one_t& data);
-        void update_many(session_id_t& session, address_t& sender, components::ql::update_many_t& data);
-        void create_index(session_id_t& session, address_t& sender, components::ql::create_index_t& data);
+        virtual void load(const session_id_t& session, address_t& sender, services::wal::id_t wal_id);
+        void create_database(const session_id_t& session, address_t& sender, components::ql::create_database_t& data);
+        void drop_database(const session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
+        void
+        create_collection(const session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
+        void drop_collection(const session_id_t& session, address_t& sender, components::ql::drop_collection_t& data);
+        void insert_one(const session_id_t& session, address_t& sender, components::ql::insert_one_t& data);
+        void insert_many(const session_id_t& session, address_t& sender, components::ql::insert_many_t& data);
+        void delete_one(const session_id_t& session, address_t& sender, components::ql::delete_one_t& data);
+        void delete_many(const session_id_t& session, address_t& sender, components::ql::delete_many_t& data);
+        void update_one(const session_id_t& session, address_t& sender, components::ql::update_one_t& data);
+        void update_many(const session_id_t& session, address_t& sender, components::ql::update_many_t& data);
+        void create_index(const session_id_t& session, address_t& sender, components::ql::create_index_t& data);
         ~wal_replicate_t() override;
 
         std::pmr::memory_resource* resource() const;
 
     private:
-        void send_success(session_id_t& session, address_t& sender);
+        void send_success(const session_id_t& session, address_t& sender);
 
         virtual void write_buffer(buffer_t& buffer);
         virtual void read_buffer(buffer_t& buffer, size_t start_index, size_t size) const;
@@ -86,7 +87,7 @@ namespace services::wal {
         wal_replicate_without_disk_t(base_manager_wal_replicate_t* manager,
                                      log_t& log,
                                      configuration::config_wal config);
-        void load(session_id_t& session, address_t& sender, services::wal::id_t wal_id) final;
+        void load(const session_id_t& session, address_t& sender, services::wal::id_t wal_id) final;
 
     private:
         void write_buffer(buffer_t&) final;

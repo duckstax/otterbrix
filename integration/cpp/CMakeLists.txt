@@ -5,6 +5,8 @@ set(${PROJECT_NAME}_sources
       base_spaces.cpp
       wrapper_dispatcher.cpp
       otterbrix.cpp
+      connection.cpp
+      impl/session_blocker.cpp
 )
 
 set(otterbrix_LIBS

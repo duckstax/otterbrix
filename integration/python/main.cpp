@@ -13,6 +13,7 @@
 
 #include "sql/convert.hpp"
 #include "sql/spaces.hpp"
+#include "sql/wrapper_connection.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
@@ -28,6 +29,12 @@ PYBIND11_MODULE(otterbrix, m) {
         .def("__getitem__", &wrapper_client::get_or_create)
         .def("database_names", &wrapper_client::database_names)
         .def("execute", &wrapper_client::execute, py::arg("query"));
+
+    py::class_<wrapper_connection>(m, "Connection")
+        .def(py::init([](wrapper_client* client) { return new wrapper_connection(client); }))
+        .def("execute", &wrapper_connection::execute, py::arg("query"))
+        .def("cursor", &wrapper_connection::cursor)
+        .def("close", &wrapper_connection::close);
 
     py::class_<wrapper_database, boost::intrusive_ptr<wrapper_database>>(m, "DataBase")
         .def("collection_names", &wrapper_database::collection_names)
@@ -99,7 +106,8 @@ PYBIND11_MODULE(otterbrix, m) {
         .def("get_error", &wrapper_cursor::get_error)
         //.def("paginate", &wrapper_cursor::paginate)
         //.def("_order", &wrapper_cursor::_order)
-        .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none());
+        .def("sort", &wrapper_cursor::sort, py::arg("key_or_list"), py::arg("direction") = py::none())
+        .def("execute", &wrapper_cursor::execute, py::arg("querry"));
 
     m.def("to_aggregate", &test_to_statement);
 }

@@ -39,24 +39,25 @@ namespace services::dispatcher {
                      log_t& log,
                      std::string name);
         ~dispatcher_t();
-        void load(components::session::session_id_t& session, actor_zeta::address_t sender);
-        void load_from_disk_result(components::session::session_id_t& session,
+        void load(const components::session::session_id_t& session, actor_zeta::address_t sender);
+        void load_from_disk_result(const components::session::session_id_t& session,
                                    const services::disk::result_load_t& result);
-        void load_from_memory_resource_result(components::session::session_id_t& session);
-        void load_from_wal_result(components::session::session_id_t& session,
+        void load_from_memory_resource_result(const components::session::session_id_t& session);
+        void load_from_wal_result(const components::session::session_id_t& session,
                                   std::vector<services::wal::record_t>& records);
-        void execute_ql(components::session::session_id_t& session,
+        void execute_ql(const components::session::session_id_t& session,
                         components::ql::ql_statement_t* ql,
                         actor_zeta::address_t address);
-        void execute_ql_finish(components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
-        void size(components::session::session_id_t& session,
+        void execute_ql_finish(const components::session::session_id_t& session,
+                               components::cursor::cursor_t_ptr cursor);
+        void size(const components::session::session_id_t& session,
                   std::string& database_name,
                   std::string& collection,
                   actor_zeta::base::address_t sender);
-        void size_finish(components::session::session_id_t&, components::cursor::cursor_t_ptr&& cursor);
-        void close_cursor(components::session::session_id_t& session);
-        void wal_success(components::session::session_id_t& session, services::wal::id_t wal_id);
-        bool load_from_wal_in_progress(components::session::session_id_t& session);
+        void size_finish(const components::session::session_id_t&, components::cursor::cursor_t_ptr&& cursor);
+        void close_cursor(const components::session::session_id_t& session);
+        void wal_success(const components::session::session_id_t& session, services::wal::id_t wal_id);
+        bool load_from_wal_in_progress(const components::session::session_id_t& session);
 
     private:
         log_t log_;
@@ -112,11 +113,12 @@ namespace services::dispatcher {
                              std::string(name_dispatcher));
         }
         ///------
-        void create(components::session::session_id_t& session, std::string& name);
-        void load(components::session::session_id_t& session);
-        void execute_ql(components::session::session_id_t& session, components::ql::ql_statement_t* ql);
-        void size(components::session::session_id_t& session, std::string& database_name, std::string& collection);
-        void close_cursor(components::session::session_id_t& session);
+        void create(const components::session::session_id_t& session, std::string& name);
+        void load(const components::session::session_id_t& session);
+        void execute_ql(const components::session::session_id_t& session, components::ql::ql_statement_t* ql);
+        void
+        size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
+        void close_cursor(const components::session::session_id_t& session);
 
     protected:
         auto scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* final;

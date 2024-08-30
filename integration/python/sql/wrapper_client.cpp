@@ -15,7 +15,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace otterbrix {
 
-    wrapper_client::wrapper_client(std::shared_ptr<spaces> space)
+    wrapper_client::wrapper_client(spaces_ptr space)
         : ptr_(std::move(space))
         , log_(ptr_->get_log().clone()) {
         debug(log_, "wrapper_client::wrapper_client()");
@@ -45,6 +45,7 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_client::execute(const std::string& query) {
         debug(log_, "wrapper_client::execute");
         auto session = otterbrix::session_id_t();
-        return wrapper_cursor_ptr(new wrapper_cursor{session, ptr_->dispatcher()->execute_sql(session, query)});
+        return wrapper_cursor_ptr(
+            new wrapper_cursor{ptr_->dispatcher()->execute_sql(session, query), ptr_->dispatcher()});
     }
 } // namespace otterbrix

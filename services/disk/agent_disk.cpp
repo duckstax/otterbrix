@@ -23,7 +23,7 @@ namespace services::disk {
 
     agent_disk_t::~agent_disk_t() { trace(log_, "delete agent_disk_t"); }
 
-    auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
+    auto agent_disk_t::load(const session_id_t& session, actor_zeta::address_t dispatcher) -> void {
         trace(log_, "agent_disk::load , session : {}", session.data());
         result_load_t result(disk_.databases(), disk_.wal_id());
         for (auto& database : *result) {

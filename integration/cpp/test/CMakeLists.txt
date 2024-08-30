@@ -10,6 +10,7 @@ set( ${PROJECT_NAME}_SOURCES
         test_save_load.cpp
         test_index.cpp
         test_join.cpp
+        test_connections.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
