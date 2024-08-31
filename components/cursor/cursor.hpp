@@ -54,12 +54,9 @@ namespace components::cursor {
         std::pmr::vector<data_ptr>& data();
         void append(data_ptr);
 
-        ~sub_cursor_t();
-
     private:
         collection_full_name_t collection_name_;
         std::pmr::vector<data_ptr> data_;
-        int counter{0};
     };
 
     class cursor_t : public boost::intrusive_ref_counter<cursor_t> {
@@ -80,8 +77,6 @@ namespace components::cursor {
         error_t get_error() const;
         void sort(std::function<bool(data_ptr, data_ptr)> sorter);
 
-        ~cursor_t();
-
     private:
         std::size_t size_{};
         index_t current_index_{start_index};
@@ -93,8 +88,6 @@ namespace components::cursor {
         void create_list_by_sort();
         data_ptr get_sorted(std::size_t index) const;
         data_ptr get_unsorted(std::size_t index) const;
-
-        int counter{0};
     };
 
     using cursor_t_ptr = boost::intrusive_ptr<cursor_t>;
