@@ -381,7 +381,7 @@ namespace services::disk {
     void manager_disk_t::load_indexes_impl([[maybe_unused]] const session_id_t& session,
                                            const actor_zeta::address_t& dispatcher) {
         auto indexes = make_unique(read_indexes_impl());
-        metafile_indexes_->seek_eof();
+        metafile_indexes_->seek(metafile_indexes_->file_size());
         for (auto& index : indexes) {
             trace(log_, "manager_disk: load_indexes_impl : {}", index->name());
             // Require to separate sessions for load and create index

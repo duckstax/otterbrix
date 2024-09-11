@@ -132,7 +132,8 @@ namespace services::dispatcher {
         void create(const components::session::session_id_t& session);
         void load(const components::session::session_id_t& session);
         void execute_ql(const components::session::session_id_t& session, components::ql::ql_statement_t* ql);
-        void size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
+        void
+        size(const components::session::session_id_t& session, std::string& database_name, std::string& collection);
         void close_cursor(const components::session::session_id_t& session);
 
     protected:

@@ -25,7 +25,7 @@ namespace services::disk {
         , log_(log.clone())
         , index_disk_(std::make_unique<index_disk_t>(path_db / collection->name().database /
                                                          collection->name().collection / index_name,
-                                                     resource_))
+                                                     resource()))
         , collection_(collection) {
         trace(log_, "index_agent_disk::create {}", index_name);
     }

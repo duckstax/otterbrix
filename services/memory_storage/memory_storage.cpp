@@ -19,14 +19,6 @@ namespace services {
 
     memory_storage_t::load_buffer_t::load_buffer_t(std::pmr::memory_resource* resource)
         : collections(resource) {}
-
-    // TODO
-    // memory_storage_t::memory_storage_t(std::pmr::memory_resource* resource,
-    //                                    actor_zeta::scheduler_raw scheduler,
-    //                                    log_t& log)
-    //     : actor_zeta::cooperative_supervisor<memory_storage_t>(resource, "memory_storage")
-    //     , executor_(nullptr, [&](collection::executor::executor_t* agent) { mr_delete(this->resource(), agent); })
-    //     , log_(log.clone())
     memory_storage_t::memory_storage_t(std::pmr::memory_resource* o_resource,
                                        actor_zeta::scheduler_raw scheduler,
                                        log_t& log)

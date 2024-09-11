@@ -148,7 +148,7 @@ namespace services::wal {
     void manager_wal_replicate_t::create_wal_worker() {
         if (config_.sync_to_disk) {
             trace(log_, "manager_wal_replicate_t::create_wal_worker");
-            // TODO
+            // TODO review
             //     auto address = spawn_actor<wal_replicate_t>(
             //         [this](wal_replicate_t* ptr) {
             //             dispatchers_.emplace_back(ptr, [&](wal_replicate_t* agent) { mr_delete(resource(), agent); });

@@ -2,14 +2,13 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/ql/ql_statement.hpp>
+#include <core/b_plus_tree/b_plus_tree.hpp>
 #include <filesystem>
 #include <wal/base.hpp>
 
-#include "core/b_plus_tree/b_plus_tree.hpp"
+#include "metadata.hpp"
 
 namespace services::disk {
-
-    class metadata_t;
 
     using path_t = std::filesystem::path;
     using metadata_ptr = std::unique_ptr<metadata_t>;
@@ -24,7 +23,6 @@ namespace services::disk {
         explicit disk_t(const path_t& storage_directory, std::pmr::memory_resource* resource);
         disk_t(const disk_t&) = delete;
         disk_t& operator=(disk_t const&) = delete;
-        ~disk_t();
 
         void save_document(const database_name_t& database,
                            const collection_name_t& collection,

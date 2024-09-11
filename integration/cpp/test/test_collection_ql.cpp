@@ -1,7 +1,6 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
 #include <components/ql/statements.hpp>
-#include <iostream>
 #include <variant>
 
 static const database_name_t database_name = "TestDatabase";

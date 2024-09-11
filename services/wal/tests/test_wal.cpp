@@ -50,7 +50,10 @@ struct test_wal {
             auto allocate_byte = sizeof(wal_replicate_t);
             auto allocate_byte_alignof = alignof(wal_replicate_t);
             void* buffer = manager->resource()->allocate(allocate_byte, allocate_byte_alignof);
-            return new (buffer) wal_replicate_t(manager.get(), log, config);
+            auto* wal_ptr = new (buffer) wal_replicate_t(manager.get(), log, config);
+            return std::unique_ptr<wal_replicate_t, actor_zeta::pmr::deleter_t>(
+                wal_ptr,
+                actor_zeta::pmr::deleter_t(manager->resource()));
         }()) {
         log.set_level(log_t::level::trace);
         std::filesystem::remove_all(path);
@@ -58,11 +61,13 @@ struct test_wal {
         config.path = path;
     }
 
+    ~test_wal() { delete scheduler; }
+
     log_t log;
     core::non_thread_scheduler::scheduler_test_t* scheduler{nullptr};
     configuration::config_wal config;
     std::unique_ptr<manager_wal_replicate_t, actor_zeta::pmr::deleter_t> manager;
-    wal_replicate_t* wal{nullptr};
+    std::unique_ptr<wal_replicate_t, actor_zeta::pmr::deleter_t> wal;
 };
 
 test_wal create_test_wal(const std::filesystem::path& path, std::pmr::memory_resource* resource) {
@@ -72,7 +77,7 @@ test_wal create_test_wal(const std::filesystem::path& path, std::pmr::memory_res
 TEST_CASE("insert one test") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/insert_one", &resource);
-    test_insert_one(test_wal.wal, &resource);
+    test_insert_one(test_wal.wal.get(), &resource);
 
     std::size_t read_index = 0;
     for (int num = 1; num <= 5; ++num) {
@@ -335,7 +340,7 @@ TEST_CASE("update many test") {
 TEST_CASE("test find start record") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/find_start_record", &resource);
-    test_insert_one(test_wal.wal, &resource);
+    test_insert_one(test_wal.wal.get(), &resource);
 
     std::size_t start_index;
     REQUIRE(test_wal.wal->test_find_start_record(services::wal::id_t(1), start_index));
@@ -347,7 +352,7 @@ TEST_CASE("test find start record") {
 TEST_CASE("test read id") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/read_id", &resource);
-    test_insert_one(test_wal.wal, &resource);
+    test_insert_one(test_wal.wal.get(), &resource);
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {
@@ -360,7 +365,7 @@ TEST_CASE("test read id") {
 TEST_CASE("test read record") {
     auto resource = std::pmr::synchronized_pool_resource();
     auto test_wal = create_test_wal("/tmp/wal/read_record", &resource);
-    test_insert_one(test_wal.wal, &resource);
+    test_insert_one(test_wal.wal.get(), &resource);
 
     std::size_t index = 0;
     for (int num = 1; num <= 5; ++num) {

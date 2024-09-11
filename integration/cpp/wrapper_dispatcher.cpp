@@ -34,8 +34,7 @@ namespace otterbrix {
                                                  &wrapper_dispatcher_t::size_finish))
         , manager_dispatcher_(manager_dispatcher)
         , log_(log.clone())
-        , blocker_(mr)
-        {}
+        , blocker_(mr) {}
 
     wrapper_dispatcher_t::~wrapper_dispatcher_t() { trace(log_, "delete wrapper_dispatcher_t"); }
 

@@ -66,6 +66,7 @@ TEST_CASE("copy from raw pointer") {
     REQUIRE(size == buff.size());
     REQUIRE(size == buff.capacity());
     REQUIRE(&mr == buff.memory_resource());
+    free(device_memory);
 }
 
 TEST_CASE("copy from nullptr") {

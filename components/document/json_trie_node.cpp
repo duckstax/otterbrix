@@ -61,7 +61,7 @@ namespace components::document::json {
             case OBJECT: {
                 auto* ptr = value_.obj.make_deep_copy();
                 size_t size = sizeof(*ptr);
-                auto* copy = new (allocator_->allocate(sizeof(json_trie_node)))
+                auto* copy = new (allocator_->allocate(sizeof(json_trie_node), alignof(json_trie_node)))
                     json_trie_node(allocator_, std::move(*ptr), OBJECT);
                 allocator_->deallocate(ptr, size);
                 return copy;
@@ -69,9 +69,9 @@ namespace components::document::json {
             case ARRAY: {
                 auto* ptr = value_.arr.make_deep_copy();
                 size_t size = sizeof(*ptr);
-                auto* copy = new (allocator_->allocate(sizeof(json_trie_node)))
+                auto* copy = new (allocator_->allocate(sizeof(json_trie_node), alignof(json_trie_node)))
                     json_trie_node(allocator_, std::move(*ptr), ARRAY);
-                allocator_->deallocate(ptr, size);
+                allocator_->deallocate(ptr, size, alignof(json_trie_node));
                 return copy;
             }
             case MUT:
@@ -167,7 +167,8 @@ namespace components::document::json {
     }
 
     json_trie_node* json_trie_node::create(impl::element value, json_trie_node::allocator_type* allocator) {
-        return new (allocator->allocate(sizeof(json_trie_node))) json_trie_node(allocator, value, MUT);
+        return new (allocator->allocate(sizeof(json_trie_node), alignof(json_trie_node)))
+            json_trie_node(allocator, value, MUT);
     }
 
     json_trie_node* json_trie_node::create_array(json_trie_node::allocator_type* allocator) {
@@ -176,7 +177,7 @@ namespace components::document::json {
     }
 
     json_trie_node* json_trie_node::create_object(json_trie_node::allocator_type* allocator) {
-        return new (allocator->allocate(sizeof(json_trie_node)))
+        return new (allocator->allocate(sizeof(json_trie_node), alignof(json_trie_node)))
             json_trie_node(allocator, std::move(json_object(allocator)), OBJECT);
     }
 

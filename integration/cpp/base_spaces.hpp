@@ -61,7 +61,7 @@ namespace otterbrix {
         services::memory_storage_ptr memory_storage_;
 
     private:
-        static std::unordered_set<std::filesystem::path, core::filesystem::path_hash> paths_;
+        inline static std::unordered_set<std::filesystem::path, core::filesystem::path_hash> paths_ = {};
         inline static std::mutex m_;
     };
 

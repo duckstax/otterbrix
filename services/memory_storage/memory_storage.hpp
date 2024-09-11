@@ -113,7 +113,8 @@ namespace services {
                                components::logical_plan::node_ptr logical_plan,
                                components::ql::storage_parameters parameters);
 
-        void execute_plan_finish(const components::session::session_id_t& session, components::cursor::cursor_t_ptr cursor);
+        void execute_plan_finish(const components::session::session_id_t& session,
+                                 components::cursor::cursor_t_ptr cursor);
 
         void create_documents_finish(const components::session::session_id_t& session);
     };

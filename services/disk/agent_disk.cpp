@@ -35,7 +35,7 @@ namespace services::disk {
         , fix_wal_id_(
               actor_zeta::make_behavior(resource(), handler_id(route::fix_wal_id), this, &agent_disk_t::fix_wal_id))
         , log_(log.clone())
-        , disk_(path_db, resource_) {
+        , disk_(path_db, resource()) {
         trace(log_, "agent_disk::create");
     }
 
@@ -82,7 +82,7 @@ namespace services::disk {
         });
     }
 
-    auto agent_disk_t::load(session_id_t& session, actor_zeta::address_t dispatcher) -> void {
+    auto agent_disk_t::load(const session_id_t& session, actor_zeta::address_t dispatcher) -> void {
         trace(log_, "agent_disk::load , session : {}", session.data());
         result_load_t result(disk_.databases(), disk_.wal_id());
         for (auto& database : *result) {

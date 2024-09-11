@@ -26,7 +26,8 @@ namespace services::wal {
         void load(const session_id_t& session, address_t& sender, services::wal::id_t wal_id);
         void create_database(const session_id_t& session, address_t& sender, components::ql::create_database_t& data);
         void drop_database(const session_id_t& session, address_t& sender, components::ql::drop_database_t& data);
-        void create_collection(const session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
+        void
+        create_collection(const session_id_t& session, address_t& sender, components::ql::create_collection_t& data);
         void drop_collection(const session_id_t& session, address_t& sender, components::ql::drop_collection_t& data);
         void insert_one(const session_id_t& session, address_t& sender, components::ql::insert_one_t& data);
         void insert_many(const session_id_t& session, address_t& sender, components::ql::insert_many_t& data);
