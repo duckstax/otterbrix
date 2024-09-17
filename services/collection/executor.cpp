@@ -269,8 +269,8 @@ namespace services::collection::executor {
                              address(),
                              disk::handler_id(disk::route::remove_documents),
                              session,
-                             std::string(collection->name().database),
-                             std::string(collection->name().collection),
+                             collection->name().database,
+                             collection->name().collection,
                              documents);
             auto cursor(new cursor_t(collection->resource()));
             auto sub_cursor = std::make_unique<sub_cursor_t>(collection->resource(), collection->name());
@@ -293,8 +293,8 @@ namespace services::collection::executor {
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(collection->name().database),
-                                 std::string(collection->name().collection),
+                                 collection->name().database,
+                                 collection->name().collection,
                                  plan->modified()->documents());
                 execute_sub_plan_finish_(session, cursor);
             } else {
@@ -304,8 +304,8 @@ namespace services::collection::executor {
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(collection->name().database),
-                                 std::string(collection->name().collection),
+                                 collection->name().database,
+                                 collection->name().collection,
                                  std::pmr::vector<document_id_t>{collection->resource()});
                 execute_sub_plan_finish_(session, cursor);
             }
@@ -322,9 +322,9 @@ namespace services::collection::executor {
                          address(),
                          disk::handler_id(disk::route::write_documents),
                          session,
-                         std::string(collection->name().database),
-                         std::string(collection->name().collection),
-                         plan->output() ? plan->output()->documents()
+                         collection->name().database,
+                         collection->name().collection,
+                         plan->output() ? std::move(plan->output()->documents())
                                         : std::pmr::vector<document_ptr>{collection->resource()});
 
         auto cursor = make_cursor(collection->resource());
@@ -353,8 +353,8 @@ namespace services::collection::executor {
                          address(),
                          disk::handler_id(disk::route::remove_documents),
                          session,
-                         std::string(collection->name().database),
-                         std::string(collection->name().collection),
+                         collection->name().database,
+                         collection->name().collection,
                          modified);
         auto sub_cursor = std::make_unique<sub_cursor_t>(plan->modified()->documents().get_allocator().resource(),
                                                          collection->name());

@@ -81,10 +81,6 @@ namespace otterbrix {
         auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
         auto make_type() const noexcept -> const char* const;
 
-        actor_zeta::behavior_t behavior();
-        auto make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t*;
-        auto make_type() const noexcept -> const char* const;
-
     protected:
         auto enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void final;
 

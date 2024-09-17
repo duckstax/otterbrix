@@ -48,9 +48,6 @@ namespace services::disk {
         auto make_type() const noexcept -> const char* const;
         actor_zeta::behavior_t behavior();
 
-        auto make_type() const noexcept -> const char* const;
-        actor_zeta::behavior_t behavior();
-
     private:
         // Behaviors
         actor_zeta::behavior_t insert_;

@@ -54,12 +54,12 @@ namespace services::disk {
                                const collection_name_t& collection) -> void;
 
         auto write_documents(const session_id_t& session,
-                             const database_name_t& database,
-                             const collection_name_t& collection,
-                             const std::pmr::vector<document_ptr>& documents) -> void;
+                             database_name_t database,
+                             collection_name_t collection,
+                             std::pmr::vector<document_ptr>&& documents) -> void;
         auto remove_documents(const session_id_t& session,
-                              const database_name_t& database,
-                              const collection_name_t& collection,
+                              database_name_t database,
+                              collection_name_t collection,
                               const std::pmr::vector<document_id_t>& documents) -> void;
 
         auto flush(const session_id_t& session, wal::id_t wal_id) -> void;

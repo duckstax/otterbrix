@@ -226,28 +226,28 @@ namespace services::disk {
     }
 
     auto manager_disk_t::write_documents(const session_id_t& session,
-                                         const database_name_t& database,
-                                         const collection_name_t& collection,
-                                         const std::pmr::vector<document_ptr>& documents) -> void {
+                                         database_name_t database,
+                                         collection_name_t collection,
+                                         std::pmr::vector<document_ptr>&& documents) -> void {
         trace(log_,
               "manager_disk_t::write_documents , session : {} , database : {} , collection : {}",
               session.data(),
               database,
               collection);
-        command_write_documents_t command{database, collection, documents};
+        command_write_documents_t command{std::move(database), std::move(collection), documents};
         append_command(commands_, session, command_t(command));
     }
 
     auto manager_disk_t::remove_documents(const session_id_t& session,
-                                          const database_name_t& database,
-                                          const collection_name_t& collection,
+                                          database_name_t database,
+                                          collection_name_t collection,
                                           const std::pmr::vector<document_id_t>& documents) -> void {
         trace(log_,
               "manager_disk_t::remove_documents , session : {} , database : {} , collection : {}",
               session.data(),
               database,
               collection);
-        command_remove_documents_t command{database, collection, documents};
+        command_remove_documents_t command{std::move(database), std::move(collection), documents};
         append_command(commands_, session, command_t(command));
     }
 
@@ -255,7 +255,7 @@ namespace services::disk {
         trace(log_, "manager_disk_t::flush , session : {} , wal_id : {}", session.data(), wal_id);
         auto it = commands_.find(session);
         if (it != commands_.end()) {
-            for (const auto& command : commands_.at(session)) {
+            for (const auto& command : it->second) {
                 if (command.name() == handler_id(route::remove_collection)) {
                     const auto& drop_collection = command.get<command_remove_collection_t>();
                     std::vector<index_agent_disk_t*> indexes;
