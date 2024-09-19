@@ -21,9 +21,9 @@ struct dummy_alloc {
     size_t size;
 };
 
-class limited_resource : public std::pmr::memory_resource {
+class limited_resource_t : public std::pmr::memory_resource {
 public:
-    explicit limited_resource(size_t memory_limit)
+    explicit limited_resource_t(size_t memory_limit)
         : memory_limit_(memory_limit) {}
 
     void* do_allocate(size_t bytes, size_t alignment) override {
@@ -31,19 +31,19 @@ public:
             throw std::bad_alloc();
         } else {
             memory_used_ += bytes;
-            return resource_->allocate(bytes, alignment);
+            return resource_.allocate(bytes, alignment);
         }
     }
     void do_deallocate(void* ptr, size_t bytes, size_t alignment) override {
         memory_used_ -= bytes;
-        resource_->deallocate(ptr, bytes, alignment);
+        resource_.deallocate(ptr, bytes, alignment);
     }
     bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return this == &other; }
 
 private:
     size_t memory_limit_;
     size_t memory_used_ = 0;
-    std::pmr::memory_resource* resource_ = std::pmr::get_default_resource();
+    std::pmr::synchronized_pool_resource resource_ = std::pmr::synchronized_pool_resource();
 };
 
 std::string gen_random(size_t len, size_t seed) {
@@ -61,6 +61,7 @@ std::string gen_random(size_t len, size_t seed) {
 
 TEST_CASE("block_t") {
     path_t testing_directory = "block_test";
+    auto resource = std::pmr::synchronized_pool_resource();
 
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
@@ -97,7 +98,7 @@ TEST_CASE("block_t") {
         std::shuffle(test_data_shuffled.begin(), test_data_shuffled.end(), std::default_random_engine{0});
 
         {
-            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
+            std::unique_ptr<block_t> test_block = create_initialize(&resource, key_getter);
 
             REQUIRE(test_block->available_memory() == DEFAULT_BLOCK_SIZE - test_block->header_size);
             REQUIRE(test_block->count() == 0);
@@ -133,7 +134,7 @@ TEST_CASE("block_t") {
         }
         // load and check iterators and removal
         {
-            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
+            std::unique_ptr<block_t> test_block = create_initialize(&resource, key_getter);
 
             unique_ptr<file_handle_t> handle =
                 open_file(fs, fname, file_flags::READ | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
@@ -169,7 +170,7 @@ TEST_CASE("block_t") {
         }
         // load split in half and check both blocks
         {
-            std::unique_ptr<block_t> test_block_1 = create_initialize(std::pmr::get_default_resource(), key_getter);
+            std::unique_ptr<block_t> test_block_1 = create_initialize(&resource, key_getter);
 
             unique_ptr<file_handle_t> handle =
                 open_file(fs, fname, file_flags::READ | file_flags::FILE_CREATE, file_lock_type::NO_LOCK);
@@ -247,7 +248,7 @@ TEST_CASE("block_t") {
         std::shuffle(test_data.begin(), test_data.end(), std::default_random_engine{0});
 
         {
-            std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
+            std::unique_ptr<block_t> test_block = create_initialize(&resource, key_getter);
 
             REQUIRE(test_block->available_memory() == DEFAULT_BLOCK_SIZE - test_block->header_size);
             REQUIRE(test_block->count() == 0);
@@ -332,7 +333,7 @@ TEST_CASE("block_t") {
             return block_t::index_t(std::string_view((char*) data.data, data.size));
         };
 
-        std::unique_ptr<block_t> test_block = create_initialize(std::pmr::get_default_resource(), key_getter);
+        std::unique_ptr<block_t> test_block = create_initialize(&resource, key_getter);
 
         for (uint64_t i = 0; i < test_count; i++) {
             REQUIRE(test_block->count() == i);
@@ -358,6 +359,7 @@ TEST_CASE("block_t") {
 }
 
 TEST_CASE("segment_tree") {
+    auto resource = std::pmr::synchronized_pool_resource();
     path_t testing_directory = "segment_tree_test";
 
     INFO("initialization") {
@@ -379,14 +381,14 @@ TEST_CASE("segment_tree") {
         for (uint64_t i = 1; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32;
-            dummy.buffer = (data_ptr_t) std::pmr::get_default_resource()->allocate(dummy.size);
+            dummy.buffer = (data_ptr_t) resource.allocate(dummy.size);
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
         for (uint64_t i = 0; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32;
-            dummy.buffer = (data_ptr_t) std::pmr::get_default_resource()->allocate(dummy.size);
+            dummy.buffer = (data_ptr_t) resource.allocate(dummy.size);
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
@@ -395,7 +397,7 @@ TEST_CASE("segment_tree") {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
-        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+        segment_tree_t tree(&resource, key_getter, std::move(handle));
 
         REQUIRE(tree.blocks_count() == 0);
         REQUIRE(tree.count() == 0);
@@ -518,7 +520,7 @@ TEST_CASE("segment_tree") {
         REQUIRE(tree.unique_indices_count() == 0);
 
         for (uint64_t i = 0; i < 500; i++) {
-            std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
+            resource.deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
 
@@ -537,19 +539,19 @@ TEST_CASE("segment_tree") {
         for (uint64_t i = 0; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t)(resource.allocate(dummy.size));
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
         for (uint64_t i = 1; i < 500; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t)(resource.allocate(dummy.size));
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
 
-        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+        segment_tree_t tree(&resource, key_getter, std::move(handle));
 
         REQUIRE(tree.blocks_count() == 0);
         REQUIRE(tree.count() == 0);
@@ -645,7 +647,7 @@ TEST_CASE("segment_tree") {
         REQUIRE(tree.unique_indices_count() == 0);
 
         for (uint64_t i = 0; i < 500; i++) {
-            std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
+            resource.deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
 
@@ -663,7 +665,7 @@ TEST_CASE("segment_tree") {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
-        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+        segment_tree_t tree(&resource, key_getter, std::move(handle));
         std::vector<std::pair<uint64_t, uint64_t>> test_data;
         test_data.reserve(key_num * duplicate_count);
         for (uint64_t i = 0; i < key_num; i++) {
@@ -675,7 +677,7 @@ TEST_CASE("segment_tree") {
 
         std::vector<size_t> duplicates(key_num, 0);
         size_t unique_added = 0;
-        uint64_t* fake_buffer = (uint64_t*) (std::pmr::get_default_resource()->allocate(fake_item_size));
+        uint64_t* fake_buffer = (uint64_t*) (resource.allocate(fake_item_size));
 
         for (uint64_t i = 0; i < key_num * duplicate_count; i++) {
             *fake_buffer = test_data[i].first;
@@ -706,11 +708,11 @@ TEST_CASE("segment_tree") {
         REQUIRE(tree.count() == 0);
         REQUIRE(tree.unique_indices_count() == 0);
 
-        std::pmr::get_default_resource()->deallocate(fake_buffer, fake_item_size);
+        resource.deallocate(fake_buffer, fake_item_size);
     }
 
     INFO("segment_tree: memory overflow") {
-        limited_resource resource(DEFAULT_BLOCK_SIZE * 16);
+        limited_resource_t limited_resource(DEFAULT_BLOCK_SIZE * 16);
 
         local_file_system_t fs = local_file_system_t();
         auto fname = testing_directory;
@@ -722,12 +724,12 @@ TEST_CASE("segment_tree") {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
-        segment_tree_t tree(&resource, key_getter, std::move(handle));
+        segment_tree_t tree(&limited_resource, key_getter, std::move(handle));
 
         size_t dummy_size = DEFAULT_BLOCK_SIZE / 32;
         size_t test_count = 5000; // about x10 of what allocator can handle
         // just use one buffer
-        uint64_t* buffer = (uint64_t*) (std::pmr::get_default_resource()->allocate(dummy_size));
+        uint64_t* buffer = (uint64_t*) (resource.allocate(dummy_size));
         std::vector<uint64_t> test_data;
         test_data.reserve(test_count);
         for (uint64_t i = 0; i < test_count; i++) {
@@ -761,7 +763,7 @@ TEST_CASE("segment_tree") {
             REQUIRE(tree.remove_index(segment_tree_t::index_t(i)));
         }
 
-        std::pmr::get_default_resource()->deallocate(buffer, dummy_size);
+        resource.deallocate(buffer, dummy_size);
     }
 
     INFO("string keys") {
@@ -783,7 +785,7 @@ TEST_CASE("segment_tree") {
             return block_t::index_t(std::string_view((char*) data.data, data.size));
         };
 
-        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+        segment_tree_t tree(&resource, key_getter, std::move(handle));
 
         for (uint64_t i = 0; i < test_count; i++) {
             REQUIRE(tree.count() == i);
@@ -823,6 +825,7 @@ TEST_CASE("segment_tree") {
 }
 
 TEST_CASE("b+tree") {
+    auto resource = std::pmr::synchronized_pool_resource();
     path_t testing_directory = "b+tree_test";
 
     INFO("initialization") {
@@ -848,19 +851,19 @@ TEST_CASE("b+tree") {
         for (uint64_t i = 0; i < test_size; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t)(resource.allocate(dummy.size));
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
         for (uint64_t i = 1; i < test_size; i += 2) {
             dummy_alloc dummy;
             dummy.size = DEFAULT_BLOCK_SIZE / 32 * ((i % 50) + 1);
-            dummy.buffer = (data_ptr_t)(std::pmr::get_default_resource()->allocate(dummy.size));
+            dummy.buffer = (data_ptr_t)(resource.allocate(dummy.size));
             *reinterpret_cast<uint64_t*>(dummy.buffer) = i;
             test_data.push_back(dummy);
         }
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 12);
+        btree_t tree(&resource, fs, dname, key_getter, 12);
 
         for (uint64_t i = 0; i < test_size; i++) {
             REQUIRE_FALSE(tree.contains_index(btree_t::index_t(*reinterpret_cast<uint64_t*>(test_data[i].buffer))));
@@ -940,7 +943,7 @@ TEST_CASE("b+tree") {
         }
 
         for (uint64_t i = 0; i < test_size; i++) {
-            std::pmr::get_default_resource()->deallocate(test_data[i].buffer, test_data[i].size);
+            resource.deallocate(test_data[i].buffer, test_data[i].size);
         }
     }
     INFO("b+tree: big item count; random order") {
@@ -953,7 +956,7 @@ TEST_CASE("b+tree") {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 2048);
+        btree_t tree(&resource, fs, dname, key_getter, 2048);
 
         std::vector<uint64_t> keys;
         for (uint64_t i = 0; i < key_num; i++) {
@@ -988,7 +991,7 @@ TEST_CASE("b+tree") {
         auto key_getter = [](const block_t::item_data& data) -> block_t::index_t {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 2048);
+        btree_t tree(&resource, fs, dname, key_getter, 2048);
 
         std::array<uint64_t, key_num> keys;
         // REQUIRE can behave wierdly with threading, but storing result and checking it later works fine
@@ -1107,7 +1110,7 @@ TEST_CASE("b+tree") {
             return block_t::index_t(*reinterpret_cast<uint64_t*>(data.data));
         };
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 128);
+        btree_t tree(&resource, fs, dname, key_getter, 128);
 
         std::vector<std::pair<uint64_t, uint64_t>> test_data;
         test_data.reserve(key_num * duplicate_count);
@@ -1120,7 +1123,7 @@ TEST_CASE("b+tree") {
 
         std::vector<size_t> duplicates(key_num, 0);
         size_t unique_added = 0;
-        uint64_t* fake_buffer = (uint64_t*) (std::pmr::get_default_resource()->allocate(fake_item_size));
+        uint64_t* fake_buffer = (uint64_t*) (resource.allocate(fake_item_size));
         REQUIRE(tree.size() == 0);
         for (uint64_t i = 0; i < key_num * duplicate_count; i++) {
             *fake_buffer = test_data[i].first;
@@ -1162,7 +1165,7 @@ TEST_CASE("b+tree") {
         }
         REQUIRE(tree.size() == 0);
 
-        std::pmr::get_default_resource()->deallocate(fake_buffer, fake_item_size);
+        resource.deallocate(fake_buffer, fake_item_size);
     }
 
     INFO("btree: string keys") {
@@ -1182,7 +1185,7 @@ TEST_CASE("b+tree") {
             return block_t::index_t(std::string_view((char*) data.data, data.size));
         };
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 64);
+        btree_t tree(&resource, fs, dname, key_getter, 64);
 
         for (uint64_t i = 0; i < test_count; i++) {
             REQUIRE(tree.size() == i);

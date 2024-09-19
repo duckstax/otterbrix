@@ -6,8 +6,8 @@ using namespace components::expressions;
 using key = components::expressions::key_t;
 
 TEST_CASE("expression::aggregate::equals") {
-    auto resource = std::pmr::synchronized_pool_resource(); // std::pmr::get_default_resource();
-    auto expr1 = make_aggregate_expression(&resource, aggregate_type::sum, key("name")); // resource
+    auto resource = std::pmr::synchronized_pool_resource();
+    auto expr1 = make_aggregate_expression(&resource, aggregate_type::sum, key("name"));
     auto expr2 = make_aggregate_expression(&resource, aggregate_type::sum, key("name"));
     auto expr3 = make_aggregate_expression(&resource, aggregate_type::avg, key("name"));
     auto expr4 = make_aggregate_expression(&resource, aggregate_type::sum, key("count"));

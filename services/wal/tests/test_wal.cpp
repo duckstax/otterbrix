@@ -187,7 +187,7 @@ TEST_CASE("delete one test") {
     auto test_wal = create_test_wal("/tmp/wal/delete_one", &resource);
 
     for (int num = 1; num <= 5; ++num) {
-        auto match = aggregate::make_match(make_compare_expression(std::pmr::get_default_resource(),
+        auto match = aggregate::make_match(make_compare_expression(&resource,
                                                                    compare_type::eq,
                                                                    components::expressions::key_t{"count"},
                                                                    core::parameter_id_t{1}));

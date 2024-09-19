@@ -42,8 +42,6 @@ using key = components::expressions::key_t;
 // };
 
 TEST_CASE("single_field_index:base") {
-    //TODO remove
-    // auto resource = MemoryTracerResource<std::pmr::synchronized_pool_resource>();
     auto resource = std::pmr::synchronized_pool_resource();
     auto tape = std::make_unique<impl::base_document>(&resource);
     single_field_index_t index(&resource, "single_count", {key("count")});

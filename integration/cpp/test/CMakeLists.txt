@@ -7,10 +7,10 @@ set( ${PROJECT_NAME}_SOURCES
         test_collection.cpp
         test_collection_ql.cpp
         test_collection_sql.cpp
-        test_save_load.cpp # disk + wal bug
+        test_save_load.cpp
         test_index.cpp
         test_join.cpp
-        test_connections.cpp # integration::cpp::test_connectors bug
+        test_connections.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})

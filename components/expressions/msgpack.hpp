@@ -113,32 +113,6 @@ namespace msgpack {
                 }
             };
 
-            // compare_expression_t
-            template<>
-            struct convert<components::expressions::compare_expression_ptr> final {
-                msgpack::object const& operator()(msgpack::object const& o,
-                                                  components::expressions::compare_expression_ptr& v) const {
-                    if (o.type != msgpack::type::ARRAY) {
-                        throw msgpack::type_error();
-                    }
-                    if (o.via.array.size != 4) {
-                        throw msgpack::type_error();
-                    }
-                    auto type = static_cast<components::expressions::compare_type>(o.via.array.ptr[0].as<uint8_t>());
-                    auto key = o.via.array.ptr[1].as<components::expressions::key_t>();
-                    auto value = o.via.array.ptr[2].as<core::parameter_id_t>();
-                    v = components::expressions::make_compare_expression(std::pmr::get_default_resource(),
-                                                                         type,
-                                                                         key,
-                                                                         value);
-                    for (uint32_t i = 0; i < o.via.array.ptr[3].via.array.size; ++i) {
-                        v->append_child(
-                            o.via.array.ptr[3].via.array.ptr[i].as<components::expressions::compare_expression_ptr>());
-                    }
-                    return o;
-                }
-            };
-
             template<>
             struct pack<components::expressions::compare_expression_ptr> final {
                 template<typename Stream>

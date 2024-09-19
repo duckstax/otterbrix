@@ -48,16 +48,12 @@ namespace components::document {
         using allocator_type = std::pmr::memory_resource;
 
         document_t();
-
         ~document_t() override;
 
-        document_t(document_t&&) noexcept = delete;
-
         document_t(const document_t&) = delete;
-
-        document_t& operator=(document_t&&) noexcept = delete;
-
+        document_t(document_t&&) = delete;
         document_t& operator=(const document_t&) = delete;
+        document_t& operator=(document_t&&) = delete;
 
         explicit document_t(allocator_type*, bool = true);
 
