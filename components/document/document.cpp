@@ -147,7 +147,7 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_array()) {
             return nullptr; // temporarily
         }
-        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t), alignof(document_t)))
             document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
@@ -156,7 +156,7 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_object()) {
             return nullptr; // temporarily
         }
-        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t), alignof(document_t)))
             document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
@@ -505,7 +505,7 @@ namespace components::document {
     }
 
     document_t::ptr document_t::document_from_json(const std::string& json, document_t::allocator_type* allocator) {
-        auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
+        auto res = new (allocator->allocate(sizeof(document_t), alignof(document_t))) document_t(allocator, true);
         auto tree = boost::json::parse(json);
         auto obj = res->element_ind_->as_object();
         for (auto& [key, val] : tree.get_object()) {
