@@ -77,7 +77,7 @@ jobs:
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel --verbose
+          python3 setup.py bdist_wheel --verbose -D_GLIBCXX_USE_CXX11_ABI
 
       - name: Repair wheel
         run: |
