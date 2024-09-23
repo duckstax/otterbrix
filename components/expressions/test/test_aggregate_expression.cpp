@@ -12,6 +12,7 @@ TEST_CASE("expression::aggregate::equals") {
     auto expr3 = make_aggregate_expression(&resource, aggregate_type::avg, key("name"));
     auto expr4 = make_aggregate_expression(&resource, aggregate_type::sum, key("count"));
     auto expr_union1 = make_aggregate_expression(&resource, aggregate_type::count);
+
     expr_union1->append_param(core::parameter_id_t(0));
     expr_union1->append_param(key("name"));
     expr_union1->append_param(expr1);

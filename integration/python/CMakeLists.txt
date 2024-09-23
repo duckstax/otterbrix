@@ -4,6 +4,7 @@ set(${PROJECT_NAME}_sql_sources
         sql/convert.cpp
         sql/spaces.cpp
         sql/wrapper_client.cpp
+        sql/wrapper_connection.cpp
         sql/wrapper_collection.cpp
         sql/wrapper_database.cpp
         sql/wrapper_cursor.cpp
@@ -23,6 +24,7 @@ set(otterbrix_LIBS
         otterbrix::disk
         otterbrix::locks
         otterbrix::ql
+        otterbrix::b_plus_tree
 )
 
 #SET(PYTHON_EXECUTABLE python3)
@@ -48,7 +50,6 @@ target_link_libraries(
         #CONAN_PKG::date
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
-        CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt

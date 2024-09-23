@@ -9,6 +9,7 @@ namespace services::index {
         create,
         drop,
         insert,
+        insert_many,
         remove,
         find,
         success,
@@ -17,6 +18,6 @@ namespace services::index {
         error
     };
 
-    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::index, type); }
+    constexpr auto handler_id(route type) { return handler_id(group_id_t::index, type); }
 
 } // namespace services::index

@@ -1,19 +1,12 @@
 import os
 import pytest
-import shutil
-from otterbrix import Client, DataBase, Collection, TypeIndex, CompareIndex
-
-if os.path.isdir('./wal'):
-    shutil.rmtree('./wal')
-
-if os.path.isdir('./disk'):
-    shutil.rmtree('./disk')
+from otterbrix import Client, DataBase, Collection, TypeIndex
 
 
-database_name = "TestDatabase"
-collection_name = "TestCollection"
+database_name = "TestDatabase_1"
+collection_name = "TestCollection_1"
 
-client = Client()
+client = Client(os.getcwd() + "/test_collection_index")
 database = client[database_name]
 
 
@@ -37,8 +30,8 @@ def insert(collection, num):
 @pytest.fixture()
 def gen_collection(request):
     collection = database[collection_name]
-    collection.create_index(['count'], TypeIndex.SINGLE, CompareIndex.INT64)
-    collection.create_index(['countStr'], TypeIndex.SINGLE, CompareIndex.STR)
+    collection.create_index(['count'], TypeIndex.SINGLE)
+    collection.create_index(['countStr'], TypeIndex.SINGLE)
     for num in range(1000):
         insert(collection, num)
 

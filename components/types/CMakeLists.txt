@@ -2,6 +2,7 @@ project(types CXX)
 
 set(SOURCE_${PROJECT_NAME}
         types.cpp
+        physical_value.cpp
 )
 
 add_library(otterbrix_${PROJECT_NAME}
@@ -16,3 +17,7 @@ target_include_directories(
         otterbrix_${PROJECT_NAME}
         PUBLIC
 )
+
+if (DEV_MODE)
+    add_subdirectory(tests)
+endif ()

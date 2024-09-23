@@ -19,6 +19,7 @@ namespace services::collection::operators {
 
     std::pmr::vector<operator_write_data_t::document_id_t>& operator_write_data_t::documents() { return documents_; }
 
+    // TODO return move
     void operator_write_data_t::append(document_id_t document) { documents_.push_back(std::move(document)); }
 
 } // namespace services::collection::operators

@@ -48,16 +48,12 @@ namespace components::document {
         using allocator_type = std::pmr::memory_resource;
 
         document_t();
-
         ~document_t() override;
 
-        document_t(document_t&&) noexcept;
-
         document_t(const document_t&) = delete;
-
-        document_t& operator=(document_t&&) noexcept = delete;
-
+        document_t(document_t&&) = delete;
         document_t& operator=(const document_t&) = delete;
+        document_t& operator=(document_t&&) = delete;
 
         explicit document_t(allocator_type*, bool = true);
 
@@ -203,12 +199,6 @@ namespace components::document {
 
         document_t(ptr ancestor, allocator_type* allocator, json_trie_node_element* index);
 
-        impl::base_document* mut_src_;
-        tape_builder builder_{};
-        boost::intrusive_ptr<json_trie_node_element> element_ind_;
-        std::pmr::vector<ptr> ancestors_{};
-        bool is_root_;
-
         constexpr static inserter_ptr creators[]{json_trie_node_element::create_object,
                                                  json_trie_node_element::create_array,
                                                  json_trie_node_element::create_deleter};
@@ -241,6 +231,13 @@ namespace components::document {
         friend ptr make_upsert_document(const ptr& source);
         friend class msgpack_decoder_t;
         friend class py_handle_decoder_t;
+
+    private:
+        impl::base_document* mut_src_;
+        tape_builder builder_{};
+        boost::intrusive_ptr<json_trie_node_element> element_ind_;
+        std::pmr::vector<ptr> ancestors_{};
+        bool is_root_;
     };
 
     using document_ptr = document_t::ptr;

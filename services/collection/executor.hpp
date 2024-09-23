@@ -16,9 +16,9 @@ namespace services::collection::executor {
     };
     using plan_storage_t = core::pmr::btree::btree_t<components::session::session_id_t, plan_t>;
 
-    class executor_t final : public actor_zeta::basic_async_actor {
+    class executor_t final : public actor_zeta::basic_actor<executor_t> {
     public:
-        executor_t(services::memory_storage_t* memory_storage, std::pmr::memory_resource* resource, log_t&& log);
+        executor_t(services::memory_storage_t* memory_storage, log_t&& log);
         ~executor_t() = default;
 
         void execute_plan(const components::session::session_id_t& session,
@@ -26,7 +26,7 @@ namespace services::collection::executor {
                           components::ql::storage_parameters parameters,
                           services::context_storage_t&& context_storage);
 
-        void create_documents(session_id_t& session,
+        void create_documents(const session_id_t& session,
                               context_collection_t* collection,
                               const std::pmr::vector<document_ptr>& documents);
 
@@ -41,6 +41,9 @@ namespace services::collection::executor {
         void index_find_finish(const session_id_t& session,
                                const std::pmr::vector<document_id_t>& result,
                                context_collection_t* collection);
+
+        auto make_type() const noexcept -> const char* const;
+        actor_zeta::behavior_t behavior();
 
     private:
         void traverse_plan_(const components::session::session_id_t& session,
@@ -71,12 +74,19 @@ namespace services::collection::executor {
                                   context_collection_t* context_,
                                   operators::operator_ptr plan);
 
+    private:
         actor_zeta::address_t memory_storage_ = actor_zeta::address_t::empty_address();
-        std::pmr::memory_resource* resource_;
         plan_storage_t plans_;
         log_t log_;
+
+        // Behaviors
+        actor_zeta::behavior_t execute_plan_;
+        actor_zeta::behavior_t create_documents_;
+        actor_zeta::behavior_t create_index_finish_;
+        actor_zeta::behavior_t create_index_finish_index_exist_;
+        actor_zeta::behavior_t index_modify_finish_;
+        actor_zeta::behavior_t index_find_finish_;
     };
 
-    using executor_ptr = std::unique_ptr<executor_t, std::function<void(executor_t*)>>;
-
+    using executor_ptr = std::unique_ptr<executor_t, actor_zeta::pmr::deleter_t>;
 } // namespace services::collection::executor

@@ -19,18 +19,9 @@ namespace components::document {
         }
     }
 
-    document_t::document_t(document_t&& other) noexcept
-        : mut_src_(other.mut_src_)
-        , builder_(*mut_src_)
-        , element_ind_(std::move(other.element_ind_))
-        , ancestors_(std::move(other.ancestors_))
-        , is_root_(other.is_root_) {
-        other.mut_src_ = nullptr;
-        other.is_root_ = false;
-    }
-
     document_t::document_t(document_t::allocator_type* allocator, bool is_root)
-        : mut_src_(is_root ? new (allocator->allocate(sizeof(impl::base_document))) impl::base_document(allocator)
+        : mut_src_(is_root ? new (allocator->allocate(sizeof(impl::base_document), alignof(impl::base_document)))
+                                 impl::base_document(allocator)
                            : nullptr)
         , element_ind_(is_root ? json_trie_node_element::create_object(allocator) : nullptr)
         , ancestors_(allocator)
@@ -156,7 +147,7 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_array()) {
             return nullptr; // temporarily
         }
-        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t), alignof(document_t)))
             document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
@@ -165,7 +156,7 @@ namespace components::document {
         if (node_ptr == nullptr || !node_ptr->is_object()) {
             return nullptr; // temporarily
         }
-        return new (element_ind_->get_allocator()->allocate(sizeof(document_t)))
+        return new (element_ind_->get_allocator()->allocate(sizeof(document_t), alignof(document_t)))
             document_t({this}, element_ind_->get_allocator(), node_ptr);
     }
 
@@ -514,7 +505,7 @@ namespace components::document {
     }
 
     document_t::ptr document_t::document_from_json(const std::string& json, document_t::allocator_type* allocator) {
-        auto res = new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
+        auto res = new (allocator->allocate(sizeof(document_t), alignof(document_t))) document_t(allocator, true);
         auto tree = boost::json::parse(json);
         auto obj = res->element_ind_->as_object();
         for (auto& [key, val] : tree.get_object()) {
@@ -859,7 +850,7 @@ namespace components::document {
     }
 
     document_ptr make_document(document_t::allocator_type* allocator) {
-        return new (allocator->allocate(sizeof(document_t))) document_t(allocator, true);
+        return new (allocator->allocate(sizeof(document_t), alignof(document_t))) document_t(allocator, true);
     }
 
     impl::error_code_t unescape_key_(std::string_view key,
