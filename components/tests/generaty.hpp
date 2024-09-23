@@ -1,12 +1,11 @@
 #pragma once
 
-#include <components/document/core/array.hpp>
-#include <components/document/core/dict.hpp>
 #include <components/document/document.hpp>
 
 using namespace components::document;
 
-document::retained_t<document::impl::array_t> gen_array(int num);
-document::retained_t<document::impl::dict_t> gen_dict(int num);
+void gen_array(int num, const document_ptr& array);
+void gen_dict(int num, const document_ptr& dict);
 std::string gen_id(int num);
-document_ptr gen_doc(int num);
+std::pmr::string gen_id(int num, std::pmr::memory_resource* resource);
+document_ptr gen_doc(int num, std::pmr::memory_resource* resource);

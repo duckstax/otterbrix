@@ -4,7 +4,6 @@
 #include <components/index/single_field_index.hpp>
 #include <core/pmr.hpp>
 #include <services/collection/collection.hpp>
-#include <services/collection/create_index_utils.hpp>
 #include <services/collection/route.hpp>
 #include <services/collection/session/session.hpp>
 #include <services/disk/index_disk.hpp>
@@ -20,43 +19,40 @@ namespace services::collection::operators {
               "operator_add_index::on_execute_impl session: {}, index: {}",
               pipeline_context->session.data(),
               index_ql_->name());
+        switch (index_ql_->index_type_) {
+            case components::ql::index_type::single: {
+                const bool index_exist = context_->index_engine()->has_index(index_ql_->name());
+                const auto id_index = index_exist
+                                          ? components::index::INDEX_ID_UNDEFINED
+                                          : components::index::make_index<components::index::single_field_index_t>(
+                                                context_->index_engine(),
+                                                index_ql_->name(),
+                                                index_ql_->keys_);
 
-        // Index has pre setup compare type already
-        if (index_ql_->index_compare_ != core::type::undef) {
-            create_index_impl(context_, pipeline_context, std::move(index_ql_));
-            return;
+                sessions::make_session(context_->sessions(),
+                                       pipeline_context->session,
+                                       index_ql_->name(),
+                                       sessions::create_index_t{pipeline_context->current_message_sender, id_index});
+                pipeline_context->send(context_->disk(),
+                                       services::index::handler_id(services::index::route::create),
+                                       std::move(*(index_ql_.release())),
+                                       context_);
+                break;
+            }
+            case components::ql::index_type::composite:
+            case components::ql::index_type::multikey:
+            case components::ql::index_type::hashed:
+            case components::ql::index_type::wildcard: {
+                trace(context_->log(), "index_type not implemented");
+                assert(false && "index_type not implemented");
+                break;
+            }
+            case components::ql::index_type::no_valid: {
+                trace(context_->log(), "index_type not valid");
+                assert(false && "index_type not valid");
+                break;
+            }
         }
-
-        // If no documents exist and current index hasn't compare type, add to pending indexes vector
-        if (context_->storage().empty()) {
-            trace(context_->log(), "No documents found, add create_index to pending indexes");
-            pipeline_context->send(pipeline_context->current_message_sender,
-                                   services::collection::handler_id(services::collection::route::execute_plan_finish),
-                                   components::cursor::make_cursor(core::pmr::default_resource(),
-                                                                   components::cursor::operation_status_t::success));
-            context_->pending_indexes().emplace_back(
-                pending_index_create{std::make_unique<components::ql::create_index_t>(std::move(*index_ql_.get())),
-                                     std::make_unique<components::pipeline::context_t>(std::move(*pipeline_context))});
-            index_ql_.release();
-            return;
-        }
-
-        // Get view for first doc to retrieve types by key
-        const auto doc_view = document_view_t(context_->storage().begin()->second);
-
-        if (!try_update_index_compare(doc_view, index_ql_)) {
-            warn(context_->log(),
-                 "Can't deduce compare type for index: {} with key {}",
-                 index_ql_->name_,
-                 index_ql_->keys_.front().as_string());
-            pipeline_context->send(
-                pipeline_context->current_message_sender,
-                services::collection::handler_id(services::collection::route::execute_plan_finish),
-                components::cursor::make_cursor(core::pmr::default_resource(),
-                                                components::cursor::error_code_t::index_create_fail,
-                                                "index with name : " + index_ql_->name_ + " fail to deduce type"));
-            return;
-        }
-        create_index_impl(context_, pipeline_context, std::move(index_ql_));
     }
+
 } // namespace services::collection::operators

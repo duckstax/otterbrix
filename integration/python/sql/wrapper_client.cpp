@@ -5,6 +5,7 @@
 
 #include "spaces.hpp"
 #include <services/collection/collection.hpp>
+#include <utility>
 
 #include "wrapper_database.hpp"
 
@@ -14,20 +15,21 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 namespace otterbrix {
 
+    wrapper_client::wrapper_client(spaces_ptr space)
+        : ptr_(std::move(space))
+        , log_(ptr_->get_log().clone()) {
+        debug(log_, "wrapper_client::wrapper_client()");
+        ptr_->dispatcher()->load();
+    }
+
     wrapper_database_ptr wrapper_client::get_or_create(const std::string& name) {
         debug(log_, "wrapper_client::get_or_create name database: {}", name);
         auto session_tmp = otterbrix::session_id_t();
-        ptr_->create_database(session_tmp, name);
-        auto result = wrapper_database_ptr(new wrapper_database(name, ptr_, log_));
+        ptr_->dispatcher()->create_database(session_tmp, name);
+        auto result = wrapper_database_ptr(new wrapper_database(name, ptr_->dispatcher(), log_));
         debug(log_, "wrapper_client::get_or_create return wrapper_database_ptr");
         names_.emplace(name, result);
         return result;
-    }
-
-    wrapper_client::wrapper_client(log_t& log, wrapper_dispatcher_t* dispatcher)
-        : ptr_(dispatcher)
-        , log_(log.clone()) {
-        debug(log_, "wrapper_client::wrapper_client()");
     }
 
     wrapper_client::~wrapper_client() { trace(log_, "delete wrapper_client"); }
@@ -43,6 +45,7 @@ namespace otterbrix {
     wrapper_cursor_ptr wrapper_client::execute(const std::string& query) {
         debug(log_, "wrapper_client::execute");
         auto session = otterbrix::session_id_t();
-        return wrapper_cursor_ptr(new wrapper_cursor{session, ptr_->execute_sql(session, query)});
+        return wrapper_cursor_ptr(
+            new wrapper_cursor{ptr_->dispatcher()->execute_sql(session, query), ptr_->dispatcher()});
     }
 } // namespace otterbrix

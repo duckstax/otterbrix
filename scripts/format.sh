@@ -8,4 +8,4 @@ components \
 core \
 example \
 integration \
-services 
+services

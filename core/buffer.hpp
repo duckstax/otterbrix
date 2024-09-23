@@ -115,7 +115,7 @@ namespace core {
         void* data_{nullptr};
         std::size_t size_{};
         std::size_t capacity_{};
-        std::pmr::memory_resource* mr_{std::pmr::get_default_resource()};
+        std::pmr::memory_resource* mr_;
 
         void allocate(std::size_t bytes) {
             size_ = bytes;

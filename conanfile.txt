@@ -6,18 +6,19 @@ msgpack-cxx/4.1.1
 catch2/2.13.7 #catch2/3.4.0
 crc32c/1.1.2
 abseil/20211102.0
-rocksdb/6.20.3
 benchmark/1.6.1
 zlib/1.2.12
 bzip2/1.0.8
 magic_enum/0.8.1
 
-actor-zeta/1.0.0a7
+actor-zeta/1.0.0a11@duckstax/stable
 
 
 [options]
 actor-zeta:cxx_standard=17
 actor-zeta:fPIC=True
+actor-zeta:exceptions_disable=False
+actor-zeta:rtti_disable=False
 #OpenSSL:shared = True
 
 [generators]

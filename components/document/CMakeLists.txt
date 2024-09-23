@@ -1,29 +1,24 @@
 project(document)
 
 set(${PROJECT_NAME}_SOURCES
-        core/array.cpp
-        core/dict.cpp
-        core/pointer.cpp
-        core/shared_keys.cpp
-        core/value.cpp
-        internal/heap.cpp
-        internal/value_slot.cpp
+        container/json_object.cpp
+        container/json_array.cpp
+        impl/tape_builder.cpp
+        impl/element.cpp
+        impl/tape_ref.cpp
+        impl/tape_writer.cpp
+        impl/document.cpp
+        impl/error.cpp
         msgpack/msgpack_encoder.cpp
-        support/better_assert.cpp
-        support/exception.cpp
-        support/num_conversion.cpp
-        support/ref_counted.cpp
-        support/varint.cpp
 
         document.cpp
-        document_view.cpp
-        structure.cpp
-        wrapper_value.cpp
+        json_trie_node.cpp
+        string_splitter.cpp
+        value.cpp
 )
 
-
 add_library(otterbrix_${PROJECT_NAME}
-            ${${PROJECT_NAME}_SOURCES}
+        ${${PROJECT_NAME}_SOURCES}
 )
 
 
@@ -31,22 +26,17 @@ add_library(otterbrix::${PROJECT_NAME} ALIAS otterbrix_${PROJECT_NAME})
 
 set_property(TARGET otterbrix_${PROJECT_NAME} PROPERTY EXPORT_NAME ${PROJECT_NAME})
 
-target_link_libraries(
-        otterbrix_${PROJECT_NAME} PUBLIC
-        CONAN_PKG::msgpack-cxx
-        CONAN_PKG::boost
-        dl
-)
+target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/components/document/")
 
-target_include_directories(
+target_link_libraries(
         otterbrix_${PROJECT_NAME}
-        PUBLIC
-        core
-        json
-        mutable
-        support
+        otterbrix::types
+        CONAN_PKG::boost
+        CONAN_PKG::abseil
+        CONAN_PKG::msgpack-cxx
 )
 
 if (DEV_MODE)
-  add_subdirectory(test)
+    add_subdirectory(test)
+    add_subdirectory(benchmark)
 endif()

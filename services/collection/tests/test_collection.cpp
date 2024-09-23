@@ -42,6 +42,35 @@ document_ptr gen_doc(const std::string& id,
 }
 
 struct context_t final {
+    context_t(log_t& log)
+        : resource(std::pmr::get_default_resource())
+        , scheduler_(new core::non_thread_scheduler::scheduler_test_t(1, 1))
+        , manager_database_(actor_zeta::spawn_supervisor<manager_database_t>(resource, scheduler_.get(), log))
+        , database_(actor_zeta::spawn_supervisor<database_t>(manager_database_.get(), "TestDataBase", log, 1, 1000))
+        , collection_([this](auto& log) {
+            auto allocate_byte = sizeof(collection_t);
+            auto allocate_byte_alignof = alignof(collection_t);
+            void* buffer = resource->allocate(allocate_byte, allocate_byte_alignof);
+            auto* collection = new (buffer)
+                collection_t(database_.get(), "TestCollection", log, actor_zeta::address_t::empty_address());
+            return std::unique_ptr<collection_t, actor_zeta::pmr::deleter>(collection,
+                                                                           actor_zeta::pmr::deleter(resource));
+        }(log)) {}
+
+    collection_t* operator->() const noexcept { return collection_.get(); }
+
+    collection_t& operator*() const noexcept { return *(collection_); }
+
+    ~context_t() = default;
+
+    actor_zeta::scheduler_ptr scheduler_;
+    std::pmr::memory_resource* resource;
+    std::unique_ptr<manager_database_t> manager_database_;
+    std::unique_ptr<database_t> database_;
+    std::unique_ptr<collection_t> collection_;
+};
+
+struct context_t final {
     using collection_ptr = actor_zeta::intrusive_ptr<collection_t>;
 
     collection_t* operator->() const noexcept { return collection_.get(); }
@@ -51,8 +80,8 @@ struct context_t final {
     ~context_t() {}
 
     actor_zeta::scheduler_ptr scheduler_;
-    actor_zeta::detail::pmr::memory_resource* resource;
-    std::unique_ptr<manager_database_t> manager_database_;
+    std::pmr::memory_resource* resource;
+    std::unique_ptr<manager_database_t> manager_database_; // TODO add deleter_t
     std::unique_ptr<database_t> database_;
     std::unique_ptr<collection_t> collection_;
 };
@@ -62,7 +91,7 @@ using context_ptr = std::unique_ptr<context_t>;
 context_ptr make_context(log_t& log) {
     auto context = std::make_unique<context_t>();
     context->scheduler_.reset(new core::non_thread_scheduler::scheduler_test_t(1, 1));
-    context->resource = actor_zeta::detail::pmr::get_default_resource();
+    context->resource = std::pmr::synchronized_pool_resource();
     context->manager_database_ =
         actor_zeta::spawn_supervisor<manager_database_t>(context->resource, context->scheduler_.get(), log);
     context->database_ =

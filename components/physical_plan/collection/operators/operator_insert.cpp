@@ -23,7 +23,7 @@ namespace services::collection::operators {
             context_->storage().insert_or_assign(id, document);
             context_->index_engine()->insert_document(document, pipeline_context);
             output_->append(document);
-            modified_->append(id);
+            modified_->append(std::move(id));
         }
     }
 

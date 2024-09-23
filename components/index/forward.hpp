@@ -4,7 +4,7 @@
 
 #include <components/cursor/cursor.hpp>
 #include <components/document/document.hpp>
-#include <components/document/wrapper_value.hpp>
+#include <components/document/value.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/ql/index.hpp>
 
@@ -16,7 +16,7 @@ namespace components::index {
     using key_t = expressions::key_t;
     using components::ql::keys_base_storage_t;
     using id_index = uint32_t;
-    using value_t = ::document::wrapper_value_t;
+    using value_t = document::value_t;
     using query_t = expressions::compare_expression_ptr;
     using result_set_t = cursor::sub_cursor_t;
 

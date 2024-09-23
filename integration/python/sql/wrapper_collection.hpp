@@ -14,7 +14,6 @@
 #include <log/log.hpp>
 
 #include <components/ql/index.hpp>
-#include <core/types.hpp>
 
 #include "forward.hpp"
 #include "integration/cpp/wrapper_dispatcher.hpp"
@@ -42,7 +41,7 @@ namespace otterbrix {
         wrapper_cursor_ptr delete_many(py::object cond);
         bool drop();
         ///auto aggregate(const py::sequence& it)-> wrapper_cursor_ptr;
-        bool create_index(const py::list& keys, index_type type, core::type compare);
+        bool create_index(const py::list& keys, index_type type);
 
     private:
         const std::string name_;

@@ -27,7 +27,7 @@ namespace components::logical_plan {
     std::string node_update_t::to_string_impl() const {
         std::stringstream stream;
         stream << "$update: {";
-        stream << document::document_to_json(update_) << ", ";
+        stream << update_->to_json() << ", ";
         stream << "$upsert: " << upsert_ << ", ";
         bool is_first = true;
         for (auto child : children()) {

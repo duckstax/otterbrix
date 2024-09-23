@@ -32,10 +32,10 @@ auto log_t::context(std::shared_ptr<spdlog::async_logger> logger) noexcept -> vo
 auto log_t::is_valid() noexcept -> bool { return logger_ != nullptr; }
 
 auto initialization_logger(std::string_view name, std::string prefix) -> log_t {
+    std::filesystem::create_directories(prefix);
     if (prefix.back() != '/') {
         prefix += '/';
     }
-    std::filesystem::create_directory(prefix);
 
     using namespace std::chrono;
     system_clock::time_point tp = system_clock::now();

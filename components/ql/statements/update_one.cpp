@@ -10,7 +10,7 @@ namespace components::ql {
                                const storage_parameters& parameters,
                                const components::document::document_ptr& update,
                                bool upsert)
-        : ql_param_statement_t(statement_type::update_one, database, collection)
+        : ql_param_statement_t(statement_type::update_one, database, collection, update->get_allocator())
         , match_(match)
         , update_(update)
         , upsert_(upsert) {
@@ -20,7 +20,10 @@ namespace components::ql {
     update_one_t::update_one_t(components::ql::aggregate_statement_raw_ptr condition,
                                const components::document::document_ptr& update,
                                bool upsert)
-        : ql_param_statement_t(statement_type::update_one, condition->database_, condition->collection_)
+        : ql_param_statement_t(statement_type::update_one,
+                               condition->database_,
+                               condition->collection_,
+                               update->get_allocator())
         , update_(update)
         , upsert_(upsert) {
         if (condition->count_operators() > 0) {

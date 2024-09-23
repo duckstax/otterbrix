@@ -1,15 +1,13 @@
 #include "wrapper_cursor.hpp"
 #include "convert.hpp"
-#include "integration/cpp/route.hpp"
 
 // The bug related to the use of RTTI by the pybind11 library has been fixed: a
 // declaration should be in each translation unit.
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
-wrapper_cursor::wrapper_cursor(components::session::session_id_t session, wrapper_cursor::pointer cursor)
-    : session_(session)
-    , ptr_(cursor)
-    , dispatcher_(actor_zeta::address_t::empty_address()) {}
+wrapper_cursor::wrapper_cursor(pointer cursor, otterbrix::wrapper_dispatcher_t* dispatcher)
+    : ptr_(std::move(cursor))
+    , dispatcher_(dispatcher) {}
 void wrapper_cursor::close() { close_ = true; }
 
 bool wrapper_cursor::has_next() { return ptr_->has_next(); }
@@ -86,7 +84,7 @@ py::tuple wrapper_cursor::get_error() const {
     return py::make_tuple(type, ptr_->get_error().what);
 }
 
-std::string wrapper_cursor::print() { return ptr_->get()->to_json(); }
+std::string wrapper_cursor::print() { return std::string(ptr_->get()->to_json()); }
 
 wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
     if (py::isinstance<py::dict>(sorter)) {
@@ -97,6 +95,10 @@ wrapper_cursor& wrapper_cursor::sort(py::object sorter, py::object order) {
     return *this;
 }
 
-py::object wrapper_cursor::get_(const std::string& key) const { return from_object(*ptr_->get(), key); }
+void wrapper_cursor::execute(std::string& query) {
+    ptr_ = dispatcher_->execute_sql(components::session::session_id_t(), query);
+}
 
-py::object wrapper_cursor::get_(std::size_t index) const { return from_document(*ptr_->get(index)); }
+py::object wrapper_cursor::get_(const std::string& key) const { return from_object(ptr_->get(), key); }
+
+py::object wrapper_cursor::get_(std::size_t index) const { return from_document(ptr_->get(index)); }

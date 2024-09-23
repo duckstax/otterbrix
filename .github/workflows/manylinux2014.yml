@@ -1,6 +1,6 @@
 name: manylinux2014
 
-on: [pull_request]
+#on: [pull_request]
         
 env:
   BUILD_TYPE: Release
@@ -62,7 +62,6 @@ jobs:
           conan install conanfile.txt --build missing  \
           --build fmt \
           --build spdlog  \
-          --build rocksdb  \
           -s build_type=Release
 
 
@@ -117,7 +116,7 @@ jobs:
           sudo apt install -y python3-pip python3-venv
           pip3 install --retries=30 pytest==6.2.5
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: otterbrix-wheel-${{ matrix.python-version }}
           path: ./app
@@ -161,7 +160,7 @@ jobs:
           sudo apt update 
           sudo apt install -y python3-pip
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: otterbrix-wheel-${{ matrix.python-version }}
           path: ./app

@@ -5,7 +5,7 @@
 #include <actor-zeta/actor-zeta.hpp>
 
 #include <components/base/collection_full_name.hpp>
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 
 #include <boost/intrusive/list.hpp>
 #include <boost/intrusive/unordered_set_hook.hpp>
@@ -14,8 +14,7 @@
 
 namespace components::cursor {
 
-    using data_t = components::document::document_view_t;
-    using data_ptr = const data_t*;
+    using data_ptr = document::document_ptr;
     using index_t = int32_t;
     constexpr index_t start_index = -1;
 
@@ -47,17 +46,17 @@ namespace components::cursor {
         explicit error_t(error_code_t type, const std::string& what);
     };
 
-    class sub_cursor_t : public boost::intrusive::list_base_hook<> {
+    class sub_cursor_t {
     public:
         sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name);
         const collection_full_name_t& collection_name();
         std::size_t size() const;
-        std::pmr::vector<data_t>& data();
-        void append(data_t);
+        std::pmr::vector<data_ptr>& data();
+        void append(data_ptr);
 
     private:
         collection_full_name_t collection_name_;
-        std::pmr::vector<data_t> data_;
+        std::pmr::vector<data_ptr> data_;
     };
 
     class cursor_t : public boost::intrusive_ref_counter<cursor_t> {
@@ -65,7 +64,7 @@ namespace components::cursor {
         explicit cursor_t(std::pmr::memory_resource* resource);
         explicit cursor_t(std::pmr::memory_resource* resource, const error_t& error);
         explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
-        void push(sub_cursor_t* sub_cursor);
+        void push(std::unique_ptr<sub_cursor_t> sub_cursor);
         std::size_t size() const;
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator end();

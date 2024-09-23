@@ -4,6 +4,9 @@
 #include "key.hpp"
 #include <memory>
 #include <memory_resource>
+#include <msgpack.hpp>
+#include <msgpack/adaptor/list.hpp>
+#include <msgpack/zone.hpp>
 
 namespace components::expressions {
 

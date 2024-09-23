@@ -3,12 +3,14 @@ project(test_otterbrix)
 add_definitions(-DDEV_MODE)
 
 set( ${PROJECT_NAME}_SOURCES
+        test_instances.cpp
         test_collection.cpp
         test_collection_ql.cpp
         test_collection_sql.cpp
         test_save_load.cpp
         test_index.cpp
         test_join.cpp
+        test_connections.cpp
 )
 
 add_executable(${PROJECT_NAME} main.cpp ${${PROJECT_NAME}_SOURCES})
@@ -36,7 +38,6 @@ target_link_libraries(
         CONAN_PKG::catch2
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
-        CONAN_PKG::rocksdb
         CONAN_PKG::benchmark
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost

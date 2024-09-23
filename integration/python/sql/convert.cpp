@@ -10,10 +10,7 @@
 
 #include <actor-zeta.hpp>
 
-#include <components/document/core/array.hpp>
-#include <components/document/core/dict.hpp>
-
-#include <components/document/document_view.hpp>
+#include <components/document/document.hpp>
 #include <components/expressions/aggregate_expression.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <components/expressions/scalar_expression.hpp>
@@ -23,84 +20,155 @@
 PYBIND11_DECLARE_HOLDER_TYPE(T, boost::intrusive_ptr<T>)
 
 using components::document::document_ptr;
-using components::document::document_view_t;
+using components::document::value_t;
 
-::document::retained_const_t<::document::impl::value_t> to_(const py::handle& obj) {
+value_t to_value(const py::handle& obj, components::document::impl::base_document* tape) {
     if (py::isinstance<py::bool_>(obj)) {
-        return ::document::impl::new_value(obj.cast<bool>());
-    }
-    if (py::isinstance<py::int_>(obj)) {
-        return ::document::impl::new_value(obj.cast<long>());
-    }
-    if (py::isinstance<py::float_>(obj)) {
-        return ::document::impl::new_value(obj.cast<double>());
-    }
-    if (py::isinstance<py::bytes>(obj)) {
+        return value_t{tape, obj.cast<bool>()};
+    } else if (py::isinstance<py::int_>(obj)) {
+        return value_t{tape, obj.cast<long>()};
+    } else if (py::isinstance<py::float_>(obj)) {
+        return value_t{tape, obj.cast<double>()};
+    } else if (py::isinstance<py::bytes>(obj)) {
         py::module base64 = py::module::import("base64");
-        return ::document::impl::new_value(base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>());
+        return value_t{tape, base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>()};
+    } else if (py::isinstance<py::str>(obj)) {
+        return value_t{tape, obj.cast<std::string>()};
     }
-    if (py::isinstance<py::str>(obj)) {
-        return ::document::impl::new_value(obj.cast<std::string>());
-    }
-    if (py::isinstance<py::tuple>(obj) || py::isinstance<py::list>(obj)) {
-        auto out = ::document::impl::array_t::new_array();
-        for (const py::handle value : obj) {
-            out->append(to_(value));
-        }
-        return out->as_array();
-    }
-    if (py::isinstance<py::dict>(obj)) {
-        auto out = ::document::impl::dict_t::new_dict();
-        for (const py::handle key : obj) {
-            out->set(py::str(key).cast<std::string>(), to_(obj[key]));
-        }
-        return out->as_dict();
-    }
-    return nullptr;
+    return value_t{};
 }
 
-py::object from_(const ::document::impl::value_t* value) {
-    using document::impl::value_type;
-    if (!value) {
-        return py::none();
-    } else if (value->type() == value_type::boolean) {
-        return py::bool_(value->as_bool());
-    } else if (value->is_unsigned()) {
-        return py::int_(value->as_unsigned());
-    } else if (value->is_int()) {
-        return py::int_(value->as_int());
-    } else if (value->is_double()) {
-        return py::float_(value->as_double());
-    } else if (value->type() == value_type::string) {
-        return py::str(value->as_string());
-    } else if (value->type() == value_type::array) {
-        py::list list;
-        for (uint32_t i = 0; i < value->as_array()->count(); ++i) {
-            list.append(from_(value->as_array()->get(i)));
+void build_primitive(components::document::tape_builder& builder, const py::handle& obj) noexcept {
+    if (py::isinstance<py::bool_>(obj)) {
+        builder.build(obj.cast<bool>());
+    } else if (py::isinstance<py::int_>(obj)) {
+        builder.build(obj.cast<long>());
+    } else if (py::isinstance<py::float_>(obj)) {
+        builder.build(obj.cast<double>());
+    } else if (py::isinstance<py::bytes>(obj)) {
+        py::module base64 = py::module::import("base64");
+        builder.build(base64.attr("b64encode")(obj).attr("decode")("utf-8").cast<std::string>());
+    } else if (py::isinstance<py::str>(obj)) {
+        builder.build(obj.cast<std::string>());
+    }
+}
+
+json_trie_node* build_index(const py::handle& py_obj,
+                            components::document::tape_builder& builder,
+                            components::document::impl::base_document* mut_src,
+                            document_t::allocator_type* allocator) {
+    json_trie_node* res;
+
+    if (py::isinstance<py::dict>(py_obj)) {
+        res = json_trie_node::create_object(allocator);
+        for (const py::handle key : py_obj) {
+            res->as_object()->set(build_index(key, builder, mut_src, allocator),
+                                  build_index(py_obj[key], builder, mut_src, allocator));
         }
-        return std::move(list);
-    } else if (value->type() == value_type::dict) {
+    } else if (py::isinstance<py::tuple>(py_obj) || py::isinstance<py::list>(py_obj)) {
+        res = json_trie_node::create_array(allocator);
+        uint32_t i = 0;
+        for (const py::handle value : py_obj) {
+            res->as_array()->set(i++, build_index(value, builder, mut_src, allocator));
+        }
+    } else {
+        auto element = mut_src->next_element();
+        build_primitive(builder, py_obj);
+        res = json_trie_node::create(element, allocator);
+    }
+    return res;
+}
+
+document_ptr components::document::py_handle_decoder_t::to_document(const py::handle& py_obj,
+                                                                    std::pmr::memory_resource* resource) {
+    auto res = new (resource->allocate(sizeof(document_t))) document_t(resource, true);
+    auto obj = res->element_ind_->as_object();
+    for (const py::handle key : py_obj) {
+        obj->set(build_index(key, res->builder_, res->mut_src_, resource),
+                 build_index(py_obj[key], res->builder_, res->mut_src_, resource));
+    }
+    return res;
+}
+
+auto to_document(const py::handle& source, std::pmr::memory_resource* resource) -> document_ptr {
+    return components::document::py_handle_decoder_t::to_document(source, resource);
+}
+
+auto from_document(const element* value) -> py::object {
+    switch (value->logical_type()) {
+        case logical_type::BOOLEAN:
+            return py::bool_(value->get_bool().value());
+        case logical_type::UTINYINT:
+        case logical_type::USMALLINT:
+        case logical_type::UINTEGER:
+        case logical_type::UBIGINT:
+            return py::int_(value->get_uint64().value());
+        case logical_type::TINYINT:
+        case logical_type::SMALLINT:
+        case logical_type::INTEGER:
+        case logical_type::BIGINT:
+            return py::int_(value->get_int64().value());
+        case logical_type::FLOAT:
+        case logical_type::DOUBLE:
+            return py::float_(value->get_double().value());
+        case logical_type::STRING_LITERAL:
+            return py::str(value->get_string().value());
+        default:
+            return py::none();
+    }
+}
+
+auto from_document(const json_trie_node* value) -> py::object {
+    if (value->type() == json_type::OBJECT) {
         py::dict dict;
-        for (auto it = value->as_dict()->begin(); it; ++it) {
-            auto key = static_cast<std::string>(it.key()->as_string());
-            dict[py::str(key)] = from_(it.value());
+        for (auto it = value->get_object()->begin(); it != value->get_object()->end(); ++it) {
+            std::string key(it->first->get_mut()->get_string().value());
+            dict[py::str(key)] = from_document(it->second.get());
         }
         return std::move(dict);
+    } else if (value->type() == json_type::ARRAY) {
+        py::list list;
+        for (uint32_t i = 0; i < value->get_array()->size(); ++i) {
+            list.append(from_document(value->get_array()->get(i)));
+        }
+        return std::move(list);
+    }
+    if (value->type() == json_type::MUT) {
+        return from_document(value->get_mut());
     }
     return py::none();
 }
 
-auto to_document(const py::handle& source) -> components::document::document_ptr {
-    return components::document::make_document(to_(source)->as_dict());
+auto from_document(const document_ptr& document) -> py::object {
+    auto node = document->json_trie();
+    return node ? from_document(node.get()) : py::none();
 }
 
-auto from_document(const document_view_t& document) -> py::object { return from_(document.get_value()); }
-
-auto from_object(const document_view_t& document, const std::string& key) -> py::object {
-    return from_(document.get(key));
+auto from_object(const document_ptr& document, const std::string& key) -> py::object {
+    if (!document->is_exists(key)) {
+        return py::none();
+    }
+    if (document->is_array(key)) {
+        return from_document(document->get_array(key));
+    } else if (document->is_dict(key)) {
+        return from_document(document->get_dict(key));
+    } else {
+        return from_document(document->get_value(key).get_element());
+    }
 }
-
-auto from_object(const document_view_t& document, uint32_t index) -> py::object { return from_(document.get(index)); }
+auto from_object(const document_ptr& document, uint32_t index) -> py::object {
+    auto key = std::to_string(index);
+    if (!document->is_exists(key)) {
+        return py::none();
+    }
+    if (document->is_array(key)) {
+        return from_document(document->get_array(key));
+    } else if (document->is_dict(key)) {
+        return from_document(document->get_dict(key));
+    } else {
+        return from_document(document->get_value(key).get_element());
+    }
+}
 
 auto to_pylist(const std::pmr::vector<std::string>& src) -> py::list {
     py::list res;
@@ -199,7 +267,7 @@ void parse_find_condition_(std::pmr::memory_resource* resource,
     } else if (py::isinstance<py::list>(condition) || py::isinstance<py::tuple>(condition)) {
         parse_find_condition_array_(resource, parent_condition, condition, real_key, aggregate);
     } else {
-        auto value = aggregate->add_parameter(to_(condition).detach());
+        auto value = aggregate->add_parameter(to_value(condition, aggregate->parameters().tape()));
         auto sub_condition = make_compare_expression(resource, type, ex_key_t(real_key), value);
         if (sub_condition->is_union()) {
             parse_find_condition_(resource, sub_condition.get(), condition, real_key, std::string(), aggregate);
@@ -266,20 +334,20 @@ expression_ptr parse_find_condition_(std::pmr::memory_resource* resource,
 
 aggregate_expression_t::param_storage parse_aggregate_param(const py::handle& condition,
                                                             aggregate_statement* aggregate) {
-    auto value = to_(condition);
-    if (value->type() == document::impl::value_type::string && !value->as_string().empty() &&
-        value->as_string().at(0) == '$') {
-        return ex_key_t(value->as_string().substr(1));
+    auto value = to_value(condition, aggregate->parameters().tape());
+    if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
+        value.as_string().at(0) == '$') {
+        return ex_key_t(value.as_string().substr(1));
     } else {
         return aggregate->add_parameter(value);
     }
 }
 
 scalar_expression_t::param_storage parse_scalar_param(const py::handle& condition, aggregate_statement* aggregate) {
-    auto value = to_(condition);
-    if (value->type() == document::impl::value_type::string && !value->as_string().empty() &&
-        value->as_string().at(0) == '$') {
-        return ex_key_t(value->as_string().substr(1));
+    auto value = to_value(condition, aggregate->parameters().tape());
+    if (value.physical_type() == components::types::physical_type::STRING && !value.as_string().empty() &&
+        value.as_string().at(0) == '$') {
+        return ex_key_t(value.as_string().substr(1));
     } else {
         return aggregate->add_parameter(value);
     }
@@ -349,8 +417,8 @@ components::ql::aggregate::sort_t parse_sort(const py::handle& condition) {
     return sort;
 }
 
-auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> void {
-    auto* resource = actor_zeta::detail::pmr::get_default_resource(); //todo
+auto to_statement(const py::handle& source, aggregate_statement* aggregate, std::pmr::memory_resource* resource)
+    -> void {
     auto is_sequence = py::isinstance<py::sequence>(source);
 
     if (!is_sequence) {
@@ -426,8 +494,9 @@ auto to_statement(const py::handle& source, aggregate_statement* aggregate) -> v
 }
 
 auto test_to_statement(const py::handle& source) -> py::str {
-    aggregate_statement aggregate("database", "collection");
-    to_statement(source, &aggregate);
+    auto resource = std::pmr::synchronized_pool_resource();
+    aggregate_statement aggregate("database", "collection", &resource);
+    to_statement(source, &aggregate, &resource);
     std::stringstream stream;
     stream << aggregate;
     return stream.str();

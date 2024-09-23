@@ -28,7 +28,7 @@ constexpr int kDocuments = 100;
     do {                                                                                                               \
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());                        \
         for (int num = 1; num <= kDocuments; ++num) {                                                                  \
-            documents.push_back(gen_doc(num));                                                                         \
+            documents.push_back(gen_doc(num, dispatcher->resource()));                                                 \
         }                                                                                                              \
         {                                                                                                              \
             auto session = otterbrix::session_id_t();                                                                  \
@@ -50,26 +50,24 @@ constexpr int kDocuments = 100;
         }                                                                                                              \
     } while (false)
 
-#define CREATE_INDEX(INDEX_NAME, INDEX_COMPARE, KEY)                                                                   \
+#define CREATE_INDEX(INDEX_NAME, KEY)                                                                                  \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
         components::ql::create_index_t ql{database_name,                                                               \
                                           collection_name,                                                             \
                                           INDEX_NAME,                                                                  \
-                                          components::ql::index_type::single,                                          \
-                                          INDEX_COMPARE};                                                              \
+                                          components::ql::index_type::single};                                         \
         ql.keys_.emplace_back(KEY);                                                                                    \
         dispatcher->create_index(session, &ql);                                                                        \
     } while (false)
 
-#define CREATE_EXISTED_INDEX(INDEX_NAME, INDEX_COMPARE, KEY)                                                           \
+#define CREATE_EXISTED_INDEX(INDEX_NAME, KEY)                                                                          \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
         components::ql::create_index_t ql{database_name,                                                               \
                                           collection_name,                                                             \
                                           INDEX_NAME,                                                                  \
-                                          components::ql::index_type::single,                                          \
-                                          INDEX_COMPARE};                                                              \
+                                          components::ql::index_type::single};                                         \
         ql.keys_.emplace_back(KEY);                                                                                    \
         auto res = dispatcher->create_index(session, &ql);                                                             \
         REQUIRE(res->is_error() == true);                                                                              \
@@ -87,7 +85,7 @@ constexpr int kDocuments = 100;
 #define CHECK_FIND_ALL()                                                                                               \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name};                            \
+        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};    \
         auto c = dispatcher->find(session, ql);                                                                        \
         REQUIRE(c->size() == kDocuments);                                                                              \
     } while (false)
@@ -95,7 +93,7 @@ constexpr int kDocuments = 100;
 #define CHECK_FIND(KEY, COMPARE, VALUE, COUNT)                                                                         \
     do {                                                                                                               \
         auto session = otterbrix::session_id_t();                                                                      \
-        auto* ql = new components::ql::aggregate_statement{database_name, collection_name};                            \
+        auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};    \
         auto expr =                                                                                                    \
             components::expressions::make_compare_expression(dispatcher->resource(), COMPARE, key{KEY}, id_par{1});    \
         ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));                      \
@@ -109,7 +107,7 @@ constexpr int kDocuments = 100;
 #define CHECK_EXISTS_INDEX(NAME, EXISTS)                                                                               \
     do {                                                                                                               \
         auto index_name = collection_name + "_" + NAME;                                                                \
-        auto path = config.disk.path / "indexes" / collection_name / index_name;                                       \
+        auto path = config.disk.path / database_name / collection_name / index_name;                                   \
         REQUIRE(std::filesystem::exists(path) == EXISTS);                                                              \
         REQUIRE(std::filesystem::is_directory(path) == EXISTS);                                                        \
     } while (false)
@@ -119,21 +117,35 @@ TEST_CASE("integration::test_index::base") {
     test_clear_directory(config);
     test_spaces space(config);
     auto* dispatcher = space.dispatcher();
+    auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+    auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::int64, "count");
+        CREATE_INDEX("ncount", "count");
         FILL_COLLECTION();
     }
 
     INFO("find") {
         CHECK_FIND_ALL();
-        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
-        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
-        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
-        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
-        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
-        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+        do {
+            auto session = otterbrix::session_id_t();
+            auto* ql = new components::ql::aggregate_statement{database_name, collection_name, dispatcher->resource()};
+            auto expr = components::expressions::make_compare_expression(dispatcher->resource(),
+                                                                         compare_type::eq,
+                                                                         key{"count"},
+                                                                         id_par{1});
+            ql->append(operator_type::match, components::ql::aggregate::make_match(std::move(expr)));
+            ql->add_parameter(id_par{1}, new_value(10));
+            auto c = dispatcher->find(session, ql);
+            REQUIRE(c->size() == 1);
+        } while (false);
+        CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
+        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90);
+        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9);
+        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99);
+        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91);
+        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10);
     }
 }
 
@@ -146,9 +158,9 @@ TEST_CASE("integration::test_index::save_load") {
         auto* dispatcher = space.dispatcher();
 
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::int64, "count");
-        CREATE_INDEX("scount", core::type::str, "countStr");
-        CREATE_INDEX("dcount", core::type::float64, "countDouble");
+        CREATE_INDEX("ncount", "count");
+        CREATE_INDEX("scount", "countStr");
+        CREATE_INDEX("dcount", "countDouble");
         FILL_COLLECTION();
     }
 
@@ -156,14 +168,16 @@ TEST_CASE("integration::test_index::save_load") {
         test_spaces space(config);
         auto* dispatcher = space.dispatcher();
         dispatcher->load();
+        auto tape = std::make_unique<impl::base_document>(dispatcher->resource());
+        auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
 
         CHECK_FIND_ALL();
-        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
-        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
-        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
-        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
-        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
-        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+        CHECK_FIND_COUNT(compare_type::eq, new_value(10), 1);
+        CHECK_FIND_COUNT(compare_type::gt, new_value(10), 90);
+        CHECK_FIND_COUNT(compare_type::lt, new_value(10), 9);
+        CHECK_FIND_COUNT(compare_type::ne, new_value(10), 99);
+        CHECK_FIND_COUNT(compare_type::gte, new_value(10), 91);
+        CHECK_FIND_COUNT(compare_type::lte, new_value(10), 10);
     }
 }
 
@@ -175,9 +189,9 @@ TEST_CASE("integration::test_index::drop") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::int64, "count");
-        CREATE_INDEX("scount", core::type::str, "countStr");
-        CREATE_INDEX("dcount", core::type::float64, "countDouble");
+        CREATE_INDEX("ncount", "count");
+        CREATE_INDEX("scount", "countStr");
+        CREATE_INDEX("dcount", "countDouble");
         FILL_COLLECTION();
         usleep(1000000); //todo: wait
     }
@@ -225,25 +239,25 @@ TEST_CASE("integration::test_index::index already exist") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::int64, "count");
-        CREATE_INDEX("scount", core::type::str, "countStr");
-        CREATE_INDEX("dcount", core::type::float64, "countDouble");
+        CREATE_INDEX("ncount", "count");
+        CREATE_INDEX("scount", "countStr");
+        CREATE_INDEX("dcount", "countDouble");
         FILL_COLLECTION();
     }
 
     INFO("add existed ncount index") {
-        CREATE_EXISTED_INDEX("ncount", core::type::int64, "count");
-        CREATE_EXISTED_INDEX("ncount", core::type::int64, "count");
+        CREATE_EXISTED_INDEX("ncount", "count");
+        CREATE_EXISTED_INDEX("ncount", "count");
     }
 
     INFO("add existed scount index") {
-        CREATE_INDEX("scount", core::type::str, "countStr");
-        CREATE_INDEX("scount", core::type::str, "countStr");
+        CREATE_INDEX("scount", "countStr");
+        CREATE_INDEX("scount", "countStr");
     }
 
     INFO("add existed dcount index") {
-        CREATE_INDEX("dcount", core::type::float64, "countDouble");
-        CREATE_INDEX("dcount", core::type::float64, "countDouble");
+        CREATE_INDEX("dcount", "countDouble");
+        CREATE_INDEX("dcount", "countDouble");
     }
 
     INFO("find") {
@@ -262,40 +276,9 @@ TEST_CASE("integration::test_index::no_type base check") {
 
     INFO("initialization") {
         INIT_COLLECTION();
-        FILL_COLLECTION();
-        CREATE_INDEX("ncount", core::type::undef, "count");
-        CREATE_INDEX("dcount", core::type::undef, "countDouble");
-        CREATE_INDEX("scount", core::type::undef, "countStr");
-    }
-
-    INFO("check indexes") {
-        CHECK_EXISTS_INDEX("ncount", true);
-        CHECK_EXISTS_INDEX("dcount", true);
-        CHECK_EXISTS_INDEX("scount", true);
-    }
-
-    // Not working
-    // INFO("find"){
-    // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
-    // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
-    // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
-    // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
-    // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
-    // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
-    // }
-}
-
-TEST_CASE("integration::test_index::no_type pending base check") {
-    auto config = test_create_config("/tmp/otterbrix/integration/test_index/base");
-    test_clear_directory(config);
-    test_spaces space(config);
-    auto* dispatcher = space.dispatcher();
-
-    INFO("initialization") {
-        INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::undef, "count");
-        CREATE_INDEX("dcount", core::type::undef, "countDouble");
-        CREATE_INDEX("scount", core::type::undef, "countStr");
+        CREATE_INDEX("ncount", "count");
+        CREATE_INDEX("dcount", "countDouble");
+        CREATE_INDEX("scount", "countStr");
         FILL_COLLECTION();
     }
 
@@ -305,18 +288,16 @@ TEST_CASE("integration::test_index::no_type pending base check") {
         CHECK_EXISTS_INDEX("scount", true);
     }
 
-    // Not working
-    // INFO("find"){
-    // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
-    // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
-    // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
-    // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
-    // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
-    // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
-    // }
+    INFO("find") {
+        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+    }
 }
 
-// TODO this test is unstable
 TEST_CASE("integration::test_index::no_type save_load") {
     auto config = test_create_config("/tmp/otterbrix/integration/test_index/save_load");
     test_clear_directory(config);
@@ -326,9 +307,9 @@ TEST_CASE("integration::test_index::no_type save_load") {
         auto* dispatcher = space.dispatcher();
 
         INIT_COLLECTION();
-        CREATE_INDEX("ncount", core::type::undef, "count");
-        CREATE_INDEX("scount", core::type::undef, "countStr");
-        CREATE_INDEX("dcount", core::type::undef, "countDouble");
+        CREATE_INDEX("ncount", "count");
+        CREATE_INDEX("scount", "countStr");
+        CREATE_INDEX("dcount", "countDouble");
         FILL_COLLECTION();
     }
 
@@ -344,11 +325,11 @@ TEST_CASE("integration::test_index::no_type save_load") {
         dispatcher->load();
 
         CHECK_FIND_ALL();
-        // CHECK_FIND_COUNT(compare_type::eq, 10, 1);
-        // CHECK_FIND_COUNT(compare_type::gt, 10, 90);
-        // CHECK_FIND_COUNT(compare_type::lt, 10, 9);
-        // CHECK_FIND_COUNT(compare_type::ne, 10, 99);
-        // CHECK_FIND_COUNT(compare_type::gte, 10, 91);
-        // CHECK_FIND_COUNT(compare_type::lte, 10, 10);
+        CHECK_FIND_COUNT(compare_type::eq, 10, 1);
+        CHECK_FIND_COUNT(compare_type::gt, 10, 90);
+        CHECK_FIND_COUNT(compare_type::lt, 10, 9);
+        CHECK_FIND_COUNT(compare_type::ne, 10, 99);
+        CHECK_FIND_COUNT(compare_type::gte, 10, 91);
+        CHECK_FIND_COUNT(compare_type::lte, 10, 10);
     }
 }

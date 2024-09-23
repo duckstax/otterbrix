@@ -10,7 +10,6 @@ using collection_name_t = std::string;
 struct collection_full_name_t {
     database_name_t database;
     collection_name_t collection;
-
     collection_full_name_t() = default;
 
     collection_full_name_t(const database_name_t& database, const collection_name_t& collection)
