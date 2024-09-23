@@ -120,10 +120,9 @@ namespace otterbrix {
                   "wrapper_collection::update_one {} modified, upsert id {}",
                   cur->size(),
                   cur->size() == 0 ? "none" : get_document_id(cur->get()).to_string());
-            return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
+            return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
-        return wrapper_cursor_ptr{
-            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
     }
 
     wrapper_cursor_ptr wrapper_collection::update_many(py::object cond, py::object fields, bool upsert) {
@@ -142,10 +141,9 @@ namespace otterbrix {
                   "wrapper_collection::update_one {} modified, upsert id {}",
                   cur->size(),
                   cur->size() == 0 ? "none" : get_document_id(cur->get()).to_string());
-            return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
+            return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
-        return wrapper_cursor_ptr{
-            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
     }
 
     auto wrapper_collection::find(py::object cond) -> wrapper_cursor_ptr {
@@ -156,7 +154,7 @@ namespace otterbrix {
             auto session_tmp = otterbrix::session_id_t();
             auto cur = ptr_->find(session_tmp, statement.get());
             debug(log_, "wrapper_collection::find {} records", cur->size());
-            return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, cur));
+            return wrapper_cursor_ptr(new wrapper_cursor(cur, ptr_));
         }
         throw std::runtime_error("wrapper_collection::find");
         return wrapper_cursor_ptr();
@@ -191,10 +189,9 @@ namespace otterbrix {
                 throw std::runtime_error("wrapper_collection::delete_one error_result");
             }
             debug(log_, "wrapper_collection::delete_one {} deleted", cur->size());
-            return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
+            return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
-        return wrapper_cursor_ptr{
-            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
     }
 
     wrapper_cursor_ptr wrapper_collection::delete_many(py::object cond) {
@@ -209,10 +206,9 @@ namespace otterbrix {
                 throw std::runtime_error("wrapper_collection::delete_many error_result");
             }
             debug(log_, "wrapper_collection::delete_many {} deleted", cur->size());
-            return wrapper_cursor_ptr{new wrapper_cursor{otterbrix::session_id_t(), cur}};
+            return wrapper_cursor_ptr{new wrapper_cursor{cur, ptr_}};
         }
-        return wrapper_cursor_ptr{
-            new wrapper_cursor{otterbrix::session_id_t(), new components::cursor::cursor_t(ptr_->resource())}};
+        return wrapper_cursor_ptr{new wrapper_cursor{new components::cursor::cursor_t(ptr_->resource()), ptr_}};
     }
 
     bool wrapper_collection::drop() {
@@ -231,16 +227,15 @@ namespace otterbrix {
             //auto session_tmp = otterbrix::session_id_t();
             //auto cur = ptr_->find(session_tmp, database_, name_, std::move(condition));
             ///trace(log_, "wrapper_collection::find {} records", cur->size());
-            ///return wrapper_cursor_ptr(new wrapper_cursor(session_tmp, cur));
+            ///return wrapper_cursor_ptr(new wrapper_cursor(cur, ptr_));
         }
         throw std::runtime_error("wrapper_collection::find");
     }
     */
-    bool
-    wrapper_collection::create_index(const py::list& keys, index_type type, components::types::logical_type compare) {
+    bool wrapper_collection::create_index(const py::list& keys, index_type type) {
         debug(log_, "wrapper_collection::create_index: {}", name_);
         auto session_tmp = otterbrix::session_id_t();
-        components::ql::create_index_t index(database_, name_, name_, type, compare);
+        components::ql::create_index_t index(database_, name_, name_, type);
         for (const auto& key : keys) {
             index.keys_.emplace_back(key.cast<std::string>());
         }

@@ -2,47 +2,41 @@
 #include <components/document/document.hpp>
 #include <components/document/document_id.hpp>
 #include <components/ql/ql_statement.hpp>
-
-#include <core/file/file.hpp>
+#include <core/b_plus_tree/b_plus_tree.hpp>
 #include <filesystem>
 #include <wal/base.hpp>
 
-namespace rocksdb {
-    class DB;
-}
+#include "metadata.hpp"
 
 namespace services::disk {
 
-    class metadata_t;
-
     using path_t = std::filesystem::path;
-    using rocks_id = std::string;
     using metadata_ptr = std::unique_ptr<metadata_t>;
-    using db_ptr = std::unique_ptr<rocksdb::DB>;
     using components::document::document_id_t;
     using components::document::document_ptr;
-    using file_ptr = std::unique_ptr<core::file::file_t>;
+    using file_ptr = std::unique_ptr<core::filesystem::file_handle_t>;
+    using btree_ptr = std::unique_ptr<core::b_plus_tree::btree_t>;
 
+    // TODO: add checkpoints to avoid flushing b+tree after each call
     class disk_t {
     public:
-        explicit disk_t(const path_t& file_name);
+        explicit disk_t(const path_t& storage_directory, std::pmr::memory_resource* resource);
         disk_t(const disk_t&) = delete;
         disk_t& operator=(disk_t const&) = delete;
-        ~disk_t();
 
         void save_document(const database_name_t& database,
                            const collection_name_t& collection,
-                           const document_id_t& id,
                            const document_ptr& document);
-        [[nodiscard]] document_ptr load_document(const rocks_id& id_rocks, std::pmr::memory_resource* resource) const;
         [[nodiscard]] document_ptr load_document(const database_name_t& database,
                                                  const collection_name_t& collection,
-                                                 const document_id_t& id,
-                                                 std::pmr::memory_resource* resource) const;
+                                                 const document_id_t& id) const;
         void
         remove_document(const database_name_t& database, const collection_name_t& collection, const document_id_t& id);
-        [[nodiscard]] std::vector<rocks_id> load_list_documents(const database_name_t& database,
-                                                                const collection_name_t& collection) const;
+        [[nodiscard]] std::pmr::vector<document_id_t> load_list_documents(const database_name_t& database,
+                                                                          const collection_name_t& collection) const;
+        void load_documents(const database_name_t& database,
+                            const collection_name_t& collection,
+                            std::pmr::vector<document_ptr>& result) const;
 
         [[nodiscard]] std::vector<database_name_t> databases() const;
         bool append_database(const database_name_t& database);
@@ -57,7 +51,9 @@ namespace services::disk {
 
     private:
         path_t path_;
-        db_ptr db_;
+        std::pmr::memory_resource* resource_;
+        core::filesystem::local_file_system_t fs_;
+        std::pmr::unordered_map<collection_full_name_t, btree_ptr, collection_name_hash> db_;
         metadata_ptr metadata_;
         file_ptr file_wal_id_;
     };

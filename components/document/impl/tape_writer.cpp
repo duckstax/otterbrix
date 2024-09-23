@@ -10,10 +10,7 @@ namespace components::document::impl {
         : tape_ptr(&doc.tape_)
         , current_string_buf(&doc.string_buf_) {}
 
-    void tape_writer::append(uint64_t val) noexcept {
-        tape_ptr->push_back(val);
-        ;
-    }
+    void tape_writer::append(uint64_t val) noexcept { tape_ptr->push_back(val); }
 
     void tape_writer::copy(void* val_ptr) noexcept {
         tape_ptr->push_back({});

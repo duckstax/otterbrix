@@ -298,13 +298,11 @@ TEST_CASE("integration::cpp::test_collection::sql::index") {
         }
     }
 
-    // [UNSTABLE] Lead to problems with documents insert
-    // TODO figure out how to fix
-    // INFO("create_pending_index") {
-    //     auto session = otterbrix::session_id_t();
-    //     auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_name ON TestDatabase.TestCollection (name);");
-    //     REQUIRE(cur->is_success());
-    // }
+    INFO("create index before insert") {
+        auto session = otterbrix::session_id_t();
+        auto cur = dispatcher->execute_sql(session, "CREATE INDEX base_name ON TestDatabase.TestCollection (name);");
+        REQUIRE(cur->is_success());
+    }
 
     INFO("insert") {
         {
@@ -353,12 +351,11 @@ TEST_CASE("integration::cpp::test_collection::sql::index") {
     }
 
     INFO("drop") {
-        // TODO uncomment when create_pending_index is fixed
-        // {
-        //     auto session = otterbrix::session_id_t();
-        //     auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_name;");
-        //     REQUIRE(cur->is_success());
-        // }
+        {
+            auto session = otterbrix::session_id_t();
+            auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_name;");
+            REQUIRE(cur->is_success());
+        }
         {
             auto session = otterbrix::session_id_t();
             auto cur = dispatcher->execute_sql(session, "DROP INDEX TestDatabase.TestCollection.base_count;");

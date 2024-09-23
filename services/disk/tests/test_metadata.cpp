@@ -8,8 +8,9 @@ const std::string database_name1 = "test_database1";
 const std::string database_name2 = "test_database2";
 
 TEST_CASE("metadata databases") {
+    core::filesystem::local_file_system_t fs = core::filesystem::local_file_system_t();
     remove("/tmp/metadata");
-    auto metadata = metadata_t::open("/tmp/metadata");
+    auto metadata = metadata_t::open(fs, "/tmp/metadata");
 
     REQUIRE(metadata->databases().empty());
     for (size_t num = 1; num <= 10; ++num) {
@@ -35,8 +36,9 @@ TEST_CASE("metadata databases") {
 }
 
 TEST_CASE("metadata collections") {
+    core::filesystem::local_file_system_t fs = core::filesystem::local_file_system_t();
     remove("/tmp/metadata");
-    auto metadata = metadata_t::open("/tmp/metadata");
+    auto metadata = metadata_t::open(fs, "/tmp/metadata");
     REQUIRE(metadata->append_database(database_name1));
     REQUIRE(metadata->append_database(database_name2));
     size_t count1 = 0;

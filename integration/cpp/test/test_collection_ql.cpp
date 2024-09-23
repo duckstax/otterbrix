@@ -1,7 +1,6 @@
 #include "test_config.hpp"
 #include <catch2/catch.hpp>
 #include <components/ql/statements.hpp>
-#include <iostream>
 #include <variant>
 
 static const database_name_t database_name = "TestDatabase";
@@ -13,6 +12,8 @@ using expressions::compare_type;
 using ql::aggregate::operator_type;
 using key = components::expressions::key_t;
 using id_par = core::parameter_id_t;
+
+static constexpr int kNumInserts = 100;
 
 TEST_CASE("integration::cpp::test_collection::ql") {
     auto config = test_create_config("/tmp/test_collection_ql");
@@ -38,7 +39,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
 
     INFO("insert") {
         std::pmr::vector<components::document::document_ptr> documents(dispatcher->resource());
-        for (int num = 0; num < 100; ++num) {
+        for (int num = 0; num < kNumInserts; ++num) {
             documents.push_back(gen_doc(num, dispatcher->resource()));
         }
         ql::insert_many_t ins{database_name, collection_name, documents};
@@ -47,11 +48,11 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             components::ql::variant_statement_t ql{ins};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
-            REQUIRE(cur->size() == 100);
+            REQUIRE(cur->size() == kNumInserts);
         }
         {
             auto session = otterbrix::session_id_t();
-            REQUIRE(dispatcher->size(session, database_name, collection_name) == 100);
+            REQUIRE(dispatcher->size(session, database_name, collection_name) == kNumInserts);
         }
     }
 
@@ -62,7 +63,7 @@ TEST_CASE("integration::cpp::test_collection::ql") {
             components::ql::variant_statement_t ql{agg};
             auto cur = dispatcher->execute_ql(session, ql);
             REQUIRE(cur->is_success());
-            REQUIRE(cur->size() == 100);
+            REQUIRE(cur->size() == kNumInserts);
         }
         {
             auto session = otterbrix::session_id_t();

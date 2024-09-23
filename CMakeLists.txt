@@ -74,6 +74,12 @@ endif ()
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(Sanitizers REQUIRED)
 
+# TODO remove
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fno-omit-frame-pointer -fsanitize=thread")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -fno-omit-frame-pointer -fsanitize=address")
+# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+
+
 #clang tools
 #############################################################################################
 #conan
@@ -134,7 +140,7 @@ include_directories(services)
 add_subdirectory(services)
 add_subdirectory(integration)
 if(EXAMPLE)
-    add_subdirectory(example)
+    # add_subdirectory(example)
 endif()
 
 

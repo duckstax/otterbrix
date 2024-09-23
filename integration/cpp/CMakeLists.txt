@@ -5,6 +5,8 @@ set(${PROJECT_NAME}_sources
       base_spaces.cpp
       wrapper_dispatcher.cpp
       otterbrix.cpp
+      connection.cpp
+      impl/session_blocker.cpp
 )
 
 set(otterbrix_LIBS
@@ -19,6 +21,7 @@ set(otterbrix_LIBS
         otterbrix::disk
         otterbrix::locks
         otterbrix::sql
+        otterbrix::b_plus_tree
 )
 
 
@@ -47,7 +50,6 @@ target_link_libraries(
         #CONAN_PKG::date
         CONAN_PKG::crc32c
         CONAN_PKG::abseil
-        CONAN_PKG::rocksdb
         CONAN_PKG::actor-zeta
         CONAN_PKG::boost
         CONAN_PKG::fmt
@@ -89,7 +91,6 @@ if (DEV_MODE OR ALLOW_BENCHMARK)
             #CONAN_PKG::date
             CONAN_PKG::crc32c
             CONAN_PKG::abseil
-            CONAN_PKG::rocksdb
             CONAN_PKG::actor-zeta
             CONAN_PKG::boost
             CONAN_PKG::fmt

@@ -38,4 +38,5 @@ target_link_libraries(
 
 if (DEV_MODE)
     add_subdirectory(test)
+    add_subdirectory(benchmark)
 endif()

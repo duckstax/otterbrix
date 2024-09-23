@@ -26,6 +26,12 @@ namespace services::wal {
         success,
     };
 
-    constexpr uint64_t handler_id(route type) { return handler_id(group_id_t::wal, type); }
+    constexpr auto handler_id(route type) { return handler_id(group_id_t::wal, type); }
+
+    enum class empty_route : uint64_t
+    {
+        return_success
+    };
+    constexpr auto empty_handler_id() { return handler_id(group_id_t::utility, empty_route::return_success); }
 
 } // namespace services::wal

@@ -21,6 +21,7 @@ set(otterbrix_LIBS
         otterbrix::disk
         otterbrix::locks
         otterbrix::sql
+        otterbrix::b_plus_tree
 )
 
 

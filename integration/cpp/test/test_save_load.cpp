@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
+#include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
 
 constexpr uint count_databases = 2;
@@ -40,13 +41,13 @@ cursor_t_ptr find_doc(otterbrix::wrapper_dispatcher_t* dispatcher,
     return cur;
 }
 
-TEST_CASE("python::test_save_load::disk") {
+TEST_CASE("integration::cpp::test_save_load::disk") {
     auto config = test_create_config("/tmp/test_save_load/disk");
 
     SECTION("initialization") {
         auto resource = std::pmr::synchronized_pool_resource();
         test_clear_directory(config);
-        services::disk::disk_t disk(config.disk.path);
+        services::disk::disk_t disk(config.disk.path, &resource);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             disk.append_database(db_name);
@@ -56,7 +57,7 @@ TEST_CASE("python::test_save_load::disk") {
                 for (uint n_doc = 1; n_doc <= count_documents; ++n_doc) {
                     auto doc = gen_doc(int(n_doc), &resource);
                     doc->set("number", gen_doc_number(n_db, n_col, n_doc));
-                    disk.save_document(db_name, col_name, get_document_id(doc), doc);
+                    disk.save_document(db_name, col_name, doc);
                 }
             }
         }
@@ -84,7 +85,7 @@ TEST_CASE("python::test_save_load::disk") {
     }
 }
 
-TEST_CASE("python::test_save_load::disk+wal") {
+TEST_CASE("integration::cpp::test_save_load::disk+wal") {
     auto config = test_create_config("/tmp/test_save_load/wal");
 
     SECTION("initialization") {
@@ -116,7 +117,11 @@ TEST_CASE("python::test_save_load::disk+wal") {
         auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
-        services::wal::wal_replicate_t wal(nullptr, log, config.wal, dispatcher->resource());
+        auto manager = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(dispatcher->resource(),
+                                                                                            nullptr,
+                                                                                            config.wal,
+                                                                                            log);
+        services::wal::wal_replicate_t wal(manager.get(), log, config.wal);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {

@@ -77,7 +77,6 @@ namespace components::document {
     template<class T>
     T value_t::as() const {
         return element_.get<T>();
-        ;
     }
 
 } // namespace components::document

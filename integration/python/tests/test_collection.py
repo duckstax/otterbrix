@@ -1,10 +1,9 @@
-import os
 import copy
-import json
+import os
 import pytest
-from otterbrix import Client,DataBase, Collection
+from otterbrix import Client, DataBase, Collection
 
-client = Client()
+client = Client(os.getcwd() + "/test_collection")
 friedrich_database = client["FriedrichDatabase"]
 friedrich_collection = friedrich_database["FriedrichCollection"]
 

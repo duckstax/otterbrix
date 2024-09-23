@@ -1,6 +1,5 @@
 #pragma once
 #include <components/cursor/cursor.hpp>
-#include <components/session/session.hpp>
 
 #include <boost/smart_ptr/intrusive_ptr.hpp>
 #include <boost/smart_ptr/intrusive_ref_counter.hpp>
@@ -10,6 +9,7 @@
 #include <pybind11/stl_bind.h>
 
 #include "forward.hpp"
+#include <integration/cpp/wrapper_dispatcher.hpp>
 
 namespace py = pybind11;
 
@@ -17,7 +17,7 @@ class PYBIND11_EXPORT wrapper_cursor final : public boost::intrusive_ref_counter
 public:
     using pointer = components::cursor::cursor_t_ptr;
 
-    wrapper_cursor(components::session::session_id_t session, pointer cursor);
+    wrapper_cursor(pointer cursor, otterbrix::wrapper_dispatcher_t* dispatcher);
 
     void close();
     bool has_next();
@@ -30,15 +30,15 @@ public:
     py::tuple get_error() const;
     std::string print();
     wrapper_cursor& sort(py::object sorter, py::object order);
+    void execute(std::string& query);
 
     //paginate();
     //_order();
 
 private:
     std::atomic_bool close_;
-    otterbrix::session_id_t session_;
     pointer ptr_;
-    actor_zeta::address_t dispatcher_;
+    otterbrix::wrapper_dispatcher_t* dispatcher_;
 
     py::object get_(const std::string& key) const;
     py::object get_(std::size_t index) const;

@@ -8,5 +8,5 @@ void mr_delete(std::pmr::memory_resource* allocator, T* p) {
         return;
     }
     p->~T();
-    allocator->deallocate(p, sizeof(T));
+    allocator->deallocate(p, sizeof(T), alignof(T));
 }

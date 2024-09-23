@@ -1,7 +1,8 @@
+import os
 import pytest
 from otterbrix import Client
 
-client = Client()
+client = Client(os.getcwd() + "/test_collection_sql")
 client["schema"]["table"] # todo: create collection
 
 
@@ -26,7 +27,7 @@ def test_collection_sql():
     assert len(c) == 100
     c.close()
 
-    
+
 
     # select
 

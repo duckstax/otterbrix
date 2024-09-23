@@ -228,6 +228,7 @@ namespace components::index {
         if (index) {
             index->clean_memory_to_new_elements(ids.size());
             for (const auto& id : ids) {
+                assert(storage.find(id) != storage.end());
                 index->insert(storage.find(id)->second);
             }
         }
