@@ -1,0 +1,13 @@
+include(default)
+[env]
+CC=/usr/bin/clang-16
+CXX=/usr/bin/clang++-16
+
+
+[settings]
+arch=x86_64
+build_type=Release
+compiler=clang
+compiler.libcxx=libc++
+compiler.version=16
+os=Linux
