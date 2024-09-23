@@ -14,6 +14,7 @@ using namespace core::filesystem;
 
 TEST_CASE("b+tree with documents") {
     path_t testing_directory = "b+tree_documents_test";
+    auto resource = std::pmr::synchronized_pool_resource();
 
     INFO("initialization") {
         local_file_system_t fs = local_file_system_t();
@@ -43,7 +44,7 @@ TEST_CASE("b+tree with documents") {
             return get_field(msg.get(), field);
         };
 
-        std::unique_ptr<block_t> block = create_initialize(std::pmr::get_default_resource(), key_getter);
+        std::unique_ptr<block_t> block = create_initialize(&resource, key_getter);
 
         auto append = [&](const document_ptr& document) -> bool {
             msgpack::sbuffer sbuf;
@@ -101,7 +102,7 @@ TEST_CASE("b+tree with documents") {
         unique_ptr<file_handle_t> handle =
             open_file(fs, fname, file_flags::READ | file_flags::WRITE | file_flags::FILE_CREATE);
 
-        segment_tree_t tree(std::pmr::get_default_resource(), key_getter, std::move(handle));
+        segment_tree_t tree(&resource, key_getter, std::move(handle));
 
         auto append = [&](const document_ptr& document) -> bool {
             msgpack::sbuffer sbuf;
@@ -159,7 +160,7 @@ TEST_CASE("b+tree with documents") {
         auto dname = testing_directory;
         dname /= "btree_test";
 
-        btree_t tree(std::pmr::get_default_resource(), fs, dname, key_getter, 128);
+        btree_t tree(&resource, fs, dname, key_getter, 128);
 
         auto append = [&](const document_ptr& document) -> bool {
             msgpack::sbuffer sbuf;

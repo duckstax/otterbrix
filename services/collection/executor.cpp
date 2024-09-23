@@ -21,19 +21,66 @@ namespace services::collection::executor {
         , parameters(parameters)
         , context_storage_(context_storage) {}
 
-    executor_t::executor_t(services::memory_storage_t* memory_storage, std::pmr::memory_resource* resource, log_t&& log)
-        : actor_zeta::basic_async_actor(memory_storage, "plan executor")
+    executor_t::executor_t(services::memory_storage_t* memory_storage, log_t&& log)
+        : actor_zeta::basic_actor<executor_t>{memory_storage}
         , memory_storage_(memory_storage->address())
-        , resource_(resource)
-        , plans_(resource_)
-        , log_(log) {
-        add_handler(handler_id(route::execute_plan), &executor_t::execute_plan);
-        add_handler(handler_id(route::create_documents), &executor_t::create_documents);
-        add_handler(handler_id(index::route::success_create), &executor_t::create_index_finish);
-        add_handler(handler_id(index::route::error), &executor_t::create_index_finish_index_exist);
-        add_handler(handler_id(index::route::success), &executor_t::index_modify_finish);
-        add_handler(handler_id(index::route::success_find), &executor_t::index_find_finish);
+        , plans_(resource())
+        , log_(log)
+        , execute_plan_(
+              actor_zeta::make_behavior(resource(), handler_id(route::execute_plan), this, &executor_t::execute_plan))
+        , create_documents_(actor_zeta::make_behavior(resource(),
+                                                      handler_id(route::create_documents),
+                                                      this,
+                                                      &executor_t::create_documents))
+        , create_index_finish_(actor_zeta::make_behavior(resource(),
+                                                         handler_id(index::route::success_create),
+                                                         this,
+                                                         &executor_t::create_index_finish))
+        , create_index_finish_index_exist_(actor_zeta::make_behavior(resource(),
+                                                                     handler_id(index::route::error),
+                                                                     this,
+                                                                     &executor_t::create_index_finish_index_exist))
+        , index_modify_finish_(actor_zeta::make_behavior(resource(),
+                                                         handler_id(index::route::success),
+                                                         this,
+                                                         &executor_t::index_modify_finish))
+        , index_find_finish_(actor_zeta::make_behavior(resource(),
+                                                       handler_id(index::route::success_find),
+                                                       this,
+                                                       &executor_t::index_find_finish)) {}
+
+    actor_zeta::behavior_t executor_t::behavior() {
+        return actor_zeta::make_behavior(resource(), [this](actor_zeta::message* msg) -> void {
+            switch (msg->command()) {
+                case handler_id(route::execute_plan): {
+                    execute_plan_(msg);
+                    break;
+                }
+                case handler_id(route::create_documents): {
+                    create_documents_(msg);
+                    break;
+                }
+                case handler_id(index::route::success_create): {
+                    create_index_finish_(msg);
+                    break;
+                }
+                case handler_id(index::route::error): {
+                    create_index_finish_index_exist_(msg);
+                    break;
+                }
+                case handler_id(index::route::success): {
+                    index_modify_finish_(msg);
+                    break;
+                }
+                case handler_id(index::route::success_find): {
+                    index_find_finish_(msg);
+                    break;
+                }
+            }
+        });
     }
+
+    auto executor_t::make_type() const noexcept -> const char* const { return "executor"; }
 
     void executor_t::execute_plan(const components::session::session_id_t& session,
                                   components::logical_plan::node_ptr logical_plan,
@@ -46,7 +93,7 @@ namespace services::collection::executor {
                              address(),
                              handler_id(route::execute_plan_finish),
                              session,
-                             make_cursor(resource_, error_code_t::create_phisical_plan_error, "invalid query plan"));
+                             make_cursor(resource(), error_code_t::create_phisical_plan_error, "invalid query plan"));
             return;
         }
         plan->set_as_root();
@@ -190,19 +237,18 @@ namespace services::collection::executor {
             trace(log_, "executor::execute_plan : operators::operator_type::join");
         }
         if (plan->is_root()) {
-            auto cursor = collection->cursor_storage().emplace(
-                session,
-                std::make_unique<components::cursor::sub_cursor_t>(collection->resource(), collection->name()));
+            auto cursor =
+                std::make_unique<components::cursor::sub_cursor_t>(collection->resource(), collection->name());
             if (plan->output()) {
                 for (const auto& document : plan->output()->documents()) {
-                    cursor.first->second->append(document);
+                    cursor->append(document);
                 }
             }
-            if (cursor.first->second.get()->size() == 0) {
+            if (cursor.get()->size() == 0) {
                 execute_sub_plan_finish_(session, make_cursor(collection->resource(), operation_status_t::failure));
             } else {
                 auto result = make_cursor(collection->resource(), operation_status_t::success);
-                result->push(cursor.first->second.get());
+                result->push(std::move(cursor));
                 execute_sub_plan_finish_(session, std::move(result));
             }
         } else {
@@ -223,43 +269,43 @@ namespace services::collection::executor {
                              address(),
                              disk::handler_id(disk::route::remove_documents),
                              session,
-                             std::string(collection->name().database),
-                             std::string(collection->name().collection),
+                             collection->name().database,
+                             collection->name().collection,
                              documents);
             auto cursor(new cursor_t(collection->resource()));
-            auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
+            auto sub_cursor = std::make_unique<sub_cursor_t>(collection->resource(), collection->name());
             for (const auto& id : documents) {
                 sub_cursor->append(collection->storage().at(id));
             }
-            cursor->push(sub_cursor);
+            cursor->push(std::move(sub_cursor));
             execute_sub_plan_finish_(session, cursor);
         } else {
             if (plan->modified()) {
                 auto cursor(new cursor_t(collection->resource()));
-                auto* sub_cursor =
-                    new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), collection->name());
+                auto sub_cursor =
+                    std::make_unique<sub_cursor_t>(plan->modified()->documents().get_allocator().resource(),
+                                                   collection->name());
                 for (const auto& id : plan->modified()->documents()) {
                     sub_cursor->append(collection->storage().at(id));
                 }
-                cursor->push(sub_cursor);
+                cursor->push(std::move(sub_cursor));
                 actor_zeta::send(collection->disk(),
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(collection->name().database),
-                                 std::string(collection->name().collection),
+                                 collection->name().database,
+                                 collection->name().collection,
                                  plan->modified()->documents());
                 execute_sub_plan_finish_(session, cursor);
             } else {
                 auto cursor(new cursor_t(collection->resource()));
-                auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
-                cursor->push(sub_cursor);
+                cursor->push(std::make_unique<sub_cursor_t>(collection->resource(), collection->name()));
                 actor_zeta::send(collection->disk(),
                                  address(),
                                  disk::handler_id(disk::route::remove_documents),
                                  session,
-                                 std::string(collection->name().database),
-                                 std::string(collection->name().collection),
+                                 collection->name().database,
+                                 collection->name().collection,
                                  std::pmr::vector<document_id_t>{collection->resource()});
                 execute_sub_plan_finish_(session, cursor);
             }
@@ -276,13 +322,13 @@ namespace services::collection::executor {
                          address(),
                          disk::handler_id(disk::route::write_documents),
                          session,
-                         std::string(collection->name().database),
-                         std::string(collection->name().collection),
-                         plan->output() ? plan->output()->documents()
+                         collection->name().database,
+                         collection->name().collection,
+                         plan->output() ? std::move(plan->output()->documents())
                                         : std::pmr::vector<document_ptr>{collection->resource()});
 
         auto cursor = make_cursor(collection->resource());
-        auto* sub_cursor = new sub_cursor_t(collection->resource(), collection->name());
+        auto sub_cursor = std::make_unique<sub_cursor_t>(collection->resource(), collection->name());
         if (plan->modified()) {
             for (const auto& id : plan->modified()->documents()) {
                 sub_cursor->append(collection->storage().at(id));
@@ -292,7 +338,7 @@ namespace services::collection::executor {
                 sub_cursor->append(doc.second);
             }
         }
-        cursor->push(sub_cursor);
+        cursor->push(std::move(sub_cursor));
         execute_sub_plan_finish_(session, cursor);
     }
 
@@ -307,16 +353,16 @@ namespace services::collection::executor {
                          address(),
                          disk::handler_id(disk::route::remove_documents),
                          session,
-                         std::string(collection->name().database),
-                         std::string(collection->name().collection),
+                         collection->name().database,
+                         collection->name().collection,
                          modified);
-        auto* sub_cursor =
-            new sub_cursor_t(plan->modified()->documents().get_allocator().resource(), collection->name());
-        for (const auto& id : plan->modified()->documents()) {
+        auto sub_cursor = std::make_unique<sub_cursor_t>(plan->modified()->documents().get_allocator().resource(),
+                                                         collection->name());
+        for (const auto& _ : plan->modified()->documents()) {
             sub_cursor->append(nullptr);
         }
         auto cursor = make_cursor(collection->resource());
-        cursor->push(sub_cursor);
+        cursor->push(std::move(sub_cursor));
         execute_sub_plan_finish_(session, cursor);
     }
 

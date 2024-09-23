@@ -1,5 +1,4 @@
 #include "disk.hpp"
-#include "metadata.hpp"
 #include <components/document/msgpack/msgpack_encoder.hpp>
 
 #include "core/b_plus_tree/msgpack_reader/msgpack_reader.hpp"
@@ -41,8 +40,6 @@ namespace services::disk {
             }
         }
     }
-
-    disk_t::~disk_t() = default;
 
     void disk_t::save_document(const database_name_t& database,
                                const collection_name_t& collection,

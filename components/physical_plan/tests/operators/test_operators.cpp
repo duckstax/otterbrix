@@ -270,7 +270,7 @@ TEST_CASE("operator::index_scan") {
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
     auto collection = create_collection(&resource);
 
-    components::index::keys_base_storage_t keys(collection->resource);
+    components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",
@@ -387,7 +387,7 @@ TEST_CASE("operator::index::delete_and_update") {
     auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
     auto collection = create_collection(&resource);
 
-    components::index::keys_base_storage_t keys(collection->resource);
+    components::index::keys_base_storage_t keys(collection->resource_);
     keys.emplace_back("count");
     components::index::make_index<components::index::single_field_index_t>(d(collection)->index_engine(),
                                                                            "single_count",

@@ -40,6 +40,7 @@ target_link_libraries(
     otterbrix::b_plus_tree
     CONAN_PKG::spdlog
     CONAN_PKG::boost
+    CONAN_PKG::actor-zeta
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME} PUBLIC

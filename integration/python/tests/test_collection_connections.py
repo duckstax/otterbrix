@@ -4,8 +4,6 @@ from otterbrix import Client, Connection, Cursor
 
 client = Client(os.getcwd() + "/test_collection_connections")
 client["schema"]["table"] # todo: create collection
-connection = Connection(client)
-
 
 def gen_id(num):
     res = str(num)
@@ -13,8 +11,9 @@ def gen_id(num):
         res = '0' + res
     return res
 
-def test_collection_sql():
-    
+def test_connection():
+    connection = Connection(client)
+
     #insert
     
     query = "INSERT INTO schema.table (_id, name, count) VALUES "

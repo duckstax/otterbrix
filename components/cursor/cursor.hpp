@@ -46,7 +46,7 @@ namespace components::cursor {
         explicit error_t(error_code_t type, const std::string& what);
     };
 
-    class sub_cursor_t : public boost::intrusive::list_base_hook<> {
+    class sub_cursor_t {
     public:
         sub_cursor_t(std::pmr::memory_resource* resource, collection_full_name_t collection_name);
         const collection_full_name_t& collection_name();
@@ -64,7 +64,7 @@ namespace components::cursor {
         explicit cursor_t(std::pmr::memory_resource* resource);
         explicit cursor_t(std::pmr::memory_resource* resource, const error_t& error);
         explicit cursor_t(std::pmr::memory_resource* resource, operation_status_t op_status);
-        void push(sub_cursor_t* sub_cursor);
+        void push(std::unique_ptr<sub_cursor_t> sub_cursor);
         std::size_t size() const;
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator begin();
         std::pmr::vector<std::unique_ptr<sub_cursor_t>>::iterator end();

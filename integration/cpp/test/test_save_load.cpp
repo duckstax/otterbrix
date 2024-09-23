@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 #include <components/expressions/compare_expression.hpp>
 #include <services/disk/disk.hpp>
+#include <services/wal/manager_wal_replicate.hpp>
 #include <services/wal/wal.hpp>
 
 constexpr uint count_databases = 2;
@@ -116,7 +117,11 @@ TEST_CASE("integration::cpp::test_save_load::disk+wal") {
         auto new_value = [&](auto value) { return value_t{tape.get(), value}; };
         auto log = initialization_logger("python", config.log.path.c_str());
         log.set_level(config.log.level);
-        services::wal::wal_replicate_t wal(nullptr, log, config.wal, dispatcher->resource());
+        auto manager = actor_zeta::spawn_supervisor<services::wal::manager_wal_replicate_t>(dispatcher->resource(),
+                                                                                            nullptr,
+                                                                                            config.wal,
+                                                                                            log);
+        services::wal::wal_replicate_t wal(manager.get(), log, config.wal);
         for (uint n_db = 1; n_db <= count_databases; ++n_db) {
             auto db_name = database_name + "_" + std::to_string(n_db);
             for (uint n_col = 1; n_col <= count_collections; ++n_col) {

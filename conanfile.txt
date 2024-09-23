@@ -11,12 +11,14 @@ zlib/1.2.12
 bzip2/1.0.8
 magic_enum/0.8.1
 
-actor-zeta/1.0.0a7
+actor-zeta/1.0.0a11@duckstax/stable
 
 
 [options]
 actor-zeta:cxx_standard=17
 actor-zeta:fPIC=True
+actor-zeta:exceptions_disable=False
+actor-zeta:rtti_disable=False
 #OpenSSL:shared = True
 
 [generators]

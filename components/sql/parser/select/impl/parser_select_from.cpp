@@ -201,9 +201,9 @@ namespace components::sql::select::impl {
         }
 
         if (join) {
-            statement = std::move(*join.detach());
+            statement = std::move(*join.get());
         } else {
-            statement = std::move(*agg.detach());
+            statement = std::move(*agg.get());
         }
         return true;
     }

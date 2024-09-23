@@ -13,9 +13,7 @@ namespace otterbrix {
                                            client_->ptr_->dispatcher()}) {}
 
     wrapper_cursor_ptr wrapper_connection::execute(const std::string& query) {
-        cursor_store_ =
-            new wrapper_cursor(client_->ptr_->dispatcher()->execute_sql(components::session::session_id_t(), query),
-                               client_->ptr_->dispatcher());
+        cursor_store_ = client_->execute(query);
         return cursor_store_;
     }
     wrapper_cursor_ptr wrapper_connection::cursor() const { return cursor_store_; }

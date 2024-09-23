@@ -42,11 +42,10 @@ namespace services::collection {
         explicit context_collection_t(std::pmr::memory_resource* resource,
                                       const collection_full_name_t& name,
                                       const actor_zeta::address_t& mdisk,
-                                      log_t&& log)
+                                      const log_t& log)
             : resource_(resource)
-            , cursor_storage_(resource_)
-            , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , storage_(resource_)
+            , index_engine_(core::pmr::make_unique<components::index::index_engine_t>(resource_))
             , name_(name)
             , mdisk_(mdisk)
             , log_(log) {
@@ -54,7 +53,6 @@ namespace services::collection {
         }
 
         storage_t& storage() noexcept { return storage_; }
-        cursor_storage_t& cursor_storage() noexcept { return cursor_storage_; }
 
         components::index::index_engine_ptr& index_engine() noexcept { return index_engine_; }
 
@@ -80,10 +78,9 @@ namespace services::collection {
 
     private:
         std::pmr::memory_resource* resource_;
-        cursor_storage_t cursor_storage_;
+        storage_t storage_;
         components::index::index_engine_ptr index_engine_;
 
-        storage_t storage_;
         collection_full_name_t name_;
         /**
          * @brief Index create/drop context

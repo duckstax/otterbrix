@@ -19,17 +19,45 @@ namespace otterbrix {
     wrapper_dispatcher_t::wrapper_dispatcher_t(std::pmr::memory_resource* mr,
                                                actor_zeta::address_t manager_dispatcher,
                                                log_t& log)
-        : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr, "wrapper_dispatcher")
+        : actor_zeta::cooperative_supervisor<wrapper_dispatcher_t>(mr)
+        , load_finish_(actor_zeta::make_behavior(resource(),
+                                                 core::handler_id(core::route::load_finish),
+                                                 this,
+                                                 &wrapper_dispatcher_t::load_finish))
+        , execute_ql_finish_(actor_zeta::make_behavior(resource(),
+                                                       dispatcher::handler_id(dispatcher::route::execute_ql_finish),
+                                                       this,
+                                                       &wrapper_dispatcher_t::execute_ql_finish))
+        , size_finish_(actor_zeta::make_behavior(resource(),
+                                                 collection::handler_id(collection::route::size_finish),
+                                                 this,
+                                                 &wrapper_dispatcher_t::size_finish))
         , manager_dispatcher_(manager_dispatcher)
         , log_(log.clone())
-        , blocker_(mr) {
-        add_handler(core::handler_id(core::route::load_finish), &wrapper_dispatcher_t::load_finish);
-        add_handler(dispatcher::handler_id(dispatcher::route::execute_ql_finish),
-                    &wrapper_dispatcher_t::execute_ql_finish);
-        add_handler(collection::handler_id(collection::route::size_finish), &wrapper_dispatcher_t::size_finish);
-    }
+        , blocker_(mr) {}
 
     wrapper_dispatcher_t::~wrapper_dispatcher_t() { trace(log_, "delete wrapper_dispatcher_t"); }
+
+    actor_zeta::behavior_t wrapper_dispatcher_t::behavior() {
+        return actor_zeta::make_behavior(resource(), [this](actor_zeta::message* msg) -> void {
+            switch (msg->command()) {
+                case core::handler_id(core::route::load_finish): {
+                    load_finish_(msg);
+                    break;
+                }
+                case dispatcher::handler_id(dispatcher::route::execute_ql_finish): {
+                    execute_ql_finish_(msg);
+                    break;
+                }
+                case collection::handler_id(collection::route::size_finish): {
+                    size_finish_(msg);
+                    break;
+                }
+            }
+        });
+    }
+
+    auto wrapper_dispatcher_t::make_type() const noexcept -> const char* const { return "wrapper_dispatcher"; }
 
     auto wrapper_dispatcher_t::load() -> void {
         session_id_t session;
@@ -257,7 +285,7 @@ namespace otterbrix {
         return make_cursor(resource(), error_code_t::sql_parse_error, "not valid sql");
     }
 
-    auto wrapper_dispatcher_t::scheduler_impl() noexcept -> actor_zeta::scheduler_abstract_t* {
+    auto wrapper_dispatcher_t::make_scheduler() noexcept -> actor_zeta::scheduler_abstract_t* {
         assert("wrapper_dispatcher_t::executor_impl");
         return nullptr;
     }
@@ -266,8 +294,7 @@ namespace otterbrix {
         std::unique_lock<spin_lock> _(input_mtx_);
         auto tmp = std::move(msg);
         trace(log_, "wrapper_dispatcher_t::enqueue_base msg type: {}", tmp->command().integer_value());
-        set_current_message(std::move(tmp));
-        execute(this, current_message());
+        behavior()(tmp.get());
     }
 
     auto wrapper_dispatcher_t::load_finish(const session_id_t& session) -> void {
@@ -277,7 +304,7 @@ namespace otterbrix {
 
     void wrapper_dispatcher_t::execute_ql_finish(const session_id_t& session, cursor_t_ptr cursor) {
         trace(log_, "wrapper_dispatcher_t::execute_ql_finish session: {} {}", session.data(), cursor->is_success());
-        cursor_store_ = cursor;
+        cursor_store_ = std::move(cursor);
         notify(session);
     }
 
