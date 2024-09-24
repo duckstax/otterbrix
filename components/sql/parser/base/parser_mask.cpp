@@ -2,6 +2,8 @@
 #include <memory_resource>
 #include <numeric>
 #include <set>
+#include <charconv>
+#include <string>
 
 namespace components::sql::impl {
 
@@ -127,7 +129,9 @@ namespace components::sql::impl {
             return document::value_t(tape, token_clean_value(token));
         } else if (token.type == token_type::number_literal) {
             if (is_integer(token.value())) {
-                return document::value_t(tape, std::atol(token.value().data()));
+                int32_t result;
+                auto [ptr,ec]= std::from_chars(token.value().data(),token.value().data()+token.value().size(),result);
+                return document::value_t(tape, result);
             } else {
                 // TODO we don't support float in this case?
                 return document::value_t(tape, std::atof(token.value().data()));

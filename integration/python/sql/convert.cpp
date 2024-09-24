@@ -42,7 +42,7 @@ void build_primitive(components::document::tape_builder& builder, const py::hand
     if (py::isinstance<py::bool_>(obj)) {
         builder.build(obj.cast<bool>());
     } else if (py::isinstance<py::int_>(obj)) {
-        builder.build(obj.cast<long>());
+        builder.build(obj.cast<int64_t>()); //TODO x64 long -> int64_t x32 long -> int32_t
     } else if (py::isinstance<py::float_>(obj)) {
         builder.build(obj.cast<double>());
     } else if (py::isinstance<py::bytes>(obj)) {

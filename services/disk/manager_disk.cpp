@@ -401,7 +401,7 @@ namespace services::disk {
         if (metafile_indexes_) {
             constexpr auto count_byte_by_size = sizeof(size_t);
             size_t size;
-            __off64_t offset = 0;
+            std::int64_t offset = 0;
             std::unique_ptr<char[]> size_str(new char[count_byte_by_size]);
             while (true) {
                 metafile_indexes_->seek(offset);
@@ -411,7 +411,7 @@ namespace services::disk {
                     std::memcpy(&size, size_str.get(), count_byte_by_size);
                     std::unique_ptr<char[]> buf(new char[size]);
                     metafile_indexes_->read(buf.get(), size, offset);
-                    offset += __off64_t(size);
+                    offset += std::int64_t(size);
                     msgpack::unpacked msg;
                     msgpack::unpack(msg, buf.get(), size);
                     auto index = msg.get().as<components::ql::create_index_t>();
