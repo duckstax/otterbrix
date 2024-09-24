@@ -43,7 +43,8 @@ jobs:
 
       - name: Install system packages
         run: |
-          yum install -y ninja-build python3-pip python3-devel wget unzip zip devtoolset-11-binutils devtoolset-11-gcc devtoolset-11-gcc-c++
+          yum install -y ninja-build python3-pip python3-devel wget unzip zip
+          #yum install -y ninja-build python3-pip python3-devel wget unzip zip devtoolset-11-binutils devtoolset-11-gcc devtoolset-11-gcc-c++
 
       - name: Set env conan dependencies
         run: |
