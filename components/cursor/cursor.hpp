@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include <actor-zeta/actor-zeta.hpp>
+#include <actor-zeta.hpp>
 
 #include <components/base/collection_full_name.hpp>
 #include <components/document/document.hpp>

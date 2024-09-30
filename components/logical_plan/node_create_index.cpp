@@ -10,7 +10,7 @@ namespace components::logical_plan {
         : node_t(resource, node_type::create_index_t, collection)
         , ql_{ql} {}
 
-    components::ql::create_index_t* node_create_index_t::get_ql() const { return ql_.release(); }
+    std::unique_ptr<components::ql::create_index_t> node_create_index_t::get_ql() const { return std::move(ql_); }
 
     hash_t node_create_index_t::hash_impl() const { return 0; }
 
