@@ -86,6 +86,7 @@ jobs:
             auditwheel repair ${whl} -w ./work/dist/ 
             rm ${whl};
           done
+          ls ./work/dist/
 
       - name: Save library
         uses: actions/upload-artifact@v3
