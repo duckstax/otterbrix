@@ -86,13 +86,12 @@ jobs:
             auditwheel repair ${whl} -w ./work/dist/ 
             rm ${whl};
           done
-          ls ./work/dist/
 
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: otterbrix-wheel-${{ matrix.PYTHON_VERSION }}
+          name: otterbrix-1.0a9-cp$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')-cp$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')m-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
   test-wheel:
     name: Test wheel
