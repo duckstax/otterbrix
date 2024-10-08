@@ -1,11 +1,12 @@
 name: manylinux2014
 
-#on: [pull_request]
-        
+on: [pull_request]
+
 env:
   BUILD_TYPE: Release
-  DEV_MODE: ON   
-  
+  DEV_MODE: ON
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   build-info:
     name: Build info
@@ -26,7 +27,7 @@ jobs:
       matrix:
         PYTHON_VERSION: ${{ fromJson(needs.build-info.outputs.python-versions) }}
 
-    container: k0tb9g9m0t/manylinux-bazel-2014
+    container: quay.io/pypa/manylinux_2_28_x86_64
 
     steps:
       - uses: actions/checkout@v3
@@ -42,11 +43,12 @@ jobs:
 
       - name: Install system packages
         run: |
-          yum install -y ninja-build python3-pip python3-devel wget unzip zip gcc-c++ java-11-openjdk-devel
+          yum install -y ninja-build python3-pip python3-devel wget unzip zip
+          #yum install -y ninja-build python3-pip python3-devel wget unzip zip devtoolset-11-binutils devtoolset-11-gcc devtoolset-11-gcc-c++
 
       - name: Set env conan dependencies
         run: |
-          pip3 install --retries=30 conan==1.62.0
+          pip3 install --retries=30 conan==1.64.0
           conan user
           conan profile new default --detect --force
           conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -76,7 +78,7 @@ jobs:
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel --verbose
+          python3 setup.py bdist_wheel --verbose -D_GLIBCXX_USE_CXX11_ABI=1
 
       - name: Repair wheel
         run: |
@@ -89,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: otterbrix-wheel-${{ matrix.PYTHON_VERSION }}
+          name: otterbrix-1.0a9-cp ${{ '${{ matrix.PYTHON_VERSION }}' | tr -d '.'}}-cp${{ '${{ matrix.PYTHON_VERSION }}' | tr -d '.'}}m-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
   test-wheel:
     name: Test wheel
