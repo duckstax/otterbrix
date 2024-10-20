@@ -1,4 +1,4 @@
-name: otterbrix-1.0a9-cp${{ matrix.PYTHON_VERSION_FORMATTED }}-cp${{ matrix.PYTHON_VERSION_FORMATTED }}m-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+name: manylinux2014
 
 on: [pull_request]
 
