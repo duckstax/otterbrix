@@ -92,13 +92,13 @@ jobs:
         run: |
           VERSION="${{ matrix.PYTHON_VERSION }}"
           FORMATTED_VERSION=$(echo "$VERSION" | tr -d '.')
-          echo "::set-output name=PYTHON_VERSION_FORMATTED::$FORMATTED_VERSION"
+          echo "PYTHON_VERSION_FORMATTED=$FORMATTED_VERSION" >> $GITHUB_ENV
 
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
+          name: ${{ env.PYTHON_VERSION_FORMATTED }}
 
   test-wheel:
     name: Test wheel
@@ -127,7 +127,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
+          name: ${{ env.PYTHON_VERSION_FORMATTED }}
           path: ./app
 
       - name: Install package from wheel
@@ -171,7 +171,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
+          name: ${{ env.PYTHON_VERSION_FORMATTED }}
           path: ./app
 
       - name: Install twine
