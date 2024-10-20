@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <memory_resource>
+
 #include <components/document/base.hpp>
 
 namespace components::document::json {

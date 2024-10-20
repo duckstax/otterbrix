@@ -127,6 +127,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # which point to directories outside the build tree to the install RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+
 include_directories(components)
 add_subdirectory(core)
 add_subdirectory(components)

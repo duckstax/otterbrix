@@ -23,12 +23,16 @@ namespace components::types {
         explicit physical_value(nullptr_t);
         explicit physical_value(bool);
         // string-like
-        template<typename T, typename = typename std::enable_if<is_buffer_like<T>>::type>
-        explicit physical_value(const T& value);
+        template<typename T>
+        physical_value(const T& value,typename std::enable_if<is_buffer_like<T>>::type* = nullptr)
+            : physical_value(value.data(), value.size()) {}
         explicit physical_value(const char* data, uint32_t size);
         // all integral types
-        template<typename T, typename = typename std::enable_if<!is_buffer_like<T>>::type>
-        explicit physical_value(T value);
+        template<typename T>
+        physical_value(T value,typename std::enable_if<!is_buffer_like<T>>::type* = nullptr)
+            : type_(physical_value::get_type_<T>()) {
+            std::memcpy(&data_, &value, sizeof(value));
+        }
 
         ~physical_value() = default;
 
@@ -96,16 +100,6 @@ namespace components::types {
         uint32_t size_ = 0;            // only for pointers
         uint64_t data_ = 0;            // buffer but allocated on a stack to make it trivially copyable
     };
-
-    template<typename T, typename = typename std::enable_if<is_buffer_like<T>>::type>
-    physical_value::physical_value(const T& value)
-        : physical_value(value.data(), value.size()) {}
-
-    template<typename T, typename = typename std::enable_if<!is_buffer_like<T>>::type>
-    physical_value::physical_value(T value)
-        : type_(physical_value::get_type_<T>()) {
-        std::memcpy(&data_, &value, sizeof(value));
-    }
 
     static_assert(sizeof(physical_value) == 16);
     static_assert(alignof(physical_value) == 8);

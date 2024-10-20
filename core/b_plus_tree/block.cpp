@@ -59,7 +59,7 @@ namespace core::b_plus_tree {
         assert((size & (SECTOR_SIZE - 1)) == 0 && "block size should be a multiple of SECTOR_SIZE!");
         internal_buffer_ = static_cast<data_ptr_t>(resource_->allocate(size));
         full_size_ = size;
-        checksum_ = reinterpret_cast<size_t*>(internal_buffer_);
+        checksum_ = reinterpret_cast<uint64_t *>(internal_buffer_);
         count_ = reinterpret_cast<uint32_t*>(checksum_ + 1);
         *count_ = 0;
         unique_indices_count_ = count_ + 1;

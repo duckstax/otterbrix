@@ -15,7 +15,7 @@ namespace services::collection {
 
 namespace services::disk {
 
-    struct manager_disk_t;
+    class manager_disk_t;
     using index_name_t = std::string;
 
     class base_manager_disk_t;
