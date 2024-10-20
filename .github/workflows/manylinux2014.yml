@@ -98,7 +98,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: ${{ env.PYTHON_VERSION_FORMATTED }}
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
   test-wheel:
     name: Test wheel
@@ -127,7 +127,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: ${{ env.PYTHON_VERSION_FORMATTED }}
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
           path: ./app
 
       - name: Install package from wheel
@@ -171,7 +171,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: ${{ env.PYTHON_VERSION_FORMATTED }}
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
           path: ./app
 
       - name: Install twine
