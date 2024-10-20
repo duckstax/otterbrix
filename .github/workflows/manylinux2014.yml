@@ -84,18 +84,11 @@ jobs:
             rm ${whl};
           done
 
-      - name: Format Python version
-        id: format_version
-        run: |
-          VERSION="${{ matrix.PYTHON_VERSION }}"
-          FORMATTED_VERSION=$(echo "$VERSION" | tr -d '.')
-          echo "PYTHON_VERSION_FORMATTED=$FORMATTED_VERSION" >> $GITHUB_ENV
-
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 
   test-wheel:
     name: Test wheel
@@ -122,17 +115,11 @@ jobs:
           sudo apt install -y python3-pip python3-venv
           pip3 install --retries=30 pytest==6.2.5
 
-      - name: Format Python version
-        id: format_version
-        run: |
-          VERSION="${{ matrix.PYTHON_VERSION }}"
-          FORMATTED_VERSION=$(echo "$VERSION" | tr -d '.')
-          echo "PYTHON_VERSION_FORMATTED=$FORMATTED_VERSION" >> $GITHUB_ENV
 
       - name: Download artifact
         uses: actions/download-artifact@v4.1.7
         with:
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
           path: ./app
 
       - name: Install package from wheel
@@ -169,13 +156,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Format Python version
-        id: format_version
-        run: |
-          VERSION="${{ matrix.PYTHON_VERSION }}"
-          FORMATTED_VERSION=$(echo "$VERSION" | tr -d '.')
-          echo "PYTHON_VERSION_FORMATTED=$FORMATTED_VERSION" >> $GITHUB_ENV
-
       - name: Install pip3
         run: |
           sudo apt update 
@@ -183,7 +163,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_VERSION_FORMATTED }}-cp${{ env.PYTHON_VERSION_FORMATTED }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
           path: ./app
 
       - name: Install twine
