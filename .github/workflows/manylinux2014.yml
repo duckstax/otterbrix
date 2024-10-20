@@ -87,11 +87,18 @@ jobs:
             rm ${whl};
           done
 
+      - name: Format Python version
+        id: format_version
+        run: |
+          VERSION="${{ matrix.PYTHON_VERSION }}"
+          FORMATTED_VERSION=$(echo "$VERSION" | tr -d '.')
+          echo "::set-output name=PYTHON_VERSION_FORMATTED::$FORMATTED_VERSION"
+
       - name: Save library
         uses: actions/upload-artifact@v3
         with:
           path: ./work/dist/
-          name: otterbrix-1.0a9-cp ${{ '${{ matrix.PYTHON_VERSION }}' | tr -d '.'}}-cp${{ '${{ matrix.PYTHON_VERSION }}' | tr -d '.'}}m-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
 
   test-wheel:
     name: Test wheel
@@ -120,7 +127,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: otterbrix-wheel-${{ matrix.python-version }}
+          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
           path: ./app
 
       - name: Install package from wheel
@@ -164,7 +171,7 @@ jobs:
 
       - uses: actions/download-artifact@v4.1.7
         with:
-          name: otterbrix-wheel-${{ matrix.python-version }}
+          name: ${{ steps.format_version.outputs.PYTHON_VERSION_FORMATTED }}
           path: ./app
 
       - name: Install twine
