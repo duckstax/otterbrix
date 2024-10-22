@@ -10,9 +10,9 @@
 
 namespace services::collection::operators {
 
-    operator_add_index::operator_add_index(context_collection_t* context, components::ql::create_index_t* ql)
+    operator_add_index::operator_add_index(context_collection_t* context, components::ql::create_index_ptr ql)
         : read_write_operator_t(context, operator_type::add_index)
-        , index_ql_{ql} {}
+        , index_ql_{std::move(ql)} {}
 
     void operator_add_index::on_execute_impl(components::pipeline::context_t* pipeline_context) {
         trace(context_->log(),
