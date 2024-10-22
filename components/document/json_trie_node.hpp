@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <memory_resource>
+#include <string>
 
 #include "container/json_array.hpp"
 #include "container/json_object.hpp"

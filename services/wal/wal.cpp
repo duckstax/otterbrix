@@ -143,7 +143,7 @@ namespace services::wal {
 
     void wal_replicate_t::read_buffer(buffer_t& buffer, size_t start_index, size_t size) const {
         buffer.resize(size);
-        file_->read(buffer.data(), size, uint64_t (start_index));
+        file_->read(buffer.data(), size, uint64_t(start_index));
     }
 
     wal_replicate_t::~wal_replicate_t() { trace(log_, "delete wal_replicate_t"); }

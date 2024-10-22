@@ -2,13 +2,13 @@
 
 #include <chrono>
 #include <map>
+#include <memory_resource>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-#include <memory_resource>
 
-#include <core/file/file_system.hpp>
 #include "block.hpp"
+#include <core/file/file_system.hpp>
 
 namespace core::b_plus_tree {
 

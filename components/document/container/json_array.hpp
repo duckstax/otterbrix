@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <memory_resource>
+#include <string>
 
 #include <components/document/base.hpp>
 
