@@ -85,7 +85,7 @@ jobs:
           done
 
       - name: Save library
-        uses: actions/upload-artifact@v4.1.7
+        uses: actions/upload-artifact@v4
         with:
           path: ./work/dist/
           name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
