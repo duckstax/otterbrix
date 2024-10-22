@@ -104,15 +104,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set env
-        run: |
-          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
-          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Set env
+        run: |
+          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.python-version }}' | tr -d '.')
+          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
 
       - name: Install pytest
         run: |
@@ -156,15 +157,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Set env
-        run: |
-          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
-          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
-
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+
+      - name: Set env
+        run: |
+          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.python-version }}' | tr -d '.')
+          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
 
       - name: Install pip3
         run: |
