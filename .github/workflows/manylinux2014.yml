@@ -75,7 +75,7 @@ jobs:
           python3 -m pip install wheel setuptools scikit-build==0.16.6 pytest==6.2.5
           mkdir -p $(echo "./$(python3 get_path.py )")
           conan install conanfile.txt --build missing -s build_type=Release -if=$(echo "./$(python3 get_path.py )")
-          python3 setup.py bdist_wheel --verbose -D_GLIBCXX_USE_CXX11_ABI=1
+          python3 setup.py bdist_wheel --verbose
 
       - name: Repair wheel
         run: |
@@ -103,6 +103,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Set env
+        run: |
+          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -150,6 +155,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Set env
+        run: |
+          export PYTHON_SHORT_VERSION=$(echo '${{ matrix.PYTHON_VERSION }}' | tr -d '.')
+          echo "PYTHON_SHORT_VERSION=${PYTHON_SHORT_VERSION}" >> $GITHUB_ENV 
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
