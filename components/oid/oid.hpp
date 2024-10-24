@@ -29,11 +29,13 @@ namespace oid {
         explicit oid_t(std::string_view str);
         explicit oid_t(const byte_t* src);
         oid_t(const oid_t& other);
+        oid_t(oid_t&& other) noexcept;
 
-        ~oid_t() = default;
+        ~oid_t();
 
         oid_t& operator=(std::string_view str);
         oid_t& operator=(const oid_t& other);
+        oid_t& operator=(oid_t&& other) noexcept;
 
         int compare(const oid_t& other) const;
         bool is_null() const;
@@ -51,7 +53,9 @@ namespace oid {
         static bool is_valid(std::string_view str);
 
         struct hash_t {
-            std::size_t operator()(const oid_t& oid) const { return std::hash<std::string_view>()(oid.data_); }
+            std::size_t operator()(const oid_t& oid) const {
+                return std::hash<std::string_view>()((byte_t[size]) oid.data_);
+            }
         };
 
         struct timestamp_generator {
@@ -98,7 +102,7 @@ namespace oid {
         };
 
     private:
-        byte_t data_[size];
+        byte_t* data_;
 
         void init(std::string_view str);
         void clear();
@@ -129,32 +133,48 @@ namespace oid {
     }
 
     template<class T>
-    oid_t<T>::oid_t() {
+    oid_t<T>::oid_t()
+        : data_(new byte_t[size]) {
         timestamp_generator::write(data_ + offset_timestamp);
         random_generator::write(data_ + offset_random);
         increment_generator::write(data_ + offset_increment);
     }
 
     template<class T>
-    oid_t<T>::oid_t(timestamp_value_t timestamp) {
+    oid_t<T>::oid_t(timestamp_value_t timestamp)
+        : data_(new byte_t[size]) {
         timestamp_generator::write(data_ + offset_timestamp, timestamp);
         random_generator::write(data_ + offset_random);
         increment_generator::write(data_ + offset_increment);
     }
 
     template<class T>
-    oid_t<T>::oid_t(std::string_view str) {
+    oid_t<T>::oid_t(std::string_view str)
+        : data_(new byte_t[size]) {
         init(str);
     }
 
     template<class T>
-    oid_t<T>::oid_t(const byte_t* src) {
+    oid_t<T>::oid_t(const byte_t* src)
+        : data_(new byte_t[size]) {
         std::memcpy(data_, src, size);
     }
 
     template<class T>
-    oid_t<T>::oid_t(const oid_t& other) {
+    oid_t<T>::oid_t(const oid_t& other)
+        : data_(new byte_t[size]) {
         std::memcpy(data_, other.data_, size);
+    }
+
+    template<class T>
+    oid_t<T>::oid_t(oid_t&& other) noexcept
+        : data_(other.data_) {
+        other.data_ = nullptr;
+    }
+
+    template<class T>
+    oid_t<T>::~oid_t() {
+        delete[] data_;
     }
 
     template<class T>
@@ -166,6 +186,12 @@ namespace oid {
     template<class T>
     oid_t<T>& oid_t<T>::operator=(const oid_t& other) {
         std::memcpy(data_, other.data_, size);
+        return *this;
+    }
+
+    template<class T>
+    oid_t<T>& oid_t<T>::operator=(oid_t&& other) noexcept {
+        std::memmove(data_, other.data_, size);
         return *this;
     }
 

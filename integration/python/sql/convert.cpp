@@ -26,7 +26,7 @@ value_t to_value(const py::handle& obj, components::document::impl::base_documen
     if (py::isinstance<py::bool_>(obj)) {
         return value_t{tape, obj.cast<bool>()};
     } else if (py::isinstance<py::int_>(obj)) {
-        return value_t{tape, obj.cast<long>()};
+        return value_t{tape, obj.cast<int64_t>()}; //TODO x64 long -> int64_t x32 long -> int32_t
     } else if (py::isinstance<py::float_>(obj)) {
         return value_t{tape, obj.cast<double>()};
     } else if (py::isinstance<py::bytes>(obj)) {
@@ -42,7 +42,7 @@ void build_primitive(components::document::tape_builder& builder, const py::hand
     if (py::isinstance<py::bool_>(obj)) {
         builder.build(obj.cast<bool>());
     } else if (py::isinstance<py::int_>(obj)) {
-        builder.build(obj.cast<long>());
+        builder.build(obj.cast<int64_t>()); //TODO x64 long -> int64_t x32 long -> int32_t
     } else if (py::isinstance<py::float_>(obj)) {
         builder.build(obj.cast<double>());
     } else if (py::isinstance<py::bytes>(obj)) {
