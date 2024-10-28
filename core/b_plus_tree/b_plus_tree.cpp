@@ -758,7 +758,7 @@ namespace core::b_plus_tree {
         size_t* buffer = static_cast<size_t*>(resource_->allocate(METADATA_SIZE));
         *buffer = item_count_;
         *(buffer + 1) = leaf_nodes_count_;
-        uint64_t* buffer_writer = static_cast<size_t*>(buffer + 2);
+        uint64_t* buffer_writer = reinterpret_cast<uint64_t*>(buffer + 2);
 
         size_t i = 0;
         // save each segment tree
@@ -794,7 +794,7 @@ namespace core::b_plus_tree {
 
         item_count_ = *buffer;
         leaf_nodes_count_ = *(buffer + 1);
-        uint64_t* buffer_reader = static_cast<uint64_t*>(buffer + 2);
+        uint64_t* buffer_reader = reinterpret_cast<uint64_t*>(buffer + 2);
 
         // with some index manipulations, all could be done in one layer
         base_node_t** nodes_layer =

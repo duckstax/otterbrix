@@ -3,6 +3,7 @@
 #include <components/session/session.hpp>
 #include <memory_resource>
 #include <mutex>
+#include <shared_mutex>
 #include <unordered_map>
 
 namespace otterbrix::impl {
