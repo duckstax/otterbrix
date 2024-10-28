@@ -161,6 +161,7 @@ namespace services::disk {
     }
 
     auto manager_disk_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
+        std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
         behavior()(current_message());
     }
@@ -506,6 +507,7 @@ namespace services::disk {
     }
 
     auto manager_disk_empty_t::enqueue_impl(actor_zeta::message_ptr msg, actor_zeta::execution_unit*) -> void {
+        std::unique_lock<spin_lock> _(lock_);
         set_current_message(std::move(msg));
         behavior()(current_message());
     }

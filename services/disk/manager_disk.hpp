@@ -90,6 +90,7 @@ namespace services::disk {
         actor_zeta::behavior_t success_;
 
         actor_zeta::scheduler_raw e_;
+        spin_lock lock_;
 
         actor_zeta::address_t manager_wal_ = actor_zeta::address_t::empty_address();
         log_t log_;
@@ -133,6 +134,7 @@ namespace services::disk {
 
     private:
         actor_zeta::scheduler_raw e_;
+        spin_lock lock_;
 
         actor_zeta::behavior_t create_;
         actor_zeta::behavior_t load_;
