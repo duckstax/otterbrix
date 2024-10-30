@@ -26,7 +26,7 @@ The Otterbrix team aims at keeping the code readable and consistent with the sur
 
 ## Contributing
 
-We are now defining the contribution process for third parties. If you are interested in contributing in Otterbrix, please contact our [team](team@otterbrix.com).
+See [CONTRIBUTING](CONTRIBUTING.md) for contribution requirements.
 
 ## Security
 
