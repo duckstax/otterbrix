@@ -24,7 +24,7 @@ target_link_libraries(
 )
 
 target_include_directories(otterbrix_${PROJECT_NAME}
-        PUBLIC
+        PUBLIC ${CMAKE_SOURCE_DIR}/components/document/
 )
 
 if (DEV_MODE)

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory_resource>
+#include <string>
+
 #include <absl/container/flat_hash_map.h>
 #include <components/document/base.hpp>
 

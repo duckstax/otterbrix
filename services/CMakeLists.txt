@@ -1,5 +1,3 @@
-include_directories(${CMAKE_SOURCE_DIR})
-
 add_subdirectory(dispatcher)
 add_subdirectory(memory_storage)
 add_subdirectory(collection)

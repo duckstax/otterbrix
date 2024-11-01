@@ -1,6 +1,9 @@
 name: dotnet package
 
-on: [pull_request]
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
 
 jobs:
   run:
@@ -26,7 +29,7 @@ jobs:
 
           - name: conan installation and configuration
             run: |
-              pip install conan==1.60.0 pytest==6.2.5
+              pip install conan==1.64.0 pytest==6.2.5
               conan user
               conan profile new default --detect --force
               conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -59,7 +62,7 @@ jobs:
               pytest    
 
           - name: Setup dotnet
-            uses: actions/setup-dotnet@v3
+            uses: actions/setup-dotnet@v4
             with:
               dotnet-version: ${{ matrix.dotnet-version }}
 
@@ -73,7 +76,7 @@ jobs:
               dotnet test ./tests/Duckstax.Otterbrix.Tests/Duckstax.Otterbrix.Tests.csproj --logger trx --results-directory "TestResults-${{ matrix.dotnet-version }}" -c Release
 
           - name: Upload dotnet test results
-            uses: actions/upload-artifact@v3
+            uses: actions/upload-artifact@v4
             with:
               name: dotnet-results-${{ matrix.dotnet-version }}
               path: TestResults-${{ matrix.dotnet-version }}

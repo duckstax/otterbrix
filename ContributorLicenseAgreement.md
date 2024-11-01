@@ -1,15 +1,15 @@
 ### Individual Contributor License Agreement
 
-Thank you for your interest in contributing to open source software projects (“Projects”) made available by Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot or its affiliates. This Individual Contributor License Agreement (“Agreement”) sets out the terms governing any source code, object code, bug fixes, configuration changes, tools, specifications, documentation, data, materials, feedback, information or other works of authorship that you submit or have submitted, in any form and in any manner, to Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot in respect of any of the Projects (collectively “Contributions”).
+Thank you for your interest in contributing to open source software projects (“Projects”) made available by Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot or its affiliates. This Individual Contributor License Agreement (“Agreement”) sets out the terms governing any source code, object code, bug fixes, configuration changes, tools, specifications, documentation, data, materials, feedback, information or other works of authorship that you submit or have submitted, in any form and in any manner, to Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot in respect of any of the Projects (collectively “Contributions”).
 
 
 You agree that the following terms apply to all of your past, present and future Contributions. Except for the licenses granted in this Agreement, you retain all of your right, title and interest in and to your Contributions.
 
 
-**Copyright License.** You hereby grant, and agree to grant, to Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot a non-exclusive, perpetual, irrevocable, worldwide, fully-paid, royalty-free, transferable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, and distribute your Contributions and such derivative works, with the right to sublicense the foregoing rights through multiple tiers of sublicensees.
+**Copyright License.** You hereby grant, and agree to grant, to Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot a non-exclusive, perpetual, irrevocable, worldwide, fully-paid, royalty-free, transferable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, and distribute your Contributions and such derivative works, with the right to sublicense the foregoing rights through multiple tiers of sublicensees.
 
 
-**Patent License.** You hereby grant, and agree to grant, to Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot a non-exclusive, perpetual, irrevocable,
+**Patent License.** You hereby grant, and agree to grant, to Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot a non-exclusive, perpetual, irrevocable,
 worldwide, fully-paid, royalty-free, transferable patent license to make, have made, use, offer to sell, sell,
 import, and otherwise transfer your Contributions, where such license applies only to those patent claims
 licensable by you that are necessarily infringed by your Contributions alone or by combination of your
@@ -18,7 +18,7 @@ foregoing rights through multiple tiers of sublicensees.
 
 
 **Moral Rights.** To the fullest extent permitted under applicable law, you hereby waive, and agree not to
-assert, all of your “moral rights” in or relating to your Contributions for the benefit of Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot, its assigns, and
+assert, all of your “moral rights” in or relating to your Contributions for the benefit of Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot, its assigns, and
 their respective direct and indirect sublicensees.
 
 
@@ -49,9 +49,9 @@ warranties or conditions of non-infringement, merchantability or fitness for a p
 required to provide support for your Contributions, except to the extent you desire to provide support.
 
 
-**No Obligation.** You acknowledge that Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot is under no obligation to use or incorporate your Contributions
+**No Obligation.** You acknowledge that Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot is under no obligation to use or incorporate your Contributions
 into any of the Projects. The decision to use or incorporate your Contributions into any of the Projects will be
-made at the sole discretion of Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot or its authorized delegates.
+made at the sole discretion of Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot or its authorized delegates.
 
 
 **Disputes.** This Agreement shall be governed by and construed in accordance with the laws of the State of
@@ -62,5 +62,5 @@ that any of the provisions of this Agreement shall be held by a court or other t
 to be unenforceable, the remaining portions hereof shall remain in full force and effect.
 
 
-**Assignment.** You agree that Borgardt Alexander <k0tb9g9m0t@yandex.ru> aka kotbegemot may assign this Agreement, and all of its rights, obligations and licenses
+**Assignment.** You agree that Aleksandr Borgardt <k0tb9g9m0t@gmail.com> aka kotbegemot may assign this Agreement, and all of its rights, obligations and licenses
 hereunder.

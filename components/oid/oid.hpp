@@ -29,11 +29,13 @@ namespace oid {
         explicit oid_t(std::string_view str);
         explicit oid_t(const byte_t* src);
         oid_t(const oid_t& other);
+        oid_t(oid_t&& other) noexcept;
 
         ~oid_t() = default;
 
         oid_t& operator=(std::string_view str);
         oid_t& operator=(const oid_t& other);
+        oid_t& operator=(oid_t&& other) noexcept;
 
         int compare(const oid_t& other) const;
         bool is_null() const;
@@ -98,7 +100,7 @@ namespace oid {
         };
 
     private:
-        byte_t data_[size];
+        std::array<byte_t, size> data_;
 
         void init(std::string_view str);
         void clear();
@@ -130,16 +132,16 @@ namespace oid {
 
     template<class T>
     oid_t<T>::oid_t() {
-        timestamp_generator::write(data_ + offset_timestamp);
-        random_generator::write(data_ + offset_random);
-        increment_generator::write(data_ + offset_increment);
+        timestamp_generator::write(data_.data() + offset_timestamp);
+        random_generator::write(data_.data() + offset_random);
+        increment_generator::write(data_.data() + offset_increment);
     }
 
     template<class T>
     oid_t<T>::oid_t(timestamp_value_t timestamp) {
-        timestamp_generator::write(data_ + offset_timestamp, timestamp);
-        random_generator::write(data_ + offset_random);
-        increment_generator::write(data_ + offset_increment);
+        timestamp_generator::write(data_.data() + offset_timestamp, timestamp);
+        random_generator::write(data_.data() + offset_random);
+        increment_generator::write(data_.data() + offset_increment);
     }
 
     template<class T>
@@ -149,12 +151,17 @@ namespace oid {
 
     template<class T>
     oid_t<T>::oid_t(const byte_t* src) {
-        std::memcpy(data_, src, size);
+        std::memcpy(data_.data(), src, size);
     }
 
     template<class T>
     oid_t<T>::oid_t(const oid_t& other) {
-        std::memcpy(data_, other.data_, size);
+        std::memcpy(data_.data(), other.data_.data(), size);
+    }
+
+    template<class T>
+    oid_t<T>::oid_t(oid_t&& other) noexcept {
+        data_ = std::move(other.data_);
     }
 
     template<class T>
@@ -165,19 +172,25 @@ namespace oid {
 
     template<class T>
     oid_t<T>& oid_t<T>::operator=(const oid_t& other) {
-        std::memcpy(data_, other.data_, size);
+        std::memcpy(data_.data(), other.data_.data(), size);
+        return *this;
+    }
+
+    template<class T>
+    oid_t<T>& oid_t<T>::operator=(oid_t&& other) noexcept {
+        std::memmove(data_.data(), other.data_.data(), size);
         return *this;
     }
 
     template<class T>
     int oid_t<T>::compare(const oid_t& other) const {
-        return std::memcmp(data_, other.data_, size);
+        return std::memcmp(data_.data(), other.data_.data(), size);
     }
 
     template<class T>
     bool oid_t<T>::is_null() const {
         for (uint32_t i = 0; i < size; ++i) {
-            if (data_[i] > 0) {
+            if (data_.data()[i] > 0) {
                 return false;
             }
         }
@@ -186,15 +199,15 @@ namespace oid {
 
     template<class T>
     const byte_t* oid_t<T>::data() const {
-        return data_;
+        return data_.data();
     }
 
     template<class T>
     std::string oid_t<T>::to_string() const {
         char str[2 * size];
         for (uint32_t i = 0; i < size; ++i) {
-            str[2 * i] = to_char_(data_[i] / 0x10);
-            str[2 * i + 1] = to_char_(data_[i] % 0x10);
+            str[2 * i] = to_char_(data_.data()[i] / 0x10);
+            str[2 * i + 1] = to_char_(data_.data()[i] % 0x10);
         }
         return {str, 2 * size};
     }
@@ -218,7 +231,7 @@ namespace oid {
     template<class T>
     oid_t<T> oid_t<T>::max() {
         oid_t oid_max{};
-        std::memset(oid_max.data_, 0xFF, size);
+        std::memset(oid_max.data_.data(), 0xFF, size);
         return oid_max;
     }
 
@@ -246,7 +259,7 @@ namespace oid {
     void oid_t<T>::init(std::string_view str) {
         if (is_valid(str)) {
             for (uint32_t i = 0; i < size; ++i) {
-                data_[i] = byte_t(from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]));
+                data_.data()[i] = byte_t(from_char_(str[2 * i]) * 0x10 + from_char_(str[2 * i + 1]));
             }
         } else {
             this->clear();
@@ -255,7 +268,7 @@ namespace oid {
 
     template<class T>
     void oid_t<T>::clear() {
-        std::memset(data_, 0x00, size);
+        std::memset(data_.data(), 0x00, size);
     }
 
 } //namespace oid

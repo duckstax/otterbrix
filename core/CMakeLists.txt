@@ -1,7 +1,3 @@
-include_directories(${CMAKE_SOURCE_DIR})
-
-
-
 add_subdirectory(assert)
 add_subdirectory(b_plus_tree)
 add_subdirectory(spinlock)

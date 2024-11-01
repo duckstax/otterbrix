@@ -12,7 +12,7 @@ namespace components::logical_plan {
                                      const collection_full_name_t& collection,
                                      components::ql::create_index_t* ql);
 
-        components::ql::create_index_t* get_ql() const;
+        std::unique_ptr<components::ql::create_index_t> get_ql() const;
 
     private:
         hash_t hash_impl() const final;
