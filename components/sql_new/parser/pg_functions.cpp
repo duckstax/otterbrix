@@ -1,0 +1,267 @@
+#include "pg_functions.h"
+#include "sql_new/parser/nodes/makefuncs.h"
+#include <cstdarg>
+#include <cstring>
+#include <iostream>
+
+int ereport(int code, ...) {
+    if (code >= ERROR) {
+        std::cerr << "error" << std::endl;
+        pg_unreachable();
+    }
+
+    return 0;
+}
+
+void elog(int code, const char* fmt, ...) {
+    ereport(code);
+}
+
+int errcode(int sqlerrcode) {
+    std::cerr << "errcode:" << sqlerrcode << std::endl;
+    return 0;
+}
+
+int errmsg(const char* fmt, ...) {
+    return 0;
+}
+
+int errhint(const char* msg) {
+    std::cerr << msg << std::endl;
+    return 0;
+}
+
+int errmsg_internal(const char* fmt, ...) { return 0; }
+
+int errdetail(const char* fmt, ...) { return 0; }
+
+int errposition(int cursorpos) {
+    std::cerr << "ERROR AT " << cursorpos << " POS" << std::endl;
+    return 0;
+}
+
+char* psprintf(const char* fmt, ...) {
+    size_t len = 128; /* initial assumption about buffer size */
+
+    for (;;) {
+        char* result;
+        va_list args;
+        size_t newlen;
+
+        /*
+		 * Allocate result buffer.  Note that in frontend this maps to malloc
+		 * with exit-on-error.
+		 */
+        result = reinterpret_cast<char*>(palloc(len));
+
+        /* Try to format the data. */
+        va_start(args, fmt);
+        newlen = std::vsnprintf(result, len, fmt, args);
+        va_end(args);
+
+        if (newlen < 0) {
+            free(result);
+            throw std::runtime_error("Formatting error in psprintf");
+        }
+
+        if (newlen < len)
+            return result;
+
+        pfree(result);
+        len = newlen;
+    }
+}
+
+// memory mgmt
+char* pstrdup(const char* in) { return strdup(in); }
+void* palloc(size_t n) { return malloc(n); }
+void pfree(void* ptr) { free(ptr); }
+void* palloc0fast(size_t n) { return calloc(n, sizeof(char)); }
+void* repalloc(void* ptr, size_t n) { return realloc(ptr, n); }
+
+std::string NameListToString(PGList* names) {
+    std::string string;
+    ListCell* l;
+
+    foreach (l, names) {
+        Node* name = (Node*) lfirst(l);
+
+        if (l != list_head(names))
+            string.push_back('.');
+
+        if (IsA(name, String))
+            string += strVal(name);
+        else if (IsA(name, A_Star))
+            string += "*";
+        else
+            elog(ERROR, "unexpected node type in name list: %d", (int) nodeTag(name));
+    }
+
+    return string;
+}
+
+DefElem* defWithOids(bool value) { return makeDefElem("oids", (Node*) makeInteger(value)); }
+
+// mdxn: only utf-8 support
+bool pg_utf8_islegal(const unsigned char* source, int length) {
+    unsigned char a;
+
+    switch (length) {
+        default:
+            /* reject lengths 5 and 6 for now */
+            return false;
+        case 4:
+            a = source[3];
+            if (a < 0x80 || a > 0xBF)
+                return false;
+            /* FALL THRU */
+        case 3:
+            a = source[2];
+            if (a < 0x80 || a > 0xBF)
+                return false;
+            /* FALL THRU */
+        case 2:
+            a = source[1];
+            switch (*source) {
+                case 0xE0:
+                    if (a < 0xA0 || a > 0xBF)
+                        return false;
+                    break;
+                case 0xED:
+                    if (a < 0x80 || a > 0x9F)
+                        return false;
+                    break;
+                case 0xF0:
+                    if (a < 0x90 || a > 0xBF)
+                        return false;
+                    break;
+                case 0xF4:
+                    if (a < 0x80 || a > 0x8F)
+                        return false;
+                    break;
+                default:
+                    if (a < 0x80 || a > 0xBF)
+                        return false;
+                    break;
+            }
+            /* FALL THRU */
+        case 1:
+            a = *source;
+            if (a >= 0x80 && a < 0xC2)
+                return false;
+            if (a > 0xF4)
+                return false;
+            break;
+    }
+    return true;
+}
+
+int pg_utf_mblen(const unsigned char* s) {
+    int len;
+
+    if ((*s & 0x80) == 0)
+        len = 1;
+    else if ((*s & 0xe0) == 0xc0)
+        len = 2;
+    else if ((*s & 0xf0) == 0xe0)
+        len = 3;
+    else if ((*s & 0xf8) == 0xf0)
+        len = 4;
+#ifdef NOT_USED
+    else if ((*s & 0xfc) == 0xf8)
+        len = 5;
+    else if ((*s & 0xfe) == 0xfc)
+        len = 6;
+#endif
+    else
+        len = 1;
+    return len;
+}
+
+static int pg_utf8_verifier(const unsigned char* s, int len) {
+    int l = pg_utf_mblen(s);
+
+    if (len < l)
+        return -1;
+
+    if (!pg_utf8_islegal(s, l))
+        return -1;
+
+    return l;
+}
+
+// end not used outside here
+
+bool pg_verifymbstr(const char* mbstr, int len, bool noError) {
+    int mb_len;
+    mb_len = 0;
+
+    while (len > 0) {
+        int l;
+
+        /* fast path for ASCII-subset characters */
+        if (!IS_HIGHBIT_SET(*mbstr)) {
+            if (*mbstr != '\0') {
+                mb_len++;
+                mbstr++;
+                len--;
+                continue;
+            }
+            if (noError)
+                return -1;
+            //            report_invalid_encoding(encoding, mbstr, len);
+            std::cerr << "INVALID ENCODING" << std::endl;
+            return -1;
+        }
+
+        l = pg_utf8_verifier(reinterpret_cast<const unsigned char*>(mbstr), len);
+
+        if (l < 0) {
+            if (noError)
+                return -1;
+            //            report_invalid_encoding(encoding, mbstr, len);
+            std::cerr << "INVALID ENCODING" << std::endl;
+            return -1;
+        }
+
+        mbstr += l;
+        len -= l;
+        mb_len++;
+    }
+    return mb_len;
+}
+
+int pg_mbstrlen_with_len(const char* mbstr, int limit) {
+    int len = 0;
+
+    while (limit > 0 && *mbstr) {
+        int l = pg_mblen(mbstr);
+
+        limit -= l;
+        mbstr += l;
+        len++;
+    }
+    return len;
+}
+
+int pg_mblen(const char* mbstr) { return (pg_utf_mblen(reinterpret_cast<const unsigned char*>(mbstr))); }
+
+unsigned char* unicode_to_utf8(pg_wchar c, unsigned char* utf8string) {
+    if (c <= 0x7F) {
+        utf8string[0] = c;
+    } else if (c <= 0x7FF) {
+        utf8string[0] = 0xC0 | ((c >> 6) & 0x1F);
+        utf8string[1] = 0x80 | (c & 0x3F);
+    } else if (c <= 0xFFFF) {
+        utf8string[0] = 0xE0 | ((c >> 12) & 0x0F);
+        utf8string[1] = 0x80 | ((c >> 6) & 0x3F);
+        utf8string[2] = 0x80 | (c & 0x3F);
+    } else {
+        utf8string[0] = 0xF0 | ((c >> 18) & 0x07);
+        utf8string[1] = 0x80 | ((c >> 12) & 0x3F);
+        utf8string[2] = 0x80 | ((c >> 6) & 0x3F);
+        utf8string[3] = 0x80 | (c & 0x3F);
+    }
+
+    return utf8string;
+}

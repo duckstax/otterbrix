@@ -2,6 +2,7 @@
 
 #include <components/document/impl/document.hpp>
 #include <cstring>
+#include <string_view>
 #include <vector>
 
 namespace components::document::impl {

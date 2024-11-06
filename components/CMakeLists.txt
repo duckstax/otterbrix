@@ -14,6 +14,7 @@ add_subdirectory(planner)
 add_subdirectory(ql)
 add_subdirectory(session)
 add_subdirectory(sql)
+add_subdirectory(sql_new)
 add_subdirectory(types)
 
 if (DEV_MODE)

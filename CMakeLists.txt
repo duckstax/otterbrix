@@ -15,7 +15,7 @@ message(STATUS "ARCH : ${CMAKE_SYSTEM_NAME}")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DBOOST_ASIO_HAS_MOVE -DEXCEPTIONS_DISABLE=OFF " CACHE STRING "compile flags" FORCE)
 
-option(DEV_MODE "developer mode" OFF)
+option(DEV_MODE "developer mode" ON)
 option(EXAMPLE "Example" OFF)
 option(ALLOW_BENCHMARK "Allow benchmark" OFF)
 option(CONAN_EXPERIMENTAL_INCLUDE "CONAN EXPERIMENT INCLUDE" ON)
