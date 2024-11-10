@@ -5,7 +5,7 @@ pybind11/2.10.0
 msgpack-cxx/4.1.1
 catch2/2.13.7 #catch2/3.4.0
 crc32c/1.1.2
-abseil/20211102.0
+abseil/20240722.0
 benchmark/1.6.1
 zlib/1.2.12
 bzip2/1.0.8
