@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstdint>
 #include <atomic>
 #include <string>
 
