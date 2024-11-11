@@ -1,6 +1,6 @@
 #pragma once
-#include <cstdint>
 #include <atomic>
+#include <cstdint>
 #include <string>
 
 namespace services::wal {
