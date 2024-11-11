@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <cstring>
+
 #include <set>
 #include <stdexcept>
 #include <unordered_map>
@@ -15,7 +17,8 @@ namespace core::filesystem::path_utils {
     std::vector<std::string> split(const std::string& str, char delimiter);
     std::vector<std::string> split(const std::string& input, const std::string& split);
 
-    bool glob(const char* string, uint64_t slen, const char* pattern, uint64_t plen, bool allow_question_mark);
+    bool
+    glob(const char* string, std::uint64_t slen, const char* pattern, std::uint64_t plen, bool allow_question_mark);
 
 #ifdef PLATFORM_WINDOWS
 
