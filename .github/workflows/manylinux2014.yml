@@ -100,8 +100,8 @@ jobs:
       - name: Save library
         uses: actions/upload-artifact@v4
         with:
-          path: ./work/dist/
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: artifact-wheel-${{ env.PYTHON_SHORT_VERSION }}
+          path: ./work/dist/otterbrix*cp${{ env.PYTHON_SHORT_VERSION }}*.whl
 
   test-wheel:
     name: Test wheel
@@ -136,10 +136,14 @@ jobs:
 
 
       - name: Download artifact
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: artifact-wheel-${{ env.PYTHON_SHORT_VERSION }}
           path: ./app
+
+      - name: Inspect artifacts
+        run: |
+          ls -l ./app/*whl
 
       - name: Install package from wheel
         run: |
@@ -185,10 +189,15 @@ jobs:
           sudo apt update 
           sudo apt install -y python3-pip
 
-      - uses: actions/download-artifact@v4.1.7
+      - name: Download artifact
+        uses: actions/download-artifact@v4
         with:
-          name: otterbrix-1.0a9-cp${{ env.PYTHON_SHORT_VERSION }}-cp${{ env.PYTHON_SHORT_VERSION }}-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+          name: artifact-wheel-${{ env.PYTHON_SHORT_VERSION }}
           path: ./app
+
+      - name: Inspect artifacts
+        run: |
+          ls -l ./app/*whl
 
       - name: Install twine
         run: |
