@@ -163,7 +163,7 @@ jobs:
     name: Upload wheel
     runs-on: ${{ matrix.operating-system }}
     needs: [ test-wheel, build-info ]
-    if: github.ref_type == 'tag' && github.ref == 'refs/tags/'
+    if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/')
     strategy:
       fail-fast: false
       matrix:
