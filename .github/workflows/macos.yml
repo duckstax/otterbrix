@@ -1,4 +1,6 @@
-on:
+name: macos
+
+n:
   pull_request:
   push:
     branches:
