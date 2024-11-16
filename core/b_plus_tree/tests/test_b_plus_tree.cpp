@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <cstdint>
 #include <core/b_plus_tree/b_plus_tree.hpp>
 #include <core/file/file_system.hpp>
 #include <log/log.hpp>
@@ -46,7 +47,7 @@ private:
     std::pmr::synchronized_pool_resource resource_ = std::pmr::synchronized_pool_resource();
 };
 
-std::string gen_random(size_t len, size_t seed) {
+std::string gen_random(size_t len, std::size_t seed) {
     std::string result;
     result.reserve(len);
     std::default_random_engine e{seed};
