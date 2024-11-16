@@ -50,8 +50,8 @@ private:
 std::string gen_random(size_t len, std::size_t seed) {
     std::string result;
     result.reserve(len);
-    std::default_random_engine e{seed};
-    std::uniform_int_distribution uniform_dist('a', 'z');
+    std::default_random_engine e{static_cast<std::default_random_engine::result_type>(seed)};
+    std::uniform_int_distribution<char> uniform_dist('a', 'z');
 
     for (size_t i = 0; i < len; ++i) {
         result += uniform_dist(e);
