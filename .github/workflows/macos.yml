@@ -21,11 +21,7 @@ jobs:
       - name: Install system dependencies
         run: |
             brew install ninja cmake
-            python3 -m pip install --no-cache-dir conan==1.63 --break-system-packages
-
-      - name: Install system dependencies
-        run: |
-          sudo apt update && sudo apt install -y  build-essential ninja-build python3-pip python3-dev curl gnupg apt-transport-https  
+            python3 -m pip install --no-cache-dir conan==1.64 --break-system-packages
 
       - name: conan installation and configuration
         run: |
