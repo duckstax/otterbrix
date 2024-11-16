@@ -28,7 +28,6 @@ jobs:
           pip install conan==1.64.0 pytest==6.2.5
           conan user
           conan profile new default --detect --force
-          conan profile update settings.compiler.libcxx=libstdc++11 default
           conan config set general.parallel_download=$(nproc)
           conan config set general.cpu_count=$(nproc)
           conan remote add duckstax http://conan.duckstax.com
