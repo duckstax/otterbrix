@@ -36,7 +36,7 @@ TEST_CASE("b+tree with documents") {
         }
         std::shuffle(documents.begin(), documents.end(), std::default_random_engine{0});
 
-        auto key_getter = [&field](const block_t::item_data& item) -> block_t::index_t {
+        auto key_getter = [field](const block_t::item_data& item) -> block_t::index_t {
             msgpack::unpacked msg;
             msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
                 return true;
@@ -88,7 +88,7 @@ TEST_CASE("b+tree with documents") {
         }
         std::shuffle(documents.begin(), documents.end(), std::default_random_engine{0});
 
-        auto key_getter = [&field](const block_t::item_data& item) -> block_t::index_t {
+        auto key_getter = [field](const block_t::item_data& item) -> block_t::index_t {
             msgpack::unpacked msg;
             msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
                 return true;
@@ -148,7 +148,7 @@ TEST_CASE("b+tree with documents") {
         }
         std::shuffle(documents.begin(), documents.end(), std::default_random_engine{0});
 
-        auto key_getter = [&field](const block_t::item_data& item) -> block_t::index_t {
+        auto key_getter = [field](const block_t::item_data& item) -> block_t::index_t {
             msgpack::unpacked msg;
             msgpack::unpack(msg, (char*) item.data, item.size, [](msgpack::type::object_type, std::size_t, void*) {
                 return true;
