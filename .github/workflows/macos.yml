@@ -14,7 +14,9 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
+
       - name: Install system dependencies
         run: |
             brew install ninja cmake
