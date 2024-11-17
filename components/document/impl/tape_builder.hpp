@@ -83,6 +83,11 @@ namespace components::document {
     }
 
     template<>
+    inline void tape_builder::build<>(long value) {
+        append2(0, value, types::physical_type::INT64);
+    }
+
+    template<>
     inline void tape_builder::build<>(int128_t value) {
         append3(value, types::physical_type::INT128);
     }
@@ -104,6 +109,12 @@ namespace components::document {
 
     template<>
     inline void tape_builder::build<>(uint64_t value) {
+        append(0, types::physical_type::UINT64);
+        tape_.append(value);
+    }
+
+    template<>
+    inline void tape_builder::build<>(unsigned long value) {
         append(0, types::physical_type::UINT64);
         tape_.append(value);
     }
