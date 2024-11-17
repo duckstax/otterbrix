@@ -71,7 +71,7 @@ namespace components::document {
     value_t::value_t(impl::base_document* tape, T value) {
         auto builder = tape_builder(*tape);
         element_ = tape->next_element();
-        builder.build(static_cast<T>(value));
+        builder.build<T>(value);
     }
 
     template<class T>

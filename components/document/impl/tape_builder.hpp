@@ -21,24 +21,12 @@ namespace components::document {
 
         tape_builder& operator=(const tape_builder&) = delete;
 
-        void build(std::string_view value) noexcept;
+        template<typename T>
+        void build(T value);
 
-        void build(int8_t value) noexcept;
-        void build(int16_t value) noexcept;
-        void build(int32_t value) noexcept;
-        void build(int64_t value) noexcept;
+        void build(const std::string& value);
+        void build(const std::pmr::string& value);
 
-        void build(int128_t value) noexcept;
-
-        void build(uint8_t value) noexcept;
-        void build(uint16_t value) noexcept;
-        void build(uint32_t value) noexcept;
-        void build(uint64_t value) noexcept;
-
-        void build(float value) noexcept;
-        void build(double value) noexcept;
-        void build(bool value) noexcept;
-        void build(nullptr_t) noexcept;
         void visit_null_atom() noexcept;
 
     private:
@@ -52,6 +40,98 @@ namespace components::document {
         template<typename T>
         void append3(T val2, types::physical_type t) noexcept;
     };
+
+    template<>
+    inline void tape_builder::build<>(std::string_view value) {
+        // we advance the point, accounting for the fact that we have a NULL termination
+        append(tape_.next_string_buf_index(), types::physical_type::STRING);
+        tape_.append_string(value);
+    }
+
+    template<>
+    inline void tape_builder::build<>(std::string value) {
+        // we advance the point, accounting for the fact that we have a NULL termination
+        append(tape_.next_string_buf_index(), types::physical_type::STRING);
+        tape_.append_string(value);
+    }
+
+    template<>
+    inline void tape_builder::build<>(std::pmr::string value) {
+        // we advance the point, accounting for the fact that we have a NULL termination
+        append(tape_.next_string_buf_index(), types::physical_type::STRING);
+        tape_.append_string(value);
+    }
+
+    template<>
+    inline void tape_builder::build<>(int8_t value) {
+        append(value, types::physical_type::INT8);
+    }
+
+    template<>
+    inline void tape_builder::build<>(int16_t value) {
+        append(value, types::physical_type::INT16);
+    }
+
+    template<>
+    inline void tape_builder::build<>(int32_t value) {
+        append(value, types::physical_type::INT32);
+    }
+
+    template<>
+    inline void tape_builder::build<>(int64_t value) {
+        append2(0, value, types::physical_type::INT64);
+    }
+
+    template<>
+    inline void tape_builder::build<>(int128_t value) {
+        append3(value, types::physical_type::INT128);
+    }
+
+    template<>
+    inline void tape_builder::build<>(uint8_t value) {
+        append(value, types::physical_type::UINT8);
+    }
+
+    template<>
+    inline void tape_builder::build<>(uint16_t value) {
+        append(value, types::physical_type::UINT16);
+    }
+
+    template<>
+    inline void tape_builder::build<>(uint32_t value) {
+        append(value, types::physical_type::UINT32);
+    }
+
+    template<>
+    inline void tape_builder::build<>(uint64_t value) {
+        append(0, types::physical_type::UINT64);
+        tape_.append(value);
+    }
+
+    // template <>
+    // inline void tape_builder::build<>(uint128_t value) {  append3(value, types::physical_type::INT128); }
+
+    template<>
+    inline void tape_builder::build<>(float value) {
+        uint64_t tape_data;
+        std::memcpy(&tape_data, &value, sizeof(value));
+        append(tape_data, types::physical_type::FLOAT);
+    }
+
+    template<>
+    inline void tape_builder::build<>(double value) {
+        append2(0, value, types::physical_type::DOUBLE);
+    }
+
+    template<>
+    inline void tape_builder::build<>(bool value) {
+        append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
+    }
+
+    template<>
+    inline void tape_builder::build<>(nullptr_t) {
+        visit_null_atom();
+    }
 
     template<typename T>
     void tape_builder::append2(uint64_t val, T val2, types::physical_type t) noexcept {

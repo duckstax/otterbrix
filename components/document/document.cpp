@@ -459,7 +459,7 @@ namespace components::document {
         // Use the fact that most scalars are going to be either strings or numbers.
         if (value.is_string()) {
             auto& str = value.get_string();
-            builder.build(str);
+            builder.build(std::string_view(str));
         } else if (value.is_number()) {
             if (value.is_double()) {
                 builder.build(value.get_double());
