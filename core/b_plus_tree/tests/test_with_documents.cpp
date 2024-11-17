@@ -27,7 +27,7 @@ TEST_CASE("b+tree with documents") {
     INFO("test block") {
         auto resource = std::pmr::synchronized_pool_resource();
         constexpr size_t test_size = 100;
-        constexpr std::string_view field = "/_id";
+        static constexpr std::string_view field = "/_id";
 
         std::vector<document_ptr> documents;
         documents.reserve(test_size);
@@ -79,7 +79,7 @@ TEST_CASE("b+tree with documents") {
     INFO("test segment tree") {
         auto resource = std::pmr::synchronized_pool_resource();
         constexpr size_t test_size = 1000;
-        constexpr std::string_view field = "/_id";
+        static constexpr std::string_view field = "/_id";
 
         std::vector<document_ptr> documents;
         documents.reserve(test_size);
@@ -139,7 +139,7 @@ TEST_CASE("b+tree with documents") {
     INFO("test b+tree") {
         auto resource = std::pmr::synchronized_pool_resource();
         constexpr size_t test_size = 10000;
-        constexpr std::string_view field = "/_id";
+        static constexpr std::string_view field = "/_id";
 
         std::vector<document_ptr> documents;
         documents.reserve(test_size);
