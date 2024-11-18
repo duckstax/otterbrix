@@ -21,13 +21,8 @@ namespace components::document {
 
         tape_builder& operator=(const tape_builder&) = delete;
 
-        template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+        template<typename T>
         void build(T value);
-        template<typename T, std::enable_if_t<!std::is_integral<T>::value, bool> = true>
-        void build(T value);
-
-        void build(const std::string& value);
-        void build(const std::pmr::string& value);
 
         void visit_null_atom() noexcept;
 
@@ -43,80 +38,48 @@ namespace components::document {
         void append3(T val2, types::physical_type t) noexcept;
     };
 
-    template<>
-    inline void tape_builder::build<>(std::string_view value) {
-        // we advance the point, accounting for the fact that we have a NULL termination
-        append(tape_.next_string_buf_index(), types::physical_type::STRING);
-        tape_.append_string(value);
-    }
-
-    template<>
-    inline void tape_builder::build<>(std::string value) {
-        // we advance the point, accounting for the fact that we have a NULL termination
-        append(tape_.next_string_buf_index(), types::physical_type::STRING);
-        tape_.append_string(value);
-    }
-
-    template<>
-    inline void tape_builder::build<>(std::pmr::string value) {
-        // we advance the point, accounting for the fact that we have a NULL termination
-        append(tape_.next_string_buf_index(), types::physical_type::STRING);
-        tape_.append_string(value);
-    }
-
-    template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+    template<typename T>
     void tape_builder::build(T value) {
-        if constexpr (std::is_same_v<T, bool>) {
-            append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
-        } else if constexpr (std::is_signed_v<T>) {
-            if constexpr (sizeof(T) == 1) {
-                append(value, types::physical_type::INT8);
-            } else if constexpr (sizeof(T) == 2) {
-                append(value, types::physical_type::INT16);
-            } else if constexpr (sizeof(T) == 4) {
-                append(value, types::physical_type::INT32);
-            } else if constexpr (sizeof(T) == 8) {
-                append2(0, value, types::physical_type::INT64);
+        if constexpr (std::is_null_pointer_v<T>) {
+            visit_null_atom();
+        } else if constexpr (std::is_integral_v<T>) {
+            if constexpr (std::is_same_v<T, bool>) {
+                append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
+            } else if constexpr (std::is_signed_v<T>) {
+                if constexpr (sizeof(T) == 1) {
+                    append(value, types::physical_type::INT8);
+                } else if constexpr (sizeof(T) == 2) {
+                    append(value, types::physical_type::INT16);
+                } else if constexpr (sizeof(T) == 4) {
+                    append(value, types::physical_type::INT32);
+                } else if constexpr (sizeof(T) == 8) {
+                    append2(0, value, types::physical_type::INT64);
+                }
+            } else if constexpr (std::is_unsigned_v<T>) {
+                if constexpr (sizeof(T) == 1) {
+                    append(value, types::physical_type::UINT8);
+                } else if constexpr (sizeof(T) == 2) {
+                    append(value, types::physical_type::UINT16);
+                } else if constexpr (sizeof(T) == 4) {
+                    append(value, types::physical_type::UINT32);
+                } else if constexpr (sizeof(T) == 8) {
+                    append(value, types::physical_type::UINT64);
+                    tape_.append(value);
+                }
             }
-        } else if constexpr (std::is_unsigned_v<T>) {
-            if constexpr (sizeof(T) == 1) {
-                append(value, types::physical_type::UINT8);
-            } else if constexpr (sizeof(T) == 2) {
-                append(value, types::physical_type::UINT16);
-            } else if constexpr (sizeof(T) == 4) {
-                append(value, types::physical_type::UINT32);
-            } else if constexpr (sizeof(T) == 8) {
-                append(value, types::physical_type::UINT64);
-                tape_.append(value);
-            }
+        } else if constexpr (std::is_same_v<T, int128_t>) {
+            append3(value, types::physical_type::INT128);
+        } else if constexpr (std::is_same_v<T, float>) {
+            uint64_t tape_data;
+            std::memcpy(&tape_data, &value, sizeof(value));
+            append(tape_data, types::physical_type::FLOAT);
+        } else if constexpr (std::is_same_v<T, double>) {
+            append2(0, value, types::physical_type::DOUBLE);
         } else {
-            assert(false && "tape_builder: undefined type");
+            // we advance the point, accounting for the fact that we have a NULL termination
+            append(tape_.next_string_buf_index(), types::physical_type::STRING);
+            tape_.append_string(value);
         }
-    }
-
-    template<>
-    inline void tape_builder::build<>(int128_t value) {
-        append3(value, types::physical_type::INT128);
-    }
-
-    // template <>
-    // inline void tape_builder::build<>(uint128_t value) {  append3(value, types::physical_type::INT128); }
-
-    template<>
-    inline void tape_builder::build<>(float value) {
-        uint64_t tape_data;
-        std::memcpy(&tape_data, &value, sizeof(value));
-        append(tape_data, types::physical_type::FLOAT);
-    }
-
-    template<>
-    inline void tape_builder::build<>(double value) {
-        append2(0, value, types::physical_type::DOUBLE);
-    }
-
-    template<>
-    inline void tape_builder::build<>(nullptr_t) {
-        visit_null_atom();
     }
 
     template<typename T>
