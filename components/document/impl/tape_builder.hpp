@@ -21,7 +21,9 @@ namespace components::document {
 
         tape_builder& operator=(const tape_builder&) = delete;
 
-        template<typename T>
+        template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+        void build(T value);
+        template<typename T, std::enable_if_t<!std::is_integral<T>::value, bool> = true>
         void build(T value);
 
         void build(const std::string& value);
@@ -62,61 +64,39 @@ namespace components::document {
         tape_.append_string(value);
     }
 
-    template<>
-    inline void tape_builder::build<>(int8_t value) {
-        append(value, types::physical_type::INT8);
-    }
-
-    template<>
-    inline void tape_builder::build<>(int16_t value) {
-        append(value, types::physical_type::INT16);
-    }
-
-    template<>
-    inline void tape_builder::build<>(int32_t value) {
-        append(value, types::physical_type::INT32);
-    }
-
-    template<>
-    inline void tape_builder::build<>(int64_t value) {
-        append2(0, value, types::physical_type::INT64);
-    }
-
-    template<>
-    inline void tape_builder::build<>(long value) {
-        append2(0, value, types::physical_type::INT64);
+    template<typename T, std::enable_if_t<std::is_integral<T>::value, bool> = true>
+    void tape_builder::build(T value) {
+        if constexpr (std::is_same_v<T, bool>) {
+            append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
+        } else if constexpr (std::is_signed_v<T>) {
+            if constexpr (sizeof(T) == 1) {
+                append(value, types::physical_type::INT8);
+            } else if constexpr (sizeof(T) == 2) {
+                append(value, types::physical_type::INT16);
+            } else if constexpr (sizeof(T) == 4) {
+                append(value, types::physical_type::INT32);
+            } else if constexpr (sizeof(T) == 8) {
+                append2(0, value, types::physical_type::INT64);
+            }
+        } else if constexpr (std::is_unsigned_v<T>) {
+            if constexpr (sizeof(T) == 1) {
+                append(value, types::physical_type::UINT8);
+            } else if constexpr (sizeof(T) == 2) {
+                append(value, types::physical_type::UINT16);
+            } else if constexpr (sizeof(T) == 4) {
+                append(value, types::physical_type::UINT32);
+            } else if constexpr (sizeof(T) == 8) {
+                append(value, types::physical_type::UINT64);
+                tape_.append(value);
+            }
+        } else {
+            assert(false && "tape_builder: undefined type");
+        }
     }
 
     template<>
     inline void tape_builder::build<>(int128_t value) {
         append3(value, types::physical_type::INT128);
-    }
-
-    template<>
-    inline void tape_builder::build<>(uint8_t value) {
-        append(value, types::physical_type::UINT8);
-    }
-
-    template<>
-    inline void tape_builder::build<>(uint16_t value) {
-        append(value, types::physical_type::UINT16);
-    }
-
-    template<>
-    inline void tape_builder::build<>(uint32_t value) {
-        append(value, types::physical_type::UINT32);
-    }
-
-    template<>
-    inline void tape_builder::build<>(uint64_t value) {
-        append(0, types::physical_type::UINT64);
-        tape_.append(value);
-    }
-
-    template<>
-    inline void tape_builder::build<>(unsigned long value) {
-        append(0, types::physical_type::UINT64);
-        tape_.append(value);
     }
 
     // template <>
@@ -132,11 +112,6 @@ namespace components::document {
     template<>
     inline void tape_builder::build<>(double value) {
         append2(0, value, types::physical_type::DOUBLE);
-    }
-
-    template<>
-    inline void tape_builder::build<>(bool value) {
-        append(0, value ? types::physical_type::BOOL_TRUE : types::physical_type::BOOL_FALSE);
     }
 
     template<>
