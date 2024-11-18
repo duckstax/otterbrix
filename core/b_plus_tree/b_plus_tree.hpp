@@ -243,7 +243,7 @@ namespace core::b_plus_tree {
             return false;
         }
 
-        tree_mutex_.lock_shared();
+        std::shared_lock l(tree_mutex_);
         first_leaf->unlock_shared();
 
         while (first_leaf) {
@@ -258,7 +258,6 @@ namespace core::b_plus_tree {
             first_leaf = static_cast<leaf_node_t*>(first_leaf->right_node_);
         }
 
-        tree_mutex_.unlock_shared();
         return true;
     }
 
@@ -285,7 +284,7 @@ namespace core::b_plus_tree {
             return false;
         }
 
-        tree_mutex_.lock_shared();
+        std::shared_lock l(tree_mutex_);
         first_leaf->unlock_shared();
 
         while (first_leaf) {
@@ -296,7 +295,6 @@ namespace core::b_plus_tree {
             for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
                 for (auto it = block->begin(); it != block->end(); it++) {
                     if (it->index > max_index) {
-                        tree_mutex_.unlock_shared();
                         return true;
                     } else if (it->index < min_index) {
                         continue;
@@ -306,7 +304,6 @@ namespace core::b_plus_tree {
                         result->emplace_back(std::move(t));
                         limit--;
                         if (limit == 0) {
-                            tree_mutex_.unlock_shared();
                             return true;
                         }
                     }
@@ -315,7 +312,6 @@ namespace core::b_plus_tree {
             first_leaf = static_cast<leaf_node_t*>(first_leaf->right_node_);
         }
 
-        tree_mutex_.unlock_shared();
         return true;
     }
 
@@ -342,7 +338,7 @@ namespace core::b_plus_tree {
             return false;
         }
 
-        tree_mutex_.lock_shared();
+        std::shared_lock l(tree_mutex_);
         last_leaf->unlock_shared();
 
         while (last_leaf) {
@@ -353,7 +349,6 @@ namespace core::b_plus_tree {
             for (auto block = last_leaf->rbegin(); block != last_leaf->rend(); block++) {
                 for (auto it = block->rbegin(); it != block->rend(); it++) {
                     if (it->index < min_index) {
-                        tree_mutex_.unlock_shared();
                         return true;
                     } else if (it->index > max_index) {
                         continue;
@@ -363,7 +358,6 @@ namespace core::b_plus_tree {
                         result->emplace_back(std::move(t));
                         limit--;
                         if (limit == 0) {
-                            tree_mutex_.unlock_shared();
                             return true;
                         }
                     }
@@ -372,7 +366,6 @@ namespace core::b_plus_tree {
             last_leaf = static_cast<leaf_node_t*>(last_leaf->left_node_);
         }
 
-        tree_mutex_.unlock_shared();
         return true;
     }
 
