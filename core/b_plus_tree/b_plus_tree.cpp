@@ -723,20 +723,21 @@ namespace core::b_plus_tree {
         if (!first_leaf) {
             return;
         }
-        {
-            std::shared_lock l(tree_mutex_);
-            first_leaf->unlock_shared();
 
-            result.reserve(item_count_);
-            while (first_leaf) {
-                for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
-                    for (auto it = block->begin(); it != block->end(); it++) {
-                        result.push_back(it->index);
-                    }
+        tree_mutex_.lock_shared();
+        first_leaf->unlock_shared();
+
+        result.reserve(item_count_);
+        while (first_leaf) {
+            for (auto block = first_leaf->begin(); block != first_leaf->end(); block++) {
+                for (auto it = block->begin(); it != block->end(); it++) {
+                    result.push_back(it->index);
                 }
-                first_leaf = static_cast<leaf_node_t*>(first_leaf->right_node_);
             }
+            first_leaf = static_cast<leaf_node_t*>(first_leaf->right_node_);
         }
+
+        tree_mutex_.unlock_shared();
         result.erase(std::unique(result.begin(), result.end()), result.end());
     }
 
@@ -747,7 +748,7 @@ namespace core::b_plus_tree {
 
         std::filesystem::path file_name = storage_directory_;
         file_name /= std::filesystem::path(metadata_file_name_);
-        std::unique_lock l(tree_mutex_);
+        tree_mutex_.lock();
 
         // got root mutex, no need to lock nodes or save parent node
         base_node_t* current_node = root_;
@@ -776,6 +777,7 @@ namespace core::b_plus_tree {
             open_file(fs_, file_name, file_flags::WRITE | file_flags::FILE_CREATE);
         file->write(static_cast<void*>(buffer), METADATA_SIZE, 0);
 
+        tree_mutex_.unlock();
         resource_->deallocate(static_cast<void*>(buffer), METADATA_SIZE);
     }
 
@@ -785,7 +787,7 @@ namespace core::b_plus_tree {
             return;
         }
 
-        std::unique_lock l(tree_mutex_);
+        tree_mutex_.lock();
         if (root_) {
             delete root_;
             root_ = nullptr;
@@ -862,6 +864,7 @@ namespace core::b_plus_tree {
 
         root_ = *nodes_layer;
 
+        tree_mutex_.unlock();
         resource_->deallocate(static_cast<void*>(buffer), METADATA_SIZE);
         resource_->deallocate(static_cast<void*>(nodes_layer), leaf_nodes_count_ * sizeof(base_node_t*));
     }
@@ -941,7 +944,7 @@ namespace core::b_plus_tree {
             return 0;
         }
 
-        std::shared_lock l(tree_mutex_);
+        tree_mutex_.lock_shared();
         first_leaf->unlock_shared();
 
         size_t result = 0;
@@ -950,6 +953,7 @@ namespace core::b_plus_tree {
             first_leaf = static_cast<leaf_node_t*>(first_leaf->right_node_);
         }
 
+        tree_mutex_.unlock_shared();
         return result;
     }
 

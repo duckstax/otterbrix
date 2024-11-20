@@ -11,8 +11,9 @@ namespace services::collection::operators {
             modified_ = make_operator_write_data(context_->resource());
             for (const auto& document : left_->output()->documents()) {
                 const auto id = get_document_id(document);
-                auto prev_end = context_->storage().end();
-                if (context_->storage().erase(context_->storage().find(id)) != prev_end) {
+                auto it = context_->storage().find(id);
+                if (it != context_->storage().end()) {
+                    context_->storage().erase(it);
                     modified_->append(id);
                     context_->index_engine()->delete_document(document, pipeline_context);
                 }
