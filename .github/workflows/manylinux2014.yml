@@ -1,7 +1,7 @@
 name: manylinux2014
 
 on:
- push:
+  push:
     paths-ignore:
       - '**.md'
     tags:
