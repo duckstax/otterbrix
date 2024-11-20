@@ -50,8 +50,3 @@ jobs:
         run: |
           cd build
           ctest -C -V --output-on-failure
-
-      - name: PyTest
-        run: |
-          cd build/integration/python/
-          pytest

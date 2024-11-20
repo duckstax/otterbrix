@@ -1,12 +1,12 @@
 name: ubuntu 20.04
 
-#on:
-#  push:
-#    paths-ignore:
-#      - '**.md'
-#  pull_request:
-#    paths-ignore:
-#      - '**.md'
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
 
 jobs:
   run:
