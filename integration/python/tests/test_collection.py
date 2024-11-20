@@ -1,6 +1,7 @@
 import copy
 import os
 import pytest
+import sys
 from otterbrix import Client, DataBase, Collection
 
 client = Client(os.getcwd() + "/test_collection")
@@ -62,47 +63,63 @@ friedrich_collection.insert(list_doc) # not inserted (not unique id)
 
 
 def test_collection_len():
-    assert len(friedrich_collection) == 100
-    assert len(friedrich_database['FriedrichCollection']) == 100
+    try:
+        assert len(friedrich_collection) == 100
+        assert len(friedrich_database['FriedrichCollection']) == 100
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_collection_find():
-    c = friedrich_collection.find({})
-    assert len(c) == 100
-    c.close()
+    try:
+        c = friedrich_collection.find({})
+        assert len(c) == 100
+        c.close()
 
-    c = friedrich_collection.find({'count': {'$gt': 90}})
-    assert len(c) == 9
-    c.close()
+        c = friedrich_collection.find({'count': {'$gt': 90}})
+        assert len(c) == 9
+        c.close()
 
-    c = friedrich_collection.find({'countStr': {'$regex': '9$'}})
-    assert len(c) == 10
-    c.close()
+        c = friedrich_collection.find({'countStr': {'$regex': '9$'}})
+        assert len(c) == 10
+        c.close()
 
-    c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
-    assert len(c) == 18
-    c.close()
+        c = friedrich_collection.find({'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
+        assert len(c) == 18
+        c.close()
 
-    c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]}, {'count': {'$lte': 30}}]})
-    assert len(c) == 3
-    c.close()
+        c = friedrich_collection.find({'$and': [{'$or': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]}, {'count': {'$lte': 30}}]})
+        assert len(c) == 3
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_collection_cursor():
-    c = friedrich_collection.find({})
-    count = 0
-    while c.hasNext():
-        c.next()
-        assert str(c['count']) == c['countStr']
-        assert c.hasNext() == (count < 99)
-        count += 1
-    c.close()
+    try:
+        c = friedrich_collection.find({})
+        count = 0
+        while c.hasNext():
+            c.next()
+            assert str(c['count']) == c['countStr']
+            assert c.hasNext() == (count < 99)
+            count += 1
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_collection_find_one():
-    c = friedrich_collection.find_one({'_id': {'$eq': gen_id(1)}})
-    assert c['count'] == 1
-    c = friedrich_collection.find_one({'count': {'$eq': 10}})
-    assert c['count'] == 10
-    c = friedrich_collection.find_one({'$and': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
-    assert c['count'] == 99
+    try:
+        c = friedrich_collection.find_one({'_id': {'$eq': gen_id(1)}})
+        assert c['count'] == 1
+        c = friedrich_collection.find_one({'count': {'$eq': 10}})
+        assert c['count'] == 10
+        c = friedrich_collection.find_one({'$and': [{'count': {'$gt': 90}}, {'countStr': {'$regex': '9$'}}]})
+        assert c['count'] == 99
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise

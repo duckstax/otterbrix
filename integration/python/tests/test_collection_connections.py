@@ -1,5 +1,6 @@
 import os
 import pytest
+import sys
 from otterbrix import Client, Connection, Cursor
 
 client = Client(os.getcwd() + "/test_collection_connections")
@@ -12,62 +13,66 @@ def gen_id(num):
     return res
 
 def test_connection():
-    connection = Connection(client)
+    try:
+        connection = Connection(client)
 
-    #insert
-    
-    query = "INSERT INTO schema.table (_id, name, count) VALUES "
-    for num in  range(0, 100):
-        query += "('" + gen_id(num + 1) + "', 'Name " + str(num) + "', " + str(num) + ")"
-        if num == 99:
-            query += ";"
-        else:
-            query += ", "
-    c = connection.execute(query)
-    assert len(c) == 100
+        #insert
 
-    # select
+        query = "INSERT INTO schema.table (_id, name, count) VALUES "
+        for num in  range(0, 100):
+            query += "('" + gen_id(num + 1) + "', 'Name " + str(num) + "', " + str(num) + ")"
+            if num == 99:
+                query += ";"
+            else:
+                query += ", "
+        c = connection.execute(query)
+        assert len(c) == 100
 
-    c.execute("SELECT * FROM schema.table;")
-    assert len(c) == 100
-    c.close()
+        # select
 
-    # delete
+        c.execute("SELECT * FROM schema.table;")
+        assert len(c) == 100
+        c.close()
 
-    c.execute("SELECT * FROM schema.table WHERE count > 90;")
-    assert len(c) == 9
-    c.close()
+        # delete
 
-    c.execute("DELETE FROM schema.table WHERE count > 90;")
-    assert len(c) == 9
-    c.close()
+        c.execute("SELECT * FROM schema.table WHERE count > 90;")
+        assert len(c) == 9
+        c.close()
 
-    c.execute("SELECT * FROM schema.table WHERE count > 90;")
-    assert len(c) == 0
-    c.close()
+        c.execute("DELETE FROM schema.table WHERE count > 90;")
+        assert len(c) == 9
+        c.close()
 
-    c.execute("SELECT * FROM schema.table;")
-    assert len(c) == 91
-    c.close()
+        c.execute("SELECT * FROM schema.table WHERE count > 90;")
+        assert len(c) == 0
+        c.close()
 
-    # update
+        c.execute("SELECT * FROM schema.table;")
+        assert len(c) == 91
+        c.close()
 
-    c.execute("SELECT * FROM schema.table WHERE count < 20;")
-    assert len(c) == 20
-    c.close()
+        # update
 
-    c.execute("SELECT * FROM schema.table WHERE count = 1000;")
-    assert len(c) == 0
-    c.close()
+        c.execute("SELECT * FROM schema.table WHERE count < 20;")
+        assert len(c) == 20
+        c.close()
 
-    c.execute("UPDATE schema.table SET count = 1000 WHERE count < 20;")
-    assert len(c) == 20
-    c.close()
+        c.execute("SELECT * FROM schema.table WHERE count = 1000;")
+        assert len(c) == 0
+        c.close()
 
-    c.execute("SELECT * FROM schema.table WHERE count < 20;")
-    assert len(c) == 0
-    c.close()
+        c.execute("UPDATE schema.table SET count = 1000 WHERE count < 20;")
+        assert len(c) == 20
+        c.close()
 
-    c.execute("SELECT * FROM schema.table WHERE count = 1000;")
-    assert len(c) == 20
-    c.close()
+        c.execute("SELECT * FROM schema.table WHERE count < 20;")
+        assert len(c) == 0
+        c.close()
+
+        c.execute("SELECT * FROM schema.table WHERE count = 1000;")
+        assert len(c) == 20
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise

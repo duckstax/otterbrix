@@ -1,6 +1,7 @@
 import copy
 import os
 import pytest
+import sys
 from otterbrix import Client, DataBase, Collection
 
 database_name = "TestDatabase"
@@ -63,147 +64,227 @@ def gen_collection(request):
 
 
 def test_list_collections():
-    tables = database.collection_names()
-    #assert '_default' in tables
-    assert collection_name in tables
+    try:
+        tables = database.collection_names()
+        #assert '_default' in tables
+        assert collection_name in tables
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_initialize_collection(gen_collection):
-    c = gen_collection['collection']
-    cursor = c.find({})
-    # count = 0
-    # for doc in cursor:
-    #     count += 1
-    # assert count == 100
-    assert cursor.count() == 100
-    assert len(cursor) == 100
-    assert c.count() == 100
-    assert len(c) == 100
-    assert len(c.find({})) == 100
+    try:
+        c = gen_collection['collection']
+        cursor = c.find({})
+        # count = 0
+        # for doc in cursor:
+        #     count += 1
+        # assert count == 100
+        assert cursor.count() == 100
+        assert len(cursor) == 100
+        assert c.count() == 100
+        assert len(c) == 100
+        assert len(c.find({})) == 100
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_drop_collection(gen_collection):
-    c = gen_collection['collection']
-    assert database.drop_collection(collection_name) is True
-    assert database.drop_collection(collection_name) is False
-    c = database[collection_name]
-    assert c.drop() is True
-    assert c.drop() is False
+    try:
+        c = gen_collection['collection']
+        assert database.drop_collection(collection_name) is True
+        assert database.drop_collection(collection_name) is False
+        c = database[collection_name]
+        assert c.drop() is True
+        assert c.drop() is False
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_with_filter_named_parameter(gen_collection):
-    c = gen_collection['collection'].find(filter={})
-    assert c.count() == 100
-    assert gen_collection['collection'].find(filter={}).count() == 100
+    try:
+        c = gen_collection['collection'].find(filter={})
+        assert c.count() == 100
+        assert gen_collection['collection'].find(filter={}).count() == 100
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_greater_than(gen_collection):
-    c = gen_collection['collection'].find({'count': {'$gte': 50}})
-    assert c.count() == 50
-    assert gen_collection['collection'].find({'count': {'$gte': 50}}).count() == 50
+    try:
+        c = gen_collection['collection'].find({'count': {'$gte': 50}})
+        assert c.count() == 50
+        assert gen_collection['collection'].find({'count': {'$gte': 50}}).count() == 50
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_in_subdocument(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict/count': 0})
-    assert c.count() == 1
-    assert gen_collection['collection'].find({'mixedDict/count': 0}).count() == 1
+    try:
+        c = gen_collection['collection'].find({'mixedDict/count': 0})
+        assert c.count() == 1
+        assert gen_collection['collection'].find({'mixedDict/count': 0}).count() == 1
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_in_subdocument_with_operator(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}})
-    assert c.count() == 50
-    assert gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}}).count() == 50
+    try:
+        c = gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}})
+        assert c.count() == 50
+        assert gen_collection['collection'].find({'mixedDict/count': {'$gte': 50}}).count() == 50
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_in_subdocument_3_levels(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict/countDict/even': True})
-    assert c.count() == 50
-    assert gen_collection['collection'].find({'mixedDict/countDict/even': True}).count() == 50
+    try:
+        c = gen_collection['collection'].find({'mixedDict/countDict/even': True})
+        assert c.count() == 50
+        assert gen_collection['collection'].find({'mixedDict/countDict/even': True}).count() == 50
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_in_subdocument_with_array(gen_collection):
-    c = gen_collection['collection'].find({'mixedDict/countArray/3': {'$gt': 50}})
-    assert c.count() == 52
-    assert gen_collection['collection'].find({'mixedDict/countArray/3': {"$gt": 50}}).count() == 52
+    try:
+        c = gen_collection['collection'].find({'mixedDict/countArray/3': {'$gt': 50}})
+        assert c.count() == 52
+        assert gen_collection['collection'].find({'mixedDict/countArray/3': {"$gt": 50}}).count() == 52
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_sort_positive(gen_collection):
-    c = gen_collection['collection'].find()
-    c.sort('count', 1)
-    assert c[0]['count'] == 0
-    assert c[1]['count'] == 1
+    try:
+        c = gen_collection['collection'].find()
+        c.sort('count', 1)
+        assert c[0]['count'] == 0
+        assert c[1]['count'] == 1
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_sort_negative(gen_collection):
-    c = gen_collection['collection'].find()
-    c.sort('count', -1)
-    assert c[0]['count'] == 99
-    assert c[1]['count'] == 98
+    try:
+        c = gen_collection['collection'].find()
+        c.sort('count', -1)
+        assert c[0]['count'] == 99
+        assert c[1]['count'] == 98
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_has_next(gen_collection):
-    c = gen_collection['collection'].find().sort('count', 1)
-    assert c.hasNext() is True
-    assert c.next()['count'] == 0
+    try:
+        c = gen_collection['collection'].find().sort('count', 1)
+        assert c.hasNext() is True
+        assert c.next()['count'] == 0
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_not_has_next(gen_collection):
-    c = gen_collection['collection'].find({'count': {'$gte': 98}}).sort('count', 1)
-    assert c.hasNext() is True
-    assert c.next()['count'] == 98
-    assert c.hasNext() is True
-    assert c.next()['count'] == 99
-    assert c.hasNext() is False
+    try:
+        c = gen_collection['collection'].find({'count': {'$gte': 98}}).sort('count', 1)
+        assert c.hasNext() is True
+        assert c.next()['count'] == 98
+        assert c.hasNext() is True
+        assert c.next()['count'] == 99
+        assert c.hasNext() is False
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_empty_find(gen_collection):
-    c = gen_collection['collection'].find()
-    assert c.count() == 100
+    try:
+        c = gen_collection['collection'].find()
+        assert c.count() == 100
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_one(gen_collection):
-    c = gen_collection['collection'].find_one({'count': 3})
-    assert c['countStr'] == '3'
+    try:
+        c = gen_collection['collection'].find_one({'count': 3})
+        assert c['countStr'] == '3'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_find_one_with_filter_named_parameter(gen_collection):
-    c = gen_collection['collection'].find_one(filter={'count': 3})
-    assert c['countStr'] == '3'
+    try:
+        c = gen_collection['collection'].find_one(filter={'count': 3})
+        assert c['countStr'] == '3'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_gte_lt(gen_collection):
-    c = gen_collection['collection'].find({'count': {'$gte': 50, '$lt': 51}})
-    assert c.count() == 1
-    assert c[0]['countStr'] == '50'
+    try:
+        c = gen_collection['collection'].find({'count': {'$gte': 50, '$lt': 51}})
+        assert c.count() == 1
+        assert c[0]['countStr'] == '50'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_gt_lte(gen_collection):
-    c = gen_collection['collection'].find({'count': {'$gt': 50, '$lte': 51}})
-    assert c.count() == 1
-    assert c[0]['countStr'] == '51'
+    try:
+        c = gen_collection['collection'].find({'count': {'$gt': 50, '$lte': 51}})
+        assert c.count() == 1
+        assert c[0]['countStr'] == '51'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_ne(gen_collection):
-    c = gen_collection['collection'].find({'count': {'$ne': 50}})
-    assert c.count() == 99
-    for item in c:
-        assert item['countStr'] != '50'
+    try:
+        c = gen_collection['collection'].find({'count': {'$ne': 50}})
+        assert c.count() == 99
+        for item in c:
+            assert item['countStr'] != '50'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_regex(gen_collection):
-    c = gen_collection['collection'].find({'countStr': {'$regex': r'^[5]{1,2}'}}).sort('count', 1)
-    assert c.count() == 11
-    assert c[0]['count'] == 5
-    assert c[1]['count'] == 50
-    assert c[2]['count'] == 51
-    assert c[10]['count'] == 59
+    try:
+        c = gen_collection['collection'].find({'countStr': {'$regex': r'^[5]{1,2}'}}).sort('count', 1)
+        assert c.count() == 11
+        assert c[0]['count'] == 5
+        assert c[1]['count'] == 50
+        assert c[2]['count'] == 51
+        assert c[10]['count'] == 59
 
-    c = gen_collection['collection'].find({'countStr': {'$regex': r'[^5][5]{1}'}}).sort('count', 1)
-    assert c.count() == 8
-    assert c[0]['count'] == 15
-    assert c[1]['count'] == 25
-    assert c[4]['count'] == 65
-    assert c[7]['count'] == 95
+        c = gen_collection['collection'].find({'countStr': {'$regex': r'[^5][5]{1}'}}).sort('count', 1)
+        assert c.count() == 8
+        assert c[0]['count'] == 15
+        assert c[1]['count'] == 25
+        assert c[4]['count'] == 65
+        assert c[7]['count'] == 95
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 #def test_in(gen_collection):
@@ -232,56 +313,88 @@ def test_regex(gen_collection):
 
 
 def test_update_one_set(gen_collection):
-    c = gen_collection['collection'].update_one({'count': 3}, {'$set': {'countStr': 'three'}})
-    assert len(c) == 1
-    c.close()
-    c = gen_collection['collection'].find_one({'count': 3})
-    assert c['countStr'] == 'three'
+    try:
+        c = gen_collection['collection'].update_one({'count': 3}, {'$set': {'countStr': 'three'}})
+        assert len(c) == 1
+        c.close()
+        c = gen_collection['collection'].find_one({'count': 3})
+        assert c['countStr'] == 'three'
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_delete_one(gen_collection):
-    gen_collection['collection'].delete_one({'count': 3})
-    c = gen_collection['collection'].find({})
-    assert c.count() == 99
+    try:
+        gen_collection['collection'].delete_one({'count': 3})
+        c = gen_collection['collection'].find({})
+        assert c.count() == 99
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_delete_all(gen_collection):
-    gen_collection['collection'].delete_many({})
-    c = gen_collection['collection'].find({})
-    assert c.count() == 0
+    try:
+        gen_collection['collection'].delete_many({})
+        c = gen_collection['collection'].find({})
+        assert c.count() == 0
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_delete_many(gen_collection):
-    gen_collection['collection'].delete_many({'count': {'$gte': 50}})
-    c = gen_collection['collection'].find({})
-    assert c.count() == 50
+    try:
+        gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+        c = gen_collection['collection'].find({})
+        assert c.count() == 50
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_insert_one(gen_collection):
-    gen_collection['collection'].insert_one({'my_object_name': 'my object value', 'count': 1000})
-    c = gen_collection['collection'].find({})
-    assert c.count() == 101
-    # assert gen_collection['collection'].find({'my_object_name': 'my object value'})['count'] == 1000 #todo
+    try:
+        gen_collection['collection'].insert_one({'my_object_name': 'my object value', 'count': 1000})
+        c = gen_collection['collection'].find({})
+        assert c.count() == 101
+        # assert gen_collection['collection'].find({'my_object_name': 'my object value'})['count'] == 1000 #todo
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_insert_many(gen_collection):
-    items = []
-    for i in range(10):
-        value = 1000 + i
-        items.append({'count': value, 'countStr': str(value)})
-    gen_collection['collection'].insert_many(items)
-    c = gen_collection['collection'].find({})
-    assert c.count() == 110
+    try:
+        items = []
+        for i in range(10):
+            value = 1000 + i
+            items.append({'count': value, 'countStr': str(value)})
+        gen_collection['collection'].insert_many(items)
+        c = gen_collection['collection'].find({})
+        assert c.count() == 110
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_and(gen_collection):
-    c = gen_collection['collection'].find({"$and": [{"count": {"$gt": 10}}, {"count": {"$lte": 50}}]})
-    assert c.count() == 40
+    try:
+        c = gen_collection['collection'].find({"$and": [{"count": {"$gt": 10}}, {"count": {"$lte": 50}}]})
+        assert c.count() == 40
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_or(gen_collection):
-    c = gen_collection['collection'].find({"$or": [{"count": {"$lt": 10}}, {"count": {"$gte": 90}}]})
-    assert c.count() == 20
+    try:
+        c = gen_collection['collection'].find({"$or": [{"count": {"$lt": 10}}, {"count": {"$gte": 90}}]})
+        assert c.count() == 20
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 # def test_not(gen_collection):
@@ -290,70 +403,98 @@ def test_or(gen_collection):
 
 
 def test_delete_one(gen_collection):
-    c = gen_collection['collection'].delete_one({'countBool': True})
-    assert c.count() == 1
-    c.close()
-    c = gen_collection['collection'].find({})
-    assert c.count() == 99
-    c.close()
-    c = gen_collection['collection'].delete_one({'countBool': True})
-    assert c.count() == 1
-    c.close()
-    c = gen_collection['collection'].find({})
-    assert c.count() == 98
-    c.close()
+    try:
+        c = gen_collection['collection'].delete_one({'countBool': True})
+        assert c.count() == 1
+        c.close()
+        c = gen_collection['collection'].find({})
+        assert c.count() == 99
+        c.close()
+        c = gen_collection['collection'].delete_one({'countBool': True})
+        assert c.count() == 1
+        c.close()
+        c = gen_collection['collection'].find({})
+        assert c.count() == 98
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_delete_all(gen_collection):
-    c = gen_collection['collection'].delete_many({})
-    assert c.count() == 100
-    c.close()
-    c = gen_collection['collection'].find({})
-    assert c.count() == 0
-    c.close()
+    try:
+        c = gen_collection['collection'].delete_many({})
+        assert c.count() == 100
+        c.close()
+        c = gen_collection['collection'].find({})
+        assert c.count() == 0
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_delete_many(gen_collection):
-    c = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
-    assert c.count() == 50
-    c.close()
-    c = gen_collection['collection'].find({})
-    assert c.count() == 50
-    c.close()
+    try:
+        c = gen_collection['collection'].delete_many({'count': {'$gte': 50}})
+        assert c.count() == 50
+        c.close()
+        c = gen_collection['collection'].find({})
+        assert c.count() == 50
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_update_one(gen_collection):
-    c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr': '500'}})
-    assert c.count() == 1
-    c.close()
-    c = gen_collection['collection'].find({'count': {'$eq': 50}})
-    c.next()
-    assert c['countStr'] == '500'
-    c.close()
+    try:
+        c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr': '500'}})
+        assert c.count() == 1
+        c.close()
+        c = gen_collection['collection'].find({'count': {'$eq': 50}})
+        c.next()
+        assert c['countStr'] == '500'
+        c.close()
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_update_many(gen_collection):
-    c = gen_collection['collection'].update_many({'count': {'$gte': 50}}, {'$inc': {'count': 100}})
-    assert c.count() == 50
-    c.close()
-    assert gen_collection['collection'].find({'count': {'$gt': 100}}).count() == 50
+    try:
+        c = gen_collection['collection'].update_many({'count': {'$gte': 50}}, {'$inc': {'count': 100}})
+        assert c.count() == 50
+        c.close()
+        assert gen_collection['collection'].find({'count': {'$gt': 100}}).count() == 50
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_update_with_add_new_field(gen_collection):
-    assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 0
-    c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr2': '500'}})
-    assert c.count() == 1
-    c.close()
-    assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 1
+    try:
+        assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 0
+        c = gen_collection['collection'].update_one({'count': {'$eq': 50}}, {'$set': {'countStr2': '500'}})
+        assert c.count() == 1
+        c.close()
+        assert gen_collection['collection'].find({'countStr2': {'$eq': '500'}}).count() == 1
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
 
 
 def test_update_with_upsert(gen_collection):
-    c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
-    assert c.count() == 0
-    c.close()
-    assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
+    try:
+        c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}})
+        assert c.count() == 0
+        c.close()
+        assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 0
 
-    c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
-    assert c.count() == 1
-    c.close()
-    assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1
+        c = gen_collection['collection'].update_one({'count': {'$eq': 100}}, {'$set': {'countStr': '500'}}, True)
+        assert c.count() == 1
+        c.close()
+        assert gen_collection['collection'].find({'countStr': {'$eq': '500'}}).count() == 1
+    except Exception as err:
+        print(f"Unexpected {err=}, {type(err)=}")
+        raise
