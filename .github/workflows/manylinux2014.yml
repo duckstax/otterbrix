@@ -29,7 +29,7 @@ jobs:
     steps:
       - id: setVariables
         run: |
-          echo 'matrix=[ "3.6", "3.7", "3.8", "3.9", "3.10", "3.11" ]' >> $GITHUB_OUTPUT
+          echo 'matrix=["3.7", "3.8", "3.9", "3.10", "3.11" ]' >> $GITHUB_OUTPUT
 
   build-wheel:
     name: Build native wheel
